@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CLONGTEXT ;
+cidx	CMEDIUMTEXT	CLONGTEXT
+1	mediumtestmediumtest	longtextlongtextlongtext
+2	mediumtestmediumtest	longtextlongtextlongtext
+3	mediumtestmediumtest	longtextlongtextlongtext
+4	mediumtestmediumtest	longtextlongtextlongtext
+5	mediumtestmediumtest	longtextlongtextlongtext
+6	mediumtestmediumtest	longtextlongtextlongtext
+7	mediumtestmediumtest	longtextlongtextlongtext
+8	mediumtestmediumtest	longtextlongtextlongtext
+9	mediumtestmediumtest	longtextlongtextlongtext
+10	mediumtestmediumtest	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CLONGTEXT ;
+cidx	CMEDIUMTEXT	CLONGTEXT
+1	mediumtestmediumtest	longtextlongtextlongtext
+2	mediumtestmediumtest	longtextlongtextlongtext
+3	mediumtestmediumtest	longtextlongtextlongtext
+4	mediumtestmediumtest	longtextlongtextlongtext
+5	mediumtestmediumtest	longtextlongtextlongtext
+6	mediumtestmediumtest	longtextlongtextlongtext
+7	mediumtestmediumtest	longtextlongtextlongtext
+8	mediumtestmediumtest	longtextlongtextlongtext
+9	mediumtestmediumtest	longtextlongtextlongtext
+10	mediumtestmediumtest	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CLONGTEXT ;
+cidx	CMEDIUMTEXT	CLONGTEXT
+1	mediumtestmediumtest	longtextlongtextlongtext
+2	mediumtestmediumtest	longtextlongtextlongtext
+3	mediumtestmediumtest	longtextlongtextlongtext
+4	mediumtestmediumtest	longtextlongtextlongtext
+5	mediumtestmediumtest	longtextlongtextlongtext
+6	mediumtestmediumtest	longtextlongtextlongtext
+7	mediumtestmediumtest	longtextlongtextlongtext
+8	mediumtestmediumtest	longtextlongtextlongtext
+9	mediumtestmediumtest	longtextlongtextlongtext
+10	mediumtestmediumtest	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CLONGTEXT ;
+cidx	CMEDIUMTEXT	CLONGTEXT
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CLONGTEXT ;
+cidx	CMEDIUMTEXT	CLONGTEXT

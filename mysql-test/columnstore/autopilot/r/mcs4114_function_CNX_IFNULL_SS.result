@@ -1,0 +1,105 @@
+USE autopilot;
+select cidx, CCHAR1, IFNULL(CCHAR1,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR1	IFNULL(CCHAR1,'Yes')
+1	a	a
+select cidx, CCHAR2, IFNULL(CCHAR2,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR2	IFNULL(CCHAR2,'Yes')
+1	aa	aa
+select cidx, CCHAR3, IFNULL(CCHAR3,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR3	IFNULL(CCHAR3,'Yes')
+1	aaa	aaa
+select cidx, CCHAR4, IFNULL(CCHAR4,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR4	IFNULL(CCHAR4,'Yes')
+1	aaaa	aaaa
+select cidx, CCHAR5, IFNULL(CCHAR5,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR5	IFNULL(CCHAR5,'Yes')
+1	aaaaa	aaaaa
+select cidx, CCHAR6, IFNULL(CCHAR6,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR6	IFNULL(CCHAR6,'Yes')
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, IFNULL(CCHAR7,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR7	IFNULL(CCHAR7,'Yes')
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, IFNULL(CCHAR8,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR8	IFNULL(CCHAR8,'Yes')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, IFNULL(CCHAR9,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR9	IFNULL(CCHAR9,'Yes')
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, IFNULL(CCHAR255,'Yes') from datatypetestm order by cidx;
+cidx	CCHAR255	IFNULL(CCHAR255,'Yes')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, IFNULL(CVCHAR1,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR1	IFNULL(CVCHAR1,'Yes')
+1	a	a
+select cidx, CVCHAR2, IFNULL(CVCHAR2,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR2	IFNULL(CVCHAR2,'Yes')
+1	aa	aa
+select cidx, CVCHAR3, IFNULL(CVCHAR3,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR3	IFNULL(CVCHAR3,'Yes')
+1	aaa	aaa
+select cidx, CVCHAR4, IFNULL(CVCHAR4,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR4	IFNULL(CVCHAR4,'Yes')
+1	aaaa	aaaa
+select cidx, CVCHAR5, IFNULL(CVCHAR5,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR5	IFNULL(CVCHAR5,'Yes')
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, IFNULL(CVCHAR6,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR6	IFNULL(CVCHAR6,'Yes')
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, IFNULL(CVCHAR7,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR7	IFNULL(CVCHAR7,'Yes')
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, IFNULL(CVCHAR8,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR8	IFNULL(CVCHAR8,'Yes')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, IFNULL(CVCHAR255,'Yes') from datatypetestm order by cidx;
+cidx	CVCHAR255	IFNULL(CVCHAR255,'Yes')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, IFNULL(concat(cchar1,'aloha'),'Yes') from datatypetestm order by cidx;
+cidx	IFNULL(concat(cchar1,'aloha'),'Yes')
+1	aaloha
+select cidx, IFNULL(concat(cchar1,'mahalo'),'Yes') from datatypetestm order by cidx;
+cidx	IFNULL(concat(cchar1,'mahalo'),'Yes')
+1	amahalo
+select cidx, IFNULL(NULL,'Yes') from datatypetestm order by cidx;
+cidx	IFNULL(NULL,'Yes')
+1	Yes
+select cidx, CCHAR1 from datatypetestm where IFNULL(CCHAR1,'Yes') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where IFNULL(CCHAR2,'Yes') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where IFNULL(CCHAR3,'Yes') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where IFNULL(CCHAR4,'Yes') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where IFNULL(CCHAR5,'Yes') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where IFNULL(CCHAR6,'Yes') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where IFNULL(CCHAR7,'Yes') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where IFNULL(CCHAR8,'Yes') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where IFNULL(CCHAR9,'Yes') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where IFNULL(CCHAR255,'Yes') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where IFNULL(CVCHAR1,'Yes') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where IFNULL(CVCHAR2,'Yes') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where IFNULL(CVCHAR3,'Yes') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where IFNULL(CVCHAR4,'Yes') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where IFNULL(CVCHAR5,'Yes') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where IFNULL(CVCHAR6,'Yes') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where IFNULL(CVCHAR7,'Yes') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where IFNULL(CVCHAR8,'Yes') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where IFNULL(CVCHAR255,'Yes') <> 0 order by cidx;
+cidx	CVCHAR255

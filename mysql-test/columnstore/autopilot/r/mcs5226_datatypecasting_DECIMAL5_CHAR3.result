@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CCHAR3 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 > dtt2.CCHAR3 ;
+cidx	CDECIMAL5	CCHAR3
+6	995	xxx
+7	996	xxx
+8	997	xxx
+9	998	xxx
+10	999	zzz
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CCHAR3 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 >= dtt2.CCHAR3 ;
+cidx	CDECIMAL5	CCHAR3
+6	995	xxx
+7	996	xxx
+8	997	xxx
+9	998	xxx
+10	999	zzz
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CCHAR3 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 <> dtt2.CCHAR3 ;
+cidx	CDECIMAL5	CCHAR3
+1	-999	aaa
+2	-998	c
+3	-997	cc
+4	-996	ccc
+5	-995	ccc
+6	995	xxx
+7	996	xxx
+8	997	xxx
+9	998	xxx
+10	999	zzz
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CCHAR3 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 < dtt2.CCHAR3 ;
+cidx	CDECIMAL5	CCHAR3
+1	-999	aaa
+2	-998	c
+3	-997	cc
+4	-996	ccc
+5	-995	ccc
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CCHAR3 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 <= dtt2.CCHAR3 ;
+cidx	CDECIMAL5	CCHAR3
+1	-999	aaa
+2	-998	c
+3	-997	cc
+4	-996	ccc
+5	-995	ccc

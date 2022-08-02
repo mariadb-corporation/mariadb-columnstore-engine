@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE > dtt2.CDECIMAL5 ;
+cidx	CDOUBLE	CDECIMAL5
+6	1.797693227e108	995
+7	1.797693228e108	996
+8	1.797693229e108	997
+9	1.79769323e108	998
+10	1.797693231e108	999
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE >= dtt2.CDECIMAL5 ;
+cidx	CDOUBLE	CDECIMAL5
+6	1.797693227e108	995
+7	1.797693228e108	996
+8	1.797693229e108	997
+9	1.79769323e108	998
+10	1.797693231e108	999
+11	0	0
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <> dtt2.CDECIMAL5 ;
+cidx	CDOUBLE	CDECIMAL5
+1	-1.797693231e108	-999
+2	-1.79769323e108	-998
+3	-1.797693229e108	-997
+4	-1.797693228e108	-996
+5	-1.797693227e108	-995
+6	1.797693227e108	995
+7	1.797693228e108	996
+8	1.797693229e108	997
+9	1.79769323e108	998
+10	1.797693231e108	999
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE < dtt2.CDECIMAL5 ;
+cidx	CDOUBLE	CDECIMAL5
+1	-1.797693231e108	-999
+2	-1.79769323e108	-998
+3	-1.797693229e108	-997
+4	-1.797693228e108	-996
+5	-1.797693227e108	-995
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <= dtt2.CDECIMAL5 ;
+cidx	CDOUBLE	CDECIMAL5
+1	-1.797693231e108	-999
+2	-1.79769323e108	-998
+3	-1.797693229e108	-997
+4	-1.797693228e108	-996
+5	-1.797693227e108	-995
+11	0	0

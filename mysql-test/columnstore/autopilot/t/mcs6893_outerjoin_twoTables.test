@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot outer join test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE outerjoin;
+#
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n left join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n right join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+#
+# with filter on join keys
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n join region r on n.n_regionkey = r.r_regionkey where r.r_regionkey <> 3 order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n left join  region r on n.n_regionkey = r.r_regionkey where r.r_regionkey <> 3 order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n left join  region r on n.n_regionkey = r.r_regionkey where n.n_regionkey <> 3 order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n right join region r on n.n_regionkey = r.r_regionkey where r.r_regionkey <> 3 order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n right join region r on n.n_regionkey = r.r_regionkey where n.n_regionkey <> 3 order by 1, 2, 3, 4, 5, 6, 7, 8;
+#
+# with filter on join keys in subquery
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n join (select * from region where r_regionkey <> 3) r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n left  join (select * from region where r_regionkey <> 3) r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n right join (select * from region where r_regionkey <> 3) r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from (select * from nation where n_regionkey <> 3) n left  join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from (select * from nation where n_regionkey <> 3) n right join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+#
+# with filter on non-join-keys column in subquery
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n join (select * from region where r_name <> 'EUROPE') r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n left  join (select * from region where r_name <> 'EUROPE') r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from nation n right join (select * from region where r_name <> 'EUROPE') r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from (select * from nation where n_name <> 'IRAN') n left  join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+select n.n_regionkey nn, r.r_regionkey rr, n.*, r.* from (select * from nation where n_name <> 'IRAN') n right join region r on n.n_regionkey = r.r_regionkey order by 1, 2, 3, 4, 5, 6, 7, 8;
+#
+#Do a semi-join test to make sure nothing broke
+select r.* from region r where exists (select null from nation n where n.n_regionkey = r.r_regionkey) order by 1, 2, 3;
+select r.* from region r where exists (select null from nation n where n.n_regionkey = r.r_regionkey and n.n_nationkey < 4) order by 1, 2, 3;
+#
+#Do a anti-join test to make sure nothing broke
+select r.* from region r where not exists (select null from nation n where n.n_regionkey = r.r_regionkey) order by 1, 2, 3;
+select r.* from region r where not exists (select null from nation n where n.n_regionkey = r.r_regionkey and n.n_nationkey < 4) order by 1, 2, 3;
+#

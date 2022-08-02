@@ -1,0 +1,110 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select cidx, CDATE, REPEAT(CDATE,0) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,0)
+1	1997-01-01	NULL
+select cidx, CDATE, REPEAT(CDATE,1) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,1)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, REPEAT(CDATE,5) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,5)
+1	1997-01-01	1997-01-011997-01-011997-01-011997-01-011997-01-01
+select cidx, CDATE, REPEAT(CDATE,NULL) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,NULL)
+1	1997-01-01	NULL
+select cidx, CDATE, REPEAT(CDATE,-1) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,-1)
+1	1997-01-01	NULL
+select cidx, CDATE, REPEAT(CDATE,-5) from datatypetestm order by cidx;
+cidx	CDATE	REPEAT(CDATE,-5)
+1	1997-01-01	NULL
+select cidx, CDATETIME, REPEAT(CDATETIME,0) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,0)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, REPEAT(CDATETIME,1) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,1)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, REPEAT(CDATETIME,5) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,5)
+1	1997-01-01 00:00:00	1997-01-01 00:00:001997-01-01 00:00:001997-01-01 00:00:001997-01-01 00:00:001997-01-01 00:00:00
+select cidx, CDATETIME, REPEAT(CDATETIME,NULL) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,NULL)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, REPEAT(CDATETIME,-1) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,-1)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, REPEAT(CDATETIME,-5) from datatypetestm order by cidx;
+cidx	CDATETIME	REPEAT(CDATETIME,-5)
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, REPEAT(CTIME,0) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,0)
+1	13:00:00	NULL
+select cidx, CTIME, REPEAT(CTIME,1) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,1)
+1	13:00:00	13:00:00
+select cidx, CTIME, REPEAT(CTIME,5) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,5)
+1	13:00:00	13:00:0013:00:0013:00:0013:00:0013:00:00
+select cidx, CTIME, REPEAT(CTIME,NULL) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,NULL)
+1	13:00:00	NULL
+select cidx, CTIME, REPEAT(CTIME,-1) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,-1)
+1	13:00:00	NULL
+select cidx, CTIME, REPEAT(CTIME,-5) from datatypetestm order by cidx;
+cidx	CTIME	REPEAT(CTIME,-5)
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,0), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,1), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,5), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,NULL), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,-1), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by REPEAT(CDATE,-5), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,0), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,1), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,5), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,NULL), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,-1), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by REPEAT(CDATETIME,-5), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,0), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,1), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,5), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,NULL), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,-1), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by REPEAT(CTIME,-5), cidx;
+cidx	CTIME
+1	13:00:00

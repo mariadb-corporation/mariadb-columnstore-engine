@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=8192;
+select cidx, CBIGINT, HEX(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, HEX(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, HEX(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, HEX(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, HEX(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, HEX(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, HEX(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, HEX(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, HEX(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, HEX(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, HEX(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, HEX(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, HEX(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, HEX(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, HEX(CFLOAT) from datatypetestm order by cidx;
+select cidx, HEX(32) from datatypetestm order by cidx;
+select cidx, HEX(00) from datatypetestm order by cidx;
+select cidx, HEX(75) from datatypetestm order by cidx;
+select cidx, HEX(255) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by HEX(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by HEX(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by HEX(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by HEX(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by HEX(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by HEX(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by HEX(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by HEX(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by HEX(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by HEX(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by HEX(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by HEX(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by HEX(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by HEX(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by HEX(CFLOAT), cidx;

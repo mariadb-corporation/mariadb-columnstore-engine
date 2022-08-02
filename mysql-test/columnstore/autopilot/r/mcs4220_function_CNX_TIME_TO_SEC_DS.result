@@ -1,0 +1,28 @@
+USE autopilot;
+select cidx, CDATE, TIME_TO_SEC(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	TIME_TO_SEC(CDATE)
+1	1997-01-01	0
+select cidx, CDATETIME, TIME_TO_SEC(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	TIME_TO_SEC(CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CTIME, TIME_TO_SEC(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	TIME_TO_SEC(CTIME)
+1	13:00:00	46800
+select cidx, TIME_TO_SEC('22:23:00') from datatypetestm order by cidx;
+cidx	TIME_TO_SEC('22:23:00')
+1	80580
+select cidx, TIME_TO_SEC('00:39:38') from datatypetestm order by cidx;
+cidx	TIME_TO_SEC('00:39:38')
+1	2378
+select cidx, TIME_TO_SEC('22:23:49 999999') from datatypetestm order by cidx;
+cidx	TIME_TO_SEC('22:23:49 999999')
+1	NULL
+Warnings:
+Warning	1292	Incorrect time value: '22:23:49 999999'
+select cidx, CDATE from datatypetestm where TIME_TO_SEC(CDATE) <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where TIME_TO_SEC(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where TIME_TO_SEC(CTIME) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

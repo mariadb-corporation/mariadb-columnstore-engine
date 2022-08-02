@@ -1,0 +1,31 @@
+USE autopilot;
+select cidx, CDATE, DATEDIFF(CDATE,'2007-02-28') from datatypetestm order by cidx;
+cidx	CDATE	DATEDIFF(CDATE,'2007-02-28')
+1	1997-01-01	-3710
+select cidx, CDATE, DATEDIFF(CDATE,'2007-07-04') from datatypetestm order by cidx;
+cidx	CDATE	DATEDIFF(CDATE,'2007-07-04')
+1	1997-01-01	-3836
+select cidx, CDATETIME, DATEDIFF(CDATETIME,'2007-02-28') from datatypetestm order by cidx;
+cidx	CDATETIME	DATEDIFF(CDATETIME,'2007-02-28')
+1	1997-01-01 00:00:00	-3710
+select cidx, CDATETIME, DATEDIFF(CDATETIME,'2007-07-04') from datatypetestm order by cidx;
+cidx	CDATETIME	DATEDIFF(CDATETIME,'2007-07-04')
+1	1997-01-01 00:00:00	-3836
+select cidx, CTIME, DATEDIFF(CTIME,'2007-02-28') from datatypetestm order by cidx;
+cidx	CTIME	DATEDIFF(CTIME,'2007-02-28')
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, DATEDIFF(CTIME,'2007-07-04') from datatypetestm order by cidx;
+cidx	CTIME	DATEDIFF(CTIME,'2007-07-04')
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm where DATEDIFF(CDATE,'2007-02-28') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where DATEDIFF(CDATE,'2007-07-04') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where DATEDIFF(CDATETIME,'2007-02-28') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where DATEDIFF(CDATETIME,'2007-07-04') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

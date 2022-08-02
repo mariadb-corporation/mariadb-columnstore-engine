@@ -1,0 +1,100 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, CONCAT_WS('-',CBIGINT,CCHAR3) from datatypetestm order by cidx;
+select cidx, CBIGINT, CONCAT_WS('-',CBIGINT,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CBIGINT, CONCAT_WS('-',CBIGINT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONCAT_WS('-',CDECIMAL1,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONCAT_WS('-',CDECIMAL1,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONCAT_WS('-',CDECIMAL1,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONCAT_WS('-',CDECIMAL4,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONCAT_WS('-',CDECIMAL4,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONCAT_WS('-',CDECIMAL4,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONCAT_WS('-',CDECIMAL4_2,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONCAT_WS('-',CDECIMAL4_2,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONCAT_WS('-',CDECIMAL4_2,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONCAT_WS('-',CDECIMAL5,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONCAT_WS('-',CDECIMAL5,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONCAT_WS('-',CDECIMAL5,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONCAT_WS('-',CDECIMAL9,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONCAT_WS('-',CDECIMAL9,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONCAT_WS('-',CDECIMAL9,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONCAT_WS('-',CDECIMAL9_2,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONCAT_WS('-',CDECIMAL9_2,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONCAT_WS('-',CDECIMAL9_2,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONCAT_WS('-',CDECIMAL10,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONCAT_WS('-',CDECIMAL10,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONCAT_WS('-',CDECIMAL10,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONCAT_WS('-',CDECIMAL18,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONCAT_WS('-',CDECIMAL18,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONCAT_WS('-',CDECIMAL18,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONCAT_WS('-',CDECIMAL18_2,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONCAT_WS('-',CDECIMAL18_2,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONCAT_WS('-',CDECIMAL18_2,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CINTEGER, CONCAT_WS('-',CINTEGER,CCHAR3) from datatypetestm order by cidx;
+select cidx, CINTEGER, CONCAT_WS('-',CINTEGER,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CINTEGER, CONCAT_WS('-',CINTEGER,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONCAT_WS('-',CSMALLINT,CCHAR3) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONCAT_WS('-',CSMALLINT,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONCAT_WS('-',CSMALLINT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CTINYINT, CONCAT_WS('-',CTINYINT,CCHAR3) from datatypetestm order by cidx;
+select cidx, CTINYINT, CONCAT_WS('-',CTINYINT,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CTINYINT, CONCAT_WS('-',CTINYINT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONCAT_WS('-',CDOUBLE,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONCAT_WS('-',CDOUBLE,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONCAT_WS('-',CDOUBLE,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CFLOAT, CONCAT_WS('-',CFLOAT,CCHAR3) from datatypetestm order by cidx;
+select cidx, CFLOAT, CONCAT_WS('-',CFLOAT,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CFLOAT, CONCAT_WS('-',CFLOAT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by CONCAT_WS('-',CBIGINT,CCHAR3), cidx;
+select cidx, CBIGINT from datatypetestm order by CONCAT_WS('-',CBIGINT,CCHAR3,CCHAR7), cidx;
+select cidx, CBIGINT from datatypetestm order by CONCAT_WS('-',CBIGINT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT_WS('-',CDECIMAL1,CCHAR3), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT_WS('-',CDECIMAL1,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT_WS('-',CDECIMAL1,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT_WS('-',CDECIMAL4,CCHAR3), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT_WS('-',CDECIMAL4,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT_WS('-',CDECIMAL4,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL4_2,CCHAR3), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL4_2,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL4_2,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT_WS('-',CDECIMAL5,CCHAR3), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT_WS('-',CDECIMAL5,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT_WS('-',CDECIMAL5,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT_WS('-',CDECIMAL9,CCHAR3), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT_WS('-',CDECIMAL9,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT_WS('-',CDECIMAL9,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL9_2,CCHAR3), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL9_2,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL9_2,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT_WS('-',CDECIMAL10,CCHAR3), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT_WS('-',CDECIMAL10,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT_WS('-',CDECIMAL10,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT_WS('-',CDECIMAL18,CCHAR3), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT_WS('-',CDECIMAL18,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT_WS('-',CDECIMAL18,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL18_2,CCHAR3), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL18_2,CCHAR3,CCHAR7), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT_WS('-',CDECIMAL18_2,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CINTEGER from datatypetestm order by CONCAT_WS('-',CINTEGER,CCHAR3), cidx;
+select cidx, CINTEGER from datatypetestm order by CONCAT_WS('-',CINTEGER,CCHAR3,CCHAR7), cidx;
+select cidx, CINTEGER from datatypetestm order by CONCAT_WS('-',CINTEGER,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CSMALLINT from datatypetestm order by CONCAT_WS('-',CSMALLINT,CCHAR3), cidx;
+select cidx, CSMALLINT from datatypetestm order by CONCAT_WS('-',CSMALLINT,CCHAR3,CCHAR7), cidx;
+select cidx, CSMALLINT from datatypetestm order by CONCAT_WS('-',CSMALLINT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CTINYINT from datatypetestm order by CONCAT_WS('-',CTINYINT,CCHAR3), cidx;
+select cidx, CTINYINT from datatypetestm order by CONCAT_WS('-',CTINYINT,CCHAR3,CCHAR7), cidx;
+select cidx, CTINYINT from datatypetestm order by CONCAT_WS('-',CTINYINT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDOUBLE from datatypetestm order by CONCAT_WS('-',CDOUBLE,CCHAR3), cidx;
+select cidx, CDOUBLE from datatypetestm order by CONCAT_WS('-',CDOUBLE,CCHAR3,CCHAR7), cidx;
+select cidx, CDOUBLE from datatypetestm order by CONCAT_WS('-',CDOUBLE,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CFLOAT from datatypetestm order by CONCAT_WS('-',CFLOAT,CCHAR3), cidx;
+select cidx, CFLOAT from datatypetestm order by CONCAT_WS('-',CFLOAT,CCHAR3,CCHAR7), cidx;
+select cidx, CFLOAT from datatypetestm order by CONCAT_WS('-',CFLOAT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;

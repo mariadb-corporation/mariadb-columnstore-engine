@@ -1,0 +1,76 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, NULLIF(CDATE,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CCHAR4) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CCHAR9) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CVCHAR4) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CVCHAR8) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CINTEGER) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CDOUBLE) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,NULL) from datatypetestm order by cidx;
+select cidx, CDATE, NULLIF(CDATE,'Hello world') from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CCHAR4) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CCHAR9) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CVCHAR4) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CVCHAR8) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CINTEGER) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CDOUBLE) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, NULLIF(CDATETIME,'Hello world') from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CDATE) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CCHAR4) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CCHAR9) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CVCHAR4) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CVCHAR8) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CINTEGER) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CDOUBLE) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,NULL) from datatypetestm order by cidx;
+select cidx, CTIME, NULLIF(CTIME,'Hello world') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDATETIME), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CCHAR4), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CCHAR9), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CVCHAR4), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CVCHAR8), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CINTEGER), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDOUBLE), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDECIMAL9_2), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,NULL), cidx;
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,'Hello world'), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CCHAR4), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CCHAR9), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CVCHAR4), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CVCHAR8), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CINTEGER), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDOUBLE), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDECIMAL9_2), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,NULL), cidx;
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,'Hello world'), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDATE), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CCHAR4), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CCHAR9), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CVCHAR4), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CVCHAR8), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CINTEGER), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDOUBLE), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDECIMAL9_2), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,NULL), cidx;
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,'Hello world'), cidx;

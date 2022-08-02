@@ -1,0 +1,82 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LEAST(CTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+cidx	CTEXT	LEAST(CTEXT,CCHAR3,CCHAR7,'MAHALO')
+1	texttexttext	aaa
+select cidx, CTEXT, LEAST(CTEXT,CCHAR3) from datatypetestm ;
+cidx	CTEXT	LEAST(CTEXT,CCHAR3)
+1	texttexttext	aaa
+select cidx, CTEXT, LEAST(CTEXT,CCHAR7) from datatypetestm ;
+cidx	CTEXT	LEAST(CTEXT,CCHAR7)
+1	texttexttext	aaaaaaa
+select cidx, CTEXT, LEAST(CTEXT,'MAHALO') from datatypetestm ;
+cidx	CTEXT	LEAST(CTEXT,'MAHALO')
+1	texttexttext	MAHALO
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+cidx	CTINYTEXT	LEAST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO')
+1	tinytext	aaa
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR3) from datatypetestm ;
+cidx	CTINYTEXT	LEAST(CTINYTEXT,CCHAR3)
+1	tinytext	aaa
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR7) from datatypetestm ;
+cidx	CTINYTEXT	LEAST(CTINYTEXT,CCHAR7)
+1	tinytext	aaaaaaa
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,'MAHALO') from datatypetestm ;
+cidx	CTINYTEXT	LEAST(CTINYTEXT,'MAHALO')
+1	tinytext	MAHALO
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+cidx	CMEDIUMTEXT	LEAST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO')
+1	mediumtestmediumtest	aaa
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+cidx	CMEDIUMTEXT	LEAST(CMEDIUMTEXT,CCHAR3)
+1	mediumtestmediumtest	aaa
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR7) from datatypetestm ;
+cidx	CMEDIUMTEXT	LEAST(CMEDIUMTEXT,CCHAR7)
+1	mediumtestmediumtest	aaaaaaa
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,'MAHALO') from datatypetestm ;
+cidx	CMEDIUMTEXT	LEAST(CMEDIUMTEXT,'MAHALO')
+1	mediumtestmediumtest	MAHALO
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+cidx	CLONGTEXT	LEAST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO')
+1	longtextlongtextlongtext	aaa
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR3) from datatypetestm ;
+cidx	CLONGTEXT	LEAST(CLONGTEXT,CCHAR3)
+1	longtextlongtextlongtext	aaa
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR7) from datatypetestm ;
+cidx	CLONGTEXT	LEAST(CLONGTEXT,CCHAR7)
+1	longtextlongtextlongtext	aaaaaaa
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,'MAHALO') from datatypetestm ;
+cidx	CLONGTEXT	LEAST(CLONGTEXT,'MAHALO')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR3) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR7) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,'MAHALO') <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR7) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,'MAHALO') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR7) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,'MAHALO') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR3) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR7) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,'MAHALO') <> 0 ;
+cidx	CLONGTEXT

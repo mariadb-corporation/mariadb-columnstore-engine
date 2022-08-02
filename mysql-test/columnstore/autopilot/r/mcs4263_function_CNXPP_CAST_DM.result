@@ -1,0 +1,31 @@
+USE autopilot;
+select cidx, CDATE, CAST(CDATE AS DATE) from datatypetestm order by cidx;
+cidx	CDATE	CAST(CDATE AS DATE)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, CAST(CDATE AS DATETIME) from datatypetestm order by cidx;
+cidx	CDATE	CAST(CDATE AS DATETIME)
+1	1997-01-01	1997-01-01 00:00:00
+select cidx, CDATETIME, CAST(CDATETIME AS DATE) from datatypetestm order by cidx;
+cidx	CDATETIME	CAST(CDATETIME AS DATE)
+1	1997-01-01 00:00:00	1997-01-01
+select cidx, CDATETIME, CAST(CDATETIME AS DATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	CAST(CDATETIME AS DATETIME)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, CAST(CTIME AS DATE) from datatypetestm order by cidx;
+cidx	CTIME	CAST(CTIME AS DATE)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, CAST(CTIME AS DATETIME) from datatypetestm order by cidx;
+cidx	CTIME	CAST(CTIME AS DATETIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm order by CAST(CDATE AS DATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by CAST(CDATE AS DATETIME), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by CAST(CDATETIME AS DATE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by CAST(CDATETIME AS DATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

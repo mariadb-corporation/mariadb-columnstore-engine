@@ -1,0 +1,74 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CASE WHEN CTEXT='aaaa' THEN 'Y' WHEN CTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTEXT	CaseCol
+1	texttexttext	NULL
+select cidx, CTEXT, CASE WHEN CTEXT='a' THEN 'Y' WHEN CTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTEXT	CaseCol
+1	texttexttext	NULL
+select cidx, CTEXT, CASE WHEN CTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTEXT	CaseCol
+1	texttexttext	NULL
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='aaaa' THEN 'Y' WHEN CTINYTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTINYTEXT	CaseCol
+1	tinytext	NULL
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='a' THEN 'Y' WHEN CTINYTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTINYTEXT	CaseCol
+1	tinytext	NULL
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CTINYTEXT	CaseCol
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='aaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CMEDIUMTEXT	CaseCol
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='a' THEN 'Y' WHEN CMEDIUMTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CMEDIUMTEXT	CaseCol
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CMEDIUMTEXT	CaseCol
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='aaaa' THEN 'Y' WHEN CLONGTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CLONGTEXT	CaseCol
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='a' THEN 'Y' WHEN CLONGTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CLONGTEXT	CaseCol
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+cidx	CLONGTEXT	CaseCol
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm order by CASE WHEN CTEXT='aaaa' THEN 'Y' WHEN CTEXT='aaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by CASE WHEN CTEXT='a' THEN 'Y' WHEN CTEXT='a' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by CASE WHEN CTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by CASE WHEN CTINYTEXT='aaaa' THEN 'Y' WHEN CTINYTEXT='aaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by CASE WHEN CTINYTEXT='a' THEN 'Y' WHEN CTINYTEXT='a' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by CASE WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by CASE WHEN CMEDIUMTEXT='aaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by CASE WHEN CMEDIUMTEXT='a' THEN 'Y' WHEN CMEDIUMTEXT='a' THEN 'Y' ELSE NULL END, cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by CASE WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by CASE WHEN CLONGTEXT='aaaa' THEN 'Y' WHEN CLONGTEXT='aaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by CASE WHEN CLONGTEXT='a' THEN 'Y' WHEN CLONGTEXT='a' THEN 'Y' ELSE NULL END, cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by CASE WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END, cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

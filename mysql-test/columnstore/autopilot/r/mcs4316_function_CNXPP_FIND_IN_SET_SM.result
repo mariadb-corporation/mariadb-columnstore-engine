@@ -1,0 +1,685 @@
+USE autopilot;
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'a,3')
+1	a	1
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'b,2')
+1	a	0
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'z,5')
+1	a	0
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'a,-3')
+1	a	1
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'b,-2')
+1	a	0
+select cidx, CCHAR1, FIND_IN_SET(CCHAR1,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR1	FIND_IN_SET(CCHAR1,'z,-5')
+1	a	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'a,3')
+1	aa	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'b,2')
+1	aa	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'z,5')
+1	aa	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'a,-3')
+1	aa	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'b,-2')
+1	aa	0
+select cidx, CCHAR2, FIND_IN_SET(CCHAR2,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR2	FIND_IN_SET(CCHAR2,'z,-5')
+1	aa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'a,3')
+1	aaa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'b,2')
+1	aaa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'z,5')
+1	aaa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'a,-3')
+1	aaa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'b,-2')
+1	aaa	0
+select cidx, CCHAR3, FIND_IN_SET(CCHAR3,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR3	FIND_IN_SET(CCHAR3,'z,-5')
+1	aaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'a,3')
+1	aaaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'b,2')
+1	aaaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'z,5')
+1	aaaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'a,-3')
+1	aaaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'b,-2')
+1	aaaa	0
+select cidx, CCHAR4, FIND_IN_SET(CCHAR4,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR4	FIND_IN_SET(CCHAR4,'z,-5')
+1	aaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'a,3')
+1	aaaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'b,2')
+1	aaaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'z,5')
+1	aaaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'a,-3')
+1	aaaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'b,-2')
+1	aaaaa	0
+select cidx, CCHAR5, FIND_IN_SET(CCHAR5,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR5	FIND_IN_SET(CCHAR5,'z,-5')
+1	aaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'a,3')
+1	aaaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'b,2')
+1	aaaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'z,5')
+1	aaaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'a,-3')
+1	aaaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'b,-2')
+1	aaaaaa	0
+select cidx, CCHAR6, FIND_IN_SET(CCHAR6,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR6	FIND_IN_SET(CCHAR6,'z,-5')
+1	aaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'a,3')
+1	aaaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'b,2')
+1	aaaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'z,5')
+1	aaaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'a,-3')
+1	aaaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'b,-2')
+1	aaaaaaa	0
+select cidx, CCHAR7, FIND_IN_SET(CCHAR7,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR7	FIND_IN_SET(CCHAR7,'z,-5')
+1	aaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'a,3')
+1	aaaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'b,2')
+1	aaaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'z,5')
+1	aaaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'a,-3')
+1	aaaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'b,-2')
+1	aaaaaaaa	0
+select cidx, CCHAR8, FIND_IN_SET(CCHAR8,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR8	FIND_IN_SET(CCHAR8,'z,-5')
+1	aaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'a,3')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'b,2')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'z,5')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'a,-3')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'b,-2')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, FIND_IN_SET(CCHAR9,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR9	FIND_IN_SET(CCHAR9,'z,-5')
+1	aaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'a,3') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'a,3')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'b,2') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'b,2')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'z,5') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'z,5')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'a,-3') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'a,-3')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'b,-2') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'b,-2')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, FIND_IN_SET(CCHAR255,'z,-5') from datatypetestm order by cidx;
+cidx	CCHAR255	FIND_IN_SET(CCHAR255,'z,-5')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'a,3')
+1	a	1
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'b,2')
+1	a	0
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'z,5')
+1	a	0
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'a,-3')
+1	a	1
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'b,-2')
+1	a	0
+select cidx, CVCHAR1, FIND_IN_SET(CVCHAR1,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR1	FIND_IN_SET(CVCHAR1,'z,-5')
+1	a	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'a,3')
+1	aa	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'b,2')
+1	aa	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'z,5')
+1	aa	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'a,-3')
+1	aa	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'b,-2')
+1	aa	0
+select cidx, CVCHAR2, FIND_IN_SET(CVCHAR2,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR2	FIND_IN_SET(CVCHAR2,'z,-5')
+1	aa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'a,3')
+1	aaa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'b,2')
+1	aaa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'z,5')
+1	aaa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'a,-3')
+1	aaa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'b,-2')
+1	aaa	0
+select cidx, CVCHAR3, FIND_IN_SET(CVCHAR3,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR3	FIND_IN_SET(CVCHAR3,'z,-5')
+1	aaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'a,3')
+1	aaaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'b,2')
+1	aaaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'z,5')
+1	aaaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'a,-3')
+1	aaaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'b,-2')
+1	aaaa	0
+select cidx, CVCHAR4, FIND_IN_SET(CVCHAR4,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR4	FIND_IN_SET(CVCHAR4,'z,-5')
+1	aaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'a,3')
+1	aaaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'b,2')
+1	aaaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'z,5')
+1	aaaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'a,-3')
+1	aaaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'b,-2')
+1	aaaaa	0
+select cidx, CVCHAR5, FIND_IN_SET(CVCHAR5,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR5	FIND_IN_SET(CVCHAR5,'z,-5')
+1	aaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'a,3')
+1	aaaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'b,2')
+1	aaaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'z,5')
+1	aaaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'a,-3')
+1	aaaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'b,-2')
+1	aaaaaa	0
+select cidx, CVCHAR6, FIND_IN_SET(CVCHAR6,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR6	FIND_IN_SET(CVCHAR6,'z,-5')
+1	aaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'a,3')
+1	aaaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'b,2')
+1	aaaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'z,5')
+1	aaaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'a,-3')
+1	aaaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'b,-2')
+1	aaaaaaa	0
+select cidx, CVCHAR7, FIND_IN_SET(CVCHAR7,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR7	FIND_IN_SET(CVCHAR7,'z,-5')
+1	aaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'a,3')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'b,2')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'z,5')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'a,-3')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'b,-2')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, FIND_IN_SET(CVCHAR8,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR8	FIND_IN_SET(CVCHAR8,'z,-5')
+1	aaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'a,3') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'a,3')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'b,2') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'b,2')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'z,5') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'z,5')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'a,-3') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'a,-3')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'b,-2') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'b,-2')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, FIND_IN_SET(CVCHAR255,'z,-5') from datatypetestm order by cidx;
+cidx	CVCHAR255	FIND_IN_SET(CVCHAR255,'z,-5')
+1	aaaaaaaaaa	0
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'a,3'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'b,2'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'z,5'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'a,-3'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'b,-2'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by FIND_IN_SET(CCHAR1,'z,-5'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'a,3'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'b,2'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'z,5'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'a,-3'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'b,-2'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by FIND_IN_SET(CCHAR2,'z,-5'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'a,3'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'b,2'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'z,5'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'a,-3'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'b,-2'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by FIND_IN_SET(CCHAR3,'z,-5'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'a,3'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'b,2'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'z,5'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'a,-3'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'b,-2'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by FIND_IN_SET(CCHAR4,'z,-5'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'a,3'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'b,2'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'z,5'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'a,-3'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'b,-2'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by FIND_IN_SET(CCHAR5,'z,-5'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'a,3'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'b,2'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'z,5'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'a,-3'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'b,-2'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by FIND_IN_SET(CCHAR6,'z,-5'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'a,3'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'b,2'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'z,5'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'a,-3'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'b,-2'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by FIND_IN_SET(CCHAR7,'z,-5'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'a,3'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'b,2'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'z,5'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'a,-3'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'b,-2'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by FIND_IN_SET(CCHAR8,'z,-5'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'a,3'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'b,2'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'z,5'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'a,-3'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'b,-2'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by FIND_IN_SET(CCHAR9,'z,-5'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'a,3'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'b,2'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'z,5'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'a,-3'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'b,-2'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by FIND_IN_SET(CCHAR255,'z,-5'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'a,3'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'b,2'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'z,5'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'a,-3'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'b,-2'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by FIND_IN_SET(CVCHAR1,'z,-5'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'a,3'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'b,2'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'z,5'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'a,-3'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'b,-2'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by FIND_IN_SET(CVCHAR2,'z,-5'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'a,3'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'b,2'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'z,5'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'a,-3'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'b,-2'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by FIND_IN_SET(CVCHAR3,'z,-5'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'a,3'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'b,2'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'z,5'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'a,-3'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'b,-2'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by FIND_IN_SET(CVCHAR4,'z,-5'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'a,3'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'b,2'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'z,5'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'a,-3'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'b,-2'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by FIND_IN_SET(CVCHAR5,'z,-5'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'a,3'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'b,2'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'z,5'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'a,-3'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'b,-2'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by FIND_IN_SET(CVCHAR6,'z,-5'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'a,3'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'b,2'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'z,5'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'a,-3'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'b,-2'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by FIND_IN_SET(CVCHAR7,'z,-5'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'a,3'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'b,2'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'z,5'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'a,-3'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'b,-2'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by FIND_IN_SET(CVCHAR8,'z,-5'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'a,3'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'b,2'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'z,5'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'a,-3'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'b,-2'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by FIND_IN_SET(CVCHAR255,'z,-5'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 > dtt2.CTINYTEXT ;
+cidx	CDECIMAL9	CTINYTEXT
+6	999995	tinytext
+7	999996	tinytext
+8	999997	tinytext
+9	999998	tinytext
+10	999999	tinytext
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 >= dtt2.CTINYTEXT ;
+cidx	CDECIMAL9	CTINYTEXT
+6	999995	tinytext
+7	999996	tinytext
+8	999997	tinytext
+9	999998	tinytext
+10	999999	tinytext
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 <> dtt2.CTINYTEXT ;
+cidx	CDECIMAL9	CTINYTEXT
+1	-999999	tinytext
+2	-999998	tinytext
+3	-999997	tinytext
+4	-999996	tinytext
+5	-999995	tinytext
+6	999995	tinytext
+7	999996	tinytext
+8	999997	tinytext
+9	999998	tinytext
+10	999999	tinytext
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 < dtt2.CTINYTEXT ;
+cidx	CDECIMAL9	CTINYTEXT
+1	-999999	tinytext
+2	-999998	tinytext
+3	-999997	tinytext
+4	-999996	tinytext
+5	-999995	tinytext
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 <= dtt2.CTINYTEXT ;
+cidx	CDECIMAL9	CTINYTEXT
+1	-999999	tinytext
+2	-999998	tinytext
+3	-999997	tinytext
+4	-999996	tinytext
+5	-999995	tinytext

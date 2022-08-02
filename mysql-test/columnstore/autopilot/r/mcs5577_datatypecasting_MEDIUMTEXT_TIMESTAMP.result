@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CTIMESTAMP ;
+cidx	CMEDIUMTEXT	CTIMESTAMP
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CTIMESTAMP ;
+cidx	CMEDIUMTEXT	CTIMESTAMP
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CTIMESTAMP ;
+cidx	CMEDIUMTEXT	CTIMESTAMP
+1	mediumtestmediumtest	2020-08-13 03:14:07
+2	mediumtestmediumtest	2020-08-13 03:14:07
+3	mediumtestmediumtest	2020-08-13 03:14:07
+4	mediumtestmediumtest	2020-08-13 03:14:07
+5	mediumtestmediumtest	2020-08-13 03:14:07
+6	mediumtestmediumtest	2020-08-13 03:14:07
+7	mediumtestmediumtest	2020-08-13 03:14:07
+8	mediumtestmediumtest	2020-08-13 03:14:07
+9	mediumtestmediumtest	2020-08-13 03:14:07
+10	mediumtestmediumtest	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CTIMESTAMP ;
+cidx	CMEDIUMTEXT	CTIMESTAMP
+1	mediumtestmediumtest	2020-08-13 03:14:07
+2	mediumtestmediumtest	2020-08-13 03:14:07
+3	mediumtestmediumtest	2020-08-13 03:14:07
+4	mediumtestmediumtest	2020-08-13 03:14:07
+5	mediumtestmediumtest	2020-08-13 03:14:07
+6	mediumtestmediumtest	2020-08-13 03:14:07
+7	mediumtestmediumtest	2020-08-13 03:14:07
+8	mediumtestmediumtest	2020-08-13 03:14:07
+9	mediumtestmediumtest	2020-08-13 03:14:07
+10	mediumtestmediumtest	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CTIMESTAMP ;
+cidx	CMEDIUMTEXT	CTIMESTAMP
+1	mediumtestmediumtest	2020-08-13 03:14:07
+2	mediumtestmediumtest	2020-08-13 03:14:07
+3	mediumtestmediumtest	2020-08-13 03:14:07
+4	mediumtestmediumtest	2020-08-13 03:14:07
+5	mediumtestmediumtest	2020-08-13 03:14:07
+6	mediumtestmediumtest	2020-08-13 03:14:07
+7	mediumtestmediumtest	2020-08-13 03:14:07
+8	mediumtestmediumtest	2020-08-13 03:14:07
+9	mediumtestmediumtest	2020-08-13 03:14:07
+10	mediumtestmediumtest	2020-08-13 03:14:07

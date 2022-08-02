@@ -1,0 +1,106 @@
+USE autopilot;
+select cidx, CBIGINT, FROM_DAYS(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	FROM_DAYS(CBIGINT)
+1	-72036854775806	0000-00-00
+select cidx, CDECIMAL1, FROM_DAYS(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	FROM_DAYS(CDECIMAL1)
+1	-9	0000-00-00
+select cidx, CDECIMAL4, FROM_DAYS(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	FROM_DAYS(CDECIMAL4)
+1	-999	0000-00-00
+select cidx, CDECIMAL4_2, FROM_DAYS(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	FROM_DAYS(CDECIMAL4_2)
+1	-9.99	0000-00-00
+select cidx, CDECIMAL5, FROM_DAYS(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	FROM_DAYS(CDECIMAL5)
+1	-999	0000-00-00
+select cidx, CDECIMAL9, FROM_DAYS(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	FROM_DAYS(CDECIMAL9)
+1	-999999	0000-00-00
+select cidx, CDECIMAL9_2, FROM_DAYS(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	FROM_DAYS(CDECIMAL9_2)
+1	-9999.99	0000-00-00
+select cidx, CDECIMAL10, FROM_DAYS(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	FROM_DAYS(CDECIMAL10)
+1	-9999999	0000-00-00
+select cidx, CDECIMAL18, FROM_DAYS(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	FROM_DAYS(CDECIMAL18)
+1	-9999999999999	0000-00-00
+select cidx, CDECIMAL18_2, FROM_DAYS(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	FROM_DAYS(CDECIMAL18_2)
+1	-99999999999.99	0000-00-00
+select cidx, CINTEGER, FROM_DAYS(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	FROM_DAYS(CINTEGER)
+1	-7483646	0000-00-00
+select cidx, CSMALLINT, FROM_DAYS(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	FROM_DAYS(CSMALLINT)
+1	-766	0000-00-00
+select cidx, CTINYINT, FROM_DAYS(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	FROM_DAYS(CTINYINT)
+1	-26	0000-00-00
+select cidx, CDOUBLE, FROM_DAYS(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	FROM_DAYS(CDOUBLE)
+1	-1.797693231e108	0000-00-00
+select cidx, CFLOAT, FROM_DAYS(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	FROM_DAYS(CFLOAT)
+1	-3.40287e18	0000-00-00
+select cidx, FROM_DAYS(11235) from datatypetestm order by cidx;
+cidx	FROM_DAYS(11235)
+1	0030-10-05
+select cidx, FROM_DAYS(456) from datatypetestm order by cidx;
+cidx	FROM_DAYS(456)
+1	0001-04-01
+select cidx, FROM_DAYS(233333) from datatypetestm order by cidx;
+cidx	FROM_DAYS(233333)
+1	0638-11-05
+select cidx, FROM_DAYS(12) from datatypetestm order by cidx;
+cidx	FROM_DAYS(12)
+1	0000-00-00
+select cidx, FROM_DAYS(9999) from datatypetestm order by cidx;
+cidx	FROM_DAYS(9999)
+1	0027-05-18
+select cidx, CBIGINT from datatypetestm order by FROM_DAYS(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by FROM_DAYS(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by FROM_DAYS(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by FROM_DAYS(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by FROM_DAYS(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by FROM_DAYS(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by FROM_DAYS(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by FROM_DAYS(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by FROM_DAYS(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by FROM_DAYS(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by FROM_DAYS(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by FROM_DAYS(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by FROM_DAYS(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by FROM_DAYS(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by FROM_DAYS(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

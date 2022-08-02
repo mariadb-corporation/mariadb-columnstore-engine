@@ -1,0 +1,446 @@
+USE autopilot;
+select cidx, CBIGINT, TRUNCATE(CBIGINT,1) from datatypetestm order by cidx;
+cidx	CBIGINT	TRUNCATE(CBIGINT,1)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, TRUNCATE(CBIGINT,2) from datatypetestm order by cidx;
+cidx	CBIGINT	TRUNCATE(CBIGINT,2)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, TRUNCATE(CBIGINT,0) from datatypetestm order by cidx;
+cidx	CBIGINT	TRUNCATE(CBIGINT,0)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, TRUNCATE(CBIGINT,-2) from datatypetestm order by cidx;
+cidx	CBIGINT	TRUNCATE(CBIGINT,-2)
+1	-72036854775806	-72036854775800
+select cidx, CBIGINT, TRUNCATE(CBIGINT,-1) from datatypetestm order by cidx;
+cidx	CBIGINT	TRUNCATE(CBIGINT,-1)
+1	-72036854775806	-72036854775800
+select cidx, CDECIMAL1, TRUNCATE(CDECIMAL1,1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TRUNCATE(CDECIMAL1,1)
+1	-9	-9.0
+select cidx, CDECIMAL1, TRUNCATE(CDECIMAL1,2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TRUNCATE(CDECIMAL1,2)
+1	-9	-9.00
+select cidx, CDECIMAL1, TRUNCATE(CDECIMAL1,0) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TRUNCATE(CDECIMAL1,0)
+1	-9	-9
+select cidx, CDECIMAL1, TRUNCATE(CDECIMAL1,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TRUNCATE(CDECIMAL1,-2)
+1	-9	0
+select cidx, CDECIMAL1, TRUNCATE(CDECIMAL1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TRUNCATE(CDECIMAL1,-1)
+1	-9	0
+select cidx, CDECIMAL4, TRUNCATE(CDECIMAL4,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TRUNCATE(CDECIMAL4,1)
+1	-999	-999.0
+select cidx, CDECIMAL4, TRUNCATE(CDECIMAL4,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TRUNCATE(CDECIMAL4,2)
+1	-999	-999.00
+select cidx, CDECIMAL4, TRUNCATE(CDECIMAL4,0) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TRUNCATE(CDECIMAL4,0)
+1	-999	-999
+select cidx, CDECIMAL4, TRUNCATE(CDECIMAL4,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TRUNCATE(CDECIMAL4,-2)
+1	-999	-900
+select cidx, CDECIMAL4, TRUNCATE(CDECIMAL4,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TRUNCATE(CDECIMAL4,-1)
+1	-999	-990
+select cidx, CDECIMAL4_2, TRUNCATE(CDECIMAL4_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TRUNCATE(CDECIMAL4_2,1)
+1	-9.99	-9.9
+select cidx, CDECIMAL4_2, TRUNCATE(CDECIMAL4_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TRUNCATE(CDECIMAL4_2,2)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, TRUNCATE(CDECIMAL4_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TRUNCATE(CDECIMAL4_2,0)
+1	-9.99	-9
+select cidx, CDECIMAL4_2, TRUNCATE(CDECIMAL4_2,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TRUNCATE(CDECIMAL4_2,-2)
+1	-9.99	0
+select cidx, CDECIMAL4_2, TRUNCATE(CDECIMAL4_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TRUNCATE(CDECIMAL4_2,-1)
+1	-9.99	0
+select cidx, CDECIMAL5, TRUNCATE(CDECIMAL5,1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TRUNCATE(CDECIMAL5,1)
+1	-999	-999.0
+select cidx, CDECIMAL5, TRUNCATE(CDECIMAL5,2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TRUNCATE(CDECIMAL5,2)
+1	-999	-999.00
+select cidx, CDECIMAL5, TRUNCATE(CDECIMAL5,0) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TRUNCATE(CDECIMAL5,0)
+1	-999	-999
+select cidx, CDECIMAL5, TRUNCATE(CDECIMAL5,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TRUNCATE(CDECIMAL5,-2)
+1	-999	-900
+select cidx, CDECIMAL5, TRUNCATE(CDECIMAL5,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TRUNCATE(CDECIMAL5,-1)
+1	-999	-990
+select cidx, CDECIMAL9, TRUNCATE(CDECIMAL9,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TRUNCATE(CDECIMAL9,1)
+1	-999999	-999999.0
+select cidx, CDECIMAL9, TRUNCATE(CDECIMAL9,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TRUNCATE(CDECIMAL9,2)
+1	-999999	-999999.00
+select cidx, CDECIMAL9, TRUNCATE(CDECIMAL9,0) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TRUNCATE(CDECIMAL9,0)
+1	-999999	-999999
+select cidx, CDECIMAL9, TRUNCATE(CDECIMAL9,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TRUNCATE(CDECIMAL9,-2)
+1	-999999	-999900
+select cidx, CDECIMAL9, TRUNCATE(CDECIMAL9,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TRUNCATE(CDECIMAL9,-1)
+1	-999999	-999990
+select cidx, CDECIMAL9_2, TRUNCATE(CDECIMAL9_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TRUNCATE(CDECIMAL9_2,1)
+1	-9999.99	-9999.9
+select cidx, CDECIMAL9_2, TRUNCATE(CDECIMAL9_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TRUNCATE(CDECIMAL9_2,2)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, TRUNCATE(CDECIMAL9_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TRUNCATE(CDECIMAL9_2,0)
+1	-9999.99	-9999
+select cidx, CDECIMAL9_2, TRUNCATE(CDECIMAL9_2,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TRUNCATE(CDECIMAL9_2,-2)
+1	-9999.99	-9900
+select cidx, CDECIMAL9_2, TRUNCATE(CDECIMAL9_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TRUNCATE(CDECIMAL9_2,-1)
+1	-9999.99	-9990
+select cidx, CDECIMAL10, TRUNCATE(CDECIMAL10,1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TRUNCATE(CDECIMAL10,1)
+1	-9999999	-9999999.0
+select cidx, CDECIMAL10, TRUNCATE(CDECIMAL10,2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TRUNCATE(CDECIMAL10,2)
+1	-9999999	-9999999.00
+select cidx, CDECIMAL10, TRUNCATE(CDECIMAL10,0) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TRUNCATE(CDECIMAL10,0)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, TRUNCATE(CDECIMAL10,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TRUNCATE(CDECIMAL10,-2)
+1	-9999999	-9999900
+select cidx, CDECIMAL10, TRUNCATE(CDECIMAL10,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TRUNCATE(CDECIMAL10,-1)
+1	-9999999	-9999990
+select cidx, CDECIMAL18, TRUNCATE(CDECIMAL18,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TRUNCATE(CDECIMAL18,1)
+1	-9999999999999	-9999999999999.0
+select cidx, CDECIMAL18, TRUNCATE(CDECIMAL18,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TRUNCATE(CDECIMAL18,2)
+1	-9999999999999	-9999999999999.00
+select cidx, CDECIMAL18, TRUNCATE(CDECIMAL18,0) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TRUNCATE(CDECIMAL18,0)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, TRUNCATE(CDECIMAL18,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TRUNCATE(CDECIMAL18,-2)
+1	-9999999999999	-9999999999900
+select cidx, CDECIMAL18, TRUNCATE(CDECIMAL18,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TRUNCATE(CDECIMAL18,-1)
+1	-9999999999999	-9999999999990
+select cidx, CDECIMAL18_2, TRUNCATE(CDECIMAL18_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TRUNCATE(CDECIMAL18_2,1)
+1	-99999999999.99	-99999999999.9
+select cidx, CDECIMAL18_2, TRUNCATE(CDECIMAL18_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TRUNCATE(CDECIMAL18_2,2)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, TRUNCATE(CDECIMAL18_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TRUNCATE(CDECIMAL18_2,0)
+1	-99999999999.99	-99999999999
+select cidx, CDECIMAL18_2, TRUNCATE(CDECIMAL18_2,-2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TRUNCATE(CDECIMAL18_2,-2)
+1	-99999999999.99	-99999999900
+select cidx, CDECIMAL18_2, TRUNCATE(CDECIMAL18_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TRUNCATE(CDECIMAL18_2,-1)
+1	-99999999999.99	-99999999990
+select cidx, CINTEGER, TRUNCATE(CINTEGER,1) from datatypetestm order by cidx;
+cidx	CINTEGER	TRUNCATE(CINTEGER,1)
+1	-7483646	-7483646
+select cidx, CINTEGER, TRUNCATE(CINTEGER,2) from datatypetestm order by cidx;
+cidx	CINTEGER	TRUNCATE(CINTEGER,2)
+1	-7483646	-7483646
+select cidx, CINTEGER, TRUNCATE(CINTEGER,0) from datatypetestm order by cidx;
+cidx	CINTEGER	TRUNCATE(CINTEGER,0)
+1	-7483646	-7483646
+select cidx, CINTEGER, TRUNCATE(CINTEGER,-2) from datatypetestm order by cidx;
+cidx	CINTEGER	TRUNCATE(CINTEGER,-2)
+1	-7483646	-7483600
+select cidx, CINTEGER, TRUNCATE(CINTEGER,-1) from datatypetestm order by cidx;
+cidx	CINTEGER	TRUNCATE(CINTEGER,-1)
+1	-7483646	-7483640
+select cidx, CSMALLINT, TRUNCATE(CSMALLINT,1) from datatypetestm order by cidx;
+cidx	CSMALLINT	TRUNCATE(CSMALLINT,1)
+1	-766	-766
+select cidx, CSMALLINT, TRUNCATE(CSMALLINT,2) from datatypetestm order by cidx;
+cidx	CSMALLINT	TRUNCATE(CSMALLINT,2)
+1	-766	-766
+select cidx, CSMALLINT, TRUNCATE(CSMALLINT,0) from datatypetestm order by cidx;
+cidx	CSMALLINT	TRUNCATE(CSMALLINT,0)
+1	-766	-766
+select cidx, CSMALLINT, TRUNCATE(CSMALLINT,-2) from datatypetestm order by cidx;
+cidx	CSMALLINT	TRUNCATE(CSMALLINT,-2)
+1	-766	-700
+select cidx, CSMALLINT, TRUNCATE(CSMALLINT,-1) from datatypetestm order by cidx;
+cidx	CSMALLINT	TRUNCATE(CSMALLINT,-1)
+1	-766	-760
+select cidx, CTINYINT, TRUNCATE(CTINYINT,1) from datatypetestm order by cidx;
+cidx	CTINYINT	TRUNCATE(CTINYINT,1)
+1	-26	-26
+select cidx, CTINYINT, TRUNCATE(CTINYINT,2) from datatypetestm order by cidx;
+cidx	CTINYINT	TRUNCATE(CTINYINT,2)
+1	-26	-26
+select cidx, CTINYINT, TRUNCATE(CTINYINT,0) from datatypetestm order by cidx;
+cidx	CTINYINT	TRUNCATE(CTINYINT,0)
+1	-26	-26
+select cidx, CTINYINT, TRUNCATE(CTINYINT,-2) from datatypetestm order by cidx;
+cidx	CTINYINT	TRUNCATE(CTINYINT,-2)
+1	-26	0
+select cidx, CTINYINT, TRUNCATE(CTINYINT,-1) from datatypetestm order by cidx;
+cidx	CTINYINT	TRUNCATE(CTINYINT,-1)
+1	-26	-20
+select cidx, CDOUBLE, TRUNCATE(CDOUBLE,1) from datatypetestm order by cidx;
+cidx	CDOUBLE	TRUNCATE(CDOUBLE,1)
+1	-1.797693231e108	-1797693231000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0
+select cidx, CDOUBLE, TRUNCATE(CDOUBLE,2) from datatypetestm order by cidx;
+cidx	CDOUBLE	TRUNCATE(CDOUBLE,2)
+1	-1.797693231e108	-1797693231000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.00
+select cidx, CDOUBLE, TRUNCATE(CDOUBLE,0) from datatypetestm order by cidx;
+cidx	CDOUBLE	TRUNCATE(CDOUBLE,0)
+1	-1.797693231e108	-1797693231000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+select cidx, CDOUBLE, TRUNCATE(CDOUBLE,-2) from datatypetestm order by cidx;
+cidx	CDOUBLE	TRUNCATE(CDOUBLE,-2)
+1	-1.797693231e108	-1797693231000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+select cidx, CDOUBLE, TRUNCATE(CDOUBLE,-1) from datatypetestm order by cidx;
+cidx	CDOUBLE	TRUNCATE(CDOUBLE,-1)
+1	-1.797693231e108	-1797693231000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+select cidx, CFLOAT, TRUNCATE(CFLOAT,1) from datatypetestm order by cidx;
+cidx	CFLOAT	TRUNCATE(CFLOAT,1)
+1	-3.40287e18	-3402865892420223000.0
+select cidx, CFLOAT, TRUNCATE(CFLOAT,2) from datatypetestm order by cidx;
+cidx	CFLOAT	TRUNCATE(CFLOAT,2)
+1	-3.40287e18	-3402865892420223000.00
+select cidx, CFLOAT, TRUNCATE(CFLOAT,0) from datatypetestm order by cidx;
+cidx	CFLOAT	TRUNCATE(CFLOAT,0)
+1	-3.40287e18	-3402865892420223000
+select cidx, CFLOAT, TRUNCATE(CFLOAT,-2) from datatypetestm order by cidx;
+cidx	CFLOAT	TRUNCATE(CFLOAT,-2)
+1	-3.40287e18	-3402865892420223000
+select cidx, CFLOAT, TRUNCATE(CFLOAT,-1) from datatypetestm order by cidx;
+cidx	CFLOAT	TRUNCATE(CFLOAT,-1)
+1	-3.40287e18	-3402865892420223000
+select cidx, CBIGINT from datatypetestm where TRUNCATE(CBIGINT,1) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where TRUNCATE(CBIGINT,2) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where TRUNCATE(CBIGINT,0) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where TRUNCATE(CBIGINT,-2) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where TRUNCATE(CBIGINT,-1) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where TRUNCATE(CDECIMAL1,1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where TRUNCATE(CDECIMAL1,2) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where TRUNCATE(CDECIMAL1,0) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where TRUNCATE(CDECIMAL1,-2) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where TRUNCATE(CDECIMAL1,-1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where TRUNCATE(CDECIMAL4,1) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where TRUNCATE(CDECIMAL4,2) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where TRUNCATE(CDECIMAL4,0) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where TRUNCATE(CDECIMAL4,-2) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where TRUNCATE(CDECIMAL4,-1) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm where TRUNCATE(CDECIMAL4_2,1) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where TRUNCATE(CDECIMAL4_2,2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where TRUNCATE(CDECIMAL4_2,0) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where TRUNCATE(CDECIMAL4_2,-2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where TRUNCATE(CDECIMAL4_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where TRUNCATE(CDECIMAL5,1) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where TRUNCATE(CDECIMAL5,2) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where TRUNCATE(CDECIMAL5,0) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where TRUNCATE(CDECIMAL5,-2) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where TRUNCATE(CDECIMAL5,-1) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm where TRUNCATE(CDECIMAL9,1) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where TRUNCATE(CDECIMAL9,2) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where TRUNCATE(CDECIMAL9,0) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where TRUNCATE(CDECIMAL9,-2) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where TRUNCATE(CDECIMAL9,-1) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where TRUNCATE(CDECIMAL9_2,1) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where TRUNCATE(CDECIMAL9_2,2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where TRUNCATE(CDECIMAL9_2,0) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where TRUNCATE(CDECIMAL9_2,-2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where TRUNCATE(CDECIMAL9_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm where TRUNCATE(CDECIMAL10,1) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where TRUNCATE(CDECIMAL10,2) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where TRUNCATE(CDECIMAL10,0) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where TRUNCATE(CDECIMAL10,-2) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where TRUNCATE(CDECIMAL10,-1) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm where TRUNCATE(CDECIMAL18,1) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where TRUNCATE(CDECIMAL18,2) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where TRUNCATE(CDECIMAL18,0) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where TRUNCATE(CDECIMAL18,-2) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where TRUNCATE(CDECIMAL18,-1) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where TRUNCATE(CDECIMAL18_2,1) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where TRUNCATE(CDECIMAL18_2,2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where TRUNCATE(CDECIMAL18_2,0) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where TRUNCATE(CDECIMAL18_2,-2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where TRUNCATE(CDECIMAL18_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where TRUNCATE(CINTEGER,1) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where TRUNCATE(CINTEGER,2) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where TRUNCATE(CINTEGER,0) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where TRUNCATE(CINTEGER,-2) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where TRUNCATE(CINTEGER,-1) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm where TRUNCATE(CSMALLINT,1) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where TRUNCATE(CSMALLINT,2) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where TRUNCATE(CSMALLINT,0) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where TRUNCATE(CSMALLINT,-2) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where TRUNCATE(CSMALLINT,-1) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm where TRUNCATE(CTINYINT,1) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where TRUNCATE(CTINYINT,2) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where TRUNCATE(CTINYINT,0) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where TRUNCATE(CTINYINT,-2) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where TRUNCATE(CTINYINT,-1) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where TRUNCATE(CDOUBLE,1) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where TRUNCATE(CDOUBLE,2) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where TRUNCATE(CDOUBLE,0) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where TRUNCATE(CDOUBLE,-2) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where TRUNCATE(CDOUBLE,-1) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where TRUNCATE(CFLOAT,1) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where TRUNCATE(CFLOAT,2) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where TRUNCATE(CFLOAT,0) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where TRUNCATE(CFLOAT,-2) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where TRUNCATE(CFLOAT,-1) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18

@@ -1,0 +1,106 @@
+USE autopilot;
+select cidx, CBIGINT, RADIANS(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	RADIANS(CBIGINT)
+1	-72036854775806	-1257280298618.8164
+select cidx, CDECIMAL1, RADIANS(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	RADIANS(CDECIMAL1)
+1	-9	-0.15707963267948966
+select cidx, CDECIMAL4, RADIANS(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	RADIANS(CDECIMAL4)
+1	-999	-17.43583922742335
+select cidx, CDECIMAL4_2, RADIANS(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	RADIANS(CDECIMAL4_2)
+1	-9.99	-0.17435839227423353
+select cidx, CDECIMAL5, RADIANS(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	RADIANS(CDECIMAL5)
+1	-999	-17.43583922742335
+select cidx, CDECIMAL9, RADIANS(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	RADIANS(CDECIMAL9)
+1	-999999	-17453.275066650775
+select cidx, CDECIMAL9_2, RADIANS(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	RADIANS(CDECIMAL9_2)
+1	-9999.99	-174.53275066650775
+select cidx, CDECIMAL10, RADIANS(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	RADIANS(CDECIMAL10)
+1	-9999999	-174532.90774614044
+select cidx, CDECIMAL18, RADIANS(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	RADIANS(CDECIMAL18)
+1	-9999999999999	-174532925199.4155
+select cidx, CDECIMAL18_2, RADIANS(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	RADIANS(CDECIMAL18_2)
+1	-99999999999.99	-1745329251.9941552
+select cidx, CINTEGER, RADIANS(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	RADIANS(CINTEGER)
+1	-7483646	-130614.26275370357
+select cidx, CSMALLINT, RADIANS(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	RADIANS(CSMALLINT)
+1	-766	-13.369222070276562
+select cidx, CTINYINT, RADIANS(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	RADIANS(CTINYINT)
+1	-26	-0.4537856055185257
+select cidx, CDOUBLE, RADIANS(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	RADIANS(CDOUBLE)
+1	-1.797693231e108	-3.1375665821764995e106
+select cidx, CFLOAT, RADIANS(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	RADIANS(CFLOAT)
+1	-3.40287e18	-5.939121382654804e16
+select cidx, RADIANS(0*cidx) from datatypetestm order by cidx;
+cidx	RADIANS(0*cidx)
+1	0
+select cidx, RADIANS(60*cidx) from datatypetestm order by cidx;
+cidx	RADIANS(60*cidx)
+1	1.0471975511965976
+select cidx, RADIANS(90*cidx) from datatypetestm order by cidx;
+cidx	RADIANS(90*cidx)
+1	1.5707963267948966
+select cidx, RADIANS(180*cidx) from datatypetestm order by cidx;
+cidx	RADIANS(180*cidx)
+1	3.141592653589793
+select cidx, RADIANS(360*cidx) from datatypetestm order by cidx;
+cidx	RADIANS(360*cidx)
+1	6.283185307179586
+select cidx, CBIGINT from datatypetestm order by RADIANS(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by RADIANS(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by RADIANS(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by RADIANS(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by RADIANS(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by RADIANS(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by RADIANS(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by RADIANS(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by RADIANS(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by RADIANS(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by RADIANS(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by RADIANS(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by RADIANS(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by RADIANS(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by RADIANS(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

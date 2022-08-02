@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json1 = '[1, 2]';
+SET @json2 = '[3, 4]';
+SELECT @json1;
+SELECT @json2;
+INSERT INTO jsontest VALUES (1, @json1, @json1);
+INSERT INTO jsontest VALUES (1, @json2, @json2);
+#
+SELECT JSON_MERGE(@json1,@json2);
+#
+SELECT * FROM jsontest;
+--error 1178
+SELECT cVarchar, JSON_MERGE(cVarchar, @json2), cText, JSON_MERGE(cText, @json2) from jsontest;
+--error 1178
+SELECT cVarchar, JSON_MERGE(cVarchar, cText), cText, JSON_MERGE(cText, cVarchar) from jsontest;
+TRUNCATE TABLE jsontest;
+#

@@ -1,0 +1,105 @@
+USE autopilot;
+select cidx, CCHAR1, DEGREES(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	DEGREES(CCHAR1)
+1	a	0
+select cidx, CCHAR2, DEGREES(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	DEGREES(CCHAR2)
+1	aa	0
+select cidx, CCHAR3, DEGREES(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	DEGREES(CCHAR3)
+1	aaa	0
+select cidx, CCHAR4, DEGREES(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	DEGREES(CCHAR4)
+1	aaaa	0
+select cidx, CCHAR5, DEGREES(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	DEGREES(CCHAR5)
+1	aaaaa	0
+select cidx, CCHAR6, DEGREES(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	DEGREES(CCHAR6)
+1	aaaaaa	0
+select cidx, CCHAR7, DEGREES(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	DEGREES(CCHAR7)
+1	aaaaaaa	0
+select cidx, CCHAR8, DEGREES(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	DEGREES(CCHAR8)
+1	aaaaaaaa	0
+select cidx, CCHAR9, DEGREES(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	DEGREES(CCHAR9)
+1	aaaaaaaaa	0
+select cidx, CCHAR255, DEGREES(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	DEGREES(CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR1, DEGREES(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	DEGREES(CVCHAR1)
+1	a	0
+select cidx, CVCHAR2, DEGREES(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	DEGREES(CVCHAR2)
+1	aa	0
+select cidx, CVCHAR3, DEGREES(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	DEGREES(CVCHAR3)
+1	aaa	0
+select cidx, CVCHAR4, DEGREES(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	DEGREES(CVCHAR4)
+1	aaaa	0
+select cidx, CVCHAR5, DEGREES(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	DEGREES(CVCHAR5)
+1	aaaaa	0
+select cidx, CVCHAR6, DEGREES(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	DEGREES(CVCHAR6)
+1	aaaaaa	0
+select cidx, CVCHAR7, DEGREES(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	DEGREES(CVCHAR7)
+1	aaaaaaa	0
+select cidx, CVCHAR8, DEGREES(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	DEGREES(CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CVCHAR255, DEGREES(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	DEGREES(CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, DEGREES(PI()) from datatypetestm order by cidx;
+cidx	DEGREES(PI())
+1	180
+select cidx, DEGREES(1) from datatypetestm order by cidx;
+cidx	DEGREES(1)
+1	57.29577951308232
+select cidx, DEGREES(2) from datatypetestm order by cidx;
+cidx	DEGREES(2)
+1	114.59155902616465
+select cidx, CCHAR1 from datatypetestm where DEGREES(CCHAR1) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where DEGREES(CCHAR2) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where DEGREES(CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where DEGREES(CCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where DEGREES(CCHAR5) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where DEGREES(CCHAR6) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where DEGREES(CCHAR7) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where DEGREES(CCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where DEGREES(CCHAR9) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where DEGREES(CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where DEGREES(CVCHAR1) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where DEGREES(CVCHAR2) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where DEGREES(CVCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where DEGREES(CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where DEGREES(CVCHAR5) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where DEGREES(CVCHAR6) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where DEGREES(CVCHAR7) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where DEGREES(CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where DEGREES(CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255

@@ -1,0 +1,50 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, LOWER(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, LOWER(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, LOWER(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, LOWER(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, LOWER(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, LOWER(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, LOWER(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, LOWER(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, LOWER(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, LOWER(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, LOWER(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, LOWER(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, LOWER(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, LOWER(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, LOWER(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, LOWER(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, LOWER(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, LOWER(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, LOWER(CVCHAR255) from datatypetestm order by cidx;
+select cidx, LOWER(concat(cchar1,'ALOHA')) from datatypetestm order by cidx;
+select cidx, LOWER(concat(cchar1,'MAHALO')) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by LOWER(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by LOWER(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by LOWER(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by LOWER(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by LOWER(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by LOWER(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by LOWER(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by LOWER(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by LOWER(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by LOWER(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by LOWER(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by LOWER(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by LOWER(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by LOWER(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by LOWER(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by LOWER(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by LOWER(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by LOWER(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by LOWER(CVCHAR255), cidx;

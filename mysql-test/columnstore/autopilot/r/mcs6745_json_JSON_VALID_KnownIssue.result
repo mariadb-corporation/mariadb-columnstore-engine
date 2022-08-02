@@ -1,0 +1,27 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @tmpstr1 = '{"id": 1, "name": "Monty"}';
+SET @tmpstr2 = '{"id": 1, "name": "Monty", "oddfield"}';
+SET @flag1 = (SELECT JSON_VALID(@tmpstr1));
+SET @flag2 = (SELECT JSON_VALID(@tmpstr2));
+SELECT @flag1;
+@flag1
+1
+SELECT @flag2;
+@flag2
+0
+SELECT @tmpstr1;
+@tmpstr1
+{"id": 1, "name": "Monty"}
+SELECT @tmpstr2;
+@tmpstr2
+{"id": 1, "name": "Monty", "oddfield"}
+INSERT INTO jsontest VALUES (1, @tmpstr1, @tmpstr1);
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"id": 1, "name": "Monty"}	{"id": 1, "name": "Monty"}
+SELECT cVarchar, JSON_VALID(cVarchar), cText, JSON_VALID(cText) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_valid' isn't supported.
+SELECT cVarchar, JSON_VALID(CONCAT(cVarchar,'HELLO WORLD')), cText, JSON_VALID(CONCAT(cText,'HELLO WORLD')) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_valid' isn't supported.
+TRUNCATE TABLE jsontest;

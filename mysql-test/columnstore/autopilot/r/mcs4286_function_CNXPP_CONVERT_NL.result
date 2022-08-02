@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CONVERT(132.499*cidx,SIGNED) from datatypetestm order by cidx;
+cidx	CONVERT(132.499*cidx,SIGNED)
+1	132
+select cidx, CONVERT(132.500*cidx,SIGNED) from datatypetestm order by cidx;
+cidx	CONVERT(132.500*cidx,SIGNED)
+1	133
+select cidx, CONVERT(132.499*cidx,DECIMAL(9)) from datatypetestm order by cidx;
+cidx	CONVERT(132.499*cidx,DECIMAL(9))
+1	132
+select cidx, CONVERT(132.500*cidx,DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CONVERT(132.500*cidx,DECIMAL(9,2))
+1	132.50
+select cidx, CONVERT(132.499*cidx,DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CONVERT(132.499*cidx,DECIMAL(9,2))
+1	132.50
+select cidx, CONVERT(132.500*cidx,DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CONVERT(132.500*cidx,DECIMAL(9,2))
+1	132.50

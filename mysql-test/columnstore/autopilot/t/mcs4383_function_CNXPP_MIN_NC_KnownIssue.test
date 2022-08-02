@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select MIN(CBIGINT) from datatypetestm;
+select MIN(CDECIMAL1) from datatypetestm;
+select MIN(CDECIMAL4) from datatypetestm;
+select MIN(CDECIMAL4_2) from datatypetestm;
+select MIN(CDECIMAL5) from datatypetestm;
+select MIN(CDECIMAL9) from datatypetestm;
+select MIN(CDECIMAL9_2) from datatypetestm;
+select MIN(CDECIMAL10) from datatypetestm;
+select MIN(CDECIMAL18) from datatypetestm;
+select MIN(CDECIMAL18_2) from datatypetestm;
+select MIN(CINTEGER) from datatypetestm;
+select MIN(CSMALLINT) from datatypetestm;
+select MIN(CTINYINT) from datatypetestm;
+select MIN(CDOUBLE) from datatypetestm;
+select MIN(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, MIN(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, MIN(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, MIN(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, MIN(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, MIN(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, MIN(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, MIN(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, MIN(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, MIN(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, MIN(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, MIN(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, MIN(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, MIN(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, MIN(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, MIN(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

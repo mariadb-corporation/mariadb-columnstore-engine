@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CDATE, HOUR(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	HOUR(CDATE)
+1	1997-01-01	0
+select cidx, CDATETIME, HOUR(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	HOUR(CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CTIME, HOUR(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	HOUR(CTIME)
+1	13:00:00	13
+select cidx, CDATE from datatypetestm order by HOUR(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by HOUR(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by HOUR(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

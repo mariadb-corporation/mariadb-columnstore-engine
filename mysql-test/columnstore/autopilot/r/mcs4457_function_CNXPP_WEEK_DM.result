@@ -1,0 +1,121 @@
+USE autopilot;
+select cidx, CDATE, WEEK(CDATE,0) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,0)
+1	1997-01-01	0
+select cidx, CDATE, WEEK(CDATE,1) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,1)
+1	1997-01-01	1
+select cidx, CDATE, WEEK(CDATE,2) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,2)
+1	1997-01-01	52
+select cidx, CDATE, WEEK(CDATE,3) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,3)
+1	1997-01-01	1
+select cidx, CDATE, WEEK(CDATE,4) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,4)
+1	1997-01-01	1
+select cidx, CDATE, WEEK(CDATE,5) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,5)
+1	1997-01-01	0
+select cidx, CDATE, WEEK(CDATE,6) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,6)
+1	1997-01-01	1
+select cidx, CDATE, WEEK(CDATE,7) from datatypetestm order by cidx;
+cidx	CDATE	WEEK(CDATE,7)
+1	1997-01-01	53
+select cidx, CDATETIME, WEEK(CDATETIME,0) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,0)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, WEEK(CDATETIME,1) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,1)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, WEEK(CDATETIME,2) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,2)
+1	1997-01-01 00:00:00	52
+select cidx, CDATETIME, WEEK(CDATETIME,3) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,3)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, WEEK(CDATETIME,4) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,4)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, WEEK(CDATETIME,5) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,5)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, WEEK(CDATETIME,6) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,6)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, WEEK(CDATETIME,7) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEK(CDATETIME,7)
+1	1997-01-01 00:00:00	53
+select cidx, CTIME, WEEK(CTIME,0) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,0)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,1) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,1)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,2) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,2)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,3) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,3)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,4) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,4)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,5) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,5)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,6) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,6)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,7) from datatypetestm order by cidx;
+cidx	CTIME	WEEK(CTIME,7)
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,0), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,1), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,2), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,3), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,4), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,5), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,6), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,7), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,0), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,1), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,2), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,3), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,4), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,5), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,6), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,7), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

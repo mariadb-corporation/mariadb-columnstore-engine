@@ -1,0 +1,1141 @@
+USE autopilot;
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(1))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(2))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(3))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(4))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(5))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(6))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(7))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(8))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(9))
+1	a	a
+select cidx, CCHAR1, CONVERT(CCHAR1,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR1	CONVERT(CCHAR1,CHAR(20))
+1	a	a
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(1))
+1	aa	a
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(2))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(3))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(4))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(5))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(6))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(7))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(8))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(9))
+1	aa	aa
+select cidx, CCHAR2, CONVERT(CCHAR2,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR2	CONVERT(CCHAR2,CHAR(20))
+1	aa	aa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(1))
+1	aaa	a
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(2))
+1	aaa	aa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(3))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(4))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(5))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(6))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(7))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(8))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(9))
+1	aaa	aaa
+select cidx, CCHAR3, CONVERT(CCHAR3,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR3	CONVERT(CCHAR3,CHAR(20))
+1	aaa	aaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(1))
+1	aaaa	a
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(2))
+1	aaaa	aa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(3))
+1	aaaa	aaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(4))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(5))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(6))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(7))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(8))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(9))
+1	aaaa	aaaa
+select cidx, CCHAR4, CONVERT(CCHAR4,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR4	CONVERT(CCHAR4,CHAR(20))
+1	aaaa	aaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(1))
+1	aaaaa	a
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(2))
+1	aaaaa	aa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(3))
+1	aaaaa	aaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(4))
+1	aaaaa	aaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(5))
+1	aaaaa	aaaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(6))
+1	aaaaa	aaaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(7))
+1	aaaaa	aaaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(8))
+1	aaaaa	aaaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(9))
+1	aaaaa	aaaaa
+select cidx, CCHAR5, CONVERT(CCHAR5,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR5	CONVERT(CCHAR5,CHAR(20))
+1	aaaaa	aaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(1))
+1	aaaaaa	a
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(2))
+1	aaaaaa	aa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(3))
+1	aaaaaa	aaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(4))
+1	aaaaaa	aaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(5))
+1	aaaaaa	aaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(6))
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(7))
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(8))
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(9))
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, CONVERT(CCHAR6,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR6	CONVERT(CCHAR6,CHAR(20))
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(1))
+1	aaaaaaa	a
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(2))
+1	aaaaaaa	aa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(3))
+1	aaaaaaa	aaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(4))
+1	aaaaaaa	aaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(5))
+1	aaaaaaa	aaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(6))
+1	aaaaaaa	aaaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(7))
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(8))
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(9))
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, CONVERT(CCHAR7,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR7	CONVERT(CCHAR7,CHAR(20))
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(1))
+1	aaaaaaaa	a
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(2))
+1	aaaaaaaa	aa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(3))
+1	aaaaaaaa	aaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(4))
+1	aaaaaaaa	aaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(5))
+1	aaaaaaaa	aaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(6))
+1	aaaaaaaa	aaaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(7))
+1	aaaaaaaa	aaaaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(8))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(9))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, CONVERT(CCHAR8,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR8	CONVERT(CCHAR8,CHAR(20))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(1))
+1	aaaaaaaaa	a
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(2))
+1	aaaaaaaaa	aa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(3))
+1	aaaaaaaaa	aaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(4))
+1	aaaaaaaaa	aaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(5))
+1	aaaaaaaaa	aaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(6))
+1	aaaaaaaaa	aaaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(7))
+1	aaaaaaaaa	aaaaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(8))
+1	aaaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(9))
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, CONVERT(CCHAR9,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR9	CONVERT(CCHAR9,CHAR(20))
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(1)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(1))
+1	aaaaaaaaaa	a
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(2)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(2))
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(3)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(3))
+1	aaaaaaaaaa	aaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(4)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(4))
+1	aaaaaaaaaa	aaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(5)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(5))
+1	aaaaaaaaaa	aaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(6)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(6))
+1	aaaaaaaaaa	aaaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(7)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(7))
+1	aaaaaaaaaa	aaaaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(8)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(8))
+1	aaaaaaaaaa	aaaaaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(9)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(9))
+1	aaaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, CONVERT(CCHAR255,CHAR(20)) from datatypetestm order by cidx;
+cidx	CCHAR255	CONVERT(CCHAR255,CHAR(20))
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(1))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(2))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(3))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(4))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(5))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(6))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(7))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(8))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(9))
+1	a	a
+select cidx, CVCHAR1, CONVERT(CVCHAR1,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONVERT(CVCHAR1,CHAR(20))
+1	a	a
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(1))
+1	aa	a
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(2))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(3))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(4))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(5))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(6))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(7))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(8))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(9))
+1	aa	aa
+select cidx, CVCHAR2, CONVERT(CVCHAR2,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONVERT(CVCHAR2,CHAR(20))
+1	aa	aa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(1))
+1	aaa	a
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(2))
+1	aaa	aa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(3))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(4))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(5))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(6))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(7))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(8))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(9))
+1	aaa	aaa
+select cidx, CVCHAR3, CONVERT(CVCHAR3,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONVERT(CVCHAR3,CHAR(20))
+1	aaa	aaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(1))
+1	aaaa	a
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(2))
+1	aaaa	aa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(3))
+1	aaaa	aaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(4))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(5))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(6))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(7))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(8))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(9))
+1	aaaa	aaaa
+select cidx, CVCHAR4, CONVERT(CVCHAR4,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONVERT(CVCHAR4,CHAR(20))
+1	aaaa	aaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(1))
+1	aaaaa	a
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(2))
+1	aaaaa	aa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(3))
+1	aaaaa	aaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(4))
+1	aaaaa	aaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(5))
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(6))
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(7))
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(8))
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(9))
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, CONVERT(CVCHAR5,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONVERT(CVCHAR5,CHAR(20))
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(1))
+1	aaaaaa	a
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(2))
+1	aaaaaa	aa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(3))
+1	aaaaaa	aaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(4))
+1	aaaaaa	aaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(5))
+1	aaaaaa	aaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(6))
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(7))
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(8))
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(9))
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, CONVERT(CVCHAR6,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONVERT(CVCHAR6,CHAR(20))
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(1))
+1	aaaaaaa	a
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(2))
+1	aaaaaaa	aa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(3))
+1	aaaaaaa	aaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(4))
+1	aaaaaaa	aaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(5))
+1	aaaaaaa	aaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(6))
+1	aaaaaaa	aaaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(7))
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(8))
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(9))
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, CONVERT(CVCHAR7,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONVERT(CVCHAR7,CHAR(20))
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(1))
+1	aaaaaaaa	a
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(2))
+1	aaaaaaaa	aa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(3))
+1	aaaaaaaa	aaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(4))
+1	aaaaaaaa	aaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(5))
+1	aaaaaaaa	aaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(6))
+1	aaaaaaaa	aaaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(7))
+1	aaaaaaaa	aaaaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(8))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(9))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, CONVERT(CVCHAR8,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONVERT(CVCHAR8,CHAR(20))
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(1)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(1))
+1	aaaaaaaaaa	a
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(2)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(2))
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(3)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(3))
+1	aaaaaaaaaa	aaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(4)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(4))
+1	aaaaaaaaaa	aaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(5)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(5))
+1	aaaaaaaaaa	aaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(6)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(6))
+1	aaaaaaaaaa	aaaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(7)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(7))
+1	aaaaaaaaaa	aaaaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(8)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(8))
+1	aaaaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(9)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(9))
+1	aaaaaaaaaa	aaaaaaaaa
+select cidx, CVCHAR255, CONVERT(CVCHAR255,CHAR(20)) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONVERT(CVCHAR255,CHAR(20))
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(1)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(2)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(3)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(4)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(5)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(6)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(7)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(8)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(9)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CONVERT(CCHAR1,CHAR(20)), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(1)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(2)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(3)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(4)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(5)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(6)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(7)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(8)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(9)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CONVERT(CCHAR2,CHAR(20)), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(1)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(2)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(3)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(4)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(5)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(6)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(7)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(8)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(9)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CONVERT(CCHAR3,CHAR(20)), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(1)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(2)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(3)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(4)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(5)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(6)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(7)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(8)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(9)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CONVERT(CCHAR4,CHAR(20)), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(1)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(2)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(3)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(4)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(5)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(6)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(7)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(8)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(9)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CONVERT(CCHAR5,CHAR(20)), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(1)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(2)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(3)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(4)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(5)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(6)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(7)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(8)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(9)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CONVERT(CCHAR6,CHAR(20)), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(1)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(2)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(3)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(4)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(5)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(6)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(7)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(8)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(9)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CONVERT(CCHAR7,CHAR(20)), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(1)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(2)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(3)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(4)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(5)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(6)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(7)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(8)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(9)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CONVERT(CCHAR8,CHAR(20)), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(1)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(2)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(3)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(4)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(5)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(6)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(7)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(8)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(9)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CONVERT(CCHAR9,CHAR(20)), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(1)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(2)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(3)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(4)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(5)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(6)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(7)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(8)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(9)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CONVERT(CCHAR255,CHAR(20)), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(1)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(2)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(3)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(4)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(5)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(6)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(7)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(8)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(9)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CONVERT(CVCHAR1,CHAR(20)), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(1)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(2)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(3)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(4)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(5)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(6)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(7)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(8)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(9)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CONVERT(CVCHAR2,CHAR(20)), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(1)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(2)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(3)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(4)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(5)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(6)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(7)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(8)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(9)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CONVERT(CVCHAR3,CHAR(20)), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(1)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(2)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(3)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(4)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(5)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(6)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(7)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(8)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(9)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CONVERT(CVCHAR4,CHAR(20)), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(1)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(2)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(3)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(4)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(5)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(6)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(7)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(8)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(9)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CONVERT(CVCHAR5,CHAR(20)), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(1)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(2)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(3)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(4)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(5)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(6)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(7)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(8)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(9)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CONVERT(CVCHAR6,CHAR(20)), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(1)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(2)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(3)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(4)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(5)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(6)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(7)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(8)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(9)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CONVERT(CVCHAR7,CHAR(20)), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(1)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(2)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(3)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(4)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(5)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(6)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(7)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(8)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(9)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CONVERT(CVCHAR8,CHAR(20)), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(1)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(2)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(3)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(4)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(5)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(6)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(7)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(8)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(9)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CONVERT(CVCHAR255,CHAR(20)), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

@@ -1,0 +1,286 @@
+USE autopilot;
+select cidx, CCHAR1, IF(CCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR1	IF(CCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CCHAR1, IF(CCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR1	IF(CCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CCHAR1, IF(CCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR1	IF(CCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CCHAR2, IF(CCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR2	IF(CCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CCHAR2, IF(CCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR2	IF(CCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CCHAR2, IF(CCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR2	IF(CCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CCHAR3, IF(CCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR3	IF(CCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CCHAR3, IF(CCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR3	IF(CCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CCHAR3, IF(CCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR3	IF(CCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CCHAR4, IF(CCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR4	IF(CCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CCHAR4, IF(CCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR4	IF(CCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CCHAR4, IF(CCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR4	IF(CCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CCHAR5, IF(CCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR5	IF(CCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CCHAR5, IF(CCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR5	IF(CCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CCHAR5, IF(CCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR5	IF(CCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CCHAR6, IF(CCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR6	IF(CCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CCHAR6, IF(CCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR6	IF(CCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CCHAR6, IF(CCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR6	IF(CCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CCHAR7, IF(CCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR7	IF(CCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CCHAR7, IF(CCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR7	IF(CCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CCHAR7, IF(CCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR7	IF(CCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CCHAR8, IF(CCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR8	IF(CCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CCHAR8, IF(CCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR8	IF(CCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CCHAR8, IF(CCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR8	IF(CCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CCHAR9, IF(CCHAR9>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR9	IF(CCHAR9>'aaa','Yes','No')
+1	aaaaaaaaa	Yes
+select cidx, CCHAR9, IF(CCHAR9>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR9	IF(CCHAR9>'aaa','Yes','No')
+1	aaaaaaaaa	Yes
+select cidx, CCHAR9, IF(CCHAR9>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR9	IF(CCHAR9>'aaa','Yes','No')
+1	aaaaaaaaa	Yes
+select cidx, CCHAR255, IF(CCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR255	IF(CCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CCHAR255, IF(CCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR255	IF(CCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CCHAR255, IF(CCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CCHAR255	IF(CCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CVCHAR1, IF(CVCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR1	IF(CVCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CVCHAR1, IF(CVCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR1	IF(CVCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CVCHAR1, IF(CVCHAR1>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR1	IF(CVCHAR1>'aaa','Yes','No')
+1	a	No
+select cidx, CVCHAR2, IF(CVCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR2	IF(CVCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CVCHAR2, IF(CVCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR2	IF(CVCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CVCHAR2, IF(CVCHAR2>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR2	IF(CVCHAR2>'aaa','Yes','No')
+1	aa	No
+select cidx, CVCHAR3, IF(CVCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR3	IF(CVCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CVCHAR3, IF(CVCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR3	IF(CVCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CVCHAR3, IF(CVCHAR3>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR3	IF(CVCHAR3>'aaa','Yes','No')
+1	aaa	No
+select cidx, CVCHAR4, IF(CVCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR4	IF(CVCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CVCHAR4, IF(CVCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR4	IF(CVCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CVCHAR4, IF(CVCHAR4>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR4	IF(CVCHAR4>'aaa','Yes','No')
+1	aaaa	Yes
+select cidx, CVCHAR5, IF(CVCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR5	IF(CVCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CVCHAR5, IF(CVCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR5	IF(CVCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CVCHAR5, IF(CVCHAR5>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR5	IF(CVCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+select cidx, CVCHAR6, IF(CVCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CVCHAR6, IF(CVCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CVCHAR6, IF(CVCHAR6>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+select cidx, CVCHAR7, IF(CVCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CVCHAR7, IF(CVCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CVCHAR7, IF(CVCHAR7>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+select cidx, CVCHAR8, IF(CVCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CVCHAR8, IF(CVCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CVCHAR8, IF(CVCHAR8>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+select cidx, CVCHAR255, IF(CVCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CVCHAR255, IF(CVCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CVCHAR255, IF(CVCHAR255>'aaa','Yes','No') from datatypetestm order by cidx;
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+select cidx, CCHAR1 from datatypetestm where IF(CCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where IF(CCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where IF(CCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where IF(CCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where IF(CCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where IF(CCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where IF(CCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where IF(CCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where IF(CCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where IF(CCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where IF(CCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where IF(CCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where IF(CCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where IF(CCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where IF(CCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where IF(CCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where IF(CCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where IF(CCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where IF(CCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where IF(CCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where IF(CCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where IF(CCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where IF(CCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where IF(CCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where IF(CCHAR9>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where IF(CCHAR9>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where IF(CCHAR9>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where IF(CCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where IF(CCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where IF(CCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where IF(CVCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where IF(CVCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where IF(CVCHAR1>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where IF(CVCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where IF(CVCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where IF(CVCHAR2>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where IF(CVCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where IF(CVCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where IF(CVCHAR3>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where IF(CVCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where IF(CVCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where IF(CVCHAR4>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where IF(CVCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where IF(CVCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where IF(CVCHAR5>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where IF(CVCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where IF(CVCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where IF(CVCHAR6>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where IF(CVCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where IF(CVCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where IF(CVCHAR7>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where IF(CVCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where IF(CVCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where IF(CVCHAR8>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where IF(CVCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where IF(CVCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where IF(CVCHAR255>'aaa','Yes','No') <> 0 order by cidx;
+cidx	CVCHAR255

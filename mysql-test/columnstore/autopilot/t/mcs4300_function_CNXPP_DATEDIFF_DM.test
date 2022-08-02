@@ -1,0 +1,24 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, DATEDIFF(CDATE,'2007-02-28') from datatypetestm order by cidx;
+select cidx, CDATE, DATEDIFF(CDATE,'2007-07-04') from datatypetestm order by cidx;
+select cidx, CDATETIME, DATEDIFF(CDATETIME,'2007-02-28') from datatypetestm order by cidx;
+select cidx, CDATETIME, DATEDIFF(CDATETIME,'2007-07-04') from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, DATEDIFF(CTIME,'2007-02-28') from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, DATEDIFF(CTIME,'2007-07-04') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by DATEDIFF(CDATE,'2007-02-28'), cidx;
+select cidx, CDATE from datatypetestm order by DATEDIFF(CDATE,'2007-07-04'), cidx;
+select cidx, CDATETIME from datatypetestm order by DATEDIFF(CDATETIME,'2007-02-28'), cidx;
+select cidx, CDATETIME from datatypetestm order by DATEDIFF(CDATETIME,'2007-07-04'), cidx;
+#select cidx, CTIME from datatypetestm order by DATEDIFF(CTIME,'2007-02-28'), cidx;
+#select cidx, CTIME from datatypetestm order by DATEDIFF(CTIME,'2007-07-04'), cidx;

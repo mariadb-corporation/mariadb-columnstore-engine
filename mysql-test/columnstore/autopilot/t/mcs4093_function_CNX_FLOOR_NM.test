@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, FLOOR(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, FLOOR(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, FLOOR(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, FLOOR(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, FLOOR(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, FLOOR(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, FLOOR(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, FLOOR(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, FLOOR(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, FLOOR(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, FLOOR(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, FLOOR(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, FLOOR(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, FLOOR(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, FLOOR(CFLOAT) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where FLOOR(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where FLOOR(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where FLOOR(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where FLOOR(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where FLOOR(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where FLOOR(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where FLOOR(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where FLOOR(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where FLOOR(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where FLOOR(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where FLOOR(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where FLOOR(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where FLOOR(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where FLOOR(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where FLOOR(CFLOAT) <> 0 order by cidx;

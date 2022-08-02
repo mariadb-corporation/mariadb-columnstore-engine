@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CTINYTEXT = CCHAR7;
+SELECT CTINYTEXT FROM datatypeupdate;
+CTINYTEXT
+aaaaaaa
+ROLLBACK;

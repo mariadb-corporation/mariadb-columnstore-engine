@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CAST(132.499*cidx AS SIGNED) from datatypetestm order by cidx;
+cidx	CAST(132.499*cidx AS SIGNED)
+1	132
+select cidx, CAST(132.500*cidx AS SIGNED) from datatypetestm order by cidx;
+cidx	CAST(132.500*cidx AS SIGNED)
+1	133
+select cidx, CAST(132.499*cidx AS DECIMAL(9)) from datatypetestm order by cidx;
+cidx	CAST(132.499*cidx AS DECIMAL(9))
+1	132
+select cidx, CAST(132.500*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CAST(132.500*cidx AS DECIMAL(9,2))
+1	132.50
+select cidx, CAST(132.499*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CAST(132.499*cidx AS DECIMAL(9,2))
+1	132.50
+select cidx, CAST(132.500*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+cidx	CAST(132.500*cidx AS DECIMAL(9,2))
+1	132.50

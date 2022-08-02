@@ -1,0 +1,82 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CONCAT(CTEXT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm ;
+cidx	CTEXT	CONCAT(CTEXT,CCHAR3,CCHAR7,'ALOHA')
+1	texttexttext	texttexttextaaaaaaaaaaALOHA
+select cidx, CTEXT, CONCAT(CTEXT,CCHAR3) from datatypetestm ;
+cidx	CTEXT	CONCAT(CTEXT,CCHAR3)
+1	texttexttext	texttexttextaaa
+select cidx, CTEXT, CONCAT(CTEXT,CCHAR7) from datatypetestm ;
+cidx	CTEXT	CONCAT(CTEXT,CCHAR7)
+1	texttexttext	texttexttextaaaaaaa
+select cidx, CTEXT, CONCAT(CTEXT,'ALOHA') from datatypetestm ;
+cidx	CTEXT	CONCAT(CTEXT,'ALOHA')
+1	texttexttext	texttexttextALOHA
+select cidx, CTINYTEXT, CONCAT(CTINYTEXT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm ;
+cidx	CTINYTEXT	CONCAT(CTINYTEXT,CCHAR3,CCHAR7,'ALOHA')
+1	tinytext	tinytextaaaaaaaaaaALOHA
+select cidx, CTINYTEXT, CONCAT(CTINYTEXT,CCHAR3) from datatypetestm ;
+cidx	CTINYTEXT	CONCAT(CTINYTEXT,CCHAR3)
+1	tinytext	tinytextaaa
+select cidx, CTINYTEXT, CONCAT(CTINYTEXT,CCHAR7) from datatypetestm ;
+cidx	CTINYTEXT	CONCAT(CTINYTEXT,CCHAR7)
+1	tinytext	tinytextaaaaaaa
+select cidx, CTINYTEXT, CONCAT(CTINYTEXT,'ALOHA') from datatypetestm ;
+cidx	CTINYTEXT	CONCAT(CTINYTEXT,'ALOHA')
+1	tinytext	tinytextALOHA
+select cidx, CMEDIUMTEXT, CONCAT(CMEDIUMTEXT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT(CMEDIUMTEXT,CCHAR3,CCHAR7,'ALOHA')
+1	mediumtestmediumtest	mediumtestmediumtestaaaaaaaaaaALOHA
+select cidx, CMEDIUMTEXT, CONCAT(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT(CMEDIUMTEXT,CCHAR3)
+1	mediumtestmediumtest	mediumtestmediumtestaaa
+select cidx, CMEDIUMTEXT, CONCAT(CMEDIUMTEXT,CCHAR7) from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT(CMEDIUMTEXT,CCHAR7)
+1	mediumtestmediumtest	mediumtestmediumtestaaaaaaa
+select cidx, CMEDIUMTEXT, CONCAT(CMEDIUMTEXT,'ALOHA') from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT(CMEDIUMTEXT,'ALOHA')
+1	mediumtestmediumtest	mediumtestmediumtestALOHA
+select cidx, CLONGTEXT, CONCAT(CLONGTEXT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm ;
+cidx	CLONGTEXT	CONCAT(CLONGTEXT,CCHAR3,CCHAR7,'ALOHA')
+1	longtextlongtextlongtext	longtextlongtextlongtextaaaaaaaaaaALOHA
+select cidx, CLONGTEXT, CONCAT(CLONGTEXT,CCHAR3) from datatypetestm ;
+cidx	CLONGTEXT	CONCAT(CLONGTEXT,CCHAR3)
+1	longtextlongtextlongtext	longtextlongtextlongtextaaa
+select cidx, CLONGTEXT, CONCAT(CLONGTEXT,CCHAR7) from datatypetestm ;
+cidx	CLONGTEXT	CONCAT(CLONGTEXT,CCHAR7)
+1	longtextlongtextlongtext	longtextlongtextlongtextaaaaaaa
+select cidx, CLONGTEXT, CONCAT(CLONGTEXT,'ALOHA') from datatypetestm ;
+cidx	CLONGTEXT	CONCAT(CLONGTEXT,'ALOHA')
+1	longtextlongtextlongtext	longtextlongtextlongtextALOHA
+select cidx, CTEXT from datatypetestm where CONCAT(CTEXT,CCHAR3,CCHAR7,'ALOHA') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CONCAT(CTEXT,CCHAR3) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CONCAT(CTEXT,CCHAR7) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CONCAT(CTEXT,'ALOHA') <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where CONCAT(CTINYTEXT,CCHAR3,CCHAR7,'ALOHA') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CONCAT(CTINYTEXT,CCHAR3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CONCAT(CTINYTEXT,CCHAR7) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CONCAT(CTINYTEXT,'ALOHA') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CONCAT(CMEDIUMTEXT,CCHAR3,CCHAR7,'ALOHA') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CONCAT(CMEDIUMTEXT,CCHAR3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CONCAT(CMEDIUMTEXT,CCHAR7) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CONCAT(CMEDIUMTEXT,'ALOHA') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where CONCAT(CLONGTEXT,CCHAR3,CCHAR7,'ALOHA') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CONCAT(CLONGTEXT,CCHAR3) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CONCAT(CLONGTEXT,CCHAR7) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CONCAT(CLONGTEXT,'ALOHA') <> 0 ;
+cidx	CLONGTEXT

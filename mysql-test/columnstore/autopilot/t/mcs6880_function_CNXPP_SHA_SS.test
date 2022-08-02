@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, SHA(CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, SHA(CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, SHA(CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, SHA(CLONGTEXT) from datatypetestm ;
+select cidx, SHA('THIS IS A TEST') from datatypetestm ;
+select cidx, SHA('Hello, World') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by SHA(CTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by SHA(CTINYTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by SHA(CMEDIUMTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by SHA(CLONGTEXT), cidx;

@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, UNIX_TIMESTAMP(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, UNIX_TIMESTAMP(CDATETIME) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, UNIX_TIMESTAMP(CTIME) from datatypetestm order by cidx;
+--replace_column 2 REPLACEDVALUE
+select cidx, UNIX_TIMESTAMP() from datatypetestm order by cidx;
+select cidx, UNIX_TIMESTAMP('2009-02-28') from datatypetestm order by cidx;
+select cidx, UNIX_TIMESTAMP('2009-07-04') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where UNIX_TIMESTAMP(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where UNIX_TIMESTAMP(CDATETIME) <> 0 order by cidx;
+#select cidx, CTIME from datatypetestm where UNIX_TIMESTAMP(CTIME) <> 0 order by cidx;

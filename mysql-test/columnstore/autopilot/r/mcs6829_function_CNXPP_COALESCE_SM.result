@@ -1,0 +1,74 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, COALESCE(CTEXT,'A',NULL) from datatypetestm ;
+cidx	CTEXT	COALESCE(CTEXT,'A',NULL)
+1	texttexttext	texttexttext
+select cidx, CTEXT, COALESCE(CTEXT,NULL,NULL,'B') from datatypetestm ;
+cidx	CTEXT	COALESCE(CTEXT,NULL,NULL,'B')
+1	texttexttext	texttexttext
+select cidx, CTEXT, COALESCE(CTEXT,NULL) from datatypetestm ;
+cidx	CTEXT	COALESCE(CTEXT,NULL)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,'A',NULL) from datatypetestm ;
+cidx	CTINYTEXT	COALESCE(CTINYTEXT,'A',NULL)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL,NULL,'B') from datatypetestm ;
+cidx	CTINYTEXT	COALESCE(CTINYTEXT,NULL,NULL,'B')
+1	tinytext	tinytext
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL) from datatypetestm ;
+cidx	CTINYTEXT	COALESCE(CTINYTEXT,NULL)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,'A',NULL) from datatypetestm ;
+cidx	CMEDIUMTEXT	COALESCE(CMEDIUMTEXT,'A',NULL)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL,NULL,'B') from datatypetestm ;
+cidx	CMEDIUMTEXT	COALESCE(CMEDIUMTEXT,NULL,NULL,'B')
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL) from datatypetestm ;
+cidx	CMEDIUMTEXT	COALESCE(CMEDIUMTEXT,NULL)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,'A',NULL) from datatypetestm ;
+cidx	CLONGTEXT	COALESCE(CLONGTEXT,'A',NULL)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL,NULL,'B') from datatypetestm ;
+cidx	CLONGTEXT	COALESCE(CLONGTEXT,NULL,NULL,'B')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL) from datatypetestm ;
+cidx	CLONGTEXT	COALESCE(CLONGTEXT,NULL)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,'A',NULL), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,NULL,NULL,'B'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,NULL), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,'A',NULL), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,NULL,NULL,'B'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,NULL), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,'A',NULL), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,NULL,NULL,'B'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,NULL), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,'A',NULL), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,NULL,NULL,'B'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,NULL), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

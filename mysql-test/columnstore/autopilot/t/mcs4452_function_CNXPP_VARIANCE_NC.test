@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select VARIANCE(CBIGINT) from datatypetestm;
+select VARIANCE(CDECIMAL1) from datatypetestm;
+select VARIANCE(CDECIMAL4) from datatypetestm;
+select VARIANCE(CDECIMAL4_2) from datatypetestm;
+select VARIANCE(CDECIMAL5) from datatypetestm;
+select VARIANCE(CDECIMAL9) from datatypetestm;
+select VARIANCE(CDECIMAL9_2) from datatypetestm;
+select VARIANCE(CDECIMAL10) from datatypetestm;
+select VARIANCE(CDECIMAL18) from datatypetestm;
+select VARIANCE(CDECIMAL18_2) from datatypetestm;
+select VARIANCE(CINTEGER) from datatypetestm;
+select VARIANCE(CSMALLINT) from datatypetestm;
+select VARIANCE(CTINYINT) from datatypetestm;
+select VARIANCE(CDOUBLE) from datatypetestm;
+select VARIANCE(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, VARIANCE(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, VARIANCE(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, VARIANCE(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, VARIANCE(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, VARIANCE(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, VARIANCE(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, VARIANCE(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, VARIANCE(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, VARIANCE(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, VARIANCE(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, VARIANCE(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, VARIANCE(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, VARIANCE(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, VARIANCE(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, VARIANCE(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

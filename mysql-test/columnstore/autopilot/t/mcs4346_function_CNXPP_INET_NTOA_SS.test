@@ -1,0 +1,52 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, INET_NTOA(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, INET_NTOA(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, INET_NTOA(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, INET_NTOA(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, INET_NTOA(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, INET_NTOA(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, INET_NTOA(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, INET_NTOA(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, INET_NTOA(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, INET_NTOA(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, INET_NTOA(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, INET_NTOA(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, INET_NTOA(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, INET_NTOA(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, INET_NTOA(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, INET_NTOA(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, INET_NTOA(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, INET_NTOA(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, INET_NTOA(CVCHAR255) from datatypetestm order by cidx;
+select cidx, INET_NTOA(12) from datatypetestm order by cidx;
+select cidx, INET_NTOA(123) from datatypetestm order by cidx;
+select cidx, INET_NTOA(1234) from datatypetestm order by cidx;
+select cidx, INET_NTOA(12345678) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by INET_NTOA(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by INET_NTOA(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by INET_NTOA(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by INET_NTOA(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by INET_NTOA(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by INET_NTOA(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by INET_NTOA(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by INET_NTOA(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by INET_NTOA(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by INET_NTOA(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by INET_NTOA(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by INET_NTOA(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by INET_NTOA(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by INET_NTOA(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by INET_NTOA(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by INET_NTOA(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by INET_NTOA(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by INET_NTOA(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by INET_NTOA(CVCHAR255), cidx;

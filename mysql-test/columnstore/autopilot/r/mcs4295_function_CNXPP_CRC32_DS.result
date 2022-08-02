@@ -1,0 +1,37 @@
+USE autopilot;
+select cidx, CDATE, CRC32(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	CRC32(CDATE)
+1	1997-01-01	4259772067
+select cidx, CDATETIME, CRC32(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	CRC32(CDATETIME)
+1	1997-01-01 00:00:00	1083136217
+select cidx, CTIME, CRC32(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	CRC32(CTIME)
+1	13:00:00	2437296560
+select cidx, CRC32('NULL') from datatypetestm order by cidx;
+cidx	CRC32('NULL')
+1	324932091
+select cidx, CRC32('null') from datatypetestm order by cidx;
+cidx	CRC32('null')
+1	634125391
+select cidx, CRC32(' ') from datatypetestm order by cidx;
+cidx	CRC32(' ')
+1	3916222277
+select cidx, CRC32(' THIS ') from datatypetestm order by cidx;
+cidx	CRC32(' THIS ')
+1	4042138972
+select cidx, CRC32('this') from datatypetestm order by cidx;
+cidx	CRC32('this')
+1	4277043751
+select cidx, CRC32('t') from datatypetestm order by cidx;
+cidx	CRC32('t')
+1	2238339752
+select cidx, CDATE from datatypetestm order by CRC32(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by CRC32(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by CRC32(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

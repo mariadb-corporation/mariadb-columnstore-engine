@@ -1,0 +1,23 @@
+USE autopilot;
+select cidx, CDATE, MD5(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	MD5(CDATE)
+1	1997-01-01	7e4e47ae134cb247e80b5e0393cfb4c0
+select cidx, CDATETIME, MD5(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	MD5(CDATETIME)
+1	1997-01-01 00:00:00	fb8c36abb3ecffd47e85e15f8b0a490d
+select cidx, CTIME, MD5(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	MD5(CTIME)
+1	13:00:00	c26cb3cb86b9c5a77211b6c724c364b4
+select cidx, MD5('2011-05-01') from datatypetestm order by cidx;
+cidx	MD5('2011-05-01')
+1	c7a16e3564a93e8393da22246748d231
+select cidx, MD5('2011-05-01 13:58:22.123456') from datatypetestm order by cidx;
+cidx	MD5('2011-05-01 13:58:22.123456')
+1	27e717d148a7cd0a8caceedebc34a532
+select cidx, CDATE from datatypetestm where MD5(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where MD5(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where MD5(CTIME) <> 0 order by cidx;
+cidx	CTIME

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CVCHAR7 ;
+cidx	CINTEGER	CVCHAR7
+6	7483643	ttttttt
+7	7483644	ttttttt
+8	7483645	ttttttt
+9	7483646	ttttttt
+10	7483647	zzzzzzz
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CVCHAR7 ;
+cidx	CINTEGER	CVCHAR7
+6	7483643	ttttttt
+7	7483644	ttttttt
+8	7483645	ttttttt
+9	7483646	ttttttt
+10	7483647	zzzzzzz
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CVCHAR7 ;
+cidx	CINTEGER	CVCHAR7
+1	-7483646	aaaaaaa
+2	-7483645	g
+3	-7483644	gg
+4	-7483643	ggg
+5	-7483642	gggg
+6	7483643	ttttttt
+7	7483644	ttttttt
+8	7483645	ttttttt
+9	7483646	ttttttt
+10	7483647	zzzzzzz
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CVCHAR7 ;
+cidx	CINTEGER	CVCHAR7
+1	-7483646	aaaaaaa
+2	-7483645	g
+3	-7483644	gg
+4	-7483643	ggg
+5	-7483642	gggg
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CVCHAR7 ;
+cidx	CINTEGER	CVCHAR7
+1	-7483646	aaaaaaa
+2	-7483645	g
+3	-7483644	gg
+4	-7483643	ggg
+5	-7483642	gggg

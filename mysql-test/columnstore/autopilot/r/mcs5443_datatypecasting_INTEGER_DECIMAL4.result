@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDECIMAL4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CDECIMAL4 ;
+cidx	CINTEGER	CDECIMAL4
+6	7483643	995
+7	7483644	996
+8	7483645	997
+9	7483646	998
+10	7483647	999
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDECIMAL4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CDECIMAL4 ;
+cidx	CINTEGER	CDECIMAL4
+6	7483643	995
+7	7483644	996
+8	7483645	997
+9	7483646	998
+10	7483647	999
+11	0	0
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDECIMAL4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CDECIMAL4 ;
+cidx	CINTEGER	CDECIMAL4
+1	-7483646	-999
+2	-7483645	-998
+3	-7483644	-997
+4	-7483643	-996
+5	-7483642	-995
+6	7483643	995
+7	7483644	996
+8	7483645	997
+9	7483646	998
+10	7483647	999
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDECIMAL4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CDECIMAL4 ;
+cidx	CINTEGER	CDECIMAL4
+1	-7483646	-999
+2	-7483645	-998
+3	-7483644	-997
+4	-7483643	-996
+5	-7483642	-995
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDECIMAL4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CDECIMAL4 ;
+cidx	CINTEGER	CDECIMAL4
+1	-7483646	-999
+2	-7483645	-998
+3	-7483644	-997
+4	-7483643	-996
+5	-7483642	-995
+11	0	0

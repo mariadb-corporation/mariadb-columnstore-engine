@@ -1,0 +1,44 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, IFNULL(CBIGINT,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, IFNULL(CDECIMAL1,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, IFNULL(CDECIMAL4,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, IFNULL(CDECIMAL4_2,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, IFNULL(CDECIMAL5,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, IFNULL(CDECIMAL9,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, IFNULL(CDECIMAL9_2,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, IFNULL(CDECIMAL10,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, IFNULL(CDECIMAL18,0) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, IFNULL(CDECIMAL18_2,0) from datatypetestm order by cidx;
+select cidx, CINTEGER, IFNULL(CINTEGER,0) from datatypetestm order by cidx;
+select cidx, CSMALLINT, IFNULL(CSMALLINT,0) from datatypetestm order by cidx;
+select cidx, CTINYINT, IFNULL(CTINYINT,0) from datatypetestm order by cidx;
+select cidx, CDOUBLE, IFNULL(CDOUBLE,0) from datatypetestm order by cidx;
+select cidx, CFLOAT, IFNULL(CFLOAT,0) from datatypetestm order by cidx;
+select cidx, IFNULL(-1*cidx,0) from datatypetestm order by cidx;
+select cidx, IFNULL(0*cidx,0) from datatypetestm order by cidx;
+select cidx, IFNULL(1*cidx,0) from datatypetestm order by cidx;
+select cidx, IFNULL(NULL,0) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by IFNULL(CBIGINT,0), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by IFNULL(CDECIMAL1,0), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by IFNULL(CDECIMAL4,0), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by IFNULL(CDECIMAL4_2,0), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by IFNULL(CDECIMAL5,0), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by IFNULL(CDECIMAL9,0), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by IFNULL(CDECIMAL9_2,0), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by IFNULL(CDECIMAL10,0), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by IFNULL(CDECIMAL18,0), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by IFNULL(CDECIMAL18_2,0), cidx;
+select cidx, CINTEGER from datatypetestm order by IFNULL(CINTEGER,0), cidx;
+select cidx, CSMALLINT from datatypetestm order by IFNULL(CSMALLINT,0), cidx;
+select cidx, CTINYINT from datatypetestm order by IFNULL(CTINYINT,0), cidx;
+select cidx, CDOUBLE from datatypetestm order by IFNULL(CDOUBLE,0), cidx;
+select cidx, CFLOAT from datatypetestm order by IFNULL(CFLOAT,0), cidx;

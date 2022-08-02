@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CRC32(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, CRC32(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, CRC32(CTIME) from datatypetestm order by cidx;
+select cidx, CRC32('NULL') from datatypetestm order by cidx;
+select cidx, CRC32('null') from datatypetestm order by cidx;
+select cidx, CRC32(' ') from datatypetestm order by cidx;
+select cidx, CRC32(' THIS ') from datatypetestm order by cidx;
+select cidx, CRC32('this') from datatypetestm order by cidx;
+select cidx, CRC32('t') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by CRC32(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by CRC32(CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by CRC32(CTIME), cidx;

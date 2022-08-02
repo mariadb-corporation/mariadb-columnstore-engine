@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 > dtt2.CTINYINT ;
+cidx	CDECIMAL1	CTINYINT
+1	-9	-26
+2	-8	-25
+3	-7	-24
+4	-6	-23
+5	-5	-22
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 >= dtt2.CTINYINT ;
+cidx	CDECIMAL1	CTINYINT
+1	-9	-26
+2	-8	-25
+3	-7	-24
+4	-6	-23
+5	-5	-22
+11	0	0
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <> dtt2.CTINYINT ;
+cidx	CDECIMAL1	CTINYINT
+1	-9	-26
+2	-8	-25
+3	-7	-24
+4	-6	-23
+5	-5	-22
+6	5	23
+7	6	24
+8	7	25
+9	8	26
+10	9	27
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 < dtt2.CTINYINT ;
+cidx	CDECIMAL1	CTINYINT
+6	5	23
+7	6	24
+8	7	25
+9	8	26
+10	9	27
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <= dtt2.CTINYINT ;
+cidx	CDECIMAL1	CTINYINT
+6	5	23
+7	6	24
+8	7	25
+9	8	26
+10	9	27
+11	0	0

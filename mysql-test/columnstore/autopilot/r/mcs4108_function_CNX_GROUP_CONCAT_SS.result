@@ -1,0 +1,122 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select GROUP_CONCAT(CCHAR1) from datatypetestm;
+GROUP_CONCAT(CCHAR1)
+a
+select GROUP_CONCAT(CCHAR2) from datatypetestm;
+GROUP_CONCAT(CCHAR2)
+aa
+select GROUP_CONCAT(CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR3)
+aaa
+select GROUP_CONCAT(CCHAR4) from datatypetestm;
+GROUP_CONCAT(CCHAR4)
+aaaa
+select GROUP_CONCAT(CCHAR5) from datatypetestm;
+GROUP_CONCAT(CCHAR5)
+aaaaa
+select GROUP_CONCAT(CCHAR6) from datatypetestm;
+GROUP_CONCAT(CCHAR6)
+aaaaaa
+select GROUP_CONCAT(CCHAR7) from datatypetestm;
+GROUP_CONCAT(CCHAR7)
+aaaaaaa
+select GROUP_CONCAT(CCHAR8) from datatypetestm;
+GROUP_CONCAT(CCHAR8)
+aaaaaaaa
+select GROUP_CONCAT(CCHAR9) from datatypetestm;
+GROUP_CONCAT(CCHAR9)
+aaaaaaaaa
+select GROUP_CONCAT(CCHAR255) from datatypetestm;
+GROUP_CONCAT(CCHAR255)
+aaaaaaaaaa
+select GROUP_CONCAT(CVCHAR1) from datatypetestm;
+GROUP_CONCAT(CVCHAR1)
+a
+select GROUP_CONCAT(CVCHAR2) from datatypetestm;
+GROUP_CONCAT(CVCHAR2)
+aa
+select GROUP_CONCAT(CVCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR3)
+aaa
+select GROUP_CONCAT(CVCHAR4) from datatypetestm;
+GROUP_CONCAT(CVCHAR4)
+aaaa
+select GROUP_CONCAT(CVCHAR5) from datatypetestm;
+GROUP_CONCAT(CVCHAR5)
+aaaaa
+select GROUP_CONCAT(CVCHAR6) from datatypetestm;
+GROUP_CONCAT(CVCHAR6)
+aaaaaa
+select GROUP_CONCAT(CVCHAR7) from datatypetestm;
+GROUP_CONCAT(CVCHAR7)
+aaaaaaa
+select GROUP_CONCAT(CVCHAR8) from datatypetestm;
+GROUP_CONCAT(CVCHAR8)
+aaaaaaaa
+select GROUP_CONCAT(CVCHAR255) from datatypetestm;
+GROUP_CONCAT(CVCHAR255)
+aaaaaaaaaa
+select GROUP_CONCAT('Hello') from datatypetestm;
+GROUP_CONCAT('Hello')
+Hello
+select GROUP_CONCAT('Hello, World') from datatypetestm;
+GROUP_CONCAT('Hello, World')
+Hello, World
+select cidx, CCHAR1, GROUP_CONCAT(CCHAR1) from datatypetestm group by cidx, CCHAR1 order by cidx;
+cidx	CCHAR1	GROUP_CONCAT(CCHAR1)
+1	a	a
+select cidx, CCHAR2, GROUP_CONCAT(CCHAR2) from datatypetestm group by cidx, CCHAR2 order by cidx;
+cidx	CCHAR2	GROUP_CONCAT(CCHAR2)
+1	aa	aa
+select cidx, CCHAR3, GROUP_CONCAT(CCHAR3) from datatypetestm group by cidx, CCHAR3 order by cidx;
+cidx	CCHAR3	GROUP_CONCAT(CCHAR3)
+1	aaa	aaa
+select cidx, CCHAR4, GROUP_CONCAT(CCHAR4) from datatypetestm group by cidx, CCHAR4 order by cidx;
+cidx	CCHAR4	GROUP_CONCAT(CCHAR4)
+1	aaaa	aaaa
+select cidx, CCHAR5, GROUP_CONCAT(CCHAR5) from datatypetestm group by cidx, CCHAR5 order by cidx;
+cidx	CCHAR5	GROUP_CONCAT(CCHAR5)
+1	aaaaa	aaaaa
+select cidx, CCHAR6, GROUP_CONCAT(CCHAR6) from datatypetestm group by cidx, CCHAR6 order by cidx;
+cidx	CCHAR6	GROUP_CONCAT(CCHAR6)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, GROUP_CONCAT(CCHAR7) from datatypetestm group by cidx, CCHAR7 order by cidx;
+cidx	CCHAR7	GROUP_CONCAT(CCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, GROUP_CONCAT(CCHAR8) from datatypetestm group by cidx, CCHAR8 order by cidx;
+cidx	CCHAR8	GROUP_CONCAT(CCHAR8)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, GROUP_CONCAT(CCHAR9) from datatypetestm group by cidx, CCHAR9 order by cidx;
+cidx	CCHAR9	GROUP_CONCAT(CCHAR9)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, GROUP_CONCAT(CCHAR255) from datatypetestm group by cidx, CCHAR255 order by cidx;
+cidx	CCHAR255	GROUP_CONCAT(CCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, GROUP_CONCAT(CVCHAR1) from datatypetestm group by cidx, CVCHAR1 order by cidx;
+cidx	CVCHAR1	GROUP_CONCAT(CVCHAR1)
+1	a	a
+select cidx, CVCHAR2, GROUP_CONCAT(CVCHAR2) from datatypetestm group by cidx, CVCHAR2 order by cidx;
+cidx	CVCHAR2	GROUP_CONCAT(CVCHAR2)
+1	aa	aa
+select cidx, CVCHAR3, GROUP_CONCAT(CVCHAR3) from datatypetestm group by cidx, CVCHAR3 order by cidx;
+cidx	CVCHAR3	GROUP_CONCAT(CVCHAR3)
+1	aaa	aaa
+select cidx, CVCHAR4, GROUP_CONCAT(CVCHAR4) from datatypetestm group by cidx, CVCHAR4 order by cidx;
+cidx	CVCHAR4	GROUP_CONCAT(CVCHAR4)
+1	aaaa	aaaa
+select cidx, CVCHAR5, GROUP_CONCAT(CVCHAR5) from datatypetestm group by cidx, CVCHAR5 order by cidx;
+cidx	CVCHAR5	GROUP_CONCAT(CVCHAR5)
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, GROUP_CONCAT(CVCHAR6) from datatypetestm group by cidx, CVCHAR6 order by cidx;
+cidx	CVCHAR6	GROUP_CONCAT(CVCHAR6)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, GROUP_CONCAT(CVCHAR7) from datatypetestm group by cidx, CVCHAR7 order by cidx;
+cidx	CVCHAR7	GROUP_CONCAT(CVCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, GROUP_CONCAT(CVCHAR8) from datatypetestm group by cidx, CVCHAR8 order by cidx;
+cidx	CVCHAR8	GROUP_CONCAT(CVCHAR8)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, GROUP_CONCAT(CVCHAR255) from datatypetestm group by cidx, CVCHAR255 order by cidx;
+cidx	CVCHAR255	GROUP_CONCAT(CVCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa

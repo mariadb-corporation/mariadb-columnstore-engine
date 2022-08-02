@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR7, dtt2.CDECIMAL4_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR7 > dtt2.CDECIMAL4_2 ;
+cidx	CCHAR7	CDECIMAL4_2
+1	aaaaaaa	-9.99
+2	g	-9.98
+3	gg	-9.97
+4	ggg	-9.96
+5	gggg	-9.95
+select dtt1.cidx, dtt1.CCHAR7, dtt2.CDECIMAL4_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR7 >= dtt2.CDECIMAL4_2 ;
+cidx	CCHAR7	CDECIMAL4_2
+1	aaaaaaa	-9.99
+2	g	-9.98
+3	gg	-9.97
+4	ggg	-9.96
+5	gggg	-9.95
+select dtt1.cidx, dtt1.CCHAR7, dtt2.CDECIMAL4_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR7 <> dtt2.CDECIMAL4_2 ;
+cidx	CCHAR7	CDECIMAL4_2
+1	aaaaaaa	-9.99
+2	g	-9.98
+3	gg	-9.97
+4	ggg	-9.96
+5	gggg	-9.95
+6	ttttttt	9.95
+7	ttttttt	9.96
+8	ttttttt	9.97
+9	ttttttt	9.98
+10	zzzzzzz	9.99
+select dtt1.cidx, dtt1.CCHAR7, dtt2.CDECIMAL4_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR7 < dtt2.CDECIMAL4_2 ;
+cidx	CCHAR7	CDECIMAL4_2
+6	ttttttt	9.95
+7	ttttttt	9.96
+8	ttttttt	9.97
+9	ttttttt	9.98
+10	zzzzzzz	9.99
+select dtt1.cidx, dtt1.CCHAR7, dtt2.CDECIMAL4_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR7 <= dtt2.CDECIMAL4_2 ;
+cidx	CCHAR7	CDECIMAL4_2
+6	ttttttt	9.95
+7	ttttttt	9.96
+8	ttttttt	9.97
+9	ttttttt	9.98
+10	zzzzzzz	9.99

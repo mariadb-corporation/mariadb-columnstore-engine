@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CFLOAT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 > dtt2.CFLOAT ;
+cidx	CDECIMAL4_2	CFLOAT
+1	-9.99	-3.40287e18
+2	-9.98	-3.40287e18
+3	-9.97	-3.40286e18
+4	-9.96	-3.40286e18
+5	-9.95	-3.40286e18
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CFLOAT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 >= dtt2.CFLOAT ;
+cidx	CDECIMAL4_2	CFLOAT
+1	-9.99	-3.40287e18
+2	-9.98	-3.40287e18
+3	-9.97	-3.40286e18
+4	-9.96	-3.40286e18
+5	-9.95	-3.40286e18
+11	0.00	0
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CFLOAT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <> dtt2.CFLOAT ;
+cidx	CDECIMAL4_2	CFLOAT
+1	-9.99	-3.40287e18
+2	-9.98	-3.40287e18
+3	-9.97	-3.40286e18
+4	-9.96	-3.40286e18
+5	-9.95	-3.40286e18
+6	9.95	3.40286e18
+7	9.96	3.40286e18
+8	9.97	3.40286e18
+9	9.98	3.40287e18
+10	9.99	3.40287e18
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CFLOAT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 < dtt2.CFLOAT ;
+cidx	CDECIMAL4_2	CFLOAT
+6	9.95	3.40286e18
+7	9.96	3.40286e18
+8	9.97	3.40286e18
+9	9.98	3.40287e18
+10	9.99	3.40287e18
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CFLOAT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <= dtt2.CFLOAT ;
+cidx	CDECIMAL4_2	CFLOAT
+6	9.95	3.40286e18
+7	9.96	3.40286e18
+8	9.97	3.40286e18
+9	9.98	3.40287e18
+10	9.99	3.40287e18
+11	0.00	0

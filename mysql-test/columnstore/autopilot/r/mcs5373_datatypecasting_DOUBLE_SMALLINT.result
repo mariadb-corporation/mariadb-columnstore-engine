@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE > dtt2.CSMALLINT ;
+cidx	CDOUBLE	CSMALLINT
+6	1.797693227e108	763
+7	1.797693228e108	764
+8	1.797693229e108	765
+9	1.79769323e108	766
+10	1.797693231e108	767
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE >= dtt2.CSMALLINT ;
+cidx	CDOUBLE	CSMALLINT
+6	1.797693227e108	763
+7	1.797693228e108	764
+8	1.797693229e108	765
+9	1.79769323e108	766
+10	1.797693231e108	767
+11	0	0
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <> dtt2.CSMALLINT ;
+cidx	CDOUBLE	CSMALLINT
+1	-1.797693231e108	-766
+2	-1.79769323e108	-765
+3	-1.797693229e108	-764
+4	-1.797693228e108	-763
+5	-1.797693227e108	-762
+6	1.797693227e108	763
+7	1.797693228e108	764
+8	1.797693229e108	765
+9	1.79769323e108	766
+10	1.797693231e108	767
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE < dtt2.CSMALLINT ;
+cidx	CDOUBLE	CSMALLINT
+1	-1.797693231e108	-766
+2	-1.79769323e108	-765
+3	-1.797693229e108	-764
+4	-1.797693228e108	-763
+5	-1.797693227e108	-762
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <= dtt2.CSMALLINT ;
+cidx	CDOUBLE	CSMALLINT
+1	-1.797693231e108	-766
+2	-1.79769323e108	-765
+3	-1.797693229e108	-764
+4	-1.797693228e108	-763
+5	-1.797693227e108	-762
+11	0	0

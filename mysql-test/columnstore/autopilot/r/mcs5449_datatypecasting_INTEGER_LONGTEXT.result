@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CLONGTEXT ;
+cidx	CINTEGER	CLONGTEXT
+6	7483643	longtextlongtextlongtext
+7	7483644	longtextlongtextlongtext
+8	7483645	longtextlongtextlongtext
+9	7483646	longtextlongtextlongtext
+10	7483647	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CLONGTEXT ;
+cidx	CINTEGER	CLONGTEXT
+6	7483643	longtextlongtextlongtext
+7	7483644	longtextlongtextlongtext
+8	7483645	longtextlongtextlongtext
+9	7483646	longtextlongtextlongtext
+10	7483647	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CLONGTEXT ;
+cidx	CINTEGER	CLONGTEXT
+1	-7483646	longtextlongtextlongtext
+2	-7483645	longtextlongtextlongtext
+3	-7483644	longtextlongtextlongtext
+4	-7483643	longtextlongtextlongtext
+5	-7483642	longtextlongtextlongtext
+6	7483643	longtextlongtextlongtext
+7	7483644	longtextlongtextlongtext
+8	7483645	longtextlongtextlongtext
+9	7483646	longtextlongtextlongtext
+10	7483647	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CLONGTEXT ;
+cidx	CINTEGER	CLONGTEXT
+1	-7483646	longtextlongtextlongtext
+2	-7483645	longtextlongtextlongtext
+3	-7483644	longtextlongtextlongtext
+4	-7483643	longtextlongtextlongtext
+5	-7483642	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CLONGTEXT ;
+cidx	CINTEGER	CLONGTEXT
+1	-7483646	longtextlongtextlongtext
+2	-7483645	longtextlongtextlongtext
+3	-7483644	longtextlongtextlongtext
+4	-7483643	longtextlongtextlongtext
+5	-7483642	longtextlongtextlongtext

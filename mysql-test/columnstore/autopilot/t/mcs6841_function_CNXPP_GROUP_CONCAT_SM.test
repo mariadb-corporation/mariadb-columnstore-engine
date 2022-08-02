@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select GROUP_CONCAT(CTEXT,CCHAR3) from datatypetestm;
+select GROUP_CONCAT(CTEXT,CCHAR3,'Calpont') from datatypetestm;
+select GROUP_CONCAT(CTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
+select GROUP_CONCAT(CTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+select GROUP_CONCAT(CTINYTEXT,CCHAR3) from datatypetestm;
+select GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont') from datatypetestm;
+select GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
+select GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3) from datatypetestm;
+select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont') from datatypetestm;
+select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
+select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+select GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm;
+select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm;
+select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
+select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3) from datatypetestm group by cidx, CTEXT ;
+select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CTEXT ;
+select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CTEXT ;
+select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CTEXT ;
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT,CCHAR3) from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3) from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm group by cidx, CLONGTEXT ;
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CLONGTEXT ;
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CLONGTEXT ;
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CLONGTEXT ;

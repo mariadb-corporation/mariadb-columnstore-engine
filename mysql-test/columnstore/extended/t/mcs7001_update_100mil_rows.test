@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Version buffer test
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs7001_db;
+--enable_warnings
+#
+CREATE DATABASE mcs7001_db;
+USE mcs7001_db;
+# -------------------------------------------------------------- #
+# Create test tables
+# -------------------------------------------------------------- #
+create table update100mrows (cidx integer, cinteger integer) engine=Columnstore DEFAULT CHARSET=utf8mb3;
+# -------------------------------------------------------------- #
+# LDI 10g dataset for the lineitem table
+# -------------------------------------------------------------- #
+--exec echo "dummy" | awk '{for(i=1; i<=100000000; i++)print i "|" int(rand()* 10000) "|"}'|cpimport mcs7001_db update100mrows > /dev/null
+update update100mrows set cinteger=cidx;
+select count(*) from update100mrows where cinteger=cidx;
+#
+DROP DATABASE mcs7001_db;
+#

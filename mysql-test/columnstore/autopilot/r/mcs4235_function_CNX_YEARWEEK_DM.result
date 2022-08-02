@@ -1,0 +1,121 @@
+USE autopilot;
+select cidx, CDATE, YEARWEEK(CDATE,0) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,0)
+1	1997-01-01	199652
+select cidx, CDATE, YEARWEEK(CDATE,1) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,1)
+1	1997-01-01	199701
+select cidx, CDATE, YEARWEEK(CDATE,2) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,2)
+1	1997-01-01	199652
+select cidx, CDATE, YEARWEEK(CDATE,3) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,3)
+1	1997-01-01	199701
+select cidx, CDATE, YEARWEEK(CDATE,4) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,4)
+1	1997-01-01	199701
+select cidx, CDATE, YEARWEEK(CDATE,5) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,5)
+1	1997-01-01	199653
+select cidx, CDATE, YEARWEEK(CDATE,6) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,6)
+1	1997-01-01	199701
+select cidx, CDATE, YEARWEEK(CDATE,7) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE,7)
+1	1997-01-01	199653
+select cidx, CDATETIME, YEARWEEK(CDATETIME,0) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,0)
+1	1997-01-01 00:00:00	199652
+select cidx, CDATETIME, YEARWEEK(CDATETIME,1) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,1)
+1	1997-01-01 00:00:00	199701
+select cidx, CDATETIME, YEARWEEK(CDATETIME,2) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,2)
+1	1997-01-01 00:00:00	199652
+select cidx, CDATETIME, YEARWEEK(CDATETIME,3) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,3)
+1	1997-01-01 00:00:00	199701
+select cidx, CDATETIME, YEARWEEK(CDATETIME,4) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,4)
+1	1997-01-01 00:00:00	199701
+select cidx, CDATETIME, YEARWEEK(CDATETIME,5) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,5)
+1	1997-01-01 00:00:00	199653
+select cidx, CDATETIME, YEARWEEK(CDATETIME,6) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,6)
+1	1997-01-01 00:00:00	199701
+select cidx, CDATETIME, YEARWEEK(CDATETIME,7) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME,7)
+1	1997-01-01 00:00:00	199653
+select cidx, CTIME, YEARWEEK(CTIME,0) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,0)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,1) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,1)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,2) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,2)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,3) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,3)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,4) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,4)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,5) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,5)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,6) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,6)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,7) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME,7)
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,0) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,1) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,2) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,3) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,4) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,5) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,6) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where YEARWEEK(CDATE,7) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,0) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,1) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,2) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,3) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,4) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,5) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,6) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where YEARWEEK(CDATETIME,7) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

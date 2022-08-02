@@ -1,0 +1,98 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LPAD(CTEXT,5,'**') from datatypetestm ;
+cidx	CTEXT	LPAD(CTEXT,5,'**')
+1	texttexttext	textt
+select cidx, CTEXT, LPAD(CTEXT,5,'********') from datatypetestm ;
+cidx	CTEXT	LPAD(CTEXT,5,'********')
+1	texttexttext	textt
+select cidx, CTEXT, LPAD(CTEXT,15,'**') from datatypetestm ;
+cidx	CTEXT	LPAD(CTEXT,15,'**')
+1	texttexttext	***texttexttext
+select cidx, CTEXT, LPAD(CTEXT,15,'********') from datatypetestm ;
+cidx	CTEXT	LPAD(CTEXT,15,'********')
+1	texttexttext	***texttexttext
+select cidx, CTINYTEXT, LPAD(CTINYTEXT,5,'**') from datatypetestm ;
+cidx	CTINYTEXT	LPAD(CTINYTEXT,5,'**')
+1	tinytext	tinyt
+select cidx, CTINYTEXT, LPAD(CTINYTEXT,5,'********') from datatypetestm ;
+cidx	CTINYTEXT	LPAD(CTINYTEXT,5,'********')
+1	tinytext	tinyt
+select cidx, CTINYTEXT, LPAD(CTINYTEXT,15,'**') from datatypetestm ;
+cidx	CTINYTEXT	LPAD(CTINYTEXT,15,'**')
+1	tinytext	*******tinytext
+select cidx, CTINYTEXT, LPAD(CTINYTEXT,15,'********') from datatypetestm ;
+cidx	CTINYTEXT	LPAD(CTINYTEXT,15,'********')
+1	tinytext	*******tinytext
+select cidx, CMEDIUMTEXT, LPAD(CMEDIUMTEXT,5,'**') from datatypetestm ;
+cidx	CMEDIUMTEXT	LPAD(CMEDIUMTEXT,5,'**')
+1	mediumtestmediumtest	mediu
+select cidx, CMEDIUMTEXT, LPAD(CMEDIUMTEXT,5,'********') from datatypetestm ;
+cidx	CMEDIUMTEXT	LPAD(CMEDIUMTEXT,5,'********')
+1	mediumtestmediumtest	mediu
+select cidx, CMEDIUMTEXT, LPAD(CMEDIUMTEXT,15,'**') from datatypetestm ;
+cidx	CMEDIUMTEXT	LPAD(CMEDIUMTEXT,15,'**')
+1	mediumtestmediumtest	mediumtestmediu
+select cidx, CMEDIUMTEXT, LPAD(CMEDIUMTEXT,15,'********') from datatypetestm ;
+cidx	CMEDIUMTEXT	LPAD(CMEDIUMTEXT,15,'********')
+1	mediumtestmediumtest	mediumtestmediu
+select cidx, CLONGTEXT, LPAD(CLONGTEXT,5,'**') from datatypetestm ;
+cidx	CLONGTEXT	LPAD(CLONGTEXT,5,'**')
+1	longtextlongtextlongtext	longt
+select cidx, CLONGTEXT, LPAD(CLONGTEXT,5,'********') from datatypetestm ;
+cidx	CLONGTEXT	LPAD(CLONGTEXT,5,'********')
+1	longtextlongtextlongtext	longt
+select cidx, CLONGTEXT, LPAD(CLONGTEXT,15,'**') from datatypetestm ;
+cidx	CLONGTEXT	LPAD(CLONGTEXT,15,'**')
+1	longtextlongtextlongtext	longtextlongtex
+select cidx, CLONGTEXT, LPAD(CLONGTEXT,15,'********') from datatypetestm ;
+cidx	CLONGTEXT	LPAD(CLONGTEXT,15,'********')
+1	longtextlongtextlongtext	longtextlongtex
+select cidx, CTEXT from datatypetestm order by LPAD(CTEXT,5,'**'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LPAD(CTEXT,5,'********'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LPAD(CTEXT,15,'**'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LPAD(CTEXT,15,'********'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by LPAD(CTINYTEXT,5,'**'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LPAD(CTINYTEXT,5,'********'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LPAD(CTINYTEXT,15,'**'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LPAD(CTINYTEXT,15,'********'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by LPAD(CMEDIUMTEXT,5,'**'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LPAD(CMEDIUMTEXT,5,'********'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LPAD(CMEDIUMTEXT,15,'**'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LPAD(CMEDIUMTEXT,15,'********'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by LPAD(CLONGTEXT,5,'**'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LPAD(CLONGTEXT,5,'********'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LPAD(CLONGTEXT,15,'**'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LPAD(CLONGTEXT,15,'********'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

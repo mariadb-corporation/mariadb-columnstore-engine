@@ -1,0 +1,91 @@
+USE autopilot;
+select VAR_POP(CBIGINT) from datatypetestm;
+VAR_POP(CBIGINT)
+0.0000
+select VAR_POP(CDECIMAL1) from datatypetestm;
+VAR_POP(CDECIMAL1)
+0.0000
+select VAR_POP(CDECIMAL4) from datatypetestm;
+VAR_POP(CDECIMAL4)
+0.0000
+select VAR_POP(CDECIMAL4_2) from datatypetestm;
+VAR_POP(CDECIMAL4_2)
+0.000000
+select VAR_POP(CDECIMAL5) from datatypetestm;
+VAR_POP(CDECIMAL5)
+0.0000
+select VAR_POP(CDECIMAL9) from datatypetestm;
+VAR_POP(CDECIMAL9)
+0.0000
+select VAR_POP(CDECIMAL9_2) from datatypetestm;
+VAR_POP(CDECIMAL9_2)
+0.000000
+select VAR_POP(CDECIMAL10) from datatypetestm;
+VAR_POP(CDECIMAL10)
+0.0000
+select VAR_POP(CDECIMAL18) from datatypetestm;
+VAR_POP(CDECIMAL18)
+0.0000
+select VAR_POP(CDECIMAL18_2) from datatypetestm;
+VAR_POP(CDECIMAL18_2)
+0.000000
+select VAR_POP(CINTEGER) from datatypetestm;
+VAR_POP(CINTEGER)
+0.0000
+select VAR_POP(CSMALLINT) from datatypetestm;
+VAR_POP(CSMALLINT)
+0.0000
+select VAR_POP(CTINYINT) from datatypetestm;
+VAR_POP(CTINYINT)
+0.0000
+select VAR_POP(CDOUBLE) from datatypetestm;
+VAR_POP(CDOUBLE)
+0
+select VAR_POP(CFLOAT) from datatypetestm;
+VAR_POP(CFLOAT)
+0
+select cidx, CBIGINT, VAR_POP(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+cidx	CBIGINT	VAR_POP(CBIGINT)
+1	-72036854775806	0.0000
+select cidx, CDECIMAL1, VAR_POP(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+cidx	CDECIMAL1	VAR_POP(CDECIMAL1)
+1	-9	0.0000
+select cidx, CDECIMAL4, VAR_POP(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+cidx	CDECIMAL4	VAR_POP(CDECIMAL4)
+1	-999	0.0000
+select cidx, CDECIMAL4_2, VAR_POP(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+cidx	CDECIMAL4_2	VAR_POP(CDECIMAL4_2)
+1	-9.99	0.000000
+select cidx, CDECIMAL5, VAR_POP(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+cidx	CDECIMAL5	VAR_POP(CDECIMAL5)
+1	-999	0.0000
+select cidx, CDECIMAL9, VAR_POP(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+cidx	CDECIMAL9	VAR_POP(CDECIMAL9)
+1	-999999	0.0000
+select cidx, CDECIMAL9_2, VAR_POP(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+cidx	CDECIMAL9_2	VAR_POP(CDECIMAL9_2)
+1	-9999.99	0.000000
+select cidx, CDECIMAL10, VAR_POP(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+cidx	CDECIMAL10	VAR_POP(CDECIMAL10)
+1	-9999999	0.0000
+select cidx, CDECIMAL18, VAR_POP(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+cidx	CDECIMAL18	VAR_POP(CDECIMAL18)
+1	-9999999999999	0.0000
+select cidx, CDECIMAL18_2, VAR_POP(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+cidx	CDECIMAL18_2	VAR_POP(CDECIMAL18_2)
+1	-99999999999.99	0.000000
+select cidx, CINTEGER, VAR_POP(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+cidx	CINTEGER	VAR_POP(CINTEGER)
+1	-7483646	0.0000
+select cidx, CSMALLINT, VAR_POP(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+cidx	CSMALLINT	VAR_POP(CSMALLINT)
+1	-766	0.0000
+select cidx, CTINYINT, VAR_POP(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+cidx	CTINYINT	VAR_POP(CTINYINT)
+1	-26	0.0000
+select cidx, CDOUBLE, VAR_POP(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+cidx	CDOUBLE	VAR_POP(CDOUBLE)
+1	-1.797693231e108	0
+select cidx, CFLOAT, VAR_POP(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;
+cidx	CFLOAT	VAR_POP(CFLOAT)
+1	-3.40287e18	0

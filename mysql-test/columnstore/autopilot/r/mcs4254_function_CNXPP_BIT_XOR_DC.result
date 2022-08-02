@@ -1,0 +1,19 @@
+USE autopilot;
+select BIT_XOR(CDATE) from datatypetestm;
+BIT_XOR(CDATE)
+19970101
+select BIT_XOR(CDATETIME) from datatypetestm;
+BIT_XOR(CDATETIME)
+19970101000000
+select BIT_XOR(CTIME) from datatypetestm;
+BIT_XOR(CTIME)
+130000
+select cidx, CDATE, BIT_XOR(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	BIT_XOR(CDATE)
+1	1997-01-01	19970101
+select cidx, CDATETIME, BIT_XOR(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	BIT_XOR(CDATETIME)
+1	1997-01-01 00:00:00	19970101000000
+select cidx, CTIME, BIT_XOR(CTIME) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	BIT_XOR(CTIME)
+1	13:00:00	130000

@@ -1,0 +1,38 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INET_ATON(CTEXT) from datatypetestm ;
+cidx	CTEXT	INET_ATON(CTEXT)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, INET_ATON(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	INET_ATON(CTINYTEXT)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, INET_ATON(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	INET_ATON(CMEDIUMTEXT)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, INET_ATON(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	INET_ATON(CLONGTEXT)
+1	longtextlongtextlongtext	NULL
+select cidx, INET_ATON('0.0.0.0') from datatypetestm ;
+cidx	INET_ATON('0.0.0.0')
+1	0
+select cidx, INET_ATON('255.255.255.255') from datatypetestm ;
+cidx	INET_ATON('255.255.255.255')
+1	4294967295
+select cidx, INET_ATON('127.0.0.1') from datatypetestm ;
+cidx	INET_ATON('127.0.0.1')
+1	2130706433
+select cidx, INET_ATON('192.168.2.1') from datatypetestm ;
+cidx	INET_ATON('192.168.2.1')
+1	3232236033
+select cidx, CTEXT from datatypetestm order by INET_ATON(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by INET_ATON(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by INET_ATON(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by INET_ATON(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

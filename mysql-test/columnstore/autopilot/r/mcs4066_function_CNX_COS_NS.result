@@ -1,0 +1,106 @@
+USE autopilot;
+select cidx, CBIGINT, COS(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	COS(CBIGINT)
+1	-72036854775806	-0.9790102376506001
+select cidx, CDECIMAL1, COS(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	COS(CDECIMAL1)
+1	-9	-0.9111302618846769
+select cidx, CDECIMAL4, COS(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	COS(CDECIMAL4)
+1	-999	0.9996498529808264
+select cidx, CDECIMAL4_2, COS(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	COS(CDECIMAL4_2)
+1	-9.99	-0.8444696962887723
+select cidx, CDECIMAL5, COS(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	COS(CDECIMAL5)
+1	-999	0.9996498529808264
+select cidx, CDECIMAL9, COS(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	COS(CDECIMAL9)
+1	-999999	0.21161995758460128
+select cidx, CDECIMAL9_2, COS(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	COS(CDECIMAL9_2)
+1	-9999.99	-0.9551638538408024
+select cidx, CDECIMAL10, COS(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	COS(CDECIMAL10)
+1	-9999999	-0.13632151600483616
+select cidx, CDECIMAL18, COS(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	COS(CDECIMAL18)
+1	-9999999999999	0.27417723026939433
+select cidx, CDECIMAL18_2, COS(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	COS(CDECIMAL18_2)
+1	-99999999999.99	0.38011095090671887
+select cidx, CINTEGER, COS(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	COS(CINTEGER)
+1	-7483646	-0.02041824310582968
+select cidx, CSMALLINT, COS(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	COS(CSMALLINT)
+1	-766	0.8532515498073621
+select cidx, CTINYINT, COS(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	COS(CTINYINT)
+1	-26	0.6469193223286404
+select cidx, CDOUBLE, COS(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	COS(CDOUBLE)
+1	-1.797693231e108	-0.673989289318166
+select cidx, CFLOAT, COS(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	COS(CFLOAT)
+1	-3.40287e18	-0.9450444801837102
+select cidx, COS(0*cidx) from datatypetestm order by cidx;
+cidx	COS(0*cidx)
+1	1
+select cidx, COS(60*cidx) from datatypetestm order by cidx;
+cidx	COS(60*cidx)
+1	-0.9524129804151563
+select cidx, COS(90*cidx) from datatypetestm order by cidx;
+cidx	COS(90*cidx)
+1	-0.4480736161291701
+select cidx, COS(180*cidx) from datatypetestm order by cidx;
+cidx	COS(180*cidx)
+1	-0.5984600690578581
+select cidx, COS(360*cidx) from datatypetestm order by cidx;
+cidx	COS(360*cidx)
+1	-0.2836910914865273
+select cidx, CBIGINT from datatypetestm where COS(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where COS(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where COS(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm where COS(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm where COS(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm where COS(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where COS(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm where COS(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm where COS(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where COS(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where COS(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm where COS(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm where COS(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where COS(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where COS(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18

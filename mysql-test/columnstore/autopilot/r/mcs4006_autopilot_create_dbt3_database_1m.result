@@ -1,0 +1,215 @@
+DROP DATABASE IF EXISTS mcs4006_db;
+CREATE DATABASE mcs4006_db;
+USE mcs4006_db;
+set columnstore_use_import_for_batchinsert=1;
+drop table if exists nation;
+create table nation (
+n_nationkey int,
+n_name char (25),
+n_regionkey int,
+n_comment varchar (152)
+) engine=columnstore;
+SHOW CREATE TABLE nation;
+Table	Create Table
+nation	CREATE TABLE `nation` (
+  `n_nationkey` int(11) DEFAULT NULL,
+  `n_name` char(25) DEFAULT NULL,
+  `n_regionkey` int(11) DEFAULT NULL,
+  `n_comment` varchar(152) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists region;
+create table region (
+r_regionkey int,
+r_name char (25),
+r_comment varchar (152)
+) engine=columnstore;
+SHOW CREATE TABLE region;
+Table	Create Table
+region	CREATE TABLE `region` (
+  `r_regionkey` int(11) DEFAULT NULL,
+  `r_name` char(25) DEFAULT NULL,
+  `r_comment` varchar(152) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists customer;
+create table customer (
+c_custkey int,
+c_name varchar (25),
+c_address varchar (40),
+c_nationkey int,
+c_phone char (15),
+c_acctbal decimal(12,2),
+c_mktsegment char (10),
+c_comment varchar (117)
+) engine=columnstore;
+SHOW CREATE TABLE customer;
+Table	Create Table
+customer	CREATE TABLE `customer` (
+  `c_custkey` int(11) DEFAULT NULL,
+  `c_name` varchar(25) DEFAULT NULL,
+  `c_address` varchar(40) DEFAULT NULL,
+  `c_nationkey` int(11) DEFAULT NULL,
+  `c_phone` char(15) DEFAULT NULL,
+  `c_acctbal` decimal(12,2) DEFAULT NULL,
+  `c_mktsegment` char(10) DEFAULT NULL,
+  `c_comment` varchar(117) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists orders;
+create table orders (
+o_orderkey int,
+o_custkey int,
+o_orderstatus char (1),
+o_totalprice decimal(12,2),
+o_orderdate date,
+o_orderpriority char (15),
+o_clerk char (15),
+o_shippriority int,
+o_comment varchar (79)
+) engine=columnstore;
+SHOW CREATE TABLE orders;
+Table	Create Table
+orders	CREATE TABLE `orders` (
+  `o_orderkey` int(11) DEFAULT NULL,
+  `o_custkey` int(11) DEFAULT NULL,
+  `o_orderstatus` char(1) DEFAULT NULL,
+  `o_totalprice` decimal(12,2) DEFAULT NULL,
+  `o_orderdate` date DEFAULT NULL,
+  `o_orderpriority` char(15) DEFAULT NULL,
+  `o_clerk` char(15) DEFAULT NULL,
+  `o_shippriority` int(11) DEFAULT NULL,
+  `o_comment` varchar(79) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists supplier;
+create table supplier (
+s_suppkey int,
+s_name char (25),
+s_address varchar (40),
+s_nationkey int,
+s_phone char (15),
+s_acctbal decimal(12,2),
+s_comment varchar (101)
+) engine=columnstore;
+SHOW CREATE TABLE supplier;
+Table	Create Table
+supplier	CREATE TABLE `supplier` (
+  `s_suppkey` int(11) DEFAULT NULL,
+  `s_name` char(25) DEFAULT NULL,
+  `s_address` varchar(40) DEFAULT NULL,
+  `s_nationkey` int(11) DEFAULT NULL,
+  `s_phone` char(15) DEFAULT NULL,
+  `s_acctbal` decimal(12,2) DEFAULT NULL,
+  `s_comment` varchar(101) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists partsupp;
+create table partsupp (
+ps_partkey int,
+ps_suppkey int,
+ps_availqty int,
+ps_supplycost decimal(12,2),
+ps_comment varchar (199)
+) engine=columnstore;
+SHOW CREATE TABLE partsupp;
+Table	Create Table
+partsupp	CREATE TABLE `partsupp` (
+  `ps_partkey` int(11) DEFAULT NULL,
+  `ps_suppkey` int(11) DEFAULT NULL,
+  `ps_availqty` int(11) DEFAULT NULL,
+  `ps_supplycost` decimal(12,2) DEFAULT NULL,
+  `ps_comment` varchar(199) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists part;
+create table part (
+p_partkey int,
+p_name varchar (55),
+p_mfgr char (25),
+p_brand char (10),
+p_type varchar (25),
+p_size int,
+p_container char (10),
+p_retailprice decimal(12,2),
+p_comment varchar (23)
+) engine=columnstore;
+SHOW CREATE TABLE part;
+Table	Create Table
+part	CREATE TABLE `part` (
+  `p_partkey` int(11) DEFAULT NULL,
+  `p_name` varchar(55) DEFAULT NULL,
+  `p_mfgr` char(25) DEFAULT NULL,
+  `p_brand` char(10) DEFAULT NULL,
+  `p_type` varchar(25) DEFAULT NULL,
+  `p_size` int(11) DEFAULT NULL,
+  `p_container` char(10) DEFAULT NULL,
+  `p_retailprice` decimal(12,2) DEFAULT NULL,
+  `p_comment` varchar(23) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+drop table if exists lineitem;
+create table lineitem (
+l_orderkey int,
+l_partkey int,
+l_suppkey int,
+l_linenumber bigint,
+l_quantity decimal(12,2),
+l_extendedprice decimal(12,2),
+l_discount decimal(12,2),
+l_tax decimal(12,2),
+l_returnflag char (1),
+l_linestatus char (1),
+l_shipdate date,
+l_commitdate date,
+l_receiptdate date,
+l_shipinstruct char (25),
+l_shipmode char (10),
+l_comment varchar (44)
+) engine=columnstore;
+SHOW CREATE TABLE lineitem;
+Table	Create Table
+lineitem	CREATE TABLE `lineitem` (
+  `l_orderkey` int(11) DEFAULT NULL,
+  `l_partkey` int(11) DEFAULT NULL,
+  `l_suppkey` int(11) DEFAULT NULL,
+  `l_linenumber` bigint(20) DEFAULT NULL,
+  `l_quantity` decimal(12,2) DEFAULT NULL,
+  `l_extendedprice` decimal(12,2) DEFAULT NULL,
+  `l_discount` decimal(12,2) DEFAULT NULL,
+  `l_tax` decimal(12,2) DEFAULT NULL,
+  `l_returnflag` char(1) DEFAULT NULL,
+  `l_linestatus` char(1) DEFAULT NULL,
+  `l_shipdate` date DEFAULT NULL,
+  `l_commitdate` date DEFAULT NULL,
+  `l_receiptdate` date DEFAULT NULL,
+  `l_shipinstruct` char(25) DEFAULT NULL,
+  `l_shipmode` char(10) DEFAULT NULL,
+  `l_comment` varchar(44) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/region.tbl' INTO TABLE region FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/customer.tbl' INTO TABLE customer FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/orders.tbl' INTO TABLE orders FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/supplier.tbl' INTO TABLE supplier FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/partsupp.tbl' INTO TABLE partsupp FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/part.tbl' INTO TABLE part FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+SELECT COUNT(*) FROM nation;
+COUNT(*)
+25
+SELECT COUNT(*) FROM region;
+COUNT(*)
+5
+SELECT COUNT(*) FROM customer;
+COUNT(*)
+150
+SELECT COUNT(*) FROM orders;
+COUNT(*)
+1500
+SELECT COUNT(*) FROM supplier;
+COUNT(*)
+10
+SELECT COUNT(*) FROM partsupp;
+COUNT(*)
+800
+SELECT COUNT(*) FROM part;
+COUNT(*)
+200
+SELECT COUNT(*) FROM lineitem;
+COUNT(*)
+6005
+DROP DATABASE mcs4006_db;

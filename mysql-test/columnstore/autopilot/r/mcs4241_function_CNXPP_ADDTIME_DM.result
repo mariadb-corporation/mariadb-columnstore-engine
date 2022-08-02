@@ -1,0 +1,73 @@
+USE autopilot;
+select cidx, CDATE, ADDTIME(CDATE,'01:24:59') from datatypetestm order by cidx;
+cidx	CDATE	ADDTIME(CDATE,'01:24:59')
+1	1997-01-01	1997-01-01 01:24:59
+select cidx, CDATE, ADDTIME(CDATE,'01:10:02.999999') from datatypetestm order by cidx;
+cidx	CDATE	ADDTIME(CDATE,'01:10:02.999999')
+1	1997-01-01	1997-01-01 01:10:02.999999
+select cidx, CDATE, ADDTIME(CDATE,'1 01:24:59') from datatypetestm order by cidx;
+cidx	CDATE	ADDTIME(CDATE,'1 01:24:59')
+1	1997-01-01	1997-01-02 01:24:59
+select cidx, CDATE, ADDTIME(CDATE,'1 01:10:02.999999') from datatypetestm order by cidx;
+cidx	CDATE	ADDTIME(CDATE,'1 01:10:02.999999')
+1	1997-01-01	1997-01-02 01:10:02.999999
+select cidx, CDATETIME, ADDTIME(CDATETIME,'01:24:59') from datatypetestm order by cidx;
+cidx	CDATETIME	ADDTIME(CDATETIME,'01:24:59')
+1	1997-01-01 00:00:00	1997-01-01 01:24:59
+select cidx, CDATETIME, ADDTIME(CDATETIME,'01:10:02.999999') from datatypetestm order by cidx;
+cidx	CDATETIME	ADDTIME(CDATETIME,'01:10:02.999999')
+1	1997-01-01 00:00:00	1997-01-01 01:10:02.999999
+select cidx, CDATETIME, ADDTIME(CDATETIME,'1 01:24:59') from datatypetestm order by cidx;
+cidx	CDATETIME	ADDTIME(CDATETIME,'1 01:24:59')
+1	1997-01-01 00:00:00	1997-01-02 01:24:59
+select cidx, CDATETIME, ADDTIME(CDATETIME,'1 01:10:02.999999') from datatypetestm order by cidx;
+cidx	CDATETIME	ADDTIME(CDATETIME,'1 01:10:02.999999')
+1	1997-01-01 00:00:00	1997-01-02 01:10:02.999999
+select cidx, CTIME, ADDTIME(CTIME,'01:24:59') from datatypetestm order by cidx;
+cidx	CTIME	ADDTIME(CTIME,'01:24:59')
+1	13:00:00	14:24:59
+select cidx, CTIME, ADDTIME(CTIME,'01:10:02.999999') from datatypetestm order by cidx;
+cidx	CTIME	ADDTIME(CTIME,'01:10:02.999999')
+1	13:00:00	14:10:02.999999
+select cidx, CTIME, ADDTIME(CTIME,'1 01:24:59') from datatypetestm order by cidx;
+cidx	CTIME	ADDTIME(CTIME,'1 01:24:59')
+1	13:00:00	38:24:59
+select cidx, CTIME, ADDTIME(CTIME,'1 01:10:02.999999') from datatypetestm order by cidx;
+cidx	CTIME	ADDTIME(CTIME,'1 01:10:02.999999')
+1	13:00:00	38:10:02.999999
+select cidx, CDATE from datatypetestm order by ADDTIME(CDATE,'01:24:59'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by ADDTIME(CDATE,'01:10:02.999999'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by ADDTIME(CDATE,'1 01:24:59'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by ADDTIME(CDATE,'1 01:10:02.999999'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by ADDTIME(CDATETIME,'01:24:59'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by ADDTIME(CDATETIME,'01:10:02.999999'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by ADDTIME(CDATETIME,'1 01:24:59'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by ADDTIME(CDATETIME,'1 01:10:02.999999'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by ADDTIME(CTIME,'01:24:59'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by ADDTIME(CTIME,'01:10:02.999999'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by ADDTIME(CTIME,'1 01:24:59'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by ADDTIME(CTIME,'1 01:10:02.999999'), cidx;
+cidx	CTIME
+1	13:00:00

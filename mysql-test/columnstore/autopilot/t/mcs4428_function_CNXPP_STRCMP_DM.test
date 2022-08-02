@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, STRCMP(CDATE,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, STRCMP(CDATE,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATE, STRCMP(CDATE,'1997-01-01') from datatypetestm order by cidx;
+select cidx, CDATE, STRCMP(CDATE,'1997-01-01 00:00:01') from datatypetestm order by cidx;
+select cidx, CDATE, STRCMP(CDATE,NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, STRCMP(CDATETIME,CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, STRCMP(CDATETIME,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, STRCMP(CDATETIME,'1997-01-01') from datatypetestm order by cidx;
+select cidx, CDATETIME, STRCMP(CDATETIME,'1997-01-01 00:00:01') from datatypetestm order by cidx;
+select cidx, CDATETIME, STRCMP(CDATETIME,NULL) from datatypetestm order by cidx;
+select cidx, CTIME, STRCMP(CTIME,CDATE) from datatypetestm order by cidx;
+select cidx, CTIME, STRCMP(CTIME,CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, STRCMP(CTIME,'1997-01-01') from datatypetestm order by cidx;
+select cidx, CTIME, STRCMP(CTIME,'1997-01-01 00:00:01') from datatypetestm order by cidx;
+select cidx, CTIME, STRCMP(CTIME,NULL) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by STRCMP(CDATE,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by STRCMP(CDATE,CDATETIME), cidx;
+select cidx, CDATE from datatypetestm order by STRCMP(CDATE,'1997-01-01'), cidx;
+select cidx, CDATE from datatypetestm order by STRCMP(CDATE,'1997-01-01 00:00:01'), cidx;
+select cidx, CDATE from datatypetestm order by STRCMP(CDATE,NULL), cidx;
+select cidx, CDATETIME from datatypetestm order by STRCMP(CDATETIME,CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by STRCMP(CDATETIME,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by STRCMP(CDATETIME,'1997-01-01'), cidx;
+select cidx, CDATETIME from datatypetestm order by STRCMP(CDATETIME,'1997-01-01 00:00:01'), cidx;
+select cidx, CDATETIME from datatypetestm order by STRCMP(CDATETIME,NULL), cidx;
+select cidx, CTIME from datatypetestm order by STRCMP(CTIME,CDATE), cidx;
+select cidx, CTIME from datatypetestm order by STRCMP(CTIME,CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by STRCMP(CTIME,'1997-01-01'), cidx;
+select cidx, CTIME from datatypetestm order by STRCMP(CTIME,'1997-01-01 00:00:01'), cidx;
+select cidx, CTIME from datatypetestm order by STRCMP(CTIME,NULL), cidx;

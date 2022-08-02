@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CSMALLINT ;
+cidx	CLONGTEXT	CSMALLINT
+1	longtextlongtextlongtext	-766
+2	longtextlongtextlongtext	-765
+3	longtextlongtextlongtext	-764
+4	longtextlongtextlongtext	-763
+5	longtextlongtextlongtext	-762
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CSMALLINT ;
+cidx	CLONGTEXT	CSMALLINT
+1	longtextlongtextlongtext	-766
+2	longtextlongtextlongtext	-765
+3	longtextlongtextlongtext	-764
+4	longtextlongtextlongtext	-763
+5	longtextlongtextlongtext	-762
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CSMALLINT ;
+cidx	CLONGTEXT	CSMALLINT
+1	longtextlongtextlongtext	-766
+2	longtextlongtextlongtext	-765
+3	longtextlongtextlongtext	-764
+4	longtextlongtextlongtext	-763
+5	longtextlongtextlongtext	-762
+6	longtextlongtextlongtext	763
+7	longtextlongtextlongtext	764
+8	longtextlongtextlongtext	765
+9	longtextlongtextlongtext	766
+10	longtextlongtextlongtext	767
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CSMALLINT ;
+cidx	CLONGTEXT	CSMALLINT
+6	longtextlongtextlongtext	763
+7	longtextlongtextlongtext	764
+8	longtextlongtextlongtext	765
+9	longtextlongtextlongtext	766
+10	longtextlongtextlongtext	767
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CSMALLINT ;
+cidx	CLONGTEXT	CSMALLINT
+6	longtextlongtextlongtext	763
+7	longtextlongtextlongtext	764
+8	longtextlongtextlongtext	765
+9	longtextlongtextlongtext	766
+10	longtextlongtextlongtext	767

@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, FLOOR(68.9876*cidx) from datatypetestm order by cidx;
+cidx	FLOOR(68.9876*cidx)
+1	68
+select cidx, FLOOR(-68.9876*cidx) from datatypetestm order by cidx;
+cidx	FLOOR(-68.9876*cidx)
+1	-69
+select cidx, FLOOR(8.1234*cidx) from datatypetestm order by cidx;
+cidx	FLOOR(8.1234*cidx)
+1	8
+select cidx, FLOOR(-8.1234*cidx) from datatypetestm order by cidx;
+cidx	FLOOR(-8.1234*cidx)
+1	-9

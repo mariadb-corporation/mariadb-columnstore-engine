@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select GROUP_CONCAT(CTEXT) from datatypetestm;
+select GROUP_CONCAT(CTINYTEXT) from datatypetestm;
+select GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm;
+select GROUP_CONCAT(CLONGTEXT) from datatypetestm;
+select GROUP_CONCAT('Hello') from datatypetestm;
+select GROUP_CONCAT('Hello, World') from datatypetestm;
+select cidx, CTEXT, GROUP_CONCAT(CTEXT) from datatypetestm group by cidx, CTEXT ;
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;

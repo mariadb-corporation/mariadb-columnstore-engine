@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CASE WHEN CTEXT='aaaa' THEN 'Y' WHEN CTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTEXT, CASE WHEN CTEXT='a' THEN 'Y' WHEN CTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTEXT, CASE WHEN CTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='aaaa' THEN 'Y' WHEN CTINYTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='a' THEN 'Y' WHEN CTINYTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTINYTEXT, CASE WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='aaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='a' THEN 'Y' WHEN CMEDIUMTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CMEDIUMTEXT, CASE WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='aaaa' THEN 'Y' WHEN CLONGTEXT='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='a' THEN 'Y' WHEN CLONGTEXT='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CLONGTEXT, CASE WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm ;
+select cidx, CTEXT from datatypetestm where CASE WHEN CTEXT='aaaa' THEN 'Y' WHEN CTEXT='aaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CTEXT from datatypetestm where CASE WHEN CTEXT='a' THEN 'Y' WHEN CTEXT='a' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CTEXT from datatypetestm where CASE WHEN CTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CASE WHEN CTINYTEXT='aaaa' THEN 'Y' WHEN CTINYTEXT='aaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CASE WHEN CTINYTEXT='a' THEN 'Y' WHEN CTINYTEXT='a' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CASE WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' WHEN CTINYTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CASE WHEN CMEDIUMTEXT='aaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CASE WHEN CMEDIUMTEXT='a' THEN 'Y' WHEN CMEDIUMTEXT='a' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CASE WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' WHEN CMEDIUMTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CASE WHEN CLONGTEXT='aaaa' THEN 'Y' WHEN CLONGTEXT='aaaa' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CASE WHEN CLONGTEXT='a' THEN 'Y' WHEN CLONGTEXT='a' THEN 'Y' ELSE NULL END <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CASE WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' WHEN CLONGTEXT='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 ;

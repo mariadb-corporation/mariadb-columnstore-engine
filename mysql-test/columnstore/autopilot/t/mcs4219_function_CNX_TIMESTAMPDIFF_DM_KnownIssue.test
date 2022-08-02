@@ -1,0 +1,64 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, TIMESTAMPDIFF(MICROSECOND,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(SECOND,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(MINUTE,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(HOUR,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(DAY,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(WEEK,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(MONTH,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(QUARTER,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPDIFF(YEAR,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(MICROSECOND,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(SECOND,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(MINUTE,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(HOUR,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(DAY,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(WEEK,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(MONTH,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(QUARTER,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPDIFF(YEAR,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(MICROSECOND,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(SECOND,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(MINUTE,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(HOUR,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(DAY,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(WEEK,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(MONTH,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(QUARTER,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPDIFF(YEAR,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(SECOND,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MINUTE,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(HOUR,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(DAY,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(WEEK,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MONTH,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(QUARTER,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(YEAR,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(SECOND,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MINUTE,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(HOUR,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(DAY,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(WEEK,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MONTH,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(QUARTER,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(YEAR,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(SECOND,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MINUTE,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(HOUR,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(DAY,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(WEEK,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MONTH,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(QUARTER,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(YEAR,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;

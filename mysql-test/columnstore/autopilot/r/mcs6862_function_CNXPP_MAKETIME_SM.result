@@ -1,0 +1,50 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MAKETIME(2010, CTEXT, 35) from datatypetestm ;
+cidx	CTEXT	MAKETIME(2010, CTEXT, 35)
+1	texttexttext	838:59:59
+select cidx, CTEXT, MAKETIME(2011, CTEXT, 35) from datatypetestm ;
+cidx	CTEXT	MAKETIME(2011, CTEXT, 35)
+1	texttexttext	838:59:59
+select cidx, CTINYTEXT, MAKETIME(2010, CTINYTEXT, 35) from datatypetestm ;
+cidx	CTINYTEXT	MAKETIME(2010, CTINYTEXT, 35)
+1	tinytext	838:59:59
+select cidx, CTINYTEXT, MAKETIME(2011, CTINYTEXT, 35) from datatypetestm ;
+cidx	CTINYTEXT	MAKETIME(2011, CTINYTEXT, 35)
+1	tinytext	838:59:59
+select cidx, CMEDIUMTEXT, MAKETIME(2010, CMEDIUMTEXT, 35) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKETIME(2010, CMEDIUMTEXT, 35)
+1	mediumtestmediumtest	838:59:59
+select cidx, CMEDIUMTEXT, MAKETIME(2011, CMEDIUMTEXT, 35) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKETIME(2011, CMEDIUMTEXT, 35)
+1	mediumtestmediumtest	838:59:59
+select cidx, CLONGTEXT, MAKETIME(2010, CLONGTEXT, 35) from datatypetestm ;
+cidx	CLONGTEXT	MAKETIME(2010, CLONGTEXT, 35)
+1	longtextlongtextlongtext	838:59:59
+select cidx, CLONGTEXT, MAKETIME(2011, CLONGTEXT, 35) from datatypetestm ;
+cidx	CLONGTEXT	MAKETIME(2011, CLONGTEXT, 35)
+1	longtextlongtextlongtext	838:59:59
+select cidx, CTEXT from datatypetestm order by MAKETIME(2010, CTEXT, 35), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by MAKETIME(2011, CTEXT, 35), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by MAKETIME(2010, CTINYTEXT, 35), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by MAKETIME(2011, CTINYTEXT, 35), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKETIME(2010, CMEDIUMTEXT, 35), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKETIME(2011, CMEDIUMTEXT, 35), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by MAKETIME(2010, CLONGTEXT, 35), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by MAKETIME(2011, CLONGTEXT, 35), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL18, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL18 > dtt2.CMEDIUMTEXT ;
+cidx	CDECIMAL18	CMEDIUMTEXT
+6	9999999999995	mediumtestmediumtest
+7	9999999999996	mediumtestmediumtest
+8	9999999999997	mediumtestmediumtest
+9	9999999999998	mediumtestmediumtest
+10	9999999999999	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDECIMAL18, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL18 >= dtt2.CMEDIUMTEXT ;
+cidx	CDECIMAL18	CMEDIUMTEXT
+6	9999999999995	mediumtestmediumtest
+7	9999999999996	mediumtestmediumtest
+8	9999999999997	mediumtestmediumtest
+9	9999999999998	mediumtestmediumtest
+10	9999999999999	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDECIMAL18, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL18 <> dtt2.CMEDIUMTEXT ;
+cidx	CDECIMAL18	CMEDIUMTEXT
+1	-9999999999999	mediumtestmediumtest
+2	-9999999999998	mediumtestmediumtest
+3	-9999999999997	mediumtestmediumtest
+4	-9999999999996	mediumtestmediumtest
+5	-9999999999995	mediumtestmediumtest
+6	9999999999995	mediumtestmediumtest
+7	9999999999996	mediumtestmediumtest
+8	9999999999997	mediumtestmediumtest
+9	9999999999998	mediumtestmediumtest
+10	9999999999999	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDECIMAL18, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL18 < dtt2.CMEDIUMTEXT ;
+cidx	CDECIMAL18	CMEDIUMTEXT
+1	-9999999999999	mediumtestmediumtest
+2	-9999999999998	mediumtestmediumtest
+3	-9999999999997	mediumtestmediumtest
+4	-9999999999996	mediumtestmediumtest
+5	-9999999999995	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDECIMAL18, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL18 <= dtt2.CMEDIUMTEXT ;
+cidx	CDECIMAL18	CMEDIUMTEXT
+1	-9999999999999	mediumtestmediumtest
+2	-9999999999998	mediumtestmediumtest
+3	-9999999999997	mediumtestmediumtest
+4	-9999999999996	mediumtestmediumtest
+5	-9999999999995	mediumtestmediumtest

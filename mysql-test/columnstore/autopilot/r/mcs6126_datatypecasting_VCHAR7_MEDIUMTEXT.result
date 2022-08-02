@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CVCHAR7, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR7 > dtt2.CMEDIUMTEXT ;
+cidx	CVCHAR7	CMEDIUMTEXT
+6	ttttttt	mediumtestmediumtest
+7	ttttttt	mediumtestmediumtest
+8	ttttttt	mediumtestmediumtest
+9	ttttttt	mediumtestmediumtest
+10	zzzzzzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CVCHAR7, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR7 >= dtt2.CMEDIUMTEXT ;
+cidx	CVCHAR7	CMEDIUMTEXT
+6	ttttttt	mediumtestmediumtest
+7	ttttttt	mediumtestmediumtest
+8	ttttttt	mediumtestmediumtest
+9	ttttttt	mediumtestmediumtest
+10	zzzzzzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CVCHAR7, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR7 <> dtt2.CMEDIUMTEXT ;
+cidx	CVCHAR7	CMEDIUMTEXT
+1	aaaaaaa	mediumtestmediumtest
+2	g	mediumtestmediumtest
+3	gg	mediumtestmediumtest
+4	ggg	mediumtestmediumtest
+5	gggg	mediumtestmediumtest
+6	ttttttt	mediumtestmediumtest
+7	ttttttt	mediumtestmediumtest
+8	ttttttt	mediumtestmediumtest
+9	ttttttt	mediumtestmediumtest
+10	zzzzzzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CVCHAR7, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR7 < dtt2.CMEDIUMTEXT ;
+cidx	CVCHAR7	CMEDIUMTEXT
+1	aaaaaaa	mediumtestmediumtest
+2	g	mediumtestmediumtest
+3	gg	mediumtestmediumtest
+4	ggg	mediumtestmediumtest
+5	gggg	mediumtestmediumtest
+select dtt1.cidx, dtt1.CVCHAR7, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR7 <= dtt2.CMEDIUMTEXT ;
+cidx	CVCHAR7	CMEDIUMTEXT
+1	aaaaaaa	mediumtestmediumtest
+2	g	mediumtestmediumtest
+3	gg	mediumtestmediumtest
+4	ggg	mediumtestmediumtest
+5	gggg	mediumtestmediumtest

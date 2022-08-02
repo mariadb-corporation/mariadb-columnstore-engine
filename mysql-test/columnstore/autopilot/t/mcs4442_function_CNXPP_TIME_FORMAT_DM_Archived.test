@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, TIME_FORMAT(CDATE,'%h %i %s') from datatypetestm order by cidx;
+select cidx, CDATE, TIME_FORMAT(CDATE,'%H:%i:%s %f') from datatypetestm order by cidx;
+select cidx, CDATE, TIME_FORMAT(CDATE,'%k:%i:%S') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%h %i %s') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%H:%i:%s %f') from datatypetestm order by cidx;
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%k:%i:%S') from datatypetestm order by cidx;
+select cidx, CTIME, TIME_FORMAT(CTIME,'%h %i %s') from datatypetestm order by cidx;
+select cidx, CTIME, TIME_FORMAT(CTIME,'%H:%i:%s %f') from datatypetestm order by cidx;
+select cidx, CTIME, TIME_FORMAT(CTIME,'%k:%i:%S') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by TIME_FORMAT(CDATE,'%h %i %s'), cidx;
+select cidx, CDATE from datatypetestm order by TIME_FORMAT(CDATE,'%H:%i:%s %f'), cidx;
+select cidx, CDATE from datatypetestm order by TIME_FORMAT(CDATE,'%k:%i:%S'), cidx;
+select cidx, CDATETIME from datatypetestm order by TIME_FORMAT(CDATETIME,'%h %i %s'), cidx;
+select cidx, CDATETIME from datatypetestm order by TIME_FORMAT(CDATETIME,'%H:%i:%s %f'), cidx;
+select cidx, CDATETIME from datatypetestm order by TIME_FORMAT(CDATETIME,'%k:%i:%S'), cidx;
+select cidx, CTIME from datatypetestm order by TIME_FORMAT(CTIME,'%h %i %s'), cidx;
+select cidx, CTIME from datatypetestm order by TIME_FORMAT(CTIME,'%H:%i:%s %f'), cidx;
+select cidx, CTIME from datatypetestm order by TIME_FORMAT(CTIME,'%k:%i:%S'), cidx;

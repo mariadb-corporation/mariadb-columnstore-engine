@@ -1,0 +1,16 @@
+USE autopilot;
+select cidx, CDATE, CASE CDATE WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CDATE	CaseCol
+1	1997-01-01	NULL
+select cidx, CDATETIME, CASE CDATETIME WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CDATETIME	CaseCol
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, CASE CTIME WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CTIME	CaseCol
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm where CASE CDATE WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where CASE CDATETIME WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where CASE CTIME WHEN '9999-12-27' THEN '2009-01-01' WHEN '9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;
+cidx	CTIME

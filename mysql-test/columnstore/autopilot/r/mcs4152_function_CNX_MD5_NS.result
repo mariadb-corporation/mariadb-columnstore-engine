@@ -1,0 +1,110 @@
+USE autopilot;
+select cidx, CBIGINT, MD5(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	MD5(CBIGINT)
+1	-72036854775806	56518dc87aaf795edc058e66d51e58fd
+select cidx, CDECIMAL1, MD5(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	MD5(CDECIMAL1)
+1	-9	252e691406782824eec43d7eadc3d256
+select cidx, CDECIMAL4, MD5(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	MD5(CDECIMAL4)
+1	-999	dc9a0d67a31dae74f0ae340fc5ebbddb
+select cidx, CDECIMAL4_2, MD5(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	MD5(CDECIMAL4_2)
+1	-9.99	c34942982f28e5df3217f146a8d1291d
+select cidx, CDECIMAL5, MD5(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	MD5(CDECIMAL5)
+1	-999	dc9a0d67a31dae74f0ae340fc5ebbddb
+select cidx, CDECIMAL9, MD5(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	MD5(CDECIMAL9)
+1	-999999	8240344c8807a2e0d0e3cfc001e94350
+select cidx, CDECIMAL9_2, MD5(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	MD5(CDECIMAL9_2)
+1	-9999.99	d5d54d11a4264305f0b372b3fadcbc1f
+select cidx, CDECIMAL10, MD5(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	MD5(CDECIMAL10)
+1	-9999999	b1221b77c287d6a02be2df4b43b6597e
+select cidx, CDECIMAL18, MD5(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	MD5(CDECIMAL18)
+1	-9999999999999	792ec05318ccf1fd1f255a0a3d13d289
+select cidx, CDECIMAL18_2, MD5(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	MD5(CDECIMAL18_2)
+1	-99999999999.99	4b4c4bd6853d4d36cc0e8030219128af
+select cidx, CINTEGER, MD5(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	MD5(CINTEGER)
+1	-7483646	af3c7458a7702182a0c656b25e9a07cb
+select cidx, CSMALLINT, MD5(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	MD5(CSMALLINT)
+1	-766	da5083273f1bb24905b1bab2b37c76e2
+select cidx, CTINYINT, MD5(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	MD5(CTINYINT)
+1	-26	716890265e6c69c99bad97217356a57e
+select cidx, CDOUBLE, MD5(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	MD5(CDOUBLE)
+1	-1.797693231e108	4693725c294da5c16379cab03f91abd2
+select cidx, CFLOAT, MD5(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	MD5(CFLOAT)
+1	-3.40287e18	f6480ee6391449529612eda4281a445f
+select cidx, MD5(1) from datatypetestm order by cidx;
+cidx	MD5(1)
+1	c4ca4238a0b923820dcc509a6f75849b
+select cidx, MD5(194) from datatypetestm order by cidx;
+cidx	MD5(194)
+1	a597e50502f5ff68e3e25b9114205d4a
+select cidx, MD5(3887) from datatypetestm order by cidx;
+cidx	MD5(3887)
+1	9649dec6196d730c5e024f204477d8d1
+select cidx, MD5(1234.56) from datatypetestm order by cidx;
+cidx	MD5(1234.56)
+1	1cd907fa8ab67b6188de73c0ca7a66a8
+select cidx, MD5(-1) from datatypetestm order by cidx;
+cidx	MD5(-1)
+1	6bb61e3b7bce0931da574d19d1d82c88
+select cidx, MD5(-3998) from datatypetestm order by cidx;
+cidx	MD5(-3998)
+1	2a3298e2cbda5e2b0549b67cdc418ac2
+select cidx, MD5(-11111) from datatypetestm order by cidx;
+cidx	MD5(-11111)
+1	66d39efd283de286c9192281666950b3
+select cidx, MD5(-9999) from datatypetestm order by cidx;
+cidx	MD5(-9999)
+1	fe44ed67531aca9a5abd5e4854512524
+select cidx, MD5(-1234.56) from datatypetestm order by cidx;
+cidx	MD5(-1234.56)
+1	be8a4e0a04ab71003f8f5d66e15b87f5
+select cidx, CBIGINT from datatypetestm where MD5(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where MD5(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where MD5(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where MD5(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where MD5(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where MD5(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where MD5(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where MD5(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where MD5(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where MD5(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where MD5(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where MD5(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where MD5(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where MD5(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where MD5(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT

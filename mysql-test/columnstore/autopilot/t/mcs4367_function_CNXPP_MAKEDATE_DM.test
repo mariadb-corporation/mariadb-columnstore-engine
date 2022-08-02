@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, MAKEDATE(2010, CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, MAKEDATE(2011, CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, MAKEDATE(2010, CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, MAKEDATE(2011, CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, MAKEDATE(2010, CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, MAKEDATE(2011, CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by MAKEDATE(2010, CDATE), cidx;
+select cidx, CDATE from datatypetestm order by MAKEDATE(2011, CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by MAKEDATE(2010, CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by MAKEDATE(2011, CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by MAKEDATE(2010, CTIME), cidx;
+select cidx, CTIME from datatypetestm order by MAKEDATE(2011, CTIME), cidx;

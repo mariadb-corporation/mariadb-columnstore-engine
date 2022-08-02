@@ -1,0 +1,4 @@
+USE autopilot;
+select cidx, NOW() from datatypetestm order by cidx;
+cidx	NOW()
+1	REPLACEDVALUE

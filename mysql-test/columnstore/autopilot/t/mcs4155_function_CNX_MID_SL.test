@@ -1,0 +1,12 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, MID('this is a test',5,2) from datatypetestm order by cidx;
+select cidx, MID('hello calpont world',9,3) from datatypetestm order by cidx;

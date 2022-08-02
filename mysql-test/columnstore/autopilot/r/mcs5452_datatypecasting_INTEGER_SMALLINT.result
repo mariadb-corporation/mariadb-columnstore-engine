@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CSMALLINT ;
+cidx	CINTEGER	CSMALLINT
+6	7483643	763
+7	7483644	764
+8	7483645	765
+9	7483646	766
+10	7483647	767
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CSMALLINT ;
+cidx	CINTEGER	CSMALLINT
+6	7483643	763
+7	7483644	764
+8	7483645	765
+9	7483646	766
+10	7483647	767
+11	0	0
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CSMALLINT ;
+cidx	CINTEGER	CSMALLINT
+1	-7483646	-766
+2	-7483645	-765
+3	-7483644	-764
+4	-7483643	-763
+5	-7483642	-762
+6	7483643	763
+7	7483644	764
+8	7483645	765
+9	7483646	766
+10	7483647	767
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CSMALLINT ;
+cidx	CINTEGER	CSMALLINT
+1	-7483646	-766
+2	-7483645	-765
+3	-7483644	-764
+4	-7483643	-763
+5	-7483642	-762
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CSMALLINT ;
+cidx	CINTEGER	CSMALLINT
+1	-7483646	-766
+2	-7483645	-765
+3	-7483644	-764
+4	-7483643	-763
+5	-7483642	-762
+11	0	0

@@ -1,0 +1,191 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot outer join test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE outerjoin;
+#
+# conventional, conventional, conventional
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+where c_custkey < 10
+;
+# conventional, conventional, conventional, with filter in subquery
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# conventional, conventional, left
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# conventional, conventional, right
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# conventional, left, conventional
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# conventional, left, left
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# conventional, left, right
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# conventional, right, conventional
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# conventional, right, left
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# conventional, right, right
+select count(*) from orders o
+join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, conventional, conventional
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, conventional, left
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, conventional, right
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, left, conventional
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, left, left
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, left, right
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, right, conventional
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, right, left
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, right, right
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, conventional, conventional
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# left, conventional, left
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# left, conventional, right
+select count(*) from orders o
+left join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# right, left, conventional
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# right, left, left
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# right, left, right
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#
+# right, right, conventional
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+# right, right, left
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+# right, right, right
+select count(*) from orders o
+right join (select * from customer where c_custkey < 10) c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+#

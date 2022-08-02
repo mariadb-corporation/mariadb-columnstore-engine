@@ -1,0 +1,32 @@
+# -------------------------------------------------------------- #
+# Run 22 DBT3 performance queries on a 1mb dataset to 
+# verify results
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+# Create DBT3 tables, load 1gb data and verify row counts
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4007_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4007_db;
+USE mcs4007_db;
+#
+set columnstore_use_import_for_batchinsert=1;
+--source ../include/dbt3/createTables.inc
+--source ../include/dbt3/ldiTables1g.inc
+--source ../include/dbt3/countTables.inc
+# -------------------------------------------------------------- #
+# Run 22 performance queries
+# -------------------------------------------------------------- #
+#
+--source ../include/dbt3/dbt3_performance_queries_1g.sql
+# -------------------------------------------------------------- #
+# clean up
+# -------------------------------------------------------------- #
+#
+DROP DATABASE mcs4007_db;

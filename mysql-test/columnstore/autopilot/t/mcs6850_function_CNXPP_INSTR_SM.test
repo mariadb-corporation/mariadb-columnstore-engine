@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INSTR(CTEXT,'aaa') from datatypetestm ;
+select cidx, CTEXT, INSTR(CTEXT,'zz') from datatypetestm ;
+select cidx, CTEXT, INSTR(CTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+select cidx, CTEXT, INSTR(CTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaa') from datatypetestm ;
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zz') from datatypetestm ;
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaa') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zz') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaa') from datatypetestm ;
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zz') from datatypetestm ;
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'aaa'), cidx;
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'zz'), cidx;
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'aaaaaaaaaaaa'), cidx;
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'zzzzzzzzzzzzzz'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'aaa'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'zz'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'aaaaaaaaaaaa'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'zzzzzzzzzzzzzz'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'aaa'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'zz'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'aaa'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'zz'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'aaaaaaaaaaaa'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'zzzzzzzzzzzzzz'), cidx;

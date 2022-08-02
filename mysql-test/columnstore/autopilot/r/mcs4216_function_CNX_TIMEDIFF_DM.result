@@ -1,0 +1,17 @@
+USE autopilot;
+select cidx, CDATE, TIMEDIFF(CDATE,'2007-02-28 22:23:0') from datatypetestm order by cidx;
+cidx	CDATE	TIMEDIFF(CDATE,'2007-02-28 22:23:0')
+1	1997-01-01	NULL
+select cidx, CDATETIME, TIMEDIFF(CDATETIME,'2007-02-28 22:23:0') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMEDIFF(CDATETIME,'2007-02-28 22:23:0')
+1	1997-01-01 00:00:00	-838:59:59
+select cidx, CTIME, TIMEDIFF(CTIME,'2007-02-28 22:23:0') from datatypetestm order by cidx;
+cidx	CTIME	TIMEDIFF(CTIME,'2007-02-28 22:23:0')
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm where TIMEDIFF(CDATE,'2007-02-28 22:23:0') <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where TIMEDIFF(CDATETIME,'2007-02-28 22:23:0') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm where TIMEDIFF(CTIME,'2007-02-28 22:23:0') <> 0 order by cidx;
+cidx	CTIME

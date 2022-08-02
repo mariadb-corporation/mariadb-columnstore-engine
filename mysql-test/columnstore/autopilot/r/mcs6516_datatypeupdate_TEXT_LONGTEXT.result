@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CLONGTEXT = CTEXT;
+SELECT CLONGTEXT FROM datatypeupdate;
+CLONGTEXT
+texttexttext
+ROLLBACK;

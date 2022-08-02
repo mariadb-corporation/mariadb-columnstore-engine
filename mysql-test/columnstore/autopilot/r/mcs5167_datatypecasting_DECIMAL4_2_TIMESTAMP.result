@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 > dtt2.CTIMESTAMP ;
+cidx	CDECIMAL4_2	CTIMESTAMP
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 >= dtt2.CTIMESTAMP ;
+cidx	CDECIMAL4_2	CTIMESTAMP
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <> dtt2.CTIMESTAMP ;
+cidx	CDECIMAL4_2	CTIMESTAMP
+1	-9.99	2020-08-13 03:14:07
+2	-9.98	2020-08-13 03:14:07
+3	-9.97	2020-08-13 03:14:07
+4	-9.96	2020-08-13 03:14:07
+5	-9.95	2020-08-13 03:14:07
+6	9.95	2020-08-13 03:14:07
+7	9.96	2020-08-13 03:14:07
+8	9.97	2020-08-13 03:14:07
+9	9.98	2020-08-13 03:14:07
+10	9.99	2020-08-13 03:14:07
+11	0.00	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 < dtt2.CTIMESTAMP ;
+cidx	CDECIMAL4_2	CTIMESTAMP
+1	-9.99	2020-08-13 03:14:07
+2	-9.98	2020-08-13 03:14:07
+3	-9.97	2020-08-13 03:14:07
+4	-9.96	2020-08-13 03:14:07
+5	-9.95	2020-08-13 03:14:07
+6	9.95	2020-08-13 03:14:07
+7	9.96	2020-08-13 03:14:07
+8	9.97	2020-08-13 03:14:07
+9	9.98	2020-08-13 03:14:07
+10	9.99	2020-08-13 03:14:07
+11	0.00	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <= dtt2.CTIMESTAMP ;
+cidx	CDECIMAL4_2	CTIMESTAMP
+1	-9.99	2020-08-13 03:14:07
+2	-9.98	2020-08-13 03:14:07
+3	-9.97	2020-08-13 03:14:07
+4	-9.96	2020-08-13 03:14:07
+5	-9.95	2020-08-13 03:14:07
+6	9.95	2020-08-13 03:14:07
+7	9.96	2020-08-13 03:14:07
+8	9.97	2020-08-13 03:14:07
+9	9.98	2020-08-13 03:14:07
+10	9.99	2020-08-13 03:14:07
+11	0.00	2020-08-13 03:14:07

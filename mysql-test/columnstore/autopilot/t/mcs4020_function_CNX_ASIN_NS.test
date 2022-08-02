@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, ASIN(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, ASIN(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, ASIN(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, ASIN(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, ASIN(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, ASIN(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, ASIN(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, ASIN(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, ASIN(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, ASIN(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, ASIN(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, ASIN(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, ASIN(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, ASIN(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, ASIN(CFLOAT) from datatypetestm order by cidx;
+select cidx, ASIN(0*cidx) from datatypetestm order by cidx;
+select cidx, ASIN(60*cidx) from datatypetestm order by cidx;
+select cidx, ASIN(90*cidx) from datatypetestm order by cidx;
+select cidx, ASIN(180*cidx) from datatypetestm order by cidx;
+select cidx, ASIN(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where ASIN(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where ASIN(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where ASIN(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where ASIN(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where ASIN(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where ASIN(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where ASIN(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where ASIN(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where ASIN(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where ASIN(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where ASIN(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where ASIN(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where ASIN(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where ASIN(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where ASIN(CFLOAT) <> 0 order by cidx;

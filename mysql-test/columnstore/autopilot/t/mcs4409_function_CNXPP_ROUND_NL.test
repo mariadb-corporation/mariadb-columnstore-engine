@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, ROUND(68.9876*cidx) from datatypetestm order by cidx;
+select cidx, ROUND(-68.9876*cidx,2) from datatypetestm order by cidx;
+select cidx, ROUND(68.9876*cidx,-2) from datatypetestm order by cidx;
+select cidx, ROUND(-68.9876*cidx,-1) from datatypetestm order by cidx;

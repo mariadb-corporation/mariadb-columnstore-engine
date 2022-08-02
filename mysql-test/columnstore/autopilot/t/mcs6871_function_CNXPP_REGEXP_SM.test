@@ -1,0 +1,83 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CTEXT REGEXP 'ssss$' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'ggg$' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'hhh$' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'z$' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'w*' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'ww+w' from datatypetestm ;
+select cidx, CTEXT, CTEXT REGEXP 'dd?d' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ssss$' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ggg$' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'hhh$' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'z$' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'w*' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ww+w' from datatypetestm ;
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'dd?d' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ssss$' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ggg$' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'hhh$' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'z$' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'w*' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ww+w' from datatypetestm ;
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'dd?d' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ssss$' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ggg$' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'hhh$' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'z$' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'w*' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ww+w' from datatypetestm ;
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'dd?d' from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'ssss$', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'ggg$', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'hhh$', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP '(ttttttt)+', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP '(ssssssss)+', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'z$', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'w*', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'ww+w', cidx;
+select cidx, CTEXT from datatypetestm order by CTEXT REGEXP 'dd?d', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'ssss$', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'ggg$', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'hhh$', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP '(ttttttt)+', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP '(ssssssss)+', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'z$', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'w*', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'ww+w', cidx;
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT REGEXP 'dd?d', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'ssss$', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'ggg$', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'hhh$', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP '(ttttttt)+', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP '(ssssssss)+', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'z$', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'w*', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'ww+w', cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT REGEXP 'dd?d', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'ssss$', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'ggg$', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'hhh$', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP '(ttttttt)+', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP '(ssssssss)+', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'z$', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'w*', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'ww+w', cidx;
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT REGEXP 'dd?d', cidx;

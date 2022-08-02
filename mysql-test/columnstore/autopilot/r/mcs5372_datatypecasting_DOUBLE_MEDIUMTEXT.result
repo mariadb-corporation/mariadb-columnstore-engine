@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE > dtt2.CMEDIUMTEXT ;
+cidx	CDOUBLE	CMEDIUMTEXT
+6	1.797693227e108	mediumtestmediumtest
+7	1.797693228e108	mediumtestmediumtest
+8	1.797693229e108	mediumtestmediumtest
+9	1.79769323e108	mediumtestmediumtest
+10	1.797693231e108	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE >= dtt2.CMEDIUMTEXT ;
+cidx	CDOUBLE	CMEDIUMTEXT
+6	1.797693227e108	mediumtestmediumtest
+7	1.797693228e108	mediumtestmediumtest
+8	1.797693229e108	mediumtestmediumtest
+9	1.79769323e108	mediumtestmediumtest
+10	1.797693231e108	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <> dtt2.CMEDIUMTEXT ;
+cidx	CDOUBLE	CMEDIUMTEXT
+1	-1.797693231e108	mediumtestmediumtest
+2	-1.79769323e108	mediumtestmediumtest
+3	-1.797693229e108	mediumtestmediumtest
+4	-1.797693228e108	mediumtestmediumtest
+5	-1.797693227e108	mediumtestmediumtest
+6	1.797693227e108	mediumtestmediumtest
+7	1.797693228e108	mediumtestmediumtest
+8	1.797693229e108	mediumtestmediumtest
+9	1.79769323e108	mediumtestmediumtest
+10	1.797693231e108	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE < dtt2.CMEDIUMTEXT ;
+cidx	CDOUBLE	CMEDIUMTEXT
+1	-1.797693231e108	mediumtestmediumtest
+2	-1.79769323e108	mediumtestmediumtest
+3	-1.797693229e108	mediumtestmediumtest
+4	-1.797693228e108	mediumtestmediumtest
+5	-1.797693227e108	mediumtestmediumtest
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <= dtt2.CMEDIUMTEXT ;
+cidx	CDOUBLE	CMEDIUMTEXT
+1	-1.797693231e108	mediumtestmediumtest
+2	-1.79769323e108	mediumtestmediumtest
+3	-1.797693229e108	mediumtestmediumtest
+4	-1.797693228e108	mediumtestmediumtest
+5	-1.797693227e108	mediumtestmediumtest

@@ -1,0 +1,50 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MAKEDATE(2010, CTEXT) from datatypetestm ;
+cidx	CTEXT	MAKEDATE(2010, CTEXT)
+1	texttexttext	NULL
+select cidx, CTEXT, MAKEDATE(2011, CTEXT) from datatypetestm ;
+cidx	CTEXT	MAKEDATE(2011, CTEXT)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, MAKEDATE(2010, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	MAKEDATE(2010, CTINYTEXT)
+1	tinytext	NULL
+select cidx, CTINYTEXT, MAKEDATE(2011, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	MAKEDATE(2011, CTINYTEXT)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, MAKEDATE(2010, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKEDATE(2010, CMEDIUMTEXT)
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, MAKEDATE(2011, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKEDATE(2011, CMEDIUMTEXT)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, MAKEDATE(2010, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	MAKEDATE(2010, CLONGTEXT)
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, MAKEDATE(2011, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	MAKEDATE(2011, CLONGTEXT)
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm order by MAKEDATE(2010, CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by MAKEDATE(2011, CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by MAKEDATE(2010, CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by MAKEDATE(2011, CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKEDATE(2010, CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKEDATE(2011, CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by MAKEDATE(2010, CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by MAKEDATE(2011, CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

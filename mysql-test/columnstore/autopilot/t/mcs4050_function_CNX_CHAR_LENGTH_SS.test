@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, CHAR_LENGTH(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, CHAR_LENGTH(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, CHAR_LENGTH(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, CHAR_LENGTH(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, CHAR_LENGTH(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, CHAR_LENGTH(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, CHAR_LENGTH(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, CHAR_LENGTH(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, CHAR_LENGTH(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, CHAR_LENGTH(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, CHAR_LENGTH(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, CHAR_LENGTH(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, CHAR_LENGTH(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, CHAR_LENGTH(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, CHAR_LENGTH(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, CHAR_LENGTH(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, CHAR_LENGTH(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, CHAR_LENGTH(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, CHAR_LENGTH(CVCHAR255) from datatypetestm order by cidx;
+select cidx, CHAR_LENGTH(concat('Hello',cchar1)) from datatypetestm order by cidx;
+select cidx, CHAR_LENGTH(concat('World',cchar1)) from datatypetestm order by cidx;
+select cidx, CHAR_LENGTH(concat(cchar1,'KingKamahamaha')) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm where CHAR_LENGTH(CCHAR1) <> 0 order by cidx;
+select cidx, CCHAR2 from datatypetestm where CHAR_LENGTH(CCHAR2) <> 0 order by cidx;
+select cidx, CCHAR3 from datatypetestm where CHAR_LENGTH(CCHAR3) <> 0 order by cidx;
+select cidx, CCHAR4 from datatypetestm where CHAR_LENGTH(CCHAR4) <> 0 order by cidx;
+select cidx, CCHAR5 from datatypetestm where CHAR_LENGTH(CCHAR5) <> 0 order by cidx;
+select cidx, CCHAR6 from datatypetestm where CHAR_LENGTH(CCHAR6) <> 0 order by cidx;
+select cidx, CCHAR7 from datatypetestm where CHAR_LENGTH(CCHAR7) <> 0 order by cidx;
+select cidx, CCHAR8 from datatypetestm where CHAR_LENGTH(CCHAR8) <> 0 order by cidx;
+select cidx, CCHAR9 from datatypetestm where CHAR_LENGTH(CCHAR9) <> 0 order by cidx;
+select cidx, CCHAR255 from datatypetestm where CHAR_LENGTH(CCHAR255) <> 0 order by cidx;
+select cidx, CVCHAR1 from datatypetestm where CHAR_LENGTH(CVCHAR1) <> 0 order by cidx;
+select cidx, CVCHAR2 from datatypetestm where CHAR_LENGTH(CVCHAR2) <> 0 order by cidx;
+select cidx, CVCHAR3 from datatypetestm where CHAR_LENGTH(CVCHAR3) <> 0 order by cidx;
+select cidx, CVCHAR4 from datatypetestm where CHAR_LENGTH(CVCHAR4) <> 0 order by cidx;
+select cidx, CVCHAR5 from datatypetestm where CHAR_LENGTH(CVCHAR5) <> 0 order by cidx;
+select cidx, CVCHAR6 from datatypetestm where CHAR_LENGTH(CVCHAR6) <> 0 order by cidx;
+select cidx, CVCHAR7 from datatypetestm where CHAR_LENGTH(CVCHAR7) <> 0 order by cidx;
+select cidx, CVCHAR8 from datatypetestm where CHAR_LENGTH(CVCHAR8) <> 0 order by cidx;
+select cidx, CVCHAR255 from datatypetestm where CHAR_LENGTH(CVCHAR255) <> 0 order by cidx;

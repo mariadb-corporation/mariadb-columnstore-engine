@@ -1,0 +1,31 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, DATE_FORMAT(CDATE,'%W %M %Y') from datatypetestm order by cidx;
+select cidx, CDATE, DATE_FORMAT(CDATE,'%H:%i:%s') from datatypetestm order by cidx;
+select cidx, CDATE, DATE_FORMAT(CDATE,'%D %y %a %d %m %b %j') from datatypetestm order by cidx;
+select cidx, CDATETIME, DATE_FORMAT(CDATETIME,'%W %M %Y') from datatypetestm order by cidx;
+select cidx, CDATETIME, DATE_FORMAT(CDATETIME,'%H:%i:%s') from datatypetestm order by cidx;
+select cidx, CDATETIME, DATE_FORMAT(CDATETIME,'%D %y %a %d %m %b %j') from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, DATE_FORMAT(CTIME,'%W %M %Y') from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, DATE_FORMAT(CTIME,'%H:%i:%s') from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, DATE_FORMAT(CTIME,'%D %y %a %d %m %b %j') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by DATE_FORMAT(CDATE,'%W %M %Y'), cidx;
+select cidx, CDATE from datatypetestm order by DATE_FORMAT(CDATE,'%H:%i:%s'), cidx;
+select cidx, CDATE from datatypetestm order by DATE_FORMAT(CDATE,'%D %y %a %d %m %b %j'), cidx;
+select cidx, CDATETIME from datatypetestm order by DATE_FORMAT(CDATETIME,'%W %M %Y'), cidx;
+select cidx, CDATETIME from datatypetestm order by DATE_FORMAT(CDATETIME,'%H:%i:%s'), cidx;
+select cidx, CDATETIME from datatypetestm order by DATE_FORMAT(CDATETIME,'%D %y %a %d %m %b %j'), cidx;
+#select cidx, CTIME from datatypetestm order by DATE_FORMAT(CTIME,'%W %M %Y'), cidx;
+#select cidx, CTIME from datatypetestm order by DATE_FORMAT(CTIME,'%H:%i:%s'), cidx;
+#select cidx, CTIME from datatypetestm order by DATE_FORMAT(CTIME,'%D %y %a %d %m %b %j'), cidx;

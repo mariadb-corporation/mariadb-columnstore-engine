@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT from datatypetestm where CTEXT XOR -1 <> 0 ;
+select cidx, CTEXT from datatypetestm where CTEXT XOR 0 <> 0 ;
+select cidx, CTEXT from datatypetestm where CTEXT XOR 1 <> 0 ;
+select cidx, CTEXT from datatypetestm where CTEXT XOR '-1' <> 0 ;
+select cidx, CTEXT from datatypetestm where CTEXT XOR '0' <> 0 ;
+select cidx, CTEXT from datatypetestm where CTEXT XOR '1' <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR -1 <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR 0 <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR 1 <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR '-1' <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR '0' <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT XOR '1' <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR -1 <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR 0 <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR 1 <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR '-1' <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR '0' <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT XOR '1' <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR -1 <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR 0 <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR 1 <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR '-1' <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR '0' <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT XOR '1' <> 0 ;

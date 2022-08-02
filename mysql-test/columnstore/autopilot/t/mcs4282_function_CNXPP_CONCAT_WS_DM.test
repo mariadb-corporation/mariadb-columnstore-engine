@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3) from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3), cidx;
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3,CCHAR7), cidx;
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3), cidx;
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3,CCHAR7), cidx;
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3), cidx;
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3,CCHAR7), cidx;
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;

@@ -1,0 +1,457 @@
+USE autopilot;
+select cidx, CCHAR1, LOCATE('aaa',CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	LOCATE('aaa',CCHAR1)
+1	a	0
+select cidx, CCHAR1, LOCATE('zz',CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	LOCATE('zz',CCHAR1)
+1	a	0
+select cidx, CCHAR1, LOCATE('aaaaaaaaaaaa',CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	LOCATE('aaaaaaaaaaaa',CCHAR1)
+1	a	0
+select cidx, CCHAR1, LOCATE('zzzzzzzzzzzzzz',CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	LOCATE('zzzzzzzzzzzzzz',CCHAR1)
+1	a	0
+select cidx, CCHAR2, LOCATE('aaa',CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	LOCATE('aaa',CCHAR2)
+1	aa	0
+select cidx, CCHAR2, LOCATE('zz',CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	LOCATE('zz',CCHAR2)
+1	aa	0
+select cidx, CCHAR2, LOCATE('aaaaaaaaaaaa',CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	LOCATE('aaaaaaaaaaaa',CCHAR2)
+1	aa	0
+select cidx, CCHAR2, LOCATE('zzzzzzzzzzzzzz',CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	LOCATE('zzzzzzzzzzzzzz',CCHAR2)
+1	aa	0
+select cidx, CCHAR3, LOCATE('aaa',CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	LOCATE('aaa',CCHAR3)
+1	aaa	1
+select cidx, CCHAR3, LOCATE('zz',CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	LOCATE('zz',CCHAR3)
+1	aaa	0
+select cidx, CCHAR3, LOCATE('aaaaaaaaaaaa',CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	LOCATE('aaaaaaaaaaaa',CCHAR3)
+1	aaa	0
+select cidx, CCHAR3, LOCATE('zzzzzzzzzzzzzz',CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	LOCATE('zzzzzzzzzzzzzz',CCHAR3)
+1	aaa	0
+select cidx, CCHAR4, LOCATE('aaa',CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	LOCATE('aaa',CCHAR4)
+1	aaaa	1
+select cidx, CCHAR4, LOCATE('zz',CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	LOCATE('zz',CCHAR4)
+1	aaaa	0
+select cidx, CCHAR4, LOCATE('aaaaaaaaaaaa',CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	LOCATE('aaaaaaaaaaaa',CCHAR4)
+1	aaaa	0
+select cidx, CCHAR4, LOCATE('zzzzzzzzzzzzzz',CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	LOCATE('zzzzzzzzzzzzzz',CCHAR4)
+1	aaaa	0
+select cidx, CCHAR5, LOCATE('aaa',CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	LOCATE('aaa',CCHAR5)
+1	aaaaa	1
+select cidx, CCHAR5, LOCATE('zz',CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	LOCATE('zz',CCHAR5)
+1	aaaaa	0
+select cidx, CCHAR5, LOCATE('aaaaaaaaaaaa',CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	LOCATE('aaaaaaaaaaaa',CCHAR5)
+1	aaaaa	0
+select cidx, CCHAR5, LOCATE('zzzzzzzzzzzzzz',CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	LOCATE('zzzzzzzzzzzzzz',CCHAR5)
+1	aaaaa	0
+select cidx, CCHAR6, LOCATE('aaa',CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	LOCATE('aaa',CCHAR6)
+1	aaaaaa	1
+select cidx, CCHAR6, LOCATE('zz',CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	LOCATE('zz',CCHAR6)
+1	aaaaaa	0
+select cidx, CCHAR6, LOCATE('aaaaaaaaaaaa',CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	LOCATE('aaaaaaaaaaaa',CCHAR6)
+1	aaaaaa	0
+select cidx, CCHAR6, LOCATE('zzzzzzzzzzzzzz',CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	LOCATE('zzzzzzzzzzzzzz',CCHAR6)
+1	aaaaaa	0
+select cidx, CCHAR7, LOCATE('aaa',CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	LOCATE('aaa',CCHAR7)
+1	aaaaaaa	1
+select cidx, CCHAR7, LOCATE('zz',CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	LOCATE('zz',CCHAR7)
+1	aaaaaaa	0
+select cidx, CCHAR7, LOCATE('aaaaaaaaaaaa',CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	LOCATE('aaaaaaaaaaaa',CCHAR7)
+1	aaaaaaa	0
+select cidx, CCHAR7, LOCATE('zzzzzzzzzzzzzz',CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	LOCATE('zzzzzzzzzzzzzz',CCHAR7)
+1	aaaaaaa	0
+select cidx, CCHAR8, LOCATE('aaa',CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	LOCATE('aaa',CCHAR8)
+1	aaaaaaaa	1
+select cidx, CCHAR8, LOCATE('zz',CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	LOCATE('zz',CCHAR8)
+1	aaaaaaaa	0
+select cidx, CCHAR8, LOCATE('aaaaaaaaaaaa',CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	LOCATE('aaaaaaaaaaaa',CCHAR8)
+1	aaaaaaaa	0
+select cidx, CCHAR8, LOCATE('zzzzzzzzzzzzzz',CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	LOCATE('zzzzzzzzzzzzzz',CCHAR8)
+1	aaaaaaaa	0
+select cidx, CCHAR9, LOCATE('aaa',CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	LOCATE('aaa',CCHAR9)
+1	aaaaaaaaa	1
+select cidx, CCHAR9, LOCATE('zz',CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	LOCATE('zz',CCHAR9)
+1	aaaaaaaaa	0
+select cidx, CCHAR9, LOCATE('aaaaaaaaaaaa',CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	LOCATE('aaaaaaaaaaaa',CCHAR9)
+1	aaaaaaaaa	0
+select cidx, CCHAR9, LOCATE('zzzzzzzzzzzzzz',CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	LOCATE('zzzzzzzzzzzzzz',CCHAR9)
+1	aaaaaaaaa	0
+select cidx, CCHAR255, LOCATE('aaa',CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	LOCATE('aaa',CCHAR255)
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, LOCATE('zz',CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	LOCATE('zz',CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, LOCATE('aaaaaaaaaaaa',CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	LOCATE('aaaaaaaaaaaa',CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, LOCATE('zzzzzzzzzzzzzz',CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	LOCATE('zzzzzzzzzzzzzz',CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR1, LOCATE('aaa',CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	LOCATE('aaa',CVCHAR1)
+1	a	0
+select cidx, CVCHAR1, LOCATE('zz',CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	LOCATE('zz',CVCHAR1)
+1	a	0
+select cidx, CVCHAR1, LOCATE('aaaaaaaaaaaa',CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	LOCATE('aaaaaaaaaaaa',CVCHAR1)
+1	a	0
+select cidx, CVCHAR1, LOCATE('zzzzzzzzzzzzzz',CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	LOCATE('zzzzzzzzzzzzzz',CVCHAR1)
+1	a	0
+select cidx, CVCHAR2, LOCATE('aaa',CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	LOCATE('aaa',CVCHAR2)
+1	aa	0
+select cidx, CVCHAR2, LOCATE('zz',CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	LOCATE('zz',CVCHAR2)
+1	aa	0
+select cidx, CVCHAR2, LOCATE('aaaaaaaaaaaa',CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	LOCATE('aaaaaaaaaaaa',CVCHAR2)
+1	aa	0
+select cidx, CVCHAR2, LOCATE('zzzzzzzzzzzzzz',CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	LOCATE('zzzzzzzzzzzzzz',CVCHAR2)
+1	aa	0
+select cidx, CVCHAR3, LOCATE('aaa',CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	LOCATE('aaa',CVCHAR3)
+1	aaa	1
+select cidx, CVCHAR3, LOCATE('zz',CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	LOCATE('zz',CVCHAR3)
+1	aaa	0
+select cidx, CVCHAR3, LOCATE('aaaaaaaaaaaa',CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	LOCATE('aaaaaaaaaaaa',CVCHAR3)
+1	aaa	0
+select cidx, CVCHAR3, LOCATE('zzzzzzzzzzzzzz',CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	LOCATE('zzzzzzzzzzzzzz',CVCHAR3)
+1	aaa	0
+select cidx, CVCHAR4, LOCATE('aaa',CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	LOCATE('aaa',CVCHAR4)
+1	aaaa	1
+select cidx, CVCHAR4, LOCATE('zz',CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	LOCATE('zz',CVCHAR4)
+1	aaaa	0
+select cidx, CVCHAR4, LOCATE('aaaaaaaaaaaa',CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	LOCATE('aaaaaaaaaaaa',CVCHAR4)
+1	aaaa	0
+select cidx, CVCHAR4, LOCATE('zzzzzzzzzzzzzz',CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	LOCATE('zzzzzzzzzzzzzz',CVCHAR4)
+1	aaaa	0
+select cidx, CVCHAR5, LOCATE('aaa',CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	LOCATE('aaa',CVCHAR5)
+1	aaaaa	1
+select cidx, CVCHAR5, LOCATE('zz',CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	LOCATE('zz',CVCHAR5)
+1	aaaaa	0
+select cidx, CVCHAR5, LOCATE('aaaaaaaaaaaa',CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	LOCATE('aaaaaaaaaaaa',CVCHAR5)
+1	aaaaa	0
+select cidx, CVCHAR5, LOCATE('zzzzzzzzzzzzzz',CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	LOCATE('zzzzzzzzzzzzzz',CVCHAR5)
+1	aaaaa	0
+select cidx, CVCHAR6, LOCATE('aaa',CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	LOCATE('aaa',CVCHAR6)
+1	aaaaaa	1
+select cidx, CVCHAR6, LOCATE('zz',CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	LOCATE('zz',CVCHAR6)
+1	aaaaaa	0
+select cidx, CVCHAR6, LOCATE('aaaaaaaaaaaa',CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	LOCATE('aaaaaaaaaaaa',CVCHAR6)
+1	aaaaaa	0
+select cidx, CVCHAR6, LOCATE('zzzzzzzzzzzzzz',CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	LOCATE('zzzzzzzzzzzzzz',CVCHAR6)
+1	aaaaaa	0
+select cidx, CVCHAR7, LOCATE('aaa',CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	LOCATE('aaa',CVCHAR7)
+1	aaaaaaa	1
+select cidx, CVCHAR7, LOCATE('zz',CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	LOCATE('zz',CVCHAR7)
+1	aaaaaaa	0
+select cidx, CVCHAR7, LOCATE('aaaaaaaaaaaa',CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	LOCATE('aaaaaaaaaaaa',CVCHAR7)
+1	aaaaaaa	0
+select cidx, CVCHAR7, LOCATE('zzzzzzzzzzzzzz',CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	LOCATE('zzzzzzzzzzzzzz',CVCHAR7)
+1	aaaaaaa	0
+select cidx, CVCHAR8, LOCATE('aaa',CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	LOCATE('aaa',CVCHAR8)
+1	aaaaaaaa	1
+select cidx, CVCHAR8, LOCATE('zz',CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	LOCATE('zz',CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CVCHAR8, LOCATE('aaaaaaaaaaaa',CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	LOCATE('aaaaaaaaaaaa',CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CVCHAR8, LOCATE('zzzzzzzzzzzzzz',CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	LOCATE('zzzzzzzzzzzzzz',CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CVCHAR255, LOCATE('aaa',CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	LOCATE('aaa',CVCHAR255)
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, LOCATE('zz',CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	LOCATE('zz',CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, LOCATE('aaaaaaaaaaaa',CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	LOCATE('aaaaaaaaaaaa',CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, LOCATE('zzzzzzzzzzzzzz',CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	LOCATE('zzzzzzzzzzzzzz',CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CCHAR1 from datatypetestm order by LOCATE('aaa',CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by LOCATE('zz',CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by LOCATE('aaa',CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by LOCATE('zz',CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by LOCATE('aaa',CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by LOCATE('zz',CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by LOCATE('aaa',CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by LOCATE('zz',CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by LOCATE('aaa',CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by LOCATE('zz',CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by LOCATE('aaa',CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by LOCATE('zz',CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by LOCATE('aaa',CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by LOCATE('zz',CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by LOCATE('aaa',CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by LOCATE('zz',CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by LOCATE('aaa',CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by LOCATE('zz',CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by LOCATE('aaa',CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by LOCATE('zz',CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by LOCATE('aaa',CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by LOCATE('zz',CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by LOCATE('aaa',CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by LOCATE('zz',CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by LOCATE('aaa',CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by LOCATE('zz',CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by LOCATE('aaa',CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by LOCATE('zz',CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by LOCATE('aaa',CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by LOCATE('zz',CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by LOCATE('aaa',CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by LOCATE('zz',CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by LOCATE('aaa',CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by LOCATE('zz',CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by LOCATE('aaa',CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by LOCATE('zz',CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by LOCATE('aaa',CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by LOCATE('zz',CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by LOCATE('aaaaaaaaaaaa',CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

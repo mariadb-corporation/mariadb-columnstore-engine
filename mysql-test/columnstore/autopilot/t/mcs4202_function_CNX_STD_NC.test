@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select STD(CBIGINT) from datatypetestm;
+select STD(CDECIMAL1) from datatypetestm;
+select STD(CDECIMAL4) from datatypetestm;
+select STD(CDECIMAL4_2) from datatypetestm;
+select STD(CDECIMAL5) from datatypetestm;
+select STD(CDECIMAL9) from datatypetestm;
+select STD(CDECIMAL9_2) from datatypetestm;
+select STD(CDECIMAL10) from datatypetestm;
+select STD(CDECIMAL18) from datatypetestm;
+select STD(CDECIMAL18_2) from datatypetestm;
+select STD(CINTEGER) from datatypetestm;
+select STD(CSMALLINT) from datatypetestm;
+select STD(CTINYINT) from datatypetestm;
+select STD(CDOUBLE) from datatypetestm;
+select STD(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, STD(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, STD(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, STD(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, STD(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, STD(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, STD(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, STD(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, STD(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, STD(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, STD(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, STD(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, STD(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, STD(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, STD(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, STD(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

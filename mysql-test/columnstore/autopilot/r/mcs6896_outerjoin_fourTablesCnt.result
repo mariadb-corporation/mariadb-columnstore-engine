@@ -1,0 +1,197 @@
+USE outerjoin;
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1504
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1502
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1504
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1501
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1507
+select count(*) from orders o
+join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1505
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1504
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1610
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1504
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1501
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1507
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1505
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1500
+select count(*) from orders o
+left join customer c on o.o_custkey = c.c_custkey 
+join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1504
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1550
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1591
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+left join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1554
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1550
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+left join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1556
+select count(*) from orders o
+right join customer c on o.o_custkey = c.c_custkey 
+right join nation   n on c.c_nationkey = n.n_nationkey
+right join region   r on n.n_regionkey = r.r_regionkey
+;
+count(*)
+1554

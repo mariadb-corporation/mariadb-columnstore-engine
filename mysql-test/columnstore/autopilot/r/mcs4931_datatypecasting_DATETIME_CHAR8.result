@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME > dtt2.CCHAR8 ;
+cidx	CDATETIME	CCHAR8
+1	1997-01-01 00:00:00	aaaaaaaa
+2	1997-01-01 00:00:01	h
+3	1997-01-02 00:00:01	hh
+4	1997-01-03 00:00:02	hhh
+5	1997-01-04 00:00:03	hhhh
+6	2009-12-31 23:59:56	sssssss
+7	2009-12-31 23:59:57	ssssssss
+8	2009-12-31 23:59:58	ssssssss
+9	2009-12-31 23:59:59	ssssssss
+10	2009-12-31 23:59:59	zzzzzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME >= dtt2.CCHAR8 ;
+cidx	CDATETIME	CCHAR8
+1	1997-01-01 00:00:00	aaaaaaaa
+2	1997-01-01 00:00:01	h
+3	1997-01-02 00:00:01	hh
+4	1997-01-03 00:00:02	hhh
+5	1997-01-04 00:00:03	hhhh
+6	2009-12-31 23:59:56	sssssss
+7	2009-12-31 23:59:57	ssssssss
+8	2009-12-31 23:59:58	ssssssss
+9	2009-12-31 23:59:59	ssssssss
+10	2009-12-31 23:59:59	zzzzzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <> dtt2.CCHAR8 ;
+cidx	CDATETIME	CCHAR8
+1	1997-01-01 00:00:00	aaaaaaaa
+2	1997-01-01 00:00:01	h
+3	1997-01-02 00:00:01	hh
+4	1997-01-03 00:00:02	hhh
+5	1997-01-04 00:00:03	hhhh
+6	2009-12-31 23:59:56	sssssss
+7	2009-12-31 23:59:57	ssssssss
+8	2009-12-31 23:59:58	ssssssss
+9	2009-12-31 23:59:59	ssssssss
+10	2009-12-31 23:59:59	zzzzzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME < dtt2.CCHAR8 ;
+cidx	CDATETIME	CCHAR8
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <= dtt2.CCHAR8 ;
+cidx	CDATETIME	CCHAR8

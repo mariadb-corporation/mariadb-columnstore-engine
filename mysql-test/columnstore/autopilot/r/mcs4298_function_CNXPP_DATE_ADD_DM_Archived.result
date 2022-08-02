@@ -1,0 +1,361 @@
+USE autopilot;
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 MICROSECOND)
+1	1997-01-01	1997-01-01 00:00:00.300000
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 SECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 SECOND)
+1	1997-01-01	1997-01-01 00:00:03
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 MINUTE) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 MINUTE)
+1	1997-01-01	1997-01-01 00:03:00
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 HOUR) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 HOUR)
+1	1997-01-01	1997-01-01 03:00:00
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 DAY) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 DAY)
+1	1997-01-01	1997-01-04
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 WEEK) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 WEEK)
+1	1997-01-01	1997-01-22
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 MONTH) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 MONTH)
+1	1997-01-01	1997-04-01
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 QUARTER) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 QUARTER)
+1	1997-01-01	1997-10-01
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 YEAR) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 YEAR)
+1	1997-01-01	2000-01-01
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 SECOND_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 SECOND_MICROSECOND)
+1	1997-01-01	1997-01-01 00:00:00.300000
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 MINUTE_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 MINUTE_MICROSECOND)
+1	1997-01-01	1997-01-01 00:00:00.300000
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 MINUTE_SECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 MINUTE_SECOND)
+1	1997-01-01	1997-01-01 00:00:03
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 HOUR_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 HOUR_MICROSECOND)
+1	1997-01-01	1997-01-01 00:00:00.300000
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 HOUR_SECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 HOUR_SECOND)
+1	1997-01-01	1997-01-01 00:00:03
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 HOUR_MINUTE) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 HOUR_MINUTE)
+1	1997-01-01	1997-01-01 00:03:00
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 DAY_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 DAY_MICROSECOND)
+1	1997-01-01	1997-01-01 00:00:00.300000
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 DAY_SECOND) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 DAY_SECOND)
+1	1997-01-01	1997-01-01 00:00:03
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 DAY_MINUTE) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 DAY_MINUTE)
+1	1997-01-01	1997-01-01 00:03:00
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 DAY_HOUR) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 DAY_HOUR)
+1	1997-01-01	1997-01-01 03:00:00
+select cidx, CDATE, DATE_ADD(CDATE, INTERVAL 3 YEAR_MONTH) from datatypetestm order by cidx;
+cidx	CDATE	DATE_ADD(CDATE, INTERVAL 3 YEAR_MONTH)
+1	1997-01-01	1997-04-01
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 MICROSECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00.300000
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 SECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 SECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:03
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 MINUTE) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 MINUTE)
+1	1997-01-01 00:00:00	1997-01-01 00:03:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 HOUR) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 HOUR)
+1	1997-01-01 00:00:00	1997-01-01 03:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 DAY) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 DAY)
+1	1997-01-01 00:00:00	1997-01-04 00:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 WEEK) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 WEEK)
+1	1997-01-01 00:00:00	1997-01-22 00:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 MONTH) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 MONTH)
+1	1997-01-01 00:00:00	1997-04-01 00:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 QUARTER) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 QUARTER)
+1	1997-01-01 00:00:00	1997-10-01 00:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 YEAR) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 YEAR)
+1	1997-01-01 00:00:00	2000-01-01 00:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 SECOND_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 SECOND_MICROSECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00.300000
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_MICROSECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00.300000
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_SECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_SECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:03
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MICROSECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00.300000
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 HOUR_SECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 HOUR_SECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:03
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MINUTE) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MINUTE)
+1	1997-01-01 00:00:00	1997-01-01 00:03:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 DAY_MICROSECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 DAY_MICROSECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00.300000
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 DAY_SECOND) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 DAY_SECOND)
+1	1997-01-01 00:00:00	1997-01-01 00:00:03
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 DAY_MINUTE) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 DAY_MINUTE)
+1	1997-01-01 00:00:00	1997-01-01 00:03:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 DAY_HOUR) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 DAY_HOUR)
+1	1997-01-01 00:00:00	1997-01-01 03:00:00
+select cidx, CDATETIME, DATE_ADD(CDATETIME, INTERVAL 3 YEAR_MONTH) from datatypetestm order by cidx;
+cidx	CDATETIME	DATE_ADD(CDATETIME, INTERVAL 3 YEAR_MONTH)
+1	1997-01-01 00:00:00	1997-04-01 00:00:00
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 MICROSECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 MICROSECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 SECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 SECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 MINUTE) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 MINUTE)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 HOUR) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 HOUR)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 DAY) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 DAY)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 WEEK) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 WEEK)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 MONTH) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 MONTH)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 QUARTER) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 QUARTER)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 YEAR) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 YEAR)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 SECOND_MICROSECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 SECOND_MICROSECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 MINUTE_MICROSECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 MINUTE_MICROSECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 MINUTE_SECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 MINUTE_SECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 HOUR_MICROSECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 HOUR_MICROSECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 HOUR_SECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 HOUR_SECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 HOUR_MINUTE) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 HOUR_MINUTE)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 DAY_MICROSECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 DAY_MICROSECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 DAY_SECOND) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 DAY_SECOND)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 DAY_MINUTE) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 DAY_MINUTE)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 DAY_HOUR) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 DAY_HOUR)
+1	13:00:00	NULL
+select cidx, CTIME, DATE_ADD(CTIME, INTERVAL 3 YEAR_MONTH) from datatypetestm order by cidx;
+cidx	CTIME	DATE_ADD(CTIME, INTERVAL 3 YEAR_MONTH)
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 MICROSECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 SECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 MINUTE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 HOUR), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 DAY), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 WEEK), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 MONTH), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 QUARTER), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 YEAR), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 SECOND_MICROSECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 MINUTE_MICROSECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 MINUTE_SECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 HOUR_MICROSECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 HOUR_SECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 HOUR_MINUTE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 DAY_MICROSECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 DAY_SECOND), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 DAY_MINUTE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 DAY_HOUR), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by DATE_ADD(CDATE, INTERVAL 3 YEAR_MONTH), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 MICROSECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 SECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 MINUTE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 HOUR), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 DAY), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 WEEK), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 MONTH), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 QUARTER), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 YEAR), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 SECOND_MICROSECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_MICROSECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 MINUTE_SECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MICROSECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 HOUR_SECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 HOUR_MINUTE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 DAY_MICROSECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 DAY_SECOND), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 DAY_MINUTE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 DAY_HOUR), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by DATE_ADD(CDATETIME, INTERVAL 3 YEAR_MONTH), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 MICROSECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 SECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 MINUTE), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 HOUR), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 DAY), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 WEEK), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 MONTH), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 QUARTER), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 YEAR), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 SECOND_MICROSECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 MINUTE_MICROSECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 MINUTE_SECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 HOUR_MICROSECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 HOUR_SECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 HOUR_MINUTE), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 DAY_MICROSECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 DAY_SECOND), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 DAY_MINUTE), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 DAY_HOUR), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by DATE_ADD(CTIME, INTERVAL 3 YEAR_MONTH), cidx;
+cidx	CTIME
+1	13:00:00

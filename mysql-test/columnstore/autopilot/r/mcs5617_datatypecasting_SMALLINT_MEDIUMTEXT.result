@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT > dtt2.CMEDIUMTEXT ;
+cidx	CSMALLINT	CMEDIUMTEXT
+6	763	mediumtestmediumtest
+7	764	mediumtestmediumtest
+8	765	mediumtestmediumtest
+9	766	mediumtestmediumtest
+10	767	mediumtestmediumtest
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT >= dtt2.CMEDIUMTEXT ;
+cidx	CSMALLINT	CMEDIUMTEXT
+6	763	mediumtestmediumtest
+7	764	mediumtestmediumtest
+8	765	mediumtestmediumtest
+9	766	mediumtestmediumtest
+10	767	mediumtestmediumtest
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <> dtt2.CMEDIUMTEXT ;
+cidx	CSMALLINT	CMEDIUMTEXT
+1	-766	mediumtestmediumtest
+2	-765	mediumtestmediumtest
+3	-764	mediumtestmediumtest
+4	-763	mediumtestmediumtest
+5	-762	mediumtestmediumtest
+6	763	mediumtestmediumtest
+7	764	mediumtestmediumtest
+8	765	mediumtestmediumtest
+9	766	mediumtestmediumtest
+10	767	mediumtestmediumtest
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT < dtt2.CMEDIUMTEXT ;
+cidx	CSMALLINT	CMEDIUMTEXT
+1	-766	mediumtestmediumtest
+2	-765	mediumtestmediumtest
+3	-764	mediumtestmediumtest
+4	-763	mediumtestmediumtest
+5	-762	mediumtestmediumtest
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <= dtt2.CMEDIUMTEXT ;
+cidx	CSMALLINT	CMEDIUMTEXT
+1	-766	mediumtestmediumtest
+2	-765	mediumtestmediumtest
+3	-764	mediumtestmediumtest
+4	-763	mediumtestmediumtest
+5	-762	mediumtestmediumtest

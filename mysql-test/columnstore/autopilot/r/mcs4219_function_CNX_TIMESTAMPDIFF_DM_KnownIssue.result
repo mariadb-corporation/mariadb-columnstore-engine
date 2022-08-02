@@ -1,0 +1,163 @@
+USE autopilot;
+select cidx, CDATE, TIMESTAMPDIFF(MICROSECOND,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(MICROSECOND,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	452603376000000
+select cidx, CDATE, TIMESTAMPDIFF(SECOND,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(SECOND,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	452603376
+select cidx, CDATE, TIMESTAMPDIFF(MINUTE,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(MINUTE,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	7543389
+select cidx, CDATE, TIMESTAMPDIFF(HOUR,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(HOUR,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	125723
+select cidx, CDATE, TIMESTAMPDIFF(DAY,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(DAY,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	5238
+select cidx, CDATE, TIMESTAMPDIFF(WEEK,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(WEEK,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	748
+select cidx, CDATE, TIMESTAMPDIFF(MONTH,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(MONTH,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	172
+select cidx, CDATE, TIMESTAMPDIFF(QUARTER,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(QUARTER,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	57
+select cidx, CDATE, TIMESTAMPDIFF(YEAR,CDATE, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATE	TIMESTAMPDIFF(YEAR,CDATE, '2011-05-06 11:09:36')
+1	1997-01-01	14
+select cidx, CDATETIME, TIMESTAMPDIFF(MICROSECOND,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(MICROSECOND,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	452603376000000
+select cidx, CDATETIME, TIMESTAMPDIFF(SECOND,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(SECOND,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	452603376
+select cidx, CDATETIME, TIMESTAMPDIFF(MINUTE,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(MINUTE,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	7543389
+select cidx, CDATETIME, TIMESTAMPDIFF(HOUR,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(HOUR,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	125723
+select cidx, CDATETIME, TIMESTAMPDIFF(DAY,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(DAY,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	5238
+select cidx, CDATETIME, TIMESTAMPDIFF(WEEK,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(WEEK,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	748
+select cidx, CDATETIME, TIMESTAMPDIFF(MONTH,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(MONTH,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	172
+select cidx, CDATETIME, TIMESTAMPDIFF(QUARTER,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(QUARTER,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	57
+select cidx, CDATETIME, TIMESTAMPDIFF(YEAR,CDATETIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CDATETIME	TIMESTAMPDIFF(YEAR,CDATETIME, '2011-05-06 11:09:36')
+1	1997-01-01 00:00:00	14
+select cidx, CTIME, TIMESTAMPDIFF(MICROSECOND,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(MICROSECOND,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-2086818369232967680
+select cidx, CTIME, TIMESTAMPDIFF(SECOND,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(SECOND,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-2086818369232
+select cidx, CTIME, TIMESTAMPDIFF(MINUTE,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(MINUTE,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-34780306153
+select cidx, CTIME, TIMESTAMPDIFF(HOUR,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(HOUR,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-579671769
+select cidx, CTIME, TIMESTAMPDIFF(DAY,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(DAY,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-24152990
+select cidx, CTIME, TIMESTAMPDIFF(WEEK,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(WEEK,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	-3450427
+select cidx, CTIME, TIMESTAMPDIFF(MONTH,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(MONTH,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	24137
+select cidx, CTIME, TIMESTAMPDIFF(QUARTER,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(QUARTER,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	8045
+select cidx, CTIME, TIMESTAMPDIFF(YEAR,CTIME, '2011-05-06 11:09:36') from datatypetestm order by cidx;
+cidx	CTIME	TIMESTAMPDIFF(YEAR,CTIME, '2011-05-06 11:09:36')
+1	13:00:00	2011
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(SECOND,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MINUTE,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(HOUR,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(DAY,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(WEEK,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(MONTH,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(QUARTER,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where TIMESTAMPDIFF(YEAR,CDATE, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(SECOND,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MINUTE,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(HOUR,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(DAY,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(WEEK,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(MONTH,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(QUARTER,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIMESTAMPDIFF(YEAR,CDATETIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MICROSECOND,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(SECOND,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MINUTE,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(HOUR,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(DAY,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(WEEK,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(MONTH,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(QUARTER,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where TIMESTAMPDIFF(YEAR,CTIME, '2011-05-06 11:09:36') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

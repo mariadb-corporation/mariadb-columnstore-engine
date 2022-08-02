@@ -1,0 +1,124 @@
+USE autopilot;
+select cidx, CCHAR1, CHARACTER_LENGTH(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	CHARACTER_LENGTH(CCHAR1)
+1	a	1
+select cidx, CCHAR2, CHARACTER_LENGTH(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	CHARACTER_LENGTH(CCHAR2)
+1	aa	2
+select cidx, CCHAR3, CHARACTER_LENGTH(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	CHARACTER_LENGTH(CCHAR3)
+1	aaa	3
+select cidx, CCHAR4, CHARACTER_LENGTH(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	CHARACTER_LENGTH(CCHAR4)
+1	aaaa	4
+select cidx, CCHAR5, CHARACTER_LENGTH(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	CHARACTER_LENGTH(CCHAR5)
+1	aaaaa	5
+select cidx, CCHAR6, CHARACTER_LENGTH(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	CHARACTER_LENGTH(CCHAR6)
+1	aaaaaa	6
+select cidx, CCHAR7, CHARACTER_LENGTH(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	CHARACTER_LENGTH(CCHAR7)
+1	aaaaaaa	7
+select cidx, CCHAR8, CHARACTER_LENGTH(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	CHARACTER_LENGTH(CCHAR8)
+1	aaaaaaaa	8
+select cidx, CCHAR9, CHARACTER_LENGTH(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	CHARACTER_LENGTH(CCHAR9)
+1	aaaaaaaaa	9
+select cidx, CCHAR255, CHARACTER_LENGTH(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	CHARACTER_LENGTH(CCHAR255)
+1	aaaaaaaaaa	10
+select cidx, CVCHAR1, CHARACTER_LENGTH(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	CHARACTER_LENGTH(CVCHAR1)
+1	a	1
+select cidx, CVCHAR2, CHARACTER_LENGTH(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	CHARACTER_LENGTH(CVCHAR2)
+1	aa	2
+select cidx, CVCHAR3, CHARACTER_LENGTH(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	CHARACTER_LENGTH(CVCHAR3)
+1	aaa	3
+select cidx, CVCHAR4, CHARACTER_LENGTH(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	CHARACTER_LENGTH(CVCHAR4)
+1	aaaa	4
+select cidx, CVCHAR5, CHARACTER_LENGTH(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	CHARACTER_LENGTH(CVCHAR5)
+1	aaaaa	5
+select cidx, CVCHAR6, CHARACTER_LENGTH(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	CHARACTER_LENGTH(CVCHAR6)
+1	aaaaaa	6
+select cidx, CVCHAR7, CHARACTER_LENGTH(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	CHARACTER_LENGTH(CVCHAR7)
+1	aaaaaaa	7
+select cidx, CVCHAR8, CHARACTER_LENGTH(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	CHARACTER_LENGTH(CVCHAR8)
+1	aaaaaaaa	8
+select cidx, CVCHAR255, CHARACTER_LENGTH(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	CHARACTER_LENGTH(CVCHAR255)
+1	aaaaaaaaaa	10
+select cidx, CHARACTER_LENGTH(concat('Hello',cchar1)) from datatypetestm order by cidx;
+cidx	CHARACTER_LENGTH(concat('Hello',cchar1))
+1	6
+select cidx, CHARACTER_LENGTH(concat('World',cchar1)) from datatypetestm order by cidx;
+cidx	CHARACTER_LENGTH(concat('World',cchar1))
+1	6
+select cidx, CHARACTER_LENGTH(concat(cchar1,'KingKamahamaha')) from datatypetestm order by cidx;
+cidx	CHARACTER_LENGTH(concat(cchar1,'KingKamahamaha'))
+1	15
+select cidx, CCHAR1 from datatypetestm order by CHARACTER_LENGTH(CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by CHARACTER_LENGTH(CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by CHARACTER_LENGTH(CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by CHARACTER_LENGTH(CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by CHARACTER_LENGTH(CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by CHARACTER_LENGTH(CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by CHARACTER_LENGTH(CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CHARACTER_LENGTH(CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CHARACTER_LENGTH(CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CHARACTER_LENGTH(CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by CHARACTER_LENGTH(CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by CHARACTER_LENGTH(CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by CHARACTER_LENGTH(CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by CHARACTER_LENGTH(CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by CHARACTER_LENGTH(CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by CHARACTER_LENGTH(CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CHARACTER_LENGTH(CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CHARACTER_LENGTH(CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CHARACTER_LENGTH(CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

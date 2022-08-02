@@ -1,0 +1,82 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INSTR(CTEXT,'aaa') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'aaa')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'zz') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'zz')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'aaaaaaaaaaaa')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'zzzzzzzzzzzzzz')
+1	texttexttext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaa') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'aaa')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zz') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'zz')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'aaaaaaaaaaaa')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'zzzzzzzzzzzzzz')
+1	tinytext	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaa') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'aaa')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zz') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'zz')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz')
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaa') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'aaa')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zz') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'zz')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'aaaaaaaaaaaa')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'zzzzzzzzzzzzzz')
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm where INSTR(CTEXT,'aaa') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSTR(CTEXT,'zz') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSTR(CTEXT,'aaaaaaaaaaaa') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSTR(CTEXT,'zzzzzzzzzzzzzz') <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where INSTR(CTINYTEXT,'aaa') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSTR(CTINYTEXT,'zz') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSTR(CTINYTEXT,'aaaaaaaaaaaa') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSTR(CTINYTEXT,'zzzzzzzzzzzzzz') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSTR(CMEDIUMTEXT,'aaa') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSTR(CMEDIUMTEXT,'zz') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where INSTR(CLONGTEXT,'aaa') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSTR(CLONGTEXT,'zz') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSTR(CLONGTEXT,'aaaaaaaaaaaa') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSTR(CLONGTEXT,'zzzzzzzzzzzzzz') <> 0 ;
+cidx	CLONGTEXT

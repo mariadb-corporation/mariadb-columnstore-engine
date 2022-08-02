@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, DAYOFYEAR(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, DAYOFYEAR(CDATETIME) from datatypetestm order by cidx;
+#select cidx, CTIME, DAYOFYEAR(CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where DAYOFYEAR(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where DAYOFYEAR(CDATETIME) <> 0 order by cidx;
+#select cidx, CTIME from datatypetestm where DAYOFYEAR(CTIME) <> 0 order by cidx;

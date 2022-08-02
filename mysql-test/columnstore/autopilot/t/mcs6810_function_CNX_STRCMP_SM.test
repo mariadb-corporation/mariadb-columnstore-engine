@@ -1,0 +1,75 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, STRCMP(CTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,CCHAR255) from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,CVCHAR255) from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,'aa') from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,'zzzzzz') from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,'qqqqqqqqqq') from datatypetestm ;
+select cidx, CTEXT, STRCMP(CTEXT,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CCHAR255) from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CVCHAR255) from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'aa') from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'zzzzzz') from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'qqqqqqqqqq') from datatypetestm ;
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CCHAR255) from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CVCHAR255) from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'aa') from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'zzzzzz') from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'qqqqqqqqqq') from datatypetestm ;
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CCHAR3) from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CCHAR255) from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CVCHAR255) from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'aa') from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'zzzzzz') from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'qqqqqqqqqq') from datatypetestm ;
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,NULL) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,CCHAR3) <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,CVCHAR8) <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,CCHAR255) <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,CVCHAR255) <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,'aa') <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,'zzzzzz') <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,'qqqqqqqqqq') <> 0 ;
+select cidx, CTEXT from datatypetestm where STRCMP(CTEXT,NULL) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,CCHAR3) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,CVCHAR8) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,CCHAR255) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,CVCHAR255) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,'aa') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,'zzzzzz') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,'qqqqqqqqqq') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where STRCMP(CTINYTEXT,NULL) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,CCHAR3) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,CVCHAR8) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,CCHAR255) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,CVCHAR255) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,'aa') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,'zzzzzz') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,'qqqqqqqqqq') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where STRCMP(CMEDIUMTEXT,NULL) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,CCHAR3) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,CVCHAR8) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,CCHAR255) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,CVCHAR255) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,'aa') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,'zzzzzz') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,'qqqqqqqqqq') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where STRCMP(CLONGTEXT,NULL) <> 0 ;

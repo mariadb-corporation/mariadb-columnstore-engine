@@ -1,0 +1,588 @@
+USE autopilot;
+select cidx, CBIGINT, CBIGINT REGEXP '99$' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '99$'
+1	-72036854775806	0
+select cidx, CBIGINT, CBIGINT REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '\.99$'
+1	-72036854775806	0
+select cidx, CBIGINT, CBIGINT REGEXP '03$' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '03$'
+1	-72036854775806	0
+select cidx, CBIGINT, CBIGINT REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '\.+'
+1	-72036854775806	1
+select cidx, CBIGINT, CBIGINT REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '(-7)*'
+1	-72036854775806	1
+select cidx, CBIGINT, CBIGINT REGEXP '0?' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '0?'
+1	-72036854775806	1
+select cidx, CBIGINT, CBIGINT REGEXP '-26' from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT REGEXP '-26'
+1	-72036854775806	0
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '99$'
+1	-9	0
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '\.99$'
+1	-9	0
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '03$'
+1	-9	0
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '\.+'
+1	-9	1
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '(-7)*'
+1	-9	1
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '0?'
+1	-9	1
+select cidx, CDECIMAL1, CDECIMAL1 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 REGEXP '-26'
+1	-9	0
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '99$'
+1	-999	1
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '\.99$'
+1	-999	1
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '03$'
+1	-999	0
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '\.+'
+1	-999	1
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '(-7)*'
+1	-999	1
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '0?'
+1	-999	1
+select cidx, CDECIMAL4, CDECIMAL4 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 REGEXP '-26'
+1	-999	0
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '99$'
+1	-9.99	1
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '\.99$'
+1	-9.99	1
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '03$'
+1	-9.99	0
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '\.+'
+1	-9.99	1
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '(-7)*'
+1	-9.99	1
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '0?'
+1	-9.99	1
+select cidx, CDECIMAL4_2, CDECIMAL4_2 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 REGEXP '-26'
+1	-9.99	0
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '99$'
+1	-999	1
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '\.99$'
+1	-999	1
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '03$'
+1	-999	0
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '\.+'
+1	-999	1
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '(-7)*'
+1	-999	1
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '0?'
+1	-999	1
+select cidx, CDECIMAL5, CDECIMAL5 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 REGEXP '-26'
+1	-999	0
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '99$'
+1	-999999	1
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '\.99$'
+1	-999999	1
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '03$'
+1	-999999	0
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '\.+'
+1	-999999	1
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '(-7)*'
+1	-999999	1
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '0?'
+1	-999999	1
+select cidx, CDECIMAL9, CDECIMAL9 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 REGEXP '-26'
+1	-999999	0
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '99$'
+1	-9999.99	1
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '\.99$'
+1	-9999.99	1
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '03$'
+1	-9999.99	0
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '\.+'
+1	-9999.99	1
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '(-7)*'
+1	-9999.99	1
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '0?'
+1	-9999.99	1
+select cidx, CDECIMAL9_2, CDECIMAL9_2 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 REGEXP '-26'
+1	-9999.99	0
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '99$'
+1	-9999999	1
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '\.99$'
+1	-9999999	1
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '03$'
+1	-9999999	0
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '\.+'
+1	-9999999	1
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '(-7)*'
+1	-9999999	1
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '0?'
+1	-9999999	1
+select cidx, CDECIMAL10, CDECIMAL10 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 REGEXP '-26'
+1	-9999999	0
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '99$'
+1	-9999999999999	1
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '\.99$'
+1	-9999999999999	1
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '03$'
+1	-9999999999999	0
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '\.+'
+1	-9999999999999	1
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '(-7)*'
+1	-9999999999999	1
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '0?'
+1	-9999999999999	1
+select cidx, CDECIMAL18, CDECIMAL18 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 REGEXP '-26'
+1	-9999999999999	0
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '99$'
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '\.99$'
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '03$'
+1	-99999999999.99	0
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '\.+'
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '(-7)*'
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '0?'
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, CDECIMAL18_2 REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 REGEXP '-26'
+1	-99999999999.99	0
+select cidx, CINTEGER, CINTEGER REGEXP '99$' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '99$'
+1	-7483646	0
+select cidx, CINTEGER, CINTEGER REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '\.99$'
+1	-7483646	0
+select cidx, CINTEGER, CINTEGER REGEXP '03$' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '03$'
+1	-7483646	0
+select cidx, CINTEGER, CINTEGER REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '\.+'
+1	-7483646	1
+select cidx, CINTEGER, CINTEGER REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '(-7)*'
+1	-7483646	1
+select cidx, CINTEGER, CINTEGER REGEXP '0?' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '0?'
+1	-7483646	1
+select cidx, CINTEGER, CINTEGER REGEXP '-26' from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER REGEXP '-26'
+1	-7483646	0
+select cidx, CSMALLINT, CSMALLINT REGEXP '99$' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '99$'
+1	-766	0
+select cidx, CSMALLINT, CSMALLINT REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '\.99$'
+1	-766	0
+select cidx, CSMALLINT, CSMALLINT REGEXP '03$' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '03$'
+1	-766	0
+select cidx, CSMALLINT, CSMALLINT REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '\.+'
+1	-766	1
+select cidx, CSMALLINT, CSMALLINT REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '(-7)*'
+1	-766	1
+select cidx, CSMALLINT, CSMALLINT REGEXP '0?' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '0?'
+1	-766	1
+select cidx, CSMALLINT, CSMALLINT REGEXP '-26' from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT REGEXP '-26'
+1	-766	0
+select cidx, CTINYINT, CTINYINT REGEXP '99$' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '99$'
+1	-26	0
+select cidx, CTINYINT, CTINYINT REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '\.99$'
+1	-26	0
+select cidx, CTINYINT, CTINYINT REGEXP '03$' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '03$'
+1	-26	0
+select cidx, CTINYINT, CTINYINT REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '\.+'
+1	-26	1
+select cidx, CTINYINT, CTINYINT REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '(-7)*'
+1	-26	1
+select cidx, CTINYINT, CTINYINT REGEXP '0?' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '0?'
+1	-26	1
+select cidx, CTINYINT, CTINYINT REGEXP '-26' from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT REGEXP '-26'
+1	-26	1
+select cidx, CDOUBLE, CDOUBLE REGEXP '99$' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '99$'
+1	-1.797693231e108	0
+select cidx, CDOUBLE, CDOUBLE REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '\.99$'
+1	-1.797693231e108	0
+select cidx, CDOUBLE, CDOUBLE REGEXP '03$' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '03$'
+1	-1.797693231e108	0
+select cidx, CDOUBLE, CDOUBLE REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '\.+'
+1	-1.797693231e108	1
+select cidx, CDOUBLE, CDOUBLE REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '(-7)*'
+1	-1.797693231e108	1
+select cidx, CDOUBLE, CDOUBLE REGEXP '0?' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '0?'
+1	-1.797693231e108	1
+select cidx, CDOUBLE, CDOUBLE REGEXP '-26' from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE REGEXP '-26'
+1	-1.797693231e108	0
+select cidx, CFLOAT, CFLOAT REGEXP '99$' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '99$'
+1	-3.40287e18	0
+select cidx, CFLOAT, CFLOAT REGEXP '\.99$' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '\.99$'
+1	-3.40287e18	0
+select cidx, CFLOAT, CFLOAT REGEXP '03$' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '03$'
+1	-3.40287e18	0
+select cidx, CFLOAT, CFLOAT REGEXP '\.+' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '\.+'
+1	-3.40287e18	1
+select cidx, CFLOAT, CFLOAT REGEXP '(-7)*' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '(-7)*'
+1	-3.40287e18	1
+select cidx, CFLOAT, CFLOAT REGEXP '0?' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '0?'
+1	-3.40287e18	1
+select cidx, CFLOAT, CFLOAT REGEXP '-26' from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT REGEXP '-26'
+1	-3.40287e18	0
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '99$' <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '\.99$' <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '03$' <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '\.+' <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '0?' <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where CBIGINT REGEXP '-26' <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where CDECIMAL1 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where CDECIMAL4 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where CDECIMAL4_2 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where CDECIMAL5 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where CDECIMAL9 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where CDECIMAL9_2 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where CDECIMAL10 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where CDECIMAL18 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '99$' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '03$' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '\.+' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '0?' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where CDECIMAL18_2 REGEXP '-26' <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '99$' <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '\.99$' <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '03$' <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '\.+' <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '0?' <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where CINTEGER REGEXP '-26' <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '99$' <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '\.99$' <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '03$' <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '\.+' <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '0?' <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where CSMALLINT REGEXP '-26' <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '99$' <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '\.99$' <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '03$' <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '\.+' <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '0?' <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where CTINYINT REGEXP '-26' <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '99$' <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '\.99$' <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '03$' <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '\.+' <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '0?' <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where CDOUBLE REGEXP '-26' <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '99$' <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '\.99$' <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '03$' <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '\.+' <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '(-7)*' <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '0?' <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where CFLOAT REGEXP '-26' <> 0 order by cidx;
+cidx	CFLOAT

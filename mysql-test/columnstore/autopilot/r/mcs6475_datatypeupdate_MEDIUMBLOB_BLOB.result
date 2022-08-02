@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CBLOB = CMEDIUMBLOB;
+SELECT CBLOB FROM datatypeupdate;
+CBLOB
+mediumblobmediumblob
+ROLLBACK;

@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select VAR_SAMP(CBIGINT) from datatypetestm;
+select VAR_SAMP(CDECIMAL1) from datatypetestm;
+select VAR_SAMP(CDECIMAL4) from datatypetestm;
+select VAR_SAMP(CDECIMAL4_2) from datatypetestm;
+select VAR_SAMP(CDECIMAL5) from datatypetestm;
+select VAR_SAMP(CDECIMAL9) from datatypetestm;
+select VAR_SAMP(CDECIMAL9_2) from datatypetestm;
+select VAR_SAMP(CDECIMAL10) from datatypetestm;
+select VAR_SAMP(CDECIMAL18) from datatypetestm;
+select VAR_SAMP(CDECIMAL18_2) from datatypetestm;
+select VAR_SAMP(CINTEGER) from datatypetestm;
+select VAR_SAMP(CSMALLINT) from datatypetestm;
+select VAR_SAMP(CTINYINT) from datatypetestm;
+select VAR_SAMP(CDOUBLE) from datatypetestm;
+select VAR_SAMP(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, VAR_SAMP(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, VAR_SAMP(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, VAR_SAMP(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, VAR_SAMP(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, VAR_SAMP(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, VAR_SAMP(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, VAR_SAMP(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, VAR_SAMP(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, VAR_SAMP(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, VAR_SAMP(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, VAR_SAMP(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, VAR_SAMP(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, VAR_SAMP(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, VAR_SAMP(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, VAR_SAMP(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

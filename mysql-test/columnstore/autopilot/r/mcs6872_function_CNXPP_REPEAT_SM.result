@@ -1,0 +1,146 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, REPEAT(CTEXT,0) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,0)
+1	texttexttext	NULL
+select cidx, CTEXT, REPEAT(CTEXT,1) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,1)
+1	texttexttext	texttexttext
+select cidx, CTEXT, REPEAT(CTEXT,5) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,5)
+1	texttexttext	texttexttexttexttexttexttexttexttexttexttexttexttexttexttext
+select cidx, CTEXT, REPEAT(CTEXT,NULL) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,NULL)
+1	texttexttext	NULL
+select cidx, CTEXT, REPEAT(CTEXT,-1) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,-1)
+1	texttexttext	NULL
+select cidx, CTEXT, REPEAT(CTEXT,-5) from datatypetestm ;
+cidx	CTEXT	REPEAT(CTEXT,-5)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,0) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,0)
+1	tinytext	NULL
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,1) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,1)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,5) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,5)
+1	tinytext	tinytexttinytexttinytexttinytexttinytext
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,NULL) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,NULL)
+1	tinytext	NULL
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,-1) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,-1)
+1	tinytext	NULL
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,-5) from datatypetestm ;
+cidx	CTINYTEXT	REPEAT(CTINYTEXT,-5)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,0) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,0)
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,1) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,1)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,5) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,5)
+1	mediumtestmediumtest	mediumtestmediumtestmediumtestmediumtestmediumtestmediumtestmediumtestmediumtestmediumtestmediumtest
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,NULL) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,NULL)
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,-1) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,-1)
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,-5) from datatypetestm ;
+cidx	CMEDIUMTEXT	REPEAT(CMEDIUMTEXT,-5)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,0) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,0)
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,1) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,1)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,5) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,5)
+1	longtextlongtextlongtext	longtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtextlongtext
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,NULL) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,NULL)
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,-1) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,-1)
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,-5) from datatypetestm ;
+cidx	CLONGTEXT	REPEAT(CLONGTEXT,-5)
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,0), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,1), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,5), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,NULL), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,-1), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by REPEAT(CTEXT,-5), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,0), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,1), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,5), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,NULL), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,-1), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by REPEAT(CTINYTEXT,-5), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,0), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,1), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,5), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,NULL), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,-1), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by REPEAT(CMEDIUMTEXT,-5), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,0), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,1), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,5), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,NULL), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,-1), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by REPEAT(CLONGTEXT,-5), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

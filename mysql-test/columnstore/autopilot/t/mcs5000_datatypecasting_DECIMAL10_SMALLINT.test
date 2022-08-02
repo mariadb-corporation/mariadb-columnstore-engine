@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot datatypecasting test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select dtt1.cidx, dtt1.CDECIMAL10, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL10 > dtt2.CSMALLINT ;
+select dtt1.cidx, dtt1.CDECIMAL10, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL10 >= dtt2.CSMALLINT ;
+select dtt1.cidx, dtt1.CDECIMAL10, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL10 <> dtt2.CSMALLINT ;
+select dtt1.cidx, dtt1.CDECIMAL10, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL10 < dtt2.CSMALLINT ;
+select dtt1.cidx, dtt1.CDECIMAL10, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL10 <= dtt2.CSMALLINT ;

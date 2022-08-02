@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CDATE ;
+cidx	CLONGTEXT	CDATE
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CDATE ;
+cidx	CLONGTEXT	CDATE
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CDATE ;
+cidx	CLONGTEXT	CDATE
+1	longtextlongtextlongtext	1997-01-01
+2	longtextlongtextlongtext	1997-01-01
+3	longtextlongtextlongtext	1997-01-02
+4	longtextlongtextlongtext	1997-01-03
+5	longtextlongtextlongtext	1997-01-04
+6	longtextlongtextlongtext	2009-12-28
+7	longtextlongtextlongtext	2009-12-29
+8	longtextlongtextlongtext	2009-12-30
+9	longtextlongtextlongtext	2009-12-31
+10	longtextlongtextlongtext	2009-12-31
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CDATE ;
+cidx	CLONGTEXT	CDATE
+1	longtextlongtextlongtext	1997-01-01
+2	longtextlongtextlongtext	1997-01-01
+3	longtextlongtextlongtext	1997-01-02
+4	longtextlongtextlongtext	1997-01-03
+5	longtextlongtextlongtext	1997-01-04
+6	longtextlongtextlongtext	2009-12-28
+7	longtextlongtextlongtext	2009-12-29
+8	longtextlongtextlongtext	2009-12-30
+9	longtextlongtextlongtext	2009-12-31
+10	longtextlongtextlongtext	2009-12-31
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CDATE ;
+cidx	CLONGTEXT	CDATE
+1	longtextlongtextlongtext	1997-01-01
+2	longtextlongtextlongtext	1997-01-01
+3	longtextlongtextlongtext	1997-01-02
+4	longtextlongtextlongtext	1997-01-03
+5	longtextlongtextlongtext	1997-01-04
+6	longtextlongtextlongtext	2009-12-28
+7	longtextlongtextlongtext	2009-12-29
+8	longtextlongtextlongtext	2009-12-30
+9	longtextlongtextlongtext	2009-12-31
+10	longtextlongtextlongtext	2009-12-31

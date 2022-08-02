@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CTEXT ;
+cidx	CLONGTEXT	CTEXT
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CTEXT ;
+cidx	CLONGTEXT	CTEXT
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CTEXT ;
+cidx	CLONGTEXT	CTEXT
+1	longtextlongtextlongtext	texttexttext
+2	longtextlongtextlongtext	texttexttext
+3	longtextlongtextlongtext	texttexttext
+4	longtextlongtextlongtext	texttexttext
+5	longtextlongtextlongtext	texttexttext
+6	longtextlongtextlongtext	texttexttext
+7	longtextlongtextlongtext	texttexttext
+8	longtextlongtextlongtext	texttexttext
+9	longtextlongtextlongtext	texttexttext
+10	longtextlongtextlongtext	texttexttext
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CTEXT ;
+cidx	CLONGTEXT	CTEXT
+1	longtextlongtextlongtext	texttexttext
+2	longtextlongtextlongtext	texttexttext
+3	longtextlongtextlongtext	texttexttext
+4	longtextlongtextlongtext	texttexttext
+5	longtextlongtextlongtext	texttexttext
+6	longtextlongtextlongtext	texttexttext
+7	longtextlongtextlongtext	texttexttext
+8	longtextlongtextlongtext	texttexttext
+9	longtextlongtextlongtext	texttexttext
+10	longtextlongtextlongtext	texttexttext
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CTEXT ;
+cidx	CLONGTEXT	CTEXT
+1	longtextlongtextlongtext	texttexttext
+2	longtextlongtextlongtext	texttexttext
+3	longtextlongtextlongtext	texttexttext
+4	longtextlongtextlongtext	texttexttext
+5	longtextlongtextlongtext	texttexttext
+6	longtextlongtextlongtext	texttexttext
+7	longtextlongtextlongtext	texttexttext
+8	longtextlongtextlongtext	texttexttext
+9	longtextlongtextlongtext	texttexttext
+10	longtextlongtextlongtext	texttexttext

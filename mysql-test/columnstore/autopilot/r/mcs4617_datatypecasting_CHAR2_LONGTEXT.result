@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR2, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR2 > dtt2.CLONGTEXT ;
+cidx	CCHAR2	CLONGTEXT
+6	yy	longtextlongtextlongtext
+7	yy	longtextlongtextlongtext
+8	yy	longtextlongtextlongtext
+9	yy	longtextlongtextlongtext
+10	zz	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CCHAR2, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR2 >= dtt2.CLONGTEXT ;
+cidx	CCHAR2	CLONGTEXT
+6	yy	longtextlongtextlongtext
+7	yy	longtextlongtextlongtext
+8	yy	longtextlongtextlongtext
+9	yy	longtextlongtextlongtext
+10	zz	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CCHAR2, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR2 <> dtt2.CLONGTEXT ;
+cidx	CCHAR2	CLONGTEXT
+1	aa	longtextlongtextlongtext
+2	b	longtextlongtextlongtext
+3	bb	longtextlongtextlongtext
+4	bb	longtextlongtextlongtext
+5	bb	longtextlongtextlongtext
+6	yy	longtextlongtextlongtext
+7	yy	longtextlongtextlongtext
+8	yy	longtextlongtextlongtext
+9	yy	longtextlongtextlongtext
+10	zz	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CCHAR2, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR2 < dtt2.CLONGTEXT ;
+cidx	CCHAR2	CLONGTEXT
+1	aa	longtextlongtextlongtext
+2	b	longtextlongtextlongtext
+3	bb	longtextlongtextlongtext
+4	bb	longtextlongtextlongtext
+5	bb	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CCHAR2, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR2 <= dtt2.CLONGTEXT ;
+cidx	CCHAR2	CLONGTEXT
+1	aa	longtextlongtextlongtext
+2	b	longtextlongtextlongtext
+3	bb	longtextlongtextlongtext
+4	bb	longtextlongtextlongtext
+5	bb	longtextlongtextlongtext

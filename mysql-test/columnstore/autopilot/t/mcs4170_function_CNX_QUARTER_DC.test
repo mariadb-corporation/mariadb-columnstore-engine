@@ -1,0 +1,17 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, QUARTER(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, QUARTER(CDATETIME) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, QUARTER(CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where QUARTER(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where QUARTER(CDATETIME) <> 0 order by cidx;
+#select cidx, CTIME from datatypetestm where QUARTER(CTIME) <> 0 order by cidx;

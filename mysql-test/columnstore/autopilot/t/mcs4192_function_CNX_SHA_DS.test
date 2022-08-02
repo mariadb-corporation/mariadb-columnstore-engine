@@ -1,0 +1,18 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, SHA(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, SHA(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, SHA(CTIME) from datatypetestm order by cidx;
+select cidx, SHA('THIS IS A TEST') from datatypetestm order by cidx;
+select cidx, SHA('Hello, World') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where SHA(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where SHA(CDATETIME) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where SHA(CTIME) <> 0 order by cidx;

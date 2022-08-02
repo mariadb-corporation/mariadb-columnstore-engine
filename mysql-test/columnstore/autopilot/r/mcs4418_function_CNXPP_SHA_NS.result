@@ -1,0 +1,97 @@
+USE autopilot;
+select cidx, CBIGINT, SHA(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	SHA(CBIGINT)
+1	-72036854775806	c3dd72cbf875ced83c00cb15a035ca0f60cd4d09
+select cidx, CDECIMAL1, SHA(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	SHA(CDECIMAL1)
+1	-9	68ce583f0ebf973d5bbf39da202cf3c7d7f92b6b
+select cidx, CDECIMAL4, SHA(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	SHA(CDECIMAL4)
+1	-999	a9389fe3addc9eb110fc326bba3cbd5783d64239
+select cidx, CDECIMAL4_2, SHA(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	SHA(CDECIMAL4_2)
+1	-9.99	a0728c1616dc8541bb2806e11e71dfb6cca208a5
+select cidx, CDECIMAL5, SHA(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	SHA(CDECIMAL5)
+1	-999	a9389fe3addc9eb110fc326bba3cbd5783d64239
+select cidx, CDECIMAL9, SHA(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	SHA(CDECIMAL9)
+1	-999999	fcae4e9a8ca34fa1e5c9faa8207de8889f3521c0
+select cidx, CDECIMAL9_2, SHA(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	SHA(CDECIMAL9_2)
+1	-9999.99	08649a1fd5df93e14828322432ba06303207908a
+select cidx, CDECIMAL10, SHA(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	SHA(CDECIMAL10)
+1	-9999999	0481e0ff47fc07e86978ccdb5c1c4ba311223fd8
+select cidx, CDECIMAL18, SHA(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	SHA(CDECIMAL18)
+1	-9999999999999	0a3f51ee29fb640614127d48e0b0886e6c79be05
+select cidx, CDECIMAL18_2, SHA(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	SHA(CDECIMAL18_2)
+1	-99999999999.99	c94919b8d074e67b33fa4505fed92d5f6320af65
+select cidx, CINTEGER, SHA(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	SHA(CINTEGER)
+1	-7483646	6d8d1d7a9d8b825147cdba6500e1830e0177b80e
+select cidx, CSMALLINT, SHA(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	SHA(CSMALLINT)
+1	-766	35cd7a6c5c4939804a353dc0519fa35f8f66a04d
+select cidx, CTINYINT, SHA(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	SHA(CTINYINT)
+1	-26	b655dc367f08f881894f277f96122b6174a9ff9c
+select cidx, CDOUBLE, SHA(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	SHA(CDOUBLE)
+1	-1.797693231e108	84fd15880f873fc400dece5d39e4d7cd73d3b7df
+select cidx, CFLOAT, SHA(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	SHA(CFLOAT)
+1	-3.40287e18	f452f780f5a612f9bdc304f33c6994d55a64918a
+select cidx, SHA('THIS IS A TEST') from datatypetestm order by cidx;
+cidx	SHA('THIS IS A TEST')
+1	22bbdabf087de76a1a064a099f4b33794ccdb9e0
+select cidx, SHA('Hello, World') from datatypetestm order by cidx;
+cidx	SHA('Hello, World')
+1	907d14fb3af2b0d4f18c2d46abe8aedce17367bd
+select cidx, CBIGINT from datatypetestm order by SHA(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by SHA(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by SHA(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by SHA(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by SHA(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by SHA(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by SHA(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by SHA(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by SHA(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by SHA(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by SHA(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by SHA(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by SHA(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by SHA(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by SHA(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

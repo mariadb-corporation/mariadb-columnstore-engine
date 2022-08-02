@@ -1,0 +1,1255 @@
+USE autopilot;
+select cidx, CCHAR1, SUBSTR(CCHAR1,1) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,1)
+1	a	a
+select cidx, CCHAR1, SUBSTR(CCHAR1,5) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,5)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1,7) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,7)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1,8) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,8)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1,9) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,9)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1 FROM 5)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1 FROM 9)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1,5,2) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,5,2)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1,9,3) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1,9,3)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1 FROM 5 FOR 2)
+1	a	NULL
+select cidx, CCHAR1, SUBSTR(CCHAR1 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR1	SUBSTR(CCHAR1 FROM 9 FOR 3)
+1	a	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,1) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,1)
+1	aa	aa
+select cidx, CCHAR2, SUBSTR(CCHAR2,5) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,5)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,7) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,7)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,8) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,8)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,9) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,9)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2 FROM 5)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2 FROM 9)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,5,2) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,5,2)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2,9,3) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2,9,3)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2 FROM 5 FOR 2)
+1	aa	NULL
+select cidx, CCHAR2, SUBSTR(CCHAR2 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR2	SUBSTR(CCHAR2 FROM 9 FOR 3)
+1	aa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,1) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,1)
+1	aaa	aaa
+select cidx, CCHAR3, SUBSTR(CCHAR3,5) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,5)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,7) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,7)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,8) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,8)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,9) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,9)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3 FROM 5)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3 FROM 9)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,5,2) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,5,2)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3,9,3) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3,9,3)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3 FROM 5 FOR 2)
+1	aaa	NULL
+select cidx, CCHAR3, SUBSTR(CCHAR3 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR3	SUBSTR(CCHAR3 FROM 9 FOR 3)
+1	aaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,1) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,1)
+1	aaaa	aaaa
+select cidx, CCHAR4, SUBSTR(CCHAR4,5) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,5)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,7) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,7)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,8) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,8)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,9) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,9)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4 FROM 5)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4 FROM 9)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,5,2) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,5,2)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4,9,3) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4,9,3)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4 FROM 5 FOR 2)
+1	aaaa	NULL
+select cidx, CCHAR4, SUBSTR(CCHAR4 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR4	SUBSTR(CCHAR4 FROM 9 FOR 3)
+1	aaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5,1) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,1)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, SUBSTR(CCHAR5,5) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,5)
+1	aaaaa	a
+select cidx, CCHAR5, SUBSTR(CCHAR5,7) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,7)
+1	aaaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5,8) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,8)
+1	aaaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5,9) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,9)
+1	aaaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5 FROM 5)
+1	aaaaa	a
+select cidx, CCHAR5, SUBSTR(CCHAR5 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5 FROM 9)
+1	aaaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5,5,2) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,5,2)
+1	aaaaa	a
+select cidx, CCHAR5, SUBSTR(CCHAR5,9,3) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5,9,3)
+1	aaaaa	NULL
+select cidx, CCHAR5, SUBSTR(CCHAR5 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5 FROM 5 FOR 2)
+1	aaaaa	a
+select cidx, CCHAR5, SUBSTR(CCHAR5 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR5	SUBSTR(CCHAR5 FROM 9 FOR 3)
+1	aaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6,1) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,1)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, SUBSTR(CCHAR6,5) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,5)
+1	aaaaaa	aa
+select cidx, CCHAR6, SUBSTR(CCHAR6,7) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,7)
+1	aaaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6,8) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,8)
+1	aaaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6,9) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,9)
+1	aaaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6 FROM 5)
+1	aaaaaa	aa
+select cidx, CCHAR6, SUBSTR(CCHAR6 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6 FROM 9)
+1	aaaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6,5,2) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,5,2)
+1	aaaaaa	aa
+select cidx, CCHAR6, SUBSTR(CCHAR6,9,3) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6,9,3)
+1	aaaaaa	NULL
+select cidx, CCHAR6, SUBSTR(CCHAR6 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6 FROM 5 FOR 2)
+1	aaaaaa	aa
+select cidx, CCHAR6, SUBSTR(CCHAR6 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR6	SUBSTR(CCHAR6 FROM 9 FOR 3)
+1	aaaaaa	NULL
+select cidx, CCHAR7, SUBSTR(CCHAR7,1) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,1)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, SUBSTR(CCHAR7,5) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,5)
+1	aaaaaaa	aaa
+select cidx, CCHAR7, SUBSTR(CCHAR7,7) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,7)
+1	aaaaaaa	a
+select cidx, CCHAR7, SUBSTR(CCHAR7,8) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,8)
+1	aaaaaaa	NULL
+select cidx, CCHAR7, SUBSTR(CCHAR7,9) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,9)
+1	aaaaaaa	NULL
+select cidx, CCHAR7, SUBSTR(CCHAR7 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7 FROM 5)
+1	aaaaaaa	aaa
+select cidx, CCHAR7, SUBSTR(CCHAR7 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7 FROM 9)
+1	aaaaaaa	NULL
+select cidx, CCHAR7, SUBSTR(CCHAR7,5,2) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,5,2)
+1	aaaaaaa	aa
+select cidx, CCHAR7, SUBSTR(CCHAR7,9,3) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7,9,3)
+1	aaaaaaa	NULL
+select cidx, CCHAR7, SUBSTR(CCHAR7 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7 FROM 5 FOR 2)
+1	aaaaaaa	aa
+select cidx, CCHAR7, SUBSTR(CCHAR7 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR7	SUBSTR(CCHAR7 FROM 9 FOR 3)
+1	aaaaaaa	NULL
+select cidx, CCHAR8, SUBSTR(CCHAR8,1) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,1)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, SUBSTR(CCHAR8,5) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,5)
+1	aaaaaaaa	aaaa
+select cidx, CCHAR8, SUBSTR(CCHAR8,7) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,7)
+1	aaaaaaaa	aa
+select cidx, CCHAR8, SUBSTR(CCHAR8,8) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,8)
+1	aaaaaaaa	a
+select cidx, CCHAR8, SUBSTR(CCHAR8,9) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,9)
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, SUBSTR(CCHAR8 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8 FROM 5)
+1	aaaaaaaa	aaaa
+select cidx, CCHAR8, SUBSTR(CCHAR8 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8 FROM 9)
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, SUBSTR(CCHAR8,5,2) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,5,2)
+1	aaaaaaaa	aa
+select cidx, CCHAR8, SUBSTR(CCHAR8,9,3) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8,9,3)
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, SUBSTR(CCHAR8 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8 FROM 5 FOR 2)
+1	aaaaaaaa	aa
+select cidx, CCHAR8, SUBSTR(CCHAR8 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR8	SUBSTR(CCHAR8 FROM 9 FOR 3)
+1	aaaaaaaa	NULL
+select cidx, CCHAR9, SUBSTR(CCHAR9,1) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,1)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, SUBSTR(CCHAR9,5) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,5)
+1	aaaaaaaaa	aaaaa
+select cidx, CCHAR9, SUBSTR(CCHAR9,7) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,7)
+1	aaaaaaaaa	aaa
+select cidx, CCHAR9, SUBSTR(CCHAR9,8) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,8)
+1	aaaaaaaaa	aa
+select cidx, CCHAR9, SUBSTR(CCHAR9,9) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,9)
+1	aaaaaaaaa	a
+select cidx, CCHAR9, SUBSTR(CCHAR9 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9 FROM 5)
+1	aaaaaaaaa	aaaaa
+select cidx, CCHAR9, SUBSTR(CCHAR9 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9 FROM 9)
+1	aaaaaaaaa	a
+select cidx, CCHAR9, SUBSTR(CCHAR9,5,2) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,5,2)
+1	aaaaaaaaa	aa
+select cidx, CCHAR9, SUBSTR(CCHAR9,9,3) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9,9,3)
+1	aaaaaaaaa	a
+select cidx, CCHAR9, SUBSTR(CCHAR9 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9 FROM 5 FOR 2)
+1	aaaaaaaaa	aa
+select cidx, CCHAR9, SUBSTR(CCHAR9 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR9	SUBSTR(CCHAR9 FROM 9 FOR 3)
+1	aaaaaaaaa	a
+select cidx, CCHAR255, SUBSTR(CCHAR255,1) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,1)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, SUBSTR(CCHAR255,5) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,5)
+1	aaaaaaaaaa	aaaaaa
+select cidx, CCHAR255, SUBSTR(CCHAR255,7) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,7)
+1	aaaaaaaaaa	aaaa
+select cidx, CCHAR255, SUBSTR(CCHAR255,8) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,8)
+1	aaaaaaaaaa	aaa
+select cidx, CCHAR255, SUBSTR(CCHAR255,9) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,9)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, SUBSTR(CCHAR255 FROM 5) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255 FROM 5)
+1	aaaaaaaaaa	aaaaaa
+select cidx, CCHAR255, SUBSTR(CCHAR255 FROM 9) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255 FROM 9)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, SUBSTR(CCHAR255,5,2) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,5,2)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, SUBSTR(CCHAR255,9,3) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255,9,3)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, SUBSTR(CCHAR255 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255 FROM 5 FOR 2)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, SUBSTR(CCHAR255 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CCHAR255	SUBSTR(CCHAR255 FROM 9 FOR 3)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,1) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,1)
+1	a	a
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,5) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,5)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,7) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,7)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,8) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,8)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,9) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,9)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1 FROM 5)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1 FROM 9)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,5,2)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1,9,3)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1 FROM 5 FOR 2)
+1	a	NULL
+select cidx, CVCHAR1, SUBSTR(CVCHAR1 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR1	SUBSTR(CVCHAR1 FROM 9 FOR 3)
+1	a	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,1) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,1)
+1	aa	aa
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,5) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,5)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,7) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,7)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,8) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,8)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,9) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,9)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2 FROM 5)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2 FROM 9)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,5,2)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2,9,3)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2 FROM 5 FOR 2)
+1	aa	NULL
+select cidx, CVCHAR2, SUBSTR(CVCHAR2 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR2	SUBSTR(CVCHAR2 FROM 9 FOR 3)
+1	aa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,1) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,1)
+1	aaa	aaa
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,5) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,5)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,7) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,7)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,8) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,8)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,9) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,9)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3 FROM 5)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3 FROM 9)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,5,2)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3,9,3)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3 FROM 5 FOR 2)
+1	aaa	NULL
+select cidx, CVCHAR3, SUBSTR(CVCHAR3 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR3	SUBSTR(CVCHAR3 FROM 9 FOR 3)
+1	aaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,1) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,1)
+1	aaaa	aaaa
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,5) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,5)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,7) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,7)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,8) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,8)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,9) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,9)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4 FROM 5)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4 FROM 9)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,5,2)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4,9,3)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4 FROM 5 FOR 2)
+1	aaaa	NULL
+select cidx, CVCHAR4, SUBSTR(CVCHAR4 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR4	SUBSTR(CVCHAR4 FROM 9 FOR 3)
+1	aaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,1) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,1)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,5) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,5)
+1	aaaaa	a
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,7) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,7)
+1	aaaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,8) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,8)
+1	aaaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,9) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,9)
+1	aaaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5 FROM 5)
+1	aaaaa	a
+select cidx, CVCHAR5, SUBSTR(CVCHAR5 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5 FROM 9)
+1	aaaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,5,2)
+1	aaaaa	a
+select cidx, CVCHAR5, SUBSTR(CVCHAR5,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5,9,3)
+1	aaaaa	NULL
+select cidx, CVCHAR5, SUBSTR(CVCHAR5 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5 FROM 5 FOR 2)
+1	aaaaa	a
+select cidx, CVCHAR5, SUBSTR(CVCHAR5 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR5	SUBSTR(CVCHAR5 FROM 9 FOR 3)
+1	aaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,1) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,1)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,5) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,5)
+1	aaaaaa	aa
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,7) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,7)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,8) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,8)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,9) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,9)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6 FROM 5)
+1	aaaaaa	aa
+select cidx, CVCHAR6, SUBSTR(CVCHAR6 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6 FROM 9)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,5,2)
+1	aaaaaa	aa
+select cidx, CVCHAR6, SUBSTR(CVCHAR6,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6,9,3)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, SUBSTR(CVCHAR6 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6 FROM 5 FOR 2)
+1	aaaaaa	aa
+select cidx, CVCHAR6, SUBSTR(CVCHAR6 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR6	SUBSTR(CVCHAR6 FROM 9 FOR 3)
+1	aaaaaa	NULL
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,1) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,1)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,5) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,5)
+1	aaaaaaa	aaa
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,7) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,7)
+1	aaaaaaa	a
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,8) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,8)
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,9) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,9)
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, SUBSTR(CVCHAR7 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7 FROM 5)
+1	aaaaaaa	aaa
+select cidx, CVCHAR7, SUBSTR(CVCHAR7 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7 FROM 9)
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,5,2)
+1	aaaaaaa	aa
+select cidx, CVCHAR7, SUBSTR(CVCHAR7,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7,9,3)
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, SUBSTR(CVCHAR7 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7 FROM 5 FOR 2)
+1	aaaaaaa	aa
+select cidx, CVCHAR7, SUBSTR(CVCHAR7 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR7	SUBSTR(CVCHAR7 FROM 9 FOR 3)
+1	aaaaaaa	NULL
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,1) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,1)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,5) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,5)
+1	aaaaaaaa	aaaa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,7) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,7)
+1	aaaaaaaa	aa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,8) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,8)
+1	aaaaaaaa	a
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,9) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,9)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, SUBSTR(CVCHAR8 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8 FROM 5)
+1	aaaaaaaa	aaaa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8 FROM 9)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,5,2)
+1	aaaaaaaa	aa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8,9,3)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, SUBSTR(CVCHAR8 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8 FROM 5 FOR 2)
+1	aaaaaaaa	aa
+select cidx, CVCHAR8, SUBSTR(CVCHAR8 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR8	SUBSTR(CVCHAR8 FROM 9 FOR 3)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,1) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,1)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,5) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,5)
+1	aaaaaaaaaa	aaaaaa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,7) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,7)
+1	aaaaaaaaaa	aaaa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,8) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,8)
+1	aaaaaaaaaa	aaa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,9) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,9)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255 FROM 5) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255 FROM 5)
+1	aaaaaaaaaa	aaaaaa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255 FROM 9) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255 FROM 9)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,5,2)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255,9,3)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255 FROM 5 FOR 2) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255 FROM 5 FOR 2)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, SUBSTR(CVCHAR255 FROM 9 FOR 3) from datatypetestm order by cidx;
+cidx	CVCHAR255	SUBSTR(CVCHAR255 FROM 9 FOR 3)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,5), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,7), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,8), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,9), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1 FROM 5), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1 FROM 9), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,5,2), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1,9,3), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1 FROM 5 FOR 2), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by SUBSTR(CCHAR1 FROM 9 FOR 3), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,1), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,5), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,7), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,8), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,9), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2 FROM 5), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2 FROM 9), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,5,2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2,9,3), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2 FROM 5 FOR 2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by SUBSTR(CCHAR2 FROM 9 FOR 3), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,1), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,5), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,7), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,8), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,9), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3 FROM 5), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3 FROM 9), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,5,2), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3,9,3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3 FROM 5 FOR 2), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by SUBSTR(CCHAR3 FROM 9 FOR 3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,1), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,5), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,7), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,8), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,9), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4 FROM 5), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4 FROM 9), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,5,2), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4,9,3), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4 FROM 5 FOR 2), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by SUBSTR(CCHAR4 FROM 9 FOR 3), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,1), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,7), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,8), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,9), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5 FROM 5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5 FROM 9), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,5,2), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5,9,3), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5 FROM 5 FOR 2), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by SUBSTR(CCHAR5 FROM 9 FOR 3), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,1), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,5), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,7), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,8), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,9), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6 FROM 5), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6 FROM 9), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,5,2), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6,9,3), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6 FROM 5 FOR 2), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by SUBSTR(CCHAR6 FROM 9 FOR 3), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,1), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,5), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,8), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,9), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7 FROM 5), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7 FROM 9), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,5,2), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7,9,3), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7 FROM 5 FOR 2), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by SUBSTR(CCHAR7 FROM 9 FOR 3), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,1), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,5), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,7), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,9), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8 FROM 5), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8 FROM 9), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,5,2), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8,9,3), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8 FROM 5 FOR 2), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SUBSTR(CCHAR8 FROM 9 FOR 3), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,1), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,5), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,7), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,8), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9 FROM 5), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9 FROM 9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,5,2), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9,9,3), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9 FROM 5 FOR 2), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SUBSTR(CCHAR9 FROM 9 FOR 3), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,1), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,5), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,7), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,8), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,9), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255 FROM 5), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255 FROM 9), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,5,2), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255,9,3), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255 FROM 5 FOR 2), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SUBSTR(CCHAR255 FROM 9 FOR 3), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,5), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,7), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,8), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,9), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1 FROM 5), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1 FROM 9), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,5,2), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1,9,3), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1 FROM 5 FOR 2), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by SUBSTR(CVCHAR1 FROM 9 FOR 3), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,1), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,5), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,7), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,8), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,9), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2 FROM 5), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2 FROM 9), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,5,2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2,9,3), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2 FROM 5 FOR 2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by SUBSTR(CVCHAR2 FROM 9 FOR 3), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,1), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,5), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,7), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,8), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,9), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3 FROM 5), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3 FROM 9), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,5,2), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3,9,3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3 FROM 5 FOR 2), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by SUBSTR(CVCHAR3 FROM 9 FOR 3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,1), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,5), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,7), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,8), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,9), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4 FROM 5), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4 FROM 9), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,5,2), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4,9,3), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4 FROM 5 FOR 2), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by SUBSTR(CVCHAR4 FROM 9 FOR 3), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,1), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,7), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,8), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,9), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5 FROM 5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5 FROM 9), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,5,2), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5,9,3), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5 FROM 5 FOR 2), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by SUBSTR(CVCHAR5 FROM 9 FOR 3), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,1), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,5), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,7), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,8), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,9), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6 FROM 5), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6 FROM 9), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,5,2), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6,9,3), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6 FROM 5 FOR 2), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by SUBSTR(CVCHAR6 FROM 9 FOR 3), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,1), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,5), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,8), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,9), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7 FROM 5), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7 FROM 9), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,5,2), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7,9,3), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7 FROM 5 FOR 2), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SUBSTR(CVCHAR7 FROM 9 FOR 3), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,1), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,5), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,7), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,9), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8 FROM 5), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8 FROM 9), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,5,2), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8,9,3), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8 FROM 5 FOR 2), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SUBSTR(CVCHAR8 FROM 9 FOR 3), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,1), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,5), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,7), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,8), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,9), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255 FROM 5), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255 FROM 9), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,5,2), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255,9,3), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255 FROM 5 FOR 2), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SUBSTR(CVCHAR255 FROM 9 FOR 3), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

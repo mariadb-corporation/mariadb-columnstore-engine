@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, FLOOR(68.9876*cidx) from datatypetestm order by cidx;
+select cidx, FLOOR(-68.9876*cidx) from datatypetestm order by cidx;
+select cidx, FLOOR(8.1234*cidx) from datatypetestm order by cidx;
+select cidx, FLOOR(-8.1234*cidx) from datatypetestm order by cidx;

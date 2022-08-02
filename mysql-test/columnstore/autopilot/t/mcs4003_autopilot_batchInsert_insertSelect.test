@@ -1,0 +1,88 @@
+# -------------------------------------------------------------- #
+# Batch insert test for insert..select
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4003_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4003_db;
+USE mcs4003_db;
+# -------------------------------------------------------------- #
+# Create test tables
+# -------------------------------------------------------------- #
+--source ../include/dbt3/createLineitem.inc
+--source ../include/dbt3/createLineitem1.inc
+
+# -------------------------------------------------------------- #
+# Execute insert into table 1
+# -------------------------------------------------------------- #
+insert into lineitem values
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.');
+SELECT COUNT(*) FROM lineitem;
+#
+# -------------------------------------------------------------- #
+# Execute insert select into table 2
+# -------------------------------------------------------------- #
+show variables like 'columnstore_use_import_for_batchinsert';
+#
+# Do not use batch insert
+SET columnstore_use_import_for_batchinsert = 0;
+show variables like 'columnstore_use_import_for_batchinsert';
+INSERT INTO lineitem1 SELECT * FROM lineitem;
+#
+# Use batch insert when not in a transaction
+SET columnstore_use_import_for_batchinsert = 1;
+show variables like 'columnstore_use_import_for_batchinsert';
+INSERT INTO lineitem1 SELECT * FROM lineitem;
+#
+# Always use batch insert, even in a transaction.  If an insert..select has been command completed
+# and the transaction failed later and rolled back, the insert..select operation will not be rolled back. 
+SET columnstore_use_import_for_batchinsert = 2;
+show variables like 'columnstore_use_import_for_batchinsert';
+INSERT INTO lineitem1 SELECT * FROM lineitem;
+#
+# Set variable back to default value
+SET columnstore_use_import_for_batchinsert = default;
+show variables like 'columnstore_use_import_for_batchinsert';
+INSERT INTO lineitem1 SELECT * FROM lineitem;
+#
+SELECT COUNT(*) FROM lineitem1;
+# -------------------------------------------------------------- #
+# clean up
+# -------------------------------------------------------------- #
+DROP DATABASE mcs4003_db;
+#

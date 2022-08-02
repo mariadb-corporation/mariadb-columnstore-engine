@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CDATE = CDATETIME;
+SELECT CDATE FROM datatypeupdate;
+CDATE
+1997-01-01
+ROLLBACK;

@@ -1,0 +1,49 @@
+# -------------------------------------------------------------- #
+# A simple SQL test to check if ColumnStore is operational
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4008_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4008_db;
+USE mcs4008_db;
+#
+--source ../include/dbt3/createOrders.inc
+--source ../include/dbt3/createLineitem.inc
+create table if not exists quicktest (c1 int, c2 char(15)) engine=columnstore;
+SHOW CREATE TABLE quicktest;
+#
+insert into quicktest values (1,'Hello');
+insert into quicktest values (2,'world');
+select * from quicktest;
+update quicktest set c2='Aloha' where c2 = 'Hello';
+update quicktest set c2='My frind' where c2 = 'world';
+select * from quicktest;
+delete from quicktest where c1=1;
+select * from quicktest;
+delete from quicktest where c1=2;
+select * from quicktest;
+drop table quicktest;
+# -------------------------------------------------------------- #
+# Load table without using cpimport in the background
+# -------------------------------------------------------------- #
+#
+set columnstore_use_import_for_batchinsert=0;
+--source ../include/dbt3/ldiOrders1m.inc
+# -------------------------------------------------------------- #
+# Load table using cpimport in the background
+# -------------------------------------------------------------- #
+#
+set columnstore_use_import_for_batchinsert=1;
+--source ../include/dbt3/ldiLineitem1m.inc
+--source ../include/dbt3/countOrders.inc
+--source ../include/dbt3/countLineitem.inc
+# -------------------------------------------------------------- #
+# clean up
+# -------------------------------------------------------------- #
+#
+DROP DATABASE mcs4008_db;

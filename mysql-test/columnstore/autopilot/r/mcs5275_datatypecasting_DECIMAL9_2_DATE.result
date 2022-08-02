@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL9_2, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9_2 > dtt2.CDATE ;
+cidx	CDECIMAL9_2	CDATE
+select dtt1.cidx, dtt1.CDECIMAL9_2, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9_2 >= dtt2.CDATE ;
+cidx	CDECIMAL9_2	CDATE
+select dtt1.cidx, dtt1.CDECIMAL9_2, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9_2 <> dtt2.CDATE ;
+cidx	CDECIMAL9_2	CDATE
+1	-9999.99	1997-01-01
+2	-9999.98	1997-01-01
+3	-9999.97	1997-01-02
+4	-9999.96	1997-01-03
+5	-9999.95	1997-01-04
+6	9999.95	2009-12-28
+7	9999.96	2009-12-29
+8	9999.97	2009-12-30
+9	9999.98	2009-12-31
+10	9999.99	2009-12-31
+11	0.00	2009-12-31
+select dtt1.cidx, dtt1.CDECIMAL9_2, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9_2 < dtt2.CDATE ;
+cidx	CDECIMAL9_2	CDATE
+1	-9999.99	1997-01-01
+2	-9999.98	1997-01-01
+3	-9999.97	1997-01-02
+4	-9999.96	1997-01-03
+5	-9999.95	1997-01-04
+6	9999.95	2009-12-28
+7	9999.96	2009-12-29
+8	9999.97	2009-12-30
+9	9999.98	2009-12-31
+10	9999.99	2009-12-31
+11	0.00	2009-12-31
+select dtt1.cidx, dtt1.CDECIMAL9_2, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9_2 <= dtt2.CDATE ;
+cidx	CDECIMAL9_2	CDATE
+1	-9999.99	1997-01-01
+2	-9999.98	1997-01-01
+3	-9999.97	1997-01-02
+4	-9999.96	1997-01-03
+5	-9999.95	1997-01-04
+6	9999.95	2009-12-28
+7	9999.96	2009-12-29
+8	9999.97	2009-12-30
+9	9999.98	2009-12-31
+10	9999.99	2009-12-31
+11	0.00	2009-12-31

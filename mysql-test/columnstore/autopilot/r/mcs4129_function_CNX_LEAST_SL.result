@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, LEAST(cchar1,'hi','hello','wei') from datatypetestm order by cidx;
+cidx	LEAST(cchar1,'hi','hello','wei')
+1	a
+select cidx, LEAST(cchar1,'world','mahimahi','spam') from datatypetestm order by cidx;
+cidx	LEAST(cchar1,'world','mahimahi','spam')
+1	a

@@ -1,0 +1,8 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, RIGHT(concat(cchar1,'helloworld'),5) from datatypetestm ;
+cidx	RIGHT(concat(cchar1,'helloworld'),5)
+1	world
+select cidx, RIGHT(concat(cchar1,'helloworld'),25) from datatypetestm ;
+cidx	RIGHT(concat(cchar1,'helloworld'),25)
+1	ahelloworld

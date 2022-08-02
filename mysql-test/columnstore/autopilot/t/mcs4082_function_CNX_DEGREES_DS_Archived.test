@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, DEGREES(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, DEGREES(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, DEGREES(CTIME) from datatypetestm order by cidx;
+select cidx, DEGREES(PI()) from datatypetestm order by cidx;
+select cidx, DEGREES(1) from datatypetestm order by cidx;
+select cidx, DEGREES(2) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where DEGREES(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where DEGREES(CDATETIME) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where DEGREES(CTIME) <> 0 order by cidx;

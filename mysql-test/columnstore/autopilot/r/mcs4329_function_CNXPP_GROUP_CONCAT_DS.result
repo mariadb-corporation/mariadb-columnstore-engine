@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select GROUP_CONCAT(CDATE) from datatypetestm;
+GROUP_CONCAT(CDATE)
+1997-01-01
+select GROUP_CONCAT(CDATETIME) from datatypetestm;
+GROUP_CONCAT(CDATETIME)
+1997-01-01 00:00:00
+select GROUP_CONCAT(CTIME) from datatypetestm;
+GROUP_CONCAT(CTIME)
+13:00:00
+select GROUP_CONCAT('Hello') from datatypetestm;
+GROUP_CONCAT('Hello')
+Hello
+select GROUP_CONCAT('Hello, World') from datatypetestm;
+GROUP_CONCAT('Hello, World')
+Hello, World
+select cidx, CDATE, GROUP_CONCAT(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	GROUP_CONCAT(CDATE)
+1	1997-01-01	1997-01-01
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	GROUP_CONCAT(CDATETIME)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, GROUP_CONCAT(CTIME) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	GROUP_CONCAT(CTIME)
+1	13:00:00	13:00:00

@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CBLOB = CVCHAR5;
+SELECT CBLOB FROM datatypeupdate;
+CBLOB
+aaaaa
+ROLLBACK;

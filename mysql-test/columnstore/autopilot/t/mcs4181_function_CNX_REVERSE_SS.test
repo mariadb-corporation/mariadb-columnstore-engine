@@ -1,0 +1,50 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, REVERSE(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, REVERSE(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, REVERSE(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, REVERSE(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, REVERSE(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, REVERSE(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, REVERSE(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, REVERSE(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, REVERSE(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, REVERSE(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, REVERSE(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, REVERSE(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, REVERSE(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, REVERSE(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, REVERSE(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, REVERSE(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, REVERSE(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, REVERSE(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, REVERSE(CVCHAR255) from datatypetestm order by cidx;
+select cidx, REVERSE('THIS IS A TEST') from datatypetestm order by cidx;
+select cidx, REVERSE('Hello, World') from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm where REVERSE(CCHAR1) <> 0 order by cidx;
+select cidx, CCHAR2 from datatypetestm where REVERSE(CCHAR2) <> 0 order by cidx;
+select cidx, CCHAR3 from datatypetestm where REVERSE(CCHAR3) <> 0 order by cidx;
+select cidx, CCHAR4 from datatypetestm where REVERSE(CCHAR4) <> 0 order by cidx;
+select cidx, CCHAR5 from datatypetestm where REVERSE(CCHAR5) <> 0 order by cidx;
+select cidx, CCHAR6 from datatypetestm where REVERSE(CCHAR6) <> 0 order by cidx;
+select cidx, CCHAR7 from datatypetestm where REVERSE(CCHAR7) <> 0 order by cidx;
+select cidx, CCHAR8 from datatypetestm where REVERSE(CCHAR8) <> 0 order by cidx;
+select cidx, CCHAR9 from datatypetestm where REVERSE(CCHAR9) <> 0 order by cidx;
+select cidx, CCHAR255 from datatypetestm where REVERSE(CCHAR255) <> 0 order by cidx;
+select cidx, CVCHAR1 from datatypetestm where REVERSE(CVCHAR1) <> 0 order by cidx;
+select cidx, CVCHAR2 from datatypetestm where REVERSE(CVCHAR2) <> 0 order by cidx;
+select cidx, CVCHAR3 from datatypetestm where REVERSE(CVCHAR3) <> 0 order by cidx;
+select cidx, CVCHAR4 from datatypetestm where REVERSE(CVCHAR4) <> 0 order by cidx;
+select cidx, CVCHAR5 from datatypetestm where REVERSE(CVCHAR5) <> 0 order by cidx;
+select cidx, CVCHAR6 from datatypetestm where REVERSE(CVCHAR6) <> 0 order by cidx;
+select cidx, CVCHAR7 from datatypetestm where REVERSE(CVCHAR7) <> 0 order by cidx;
+select cidx, CVCHAR8 from datatypetestm where REVERSE(CVCHAR8) <> 0 order by cidx;
+select cidx, CVCHAR255 from datatypetestm where REVERSE(CVCHAR255) <> 0 order by cidx;

@@ -1,0 +1,38 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, HEX(CTEXT) from datatypetestm ;
+cidx	CTEXT	HEX(CTEXT)
+1	texttexttext	746578747465787474657874
+select cidx, CTINYTEXT, HEX(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	HEX(CTINYTEXT)
+1	tinytext	74696E7974657874
+select cidx, CMEDIUMTEXT, HEX(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	HEX(CMEDIUMTEXT)
+1	mediumtestmediumtest	6D656469756D746573746D656469756D74657374
+select cidx, CLONGTEXT, HEX(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	HEX(CLONGTEXT)
+1	longtextlongtextlongtext	6C6F6E67746578746C6F6E67746578746C6F6E6774657874
+select cidx, HEX('4D7953514V') from datatypetestm ;
+cidx	HEX('4D7953514V')
+1	34443739353335313456
+select cidx, HEX('00') from datatypetestm ;
+cidx	HEX('00')
+1	3030
+select cidx, HEX('FF') from datatypetestm ;
+cidx	HEX('FF')
+1	4646
+select cidx, HEX('0D0D0D') from datatypetestm ;
+cidx	HEX('0D0D0D')
+1	304430443044
+select cidx, CTEXT from datatypetestm where HEX(CTEXT) <> 0 ;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm where HEX(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm where HEX(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm where HEX(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

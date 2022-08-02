@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, MONTHNAME(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, MONTHNAME(CDATETIME) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, MONTHNAME(CTIME) from datatypetestm order by cidx;
+select cidx, MONTHNAME('2009-02-28') from datatypetestm order by cidx;
+select cidx, MONTHNAME('2009-07-04') from datatypetestm order by cidx;
+select cidx, MONTHNAME('2010-02-31') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where MONTHNAME(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where MONTHNAME(CDATETIME) <> 0 order by cidx;
+#select cidx, CTIME from datatypetestm where MONTHNAME(CTIME) <> 0 order by cidx;

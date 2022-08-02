@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE > dtt2.CTIME ;
+cidx	CDOUBLE	CTIME
+6	1.797693227e108	11:58:28
+7	1.797693228e108	11:58:28
+8	1.797693229e108	11:58:28
+9	1.79769323e108	11:58:28
+10	1.797693231e108	11:58:28
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE >= dtt2.CTIME ;
+cidx	CDOUBLE	CTIME
+6	1.797693227e108	11:58:28
+7	1.797693228e108	11:58:28
+8	1.797693229e108	11:58:28
+9	1.79769323e108	11:58:28
+10	1.797693231e108	11:58:28
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <> dtt2.CTIME ;
+cidx	CDOUBLE	CTIME
+1	-1.797693231e108	11:58:28
+2	-1.79769323e108	11:58:28
+3	-1.797693229e108	11:58:28
+4	-1.797693228e108	11:58:28
+5	-1.797693227e108	11:58:28
+6	1.797693227e108	11:58:28
+7	1.797693228e108	11:58:28
+8	1.797693229e108	11:58:28
+9	1.79769323e108	11:58:28
+10	1.797693231e108	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE < dtt2.CTIME ;
+cidx	CDOUBLE	CTIME
+1	-1.797693231e108	11:58:28
+2	-1.79769323e108	11:58:28
+3	-1.797693229e108	11:58:28
+4	-1.797693228e108	11:58:28
+5	-1.797693227e108	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <= dtt2.CTIME ;
+cidx	CDOUBLE	CTIME
+1	-1.797693231e108	11:58:28
+2	-1.79769323e108	11:58:28
+3	-1.797693229e108	11:58:28
+4	-1.797693228e108	11:58:28
+5	-1.797693227e108	11:58:28
+11	0	11:58:28

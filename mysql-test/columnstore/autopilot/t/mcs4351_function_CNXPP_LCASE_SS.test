@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, LCASE(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, LCASE(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, LCASE(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, LCASE(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, LCASE(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, LCASE(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, LCASE(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, LCASE(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, LCASE(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, LCASE(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, LCASE(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, LCASE(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, LCASE(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, LCASE(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, LCASE(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, LCASE(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, LCASE(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, LCASE(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, LCASE(CVCHAR255) from datatypetestm order by cidx;
+select cidx, LCASE(concat(cchar1,'ALOHA')) from datatypetestm order by cidx;
+select cidx, LCASE(concat(cchar1,'MAHALO')) from datatypetestm order by cidx;
+select cidx, LCASE(concat(cchar1,'Hawaii')) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by LCASE(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by LCASE(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by LCASE(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by LCASE(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by LCASE(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by LCASE(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by LCASE(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by LCASE(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by LCASE(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by LCASE(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by LCASE(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by LCASE(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by LCASE(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by LCASE(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by LCASE(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by LCASE(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by LCASE(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by LCASE(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by LCASE(CVCHAR255), cidx;

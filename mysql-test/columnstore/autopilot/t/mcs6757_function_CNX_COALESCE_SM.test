@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, COALESCE(CTEXT,'A',NULL) from datatypetestm ;
+select cidx, CTEXT, COALESCE(CTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CTEXT, COALESCE(CTEXT,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,'A',NULL) from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,'A',NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,'A',NULL) from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where COALESCE(CTEXT,'A',NULL) <> 0 ;
+select cidx, CTEXT from datatypetestm where COALESCE(CTEXT,NULL,NULL,'B') <> 0 ;
+select cidx, CTEXT from datatypetestm where COALESCE(CTEXT,NULL) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where COALESCE(CTINYTEXT,'A',NULL) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where COALESCE(CTINYTEXT,NULL,NULL,'B') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where COALESCE(CTINYTEXT,NULL) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where COALESCE(CMEDIUMTEXT,'A',NULL) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where COALESCE(CMEDIUMTEXT,NULL,NULL,'B') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where COALESCE(CMEDIUMTEXT,NULL) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where COALESCE(CLONGTEXT,'A',NULL) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where COALESCE(CLONGTEXT,NULL,NULL,'B') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where COALESCE(CLONGTEXT,NULL) <> 0 ;

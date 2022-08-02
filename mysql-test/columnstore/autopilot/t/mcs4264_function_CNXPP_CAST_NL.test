@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CAST(132.499*cidx AS SIGNED) from datatypetestm order by cidx;
+select cidx, CAST(132.500*cidx AS SIGNED) from datatypetestm order by cidx;
+select cidx, CAST(132.499*cidx AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CAST(132.500*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CAST(132.499*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CAST(132.500*cidx AS DECIMAL(9,2)) from datatypetestm order by cidx;

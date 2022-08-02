@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT > dtt2.CSMALLINT ;
+cidx	CTINYINT	CSMALLINT
+1	-26	-766
+2	-25	-765
+3	-24	-764
+4	-23	-763
+5	-22	-762
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT >= dtt2.CSMALLINT ;
+cidx	CTINYINT	CSMALLINT
+1	-26	-766
+2	-25	-765
+3	-24	-764
+4	-23	-763
+5	-22	-762
+11	0	0
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <> dtt2.CSMALLINT ;
+cidx	CTINYINT	CSMALLINT
+1	-26	-766
+2	-25	-765
+3	-24	-764
+4	-23	-763
+5	-22	-762
+6	23	763
+7	24	764
+8	25	765
+9	26	766
+10	27	767
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT < dtt2.CSMALLINT ;
+cidx	CTINYINT	CSMALLINT
+6	23	763
+7	24	764
+8	25	765
+9	26	766
+10	27	767
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <= dtt2.CSMALLINT ;
+cidx	CTINYINT	CSMALLINT
+6	23	763
+7	24	764
+8	25	765
+9	26	766
+10	27	767
+11	0	0

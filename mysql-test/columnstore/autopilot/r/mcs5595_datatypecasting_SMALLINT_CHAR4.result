@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT > dtt2.CCHAR4 ;
+cidx	CSMALLINT	CCHAR4
+6	763	wwww
+7	764	wwww
+8	765	wwww
+9	766	wwww
+10	767	zzzz
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT >= dtt2.CCHAR4 ;
+cidx	CSMALLINT	CCHAR4
+6	763	wwww
+7	764	wwww
+8	765	wwww
+9	766	wwww
+10	767	zzzz
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <> dtt2.CCHAR4 ;
+cidx	CSMALLINT	CCHAR4
+1	-766	aaaa
+2	-765	d
+3	-764	dd
+4	-763	ddd
+5	-762	dddd
+6	763	wwww
+7	764	wwww
+8	765	wwww
+9	766	wwww
+10	767	zzzz
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT < dtt2.CCHAR4 ;
+cidx	CSMALLINT	CCHAR4
+1	-766	aaaa
+2	-765	d
+3	-764	dd
+4	-763	ddd
+5	-762	dddd
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <= dtt2.CCHAR4 ;
+cidx	CSMALLINT	CCHAR4
+1	-766	aaaa
+2	-765	d
+3	-764	dd
+4	-763	ddd
+5	-762	dddd

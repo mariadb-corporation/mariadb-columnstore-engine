@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT > dtt2.CCHAR5 ;
+cidx	CFLOAT	CCHAR5
+6	3.40286e18	vvvvv
+7	3.40286e18	vvvvv
+8	3.40286e18	vvvvv
+9	3.40287e18	vvvvv
+10	3.40287e18	zzzzz
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT >= dtt2.CCHAR5 ;
+cidx	CFLOAT	CCHAR5
+6	3.40286e18	vvvvv
+7	3.40286e18	vvvvv
+8	3.40286e18	vvvvv
+9	3.40287e18	vvvvv
+10	3.40287e18	zzzzz
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <> dtt2.CCHAR5 ;
+cidx	CFLOAT	CCHAR5
+1	-3.40287e18	aaaaa
+2	-3.40287e18	e
+3	-3.40286e18	ee
+4	-3.40286e18	eee
+5	-3.40286e18	eeee
+6	3.40286e18	vvvvv
+7	3.40286e18	vvvvv
+8	3.40286e18	vvvvv
+9	3.40287e18	vvvvv
+10	3.40287e18	zzzzz
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT < dtt2.CCHAR5 ;
+cidx	CFLOAT	CCHAR5
+1	-3.40287e18	aaaaa
+2	-3.40287e18	e
+3	-3.40286e18	ee
+4	-3.40286e18	eee
+5	-3.40286e18	eeee
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <= dtt2.CCHAR5 ;
+cidx	CFLOAT	CCHAR5
+1	-3.40287e18	aaaaa
+2	-3.40287e18	e
+3	-3.40286e18	ee
+4	-3.40286e18	eee
+5	-3.40286e18	eeee

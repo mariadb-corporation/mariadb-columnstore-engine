@@ -1,0 +1,55 @@
+USE autopilot;
+select cidx, CDATE, ELT(cidx,CCHAR3, CDATE) from datatypetestm order by cidx;
+cidx	CDATE	ELT(cidx,CCHAR3, CDATE)
+1	1997-01-01	aaa
+select cidx, CDATE, ELT(cidx,CCHAR3,CCHAR7, CDATE) from datatypetestm order by cidx;
+cidx	CDATE	ELT(cidx,CCHAR3,CCHAR7, CDATE)
+1	1997-01-01	aaa
+select cidx, CDATE, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATE) from datatypetestm order by cidx;
+cidx	CDATE	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATE)
+1	1997-01-01	aaa
+select cidx, CDATETIME, ELT(cidx,CCHAR3, CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	ELT(cidx,CCHAR3, CDATETIME)
+1	1997-01-01 00:00:00	aaa
+select cidx, CDATETIME, ELT(cidx,CCHAR3,CCHAR7, CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	ELT(cidx,CCHAR3,CCHAR7, CDATETIME)
+1	1997-01-01 00:00:00	aaa
+select cidx, CDATETIME, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATETIME)
+1	1997-01-01 00:00:00	aaa
+select cidx, CTIME, ELT(cidx,CCHAR3, CTIME) from datatypetestm order by cidx;
+cidx	CTIME	ELT(cidx,CCHAR3, CTIME)
+1	13:00:00	aaa
+select cidx, CTIME, ELT(cidx,CCHAR3,CCHAR7, CTIME) from datatypetestm order by cidx;
+cidx	CTIME	ELT(cidx,CCHAR3,CCHAR7, CTIME)
+1	13:00:00	aaa
+select cidx, CTIME, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTIME) from datatypetestm order by cidx;
+cidx	CTIME	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTIME)
+1	13:00:00	aaa
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3, CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3, CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3, CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTIME), cidx;
+cidx	CTIME
+1	13:00:00

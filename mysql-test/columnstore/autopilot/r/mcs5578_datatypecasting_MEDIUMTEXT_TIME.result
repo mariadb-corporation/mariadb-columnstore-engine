@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CTIME ;
+cidx	CMEDIUMTEXT	CTIME
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CTIME ;
+cidx	CMEDIUMTEXT	CTIME
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CTIME ;
+cidx	CMEDIUMTEXT	CTIME
+1	mediumtestmediumtest	11:58:28
+2	mediumtestmediumtest	11:58:28
+3	mediumtestmediumtest	11:58:28
+4	mediumtestmediumtest	11:58:28
+5	mediumtestmediumtest	11:58:28
+6	mediumtestmediumtest	11:58:28
+7	mediumtestmediumtest	11:58:28
+8	mediumtestmediumtest	11:58:28
+9	mediumtestmediumtest	11:58:28
+10	mediumtestmediumtest	11:58:28
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CTIME ;
+cidx	CMEDIUMTEXT	CTIME
+1	mediumtestmediumtest	11:58:28
+2	mediumtestmediumtest	11:58:28
+3	mediumtestmediumtest	11:58:28
+4	mediumtestmediumtest	11:58:28
+5	mediumtestmediumtest	11:58:28
+6	mediumtestmediumtest	11:58:28
+7	mediumtestmediumtest	11:58:28
+8	mediumtestmediumtest	11:58:28
+9	mediumtestmediumtest	11:58:28
+10	mediumtestmediumtest	11:58:28
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CTIME ;
+cidx	CMEDIUMTEXT	CTIME
+1	mediumtestmediumtest	11:58:28
+2	mediumtestmediumtest	11:58:28
+3	mediumtestmediumtest	11:58:28
+4	mediumtestmediumtest	11:58:28
+5	mediumtestmediumtest	11:58:28
+6	mediumtestmediumtest	11:58:28
+7	mediumtestmediumtest	11:58:28
+8	mediumtestmediumtest	11:58:28
+9	mediumtestmediumtest	11:58:28
+10	mediumtestmediumtest	11:58:28

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CTINYTEXT ;
+cidx	CINTEGER	CTINYTEXT
+6	7483643	tinytext
+7	7483644	tinytext
+8	7483645	tinytext
+9	7483646	tinytext
+10	7483647	tinytext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CTINYTEXT ;
+cidx	CINTEGER	CTINYTEXT
+6	7483643	tinytext
+7	7483644	tinytext
+8	7483645	tinytext
+9	7483646	tinytext
+10	7483647	tinytext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CTINYTEXT ;
+cidx	CINTEGER	CTINYTEXT
+1	-7483646	tinytext
+2	-7483645	tinytext
+3	-7483644	tinytext
+4	-7483643	tinytext
+5	-7483642	tinytext
+6	7483643	tinytext
+7	7483644	tinytext
+8	7483645	tinytext
+9	7483646	tinytext
+10	7483647	tinytext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CTINYTEXT ;
+cidx	CINTEGER	CTINYTEXT
+1	-7483646	tinytext
+2	-7483645	tinytext
+3	-7483644	tinytext
+4	-7483643	tinytext
+5	-7483642	tinytext
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CTINYTEXT ;
+cidx	CINTEGER	CTINYTEXT
+1	-7483646	tinytext
+2	-7483645	tinytext
+3	-7483644	tinytext
+4	-7483643	tinytext
+5	-7483642	tinytext

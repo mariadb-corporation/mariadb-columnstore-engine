@@ -1,0 +1,46 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, ABS(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, ABS(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, ABS(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, ABS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, ABS(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, ABS(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, ABS(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, ABS(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, ABS(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, ABS(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, ABS(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, ABS(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, ABS(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, ABS(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, ABS(CFLOAT) from datatypetestm order by cidx;
+select cidx, ABS(-5*cidx) from datatypetestm order by cidx;
+select cidx, ABS(0*cidx) from datatypetestm order by cidx;
+select cidx, ABS(5*cidx) from datatypetestm order by cidx;
+select cidx, ABS(-5.7*cidx) from datatypetestm order by cidx;
+select cidx, ABS(0*cidx) from datatypetestm order by cidx;
+select cidx, ABS(5.7*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by ABS(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by ABS(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by ABS(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by ABS(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by ABS(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by ABS(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by ABS(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by ABS(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by ABS(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by ABS(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by ABS(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by ABS(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by ABS(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by ABS(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by ABS(CFLOAT), cidx;

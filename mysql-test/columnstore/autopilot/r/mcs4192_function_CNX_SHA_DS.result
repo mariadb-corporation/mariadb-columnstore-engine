@@ -1,0 +1,25 @@
+USE autopilot;
+select cidx, CDATE, SHA(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	SHA(CDATE)
+1	1997-01-01	125e8ea84cf73ad99389429ef9984fd34a201b47
+select cidx, CDATETIME, SHA(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	SHA(CDATETIME)
+1	1997-01-01 00:00:00	07812a2ec14ff711a793fe925e4b38c341249a1b
+select cidx, CTIME, SHA(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	SHA(CTIME)
+1	13:00:00	81bbccc8d29aa7353a0290b3983cc5f78cb684bf
+select cidx, SHA('THIS IS A TEST') from datatypetestm order by cidx;
+cidx	SHA('THIS IS A TEST')
+1	22bbdabf087de76a1a064a099f4b33794ccdb9e0
+select cidx, SHA('Hello, World') from datatypetestm order by cidx;
+cidx	SHA('Hello, World')
+1	907d14fb3af2b0d4f18c2d46abe8aedce17367bd
+select cidx, CDATE from datatypetestm where SHA(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where SHA(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm where SHA(CTIME) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

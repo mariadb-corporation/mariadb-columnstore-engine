@@ -1,0 +1,103 @@
+USE autopilot;
+select cidx, CBIGINT, INET_NTOA(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	INET_NTOA(CBIGINT)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, INET_NTOA(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	INET_NTOA(CDECIMAL1)
+1	-9	NULL
+select cidx, CDECIMAL4, INET_NTOA(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	INET_NTOA(CDECIMAL4)
+1	-999	NULL
+select cidx, CDECIMAL4_2, INET_NTOA(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INET_NTOA(CDECIMAL4_2)
+1	-9.99	NULL
+select cidx, CDECIMAL5, INET_NTOA(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	INET_NTOA(CDECIMAL5)
+1	-999	NULL
+select cidx, CDECIMAL9, INET_NTOA(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	INET_NTOA(CDECIMAL9)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, INET_NTOA(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INET_NTOA(CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, INET_NTOA(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	INET_NTOA(CDECIMAL10)
+1	-9999999	NULL
+select cidx, CDECIMAL18, INET_NTOA(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	INET_NTOA(CDECIMAL18)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, INET_NTOA(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INET_NTOA(CDECIMAL18_2)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, INET_NTOA(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	INET_NTOA(CINTEGER)
+1	-7483646	NULL
+select cidx, CSMALLINT, INET_NTOA(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	INET_NTOA(CSMALLINT)
+1	-766	NULL
+select cidx, CTINYINT, INET_NTOA(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	INET_NTOA(CTINYINT)
+1	-26	NULL
+select cidx, CDOUBLE, INET_NTOA(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	INET_NTOA(CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, INET_NTOA(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	INET_NTOA(CFLOAT)
+1	-3.40287e18	NULL
+select cidx, INET_NTOA(12) from datatypetestm order by cidx;
+cidx	INET_NTOA(12)
+1	0.0.0.12
+select cidx, INET_NTOA(123) from datatypetestm order by cidx;
+cidx	INET_NTOA(123)
+1	0.0.0.123
+select cidx, INET_NTOA(1234) from datatypetestm order by cidx;
+cidx	INET_NTOA(1234)
+1	0.0.4.210
+select cidx, INET_NTOA(12345678) from datatypetestm order by cidx;
+cidx	INET_NTOA(12345678)
+1	0.188.97.78
+select cidx, CBIGINT from datatypetestm order by INET_NTOA(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by INET_NTOA(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by INET_NTOA(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by INET_NTOA(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by INET_NTOA(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by INET_NTOA(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by INET_NTOA(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by INET_NTOA(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by INET_NTOA(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by INET_NTOA(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by INET_NTOA(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by INET_NTOA(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by INET_NTOA(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by INET_NTOA(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by INET_NTOA(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

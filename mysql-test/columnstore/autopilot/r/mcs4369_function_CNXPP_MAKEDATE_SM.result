@@ -1,0 +1,229 @@
+USE autopilot;
+select cidx, CCHAR1, MAKEDATE(2010, CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	MAKEDATE(2010, CCHAR1)
+1	a	NULL
+select cidx, CCHAR1, MAKEDATE(2011, CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	MAKEDATE(2011, CCHAR1)
+1	a	NULL
+select cidx, CCHAR2, MAKEDATE(2010, CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	MAKEDATE(2010, CCHAR2)
+1	aa	NULL
+select cidx, CCHAR2, MAKEDATE(2011, CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	MAKEDATE(2011, CCHAR2)
+1	aa	NULL
+select cidx, CCHAR3, MAKEDATE(2010, CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	MAKEDATE(2010, CCHAR3)
+1	aaa	NULL
+select cidx, CCHAR3, MAKEDATE(2011, CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	MAKEDATE(2011, CCHAR3)
+1	aaa	NULL
+select cidx, CCHAR4, MAKEDATE(2010, CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	MAKEDATE(2010, CCHAR4)
+1	aaaa	NULL
+select cidx, CCHAR4, MAKEDATE(2011, CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	MAKEDATE(2011, CCHAR4)
+1	aaaa	NULL
+select cidx, CCHAR5, MAKEDATE(2010, CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	MAKEDATE(2010, CCHAR5)
+1	aaaaa	NULL
+select cidx, CCHAR5, MAKEDATE(2011, CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	MAKEDATE(2011, CCHAR5)
+1	aaaaa	NULL
+select cidx, CCHAR6, MAKEDATE(2010, CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	MAKEDATE(2010, CCHAR6)
+1	aaaaaa	NULL
+select cidx, CCHAR6, MAKEDATE(2011, CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	MAKEDATE(2011, CCHAR6)
+1	aaaaaa	NULL
+select cidx, CCHAR7, MAKEDATE(2010, CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	MAKEDATE(2010, CCHAR7)
+1	aaaaaaa	NULL
+select cidx, CCHAR7, MAKEDATE(2011, CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	MAKEDATE(2011, CCHAR7)
+1	aaaaaaa	NULL
+select cidx, CCHAR8, MAKEDATE(2010, CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	MAKEDATE(2010, CCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, MAKEDATE(2011, CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	MAKEDATE(2011, CCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CCHAR9, MAKEDATE(2010, CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	MAKEDATE(2010, CCHAR9)
+1	aaaaaaaaa	NULL
+select cidx, CCHAR9, MAKEDATE(2011, CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	MAKEDATE(2011, CCHAR9)
+1	aaaaaaaaa	NULL
+select cidx, CCHAR255, MAKEDATE(2010, CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	MAKEDATE(2010, CCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR255, MAKEDATE(2011, CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	MAKEDATE(2011, CCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR1, MAKEDATE(2010, CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	MAKEDATE(2010, CVCHAR1)
+1	a	NULL
+select cidx, CVCHAR1, MAKEDATE(2011, CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	MAKEDATE(2011, CVCHAR1)
+1	a	NULL
+select cidx, CVCHAR2, MAKEDATE(2010, CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	MAKEDATE(2010, CVCHAR2)
+1	aa	NULL
+select cidx, CVCHAR2, MAKEDATE(2011, CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	MAKEDATE(2011, CVCHAR2)
+1	aa	NULL
+select cidx, CVCHAR3, MAKEDATE(2010, CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	MAKEDATE(2010, CVCHAR3)
+1	aaa	NULL
+select cidx, CVCHAR3, MAKEDATE(2011, CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	MAKEDATE(2011, CVCHAR3)
+1	aaa	NULL
+select cidx, CVCHAR4, MAKEDATE(2010, CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	MAKEDATE(2010, CVCHAR4)
+1	aaaa	NULL
+select cidx, CVCHAR4, MAKEDATE(2011, CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	MAKEDATE(2011, CVCHAR4)
+1	aaaa	NULL
+select cidx, CVCHAR5, MAKEDATE(2010, CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	MAKEDATE(2010, CVCHAR5)
+1	aaaaa	NULL
+select cidx, CVCHAR5, MAKEDATE(2011, CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	MAKEDATE(2011, CVCHAR5)
+1	aaaaa	NULL
+select cidx, CVCHAR6, MAKEDATE(2010, CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	MAKEDATE(2010, CVCHAR6)
+1	aaaaaa	NULL
+select cidx, CVCHAR6, MAKEDATE(2011, CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	MAKEDATE(2011, CVCHAR6)
+1	aaaaaa	NULL
+select cidx, CVCHAR7, MAKEDATE(2010, CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	MAKEDATE(2010, CVCHAR7)
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, MAKEDATE(2011, CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	MAKEDATE(2011, CVCHAR7)
+1	aaaaaaa	NULL
+select cidx, CVCHAR8, MAKEDATE(2010, CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	MAKEDATE(2010, CVCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, MAKEDATE(2011, CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	MAKEDATE(2011, CVCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR255, MAKEDATE(2010, CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	MAKEDATE(2010, CVCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR255, MAKEDATE(2011, CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	MAKEDATE(2011, CVCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR1 from datatypetestm order by MAKEDATE(2010, CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by MAKEDATE(2011, CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by MAKEDATE(2010, CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by MAKEDATE(2011, CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by MAKEDATE(2010, CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by MAKEDATE(2011, CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by MAKEDATE(2010, CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by MAKEDATE(2011, CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by MAKEDATE(2010, CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by MAKEDATE(2011, CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by MAKEDATE(2010, CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by MAKEDATE(2011, CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by MAKEDATE(2010, CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by MAKEDATE(2011, CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by MAKEDATE(2010, CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by MAKEDATE(2011, CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by MAKEDATE(2010, CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by MAKEDATE(2011, CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by MAKEDATE(2010, CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by MAKEDATE(2011, CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by MAKEDATE(2010, CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by MAKEDATE(2011, CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by MAKEDATE(2010, CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by MAKEDATE(2011, CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by MAKEDATE(2010, CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by MAKEDATE(2011, CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by MAKEDATE(2010, CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by MAKEDATE(2011, CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by MAKEDATE(2010, CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by MAKEDATE(2011, CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by MAKEDATE(2010, CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by MAKEDATE(2011, CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by MAKEDATE(2010, CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by MAKEDATE(2011, CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by MAKEDATE(2010, CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by MAKEDATE(2011, CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by MAKEDATE(2010, CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by MAKEDATE(2011, CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

@@ -1,0 +1,13 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, RIGHT(concat(cchar1,'helloworld'),5) from datatypetestm ;
+select cidx, RIGHT(concat(cchar1,'helloworld'),25) from datatypetestm ;

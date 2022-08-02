@@ -1,0 +1,457 @@
+USE autopilot;
+select cidx, CCHAR1, GREATEST(CCHAR1,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR1	GREATEST(CCHAR1,CCHAR3,CCHAR7,'MAHALO')
+1	a	MAHALO
+select cidx, CCHAR1, GREATEST(CCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR1	GREATEST(CCHAR1,CCHAR3)
+1	a	aaa
+select cidx, CCHAR1, GREATEST(CCHAR1,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR1	GREATEST(CCHAR1,CCHAR7)
+1	a	aaaaaaa
+select cidx, CCHAR1, GREATEST(CCHAR1,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR1	GREATEST(CCHAR1,'MAHALO')
+1	a	MAHALO
+select cidx, CCHAR2, GREATEST(CCHAR2,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR2	GREATEST(CCHAR2,CCHAR3,CCHAR7,'MAHALO')
+1	aa	MAHALO
+select cidx, CCHAR2, GREATEST(CCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR2	GREATEST(CCHAR2,CCHAR3)
+1	aa	aaa
+select cidx, CCHAR2, GREATEST(CCHAR2,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR2	GREATEST(CCHAR2,CCHAR7)
+1	aa	aaaaaaa
+select cidx, CCHAR2, GREATEST(CCHAR2,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR2	GREATEST(CCHAR2,'MAHALO')
+1	aa	MAHALO
+select cidx, CCHAR3, GREATEST(CCHAR3,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR3	GREATEST(CCHAR3,CCHAR3,CCHAR7,'MAHALO')
+1	aaa	MAHALO
+select cidx, CCHAR3, GREATEST(CCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	GREATEST(CCHAR3,CCHAR3)
+1	aaa	aaa
+select cidx, CCHAR3, GREATEST(CCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR3	GREATEST(CCHAR3,CCHAR7)
+1	aaa	aaaaaaa
+select cidx, CCHAR3, GREATEST(CCHAR3,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR3	GREATEST(CCHAR3,'MAHALO')
+1	aaa	MAHALO
+select cidx, CCHAR4, GREATEST(CCHAR4,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR4	GREATEST(CCHAR4,CCHAR3,CCHAR7,'MAHALO')
+1	aaaa	MAHALO
+select cidx, CCHAR4, GREATEST(CCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR4	GREATEST(CCHAR4,CCHAR3)
+1	aaaa	aaaa
+select cidx, CCHAR4, GREATEST(CCHAR4,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR4	GREATEST(CCHAR4,CCHAR7)
+1	aaaa	aaaaaaa
+select cidx, CCHAR4, GREATEST(CCHAR4,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR4	GREATEST(CCHAR4,'MAHALO')
+1	aaaa	MAHALO
+select cidx, CCHAR5, GREATEST(CCHAR5,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR5	GREATEST(CCHAR5,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaa	MAHALO
+select cidx, CCHAR5, GREATEST(CCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR5	GREATEST(CCHAR5,CCHAR3)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, GREATEST(CCHAR5,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR5	GREATEST(CCHAR5,CCHAR7)
+1	aaaaa	aaaaaaa
+select cidx, CCHAR5, GREATEST(CCHAR5,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR5	GREATEST(CCHAR5,'MAHALO')
+1	aaaaa	MAHALO
+select cidx, CCHAR6, GREATEST(CCHAR6,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR6	GREATEST(CCHAR6,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaa	MAHALO
+select cidx, CCHAR6, GREATEST(CCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR6	GREATEST(CCHAR6,CCHAR3)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, GREATEST(CCHAR6,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR6	GREATEST(CCHAR6,CCHAR7)
+1	aaaaaa	aaaaaaa
+select cidx, CCHAR6, GREATEST(CCHAR6,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR6	GREATEST(CCHAR6,'MAHALO')
+1	aaaaaa	MAHALO
+select cidx, CCHAR7, GREATEST(CCHAR7,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR7	GREATEST(CCHAR7,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaa	MAHALO
+select cidx, CCHAR7, GREATEST(CCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR7	GREATEST(CCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, GREATEST(CCHAR7,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	GREATEST(CCHAR7,CCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, GREATEST(CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR7	GREATEST(CCHAR7,'MAHALO')
+1	aaaaaaa	MAHALO
+select cidx, CCHAR8, GREATEST(CCHAR8,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR8	GREATEST(CCHAR8,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaaa	MAHALO
+select cidx, CCHAR8, GREATEST(CCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR8	GREATEST(CCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, GREATEST(CCHAR8,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR8	GREATEST(CCHAR8,CCHAR7)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, GREATEST(CCHAR8,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR8	GREATEST(CCHAR8,'MAHALO')
+1	aaaaaaaa	MAHALO
+select cidx, CCHAR9, GREATEST(CCHAR9,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR9	GREATEST(CCHAR9,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaaaa	MAHALO
+select cidx, CCHAR9, GREATEST(CCHAR9,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR9	GREATEST(CCHAR9,CCHAR3)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, GREATEST(CCHAR9,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR9	GREATEST(CCHAR9,CCHAR7)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, GREATEST(CCHAR9,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR9	GREATEST(CCHAR9,'MAHALO')
+1	aaaaaaaaa	MAHALO
+select cidx, CCHAR255, GREATEST(CCHAR255,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR255	GREATEST(CCHAR255,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaaaaa	MAHALO
+select cidx, CCHAR255, GREATEST(CCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR255	GREATEST(CCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, GREATEST(CCHAR255,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR255	GREATEST(CCHAR255,CCHAR7)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, GREATEST(CCHAR255,'MAHALO') from datatypetestm order by cidx;
+cidx	CCHAR255	GREATEST(CCHAR255,'MAHALO')
+1	aaaaaaaaaa	MAHALO
+select cidx, CVCHAR1, GREATEST(CVCHAR1,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR1	GREATEST(CVCHAR1,CCHAR3,CCHAR7,'MAHALO')
+1	a	MAHALO
+select cidx, CVCHAR1, GREATEST(CVCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR1	GREATEST(CVCHAR1,CCHAR3)
+1	a	aaa
+select cidx, CVCHAR1, GREATEST(CVCHAR1,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR1	GREATEST(CVCHAR1,CCHAR7)
+1	a	aaaaaaa
+select cidx, CVCHAR1, GREATEST(CVCHAR1,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR1	GREATEST(CVCHAR1,'MAHALO')
+1	a	MAHALO
+select cidx, CVCHAR2, GREATEST(CVCHAR2,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR2	GREATEST(CVCHAR2,CCHAR3,CCHAR7,'MAHALO')
+1	aa	MAHALO
+select cidx, CVCHAR2, GREATEST(CVCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR2	GREATEST(CVCHAR2,CCHAR3)
+1	aa	aaa
+select cidx, CVCHAR2, GREATEST(CVCHAR2,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR2	GREATEST(CVCHAR2,CCHAR7)
+1	aa	aaaaaaa
+select cidx, CVCHAR2, GREATEST(CVCHAR2,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR2	GREATEST(CVCHAR2,'MAHALO')
+1	aa	MAHALO
+select cidx, CVCHAR3, GREATEST(CVCHAR3,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR3	GREATEST(CVCHAR3,CCHAR3,CCHAR7,'MAHALO')
+1	aaa	MAHALO
+select cidx, CVCHAR3, GREATEST(CVCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	GREATEST(CVCHAR3,CCHAR3)
+1	aaa	aaa
+select cidx, CVCHAR3, GREATEST(CVCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR3	GREATEST(CVCHAR3,CCHAR7)
+1	aaa	aaaaaaa
+select cidx, CVCHAR3, GREATEST(CVCHAR3,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR3	GREATEST(CVCHAR3,'MAHALO')
+1	aaa	MAHALO
+select cidx, CVCHAR4, GREATEST(CVCHAR4,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR4	GREATEST(CVCHAR4,CCHAR3,CCHAR7,'MAHALO')
+1	aaaa	MAHALO
+select cidx, CVCHAR4, GREATEST(CVCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR4	GREATEST(CVCHAR4,CCHAR3)
+1	aaaa	aaaa
+select cidx, CVCHAR4, GREATEST(CVCHAR4,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR4	GREATEST(CVCHAR4,CCHAR7)
+1	aaaa	aaaaaaa
+select cidx, CVCHAR4, GREATEST(CVCHAR4,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR4	GREATEST(CVCHAR4,'MAHALO')
+1	aaaa	MAHALO
+select cidx, CVCHAR5, GREATEST(CVCHAR5,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR5	GREATEST(CVCHAR5,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaa	MAHALO
+select cidx, CVCHAR5, GREATEST(CVCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR5	GREATEST(CVCHAR5,CCHAR3)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, GREATEST(CVCHAR5,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR5	GREATEST(CVCHAR5,CCHAR7)
+1	aaaaa	aaaaaaa
+select cidx, CVCHAR5, GREATEST(CVCHAR5,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR5	GREATEST(CVCHAR5,'MAHALO')
+1	aaaaa	MAHALO
+select cidx, CVCHAR6, GREATEST(CVCHAR6,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR6	GREATEST(CVCHAR6,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaa	MAHALO
+select cidx, CVCHAR6, GREATEST(CVCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR6	GREATEST(CVCHAR6,CCHAR3)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, GREATEST(CVCHAR6,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR6	GREATEST(CVCHAR6,CCHAR7)
+1	aaaaaa	aaaaaaa
+select cidx, CVCHAR6, GREATEST(CVCHAR6,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR6	GREATEST(CVCHAR6,'MAHALO')
+1	aaaaaa	MAHALO
+select cidx, CVCHAR7, GREATEST(CVCHAR7,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR7	GREATEST(CVCHAR7,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaa	MAHALO
+select cidx, CVCHAR7, GREATEST(CVCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR7	GREATEST(CVCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, GREATEST(CVCHAR7,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	GREATEST(CVCHAR7,CCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, GREATEST(CVCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR7	GREATEST(CVCHAR7,'MAHALO')
+1	aaaaaaa	MAHALO
+select cidx, CVCHAR8, GREATEST(CVCHAR8,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR8	GREATEST(CVCHAR8,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaaa	MAHALO
+select cidx, CVCHAR8, GREATEST(CVCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR8	GREATEST(CVCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, GREATEST(CVCHAR8,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR8	GREATEST(CVCHAR8,CCHAR7)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, GREATEST(CVCHAR8,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR8	GREATEST(CVCHAR8,'MAHALO')
+1	aaaaaaaa	MAHALO
+select cidx, CVCHAR255, GREATEST(CVCHAR255,CCHAR3,CCHAR7,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR255	GREATEST(CVCHAR255,CCHAR3,CCHAR7,'MAHALO')
+1	aaaaaaaaaa	MAHALO
+select cidx, CVCHAR255, GREATEST(CVCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR255	GREATEST(CVCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, GREATEST(CVCHAR255,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR255	GREATEST(CVCHAR255,CCHAR7)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, GREATEST(CVCHAR255,'MAHALO') from datatypetestm order by cidx;
+cidx	CVCHAR255	GREATEST(CVCHAR255,'MAHALO')
+1	aaaaaaaaaa	MAHALO
+select cidx, CCHAR1 from datatypetestm order by GREATEST(CCHAR1,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by GREATEST(CCHAR1,CCHAR3), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by GREATEST(CCHAR1,CCHAR7), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by GREATEST(CCHAR1,'MAHALO'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by GREATEST(CCHAR2,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by GREATEST(CCHAR2,CCHAR3), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by GREATEST(CCHAR2,CCHAR7), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by GREATEST(CCHAR2,'MAHALO'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by GREATEST(CCHAR3,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by GREATEST(CCHAR3,CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by GREATEST(CCHAR3,CCHAR7), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by GREATEST(CCHAR3,'MAHALO'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by GREATEST(CCHAR4,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by GREATEST(CCHAR4,CCHAR3), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by GREATEST(CCHAR4,CCHAR7), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by GREATEST(CCHAR4,'MAHALO'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by GREATEST(CCHAR5,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by GREATEST(CCHAR5,CCHAR3), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by GREATEST(CCHAR5,CCHAR7), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by GREATEST(CCHAR5,'MAHALO'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by GREATEST(CCHAR6,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by GREATEST(CCHAR6,CCHAR3), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by GREATEST(CCHAR6,CCHAR7), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by GREATEST(CCHAR6,'MAHALO'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by GREATEST(CCHAR7,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by GREATEST(CCHAR7,CCHAR3), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by GREATEST(CCHAR7,CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by GREATEST(CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by GREATEST(CCHAR8,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by GREATEST(CCHAR8,CCHAR3), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by GREATEST(CCHAR8,CCHAR7), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by GREATEST(CCHAR8,'MAHALO'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by GREATEST(CCHAR9,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by GREATEST(CCHAR9,CCHAR3), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by GREATEST(CCHAR9,CCHAR7), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by GREATEST(CCHAR9,'MAHALO'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by GREATEST(CCHAR255,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by GREATEST(CCHAR255,CCHAR3), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by GREATEST(CCHAR255,CCHAR7), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by GREATEST(CCHAR255,'MAHALO'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by GREATEST(CVCHAR1,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by GREATEST(CVCHAR1,CCHAR3), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by GREATEST(CVCHAR1,CCHAR7), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by GREATEST(CVCHAR1,'MAHALO'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by GREATEST(CVCHAR2,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by GREATEST(CVCHAR2,CCHAR3), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by GREATEST(CVCHAR2,CCHAR7), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by GREATEST(CVCHAR2,'MAHALO'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by GREATEST(CVCHAR3,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by GREATEST(CVCHAR3,CCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by GREATEST(CVCHAR3,CCHAR7), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by GREATEST(CVCHAR3,'MAHALO'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by GREATEST(CVCHAR4,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by GREATEST(CVCHAR4,CCHAR3), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by GREATEST(CVCHAR4,CCHAR7), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by GREATEST(CVCHAR4,'MAHALO'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by GREATEST(CVCHAR5,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by GREATEST(CVCHAR5,CCHAR3), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by GREATEST(CVCHAR5,CCHAR7), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by GREATEST(CVCHAR5,'MAHALO'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by GREATEST(CVCHAR6,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by GREATEST(CVCHAR6,CCHAR3), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by GREATEST(CVCHAR6,CCHAR7), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by GREATEST(CVCHAR6,'MAHALO'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by GREATEST(CVCHAR7,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by GREATEST(CVCHAR7,CCHAR3), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by GREATEST(CVCHAR7,CCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by GREATEST(CVCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by GREATEST(CVCHAR8,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by GREATEST(CVCHAR8,CCHAR3), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by GREATEST(CVCHAR8,CCHAR7), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by GREATEST(CVCHAR8,'MAHALO'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by GREATEST(CVCHAR255,CCHAR3,CCHAR7,'MAHALO'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by GREATEST(CVCHAR255,CCHAR3), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by GREATEST(CVCHAR255,CCHAR7), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by GREATEST(CVCHAR255,'MAHALO'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

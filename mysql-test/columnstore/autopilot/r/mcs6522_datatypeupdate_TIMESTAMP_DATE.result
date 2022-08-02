@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CDATE = CTIMESTAMP;
+SELECT CDATE FROM datatypeupdate;
+CDATE
+2020-08-13
+ROLLBACK;

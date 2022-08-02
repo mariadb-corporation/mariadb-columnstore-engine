@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, ASCII(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, ASCII(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, ASCII(CTIME) from datatypetestm order by cidx;
+select cidx, ASCII('NULL') from datatypetestm order by cidx;
+select cidx, ASCII('null') from datatypetestm order by cidx;
+select cidx, ASCII(' ') from datatypetestm order by cidx;
+select cidx, ASCII(' THIS ') from datatypetestm order by cidx;
+select cidx, ASCII('this') from datatypetestm order by cidx;
+select cidx, ASCII('t') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by ASCII(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by ASCII(CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by ASCII(CTIME), cidx;

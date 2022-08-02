@@ -1,0 +1,1027 @@
+USE autopilot;
+select cidx, CCHAR1, CCHAR1 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'ssss$'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'ggg$'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'hhh$'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP '(ttttttt)+'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP '(ssssssss)+'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'z$'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'w*'
+1	a	1
+select cidx, CCHAR1, CCHAR1 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'ww+w'
+1	a	0
+select cidx, CCHAR1, CCHAR1 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR1	CCHAR1 REGEXP 'dd?d'
+1	a	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'ssss$'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'ggg$'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'hhh$'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP '(ttttttt)+'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP '(ssssssss)+'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'z$'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'w*'
+1	aa	1
+select cidx, CCHAR2, CCHAR2 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'ww+w'
+1	aa	0
+select cidx, CCHAR2, CCHAR2 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR2	CCHAR2 REGEXP 'dd?d'
+1	aa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'ssss$'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'ggg$'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'hhh$'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP '(ttttttt)+'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP '(ssssssss)+'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'z$'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'w*'
+1	aaa	1
+select cidx, CCHAR3, CCHAR3 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'ww+w'
+1	aaa	0
+select cidx, CCHAR3, CCHAR3 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR3	CCHAR3 REGEXP 'dd?d'
+1	aaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'ssss$'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'ggg$'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'hhh$'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP '(ttttttt)+'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP '(ssssssss)+'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'z$'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'w*'
+1	aaaa	1
+select cidx, CCHAR4, CCHAR4 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'ww+w'
+1	aaaa	0
+select cidx, CCHAR4, CCHAR4 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR4	CCHAR4 REGEXP 'dd?d'
+1	aaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'ssss$'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'ggg$'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'hhh$'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP '(ttttttt)+'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP '(ssssssss)+'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'z$'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'w*'
+1	aaaaa	1
+select cidx, CCHAR5, CCHAR5 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'ww+w'
+1	aaaaa	0
+select cidx, CCHAR5, CCHAR5 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR5	CCHAR5 REGEXP 'dd?d'
+1	aaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'ssss$'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'ggg$'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'hhh$'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP '(ttttttt)+'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP '(ssssssss)+'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'z$'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'w*'
+1	aaaaaa	1
+select cidx, CCHAR6, CCHAR6 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'ww+w'
+1	aaaaaa	0
+select cidx, CCHAR6, CCHAR6 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR6	CCHAR6 REGEXP 'dd?d'
+1	aaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'ssss$'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'ggg$'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'hhh$'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP '(ttttttt)+'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP '(ssssssss)+'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'z$'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'w*'
+1	aaaaaaa	1
+select cidx, CCHAR7, CCHAR7 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'ww+w'
+1	aaaaaaa	0
+select cidx, CCHAR7, CCHAR7 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR7	CCHAR7 REGEXP 'dd?d'
+1	aaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'ssss$'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'ggg$'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'hhh$'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP '(ttttttt)+'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP '(ssssssss)+'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'z$'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'w*'
+1	aaaaaaaa	1
+select cidx, CCHAR8, CCHAR8 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'ww+w'
+1	aaaaaaaa	0
+select cidx, CCHAR8, CCHAR8 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR8	CCHAR8 REGEXP 'dd?d'
+1	aaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'ssss$'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'ggg$'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'hhh$'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP '(ttttttt)+'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP '(ssssssss)+'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'z$'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'w*'
+1	aaaaaaaaa	1
+select cidx, CCHAR9, CCHAR9 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'ww+w'
+1	aaaaaaaaa	0
+select cidx, CCHAR9, CCHAR9 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR9	CCHAR9 REGEXP 'dd?d'
+1	aaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'ssss$'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'ggg$'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'hhh$'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP '(ttttttt)+'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP '(ssssssss)+'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'z$'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'w*'
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, CCHAR255 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'ww+w'
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, CCHAR255 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CCHAR255	CCHAR255 REGEXP 'dd?d'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'ssss$'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'ggg$'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'hhh$'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP '(ttttttt)+'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP '(ssssssss)+'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'z$'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'w*'
+1	a	1
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'ww+w'
+1	a	0
+select cidx, CVCHAR1, CVCHAR1 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR1	CVCHAR1 REGEXP 'dd?d'
+1	a	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'ssss$'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'ggg$'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'hhh$'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP '(ttttttt)+'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP '(ssssssss)+'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'z$'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'w*'
+1	aa	1
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'ww+w'
+1	aa	0
+select cidx, CVCHAR2, CVCHAR2 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR2	CVCHAR2 REGEXP 'dd?d'
+1	aa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'ssss$'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'ggg$'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'hhh$'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP '(ttttttt)+'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP '(ssssssss)+'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'z$'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'w*'
+1	aaa	1
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'ww+w'
+1	aaa	0
+select cidx, CVCHAR3, CVCHAR3 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR3	CVCHAR3 REGEXP 'dd?d'
+1	aaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'ssss$'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'ggg$'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'hhh$'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP '(ttttttt)+'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP '(ssssssss)+'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'z$'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'w*'
+1	aaaa	1
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'ww+w'
+1	aaaa	0
+select cidx, CVCHAR4, CVCHAR4 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR4	CVCHAR4 REGEXP 'dd?d'
+1	aaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'ssss$'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'ggg$'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'hhh$'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP '(ttttttt)+'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP '(ssssssss)+'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'z$'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'w*'
+1	aaaaa	1
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'ww+w'
+1	aaaaa	0
+select cidx, CVCHAR5, CVCHAR5 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR5	CVCHAR5 REGEXP 'dd?d'
+1	aaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'ssss$'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'ggg$'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'hhh$'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP '(ttttttt)+'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP '(ssssssss)+'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'z$'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'w*'
+1	aaaaaa	1
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'ww+w'
+1	aaaaaa	0
+select cidx, CVCHAR6, CVCHAR6 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR6	CVCHAR6 REGEXP 'dd?d'
+1	aaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'ssss$'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'ggg$'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'hhh$'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP '(ttttttt)+'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP '(ssssssss)+'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'z$'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'w*'
+1	aaaaaaa	1
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'ww+w'
+1	aaaaaaa	0
+select cidx, CVCHAR7, CVCHAR7 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR7	CVCHAR7 REGEXP 'dd?d'
+1	aaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'ssss$'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'ggg$'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'hhh$'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP '(ttttttt)+'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP '(ssssssss)+'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'z$'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'w*'
+1	aaaaaaaa	1
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'ww+w'
+1	aaaaaaaa	0
+select cidx, CVCHAR8, CVCHAR8 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR8	CVCHAR8 REGEXP 'dd?d'
+1	aaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'ssss$' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'ssss$'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'ggg$' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'ggg$'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'hhh$' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'hhh$'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP '(ttttttt)+' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP '(ttttttt)+'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP '(ssssssss)+' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP '(ssssssss)+'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'z$' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'z$'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'w*' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'w*'
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'ww+w' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'ww+w'
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, CVCHAR255 REGEXP 'dd?d' from datatypetestm order by cidx;
+cidx	CVCHAR255	CVCHAR255 REGEXP 'dd?d'
+1	aaaaaaaaaa	0
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'ssss$', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'ggg$', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'hhh$', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'z$', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'w*', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'ww+w', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by CCHAR1 REGEXP 'dd?d', cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'ssss$', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'ggg$', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'hhh$', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'z$', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'w*', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'ww+w', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by CCHAR2 REGEXP 'dd?d', cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'ssss$', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'ggg$', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'hhh$', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'z$', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'w*', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'ww+w', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by CCHAR3 REGEXP 'dd?d', cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'ssss$', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'ggg$', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'hhh$', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'z$', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'w*', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'ww+w', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by CCHAR4 REGEXP 'dd?d', cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'ssss$', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'ggg$', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'hhh$', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'z$', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'w*', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'ww+w', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by CCHAR5 REGEXP 'dd?d', cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'ssss$', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'ggg$', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'hhh$', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'z$', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'w*', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'ww+w', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by CCHAR6 REGEXP 'dd?d', cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'ssss$', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'ggg$', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'hhh$', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'z$', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'w*', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'ww+w', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by CCHAR7 REGEXP 'dd?d', cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'ssss$', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'ggg$', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'hhh$', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'z$', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'w*', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'ww+w', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by CCHAR8 REGEXP 'dd?d', cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'ssss$', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'ggg$', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'hhh$', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'z$', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'w*', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'ww+w', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by CCHAR9 REGEXP 'dd?d', cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'ssss$', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'ggg$', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'hhh$', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP '(ttttttt)+', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP '(ssssssss)+', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'z$', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'w*', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'ww+w', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by CCHAR255 REGEXP 'dd?d', cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'ssss$', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'ggg$', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'hhh$', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'z$', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'w*', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'ww+w', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by CVCHAR1 REGEXP 'dd?d', cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'ssss$', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'ggg$', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'hhh$', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'z$', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'w*', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'ww+w', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by CVCHAR2 REGEXP 'dd?d', cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'ssss$', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'ggg$', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'hhh$', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'z$', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'w*', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'ww+w', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by CVCHAR3 REGEXP 'dd?d', cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'ssss$', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'ggg$', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'hhh$', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'z$', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'w*', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'ww+w', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by CVCHAR4 REGEXP 'dd?d', cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'ssss$', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'ggg$', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'hhh$', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'z$', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'w*', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'ww+w', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by CVCHAR5 REGEXP 'dd?d', cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'ssss$', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'ggg$', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'hhh$', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'z$', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'w*', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'ww+w', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by CVCHAR6 REGEXP 'dd?d', cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'ssss$', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'ggg$', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'hhh$', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'z$', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'w*', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'ww+w', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by CVCHAR7 REGEXP 'dd?d', cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'ssss$', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'ggg$', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'hhh$', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'z$', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'w*', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'ww+w', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by CVCHAR8 REGEXP 'dd?d', cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'ssss$', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'ggg$', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'hhh$', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP '(ttttttt)+', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP '(ssssssss)+', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'z$', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'w*', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'ww+w', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by CVCHAR255 REGEXP 'dd?d', cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

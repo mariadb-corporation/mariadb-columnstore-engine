@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, LAST_DAY(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, LAST_DAY(CDATETIME) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, LAST_DAY(CTIME) from datatypetestm order by cidx;
+select cidx, LAST_DAY('2009-02-28') from datatypetestm order by cidx;
+select cidx, LAST_DAY('2009-07-04') from datatypetestm order by cidx;
+select cidx, LAST_DAY('2010-02-31') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by LAST_DAY(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by LAST_DAY(CDATETIME), cidx;
+#select cidx, CTIME from datatypetestm order by LAST_DAY(CTIME), cidx;

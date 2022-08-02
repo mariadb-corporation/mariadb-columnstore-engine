@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select COUNT(CTEXT) from datatypetestm;
+COUNT(CTEXT)
+1
+select COUNT(CTINYTEXT) from datatypetestm;
+COUNT(CTINYTEXT)
+1
+select COUNT(CMEDIUMTEXT) from datatypetestm;
+COUNT(CMEDIUMTEXT)
+1
+select COUNT(CLONGTEXT) from datatypetestm;
+COUNT(CLONGTEXT)
+1
+select cidx, CTEXT, COUNT(CTEXT) from datatypetestm group by cidx, CTEXT ;
+cidx	CTEXT	COUNT(CTEXT)
+1	texttexttext	1
+select cidx, CTINYTEXT, COUNT(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+cidx	CTINYTEXT	COUNT(CTINYTEXT)
+1	tinytext	1
+select cidx, CMEDIUMTEXT, COUNT(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+cidx	CMEDIUMTEXT	COUNT(CMEDIUMTEXT)
+1	mediumtestmediumtest	1
+select cidx, CLONGTEXT, COUNT(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;
+cidx	CLONGTEXT	COUNT(CLONGTEXT)
+1	longtextlongtextlongtext	1

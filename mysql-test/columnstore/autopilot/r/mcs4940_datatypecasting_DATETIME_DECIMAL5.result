@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME > dtt2.CDECIMAL5 ;
+cidx	CDATETIME	CDECIMAL5
+1	1997-01-01 00:00:00	-999
+2	1997-01-01 00:00:01	-998
+3	1997-01-02 00:00:01	-997
+4	1997-01-03 00:00:02	-996
+5	1997-01-04 00:00:03	-995
+6	2009-12-31 23:59:56	995
+7	2009-12-31 23:59:57	996
+8	2009-12-31 23:59:58	997
+9	2009-12-31 23:59:59	998
+10	2009-12-31 23:59:59	999
+11	2009-12-31 23:59:59	0
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME >= dtt2.CDECIMAL5 ;
+cidx	CDATETIME	CDECIMAL5
+1	1997-01-01 00:00:00	-999
+2	1997-01-01 00:00:01	-998
+3	1997-01-02 00:00:01	-997
+4	1997-01-03 00:00:02	-996
+5	1997-01-04 00:00:03	-995
+6	2009-12-31 23:59:56	995
+7	2009-12-31 23:59:57	996
+8	2009-12-31 23:59:58	997
+9	2009-12-31 23:59:59	998
+10	2009-12-31 23:59:59	999
+11	2009-12-31 23:59:59	0
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <> dtt2.CDECIMAL5 ;
+cidx	CDATETIME	CDECIMAL5
+1	1997-01-01 00:00:00	-999
+2	1997-01-01 00:00:01	-998
+3	1997-01-02 00:00:01	-997
+4	1997-01-03 00:00:02	-996
+5	1997-01-04 00:00:03	-995
+6	2009-12-31 23:59:56	995
+7	2009-12-31 23:59:57	996
+8	2009-12-31 23:59:58	997
+9	2009-12-31 23:59:59	998
+10	2009-12-31 23:59:59	999
+11	2009-12-31 23:59:59	0
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME < dtt2.CDECIMAL5 ;
+cidx	CDATETIME	CDECIMAL5
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <= dtt2.CDECIMAL5 ;
+cidx	CDATETIME	CDECIMAL5

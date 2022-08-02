@@ -1,0 +1,22 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATE), '201105') from datatypetestm order by cidx;
+select cidx, CDATE, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATE), '196208') from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATETIME), '201105') from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATETIME), '196208') from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CTIME), '201105') from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CTIME), '196208') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATE), '201105'), cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATE), '196208'), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATETIME), '201105'), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CDATETIME), '196208'), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CTIME), '201105'), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM CTIME), '196208'), cidx;

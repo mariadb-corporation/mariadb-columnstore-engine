@@ -1,0 +1,19 @@
+USE autopilot;
+select MAX(CDATE) from datatypetestm;
+MAX(CDATE)
+1997-01-01
+select MAX(CDATETIME) from datatypetestm;
+MAX(CDATETIME)
+1997-01-01 00:00:00
+select MAX(CTIME) from datatypetestm;
+MAX(CTIME)
+13:00:00
+select cidx, CDATE, MAX(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	MAX(CDATE)
+1	1997-01-01	1997-01-01
+select cidx, CDATETIME, MAX(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	MAX(CDATETIME)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, MAX(CTIME) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	MAX(CTIME)
+1	13:00:00	13:00:00

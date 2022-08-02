@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, EXP(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, EXP(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, EXP(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, EXP(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, EXP(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, EXP(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, EXP(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, EXP(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, EXP(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, EXP(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, EXP(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, EXP(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, EXP(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, EXP(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, EXP(CFLOAT) from datatypetestm order by cidx;
+select cidx, EXP(2*cidx) from datatypetestm order by cidx;
+select cidx, EXP(-2*cidx) from datatypetestm order by cidx;
+select cidx, EXP(0*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by EXP(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by EXP(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by EXP(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by EXP(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by EXP(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by EXP(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by EXP(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by EXP(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by EXP(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by EXP(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by EXP(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by EXP(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by EXP(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by EXP(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by EXP(CFLOAT), cidx;

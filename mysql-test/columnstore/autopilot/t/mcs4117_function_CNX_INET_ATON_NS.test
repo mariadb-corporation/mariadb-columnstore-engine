@@ -1,0 +1,44 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, INET_ATON(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, INET_ATON(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, INET_ATON(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, INET_ATON(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, INET_ATON(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, INET_ATON(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, INET_ATON(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, INET_ATON(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, INET_ATON(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, INET_ATON(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, INET_ATON(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, INET_ATON(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, INET_ATON(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, INET_ATON(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, INET_ATON(CFLOAT) from datatypetestm order by cidx;
+select cidx, INET_ATON('0.0.0.0') from datatypetestm order by cidx;
+select cidx, INET_ATON('255.255.255.255') from datatypetestm order by cidx;
+select cidx, INET_ATON('127.0.0.1') from datatypetestm order by cidx;
+select cidx, INET_ATON('192.168.2.1') from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where INET_ATON(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where INET_ATON(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where INET_ATON(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where INET_ATON(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where INET_ATON(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where INET_ATON(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where INET_ATON(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where INET_ATON(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where INET_ATON(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where INET_ATON(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where INET_ATON(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where INET_ATON(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where INET_ATON(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where INET_ATON(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where INET_ATON(CFLOAT) <> 0 order by cidx;

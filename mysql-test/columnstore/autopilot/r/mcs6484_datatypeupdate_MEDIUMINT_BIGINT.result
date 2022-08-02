@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CBIGINT = CMEDIUMINT;
+SELECT CBIGINT FROM datatypeupdate;
+CBIGINT
+1000
+ROLLBACK;

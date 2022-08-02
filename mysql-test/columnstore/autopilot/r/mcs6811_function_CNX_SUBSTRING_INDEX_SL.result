@@ -1,0 +1,14 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, SUBSTRING_INDEX('a.b.c.d.e.f.g','.',5) from datatypetestm ;
+cidx	SUBSTRING_INDEX('a.b.c.d.e.f.g','.',5)
+1	a.b.c.d.e
+select cidx, SUBSTRING_INDEX('a.b.c.d.e.f.g','.',-5) from datatypetestm ;
+cidx	SUBSTRING_INDEX('a.b.c.d.e.f.g','.',-5)
+1	c.d.e.f.g
+select cidx, SUBSTRING_INDEX('a..b..c..d..e..f..g','..',5) from datatypetestm ;
+cidx	SUBSTRING_INDEX('a..b..c..d..e..f..g','..',5)
+1	a..b..c..d..e
+select cidx, SUBSTRING_INDEX('a..b..c..d..e..f..g','..',-5) from datatypetestm ;
+cidx	SUBSTRING_INDEX('a..b..c..d..e..f..g','..',-5)
+1	c..d..e..f..g

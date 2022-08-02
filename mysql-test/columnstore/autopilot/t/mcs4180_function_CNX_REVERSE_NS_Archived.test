@@ -1,0 +1,42 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, REVERSE(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, REVERSE(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, REVERSE(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, REVERSE(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, REVERSE(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, REVERSE(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, REVERSE(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, REVERSE(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, REVERSE(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, REVERSE(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, REVERSE(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, REVERSE(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, REVERSE(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, REVERSE(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, REVERSE(CFLOAT) from datatypetestm order by cidx;
+select cidx, REVERSE('THIS IS A TEST') from datatypetestm order by cidx;
+select cidx, REVERSE('Hello, World') from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where REVERSE(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where REVERSE(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where REVERSE(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where REVERSE(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where REVERSE(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where REVERSE(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where REVERSE(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where REVERSE(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where REVERSE(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where REVERSE(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where REVERSE(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where REVERSE(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where REVERSE(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where REVERSE(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where REVERSE(CFLOAT) <> 0 order by cidx;

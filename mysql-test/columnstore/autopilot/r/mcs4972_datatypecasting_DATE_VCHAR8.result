@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDATE, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATE > dtt2.CVCHAR8 ;
+cidx	CDATE	CVCHAR8
+1	1997-01-01	aaaaaaaa
+2	1997-01-01	h
+3	1997-01-02	hh
+4	1997-01-03	hhh
+5	1997-01-04	hhhh
+6	2009-12-28	sssssss
+7	2009-12-29	ssssssss
+8	2009-12-30	ssssssss
+9	2009-12-31	ssssssss
+10	2009-12-31	zzzzzzzz
+select dtt1.cidx, dtt1.CDATE, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATE >= dtt2.CVCHAR8 ;
+cidx	CDATE	CVCHAR8
+1	1997-01-01	aaaaaaaa
+2	1997-01-01	h
+3	1997-01-02	hh
+4	1997-01-03	hhh
+5	1997-01-04	hhhh
+6	2009-12-28	sssssss
+7	2009-12-29	ssssssss
+8	2009-12-30	ssssssss
+9	2009-12-31	ssssssss
+10	2009-12-31	zzzzzzzz
+select dtt1.cidx, dtt1.CDATE, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATE <> dtt2.CVCHAR8 ;
+cidx	CDATE	CVCHAR8
+1	1997-01-01	aaaaaaaa
+2	1997-01-01	h
+3	1997-01-02	hh
+4	1997-01-03	hhh
+5	1997-01-04	hhhh
+6	2009-12-28	sssssss
+7	2009-12-29	ssssssss
+8	2009-12-30	ssssssss
+9	2009-12-31	ssssssss
+10	2009-12-31	zzzzzzzz
+select dtt1.cidx, dtt1.CDATE, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATE < dtt2.CVCHAR8 ;
+cidx	CDATE	CVCHAR8
+select dtt1.cidx, dtt1.CDATE, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATE <= dtt2.CVCHAR8 ;
+cidx	CDATE	CVCHAR8

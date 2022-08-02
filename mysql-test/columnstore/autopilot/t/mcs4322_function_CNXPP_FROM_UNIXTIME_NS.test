@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, FROM_UNIXTIME(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, FROM_UNIXTIME(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, FROM_UNIXTIME(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, FROM_UNIXTIME(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, FROM_UNIXTIME(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, FROM_UNIXTIME(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, FROM_UNIXTIME(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, FROM_UNIXTIME(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, FROM_UNIXTIME(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, FROM_UNIXTIME(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, FROM_UNIXTIME(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, FROM_UNIXTIME(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, FROM_UNIXTIME(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, FROM_UNIXTIME(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, FROM_UNIXTIME(CFLOAT) from datatypetestm order by cidx;
+select cidx, FROM_UNIXTIME(11235) from datatypetestm order by cidx;
+select cidx, FROM_UNIXTIME(456) from datatypetestm order by cidx;
+select cidx, FROM_UNIXTIME(233333) from datatypetestm order by cidx;
+select cidx, FROM_UNIXTIME(12) from datatypetestm order by cidx;
+select cidx, FROM_UNIXTIME(9999) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by FROM_UNIXTIME(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by FROM_UNIXTIME(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by FROM_UNIXTIME(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by FROM_UNIXTIME(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by FROM_UNIXTIME(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by FROM_UNIXTIME(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by FROM_UNIXTIME(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by FROM_UNIXTIME(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by FROM_UNIXTIME(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by FROM_UNIXTIME(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by FROM_UNIXTIME(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by FROM_UNIXTIME(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by FROM_UNIXTIME(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by FROM_UNIXTIME(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by FROM_UNIXTIME(CFLOAT), cidx;

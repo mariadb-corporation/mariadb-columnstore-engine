@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, LENGTH(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, LENGTH(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, LENGTH(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, LENGTH(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, LENGTH(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, LENGTH(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, LENGTH(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, LENGTH(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, LENGTH(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, LENGTH(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, LENGTH(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, LENGTH(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, LENGTH(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, LENGTH(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, LENGTH(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, LENGTH(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, LENGTH(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, LENGTH(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, LENGTH(CVCHAR255) from datatypetestm order by cidx;
+select cidx, LENGTH(concat('ALOHA',cchar1)) from datatypetestm order by cidx;
+select cidx, LENGTH(concat('HAWAII',cchar1)) from datatypetestm order by cidx;
+select cidx, LENGTH(concat('MELEKALIKIMAKA',cchar1)) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by LENGTH(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by LENGTH(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by LENGTH(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by LENGTH(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by LENGTH(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by LENGTH(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by LENGTH(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by LENGTH(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by LENGTH(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by LENGTH(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by LENGTH(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by LENGTH(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by LENGTH(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by LENGTH(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by LENGTH(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by LENGTH(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by LENGTH(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by LENGTH(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by LENGTH(CVCHAR255), cidx;

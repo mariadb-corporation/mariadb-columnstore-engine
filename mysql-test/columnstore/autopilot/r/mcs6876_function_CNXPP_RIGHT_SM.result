@@ -1,0 +1,146 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, RIGHT(CTEXT,2) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,2)
+1	texttexttext	xt
+select cidx, CTEXT, RIGHT(CTEXT,5) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,5)
+1	texttexttext	ttext
+select cidx, CTEXT, RIGHT(CTEXT,7) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,7)
+1	texttexttext	exttext
+select cidx, CTEXT, RIGHT(CTEXT,8) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,8)
+1	texttexttext	texttext
+select cidx, CTEXT, RIGHT(CTEXT,9) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,9)
+1	texttexttext	ttexttext
+select cidx, CTEXT, RIGHT(CTEXT,25) from datatypetestm ;
+cidx	CTEXT	RIGHT(CTEXT,25)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,2) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,2)
+1	tinytext	xt
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,5) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,5)
+1	tinytext	ytext
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,7) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,7)
+1	tinytext	inytext
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,8) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,8)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,9) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,9)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, RIGHT(CTINYTEXT,25) from datatypetestm ;
+cidx	CTINYTEXT	RIGHT(CTINYTEXT,25)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,2) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,2)
+1	mediumtestmediumtest	st
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,5) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,5)
+1	mediumtestmediumtest	mtest
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,7) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,7)
+1	mediumtestmediumtest	iumtest
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,8) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,8)
+1	mediumtestmediumtest	diumtest
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,9) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,9)
+1	mediumtestmediumtest	ediumtest
+select cidx, CMEDIUMTEXT, RIGHT(CMEDIUMTEXT,25) from datatypetestm ;
+cidx	CMEDIUMTEXT	RIGHT(CMEDIUMTEXT,25)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,2) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,2)
+1	longtextlongtextlongtext	xt
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,5) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,5)
+1	longtextlongtextlongtext	gtext
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,7) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,7)
+1	longtextlongtextlongtext	ongtext
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,8) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,8)
+1	longtextlongtextlongtext	longtext
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,9) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,9)
+1	longtextlongtextlongtext	tlongtext
+select cidx, CLONGTEXT, RIGHT(CLONGTEXT,25) from datatypetestm ;
+cidx	CLONGTEXT	RIGHT(CLONGTEXT,25)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,2), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,5), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,7), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,8), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,9), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by RIGHT(CTEXT,25), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,2), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,5), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,7), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,8), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,9), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by RIGHT(CTINYTEXT,25), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,2), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,5), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,7), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,8), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,9), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by RIGHT(CMEDIUMTEXT,25), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,2), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,5), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,7), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,8), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,9), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by RIGHT(CLONGTEXT,25), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

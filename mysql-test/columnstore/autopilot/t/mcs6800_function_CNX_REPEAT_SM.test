@@ -1,0 +1,59 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, REPEAT(CTEXT,0) from datatypetestm ;
+select cidx, CTEXT, REPEAT(CTEXT,1) from datatypetestm ;
+select cidx, CTEXT, REPEAT(CTEXT,5) from datatypetestm ;
+select cidx, CTEXT, REPEAT(CTEXT,NULL) from datatypetestm ;
+select cidx, CTEXT, REPEAT(CTEXT,-1) from datatypetestm ;
+select cidx, CTEXT, REPEAT(CTEXT,-5) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,0) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,1) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,5) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,-1) from datatypetestm ;
+select cidx, CTINYTEXT, REPEAT(CTINYTEXT,-5) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,0) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,1) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,5) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,-1) from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPEAT(CMEDIUMTEXT,-5) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,0) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,1) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,5) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,-1) from datatypetestm ;
+select cidx, CLONGTEXT, REPEAT(CLONGTEXT,-5) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,0) <> 0 ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,1) <> 0 ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,5) <> 0 ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,NULL) <> 0 ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,-1) <> 0 ;
+select cidx, CTEXT from datatypetestm where REPEAT(CTEXT,-5) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,0) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,1) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,5) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,NULL) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,-1) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where REPEAT(CTINYTEXT,-5) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,0) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,1) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,5) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,NULL) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,-1) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where REPEAT(CMEDIUMTEXT,-5) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,0) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,1) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,5) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,NULL) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,-1) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where REPEAT(CLONGTEXT,-5) <> 0 ;

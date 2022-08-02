@@ -1,0 +1,14 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, INSTR('aaa',concat('ddaaaasss',cchar1)) from datatypetestm ;
+cidx	INSTR('aaa',concat('ddaaaasss',cchar1))
+1	0
+select cidx, INSTR('aaaaaaaaaaaa',concat('kkkkaaaaaaak',cchar1)) from datatypetestm ;
+cidx	INSTR('aaaaaaaaaaaa',concat('kkkkaaaaaaak',cchar1))
+1	0
+select cidx, INSTR('aa',concat('ddaakaasss',cchar1)) from datatypetestm ;
+cidx	INSTR('aa',concat('ddaakaasss',cchar1))
+1	0
+select cidx, INSTR('aaaaaaaaaa',concat('kkkkaaaaak',cchar1)) from datatypetestm ;
+cidx	INSTR('aaaaaaaaaa',concat('kkkkaaaaak',cchar1))
+1	0

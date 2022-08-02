@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3) from datatypetestm ;
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3), cidx;
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3,CCHAR7), cidx;
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3,CCHAR7), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CCHAR7), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3,CCHAR7), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;

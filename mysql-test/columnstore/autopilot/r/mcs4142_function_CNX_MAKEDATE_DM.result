@@ -1,0 +1,33 @@
+USE autopilot;
+select cidx, CDATE, MAKEDATE(2010, CDATE) from datatypetestm order by cidx;
+cidx	CDATE	MAKEDATE(2010, CDATE)
+1	1997-01-01	NULL
+select cidx, CDATE, MAKEDATE(2011, CDATE) from datatypetestm order by cidx;
+cidx	CDATE	MAKEDATE(2011, CDATE)
+1	1997-01-01	NULL
+select cidx, CDATETIME, MAKEDATE(2010, CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	MAKEDATE(2010, CDATETIME)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, MAKEDATE(2011, CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	MAKEDATE(2011, CDATETIME)
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, MAKEDATE(2010, CTIME) from datatypetestm order by cidx;
+cidx	CTIME	MAKEDATE(2010, CTIME)
+1	13:00:00	2365-12-05
+select cidx, CTIME, MAKEDATE(2011, CTIME) from datatypetestm order by cidx;
+cidx	CTIME	MAKEDATE(2011, CTIME)
+1	13:00:00	2366-12-05
+select cidx, CDATE from datatypetestm where MAKEDATE(2010, CDATE) <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATE from datatypetestm where MAKEDATE(2011, CDATE) <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where MAKEDATE(2010, CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CDATETIME from datatypetestm where MAKEDATE(2011, CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where MAKEDATE(2010, CTIME) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where MAKEDATE(2011, CTIME) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

@@ -1,0 +1,1046 @@
+USE autopilot;
+select cidx, CCHAR1, NULLIF(CCHAR1,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CCHAR4)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CCHAR9)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CCHAR255)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CVCHAR4)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CVCHAR8)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CINTEGER)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CDOUBLE)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CDECIMAL9_2)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,CDATE)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,NULL)
+1	a	a
+select cidx, CCHAR1, NULLIF(CCHAR1,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR1	NULLIF(CCHAR1,'Hello world')
+1	a	a
+select cidx, CCHAR2, NULLIF(CCHAR2,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CCHAR4)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CCHAR9)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CCHAR255)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CVCHAR4)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CVCHAR8)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CINTEGER)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CDOUBLE)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CDECIMAL9_2)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,CDATE)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,NULL)
+1	aa	aa
+select cidx, CCHAR2, NULLIF(CCHAR2,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR2	NULLIF(CCHAR2,'Hello world')
+1	aa	aa
+select cidx, CCHAR3, NULLIF(CCHAR3,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CCHAR4)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CCHAR9)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CCHAR255)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CVCHAR4)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CVCHAR8)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CINTEGER)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CDOUBLE)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CDECIMAL9_2)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,CDATE)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,NULL)
+1	aaa	aaa
+select cidx, CCHAR3, NULLIF(CCHAR3,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR3	NULLIF(CCHAR3,'Hello world')
+1	aaa	aaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CCHAR4)
+1	aaaa	NULL
+select cidx, CCHAR4, NULLIF(CCHAR4,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CCHAR9)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CCHAR255)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CVCHAR4)
+1	aaaa	NULL
+select cidx, CCHAR4, NULLIF(CCHAR4,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CVCHAR8)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CINTEGER)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CDOUBLE)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CDECIMAL9_2)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,CDATE)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,NULL)
+1	aaaa	aaaa
+select cidx, CCHAR4, NULLIF(CCHAR4,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR4	NULLIF(CCHAR4,'Hello world')
+1	aaaa	aaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CCHAR4)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CCHAR9)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CCHAR255)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CVCHAR4)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CVCHAR8)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CINTEGER)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CDOUBLE)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CDECIMAL9_2)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,CDATE)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,NULL)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, NULLIF(CCHAR5,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR5	NULLIF(CCHAR5,'Hello world')
+1	aaaaa	aaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CCHAR4)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CCHAR9)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CCHAR255)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CVCHAR4)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CVCHAR8)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CINTEGER)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CDOUBLE)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CDECIMAL9_2)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,CDATE)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,NULL)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, NULLIF(CCHAR6,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR6	NULLIF(CCHAR6,'Hello world')
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CCHAR4)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CCHAR9)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CCHAR255)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CVCHAR4)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CVCHAR8)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CINTEGER)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CDOUBLE)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CDECIMAL9_2)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,CDATE)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, NULLIF(CCHAR7,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR7	NULLIF(CCHAR7,'Hello world')
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CCHAR4)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CCHAR9)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CCHAR255)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CVCHAR4)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CVCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, NULLIF(CCHAR8,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CINTEGER)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CDOUBLE)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CDECIMAL9_2)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,CDATE)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, NULLIF(CCHAR8,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR8	NULLIF(CCHAR8,'Hello world')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CCHAR4)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CCHAR9)
+1	aaaaaaaaa	NULL
+select cidx, CCHAR9, NULLIF(CCHAR9,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CCHAR255)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CVCHAR4)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CVCHAR8)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CINTEGER)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CDOUBLE)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CDECIMAL9_2)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,CDATE)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,NULL) from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,NULL)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, NULLIF(CCHAR9,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR9	NULLIF(CCHAR9,'Hello world')
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CCHAR4)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CCHAR9)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR255, NULLIF(CCHAR255,CVCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CVCHAR4)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CVCHAR8)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CINTEGER) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CINTEGER)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CDOUBLE) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CDOUBLE)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CDECIMAL9_2)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,CDATE) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,CDATE)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, NULLIF(CCHAR255,'Hello world') from datatypetestm order by cidx;
+cidx	CCHAR255	NULLIF(CCHAR255,'Hello world')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CCHAR4)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CCHAR9)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CCHAR255)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CVCHAR4)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CVCHAR8)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CINTEGER)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CDOUBLE)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CDECIMAL9_2)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,CDATE)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,NULL)
+1	a	a
+select cidx, CVCHAR1, NULLIF(CVCHAR1,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR1	NULLIF(CVCHAR1,'Hello world')
+1	a	a
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CCHAR4)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CCHAR9)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CCHAR255)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CVCHAR4)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CVCHAR8)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CINTEGER)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CDOUBLE)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CDECIMAL9_2)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,CDATE)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,NULL)
+1	aa	aa
+select cidx, CVCHAR2, NULLIF(CVCHAR2,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR2	NULLIF(CVCHAR2,'Hello world')
+1	aa	aa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CCHAR4)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CCHAR9)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CCHAR255)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CVCHAR4)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CVCHAR8)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CINTEGER)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CDOUBLE)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CDECIMAL9_2)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,CDATE)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,NULL)
+1	aaa	aaa
+select cidx, CVCHAR3, NULLIF(CVCHAR3,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR3	NULLIF(CVCHAR3,'Hello world')
+1	aaa	aaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CCHAR4)
+1	aaaa	NULL
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CCHAR9)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CCHAR255)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CVCHAR4)
+1	aaaa	NULL
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CVCHAR8)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CINTEGER)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CDOUBLE)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CDECIMAL9_2)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,CDATE)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,NULL)
+1	aaaa	aaaa
+select cidx, CVCHAR4, NULLIF(CVCHAR4,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR4	NULLIF(CVCHAR4,'Hello world')
+1	aaaa	aaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CCHAR4)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CCHAR9)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CCHAR255)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CVCHAR4)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CVCHAR8)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CINTEGER)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CDOUBLE)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CDECIMAL9_2)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,CDATE)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,NULL)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, NULLIF(CVCHAR5,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR5	NULLIF(CVCHAR5,'Hello world')
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CCHAR4)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CCHAR9)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CCHAR255)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CVCHAR4)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CVCHAR8)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CINTEGER)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CDOUBLE)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CDECIMAL9_2)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,CDATE)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,NULL)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, NULLIF(CVCHAR6,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR6	NULLIF(CVCHAR6,'Hello world')
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CCHAR4)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CCHAR9)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CCHAR255)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CVCHAR4)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CVCHAR8)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CINTEGER)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CDOUBLE)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CDECIMAL9_2)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,CDATE)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, NULLIF(CVCHAR7,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR7	NULLIF(CVCHAR7,'Hello world')
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CCHAR4)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CCHAR9)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CCHAR255)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CVCHAR4)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CVCHAR8)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CINTEGER)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CDOUBLE)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CDECIMAL9_2)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,CDATE)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, NULLIF(CVCHAR8,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR8	NULLIF(CVCHAR8,'Hello world')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CCHAR4)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CCHAR9) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CCHAR9)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CCHAR255)
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CVCHAR4)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CVCHAR8)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CINTEGER) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CINTEGER)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CDOUBLE) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CDOUBLE)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CDECIMAL9_2)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,CDATE) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,CDATE)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, NULLIF(CVCHAR255,'Hello world') from datatypetestm order by cidx;
+cidx	CVCHAR255	NULLIF(CVCHAR255,'Hello world')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,CDATE) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,NULL) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where NULLIF(CCHAR1,'Hello world') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,CDATE) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,NULL) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where NULLIF(CCHAR2,'Hello world') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,CDATE) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,NULL) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where NULLIF(CCHAR3,'Hello world') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,CDATE) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,NULL) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where NULLIF(CCHAR4,'Hello world') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,CDATE) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,NULL) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where NULLIF(CCHAR5,'Hello world') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,CDATE) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,NULL) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where NULLIF(CCHAR6,'Hello world') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,CDATE) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,NULL) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where NULLIF(CCHAR7,'Hello world') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,CDATE) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,NULL) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where NULLIF(CCHAR8,'Hello world') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,CDATE) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,NULL) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where NULLIF(CCHAR9,'Hello world') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CCHAR4) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CCHAR9) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CVCHAR4) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CINTEGER) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CDOUBLE) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,CDATE) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,NULL) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where NULLIF(CCHAR255,'Hello world') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,CDATE) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,NULL) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where NULLIF(CVCHAR1,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,CDATE) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,NULL) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where NULLIF(CVCHAR2,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,CDATE) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,NULL) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where NULLIF(CVCHAR3,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,CDATE) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,NULL) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where NULLIF(CVCHAR4,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,CDATE) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,NULL) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where NULLIF(CVCHAR5,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,CDATE) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,NULL) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where NULLIF(CVCHAR6,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,CDATE) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,NULL) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where NULLIF(CVCHAR7,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,CDATE) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,NULL) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where NULLIF(CVCHAR8,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CCHAR4) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CCHAR9) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CINTEGER) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CDOUBLE) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CDECIMAL9_2) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,CDATE) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,NULL) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where NULLIF(CVCHAR255,'Hello world') <> 0 order by cidx;
+cidx	CVCHAR255

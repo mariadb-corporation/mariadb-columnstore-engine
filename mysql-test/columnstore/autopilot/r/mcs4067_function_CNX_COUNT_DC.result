@@ -1,0 +1,19 @@
+USE autopilot;
+select COUNT(CDATE) from datatypetestm;
+COUNT(CDATE)
+1
+select COUNT(CDATETIME) from datatypetestm;
+COUNT(CDATETIME)
+1
+select COUNT(CTIME) from datatypetestm;
+COUNT(CTIME)
+1
+select cidx, CDATE, COUNT(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	COUNT(CDATE)
+1	1997-01-01	1
+select cidx, CDATETIME, COUNT(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	COUNT(CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CTIME, COUNT(CTIME) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	COUNT(CTIME)
+1	13:00:00	1

@@ -1,0 +1,115 @@
+USE autopilot;
+select cidx, CCHAR1, UCASE(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	UCASE(CCHAR1)
+1	a	A
+select cidx, CCHAR2, UCASE(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	UCASE(CCHAR2)
+1	aa	AA
+select cidx, CCHAR3, UCASE(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	UCASE(CCHAR3)
+1	aaa	AAA
+select cidx, CCHAR4, UCASE(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	UCASE(CCHAR4)
+1	aaaa	AAAA
+select cidx, CCHAR5, UCASE(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	UCASE(CCHAR5)
+1	aaaaa	AAAAA
+select cidx, CCHAR6, UCASE(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	UCASE(CCHAR6)
+1	aaaaaa	AAAAAA
+select cidx, CCHAR7, UCASE(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	UCASE(CCHAR7)
+1	aaaaaaa	AAAAAAA
+select cidx, CCHAR8, UCASE(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	UCASE(CCHAR8)
+1	aaaaaaaa	AAAAAAAA
+select cidx, CCHAR9, UCASE(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	UCASE(CCHAR9)
+1	aaaaaaaaa	AAAAAAAAA
+select cidx, CCHAR255, UCASE(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	UCASE(CCHAR255)
+1	aaaaaaaaaa	AAAAAAAAAA
+select cidx, CVCHAR1, UCASE(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	UCASE(CVCHAR1)
+1	a	A
+select cidx, CVCHAR2, UCASE(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	UCASE(CVCHAR2)
+1	aa	AA
+select cidx, CVCHAR3, UCASE(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	UCASE(CVCHAR3)
+1	aaa	AAA
+select cidx, CVCHAR4, UCASE(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	UCASE(CVCHAR4)
+1	aaaa	AAAA
+select cidx, CVCHAR5, UCASE(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	UCASE(CVCHAR5)
+1	aaaaa	AAAAA
+select cidx, CVCHAR6, UCASE(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	UCASE(CVCHAR6)
+1	aaaaaa	AAAAAA
+select cidx, CVCHAR7, UCASE(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	UCASE(CVCHAR7)
+1	aaaaaaa	AAAAAAA
+select cidx, CVCHAR8, UCASE(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	UCASE(CVCHAR8)
+1	aaaaaaaa	AAAAAAAA
+select cidx, CVCHAR255, UCASE(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	UCASE(CVCHAR255)
+1	aaaaaaaaaa	AAAAAAAAAA
+select cidx, CCHAR1 from datatypetestm order by UCASE(CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by UCASE(CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by UCASE(CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by UCASE(CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by UCASE(CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by UCASE(CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by UCASE(CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by UCASE(CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by UCASE(CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by UCASE(CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by UCASE(CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by UCASE(CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by UCASE(CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by UCASE(CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by UCASE(CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by UCASE(CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by UCASE(CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by UCASE(CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by UCASE(CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

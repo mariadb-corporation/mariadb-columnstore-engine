@@ -1,0 +1,229 @@
+USE autopilot;
+select cidx, CCHAR1, MID(CCHAR1,5,2) from datatypetestm order by cidx;
+cidx	CCHAR1	MID(CCHAR1,5,2)
+1	a	NULL
+select cidx, CCHAR1, MID(CCHAR1,9,3) from datatypetestm order by cidx;
+cidx	CCHAR1	MID(CCHAR1,9,3)
+1	a	NULL
+select cidx, CCHAR2, MID(CCHAR2,5,2) from datatypetestm order by cidx;
+cidx	CCHAR2	MID(CCHAR2,5,2)
+1	aa	NULL
+select cidx, CCHAR2, MID(CCHAR2,9,3) from datatypetestm order by cidx;
+cidx	CCHAR2	MID(CCHAR2,9,3)
+1	aa	NULL
+select cidx, CCHAR3, MID(CCHAR3,5,2) from datatypetestm order by cidx;
+cidx	CCHAR3	MID(CCHAR3,5,2)
+1	aaa	NULL
+select cidx, CCHAR3, MID(CCHAR3,9,3) from datatypetestm order by cidx;
+cidx	CCHAR3	MID(CCHAR3,9,3)
+1	aaa	NULL
+select cidx, CCHAR4, MID(CCHAR4,5,2) from datatypetestm order by cidx;
+cidx	CCHAR4	MID(CCHAR4,5,2)
+1	aaaa	NULL
+select cidx, CCHAR4, MID(CCHAR4,9,3) from datatypetestm order by cidx;
+cidx	CCHAR4	MID(CCHAR4,9,3)
+1	aaaa	NULL
+select cidx, CCHAR5, MID(CCHAR5,5,2) from datatypetestm order by cidx;
+cidx	CCHAR5	MID(CCHAR5,5,2)
+1	aaaaa	a
+select cidx, CCHAR5, MID(CCHAR5,9,3) from datatypetestm order by cidx;
+cidx	CCHAR5	MID(CCHAR5,9,3)
+1	aaaaa	NULL
+select cidx, CCHAR6, MID(CCHAR6,5,2) from datatypetestm order by cidx;
+cidx	CCHAR6	MID(CCHAR6,5,2)
+1	aaaaaa	aa
+select cidx, CCHAR6, MID(CCHAR6,9,3) from datatypetestm order by cidx;
+cidx	CCHAR6	MID(CCHAR6,9,3)
+1	aaaaaa	NULL
+select cidx, CCHAR7, MID(CCHAR7,5,2) from datatypetestm order by cidx;
+cidx	CCHAR7	MID(CCHAR7,5,2)
+1	aaaaaaa	aa
+select cidx, CCHAR7, MID(CCHAR7,9,3) from datatypetestm order by cidx;
+cidx	CCHAR7	MID(CCHAR7,9,3)
+1	aaaaaaa	NULL
+select cidx, CCHAR8, MID(CCHAR8,5,2) from datatypetestm order by cidx;
+cidx	CCHAR8	MID(CCHAR8,5,2)
+1	aaaaaaaa	aa
+select cidx, CCHAR8, MID(CCHAR8,9,3) from datatypetestm order by cidx;
+cidx	CCHAR8	MID(CCHAR8,9,3)
+1	aaaaaaaa	NULL
+select cidx, CCHAR9, MID(CCHAR9,5,2) from datatypetestm order by cidx;
+cidx	CCHAR9	MID(CCHAR9,5,2)
+1	aaaaaaaaa	aa
+select cidx, CCHAR9, MID(CCHAR9,9,3) from datatypetestm order by cidx;
+cidx	CCHAR9	MID(CCHAR9,9,3)
+1	aaaaaaaaa	a
+select cidx, CCHAR255, MID(CCHAR255,5,2) from datatypetestm order by cidx;
+cidx	CCHAR255	MID(CCHAR255,5,2)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR255, MID(CCHAR255,9,3) from datatypetestm order by cidx;
+cidx	CCHAR255	MID(CCHAR255,9,3)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR1, MID(CVCHAR1,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR1	MID(CVCHAR1,5,2)
+1	a	NULL
+select cidx, CVCHAR1, MID(CVCHAR1,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR1	MID(CVCHAR1,9,3)
+1	a	NULL
+select cidx, CVCHAR2, MID(CVCHAR2,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR2	MID(CVCHAR2,5,2)
+1	aa	NULL
+select cidx, CVCHAR2, MID(CVCHAR2,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR2	MID(CVCHAR2,9,3)
+1	aa	NULL
+select cidx, CVCHAR3, MID(CVCHAR3,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR3	MID(CVCHAR3,5,2)
+1	aaa	NULL
+select cidx, CVCHAR3, MID(CVCHAR3,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR3	MID(CVCHAR3,9,3)
+1	aaa	NULL
+select cidx, CVCHAR4, MID(CVCHAR4,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR4	MID(CVCHAR4,5,2)
+1	aaaa	NULL
+select cidx, CVCHAR4, MID(CVCHAR4,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR4	MID(CVCHAR4,9,3)
+1	aaaa	NULL
+select cidx, CVCHAR5, MID(CVCHAR5,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR5	MID(CVCHAR5,5,2)
+1	aaaaa	a
+select cidx, CVCHAR5, MID(CVCHAR5,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR5	MID(CVCHAR5,9,3)
+1	aaaaa	NULL
+select cidx, CVCHAR6, MID(CVCHAR6,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR6	MID(CVCHAR6,5,2)
+1	aaaaaa	aa
+select cidx, CVCHAR6, MID(CVCHAR6,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR6	MID(CVCHAR6,9,3)
+1	aaaaaa	NULL
+select cidx, CVCHAR7, MID(CVCHAR7,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR7	MID(CVCHAR7,5,2)
+1	aaaaaaa	aa
+select cidx, CVCHAR7, MID(CVCHAR7,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR7	MID(CVCHAR7,9,3)
+1	aaaaaaa	NULL
+select cidx, CVCHAR8, MID(CVCHAR8,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR8	MID(CVCHAR8,5,2)
+1	aaaaaaaa	aa
+select cidx, CVCHAR8, MID(CVCHAR8,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR8	MID(CVCHAR8,9,3)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR255, MID(CVCHAR255,5,2) from datatypetestm order by cidx;
+cidx	CVCHAR255	MID(CVCHAR255,5,2)
+1	aaaaaaaaaa	aa
+select cidx, CVCHAR255, MID(CVCHAR255,9,3) from datatypetestm order by cidx;
+cidx	CVCHAR255	MID(CVCHAR255,9,3)
+1	aaaaaaaaaa	aa
+select cidx, CCHAR1 from datatypetestm order by MID(CCHAR1,5,2), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by MID(CCHAR1,9,3), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by MID(CCHAR2,5,2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by MID(CCHAR2,9,3), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by MID(CCHAR3,5,2), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by MID(CCHAR3,9,3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by MID(CCHAR4,5,2), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by MID(CCHAR4,9,3), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by MID(CCHAR5,5,2), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by MID(CCHAR5,9,3), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by MID(CCHAR6,5,2), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by MID(CCHAR6,9,3), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by MID(CCHAR7,5,2), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by MID(CCHAR7,9,3), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by MID(CCHAR8,5,2), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by MID(CCHAR8,9,3), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by MID(CCHAR9,5,2), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by MID(CCHAR9,9,3), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by MID(CCHAR255,5,2), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by MID(CCHAR255,9,3), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by MID(CVCHAR1,5,2), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by MID(CVCHAR1,9,3), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by MID(CVCHAR2,5,2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by MID(CVCHAR2,9,3), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by MID(CVCHAR3,5,2), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by MID(CVCHAR3,9,3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by MID(CVCHAR4,5,2), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by MID(CVCHAR4,9,3), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by MID(CVCHAR5,5,2), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by MID(CVCHAR5,9,3), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by MID(CVCHAR6,5,2), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by MID(CVCHAR6,9,3), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by MID(CVCHAR7,5,2), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by MID(CVCHAR7,9,3), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by MID(CVCHAR8,5,2), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by MID(CVCHAR8,9,3), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by MID(CVCHAR255,5,2), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by MID(CVCHAR255,9,3), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

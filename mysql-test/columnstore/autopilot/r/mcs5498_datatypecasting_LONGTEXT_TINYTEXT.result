@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CTINYTEXT ;
+cidx	CLONGTEXT	CTINYTEXT
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CTINYTEXT ;
+cidx	CLONGTEXT	CTINYTEXT
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CTINYTEXT ;
+cidx	CLONGTEXT	CTINYTEXT
+1	longtextlongtextlongtext	tinytext
+2	longtextlongtextlongtext	tinytext
+3	longtextlongtextlongtext	tinytext
+4	longtextlongtextlongtext	tinytext
+5	longtextlongtextlongtext	tinytext
+6	longtextlongtextlongtext	tinytext
+7	longtextlongtextlongtext	tinytext
+8	longtextlongtextlongtext	tinytext
+9	longtextlongtextlongtext	tinytext
+10	longtextlongtextlongtext	tinytext
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CTINYTEXT ;
+cidx	CLONGTEXT	CTINYTEXT
+1	longtextlongtextlongtext	tinytext
+2	longtextlongtextlongtext	tinytext
+3	longtextlongtextlongtext	tinytext
+4	longtextlongtextlongtext	tinytext
+5	longtextlongtextlongtext	tinytext
+6	longtextlongtextlongtext	tinytext
+7	longtextlongtextlongtext	tinytext
+8	longtextlongtextlongtext	tinytext
+9	longtextlongtextlongtext	tinytext
+10	longtextlongtextlongtext	tinytext
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CTINYTEXT ;
+cidx	CLONGTEXT	CTINYTEXT
+1	longtextlongtextlongtext	tinytext
+2	longtextlongtextlongtext	tinytext
+3	longtextlongtextlongtext	tinytext
+4	longtextlongtextlongtext	tinytext
+5	longtextlongtextlongtext	tinytext
+6	longtextlongtextlongtext	tinytext
+7	longtextlongtextlongtext	tinytext
+8	longtextlongtextlongtext	tinytext
+9	longtextlongtextlongtext	tinytext
+10	longtextlongtextlongtext	tinytext

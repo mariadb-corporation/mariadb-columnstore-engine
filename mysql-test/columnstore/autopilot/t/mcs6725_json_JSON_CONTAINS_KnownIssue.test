@@ -1,0 +1,32 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json = '{"A": 0, "B": {"C": 1}, "D": 2}';
+SELECT @json;
+INSERT INTO jsontest VALUES (1, @json, @json);
+#
+SELECT JSON_CONTAINS(@json, '2', '$.A');
+SELECT JSON_CONTAINS(@json, '2', '$.D');
+SELECT JSON_CONTAINS(@json, '{"C": 1}', '$.A');
+SELECT JSON_CONTAINS(@json, '{"C": 1}', '$.B');
+#
+SELECT * FROM jsontest;
+--error 1178
+SELECT cVarchar, JSON_CONTAINS(cVarchar, '2', '$.A'), cText, JSON_CONTAINS(cText, '2', '$.A') from jsontest;
+--error 1178
+SELECT cVarchar, JSON_CONTAINS(cVarchar, '2', '$.D'), cText, JSON_CONTAINS(cText, '2', '$.D') from jsontest;
+--error 1178
+SELECT cVarchar, JSON_CONTAINS(cVarchar, '{"C": 1}', '$.A'), cText, JSON_CONTAINS(cText, '{"C": 1}', '$.A') from jsontest;
+--error 1178
+SELECT cVarchar, JSON_CONTAINS(cVarchar, '{"C": 1}', '$.B'), cText, JSON_CONTAINS(cText, '{"C": 1}', '$.B') from jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

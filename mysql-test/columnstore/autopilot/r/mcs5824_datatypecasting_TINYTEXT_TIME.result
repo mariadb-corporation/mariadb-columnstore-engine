@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT > dtt2.CTIME ;
+cidx	CTINYTEXT	CTIME
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT >= dtt2.CTIME ;
+cidx	CTINYTEXT	CTIME
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <> dtt2.CTIME ;
+cidx	CTINYTEXT	CTIME
+1	tinytext	11:58:28
+2	tinytext	11:58:28
+3	tinytext	11:58:28
+4	tinytext	11:58:28
+5	tinytext	11:58:28
+6	tinytext	11:58:28
+7	tinytext	11:58:28
+8	tinytext	11:58:28
+9	tinytext	11:58:28
+10	tinytext	11:58:28
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT < dtt2.CTIME ;
+cidx	CTINYTEXT	CTIME
+1	tinytext	11:58:28
+2	tinytext	11:58:28
+3	tinytext	11:58:28
+4	tinytext	11:58:28
+5	tinytext	11:58:28
+6	tinytext	11:58:28
+7	tinytext	11:58:28
+8	tinytext	11:58:28
+9	tinytext	11:58:28
+10	tinytext	11:58:28
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <= dtt2.CTIME ;
+cidx	CTINYTEXT	CTIME
+1	tinytext	11:58:28
+2	tinytext	11:58:28
+3	tinytext	11:58:28
+4	tinytext	11:58:28
+5	tinytext	11:58:28
+6	tinytext	11:58:28
+7	tinytext	11:58:28
+8	tinytext	11:58:28
+9	tinytext	11:58:28
+10	tinytext	11:58:28

@@ -1,0 +1,42 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, SHA(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, SHA(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, SHA(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, SHA(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, SHA(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, SHA(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, SHA(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, SHA(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, SHA(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, SHA(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, SHA(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, SHA(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, SHA(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, SHA(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, SHA(CFLOAT) from datatypetestm order by cidx;
+select cidx, SHA('THIS IS A TEST') from datatypetestm order by cidx;
+select cidx, SHA('Hello, World') from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by SHA(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by SHA(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by SHA(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by SHA(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by SHA(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by SHA(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by SHA(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by SHA(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by SHA(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by SHA(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by SHA(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by SHA(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by SHA(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by SHA(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by SHA(CFLOAT), cidx;

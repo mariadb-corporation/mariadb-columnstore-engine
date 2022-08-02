@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT > dtt2.CTINYTEXT ;
+cidx	CFLOAT	CTINYTEXT
+6	3.40286e18	tinytext
+7	3.40286e18	tinytext
+8	3.40286e18	tinytext
+9	3.40287e18	tinytext
+10	3.40287e18	tinytext
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT >= dtt2.CTINYTEXT ;
+cidx	CFLOAT	CTINYTEXT
+6	3.40286e18	tinytext
+7	3.40286e18	tinytext
+8	3.40286e18	tinytext
+9	3.40287e18	tinytext
+10	3.40287e18	tinytext
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <> dtt2.CTINYTEXT ;
+cidx	CFLOAT	CTINYTEXT
+1	-3.40287e18	tinytext
+2	-3.40287e18	tinytext
+3	-3.40286e18	tinytext
+4	-3.40286e18	tinytext
+5	-3.40286e18	tinytext
+6	3.40286e18	tinytext
+7	3.40286e18	tinytext
+8	3.40286e18	tinytext
+9	3.40287e18	tinytext
+10	3.40287e18	tinytext
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT < dtt2.CTINYTEXT ;
+cidx	CFLOAT	CTINYTEXT
+1	-3.40287e18	tinytext
+2	-3.40287e18	tinytext
+3	-3.40286e18	tinytext
+4	-3.40286e18	tinytext
+5	-3.40286e18	tinytext
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <= dtt2.CTINYTEXT ;
+cidx	CFLOAT	CTINYTEXT
+1	-3.40287e18	tinytext
+2	-3.40287e18	tinytext
+3	-3.40286e18	tinytext
+4	-3.40286e18	tinytext
+5	-3.40286e18	tinytext

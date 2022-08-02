@@ -1,0 +1,91 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(1)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(2)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(3)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(4)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(5)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(6)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(7)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(8)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(9)) from datatypetestm ;
+select cidx, CTEXT, CONVERT(CTEXT,CHAR(20)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(1)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(2)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(3)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(4)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(5)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(6)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(7)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(8)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(9)) from datatypetestm ;
+select cidx, CTINYTEXT, CONVERT(CTINYTEXT,CHAR(20)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(1)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(2)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(3)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(4)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(5)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(6)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(7)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(8)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(9)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CONVERT(CMEDIUMTEXT,CHAR(20)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(1)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(2)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(3)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(4)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(5)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(6)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(7)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(8)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(9)) from datatypetestm ;
+select cidx, CLONGTEXT, CONVERT(CLONGTEXT,CHAR(20)) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(1)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(2)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(3)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(4)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(5)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(6)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(7)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(8)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(9)) <> 0 ;
+select cidx, CTEXT from datatypetestm where CONVERT(CTEXT,CHAR(20)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(1)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(2)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(3)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(4)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(5)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(6)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(7)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(8)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(9)) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where CONVERT(CTINYTEXT,CHAR(20)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(1)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(2)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(3)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(4)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(5)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(6)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(7)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(8)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(9)) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where CONVERT(CMEDIUMTEXT,CHAR(20)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(1)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(2)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(3)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(4)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(5)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(6)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(7)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(8)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(9)) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where CONVERT(CLONGTEXT,CHAR(20)) <> 0 ;

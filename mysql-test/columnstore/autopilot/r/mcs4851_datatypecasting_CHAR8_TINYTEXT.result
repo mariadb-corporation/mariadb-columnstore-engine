@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR8, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR8 > dtt2.CTINYTEXT ;
+cidx	CCHAR8	CTINYTEXT
+10	zzzzzzzz	tinytext
+select dtt1.cidx, dtt1.CCHAR8, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR8 >= dtt2.CTINYTEXT ;
+cidx	CCHAR8	CTINYTEXT
+10	zzzzzzzz	tinytext
+select dtt1.cidx, dtt1.CCHAR8, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR8 <> dtt2.CTINYTEXT ;
+cidx	CCHAR8	CTINYTEXT
+1	aaaaaaaa	tinytext
+2	h	tinytext
+3	hh	tinytext
+4	hhh	tinytext
+5	hhhh	tinytext
+6	sssssss	tinytext
+7	ssssssss	tinytext
+8	ssssssss	tinytext
+9	ssssssss	tinytext
+10	zzzzzzzz	tinytext
+select dtt1.cidx, dtt1.CCHAR8, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR8 < dtt2.CTINYTEXT ;
+cidx	CCHAR8	CTINYTEXT
+1	aaaaaaaa	tinytext
+2	h	tinytext
+3	hh	tinytext
+4	hhh	tinytext
+5	hhhh	tinytext
+6	sssssss	tinytext
+7	ssssssss	tinytext
+8	ssssssss	tinytext
+9	ssssssss	tinytext
+select dtt1.cidx, dtt1.CCHAR8, dtt2.CTINYTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR8 <= dtt2.CTINYTEXT ;
+cidx	CCHAR8	CTINYTEXT
+1	aaaaaaaa	tinytext
+2	h	tinytext
+3	hh	tinytext
+4	hhh	tinytext
+5	hhhh	tinytext
+6	sssssss	tinytext
+7	ssssssss	tinytext
+8	ssssssss	tinytext
+9	ssssssss	tinytext

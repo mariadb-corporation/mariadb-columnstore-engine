@@ -1,0 +1,16 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '{ "a": 1, "b": [2, 3]}';
+SELECT @json;
+@json
+{ "a": 1, "b": [2, 3]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_SET(@json, '$.a', 10, '$.c', '[true, false]');
+JSON_SET(@json, '$.a', 10, '$.c', '[true, false]')
+{"a": 10, "b": [2, 3], "c": "[true, false]"}
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{ "a": 1, "b": [2, 3]}	{ "a": 1, "b": [2, 3]}
+SELECT cVarchar, JSON_SET(cVarchar,'$.a', 10, '$.c', '[true, false]'), cText, JSON_SET(cText,'$.a', 10, '$.c', '[true, false]') from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_set' isn't supported.
+TRUNCATE TABLE jsontest;

@@ -1,0 +1,361 @@
+USE autopilot;
+select cidx, CBIGINT, CBIGINT DIV 2 from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT DIV 2
+1	-72036854775806	-36018427387903
+select cidx, CBIGINT, CBIGINT DIV 3 from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT DIV 3
+1	-72036854775806	-24012284925268
+select cidx, CBIGINT, CBIGINT DIV 2.9 from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT DIV 2.9
+1	-72036854775806	-24840294750277
+select cidx, CBIGINT, CBIGINT DIV 5.7 from datatypetestm order by cidx;
+cidx	CBIGINT	CBIGINT DIV 5.7
+1	-72036854775806	-12638044697509
+select cidx, CDECIMAL1, CDECIMAL1 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 DIV 2
+1	-9	-4
+select cidx, CDECIMAL1, CDECIMAL1 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 DIV 3
+1	-9	-3
+select cidx, CDECIMAL1, CDECIMAL1 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 DIV 2.9
+1	-9	-3
+select cidx, CDECIMAL1, CDECIMAL1 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL1	CDECIMAL1 DIV 5.7
+1	-9	-1
+select cidx, CDECIMAL4, CDECIMAL4 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 DIV 2
+1	-999	-499
+select cidx, CDECIMAL4, CDECIMAL4 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 DIV 3
+1	-999	-333
+select cidx, CDECIMAL4, CDECIMAL4 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 DIV 2.9
+1	-999	-344
+select cidx, CDECIMAL4, CDECIMAL4 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL4	CDECIMAL4 DIV 5.7
+1	-999	-175
+select cidx, CDECIMAL4_2, CDECIMAL4_2 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 DIV 2
+1	-9.99	-4
+select cidx, CDECIMAL4_2, CDECIMAL4_2 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 DIV 3
+1	-9.99	-3
+select cidx, CDECIMAL4_2, CDECIMAL4_2 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 DIV 2.9
+1	-9.99	-3
+select cidx, CDECIMAL4_2, CDECIMAL4_2 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CDECIMAL4_2 DIV 5.7
+1	-9.99	-1
+select cidx, CDECIMAL5, CDECIMAL5 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 DIV 2
+1	-999	-499
+select cidx, CDECIMAL5, CDECIMAL5 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 DIV 3
+1	-999	-333
+select cidx, CDECIMAL5, CDECIMAL5 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 DIV 2.9
+1	-999	-344
+select cidx, CDECIMAL5, CDECIMAL5 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL5	CDECIMAL5 DIV 5.7
+1	-999	-175
+select cidx, CDECIMAL9, CDECIMAL9 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 DIV 2
+1	-999999	-499999
+select cidx, CDECIMAL9, CDECIMAL9 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 DIV 3
+1	-999999	-333333
+select cidx, CDECIMAL9, CDECIMAL9 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 DIV 2.9
+1	-999999	-344827
+select cidx, CDECIMAL9, CDECIMAL9 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL9	CDECIMAL9 DIV 5.7
+1	-999999	-175438
+select cidx, CDECIMAL9_2, CDECIMAL9_2 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 DIV 2
+1	-9999.99	-4999
+select cidx, CDECIMAL9_2, CDECIMAL9_2 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 DIV 3
+1	-9999.99	-3333
+select cidx, CDECIMAL9_2, CDECIMAL9_2 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 DIV 2.9
+1	-9999.99	-3448
+select cidx, CDECIMAL9_2, CDECIMAL9_2 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CDECIMAL9_2 DIV 5.7
+1	-9999.99	-1754
+select cidx, CDECIMAL10, CDECIMAL10 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 DIV 2
+1	-9999999	-4999999
+select cidx, CDECIMAL10, CDECIMAL10 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 DIV 3
+1	-9999999	-3333333
+select cidx, CDECIMAL10, CDECIMAL10 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 DIV 2.9
+1	-9999999	-3448275
+select cidx, CDECIMAL10, CDECIMAL10 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL10	CDECIMAL10 DIV 5.7
+1	-9999999	-1754385
+select cidx, CDECIMAL18, CDECIMAL18 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 DIV 2
+1	-9999999999999	-4999999999999
+select cidx, CDECIMAL18, CDECIMAL18 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 DIV 3
+1	-9999999999999	-3333333333333
+select cidx, CDECIMAL18, CDECIMAL18 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 DIV 2.9
+1	-9999999999999	-3448275862068
+select cidx, CDECIMAL18, CDECIMAL18 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL18	CDECIMAL18 DIV 5.7
+1	-9999999999999	-1754385964912
+select cidx, CDECIMAL18_2, CDECIMAL18_2 DIV 2 from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 DIV 2
+1	-99999999999.99	-49999999999
+select cidx, CDECIMAL18_2, CDECIMAL18_2 DIV 3 from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 DIV 3
+1	-99999999999.99	-33333333333
+select cidx, CDECIMAL18_2, CDECIMAL18_2 DIV 2.9 from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 DIV 2.9
+1	-99999999999.99	-34482758620
+select cidx, CDECIMAL18_2, CDECIMAL18_2 DIV 5.7 from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CDECIMAL18_2 DIV 5.7
+1	-99999999999.99	-17543859649
+select cidx, CINTEGER, CINTEGER DIV 2 from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER DIV 2
+1	-7483646	-3741823
+select cidx, CINTEGER, CINTEGER DIV 3 from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER DIV 3
+1	-7483646	-2494548
+select cidx, CINTEGER, CINTEGER DIV 2.9 from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER DIV 2.9
+1	-7483646	-2580567
+select cidx, CINTEGER, CINTEGER DIV 5.7 from datatypetestm order by cidx;
+cidx	CINTEGER	CINTEGER DIV 5.7
+1	-7483646	-1312920
+select cidx, CSMALLINT, CSMALLINT DIV 2 from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT DIV 2
+1	-766	-383
+select cidx, CSMALLINT, CSMALLINT DIV 3 from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT DIV 3
+1	-766	-255
+select cidx, CSMALLINT, CSMALLINT DIV 2.9 from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT DIV 2.9
+1	-766	-264
+select cidx, CSMALLINT, CSMALLINT DIV 5.7 from datatypetestm order by cidx;
+cidx	CSMALLINT	CSMALLINT DIV 5.7
+1	-766	-134
+select cidx, CTINYINT, CTINYINT DIV 2 from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT DIV 2
+1	-26	-13
+select cidx, CTINYINT, CTINYINT DIV 3 from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT DIV 3
+1	-26	-8
+select cidx, CTINYINT, CTINYINT DIV 2.9 from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT DIV 2.9
+1	-26	-8
+select cidx, CTINYINT, CTINYINT DIV 5.7 from datatypetestm order by cidx;
+cidx	CTINYINT	CTINYINT DIV 5.7
+1	-26	-4
+select cidx, CDOUBLE, CDOUBLE DIV 2 from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE DIV 2
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, CDOUBLE DIV 3 from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE DIV 3
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, CDOUBLE DIV 2.9 from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE DIV 2.9
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, CDOUBLE DIV 5.7 from datatypetestm order by cidx;
+cidx	CDOUBLE	CDOUBLE DIV 5.7
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, CFLOAT DIV 2 from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT DIV 2
+1	-3.40287e18	-1701432946210111488
+select cidx, CFLOAT, CFLOAT DIV 3 from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT DIV 3
+1	-3.40287e18	-1134288630806740992
+select cidx, CFLOAT, CFLOAT DIV 2.9 from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT DIV 2.9
+1	-3.40287e18	-1173402031869042432
+select cidx, CFLOAT, CFLOAT DIV 5.7 from datatypetestm order by cidx;
+cidx	CFLOAT	CFLOAT DIV 5.7
+1	-3.40287e18	-596994016214074240
+select cidx, CBIGINT from datatypetestm order by CBIGINT DIV 2, cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CBIGINT DIV 3, cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CBIGINT DIV 2.9, cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CBIGINT DIV 5.7, cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by CDECIMAL1 DIV 2, cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CDECIMAL1 DIV 3, cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CDECIMAL1 DIV 2.9, cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CDECIMAL1 DIV 5.7, cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by CDECIMAL4 DIV 2, cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CDECIMAL4 DIV 3, cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CDECIMAL4 DIV 2.9, cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CDECIMAL4 DIV 5.7, cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by CDECIMAL4_2 DIV 2, cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CDECIMAL4_2 DIV 3, cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CDECIMAL4_2 DIV 2.9, cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CDECIMAL4_2 DIV 5.7, cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by CDECIMAL5 DIV 2, cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CDECIMAL5 DIV 3, cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CDECIMAL5 DIV 2.9, cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CDECIMAL5 DIV 5.7, cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by CDECIMAL9 DIV 2, cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CDECIMAL9 DIV 3, cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CDECIMAL9 DIV 2.9, cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CDECIMAL9 DIV 5.7, cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by CDECIMAL9_2 DIV 2, cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CDECIMAL9_2 DIV 3, cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CDECIMAL9_2 DIV 2.9, cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CDECIMAL9_2 DIV 5.7, cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by CDECIMAL10 DIV 2, cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CDECIMAL10 DIV 3, cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CDECIMAL10 DIV 2.9, cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CDECIMAL10 DIV 5.7, cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by CDECIMAL18 DIV 2, cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CDECIMAL18 DIV 3, cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CDECIMAL18 DIV 2.9, cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CDECIMAL18 DIV 5.7, cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by CDECIMAL18_2 DIV 2, cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CDECIMAL18_2 DIV 3, cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CDECIMAL18_2 DIV 2.9, cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CDECIMAL18_2 DIV 5.7, cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by CINTEGER DIV 2, cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CINTEGER DIV 3, cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CINTEGER DIV 2.9, cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CINTEGER DIV 5.7, cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by CSMALLINT DIV 2, cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CSMALLINT DIV 3, cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CSMALLINT DIV 2.9, cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CSMALLINT DIV 5.7, cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by CTINYINT DIV 2, cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CTINYINT DIV 3, cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CTINYINT DIV 2.9, cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CTINYINT DIV 5.7, cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by CDOUBLE DIV 2, cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CDOUBLE DIV 3, cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CDOUBLE DIV 2.9, cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CDOUBLE DIV 5.7, cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by CFLOAT DIV 2, cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CFLOAT DIV 3, cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CFLOAT DIV 2.9, cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CFLOAT DIV 5.7, cidx;
+cidx	CFLOAT
+1	-3.40287e18

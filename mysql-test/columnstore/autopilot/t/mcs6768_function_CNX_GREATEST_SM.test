@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, GREATEST(CTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CTEXT, GREATEST(CTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTEXT, GREATEST(CTEXT,CCHAR7) from datatypetestm ;
+select cidx, CTEXT, GREATEST(CTEXT,'MAHALO') from datatypetestm ;
+select cidx, CTINYTEXT, GREATEST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CTINYTEXT, GREATEST(CTINYTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTINYTEXT, GREATEST(CTINYTEXT,CCHAR7) from datatypetestm ;
+select cidx, CTINYTEXT, GREATEST(CTINYTEXT,'MAHALO') from datatypetestm ;
+select cidx, CMEDIUMTEXT, GREATEST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CMEDIUMTEXT, GREATEST(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+select cidx, CMEDIUMTEXT, GREATEST(CMEDIUMTEXT,CCHAR7) from datatypetestm ;
+select cidx, CMEDIUMTEXT, GREATEST(CMEDIUMTEXT,'MAHALO') from datatypetestm ;
+select cidx, CLONGTEXT, GREATEST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CLONGTEXT, GREATEST(CLONGTEXT,CCHAR3) from datatypetestm ;
+select cidx, CLONGTEXT, GREATEST(CLONGTEXT,CCHAR7) from datatypetestm ;
+select cidx, CLONGTEXT, GREATEST(CLONGTEXT,'MAHALO') from datatypetestm ;
+select cidx, CTEXT from datatypetestm where GREATEST(CTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CTEXT from datatypetestm where GREATEST(CTEXT,CCHAR3) <> 0 ;
+select cidx, CTEXT from datatypetestm where GREATEST(CTEXT,CCHAR7) <> 0 ;
+select cidx, CTEXT from datatypetestm where GREATEST(CTEXT,'MAHALO') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where GREATEST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where GREATEST(CTINYTEXT,CCHAR3) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where GREATEST(CTINYTEXT,CCHAR7) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where GREATEST(CTINYTEXT,'MAHALO') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where GREATEST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where GREATEST(CMEDIUMTEXT,CCHAR3) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where GREATEST(CMEDIUMTEXT,CCHAR7) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where GREATEST(CMEDIUMTEXT,'MAHALO') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where GREATEST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where GREATEST(CLONGTEXT,CCHAR3) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where GREATEST(CLONGTEXT,CCHAR7) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where GREATEST(CLONGTEXT,'MAHALO') <> 0 ;

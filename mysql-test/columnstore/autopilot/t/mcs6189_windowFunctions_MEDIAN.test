@@ -1,0 +1,18 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot Window functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+use tpch1m;
+#
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY 55 ) from orders order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY o_custkey ) from orders order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY abs(o_custkey) ) from orders order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY abs(o_custkey)+2 ) from orders order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY 55 ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY o_custkey ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY abs(o_custkey) ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, MEDIAN(o_custkey) OVER (PARTITION BY abs(o_custkey)+2 ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;

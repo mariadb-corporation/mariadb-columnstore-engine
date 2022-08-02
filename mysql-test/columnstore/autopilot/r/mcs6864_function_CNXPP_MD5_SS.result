@@ -1,0 +1,50 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MD5(CTEXT) from datatypetestm ;
+cidx	CTEXT	MD5(CTEXT)
+1	texttexttext	87c700e0c3c2e3e47cd1d6566ef3f0b2
+select cidx, CTINYTEXT, MD5(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	MD5(CTINYTEXT)
+1	tinytext	fc53af0bdb795ddb285f583e8c6321f9
+select cidx, CMEDIUMTEXT, MD5(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	MD5(CMEDIUMTEXT)
+1	mediumtestmediumtest	5114712631dab853b18fe776b9683c58
+select cidx, CLONGTEXT, MD5(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	MD5(CLONGTEXT)
+1	longtextlongtextlongtext	7e0efe5c1677c57ee52795837b947284
+select cidx, MD5('this') from datatypetestm ;
+cidx	MD5('this')
+1	9e925e9341b490bfd3b4c4ca3b0c1ef2
+select cidx, MD5('is') from datatypetestm ;
+cidx	MD5('is')
+1	a2a551a6458a8de22446cc76d639a9e9
+select cidx, MD5('a') from datatypetestm ;
+cidx	MD5('a')
+1	0cc175b9c0f1b6a831c399e269772661
+select cidx, MD5('test') from datatypetestm ;
+cidx	MD5('test')
+1	098f6bcd4621d373cade4e832627b4f6
+select cidx, MD5('THIS') from datatypetestm ;
+cidx	MD5('THIS')
+1	c9f869114804f0a61ce9b03def9d71f5
+select cidx, MD5('IS') from datatypetestm ;
+cidx	MD5('IS')
+1	0bfc16cc12effc1bae4d3766c4f2257d
+select cidx, MD5('A') from datatypetestm ;
+cidx	MD5('A')
+1	7fc56270e7a70fa81a5935b72eacbe29
+select cidx, MD5('TEST') from datatypetestm ;
+cidx	MD5('TEST')
+1	033bd94b1168d7e4f0d644c3c95e35bf
+select cidx, CTEXT from datatypetestm order by MD5(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by MD5(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by MD5(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by MD5(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

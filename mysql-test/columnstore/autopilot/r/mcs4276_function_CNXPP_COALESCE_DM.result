@@ -1,0 +1,55 @@
+USE autopilot;
+select cidx, CDATE, COALESCE(CDATE,'2011-01-01',NULL) from datatypetestm order by cidx;
+cidx	CDATE	COALESCE(CDATE,'2011-01-01',NULL)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, COALESCE(CDATE,NULL,'2011-01-02') from datatypetestm order by cidx;
+cidx	CDATE	COALESCE(CDATE,NULL,'2011-01-02')
+1	1997-01-01	1997-01-01
+select cidx, CDATE, COALESCE(CDATE,NULL) from datatypetestm order by cidx;
+cidx	CDATE	COALESCE(CDATE,NULL)
+1	1997-01-01	1997-01-01
+select cidx, CDATETIME, COALESCE(CDATETIME,'2011-01-01',NULL) from datatypetestm order by cidx;
+cidx	CDATETIME	COALESCE(CDATETIME,'2011-01-01',NULL)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, COALESCE(CDATETIME,NULL,'2011-01-02') from datatypetestm order by cidx;
+cidx	CDATETIME	COALESCE(CDATETIME,NULL,'2011-01-02')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, COALESCE(CDATETIME,NULL) from datatypetestm order by cidx;
+cidx	CDATETIME	COALESCE(CDATETIME,NULL)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, COALESCE(CTIME,'2011-01-01',NULL) from datatypetestm order by cidx;
+cidx	CTIME	COALESCE(CTIME,'2011-01-01',NULL)
+1	13:00:00	13:00:00
+select cidx, CTIME, COALESCE(CTIME,NULL,'2011-01-02') from datatypetestm order by cidx;
+cidx	CTIME	COALESCE(CTIME,NULL,'2011-01-02')
+1	13:00:00	13:00:00
+select cidx, CTIME, COALESCE(CTIME,NULL) from datatypetestm order by cidx;
+cidx	CTIME	COALESCE(CTIME,NULL)
+1	13:00:00	13:00:00
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,'2011-01-01',NULL), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,NULL,'2011-01-02'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,NULL), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,'2011-01-01',NULL), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,NULL,'2011-01-02'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,NULL), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,'2011-01-01',NULL), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,NULL,'2011-01-02'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,NULL), cidx;
+cidx	CTIME
+1	13:00:00

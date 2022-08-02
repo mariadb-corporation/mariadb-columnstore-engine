@@ -1,0 +1,35 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CHAR_LENGTH(CTEXT) from datatypetestm ;
+cidx	CTEXT	CHAR_LENGTH(CTEXT)
+1	texttexttext	12
+select cidx, CTINYTEXT, CHAR_LENGTH(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	CHAR_LENGTH(CTINYTEXT)
+1	tinytext	8
+select cidx, CMEDIUMTEXT, CHAR_LENGTH(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	CHAR_LENGTH(CMEDIUMTEXT)
+1	mediumtestmediumtest	20
+select cidx, CLONGTEXT, CHAR_LENGTH(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	CHAR_LENGTH(CLONGTEXT)
+1	longtextlongtextlongtext	24
+select cidx, CHAR_LENGTH(concat('Hello',cchar1)) from datatypetestm ;
+cidx	CHAR_LENGTH(concat('Hello',cchar1))
+1	6
+select cidx, CHAR_LENGTH(concat('World',cchar1)) from datatypetestm ;
+cidx	CHAR_LENGTH(concat('World',cchar1))
+1	6
+select cidx, CHAR_LENGTH(concat(cchar1,'KingKamahamaha')) from datatypetestm ;
+cidx	CHAR_LENGTH(concat(cchar1,'KingKamahamaha'))
+1	15
+select cidx, CTEXT from datatypetestm order by CHAR_LENGTH(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by CHAR_LENGTH(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by CHAR_LENGTH(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by CHAR_LENGTH(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, RADIANS(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, RADIANS(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, RADIANS(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, RADIANS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, RADIANS(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, RADIANS(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, RADIANS(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, RADIANS(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, RADIANS(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, RADIANS(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, RADIANS(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, RADIANS(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, RADIANS(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, RADIANS(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, RADIANS(CFLOAT) from datatypetestm order by cidx;
+select cidx, RADIANS(0*cidx) from datatypetestm order by cidx;
+select cidx, RADIANS(60*cidx) from datatypetestm order by cidx;
+select cidx, RADIANS(90*cidx) from datatypetestm order by cidx;
+select cidx, RADIANS(180*cidx) from datatypetestm order by cidx;
+select cidx, RADIANS(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by RADIANS(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by RADIANS(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by RADIANS(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by RADIANS(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by RADIANS(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by RADIANS(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by RADIANS(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by RADIANS(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by RADIANS(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by RADIANS(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by RADIANS(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by RADIANS(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by RADIANS(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by RADIANS(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by RADIANS(CFLOAT), cidx;

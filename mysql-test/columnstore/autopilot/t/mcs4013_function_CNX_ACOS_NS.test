@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, ACOS(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, ACOS(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, ACOS(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, ACOS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, ACOS(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, ACOS(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, ACOS(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, ACOS(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, ACOS(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, ACOS(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, ACOS(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, ACOS(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, ACOS(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, ACOS(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, ACOS(CFLOAT) from datatypetestm order by cidx;
+select cidx, ACOS(0*cidx) from datatypetestm order by cidx;
+select cidx, ACOS(60*cidx) from datatypetestm order by cidx;
+select cidx, ACOS(90*cidx) from datatypetestm order by cidx;
+select cidx, ACOS(180*cidx) from datatypetestm order by cidx;
+select cidx, ACOS(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where ACOS(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where ACOS(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where ACOS(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where ACOS(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where ACOS(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where ACOS(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where ACOS(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where ACOS(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where ACOS(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where ACOS(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where ACOS(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where ACOS(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where ACOS(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where ACOS(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where ACOS(CFLOAT) <> 0 order by cidx;

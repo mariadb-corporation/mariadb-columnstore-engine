@@ -1,0 +1,11 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = (SELECT JSON_OBJECT("id", 1, "name", "Monty"));
+SELECT @json;
+@json
+{"id": 1, "name": "Monty"}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"id": 1, "name": "Monty"}	{"id": 1, "name": "Monty"}
+TRUNCATE TABLE jsontest;

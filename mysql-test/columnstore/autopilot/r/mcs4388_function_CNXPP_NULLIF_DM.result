@@ -1,0 +1,199 @@
+USE autopilot;
+select cidx, CDATE, NULLIF(CDATE,CDATE) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CDATE)
+1	1997-01-01	NULL
+select cidx, CDATE, NULLIF(CDATE,CDATETIME) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CDATETIME)
+1	1997-01-01	NULL
+select cidx, CDATE, NULLIF(CDATE,CCHAR4) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CCHAR4)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CCHAR9) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CCHAR9)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CVCHAR4) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CVCHAR4)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CVCHAR8) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CVCHAR8)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CINTEGER) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CINTEGER)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CDOUBLE)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,CDECIMAL9_2)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,NULL) from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,NULL)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, NULLIF(CDATE,'Hello world') from datatypetestm order by cidx;
+cidx	CDATE	NULLIF(CDATE,'Hello world')
+1	1997-01-01	1997-01-01
+select cidx, CDATETIME, NULLIF(CDATETIME,CDATE) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CDATE)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, NULLIF(CDATETIME,CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CDATETIME)
+1	1997-01-01 00:00:00	NULL
+select cidx, CDATETIME, NULLIF(CDATETIME,CCHAR4) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CCHAR4)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CCHAR9) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CCHAR9)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CVCHAR4) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CVCHAR4)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CVCHAR8) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CVCHAR8)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CINTEGER) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CINTEGER)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CDOUBLE)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,CDECIMAL9_2)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,NULL) from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,NULL)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, NULLIF(CDATETIME,'Hello world') from datatypetestm order by cidx;
+cidx	CDATETIME	NULLIF(CDATETIME,'Hello world')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, NULLIF(CTIME,CDATE) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CDATE)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CDATETIME) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CDATETIME)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CCHAR4) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CCHAR4)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CCHAR9) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CCHAR9)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CVCHAR4) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CVCHAR4)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CVCHAR8) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CVCHAR8)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CINTEGER) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CINTEGER)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CDOUBLE) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CDOUBLE)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,CDECIMAL9_2)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,NULL) from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,NULL)
+1	13:00:00	13:00:00
+select cidx, CTIME, NULLIF(CTIME,'Hello world') from datatypetestm order by cidx;
+cidx	CTIME	NULLIF(CTIME,'Hello world')
+1	13:00:00	13:00:00
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDATETIME), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CCHAR4), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CCHAR9), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CVCHAR4), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CVCHAR8), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CINTEGER), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDOUBLE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,CDECIMAL9_2), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,NULL), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by NULLIF(CDATE,'Hello world'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDATE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CCHAR4), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CCHAR9), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CVCHAR4), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CVCHAR8), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CINTEGER), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDOUBLE), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,CDECIMAL9_2), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,NULL), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by NULLIF(CDATETIME,'Hello world'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDATE), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDATETIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CCHAR4), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CCHAR9), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CVCHAR4), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CVCHAR8), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CINTEGER), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDOUBLE), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,CDECIMAL9_2), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,NULL), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by NULLIF(CTIME,'Hello world'), cidx;
+cidx	CTIME
+1	13:00:00

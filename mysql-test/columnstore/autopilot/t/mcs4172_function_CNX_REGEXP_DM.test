@@ -1,0 +1,34 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CDATE REGEXP '(1997)+' from datatypetestm order by cidx;
+select cidx, CDATE, CDATE REGEXP '01$' from datatypetestm order by cidx;
+select cidx, CDATE, CDATE REGEXP '(59)+' from datatypetestm order by cidx;
+select cidx, CDATE, CDATE REGEXP '(09-12-)+' from datatypetestm order by cidx;
+select cidx, CDATETIME, CDATETIME REGEXP '(1997)+' from datatypetestm order by cidx;
+select cidx, CDATETIME, CDATETIME REGEXP '01$' from datatypetestm order by cidx;
+select cidx, CDATETIME, CDATETIME REGEXP '(59)+' from datatypetestm order by cidx;
+select cidx, CDATETIME, CDATETIME REGEXP '(09-12-)+' from datatypetestm order by cidx;
+select cidx, CTIME, CTIME REGEXP '(1997)+' from datatypetestm order by cidx;
+select cidx, CTIME, CTIME REGEXP '01$' from datatypetestm order by cidx;
+select cidx, CTIME, CTIME REGEXP '(59)+' from datatypetestm order by cidx;
+select cidx, CTIME, CTIME REGEXP '(09-12-)+' from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(1997)+' <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '01$' <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(59)+' <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(09-12-)+' <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(1997)+' <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '01$' <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(59)+' <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(09-12-)+' <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(1997)+' <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CTIME REGEXP '01$' <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(59)+' <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(09-12-)+' <> 0 order by cidx;

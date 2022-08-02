@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT > dtt2.CTIME ;
+cidx	CSMALLINT	CTIME
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT >= dtt2.CTIME ;
+cidx	CSMALLINT	CTIME
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <> dtt2.CTIME ;
+cidx	CSMALLINT	CTIME
+1	-766	11:58:28
+2	-765	11:58:28
+3	-764	11:58:28
+4	-763	11:58:28
+5	-762	11:58:28
+6	763	11:58:28
+7	764	11:58:28
+8	765	11:58:28
+9	766	11:58:28
+10	767	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT < dtt2.CTIME ;
+cidx	CSMALLINT	CTIME
+1	-766	11:58:28
+2	-765	11:58:28
+3	-764	11:58:28
+4	-763	11:58:28
+5	-762	11:58:28
+6	763	11:58:28
+7	764	11:58:28
+8	765	11:58:28
+9	766	11:58:28
+10	767	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <= dtt2.CTIME ;
+cidx	CSMALLINT	CTIME
+1	-766	11:58:28
+2	-765	11:58:28
+3	-764	11:58:28
+4	-763	11:58:28
+5	-762	11:58:28
+6	763	11:58:28
+7	764	11:58:28
+8	765	11:58:28
+9	766	11:58:28
+10	767	11:58:28
+11	0	11:58:28

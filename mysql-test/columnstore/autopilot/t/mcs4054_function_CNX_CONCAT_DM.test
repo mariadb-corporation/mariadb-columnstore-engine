@@ -1,0 +1,34 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CONCAT(CDATE,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATE, CONCAT(CDATE,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDATE, CONCAT(CDATE,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDATE, CONCAT(CDATE,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR3) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR7) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONCAT(CDATETIME,'ALOHA') from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT(CTIME,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT(CTIME,CCHAR3) from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT(CTIME,CCHAR7) from datatypetestm order by cidx;
+select cidx, CTIME, CONCAT(CTIME,'ALOHA') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR3) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR7) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,'ALOHA') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR3) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR7) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,'ALOHA') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR3) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR7) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,'ALOHA') <> 0 order by cidx;

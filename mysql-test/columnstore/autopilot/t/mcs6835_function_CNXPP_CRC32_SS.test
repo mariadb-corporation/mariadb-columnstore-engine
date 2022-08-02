@@ -1,0 +1,25 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CRC32(CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, CRC32(CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CRC32(CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, CRC32(CLONGTEXT) from datatypetestm ;
+select cidx, CRC32('NULL') from datatypetestm ;
+select cidx, CRC32('null') from datatypetestm ;
+select cidx, CRC32(' ') from datatypetestm ;
+select cidx, CRC32(' THIS ') from datatypetestm ;
+select cidx, CRC32('this') from datatypetestm ;
+select cidx, CRC32('t') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by CRC32(CTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CRC32(CTINYTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CRC32(CMEDIUMTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CRC32(CLONGTEXT), cidx;

@@ -1,0 +1,15 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @tmpstr = '56, 3.1416, \'My name is "Foo"\', NULL';
+SELECT @tmpstr;
+@tmpstr
+56, 3.1416, 'My name is "Foo"', NULL
+SET @json = (SELECT JSON_ARRAY(@tmpstr));
+SELECT @json;
+@json
+["56, 3.1416, 'My name is \"Foo\"', NULL"]
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	["56, 3.1416, 'My name is \"Foo\"', NULL"]	["56, 3.1416, 'My name is \"Foo\"', NULL"]
+TRUNCATE TABLE jsontest;

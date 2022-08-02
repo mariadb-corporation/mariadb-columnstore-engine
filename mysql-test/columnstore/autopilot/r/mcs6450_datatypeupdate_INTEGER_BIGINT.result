@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CBIGINT = CINTEGER;
+SELECT CBIGINT FROM datatypeupdate;
+CBIGINT
+-7483646
+ROLLBACK;

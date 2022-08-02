@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR5, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR5 > dtt2.CVCHAR7 ;
+cidx	CCHAR5	CVCHAR7
+6	vvvvv	ttttttt
+7	vvvvv	ttttttt
+8	vvvvv	ttttttt
+9	vvvvv	ttttttt
+select dtt1.cidx, dtt1.CCHAR5, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR5 >= dtt2.CVCHAR7 ;
+cidx	CCHAR5	CVCHAR7
+6	vvvvv	ttttttt
+7	vvvvv	ttttttt
+8	vvvvv	ttttttt
+9	vvvvv	ttttttt
+select dtt1.cidx, dtt1.CCHAR5, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR5 <> dtt2.CVCHAR7 ;
+cidx	CCHAR5	CVCHAR7
+1	aaaaa	aaaaaaa
+2	e	g
+3	ee	gg
+4	eee	ggg
+5	eeee	gggg
+6	vvvvv	ttttttt
+7	vvvvv	ttttttt
+8	vvvvv	ttttttt
+9	vvvvv	ttttttt
+10	zzzzz	zzzzzzz
+select dtt1.cidx, dtt1.CCHAR5, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR5 < dtt2.CVCHAR7 ;
+cidx	CCHAR5	CVCHAR7
+1	aaaaa	aaaaaaa
+2	e	g
+3	ee	gg
+4	eee	ggg
+5	eeee	gggg
+10	zzzzz	zzzzzzz
+select dtt1.cidx, dtt1.CCHAR5, dtt2.CVCHAR7 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR5 <= dtt2.CVCHAR7 ;
+cidx	CCHAR5	CVCHAR7
+1	aaaaa	aaaaaaa
+2	e	g
+3	ee	gg
+4	eee	ggg
+5	eeee	gggg
+10	zzzzz	zzzzzzz

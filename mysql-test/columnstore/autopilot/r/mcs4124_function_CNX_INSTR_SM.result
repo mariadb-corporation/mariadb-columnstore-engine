@@ -1,0 +1,396 @@
+USE autopilot;
+select cidx, CCHAR1, INSTR(CCHAR1,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR1	INSTR(CCHAR1,'aaa')
+1	a	0
+select cidx, CCHAR1, INSTR(CCHAR1,'zz') from datatypetestm order by cidx;
+cidx	CCHAR1	INSTR(CCHAR1,'zz')
+1	a	0
+select cidx, CCHAR1, INSTR(CCHAR1,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR1	INSTR(CCHAR1,'aaaaaaaaaaaa')
+1	a	0
+select cidx, CCHAR1, INSTR(CCHAR1,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR1	INSTR(CCHAR1,'zzzzzzzzzzzzzz')
+1	a	0
+select cidx, CCHAR2, INSTR(CCHAR2,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR2	INSTR(CCHAR2,'aaa')
+1	aa	0
+select cidx, CCHAR2, INSTR(CCHAR2,'zz') from datatypetestm order by cidx;
+cidx	CCHAR2	INSTR(CCHAR2,'zz')
+1	aa	0
+select cidx, CCHAR2, INSTR(CCHAR2,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR2	INSTR(CCHAR2,'aaaaaaaaaaaa')
+1	aa	0
+select cidx, CCHAR2, INSTR(CCHAR2,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR2	INSTR(CCHAR2,'zzzzzzzzzzzzzz')
+1	aa	0
+select cidx, CCHAR3, INSTR(CCHAR3,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR3	INSTR(CCHAR3,'aaa')
+1	aaa	1
+select cidx, CCHAR3, INSTR(CCHAR3,'zz') from datatypetestm order by cidx;
+cidx	CCHAR3	INSTR(CCHAR3,'zz')
+1	aaa	0
+select cidx, CCHAR3, INSTR(CCHAR3,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR3	INSTR(CCHAR3,'aaaaaaaaaaaa')
+1	aaa	0
+select cidx, CCHAR3, INSTR(CCHAR3,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR3	INSTR(CCHAR3,'zzzzzzzzzzzzzz')
+1	aaa	0
+select cidx, CCHAR4, INSTR(CCHAR4,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR4	INSTR(CCHAR4,'aaa')
+1	aaaa	1
+select cidx, CCHAR4, INSTR(CCHAR4,'zz') from datatypetestm order by cidx;
+cidx	CCHAR4	INSTR(CCHAR4,'zz')
+1	aaaa	0
+select cidx, CCHAR4, INSTR(CCHAR4,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR4	INSTR(CCHAR4,'aaaaaaaaaaaa')
+1	aaaa	0
+select cidx, CCHAR4, INSTR(CCHAR4,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR4	INSTR(CCHAR4,'zzzzzzzzzzzzzz')
+1	aaaa	0
+select cidx, CCHAR5, INSTR(CCHAR5,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR5	INSTR(CCHAR5,'aaa')
+1	aaaaa	1
+select cidx, CCHAR5, INSTR(CCHAR5,'zz') from datatypetestm order by cidx;
+cidx	CCHAR5	INSTR(CCHAR5,'zz')
+1	aaaaa	0
+select cidx, CCHAR5, INSTR(CCHAR5,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR5	INSTR(CCHAR5,'aaaaaaaaaaaa')
+1	aaaaa	0
+select cidx, CCHAR5, INSTR(CCHAR5,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR5	INSTR(CCHAR5,'zzzzzzzzzzzzzz')
+1	aaaaa	0
+select cidx, CCHAR6, INSTR(CCHAR6,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR6	INSTR(CCHAR6,'aaa')
+1	aaaaaa	1
+select cidx, CCHAR6, INSTR(CCHAR6,'zz') from datatypetestm order by cidx;
+cidx	CCHAR6	INSTR(CCHAR6,'zz')
+1	aaaaaa	0
+select cidx, CCHAR6, INSTR(CCHAR6,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR6	INSTR(CCHAR6,'aaaaaaaaaaaa')
+1	aaaaaa	0
+select cidx, CCHAR6, INSTR(CCHAR6,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR6	INSTR(CCHAR6,'zzzzzzzzzzzzzz')
+1	aaaaaa	0
+select cidx, CCHAR7, INSTR(CCHAR7,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR7	INSTR(CCHAR7,'aaa')
+1	aaaaaaa	1
+select cidx, CCHAR7, INSTR(CCHAR7,'zz') from datatypetestm order by cidx;
+cidx	CCHAR7	INSTR(CCHAR7,'zz')
+1	aaaaaaa	0
+select cidx, CCHAR7, INSTR(CCHAR7,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR7	INSTR(CCHAR7,'aaaaaaaaaaaa')
+1	aaaaaaa	0
+select cidx, CCHAR7, INSTR(CCHAR7,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR7	INSTR(CCHAR7,'zzzzzzzzzzzzzz')
+1	aaaaaaa	0
+select cidx, CCHAR8, INSTR(CCHAR8,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR8	INSTR(CCHAR8,'aaa')
+1	aaaaaaaa	1
+select cidx, CCHAR8, INSTR(CCHAR8,'zz') from datatypetestm order by cidx;
+cidx	CCHAR8	INSTR(CCHAR8,'zz')
+1	aaaaaaaa	0
+select cidx, CCHAR8, INSTR(CCHAR8,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR8	INSTR(CCHAR8,'aaaaaaaaaaaa')
+1	aaaaaaaa	0
+select cidx, CCHAR8, INSTR(CCHAR8,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR8	INSTR(CCHAR8,'zzzzzzzzzzzzzz')
+1	aaaaaaaa	0
+select cidx, CCHAR9, INSTR(CCHAR9,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR9	INSTR(CCHAR9,'aaa')
+1	aaaaaaaaa	1
+select cidx, CCHAR9, INSTR(CCHAR9,'zz') from datatypetestm order by cidx;
+cidx	CCHAR9	INSTR(CCHAR9,'zz')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, INSTR(CCHAR9,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR9	INSTR(CCHAR9,'aaaaaaaaaaaa')
+1	aaaaaaaaa	0
+select cidx, CCHAR9, INSTR(CCHAR9,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR9	INSTR(CCHAR9,'zzzzzzzzzzzzzz')
+1	aaaaaaaaa	0
+select cidx, CCHAR255, INSTR(CCHAR255,'aaa') from datatypetestm order by cidx;
+cidx	CCHAR255	INSTR(CCHAR255,'aaa')
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, INSTR(CCHAR255,'zz') from datatypetestm order by cidx;
+cidx	CCHAR255	INSTR(CCHAR255,'zz')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, INSTR(CCHAR255,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CCHAR255	INSTR(CCHAR255,'aaaaaaaaaaaa')
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, INSTR(CCHAR255,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR255	INSTR(CCHAR255,'zzzzzzzzzzzzzz')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR1, INSTR(CVCHAR1,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR1	INSTR(CVCHAR1,'aaa')
+1	a	0
+select cidx, CVCHAR1, INSTR(CVCHAR1,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR1	INSTR(CVCHAR1,'zz')
+1	a	0
+select cidx, CVCHAR1, INSTR(CVCHAR1,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR1	INSTR(CVCHAR1,'aaaaaaaaaaaa')
+1	a	0
+select cidx, CVCHAR1, INSTR(CVCHAR1,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR1	INSTR(CVCHAR1,'zzzzzzzzzzzzzz')
+1	a	0
+select cidx, CVCHAR2, INSTR(CVCHAR2,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR2	INSTR(CVCHAR2,'aaa')
+1	aa	0
+select cidx, CVCHAR2, INSTR(CVCHAR2,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR2	INSTR(CVCHAR2,'zz')
+1	aa	0
+select cidx, CVCHAR2, INSTR(CVCHAR2,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR2	INSTR(CVCHAR2,'aaaaaaaaaaaa')
+1	aa	0
+select cidx, CVCHAR2, INSTR(CVCHAR2,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR2	INSTR(CVCHAR2,'zzzzzzzzzzzzzz')
+1	aa	0
+select cidx, CVCHAR3, INSTR(CVCHAR3,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR3	INSTR(CVCHAR3,'aaa')
+1	aaa	1
+select cidx, CVCHAR3, INSTR(CVCHAR3,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR3	INSTR(CVCHAR3,'zz')
+1	aaa	0
+select cidx, CVCHAR3, INSTR(CVCHAR3,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR3	INSTR(CVCHAR3,'aaaaaaaaaaaa')
+1	aaa	0
+select cidx, CVCHAR3, INSTR(CVCHAR3,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR3	INSTR(CVCHAR3,'zzzzzzzzzzzzzz')
+1	aaa	0
+select cidx, CVCHAR4, INSTR(CVCHAR4,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR4	INSTR(CVCHAR4,'aaa')
+1	aaaa	1
+select cidx, CVCHAR4, INSTR(CVCHAR4,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR4	INSTR(CVCHAR4,'zz')
+1	aaaa	0
+select cidx, CVCHAR4, INSTR(CVCHAR4,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR4	INSTR(CVCHAR4,'aaaaaaaaaaaa')
+1	aaaa	0
+select cidx, CVCHAR4, INSTR(CVCHAR4,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR4	INSTR(CVCHAR4,'zzzzzzzzzzzzzz')
+1	aaaa	0
+select cidx, CVCHAR5, INSTR(CVCHAR5,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR5	INSTR(CVCHAR5,'aaa')
+1	aaaaa	1
+select cidx, CVCHAR5, INSTR(CVCHAR5,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR5	INSTR(CVCHAR5,'zz')
+1	aaaaa	0
+select cidx, CVCHAR5, INSTR(CVCHAR5,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR5	INSTR(CVCHAR5,'aaaaaaaaaaaa')
+1	aaaaa	0
+select cidx, CVCHAR5, INSTR(CVCHAR5,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR5	INSTR(CVCHAR5,'zzzzzzzzzzzzzz')
+1	aaaaa	0
+select cidx, CVCHAR6, INSTR(CVCHAR6,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR6	INSTR(CVCHAR6,'aaa')
+1	aaaaaa	1
+select cidx, CVCHAR6, INSTR(CVCHAR6,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR6	INSTR(CVCHAR6,'zz')
+1	aaaaaa	0
+select cidx, CVCHAR6, INSTR(CVCHAR6,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR6	INSTR(CVCHAR6,'aaaaaaaaaaaa')
+1	aaaaaa	0
+select cidx, CVCHAR6, INSTR(CVCHAR6,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR6	INSTR(CVCHAR6,'zzzzzzzzzzzzzz')
+1	aaaaaa	0
+select cidx, CVCHAR7, INSTR(CVCHAR7,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR7	INSTR(CVCHAR7,'aaa')
+1	aaaaaaa	1
+select cidx, CVCHAR7, INSTR(CVCHAR7,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR7	INSTR(CVCHAR7,'zz')
+1	aaaaaaa	0
+select cidx, CVCHAR7, INSTR(CVCHAR7,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR7	INSTR(CVCHAR7,'aaaaaaaaaaaa')
+1	aaaaaaa	0
+select cidx, CVCHAR7, INSTR(CVCHAR7,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR7	INSTR(CVCHAR7,'zzzzzzzzzzzzzz')
+1	aaaaaaa	0
+select cidx, CVCHAR8, INSTR(CVCHAR8,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR8	INSTR(CVCHAR8,'aaa')
+1	aaaaaaaa	1
+select cidx, CVCHAR8, INSTR(CVCHAR8,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR8	INSTR(CVCHAR8,'zz')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, INSTR(CVCHAR8,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR8	INSTR(CVCHAR8,'aaaaaaaaaaaa')
+1	aaaaaaaa	0
+select cidx, CVCHAR8, INSTR(CVCHAR8,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR8	INSTR(CVCHAR8,'zzzzzzzzzzzzzz')
+1	aaaaaaaa	0
+select cidx, CVCHAR255, INSTR(CVCHAR255,'aaa') from datatypetestm order by cidx;
+cidx	CVCHAR255	INSTR(CVCHAR255,'aaa')
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, INSTR(CVCHAR255,'zz') from datatypetestm order by cidx;
+cidx	CVCHAR255	INSTR(CVCHAR255,'zz')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, INSTR(CVCHAR255,'aaaaaaaaaaaa') from datatypetestm order by cidx;
+cidx	CVCHAR255	INSTR(CVCHAR255,'aaaaaaaaaaaa')
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, INSTR(CVCHAR255,'zzzzzzzzzzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR255	INSTR(CVCHAR255,'zzzzzzzzzzzzzz')
+1	aaaaaaaaaa	0
+select cidx, CCHAR1 from datatypetestm where INSTR(CCHAR1,'aaa') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where INSTR(CCHAR1,'zz') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where INSTR(CCHAR1,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where INSTR(CCHAR1,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where INSTR(CCHAR2,'aaa') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where INSTR(CCHAR2,'zz') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where INSTR(CCHAR2,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where INSTR(CCHAR2,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where INSTR(CCHAR3,'aaa') <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where INSTR(CCHAR3,'zz') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where INSTR(CCHAR3,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where INSTR(CCHAR3,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where INSTR(CCHAR4,'aaa') <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where INSTR(CCHAR4,'zz') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where INSTR(CCHAR4,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where INSTR(CCHAR4,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where INSTR(CCHAR5,'aaa') <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where INSTR(CCHAR5,'zz') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where INSTR(CCHAR5,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where INSTR(CCHAR5,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where INSTR(CCHAR6,'aaa') <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where INSTR(CCHAR6,'zz') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where INSTR(CCHAR6,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where INSTR(CCHAR6,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where INSTR(CCHAR7,'aaa') <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where INSTR(CCHAR7,'zz') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where INSTR(CCHAR7,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where INSTR(CCHAR7,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where INSTR(CCHAR8,'aaa') <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where INSTR(CCHAR8,'zz') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where INSTR(CCHAR8,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where INSTR(CCHAR8,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where INSTR(CCHAR9,'aaa') <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where INSTR(CCHAR9,'zz') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where INSTR(CCHAR9,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where INSTR(CCHAR9,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where INSTR(CCHAR255,'aaa') <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where INSTR(CCHAR255,'zz') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where INSTR(CCHAR255,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where INSTR(CCHAR255,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where INSTR(CVCHAR1,'aaa') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where INSTR(CVCHAR1,'zz') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where INSTR(CVCHAR1,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where INSTR(CVCHAR1,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where INSTR(CVCHAR2,'aaa') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where INSTR(CVCHAR2,'zz') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where INSTR(CVCHAR2,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where INSTR(CVCHAR2,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where INSTR(CVCHAR3,'aaa') <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where INSTR(CVCHAR3,'zz') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where INSTR(CVCHAR3,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where INSTR(CVCHAR3,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where INSTR(CVCHAR4,'aaa') <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where INSTR(CVCHAR4,'zz') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where INSTR(CVCHAR4,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where INSTR(CVCHAR4,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where INSTR(CVCHAR5,'aaa') <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where INSTR(CVCHAR5,'zz') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where INSTR(CVCHAR5,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where INSTR(CVCHAR5,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where INSTR(CVCHAR6,'aaa') <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where INSTR(CVCHAR6,'zz') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where INSTR(CVCHAR6,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where INSTR(CVCHAR6,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where INSTR(CVCHAR7,'aaa') <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where INSTR(CVCHAR7,'zz') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where INSTR(CVCHAR7,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where INSTR(CVCHAR7,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where INSTR(CVCHAR8,'aaa') <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where INSTR(CVCHAR8,'zz') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where INSTR(CVCHAR8,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where INSTR(CVCHAR8,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where INSTR(CVCHAR255,'aaa') <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where INSTR(CVCHAR255,'zz') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where INSTR(CVCHAR255,'aaaaaaaaaaaa') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where INSTR(CVCHAR255,'zzzzzzzzzzzzzz') <> 0 order by cidx;
+cidx	CVCHAR255

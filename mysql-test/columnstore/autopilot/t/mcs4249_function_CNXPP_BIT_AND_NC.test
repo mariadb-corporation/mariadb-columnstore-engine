@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select BIT_AND(CBIGINT) from datatypetestm;
+select BIT_AND(CDECIMAL1) from datatypetestm;
+select BIT_AND(CDECIMAL4) from datatypetestm;
+select BIT_AND(CDECIMAL4_2) from datatypetestm;
+select BIT_AND(CDECIMAL5) from datatypetestm;
+select BIT_AND(CDECIMAL9) from datatypetestm;
+select BIT_AND(CDECIMAL9_2) from datatypetestm;
+select BIT_AND(CDECIMAL10) from datatypetestm;
+select BIT_AND(CDECIMAL18) from datatypetestm;
+select BIT_AND(CDECIMAL18_2) from datatypetestm;
+select BIT_AND(CINTEGER) from datatypetestm;
+select BIT_AND(CSMALLINT) from datatypetestm;
+select BIT_AND(CTINYINT) from datatypetestm;
+select BIT_AND(CDOUBLE) from datatypetestm;
+select BIT_AND(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, BIT_AND(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, BIT_AND(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, BIT_AND(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, BIT_AND(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, BIT_AND(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, BIT_AND(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, BIT_AND(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, BIT_AND(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, BIT_AND(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, BIT_AND(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, BIT_AND(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, BIT_AND(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, BIT_AND(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, BIT_AND(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, BIT_AND(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

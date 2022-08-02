@@ -1,0 +1,100 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, CAST(CBIGINT AS SIGNED) from datatypetestm order by cidx;
+select cidx, CBIGINT, CAST(CBIGINT AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CBIGINT, CAST(CBIGINT AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CAST(CDECIMAL1 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CAST(CDECIMAL1 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CAST(CDECIMAL1 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CAST(CDECIMAL4 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CAST(CDECIMAL4 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CAST(CDECIMAL4 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CAST(CDECIMAL4_2 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CAST(CDECIMAL4_2 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CAST(CDECIMAL4_2 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CAST(CDECIMAL5 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CAST(CDECIMAL5 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CAST(CDECIMAL5 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CAST(CDECIMAL9 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CAST(CDECIMAL9 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CAST(CDECIMAL9 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CAST(CDECIMAL9_2 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CAST(CDECIMAL9_2 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CAST(CDECIMAL9_2 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CAST(CDECIMAL10 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CAST(CDECIMAL10 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CAST(CDECIMAL10 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CAST(CDECIMAL18 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CAST(CDECIMAL18 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CAST(CDECIMAL18 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CAST(CDECIMAL18_2 AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CAST(CDECIMAL18_2 AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CAST(CDECIMAL18_2 AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CINTEGER, CAST(CINTEGER AS SIGNED) from datatypetestm order by cidx;
+select cidx, CINTEGER, CAST(CINTEGER AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CINTEGER, CAST(CINTEGER AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CAST(CSMALLINT AS SIGNED) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CAST(CSMALLINT AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CAST(CSMALLINT AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CTINYINT, CAST(CTINYINT AS SIGNED) from datatypetestm order by cidx;
+select cidx, CTINYINT, CAST(CTINYINT AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CTINYINT, CAST(CTINYINT AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CAST(CDOUBLE AS SIGNED) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CAST(CDOUBLE AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CAST(CDOUBLE AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CFLOAT, CAST(CFLOAT AS SIGNED) from datatypetestm order by cidx;
+select cidx, CFLOAT, CAST(CFLOAT AS DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CFLOAT, CAST(CFLOAT AS DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by CAST(CBIGINT AS SIGNED), cidx;
+select cidx, CBIGINT from datatypetestm order by CAST(CBIGINT AS DECIMAL(9)), cidx;
+select cidx, CBIGINT from datatypetestm order by CAST(CBIGINT AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CAST(CDECIMAL1 AS SIGNED), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CAST(CDECIMAL1 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CAST(CDECIMAL1 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CAST(CDECIMAL4 AS SIGNED), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CAST(CDECIMAL4 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CAST(CDECIMAL4 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CAST(CDECIMAL4_2 AS SIGNED), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CAST(CDECIMAL4_2 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CAST(CDECIMAL4_2 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CAST(CDECIMAL5 AS SIGNED), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CAST(CDECIMAL5 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CAST(CDECIMAL5 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CAST(CDECIMAL9 AS SIGNED), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CAST(CDECIMAL9 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CAST(CDECIMAL9 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CAST(CDECIMAL9_2 AS SIGNED), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CAST(CDECIMAL9_2 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CAST(CDECIMAL9_2 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CAST(CDECIMAL10 AS SIGNED), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CAST(CDECIMAL10 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CAST(CDECIMAL10 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CAST(CDECIMAL18 AS SIGNED), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CAST(CDECIMAL18 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CAST(CDECIMAL18 AS DECIMAL(9,2)), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CAST(CDECIMAL18_2 AS SIGNED), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CAST(CDECIMAL18_2 AS DECIMAL(9)), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CAST(CDECIMAL18_2 AS DECIMAL(9,2)), cidx;
+select cidx, CINTEGER from datatypetestm order by CAST(CINTEGER AS SIGNED), cidx;
+select cidx, CINTEGER from datatypetestm order by CAST(CINTEGER AS DECIMAL(9)), cidx;
+select cidx, CINTEGER from datatypetestm order by CAST(CINTEGER AS DECIMAL(9,2)), cidx;
+select cidx, CSMALLINT from datatypetestm order by CAST(CSMALLINT AS SIGNED), cidx;
+select cidx, CSMALLINT from datatypetestm order by CAST(CSMALLINT AS DECIMAL(9)), cidx;
+select cidx, CSMALLINT from datatypetestm order by CAST(CSMALLINT AS DECIMAL(9,2)), cidx;
+select cidx, CTINYINT from datatypetestm order by CAST(CTINYINT AS SIGNED), cidx;
+select cidx, CTINYINT from datatypetestm order by CAST(CTINYINT AS DECIMAL(9)), cidx;
+select cidx, CTINYINT from datatypetestm order by CAST(CTINYINT AS DECIMAL(9,2)), cidx;
+select cidx, CDOUBLE from datatypetestm order by CAST(CDOUBLE AS SIGNED), cidx;
+select cidx, CDOUBLE from datatypetestm order by CAST(CDOUBLE AS DECIMAL(9)), cidx;
+select cidx, CDOUBLE from datatypetestm order by CAST(CDOUBLE AS DECIMAL(9,2)), cidx;
+select cidx, CFLOAT from datatypetestm order by CAST(CFLOAT AS SIGNED), cidx;
+select cidx, CFLOAT from datatypetestm order by CAST(CFLOAT AS DECIMAL(9)), cidx;
+select cidx, CFLOAT from datatypetestm order by CAST(CFLOAT AS DECIMAL(9,2)), cidx;

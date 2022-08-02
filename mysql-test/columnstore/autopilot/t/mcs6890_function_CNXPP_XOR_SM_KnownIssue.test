@@ -1,0 +1,60 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+# Known issue, as reported in MCOL-3480
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR -1, cidx;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR 0, cidx;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR 1, cidx;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '-1', cidx;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '0', cidx;
+--error 1178
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '1', cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR -1, cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR 0, cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR 1, cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '-1', cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '0', cidx;
+--error 1178
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '1', cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR -1, cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR 0, cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR 1, cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '-1', cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '0', cidx;
+--error 1178
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '1', cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR -1, cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR 0, cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR 1, cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '-1', cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '0', cidx;
+--error 1178
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '1', cidx;

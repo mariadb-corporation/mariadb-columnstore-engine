@@ -1,0 +1,74 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select GROUP_CONCAT(CDATE,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CDATE,CCHAR3)
+1997-01-01aaa
+select GROUP_CONCAT(CDATE,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CDATE,CCHAR3,'Calpont')
+1997-01-01aaaCalpont
+select GROUP_CONCAT(CDATE,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CDATE,CCHAR3,'Calpont' separator '#')
+1997-01-01aaaCalpont
+select GROUP_CONCAT(CDATE,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm;
+GROUP_CONCAT(CDATE,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+1997-01-01aaaCalpont
+select GROUP_CONCAT(CDATETIME,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CDATETIME,CCHAR3)
+1997-01-01 00:00:00aaa
+select GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont')
+1997-01-01 00:00:00aaaCalpont
+select GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' separator '#')
+1997-01-01 00:00:00aaaCalpont
+select GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm;
+GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+1997-01-01 00:00:00aaaCalpont
+select GROUP_CONCAT(CTIME,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CTIME,CCHAR3)
+13:00:00aaa
+select GROUP_CONCAT(CTIME,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CTIME,CCHAR3,'Calpont')
+13:00:00aaaCalpont
+select GROUP_CONCAT(CTIME,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CTIME,CCHAR3,'Calpont' separator '#')
+13:00:00aaaCalpont
+select GROUP_CONCAT(CTIME,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm;
+GROUP_CONCAT(CTIME,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+13:00:00aaaCalpont
+select cidx, CDATE, GROUP_CONCAT(CDATE,CCHAR3) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	GROUP_CONCAT(CDATE,CCHAR3)
+1	1997-01-01	1997-01-01aaa
+select cidx, CDATE, GROUP_CONCAT(CDATE,CCHAR3,'Calpont') from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	GROUP_CONCAT(CDATE,CCHAR3,'Calpont')
+1	1997-01-01	1997-01-01aaaCalpont
+select cidx, CDATE, GROUP_CONCAT(CDATE,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	GROUP_CONCAT(CDATE,CCHAR3,'Calpont' separator '#')
+1	1997-01-01	1997-01-01aaaCalpont
+select cidx, CDATE, GROUP_CONCAT(CDATE,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	GROUP_CONCAT(CDATE,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+1	1997-01-01	1997-01-01aaaCalpont
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME,CCHAR3) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	GROUP_CONCAT(CDATETIME,CCHAR3)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaa
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont') from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaaCalpont
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' separator '#')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaaCalpont
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	GROUP_CONCAT(CDATETIME,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaaCalpont
+select cidx, CTIME, GROUP_CONCAT(CTIME,CCHAR3) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	GROUP_CONCAT(CTIME,CCHAR3)
+1	13:00:00	13:00:00aaa
+select cidx, CTIME, GROUP_CONCAT(CTIME,CCHAR3,'Calpont') from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	GROUP_CONCAT(CTIME,CCHAR3,'Calpont')
+1	13:00:00	13:00:00aaaCalpont
+select cidx, CTIME, GROUP_CONCAT(CTIME,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	GROUP_CONCAT(CTIME,CCHAR3,'Calpont' separator '#')
+1	13:00:00	13:00:00aaaCalpont
+select cidx, CTIME, GROUP_CONCAT(CTIME,CCHAR3,'Calpont' ORDER BY CIDX DESC) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	GROUP_CONCAT(CTIME,CCHAR3,'Calpont' ORDER BY CIDX DESC)
+1	13:00:00	13:00:00aaaCalpont

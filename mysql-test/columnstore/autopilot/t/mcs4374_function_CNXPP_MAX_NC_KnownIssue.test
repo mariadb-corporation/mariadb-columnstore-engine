@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select MAX(CBIGINT) from datatypetestm;
+select MAX(CDECIMAL1) from datatypetestm;
+select MAX(CDECIMAL4) from datatypetestm;
+select MAX(CDECIMAL4_2) from datatypetestm;
+select MAX(CDECIMAL5) from datatypetestm;
+select MAX(CDECIMAL9) from datatypetestm;
+select MAX(CDECIMAL9_2) from datatypetestm;
+select MAX(CDECIMAL10) from datatypetestm;
+select MAX(CDECIMAL18) from datatypetestm;
+select MAX(CDECIMAL18_2) from datatypetestm;
+select MAX(CINTEGER) from datatypetestm;
+select MAX(CSMALLINT) from datatypetestm;
+select MAX(CTINYINT) from datatypetestm;
+select MAX(CDOUBLE) from datatypetestm;
+select MAX(CFLOAT) from datatypetestm;
+select cidx, CBIGINT, MAX(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+select cidx, CDECIMAL1, MAX(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+select cidx, CDECIMAL4, MAX(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+select cidx, CDECIMAL4_2, MAX(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+select cidx, CDECIMAL5, MAX(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+select cidx, CDECIMAL9, MAX(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+select cidx, CDECIMAL9_2, MAX(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+select cidx, CDECIMAL10, MAX(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+select cidx, CDECIMAL18, MAX(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+select cidx, CDECIMAL18_2, MAX(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+select cidx, CINTEGER, MAX(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+select cidx, CSMALLINT, MAX(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+select cidx, CTINYINT, MAX(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+select cidx, CDOUBLE, MAX(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+select cidx, CFLOAT, MAX(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;

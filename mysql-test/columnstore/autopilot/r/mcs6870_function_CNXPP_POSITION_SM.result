@@ -1,0 +1,98 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, POSITION('aaa' IN CTEXT) from datatypetestm ;
+cidx	CTEXT	POSITION('aaa' IN CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, POSITION('zzz' IN CTEXT) from datatypetestm ;
+cidx	CTEXT	POSITION('zzz' IN CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, POSITION('aaaaaaaaa' IN CTEXT) from datatypetestm ;
+cidx	CTEXT	POSITION('aaaaaaaaa' IN CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, POSITION('zzzzzzzzz' IN CTEXT) from datatypetestm ;
+cidx	CTEXT	POSITION('zzzzzzzzz' IN CTEXT)
+1	texttexttext	0
+select cidx, CTINYTEXT, POSITION('aaa' IN CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	POSITION('aaa' IN CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, POSITION('zzz' IN CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	POSITION('zzz' IN CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, POSITION('aaaaaaaaa' IN CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	POSITION('aaaaaaaaa' IN CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, POSITION('zzzzzzzzz' IN CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	POSITION('zzzzzzzzz' IN CTINYTEXT)
+1	tinytext	0
+select cidx, CMEDIUMTEXT, POSITION('aaa' IN CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	POSITION('aaa' IN CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, POSITION('zzz' IN CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	POSITION('zzz' IN CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, POSITION('aaaaaaaaa' IN CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	POSITION('aaaaaaaaa' IN CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, POSITION('zzzzzzzzz' IN CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	POSITION('zzzzzzzzz' IN CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, POSITION('aaa' IN CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	POSITION('aaa' IN CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, POSITION('zzz' IN CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	POSITION('zzz' IN CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, POSITION('aaaaaaaaa' IN CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	POSITION('aaaaaaaaa' IN CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, POSITION('zzzzzzzzz' IN CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	POSITION('zzzzzzzzz' IN CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm order by POSITION('aaa' IN CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by POSITION('zzz' IN CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by POSITION('aaa' IN CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by POSITION('zzz' IN CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('aaa' IN CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('zzz' IN CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by POSITION('aaa' IN CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by POSITION('zzz' IN CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

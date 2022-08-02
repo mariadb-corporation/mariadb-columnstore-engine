@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select MIN(CTEXT) from datatypetestm;
+MIN(CTEXT)
+texttexttext
+select MIN(CTINYTEXT) from datatypetestm;
+MIN(CTINYTEXT)
+tinytext
+select MIN(CMEDIUMTEXT) from datatypetestm;
+MIN(CMEDIUMTEXT)
+mediumtestmediumtest
+select MIN(CLONGTEXT) from datatypetestm;
+MIN(CLONGTEXT)
+longtextlongtextlongtext
+select cidx, CTEXT, MIN(CTEXT) from datatypetestm group by cidx, CTEXT ;
+cidx	CTEXT	MIN(CTEXT)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, MIN(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+cidx	CTINYTEXT	MIN(CTINYTEXT)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, MIN(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+cidx	CMEDIUMTEXT	MIN(CMEDIUMTEXT)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, MIN(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;
+cidx	CLONGTEXT	MIN(CLONGTEXT)
+1	longtextlongtextlongtext	longtextlongtextlongtext

@@ -1,0 +1,386 @@
+DROP DATABASE IF EXISTS mcs4005_db;
+CREATE DATABASE mcs4005_db;
+USE mcs4005_db;
+drop table if exists lineitem;
+create table lineitem (
+l_orderkey int,
+l_partkey int,
+l_suppkey int,
+l_linenumber bigint,
+l_quantity decimal(12,2),
+l_extendedprice decimal(12,2),
+l_discount decimal(12,2),
+l_tax decimal(12,2),
+l_returnflag char (1),
+l_linestatus char (1),
+l_shipdate date,
+l_commitdate date,
+l_receiptdate date,
+l_shipinstruct char (25),
+l_shipmode char (10),
+l_comment varchar (44)
+) engine=columnstore;
+SHOW CREATE TABLE lineitem;
+Table	Create Table
+lineitem	CREATE TABLE `lineitem` (
+  `l_orderkey` int(11) DEFAULT NULL,
+  `l_partkey` int(11) DEFAULT NULL,
+  `l_suppkey` int(11) DEFAULT NULL,
+  `l_linenumber` bigint(20) DEFAULT NULL,
+  `l_quantity` decimal(12,2) DEFAULT NULL,
+  `l_extendedprice` decimal(12,2) DEFAULT NULL,
+  `l_discount` decimal(12,2) DEFAULT NULL,
+  `l_tax` decimal(12,2) DEFAULT NULL,
+  `l_returnflag` char(1) DEFAULT NULL,
+  `l_linestatus` char(1) DEFAULT NULL,
+  `l_shipdate` date DEFAULT NULL,
+  `l_commitdate` date DEFAULT NULL,
+  `l_receiptdate` date DEFAULT NULL,
+  `l_shipinstruct` char(25) DEFAULT NULL,
+  `l_shipmode` char(10) DEFAULT NULL,
+  `l_comment` varchar(44) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3
+alter table lineitem add column CBIGINT BIGINT;
+alter table lineitem add column CDECIMAL1 DECIMAL(1);
+alter table lineitem add column CDECIMAL4 DECIMAL(4);
+alter table lineitem add column CDECIMAL4_2 DECIMAL(4,2);
+alter table lineitem add column CDECIMAL5 DECIMAL(5);
+alter table lineitem add column CDECIMAL9 DECIMAL(9);
+alter table lineitem add column CDECIMAL9_2 DECIMAL(9,2);
+alter table lineitem add column CDECIMAL10 DECIMAL(10);
+alter table lineitem add column CDECIMAL18 DECIMAL(18);
+alter table lineitem add column CDECIMAL18_2 DECIMAL(18,2);
+alter table lineitem add column CINTEGER INTEGER;
+alter table lineitem add column CSMALLINT SMALLINT;
+alter table lineitem add column CTINYINT TINYINT;
+alter table lineitem add column CDOUBLE DOUBLE;
+alter table lineitem add column CFLOAT FLOAT;
+alter table lineitem add column CDATE DATE;
+alter table lineitem add column CDATETIME DATETIME;
+alter table lineitem add column CTIME TIME;
+alter table lineitem add column CCHAR1 CHAR(1);
+alter table lineitem add column CCHAR2 CHAR(2);
+alter table lineitem add column CCHAR3 CHAR(3);
+alter table lineitem add column CCHAR4 CHAR(4);
+alter table lineitem add column CCHAR5 CHAR(5);
+alter table lineitem add column CCHAR6 CHAR(6);
+alter table lineitem add column CCHAR7 CHAR(7);
+alter table lineitem add column CCHAR8 CHAR(8);
+alter table lineitem add column CCHAR9 CHAR(9);
+alter table lineitem add column CCHAR255 CHAR(255);
+alter table lineitem add column CVCHAR1 VARCHAR(1);
+alter table lineitem add column CVCHAR2 VARCHAR(2);
+alter table lineitem add column CVCHAR3 VARCHAR(3);
+alter table lineitem add column CVCHAR4 VARCHAR(4);
+alter table lineitem add column CVCHAR5 VARCHAR(5);
+alter table lineitem add column CVCHAR6 VARCHAR(6);
+alter table lineitem add column CVCHAR7 VARCHAR(7);
+alter table lineitem add column CVCHAR8 VARCHAR(8);
+alter table lineitem add column CVCHAR255 VARCHAR(255);
+alter table lineitem add column CTEXT TEXT;
+alter table lineitem add column CTINYTEXT TINYTEXT;
+alter table lineitem add column CMEDIUMTEXT MEDIUMTEXT;
+alter table lineitem add column CLONGTEXT LONGTEXT;
+alter table lineitem add column CBLOB BLOB;
+alter table lineitem add column CTINYBLOB TINYBLOB;
+alter table lineitem add column CMEDIUMBLOB MEDIUMBLOB;
+alter table lineitem add column CLONGBLOB LONGBLOB;
+desc lineitem;
+Field	Type	Null	Key	Default	Extra
+l_orderkey	int(11)	YES		NULL	
+l_partkey	int(11)	YES		NULL	
+l_suppkey	int(11)	YES		NULL	
+l_linenumber	bigint(20)	YES		NULL	
+l_quantity	decimal(12,2)	YES		NULL	
+l_extendedprice	decimal(12,2)	YES		NULL	
+l_discount	decimal(12,2)	YES		NULL	
+l_tax	decimal(12,2)	YES		NULL	
+l_returnflag	char(1)	YES		NULL	
+l_linestatus	char(1)	YES		NULL	
+l_shipdate	date	YES		NULL	
+l_commitdate	date	YES		NULL	
+l_receiptdate	date	YES		NULL	
+l_shipinstruct	char(25)	YES		NULL	
+l_shipmode	char(10)	YES		NULL	
+l_comment	varchar(44)	YES		NULL	
+CBIGINT	bigint(20)	YES		NULL	
+CDECIMAL1	decimal(1,0)	YES		NULL	
+CDECIMAL4	decimal(4,0)	YES		NULL	
+CDECIMAL4_2	decimal(4,2)	YES		NULL	
+CDECIMAL5	decimal(5,0)	YES		NULL	
+CDECIMAL9	decimal(9,0)	YES		NULL	
+CDECIMAL9_2	decimal(9,2)	YES		NULL	
+CDECIMAL10	decimal(10,0)	YES		NULL	
+CDECIMAL18	decimal(18,0)	YES		NULL	
+CDECIMAL18_2	decimal(18,2)	YES		NULL	
+CINTEGER	int(11)	YES		NULL	
+CSMALLINT	smallint(6)	YES		NULL	
+CTINYINT	tinyint(4)	YES		NULL	
+CDOUBLE	double	YES		NULL	
+CFLOAT	float	YES		NULL	
+CDATE	date	YES		NULL	
+CDATETIME	datetime	YES		NULL	
+CTIME	time	YES		NULL	
+CCHAR1	char(1)	YES		NULL	
+CCHAR2	char(2)	YES		NULL	
+CCHAR3	char(3)	YES		NULL	
+CCHAR4	char(4)	YES		NULL	
+CCHAR5	char(5)	YES		NULL	
+CCHAR6	char(6)	YES		NULL	
+CCHAR7	char(7)	YES		NULL	
+CCHAR8	char(8)	YES		NULL	
+CCHAR9	char(9)	YES		NULL	
+CCHAR255	char(255)	YES		NULL	
+CVCHAR1	varchar(1)	YES		NULL	
+CVCHAR2	varchar(2)	YES		NULL	
+CVCHAR3	varchar(3)	YES		NULL	
+CVCHAR4	varchar(4)	YES		NULL	
+CVCHAR5	varchar(5)	YES		NULL	
+CVCHAR6	varchar(6)	YES		NULL	
+CVCHAR7	varchar(7)	YES		NULL	
+CVCHAR8	varchar(8)	YES		NULL	
+CVCHAR255	varchar(255)	YES		NULL	
+CTEXT	text	YES		NULL	
+CTINYTEXT	tinytext	YES		NULL	
+CMEDIUMTEXT	mediumtext	YES		NULL	
+CLONGTEXT	longtext	YES		NULL	
+CBLOB	blob	YES		NULL	
+CTINYBLOB	tinyblob	YES		NULL	
+CMEDIUMBLOB	mediumblob	YES		NULL	
+CLONGBLOB	longblob	YES		NULL	
+alter table lineitem drop column CBIGINT;
+alter table lineitem drop column CDECIMAL1;
+alter table lineitem drop column CDECIMAL4;
+alter table lineitem drop column CDECIMAL4_2;
+alter table lineitem drop column CDECIMAL5;
+alter table lineitem drop column CDECIMAL9;
+alter table lineitem drop column CDECIMAL9_2;
+alter table lineitem drop column CDECIMAL10;
+alter table lineitem drop column CDECIMAL18;
+alter table lineitem drop column CDECIMAL18_2;
+alter table lineitem drop column CINTEGER;
+alter table lineitem drop column CSMALLINT;
+alter table lineitem drop column CTINYINT;
+alter table lineitem drop column CDOUBLE;
+alter table lineitem drop column CFLOAT;
+alter table lineitem drop column CDATE;
+alter table lineitem drop column CDATETIME;
+alter table lineitem drop column CTIME;
+alter table lineitem drop column CCHAR1;
+alter table lineitem drop column CCHAR2;
+alter table lineitem drop column CCHAR3;
+alter table lineitem drop column CCHAR4;
+alter table lineitem drop column CCHAR5;
+alter table lineitem drop column CCHAR6;
+alter table lineitem drop column CCHAR7;
+alter table lineitem drop column CCHAR8;
+alter table lineitem drop column CCHAR9;
+alter table lineitem drop column CCHAR255;
+alter table lineitem drop column CVCHAR1;
+alter table lineitem drop column CVCHAR2;
+alter table lineitem drop column CVCHAR3;
+alter table lineitem drop column CVCHAR4;
+alter table lineitem drop column CVCHAR5;
+alter table lineitem drop column CVCHAR6;
+alter table lineitem drop column CVCHAR7;
+alter table lineitem drop column CVCHAR8;
+alter table lineitem drop column CVCHAR255;
+alter table lineitem drop column CTEXT;
+alter table lineitem drop column CTINYTEXT;
+alter table lineitem drop column CMEDIUMTEXT;
+alter table lineitem drop column CLONGTEXT;
+alter table lineitem drop column CBLOB;
+alter table lineitem drop column CTINYBLOB;
+alter table lineitem drop column CMEDIUMBLOB;
+alter table lineitem drop column CLONGBLOB;
+desc lineitem;
+Field	Type	Null	Key	Default	Extra
+l_orderkey	int(11)	YES		NULL	
+l_partkey	int(11)	YES		NULL	
+l_suppkey	int(11)	YES		NULL	
+l_linenumber	bigint(20)	YES		NULL	
+l_quantity	decimal(12,2)	YES		NULL	
+l_extendedprice	decimal(12,2)	YES		NULL	
+l_discount	decimal(12,2)	YES		NULL	
+l_tax	decimal(12,2)	YES		NULL	
+l_returnflag	char(1)	YES		NULL	
+l_linestatus	char(1)	YES		NULL	
+l_shipdate	date	YES		NULL	
+l_commitdate	date	YES		NULL	
+l_receiptdate	date	YES		NULL	
+l_shipinstruct	char(25)	YES		NULL	
+l_shipmode	char(10)	YES		NULL	
+l_comment	varchar(44)	YES		NULL	
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+alter table lineitem add column CBIGINT BIGINT;
+alter table lineitem add column CDECIMAL1 DECIMAL(1);
+alter table lineitem add column CDECIMAL4 DECIMAL(4);
+alter table lineitem add column CDECIMAL4_2 DECIMAL(4,2);
+alter table lineitem add column CDECIMAL5 DECIMAL(5);
+alter table lineitem add column CDECIMAL9 DECIMAL(9);
+alter table lineitem add column CDECIMAL9_2 DECIMAL(9,2);
+alter table lineitem add column CDECIMAL10 DECIMAL(10);
+alter table lineitem add column CDECIMAL18 DECIMAL(18);
+alter table lineitem add column CDECIMAL18_2 DECIMAL(18,2);
+alter table lineitem add column CINTEGER INTEGER;
+alter table lineitem add column CSMALLINT SMALLINT;
+alter table lineitem add column CTINYINT TINYINT;
+alter table lineitem add column CDOUBLE DOUBLE;
+alter table lineitem add column CFLOAT FLOAT;
+alter table lineitem add column CDATE DATE;
+alter table lineitem add column CDATETIME DATETIME;
+alter table lineitem add column CTIME TIME;
+alter table lineitem add column CCHAR1 CHAR(1);
+alter table lineitem add column CCHAR2 CHAR(2);
+alter table lineitem add column CCHAR3 CHAR(3);
+alter table lineitem add column CCHAR4 CHAR(4);
+alter table lineitem add column CCHAR5 CHAR(5);
+alter table lineitem add column CCHAR6 CHAR(6);
+alter table lineitem add column CCHAR7 CHAR(7);
+alter table lineitem add column CCHAR8 CHAR(8);
+alter table lineitem add column CCHAR9 CHAR(9);
+alter table lineitem add column CCHAR255 CHAR(255);
+alter table lineitem add column CVCHAR1 VARCHAR(1);
+alter table lineitem add column CVCHAR2 VARCHAR(2);
+alter table lineitem add column CVCHAR3 VARCHAR(3);
+alter table lineitem add column CVCHAR4 VARCHAR(4);
+alter table lineitem add column CVCHAR5 VARCHAR(5);
+alter table lineitem add column CVCHAR6 VARCHAR(6);
+alter table lineitem add column CVCHAR7 VARCHAR(7);
+alter table lineitem add column CVCHAR8 VARCHAR(8);
+alter table lineitem add column CVCHAR255 VARCHAR(255);
+alter table lineitem add column CTEXT TEXT;
+alter table lineitem add column CTINYTEXT TINYTEXT;
+alter table lineitem add column CMEDIUMTEXT MEDIUMTEXT;
+alter table lineitem add column CLONGTEXT LONGTEXT;
+alter table lineitem add column CBLOB BLOB;
+alter table lineitem add column CTINYBLOB TINYBLOB;
+alter table lineitem add column CMEDIUMBLOB MEDIUMBLOB;
+alter table lineitem add column CLONGBLOB LONGBLOB;
+desc lineitem;
+Field	Type	Null	Key	Default	Extra
+l_orderkey	int(11)	YES		NULL	
+l_partkey	int(11)	YES		NULL	
+l_suppkey	int(11)	YES		NULL	
+l_linenumber	bigint(20)	YES		NULL	
+l_quantity	decimal(12,2)	YES		NULL	
+l_extendedprice	decimal(12,2)	YES		NULL	
+l_discount	decimal(12,2)	YES		NULL	
+l_tax	decimal(12,2)	YES		NULL	
+l_returnflag	char(1)	YES		NULL	
+l_linestatus	char(1)	YES		NULL	
+l_shipdate	date	YES		NULL	
+l_commitdate	date	YES		NULL	
+l_receiptdate	date	YES		NULL	
+l_shipinstruct	char(25)	YES		NULL	
+l_shipmode	char(10)	YES		NULL	
+l_comment	varchar(44)	YES		NULL	
+CBIGINT	bigint(20)	YES		NULL	
+CDECIMAL1	decimal(1,0)	YES		NULL	
+CDECIMAL4	decimal(4,0)	YES		NULL	
+CDECIMAL4_2	decimal(4,2)	YES		NULL	
+CDECIMAL5	decimal(5,0)	YES		NULL	
+CDECIMAL9	decimal(9,0)	YES		NULL	
+CDECIMAL9_2	decimal(9,2)	YES		NULL	
+CDECIMAL10	decimal(10,0)	YES		NULL	
+CDECIMAL18	decimal(18,0)	YES		NULL	
+CDECIMAL18_2	decimal(18,2)	YES		NULL	
+CINTEGER	int(11)	YES		NULL	
+CSMALLINT	smallint(6)	YES		NULL	
+CTINYINT	tinyint(4)	YES		NULL	
+CDOUBLE	double	YES		NULL	
+CFLOAT	float	YES		NULL	
+CDATE	date	YES		NULL	
+CDATETIME	datetime	YES		NULL	
+CTIME	time	YES		NULL	
+CCHAR1	char(1)	YES		NULL	
+CCHAR2	char(2)	YES		NULL	
+CCHAR3	char(3)	YES		NULL	
+CCHAR4	char(4)	YES		NULL	
+CCHAR5	char(5)	YES		NULL	
+CCHAR6	char(6)	YES		NULL	
+CCHAR7	char(7)	YES		NULL	
+CCHAR8	char(8)	YES		NULL	
+CCHAR9	char(9)	YES		NULL	
+CCHAR255	char(255)	YES		NULL	
+CVCHAR1	varchar(1)	YES		NULL	
+CVCHAR2	varchar(2)	YES		NULL	
+CVCHAR3	varchar(3)	YES		NULL	
+CVCHAR4	varchar(4)	YES		NULL	
+CVCHAR5	varchar(5)	YES		NULL	
+CVCHAR6	varchar(6)	YES		NULL	
+CVCHAR7	varchar(7)	YES		NULL	
+CVCHAR8	varchar(8)	YES		NULL	
+CVCHAR255	varchar(255)	YES		NULL	
+CTEXT	text	YES		NULL	
+CTINYTEXT	tinytext	YES		NULL	
+CMEDIUMTEXT	mediumtext	YES		NULL	
+CLONGTEXT	longtext	YES		NULL	
+CBLOB	blob	YES		NULL	
+CTINYBLOB	tinyblob	YES		NULL	
+CMEDIUMBLOB	mediumblob	YES		NULL	
+CLONGBLOB	longblob	YES		NULL	
+alter table lineitem drop column CBIGINT;
+alter table lineitem drop column CDECIMAL1;
+alter table lineitem drop column CDECIMAL4;
+alter table lineitem drop column CDECIMAL4_2;
+alter table lineitem drop column CDECIMAL5;
+alter table lineitem drop column CDECIMAL9;
+alter table lineitem drop column CDECIMAL9_2;
+alter table lineitem drop column CDECIMAL10;
+alter table lineitem drop column CDECIMAL18;
+alter table lineitem drop column CDECIMAL18_2;
+alter table lineitem drop column CINTEGER;
+alter table lineitem drop column CSMALLINT;
+alter table lineitem drop column CTINYINT;
+alter table lineitem drop column CDOUBLE;
+alter table lineitem drop column CFLOAT;
+alter table lineitem drop column CDATE;
+alter table lineitem drop column CDATETIME;
+alter table lineitem drop column CTIME;
+alter table lineitem drop column CCHAR1;
+alter table lineitem drop column CCHAR2;
+alter table lineitem drop column CCHAR3;
+alter table lineitem drop column CCHAR4;
+alter table lineitem drop column CCHAR5;
+alter table lineitem drop column CCHAR6;
+alter table lineitem drop column CCHAR7;
+alter table lineitem drop column CCHAR8;
+alter table lineitem drop column CCHAR9;
+alter table lineitem drop column CCHAR255;
+alter table lineitem drop column CVCHAR1;
+alter table lineitem drop column CVCHAR2;
+alter table lineitem drop column CVCHAR3;
+alter table lineitem drop column CVCHAR4;
+alter table lineitem drop column CVCHAR5;
+alter table lineitem drop column CVCHAR6;
+alter table lineitem drop column CVCHAR7;
+alter table lineitem drop column CVCHAR8;
+alter table lineitem drop column CVCHAR255;
+alter table lineitem drop column CTEXT;
+alter table lineitem drop column CTINYTEXT;
+alter table lineitem drop column CMEDIUMTEXT;
+alter table lineitem drop column CLONGTEXT;
+alter table lineitem drop column CBLOB;
+alter table lineitem drop column CTINYBLOB;
+alter table lineitem drop column CMEDIUMBLOB;
+alter table lineitem drop column CLONGBLOB;
+desc lineitem;
+Field	Type	Null	Key	Default	Extra
+l_orderkey	int(11)	YES		NULL	
+l_partkey	int(11)	YES		NULL	
+l_suppkey	int(11)	YES		NULL	
+l_linenumber	bigint(20)	YES		NULL	
+l_quantity	decimal(12,2)	YES		NULL	
+l_extendedprice	decimal(12,2)	YES		NULL	
+l_discount	decimal(12,2)	YES		NULL	
+l_tax	decimal(12,2)	YES		NULL	
+l_returnflag	char(1)	YES		NULL	
+l_linestatus	char(1)	YES		NULL	
+l_shipdate	date	YES		NULL	
+l_commitdate	date	YES		NULL	
+l_receiptdate	date	YES		NULL	
+l_shipinstruct	char(25)	YES		NULL	
+l_shipmode	char(10)	YES		NULL	
+l_comment	varchar(44)	YES		NULL	
+DROP DATABASE mcs4005_db;

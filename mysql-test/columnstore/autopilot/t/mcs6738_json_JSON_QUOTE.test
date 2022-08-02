@@ -1,0 +1,29 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @tmpstr1 = 'A';
+SET @tmpstr2 = "B";
+SET @tmpstr3 = '"C"';
+#
+SET @json1 = (SELECT JSON_QUOTE(@tmpstr1));
+SET @json2 = (SELECT JSON_QUOTE(@tmpstr2));
+SET @json3 = (SELECT JSON_QUOTE(@tmpstr3));
+#
+SELECT @json1;
+SELECT @json2;
+SELECT @json3;
+
+INSERT INTO jsontest VALUES (1, @json1, @json1), (2, @json2, @json2), (3, @json3, @json3);
+#
+SELECT * FROM jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

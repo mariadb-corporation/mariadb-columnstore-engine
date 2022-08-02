@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CDATE ;
+cidx	CMEDIUMTEXT	CDATE
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CDATE ;
+cidx	CMEDIUMTEXT	CDATE
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CDATE ;
+cidx	CMEDIUMTEXT	CDATE
+1	mediumtestmediumtest	1997-01-01
+2	mediumtestmediumtest	1997-01-01
+3	mediumtestmediumtest	1997-01-02
+4	mediumtestmediumtest	1997-01-03
+5	mediumtestmediumtest	1997-01-04
+6	mediumtestmediumtest	2009-12-28
+7	mediumtestmediumtest	2009-12-29
+8	mediumtestmediumtest	2009-12-30
+9	mediumtestmediumtest	2009-12-31
+10	mediumtestmediumtest	2009-12-31
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CDATE ;
+cidx	CMEDIUMTEXT	CDATE
+1	mediumtestmediumtest	1997-01-01
+2	mediumtestmediumtest	1997-01-01
+3	mediumtestmediumtest	1997-01-02
+4	mediumtestmediumtest	1997-01-03
+5	mediumtestmediumtest	1997-01-04
+6	mediumtestmediumtest	2009-12-28
+7	mediumtestmediumtest	2009-12-29
+8	mediumtestmediumtest	2009-12-30
+9	mediumtestmediumtest	2009-12-31
+10	mediumtestmediumtest	2009-12-31
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CDATE ;
+cidx	CMEDIUMTEXT	CDATE
+1	mediumtestmediumtest	1997-01-01
+2	mediumtestmediumtest	1997-01-01
+3	mediumtestmediumtest	1997-01-02
+4	mediumtestmediumtest	1997-01-03
+5	mediumtestmediumtest	1997-01-04
+6	mediumtestmediumtest	2009-12-28
+7	mediumtestmediumtest	2009-12-29
+8	mediumtestmediumtest	2009-12-30
+9	mediumtestmediumtest	2009-12-31
+10	mediumtestmediumtest	2009-12-31

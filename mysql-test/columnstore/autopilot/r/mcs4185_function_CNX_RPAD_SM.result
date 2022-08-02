@@ -1,0 +1,381 @@
+USE autopilot;
+select cidx, CCHAR1, RPAD(CCHAR1,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR1	RPAD(CCHAR1,5,'**')
+1	a	a****
+select cidx, CCHAR1, RPAD(CCHAR1,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR1	RPAD(CCHAR1,5,'********')
+1	a	a****
+select cidx, CCHAR1, RPAD(CCHAR1,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR1	RPAD(CCHAR1,15,'**')
+1	a	a**************
+select cidx, CCHAR1, RPAD(CCHAR1,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR1	RPAD(CCHAR1,15,'********')
+1	a	a**************
+select cidx, CCHAR2, RPAD(CCHAR2,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR2	RPAD(CCHAR2,5,'**')
+1	aa	aa***
+select cidx, CCHAR2, RPAD(CCHAR2,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR2	RPAD(CCHAR2,5,'********')
+1	aa	aa***
+select cidx, CCHAR2, RPAD(CCHAR2,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR2	RPAD(CCHAR2,15,'**')
+1	aa	aa*************
+select cidx, CCHAR2, RPAD(CCHAR2,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR2	RPAD(CCHAR2,15,'********')
+1	aa	aa*************
+select cidx, CCHAR3, RPAD(CCHAR3,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR3	RPAD(CCHAR3,5,'**')
+1	aaa	aaa**
+select cidx, CCHAR3, RPAD(CCHAR3,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR3	RPAD(CCHAR3,5,'********')
+1	aaa	aaa**
+select cidx, CCHAR3, RPAD(CCHAR3,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR3	RPAD(CCHAR3,15,'**')
+1	aaa	aaa************
+select cidx, CCHAR3, RPAD(CCHAR3,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR3	RPAD(CCHAR3,15,'********')
+1	aaa	aaa************
+select cidx, CCHAR4, RPAD(CCHAR4,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR4	RPAD(CCHAR4,5,'**')
+1	aaaa	aaaa*
+select cidx, CCHAR4, RPAD(CCHAR4,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR4	RPAD(CCHAR4,5,'********')
+1	aaaa	aaaa*
+select cidx, CCHAR4, RPAD(CCHAR4,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR4	RPAD(CCHAR4,15,'**')
+1	aaaa	aaaa***********
+select cidx, CCHAR4, RPAD(CCHAR4,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR4	RPAD(CCHAR4,15,'********')
+1	aaaa	aaaa***********
+select cidx, CCHAR5, RPAD(CCHAR5,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR5	RPAD(CCHAR5,5,'**')
+1	aaaaa	aaaaa
+select cidx, CCHAR5, RPAD(CCHAR5,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR5	RPAD(CCHAR5,5,'********')
+1	aaaaa	aaaaa
+select cidx, CCHAR5, RPAD(CCHAR5,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR5	RPAD(CCHAR5,15,'**')
+1	aaaaa	aaaaa**********
+select cidx, CCHAR5, RPAD(CCHAR5,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR5	RPAD(CCHAR5,15,'********')
+1	aaaaa	aaaaa**********
+select cidx, CCHAR6, RPAD(CCHAR6,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR6	RPAD(CCHAR6,5,'**')
+1	aaaaaa	aaaaa
+select cidx, CCHAR6, RPAD(CCHAR6,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR6	RPAD(CCHAR6,5,'********')
+1	aaaaaa	aaaaa
+select cidx, CCHAR6, RPAD(CCHAR6,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR6	RPAD(CCHAR6,15,'**')
+1	aaaaaa	aaaaaa*********
+select cidx, CCHAR6, RPAD(CCHAR6,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR6	RPAD(CCHAR6,15,'********')
+1	aaaaaa	aaaaaa*********
+select cidx, CCHAR7, RPAD(CCHAR7,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR7	RPAD(CCHAR7,5,'**')
+1	aaaaaaa	aaaaa
+select cidx, CCHAR7, RPAD(CCHAR7,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR7	RPAD(CCHAR7,5,'********')
+1	aaaaaaa	aaaaa
+select cidx, CCHAR7, RPAD(CCHAR7,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR7	RPAD(CCHAR7,15,'**')
+1	aaaaaaa	aaaaaaa********
+select cidx, CCHAR7, RPAD(CCHAR7,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR7	RPAD(CCHAR7,15,'********')
+1	aaaaaaa	aaaaaaa********
+select cidx, CCHAR8, RPAD(CCHAR8,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR8	RPAD(CCHAR8,5,'**')
+1	aaaaaaaa	aaaaa
+select cidx, CCHAR8, RPAD(CCHAR8,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR8	RPAD(CCHAR8,5,'********')
+1	aaaaaaaa	aaaaa
+select cidx, CCHAR8, RPAD(CCHAR8,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR8	RPAD(CCHAR8,15,'**')
+1	aaaaaaaa	aaaaaaaa*******
+select cidx, CCHAR8, RPAD(CCHAR8,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR8	RPAD(CCHAR8,15,'********')
+1	aaaaaaaa	aaaaaaaa*******
+select cidx, CCHAR9, RPAD(CCHAR9,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR9	RPAD(CCHAR9,5,'**')
+1	aaaaaaaaa	aaaaa
+select cidx, CCHAR9, RPAD(CCHAR9,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR9	RPAD(CCHAR9,5,'********')
+1	aaaaaaaaa	aaaaa
+select cidx, CCHAR9, RPAD(CCHAR9,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR9	RPAD(CCHAR9,15,'**')
+1	aaaaaaaaa	aaaaaaaaa******
+select cidx, CCHAR9, RPAD(CCHAR9,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR9	RPAD(CCHAR9,15,'********')
+1	aaaaaaaaa	aaaaaaaaa******
+select cidx, CCHAR255, RPAD(CCHAR255,5,'**') from datatypetestm order by cidx;
+cidx	CCHAR255	RPAD(CCHAR255,5,'**')
+1	aaaaaaaaaa	aaaaa
+select cidx, CCHAR255, RPAD(CCHAR255,5,'********') from datatypetestm order by cidx;
+cidx	CCHAR255	RPAD(CCHAR255,5,'********')
+1	aaaaaaaaaa	aaaaa
+select cidx, CCHAR255, RPAD(CCHAR255,15,'**') from datatypetestm order by cidx;
+cidx	CCHAR255	RPAD(CCHAR255,15,'**')
+1	aaaaaaaaaa	aaaaaaaaaa*****
+select cidx, CCHAR255, RPAD(CCHAR255,15,'********') from datatypetestm order by cidx;
+cidx	CCHAR255	RPAD(CCHAR255,15,'********')
+1	aaaaaaaaaa	aaaaaaaaaa*****
+select cidx, CVCHAR1, RPAD(CVCHAR1,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR1	RPAD(CVCHAR1,5,'**')
+1	a	a****
+select cidx, CVCHAR1, RPAD(CVCHAR1,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR1	RPAD(CVCHAR1,5,'********')
+1	a	a****
+select cidx, CVCHAR1, RPAD(CVCHAR1,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR1	RPAD(CVCHAR1,15,'**')
+1	a	a**************
+select cidx, CVCHAR1, RPAD(CVCHAR1,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR1	RPAD(CVCHAR1,15,'********')
+1	a	a**************
+select cidx, CVCHAR2, RPAD(CVCHAR2,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR2	RPAD(CVCHAR2,5,'**')
+1	aa	aa***
+select cidx, CVCHAR2, RPAD(CVCHAR2,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR2	RPAD(CVCHAR2,5,'********')
+1	aa	aa***
+select cidx, CVCHAR2, RPAD(CVCHAR2,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR2	RPAD(CVCHAR2,15,'**')
+1	aa	aa*************
+select cidx, CVCHAR2, RPAD(CVCHAR2,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR2	RPAD(CVCHAR2,15,'********')
+1	aa	aa*************
+select cidx, CVCHAR3, RPAD(CVCHAR3,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR3	RPAD(CVCHAR3,5,'**')
+1	aaa	aaa**
+select cidx, CVCHAR3, RPAD(CVCHAR3,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR3	RPAD(CVCHAR3,5,'********')
+1	aaa	aaa**
+select cidx, CVCHAR3, RPAD(CVCHAR3,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR3	RPAD(CVCHAR3,15,'**')
+1	aaa	aaa************
+select cidx, CVCHAR3, RPAD(CVCHAR3,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR3	RPAD(CVCHAR3,15,'********')
+1	aaa	aaa************
+select cidx, CVCHAR4, RPAD(CVCHAR4,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR4	RPAD(CVCHAR4,5,'**')
+1	aaaa	aaaa*
+select cidx, CVCHAR4, RPAD(CVCHAR4,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR4	RPAD(CVCHAR4,5,'********')
+1	aaaa	aaaa*
+select cidx, CVCHAR4, RPAD(CVCHAR4,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR4	RPAD(CVCHAR4,15,'**')
+1	aaaa	aaaa***********
+select cidx, CVCHAR4, RPAD(CVCHAR4,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR4	RPAD(CVCHAR4,15,'********')
+1	aaaa	aaaa***********
+select cidx, CVCHAR5, RPAD(CVCHAR5,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR5	RPAD(CVCHAR5,5,'**')
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, RPAD(CVCHAR5,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR5	RPAD(CVCHAR5,5,'********')
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, RPAD(CVCHAR5,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR5	RPAD(CVCHAR5,15,'**')
+1	aaaaa	aaaaa**********
+select cidx, CVCHAR5, RPAD(CVCHAR5,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR5	RPAD(CVCHAR5,15,'********')
+1	aaaaa	aaaaa**********
+select cidx, CVCHAR6, RPAD(CVCHAR6,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR6	RPAD(CVCHAR6,5,'**')
+1	aaaaaa	aaaaa
+select cidx, CVCHAR6, RPAD(CVCHAR6,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR6	RPAD(CVCHAR6,5,'********')
+1	aaaaaa	aaaaa
+select cidx, CVCHAR6, RPAD(CVCHAR6,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR6	RPAD(CVCHAR6,15,'**')
+1	aaaaaa	aaaaaa*********
+select cidx, CVCHAR6, RPAD(CVCHAR6,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR6	RPAD(CVCHAR6,15,'********')
+1	aaaaaa	aaaaaa*********
+select cidx, CVCHAR7, RPAD(CVCHAR7,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR7	RPAD(CVCHAR7,5,'**')
+1	aaaaaaa	aaaaa
+select cidx, CVCHAR7, RPAD(CVCHAR7,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR7	RPAD(CVCHAR7,5,'********')
+1	aaaaaaa	aaaaa
+select cidx, CVCHAR7, RPAD(CVCHAR7,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR7	RPAD(CVCHAR7,15,'**')
+1	aaaaaaa	aaaaaaa********
+select cidx, CVCHAR7, RPAD(CVCHAR7,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR7	RPAD(CVCHAR7,15,'********')
+1	aaaaaaa	aaaaaaa********
+select cidx, CVCHAR8, RPAD(CVCHAR8,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR8	RPAD(CVCHAR8,5,'**')
+1	aaaaaaaa	aaaaa
+select cidx, CVCHAR8, RPAD(CVCHAR8,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR8	RPAD(CVCHAR8,5,'********')
+1	aaaaaaaa	aaaaa
+select cidx, CVCHAR8, RPAD(CVCHAR8,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR8	RPAD(CVCHAR8,15,'**')
+1	aaaaaaaa	aaaaaaaa*******
+select cidx, CVCHAR8, RPAD(CVCHAR8,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR8	RPAD(CVCHAR8,15,'********')
+1	aaaaaaaa	aaaaaaaa*******
+select cidx, CVCHAR255, RPAD(CVCHAR255,5,'**') from datatypetestm order by cidx;
+cidx	CVCHAR255	RPAD(CVCHAR255,5,'**')
+1	aaaaaaaaaa	aaaaa
+select cidx, CVCHAR255, RPAD(CVCHAR255,5,'********') from datatypetestm order by cidx;
+cidx	CVCHAR255	RPAD(CVCHAR255,5,'********')
+1	aaaaaaaaaa	aaaaa
+select cidx, CVCHAR255, RPAD(CVCHAR255,15,'**') from datatypetestm order by cidx;
+cidx	CVCHAR255	RPAD(CVCHAR255,15,'**')
+1	aaaaaaaaaa	aaaaaaaaaa*****
+select cidx, CVCHAR255, RPAD(CVCHAR255,15,'********') from datatypetestm order by cidx;
+cidx	CVCHAR255	RPAD(CVCHAR255,15,'********')
+1	aaaaaaaaaa	aaaaaaaaaa*****
+select cidx, CCHAR1 from datatypetestm where RPAD(CCHAR1,5,'**') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where RPAD(CCHAR1,5,'********') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where RPAD(CCHAR1,15,'**') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where RPAD(CCHAR1,15,'********') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where RPAD(CCHAR2,5,'**') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where RPAD(CCHAR2,5,'********') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where RPAD(CCHAR2,15,'**') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where RPAD(CCHAR2,15,'********') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where RPAD(CCHAR3,5,'**') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where RPAD(CCHAR3,5,'********') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where RPAD(CCHAR3,15,'**') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where RPAD(CCHAR3,15,'********') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where RPAD(CCHAR4,5,'**') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where RPAD(CCHAR4,5,'********') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where RPAD(CCHAR4,15,'**') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where RPAD(CCHAR4,15,'********') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where RPAD(CCHAR5,5,'**') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where RPAD(CCHAR5,5,'********') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where RPAD(CCHAR5,15,'**') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where RPAD(CCHAR5,15,'********') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where RPAD(CCHAR6,5,'**') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where RPAD(CCHAR6,5,'********') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where RPAD(CCHAR6,15,'**') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where RPAD(CCHAR6,15,'********') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where RPAD(CCHAR7,5,'**') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where RPAD(CCHAR7,5,'********') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where RPAD(CCHAR7,15,'**') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where RPAD(CCHAR7,15,'********') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where RPAD(CCHAR8,5,'**') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where RPAD(CCHAR8,5,'********') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where RPAD(CCHAR8,15,'**') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where RPAD(CCHAR8,15,'********') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where RPAD(CCHAR9,5,'**') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where RPAD(CCHAR9,5,'********') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where RPAD(CCHAR9,15,'**') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where RPAD(CCHAR9,15,'********') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where RPAD(CCHAR255,5,'**') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where RPAD(CCHAR255,5,'********') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where RPAD(CCHAR255,15,'**') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where RPAD(CCHAR255,15,'********') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where RPAD(CVCHAR1,5,'**') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where RPAD(CVCHAR1,5,'********') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where RPAD(CVCHAR1,15,'**') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where RPAD(CVCHAR1,15,'********') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where RPAD(CVCHAR2,5,'**') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where RPAD(CVCHAR2,5,'********') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where RPAD(CVCHAR2,15,'**') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where RPAD(CVCHAR2,15,'********') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where RPAD(CVCHAR3,5,'**') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where RPAD(CVCHAR3,5,'********') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where RPAD(CVCHAR3,15,'**') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where RPAD(CVCHAR3,15,'********') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where RPAD(CVCHAR4,5,'**') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where RPAD(CVCHAR4,5,'********') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where RPAD(CVCHAR4,15,'**') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where RPAD(CVCHAR4,15,'********') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where RPAD(CVCHAR5,5,'**') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where RPAD(CVCHAR5,5,'********') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where RPAD(CVCHAR5,15,'**') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where RPAD(CVCHAR5,15,'********') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where RPAD(CVCHAR6,5,'**') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where RPAD(CVCHAR6,5,'********') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where RPAD(CVCHAR6,15,'**') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where RPAD(CVCHAR6,15,'********') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where RPAD(CVCHAR7,5,'**') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where RPAD(CVCHAR7,5,'********') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where RPAD(CVCHAR7,15,'**') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where RPAD(CVCHAR7,15,'********') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where RPAD(CVCHAR8,5,'**') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where RPAD(CVCHAR8,5,'********') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where RPAD(CVCHAR8,15,'**') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where RPAD(CVCHAR8,15,'********') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where RPAD(CVCHAR255,5,'**') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where RPAD(CVCHAR255,5,'********') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where RPAD(CVCHAR255,15,'**') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where RPAD(CVCHAR255,15,'********') <> 0 order by cidx;
+cidx	CVCHAR255

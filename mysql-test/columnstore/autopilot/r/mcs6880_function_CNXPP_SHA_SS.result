@@ -1,0 +1,32 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, SHA(CTEXT) from datatypetestm ;
+cidx	CTEXT	SHA(CTEXT)
+1	texttexttext	e89d8c7856598e2c35c8e7619aff63279fc009d0
+select cidx, CTINYTEXT, SHA(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	SHA(CTINYTEXT)
+1	tinytext	954c65bfac764a0a5f5dbdcc6a28541f5f9ac7a8
+select cidx, CMEDIUMTEXT, SHA(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	SHA(CMEDIUMTEXT)
+1	mediumtestmediumtest	39f60a084e1d0b38c6956b69e6098f1d939f33be
+select cidx, CLONGTEXT, SHA(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	SHA(CLONGTEXT)
+1	longtextlongtextlongtext	327da2130b68f132d5dcb09c267a470d5057a12b
+select cidx, SHA('THIS IS A TEST') from datatypetestm ;
+cidx	SHA('THIS IS A TEST')
+1	22bbdabf087de76a1a064a099f4b33794ccdb9e0
+select cidx, SHA('Hello, World') from datatypetestm ;
+cidx	SHA('Hello, World')
+1	907d14fb3af2b0d4f18c2d46abe8aedce17367bd
+select cidx, CTEXT from datatypetestm order by SHA(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by SHA(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by SHA(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by SHA(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

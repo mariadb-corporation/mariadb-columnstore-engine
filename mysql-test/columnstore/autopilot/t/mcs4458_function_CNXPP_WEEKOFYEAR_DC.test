@@ -1,0 +1,17 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, WEEKOFYEAR(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEKOFYEAR(CDATETIME) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEKOFYEAR(CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by WEEKOFYEAR(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEKOFYEAR(CDATETIME), cidx;
+#select cidx, CTIME from datatypetestm order by WEEKOFYEAR(CTIME), cidx;

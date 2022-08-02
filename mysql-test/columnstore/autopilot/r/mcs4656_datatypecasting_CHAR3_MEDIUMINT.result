@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 > dtt2.CMEDIUMINT ;
+cidx	CCHAR3	CMEDIUMINT
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 >= dtt2.CMEDIUMINT ;
+cidx	CCHAR3	CMEDIUMINT
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 <> dtt2.CMEDIUMINT ;
+cidx	CCHAR3	CMEDIUMINT
+1	aaa	1000
+2	c	1000
+3	cc	1000
+4	ccc	1000
+5	ccc	1000
+6	xxx	1000
+7	xxx	1000
+8	xxx	1000
+9	xxx	1000
+10	zzz	1000
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 < dtt2.CMEDIUMINT ;
+cidx	CCHAR3	CMEDIUMINT
+1	aaa	1000
+2	c	1000
+3	cc	1000
+4	ccc	1000
+5	ccc	1000
+6	xxx	1000
+7	xxx	1000
+8	xxx	1000
+9	xxx	1000
+10	zzz	1000
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 <= dtt2.CMEDIUMINT ;
+cidx	CCHAR3	CMEDIUMINT
+1	aaa	1000
+2	c	1000
+3	cc	1000
+4	ccc	1000
+5	ccc	1000
+6	xxx	1000
+7	xxx	1000
+8	xxx	1000
+9	xxx	1000
+10	zzz	1000

@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 0) from datatypetestm order by cidx;
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 1) from datatypetestm order by cidx;
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 5) from datatypetestm order by cidx;
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -1) from datatypetestm order by cidx;
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -5) from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 0) from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 1) from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 5) from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -1) from datatypetestm order by cidx;
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -5) from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 0) from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 1) from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 5) from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -1) from datatypetestm order by cidx;
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -5) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 0), cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 1), cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 5), cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -1), cidx;
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -5), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 0), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 1), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 5), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -1), cidx;
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -5), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 0), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 1), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 5), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -1), cidx;
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -5), cidx;

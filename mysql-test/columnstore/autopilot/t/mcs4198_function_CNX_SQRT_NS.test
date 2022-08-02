@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, SQRT(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, SQRT(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, SQRT(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, SQRT(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, SQRT(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, SQRT(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, SQRT(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, SQRT(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, SQRT(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, SQRT(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, SQRT(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, SQRT(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, SQRT(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, SQRT(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, SQRT(CFLOAT) from datatypetestm order by cidx;
+select cidx, SQRT(122) from datatypetestm order by cidx;
+select cidx, SQRT(324) from datatypetestm order by cidx;
+select cidx, SQRT(33) from datatypetestm order by cidx;
+select cidx, SQRT(54) from datatypetestm order by cidx;
+select cidx, SQRT(9) from datatypetestm order by cidx;
+select cidx, SQRT(81) from datatypetestm order by cidx;
+select cidx, SQRT(1) from datatypetestm order by cidx;
+select cidx, SQRT(4) from datatypetestm order by cidx;
+select cidx, SQRT(11.2) from datatypetestm order by cidx;
+select cidx, SQRT(39.457) from datatypetestm order by cidx;
+select cidx, SQRT(672.12) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where SQRT(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where SQRT(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where SQRT(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where SQRT(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where SQRT(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where SQRT(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where SQRT(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where SQRT(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where SQRT(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where SQRT(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where SQRT(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where SQRT(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where SQRT(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where SQRT(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where SQRT(CFLOAT) <> 0 order by cidx;

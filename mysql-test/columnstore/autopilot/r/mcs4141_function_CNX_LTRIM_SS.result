@@ -1,0 +1,105 @@
+USE autopilot;
+select cidx, CCHAR1, LTRIM(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	LTRIM(CCHAR1)
+1	a	a
+select cidx, CCHAR2, LTRIM(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	LTRIM(CCHAR2)
+1	aa	aa
+select cidx, CCHAR3, LTRIM(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	LTRIM(CCHAR3)
+1	aaa	aaa
+select cidx, CCHAR4, LTRIM(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	LTRIM(CCHAR4)
+1	aaaa	aaaa
+select cidx, CCHAR5, LTRIM(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	LTRIM(CCHAR5)
+1	aaaaa	aaaaa
+select cidx, CCHAR6, LTRIM(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	LTRIM(CCHAR6)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, LTRIM(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	LTRIM(CCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, LTRIM(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	LTRIM(CCHAR8)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, LTRIM(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	LTRIM(CCHAR9)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, LTRIM(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	LTRIM(CCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, LTRIM(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	LTRIM(CVCHAR1)
+1	a	a
+select cidx, CVCHAR2, LTRIM(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	LTRIM(CVCHAR2)
+1	aa	aa
+select cidx, CVCHAR3, LTRIM(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	LTRIM(CVCHAR3)
+1	aaa	aaa
+select cidx, CVCHAR4, LTRIM(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	LTRIM(CVCHAR4)
+1	aaaa	aaaa
+select cidx, CVCHAR5, LTRIM(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	LTRIM(CVCHAR5)
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, LTRIM(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	LTRIM(CVCHAR6)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, LTRIM(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	LTRIM(CVCHAR7)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, LTRIM(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	LTRIM(CVCHAR8)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, LTRIM(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	LTRIM(CVCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, LTRIM(concat(cchar1,'Hello ')) from datatypetestm order by cidx;
+cidx	LTRIM(concat(cchar1,'Hello '))
+1	aHello 
+select cidx, LTRIM(concat(cchar1,' world')) from datatypetestm order by cidx;
+cidx	LTRIM(concat(cchar1,' world'))
+1	a world
+select cidx, LTRIM(concat(cchar1,' Howzit ')) from datatypetestm order by cidx;
+cidx	LTRIM(concat(cchar1,' Howzit '))
+1	a Howzit 
+select cidx, CCHAR1 from datatypetestm where LTRIM(CCHAR1) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where LTRIM(CCHAR2) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where LTRIM(CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where LTRIM(CCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where LTRIM(CCHAR5) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where LTRIM(CCHAR6) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where LTRIM(CCHAR7) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where LTRIM(CCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where LTRIM(CCHAR9) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where LTRIM(CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where LTRIM(CVCHAR1) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where LTRIM(CVCHAR2) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where LTRIM(CVCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where LTRIM(CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where LTRIM(CVCHAR5) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where LTRIM(CVCHAR6) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where LTRIM(CVCHAR7) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where LTRIM(CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where LTRIM(CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255

@@ -1,0 +1,91 @@
+USE autopilot;
+select SUM(CBIGINT) from datatypetestm;
+SUM(CBIGINT)
+-72036854775806
+select SUM(CDECIMAL1) from datatypetestm;
+SUM(CDECIMAL1)
+-9
+select SUM(CDECIMAL4) from datatypetestm;
+SUM(CDECIMAL4)
+-999
+select SUM(CDECIMAL4_2) from datatypetestm;
+SUM(CDECIMAL4_2)
+-9.99
+select SUM(CDECIMAL5) from datatypetestm;
+SUM(CDECIMAL5)
+-999
+select SUM(CDECIMAL9) from datatypetestm;
+SUM(CDECIMAL9)
+-999999
+select SUM(CDECIMAL9_2) from datatypetestm;
+SUM(CDECIMAL9_2)
+-9999.99
+select SUM(CDECIMAL10) from datatypetestm;
+SUM(CDECIMAL10)
+-9999999
+select SUM(CDECIMAL18) from datatypetestm;
+SUM(CDECIMAL18)
+-9999999999999
+select SUM(CDECIMAL18_2) from datatypetestm;
+SUM(CDECIMAL18_2)
+-99999999999.99
+select SUM(CINTEGER) from datatypetestm;
+SUM(CINTEGER)
+-7483646
+select SUM(CSMALLINT) from datatypetestm;
+SUM(CSMALLINT)
+-766
+select SUM(CTINYINT) from datatypetestm;
+SUM(CTINYINT)
+-26
+select SUM(CDOUBLE) from datatypetestm;
+SUM(CDOUBLE)
+-1.797693231e108
+select SUM(CFLOAT) from datatypetestm;
+SUM(CFLOAT)
+-3.402865892420223e18
+select cidx, CBIGINT, SUM(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+cidx	CBIGINT	SUM(CBIGINT)
+1	-72036854775806	-72036854775806
+select cidx, CDECIMAL1, SUM(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+cidx	CDECIMAL1	SUM(CDECIMAL1)
+1	-9	-9
+select cidx, CDECIMAL4, SUM(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+cidx	CDECIMAL4	SUM(CDECIMAL4)
+1	-999	-999
+select cidx, CDECIMAL4_2, SUM(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+cidx	CDECIMAL4_2	SUM(CDECIMAL4_2)
+1	-9.99	-9.99
+select cidx, CDECIMAL5, SUM(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+cidx	CDECIMAL5	SUM(CDECIMAL5)
+1	-999	-999
+select cidx, CDECIMAL9, SUM(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+cidx	CDECIMAL9	SUM(CDECIMAL9)
+1	-999999	-999999
+select cidx, CDECIMAL9_2, SUM(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+cidx	CDECIMAL9_2	SUM(CDECIMAL9_2)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL10, SUM(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+cidx	CDECIMAL10	SUM(CDECIMAL10)
+1	-9999999	-9999999
+select cidx, CDECIMAL18, SUM(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+cidx	CDECIMAL18	SUM(CDECIMAL18)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18_2, SUM(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+cidx	CDECIMAL18_2	SUM(CDECIMAL18_2)
+1	-99999999999.99	-99999999999.99
+select cidx, CINTEGER, SUM(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+cidx	CINTEGER	SUM(CINTEGER)
+1	-7483646	-7483646
+select cidx, CSMALLINT, SUM(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+cidx	CSMALLINT	SUM(CSMALLINT)
+1	-766	-766
+select cidx, CTINYINT, SUM(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+cidx	CTINYINT	SUM(CTINYINT)
+1	-26	-26
+select cidx, CDOUBLE, SUM(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+cidx	CDOUBLE	SUM(CDOUBLE)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CFLOAT, SUM(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;
+cidx	CFLOAT	SUM(CFLOAT)
+1	-3.40287e18	-3.402865892420223e18

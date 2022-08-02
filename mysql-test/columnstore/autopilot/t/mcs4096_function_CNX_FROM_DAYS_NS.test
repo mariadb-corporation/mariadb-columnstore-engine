@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, FROM_DAYS(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, FROM_DAYS(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, FROM_DAYS(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, FROM_DAYS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, FROM_DAYS(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, FROM_DAYS(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, FROM_DAYS(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, FROM_DAYS(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, FROM_DAYS(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, FROM_DAYS(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, FROM_DAYS(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, FROM_DAYS(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, FROM_DAYS(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, FROM_DAYS(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, FROM_DAYS(CFLOAT) from datatypetestm order by cidx;
+select cidx, FROM_DAYS(11235) from datatypetestm order by cidx;
+select cidx, FROM_DAYS(456) from datatypetestm order by cidx;
+select cidx, FROM_DAYS(233333) from datatypetestm order by cidx;
+select cidx, FROM_DAYS(12) from datatypetestm order by cidx;
+select cidx, FROM_DAYS(9999) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where FROM_DAYS(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where FROM_DAYS(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where FROM_DAYS(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where FROM_DAYS(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where FROM_DAYS(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where FROM_DAYS(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where FROM_DAYS(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where FROM_DAYS(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where FROM_DAYS(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where FROM_DAYS(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where FROM_DAYS(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where FROM_DAYS(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where FROM_DAYS(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where FROM_DAYS(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where FROM_DAYS(CFLOAT) <> 0 order by cidx;

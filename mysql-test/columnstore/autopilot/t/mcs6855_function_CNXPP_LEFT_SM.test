@@ -1,0 +1,59 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LEFT(CTEXT,2) from datatypetestm ;
+select cidx, CTEXT, LEFT(CTEXT,5) from datatypetestm ;
+select cidx, CTEXT, LEFT(CTEXT,7) from datatypetestm ;
+select cidx, CTEXT, LEFT(CTEXT,8) from datatypetestm ;
+select cidx, CTEXT, LEFT(CTEXT,9) from datatypetestm ;
+select cidx, CTEXT, LEFT(CTEXT,25) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,2) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,5) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,7) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,8) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,9) from datatypetestm ;
+select cidx, CTINYTEXT, LEFT(CTINYTEXT,25) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,2) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,5) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,7) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,8) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,9) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEFT(CMEDIUMTEXT,25) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,2) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,5) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,7) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,8) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,9) from datatypetestm ;
+select cidx, CLONGTEXT, LEFT(CLONGTEXT,25) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,2), cidx;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,5), cidx;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,7), cidx;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,8), cidx;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,9), cidx;
+select cidx, CTEXT from datatypetestm order by LEFT(CTEXT,25), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,2), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,5), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,7), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,8), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,9), cidx;
+select cidx, CTINYTEXT from datatypetestm order by LEFT(CTINYTEXT,25), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,2), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,5), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,7), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,8), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,9), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by LEFT(CMEDIUMTEXT,25), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,2), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,5), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,7), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,8), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,9), cidx;
+select cidx, CLONGTEXT from datatypetestm order by LEFT(CLONGTEXT,25), cidx;

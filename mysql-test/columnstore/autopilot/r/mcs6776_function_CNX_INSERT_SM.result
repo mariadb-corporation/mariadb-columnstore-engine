@@ -1,0 +1,102 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INSERT(CTEXT,2,2,'Hello') from datatypetestm ;
+cidx	CTEXT	INSERT(CTEXT,2,2,'Hello')
+1	texttexttext	tHellottexttext
+select cidx, CTEXT, INSERT(CTEXT,2,5,'Hello') from datatypetestm ;
+cidx	CTEXT	INSERT(CTEXT,2,5,'Hello')
+1	texttexttext	tHelloxttext
+select cidx, CTEXT, INSERT(CTEXT,-1,5,'Hello') from datatypetestm ;
+cidx	CTEXT	INSERT(CTEXT,-1,5,'Hello')
+1	texttexttext	texttexttext
+select cidx, CTEXT, INSERT(CTEXT,2,12,'Hello') from datatypetestm ;
+cidx	CTEXT	INSERT(CTEXT,2,12,'Hello')
+1	texttexttext	tHello
+select cidx, CTEXT, INSERT(CTEXT,1,12,NULL) from datatypetestm ;
+cidx	CTEXT	INSERT(CTEXT,1,12,NULL)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,2,'Hello') from datatypetestm ;
+cidx	CTINYTEXT	INSERT(CTINYTEXT,2,2,'Hello')
+1	tinytext	tHelloytext
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,5,'Hello') from datatypetestm ;
+cidx	CTINYTEXT	INSERT(CTINYTEXT,2,5,'Hello')
+1	tinytext	tHelloxt
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,-1,5,'Hello') from datatypetestm ;
+cidx	CTINYTEXT	INSERT(CTINYTEXT,-1,5,'Hello')
+1	tinytext	tinytext
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,12,'Hello') from datatypetestm ;
+cidx	CTINYTEXT	INSERT(CTINYTEXT,2,12,'Hello')
+1	tinytext	tHello
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,1,12,NULL) from datatypetestm ;
+cidx	CTINYTEXT	INSERT(CTINYTEXT,1,12,NULL)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,2,'Hello') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSERT(CMEDIUMTEXT,2,2,'Hello')
+1	mediumtestmediumtest	mHelloiumtestmediumtest
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,5,'Hello') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSERT(CMEDIUMTEXT,2,5,'Hello')
+1	mediumtestmediumtest	mHellotestmediumtest
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,-1,5,'Hello') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSERT(CMEDIUMTEXT,-1,5,'Hello')
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,12,'Hello') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSERT(CMEDIUMTEXT,2,12,'Hello')
+1	mediumtestmediumtest	mHelloiumtest
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,1,12,NULL) from datatypetestm ;
+cidx	CMEDIUMTEXT	INSERT(CMEDIUMTEXT,1,12,NULL)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,2,'Hello') from datatypetestm ;
+cidx	CLONGTEXT	INSERT(CLONGTEXT,2,2,'Hello')
+1	longtextlongtextlongtext	lHellogtextlongtextlongtext
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,5,'Hello') from datatypetestm ;
+cidx	CLONGTEXT	INSERT(CLONGTEXT,2,5,'Hello')
+1	longtextlongtextlongtext	lHelloxtlongtextlongtext
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,-1,5,'Hello') from datatypetestm ;
+cidx	CLONGTEXT	INSERT(CLONGTEXT,-1,5,'Hello')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,12,'Hello') from datatypetestm ;
+cidx	CLONGTEXT	INSERT(CLONGTEXT,2,12,'Hello')
+1	longtextlongtextlongtext	lHelloextlongtext
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,1,12,NULL) from datatypetestm ;
+cidx	CLONGTEXT	INSERT(CLONGTEXT,1,12,NULL)
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm where INSERT(CTEXT,2,2,'Hello') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSERT(CTEXT,2,5,'Hello') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSERT(CTEXT,-1,5,'Hello') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSERT(CTEXT,2,12,'Hello') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where INSERT(CTEXT,1,12,NULL) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where INSERT(CTINYTEXT,2,2,'Hello') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSERT(CTINYTEXT,2,5,'Hello') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSERT(CTINYTEXT,-1,5,'Hello') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSERT(CTINYTEXT,2,12,'Hello') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where INSERT(CTINYTEXT,1,12,NULL) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSERT(CMEDIUMTEXT,2,2,'Hello') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSERT(CMEDIUMTEXT,2,5,'Hello') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSERT(CMEDIUMTEXT,-1,5,'Hello') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSERT(CMEDIUMTEXT,2,12,'Hello') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INSERT(CMEDIUMTEXT,1,12,NULL) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where INSERT(CLONGTEXT,2,2,'Hello') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSERT(CLONGTEXT,2,5,'Hello') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSERT(CLONGTEXT,-1,5,'Hello') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSERT(CLONGTEXT,2,12,'Hello') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where INSERT(CLONGTEXT,1,12,NULL) <> 0 ;
+cidx	CLONGTEXT

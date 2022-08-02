@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT > dtt2.CDECIMAL10 ;
+cidx	CTINYINT	CDECIMAL10
+1	-26	-9999999
+2	-25	-9999998
+3	-24	-9999997
+4	-23	-9999996
+5	-22	-9999995
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT >= dtt2.CDECIMAL10 ;
+cidx	CTINYINT	CDECIMAL10
+1	-26	-9999999
+2	-25	-9999998
+3	-24	-9999997
+4	-23	-9999996
+5	-22	-9999995
+11	0	0
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <> dtt2.CDECIMAL10 ;
+cidx	CTINYINT	CDECIMAL10
+1	-26	-9999999
+2	-25	-9999998
+3	-24	-9999997
+4	-23	-9999996
+5	-22	-9999995
+6	23	9999995
+7	24	9999996
+8	25	9999997
+9	26	9999998
+10	27	9999999
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT < dtt2.CDECIMAL10 ;
+cidx	CTINYINT	CDECIMAL10
+6	23	9999995
+7	24	9999996
+8	25	9999997
+9	26	9999998
+10	27	9999999
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <= dtt2.CDECIMAL10 ;
+cidx	CTINYINT	CDECIMAL10
+6	23	9999995
+7	24	9999996
+8	25	9999997
+9	26	9999998
+10	27	9999999
+11	0	0

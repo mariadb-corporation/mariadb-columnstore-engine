@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT > dtt2.CMEDIUMINT ;
+cidx	CTINYTEXT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT >= dtt2.CMEDIUMINT ;
+cidx	CTINYTEXT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <> dtt2.CMEDIUMINT ;
+cidx	CTINYTEXT	CMEDIUMINT
+1	tinytext	1000
+2	tinytext	1000
+3	tinytext	1000
+4	tinytext	1000
+5	tinytext	1000
+6	tinytext	1000
+7	tinytext	1000
+8	tinytext	1000
+9	tinytext	1000
+10	tinytext	1000
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT < dtt2.CMEDIUMINT ;
+cidx	CTINYTEXT	CMEDIUMINT
+1	tinytext	1000
+2	tinytext	1000
+3	tinytext	1000
+4	tinytext	1000
+5	tinytext	1000
+6	tinytext	1000
+7	tinytext	1000
+8	tinytext	1000
+9	tinytext	1000
+10	tinytext	1000
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <= dtt2.CMEDIUMINT ;
+cidx	CTINYTEXT	CMEDIUMINT
+1	tinytext	1000
+2	tinytext	1000
+3	tinytext	1000
+4	tinytext	1000
+5	tinytext	1000
+6	tinytext	1000
+7	tinytext	1000
+8	tinytext	1000
+9	tinytext	1000
+10	tinytext	1000

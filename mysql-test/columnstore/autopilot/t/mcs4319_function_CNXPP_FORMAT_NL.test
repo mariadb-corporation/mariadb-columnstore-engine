@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=8192;
+select cidx, FORMAT(68.9876*cidx,0) from datatypetestm order by cidx;
+select cidx, FORMAT(-68.9876*cidx,1) from datatypetestm order by cidx;
+select cidx, FORMAT(68.9876*cidx,2) from datatypetestm order by cidx;
+select cidx, FORMAT(-68.9876*cidx,3) from datatypetestm order by cidx;
