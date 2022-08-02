@@ -105,10 +105,10 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
 
 // XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented mine's, with
 // slightly different types.
-static istream& readRid(std::istream* out, uint64_t& rhs)
+static istream& readRid(std::istream& in, uint64_t& rhs)
 {
-  out->read((char*)(&rhs), sizeof(rhs));
-  return *out;
+  in->read((char*)(&rhs), sizeof(rhs));
+  return *in;
 }
 
 ostream& operator<<(std::ostream& out, const StringElementType& rhs)
