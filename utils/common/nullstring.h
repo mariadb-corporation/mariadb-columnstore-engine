@@ -190,7 +190,7 @@ std::istream& operator >>(std::istream& in, utils::NullString& ns)
     char t[32768];
     in.read((char*)(&len), sizeof(len));
     in.read(t, len);
-    ns.assign(t, len);
+    ns.assign((const uint8_t*)t, len);
   }
   else
   {
