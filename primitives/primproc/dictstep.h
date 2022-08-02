@@ -147,7 +147,7 @@ class DictStep : public Command
   uint32_t traceFlags;  // probably move this to Command
   uint8_t BOP;
   int64_t* values;
-  boost::scoped_array<std::string>* strValues;
+  boost::scoped_array<utils::NullString>* strValues;
   int compressionType;
   messageqcpp::ByteStream filterString;
   uint32_t filterCount;
