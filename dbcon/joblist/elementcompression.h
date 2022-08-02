@@ -353,7 +353,7 @@ template <typename SrcType>
   uint32_t rid = e.first;
 
   fFile.write((char*)&rid, sizeof(rid));
-  uint8_t isNull = e.second.isiNull();
+  uint8_t isNull = e.second.isNull();
   fFile.write((char*)(&isNull), sizeof(isNull));
   if (!isNull)
   {
