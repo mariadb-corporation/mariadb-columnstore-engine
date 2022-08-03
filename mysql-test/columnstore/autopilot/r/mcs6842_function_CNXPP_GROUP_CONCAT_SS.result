@@ -10,7 +10,8 @@ select GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm;
 GROUP_CONCAT(CMEDIUMTEXT)
 mediumtestmediumtest
 select GROUP_CONCAT(CLONGTEXT) from datatypetestm;
-ERROR HY000: Internal error: MCS-2003: Aggregation/Distinct memory limit is exceeded.
+GROUP_CONCAT(CLONGTEXT)
+longtextlongtextlongtext
 select GROUP_CONCAT('Hello') from datatypetestm;
 GROUP_CONCAT('Hello')
 Hello
@@ -27,4 +28,5 @@ select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm group by 
 cidx	CMEDIUMTEXT	GROUP_CONCAT(CMEDIUMTEXT)
 1	mediumtestmediumtest	mediumtestmediumtest
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() MCS-2003: Aggregation/Distinct memory limit is exceeded.
+cidx	CLONGTEXT	GROUP_CONCAT(CLONGTEXT)
+1	longtextlongtextlongtext	longtextlongtextlongtext

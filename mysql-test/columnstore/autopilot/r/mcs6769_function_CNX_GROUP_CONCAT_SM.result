@@ -37,13 +37,17 @@ select GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatyp
 GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC)
 mediumtestmediumtestaaaCalpont
 select GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm;
-ERROR HY000: Internal error: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+GROUP_CONCAT(CLONGTEXT,CCHAR3)
+longtextlongtextlongtextaaa
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm;
-ERROR HY000: Internal error: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont')
+longtextlongtextlongtextaaaCalpont
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm;
-ERROR HY000: Internal error: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#')
+longtextlongtextlongtextaaaCalpont
 select GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
-ERROR HY000: Internal error: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+longtextlongtextlongtextaaaCalpont
 select cidx, CTEXT, GROUP_CONCAT(CTEXT,CCHAR3) from datatypetestm group by cidx, CTEXT ;
 cidx	CTEXT	GROUP_CONCAT(CTEXT,CCHAR3)
 1	texttexttext	texttexttextaaa
@@ -81,10 +85,14 @@ select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CID
 cidx	CMEDIUMTEXT	GROUP_CONCAT(CMEDIUMTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC)
 1	mediumtestmediumtest	mediumtestmediumtestaaaCalpont
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3) from datatypetestm group by cidx, CLONGTEXT ;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() IDB-2003: Aggregation/Distinct memory limit is exceeded.
+cidx	CLONGTEXT	GROUP_CONCAT(CLONGTEXT,CCHAR3)
+1	longtextlongtextlongtext	longtextlongtextlongtextaaa
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont') from datatypetestm group by cidx, CLONGTEXT ;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() IDB-2003: Aggregation/Distinct memory limit is exceeded.
+cidx	CLONGTEXT	GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont')
+1	longtextlongtextlongtext	longtextlongtextlongtextaaaCalpont
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CLONGTEXT ;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() IDB-2003: Aggregation/Distinct memory limit is exceeded.
+cidx	CLONGTEXT	GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' separator '#')
+1	longtextlongtextlongtext	longtextlongtextlongtextaaaCalpont
 select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CLONGTEXT ;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() IDB-2003: Aggregation/Distinct memory limit is exceeded.
+cidx	CLONGTEXT	GROUP_CONCAT(CLONGTEXT,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	longtextlongtextlongtext	longtextlongtextlongtextaaaCalpont

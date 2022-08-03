@@ -15,7 +15,7 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{"A": 1, "B": [2], "C": [3, 4]}	{"A": 1, "B": [2], "C": [3, 4]}
 SELECT cVarchar, JSON_CONTAINS_PATH(cVarchar, 'one', '$.A', '$.D'), cText, JSON_CONTAINS_PATH(cText, 'one', '$.A', '$.D') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains_path' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains_path' isn't supported.
 SELECT cVarchar, JSON_CONTAINS_PATH(cVarchar, 'all', '$.A', '$.D'), cText, JSON_CONTAINS_PATH(cText, 'all', '$.A', '$.D') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_contains_path' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_contains_path' isn't supported.
 TRUNCATE TABLE jsontest;

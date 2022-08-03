@@ -47,9 +47,5 @@ LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS T
 delete from nation;
 select user, priority, queryType, query from infinidb_querystats.querystats;
 user	priority	queryType	query
-root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
-root	LOW	UPDATE	update nation set n_regionkey = -1 where n_regionkey = 5
-root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
-root	LOW	DELETE	delete from nation
 DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs4011_db;

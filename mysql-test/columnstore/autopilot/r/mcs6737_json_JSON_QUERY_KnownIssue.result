@@ -21,5 +21,5 @@ cInt	cVarchar	cText
 1	{"key1":{"a":1, "b":[1,2]}}	{"key1":{"a":1, "b":[1,2]}}
 1	{"key1":123, "key1": [1,2,3]}	{"key1":123, "key1": [1,2,3]}
 SELECT cVarchar, JSON_QUERY(cVarchar, '$.key1'), cText, JSON_QUERY(cText, '$.key1') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_query' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_query' isn't supported.
 TRUNCATE TABLE jsontest;

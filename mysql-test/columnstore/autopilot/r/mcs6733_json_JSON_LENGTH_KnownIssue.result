@@ -24,7 +24,7 @@ cInt	cVarchar	cText
 1	[1, 2, {"a": 3}]	[1, 2, {"a": 3}]
 2	{"a": 1, "b": {"c": 30}}	{"a": 1, "b": {"c": 30}}
 SELECT cVarchar, JSON_LENGTH(cVarchar), cText, JSON_LENGTH(cText) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_length' isn't supported.
 SELECT cVarchar, JSON_LENGTH(cVarchar, '$.b'), cText, JSON_LENGTH(cText, '$.b') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_length' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_length' isn't supported.
 TRUNCATE TABLE jsontest;

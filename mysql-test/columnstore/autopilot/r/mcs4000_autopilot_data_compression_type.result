@@ -68,15 +68,15 @@ lineitem	CREATE TABLE `lineitem` (
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1
 SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs4000_db';
 schema	tablename	columnname	compressiontype
-mcs4000_db	orders	o_orderkey	0
-mcs4000_db	orders	o_custkey	0
-mcs4000_db	orders	o_orderstatus	0
-mcs4000_db	orders	o_totalprice	0
-mcs4000_db	orders	o_orderdate	0
-mcs4000_db	orders	o_orderpriority	0
-mcs4000_db	orders	o_clerk	0
-mcs4000_db	orders	o_shippriority	0
-mcs4000_db	orders	o_comment	0
+mcs4000_db	orders	o_orderkey	2
+mcs4000_db	orders	o_custkey	2
+mcs4000_db	orders	o_orderstatus	2
+mcs4000_db	orders	o_totalprice	2
+mcs4000_db	orders	o_orderdate	2
+mcs4000_db	orders	o_orderpriority	2
+mcs4000_db	orders	o_clerk	2
+mcs4000_db	orders	o_shippriority	2
+mcs4000_db	orders	o_comment	2
 mcs4000_db	lineitem	l_orderkey	2
 mcs4000_db	lineitem	l_partkey	2
 mcs4000_db	lineitem	l_suppkey	2

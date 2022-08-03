@@ -30,7 +30,7 @@ select cidx, CBIGINT, NULLIF(CBIGINT,'HELLO WORLD') from datatypetestm order by 
 cidx	CBIGINT	NULLIF(CBIGINT,'HELLO WORLD')
 1	-72036854775806	-72036854775806
 Warnings:
-Warning	1292	Truncated incorrect DOUBLE value: 'HELLO WORLD'
+Warning	1292	Truncated incorrect DECIMAL value: 'HELLO WORLD'
 select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CBIGINT) from datatypetestm order by cidx;
 cidx	CDECIMAL1	NULLIF(CDECIMAL1,CBIGINT)
 1	-9	-9
@@ -481,7 +481,7 @@ select cidx, CBIGINT from datatypetestm where NULLIF(CBIGINT,'HELLO WORLD') <> 0
 cidx	CBIGINT
 1	-72036854775806
 Warnings:
-Warning	1292	Truncated incorrect DOUBLE value: 'HELLO WORLD'
+Warning	1292	Truncated incorrect DECIMAL value: 'HELLO WORLD'
 select cidx, CDECIMAL1 from datatypetestm where NULLIF(CDECIMAL1,CBIGINT) <> 0 order by cidx;
 cidx	CDECIMAL1
 1	-9

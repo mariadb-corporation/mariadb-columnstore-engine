@@ -21,7 +21,7 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{"id": 1, "name": "Monty"}	{"id": 1, "name": "Monty"}
 SELECT cVarchar, JSON_VALID(cVarchar), cText, JSON_VALID(cText) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_valid' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_valid' isn't supported.
 SELECT cVarchar, JSON_VALID(CONCAT(cVarchar,'HELLO WORLD')), cText, JSON_VALID(CONCAT(cText,'HELLO WORLD')) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_valid' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_valid' isn't supported.
 TRUNCATE TABLE jsontest;

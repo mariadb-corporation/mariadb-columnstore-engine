@@ -12,5 +12,5 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{ "A": 0, "B": [1, 2]}	{ "A": 0, "B": [1, 2]}
 SELECT cVarchar, JSON_INSERT(cVarchar, '$.C', '[3, 4]'), cText, JSON_INSERT(cText, '$.C', '[3, 4]') from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_insert' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_insert' isn't supported.
 TRUNCATE TABLE jsontest;

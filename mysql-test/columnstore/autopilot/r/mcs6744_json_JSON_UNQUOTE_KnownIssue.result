@@ -17,11 +17,11 @@ SELECT JSON_UNQUOTE(@json2);
 JSON_UNQUOTE(@json2)
 Sing	ing
 SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_unquote' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_unquote' isn't supported.
 SET @@sql_mode = 'NO_BACKSLASH_ESCAPES';
 SELECT JSON_UNQUOTE(@json2);
 JSON_UNQUOTE(@json2)
 Sing	ing
 SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_unquote' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_unquote' isn't supported.
 TRUNCATE TABLE jsontest;

@@ -18,9 +18,9 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	[1, 2, [3, 4]]	[1, 2, [3, 4]]
 SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[0]', 5), cText, JSON_ARRAY_INSERT(cText, '$[0]', 5) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_array_insert' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_insert' isn't supported.
 SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_array_insert' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_insert' isn't supported.
 SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6, '$[2]', 7), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6, '$[2]', 7) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support IDB-1001: Function 'json_array_insert' isn't supported.
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_insert' isn't supported.
 TRUNCATE TABLE jsontest;
