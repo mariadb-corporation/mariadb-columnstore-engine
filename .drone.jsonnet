@@ -1,7 +1,7 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:10', 'debian:11', 'ubuntu:18.04', 'ubuntu:20.04', 'ubuntu:22.04'],
   'develop-6': ['centos:7', 'rockylinux:8', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
@@ -31,7 +31,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO';
 
-local clang_version = '14';
+local clang_version = '13';
 local gcc_version = '11';
 
 local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-' + gcc_version + ' 100 --slave /usr/bin/g++ g++ /usr/bin/g++-' + gcc_version + '--slave /usr/bin/gcov gcov /usr/bin/gcov-' + gcc_version + ' ';
@@ -59,6 +59,7 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
 
 local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
+local ubuntu18_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
@@ -73,6 +74,7 @@ local platformMap(platform, arch) =
     'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'debian:10': deb_build_deps + ' && ' + debian10_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'debian:11': deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
+    'ubuntu:18.04': ubuntu18_04_deps + " && " + turnon_clang + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
@@ -86,6 +88,7 @@ local testRun(platform) =
     'rockylinux:9': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'debian:11': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
+    'ubuntu:18.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:22.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
   };
@@ -99,6 +102,7 @@ local testPreparation(platform) =
     'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:18.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake g++ && cd /usr/src/googletest; cmake . && cmake --build . --target install; cd -',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
   };
