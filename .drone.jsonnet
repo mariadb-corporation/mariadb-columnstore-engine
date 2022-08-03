@@ -71,10 +71,10 @@ local platformMap(platform, arch) =
   local platform_map = {
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'debian:10': deb_build_deps + ' && ' + debian10_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'debian:11': deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
-    'ubuntu:18.04': ubuntu18_04_deps + " && " + turnon_clang + ' && ' + deb_build_deps + " && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
+    'ubuntu:18.04': ubuntu18_04_deps + " && " + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bionic' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
@@ -97,14 +97,14 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:18.04': 'apt update && apt install --yes libboost-all-dev libgtest-dev libcppunit-dev googletest libsnappy-dev cmake g++ && cd /usr/src/googletest; cmake . && cmake --build . --target install; cd -',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 snappy-devel',
+    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3  snappy-devel',
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 snappy-devel',
+    'debian:10': 'apt update && apt install --yes git libcppunit-dev libsnappy-dev cmake',
+    'debian:11': 'apt update && apt install --yes git libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:18.04': 'apt update && apt install --yes git libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:20.04': 'apt update && apt install --yes git libcppunit-dev libsnappy-dev cmake',
+    'ubuntu:22.04': 'apt update && apt install --yes git libcppunit-dev libsnappy-dev cmake',
   };
   platform_map[platform];
 
