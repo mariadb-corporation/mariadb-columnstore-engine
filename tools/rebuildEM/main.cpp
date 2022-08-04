@@ -115,15 +115,6 @@ int main(int argc, char** argv)
     }
   }
 
-  // Initialize system extents from the binary blob.
-  auto rc = emReBuilder.initializeSystemExtents();
-  if (rc == -1)
-  {
-    std::cerr << "Cannot initialize system extents from binary blob." << std::endl;
-    std::cerr << "Exiting. " << std::endl;
-    return 1;
-  }
-
   // Make config from default path.
   std::string count = config->getConfig("SystemConfig", "DBRootCount");
   // Read the number of DBRoots.
