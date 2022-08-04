@@ -134,7 +134,8 @@ class Charset
 {
  protected:
   const struct charset_info_st* mCharset;
-
+ private:
+  static constexpr const uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
  public:
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
@@ -177,6 +178,10 @@ class Charset
   {
     bool res = !mCharset->wildcmp(subject.str(), subject.end(), pattern.str(), pattern.end(), '\\', '_', '%');
     return neg ? !res : res;
+  }
+  static uint getDefaultFlags()
+  {
+    return flags_;
   }
 };
 
