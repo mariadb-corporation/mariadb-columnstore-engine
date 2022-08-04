@@ -166,10 +166,24 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
       case execplan::CalpontSystemCatalog::VARCHAR:
       case execplan::CalpontSystemCatalog::BLOB:
       case execplan::CalpontSystemCatalog::TEXT:
-        h.add(r.getCharset(i), r.getConstString(i));
-        strHashUsed = true;
+      {
+        auto strColValue = r.getConstString(i);
+        if (strColValue.length() > MaxConstStrSize)
+        {
+          h.add(r.getCharset(i), strColValue);
+          strHashUsed = true;
+        }
+        else
+        {
+          auto cs = r.getCharset(i);
+          uchar buf[MaxConstStrBufSize];
+          uint nActualWeights = cs->strnxfrm(buf, MaxConstStrBufSize, MaxConstStrBufSize,
+            reinterpret_cast<const uchar*>(strColValue.str()), strColValue.length(),
+            datatypes::Charset::getDefaultFlags());
+          ret = hashData(buf, nActualWeights, ret);
+        }
         break;
-
+      }
       default: ret = hashData(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
     }
   }
@@ -1820,15 +1834,26 @@ void RowAggStorage::increaseSize()
   if (fCurData->fSize * maxMaskMultiplierWoRehashing < calcMaxSize(fCurData->fMask + 1))
   {
     // something strange happens...
-    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_ERROR),
-                             logging::ERR_DISKAGG_ERROR);
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_OVERFLOW2),
+                             logging::ERR_DISKAGG_OVERFLOW2);
   }
 
   auto freeMem = fMM->getFree();
   if (fEnabledDiskAggregation ||
       freeMem > (fMM->getUsed() + fCurData->fHashes->memUsage() + fStorage->getAproxRGSize()) * 2)
   {
-    rehashPowerOfTwo((fCurData->fMask + 1) * 2);
+    if (fCurData->fSize * 2 < maxSize)
+    {
+      // we have to resize, even though there would still be plenty of space left!
+      // Try to rehash instead. Delete freed memory so we don't steadyily increase mem in case
+      // we have to rehash a few times
+      nextHashMultiplier();
+      rehashPowerOfTwo(fCurData->fMask + 1);
+    }
+    else
+    {
+      rehashPowerOfTwo((fCurData->fMask + 1) * 2);
+    }
   }
   else if (fGeneration < MAX_INMEMORY_GENS - 1)
   {
@@ -1888,8 +1913,8 @@ void RowAggStorage::insertSwap(size_t oldIdx, RowPosHashStorage* oldHashes)
 {
   if (fCurData->fMaxSize == 0 && !tryIncreaseInfo())
   {
-    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_ERROR),
-                             logging::ERR_DISKAGG_ERROR);
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_OVERFLOW1),
+                             logging::ERR_DISKAGG_OVERFLOW1);
   }
 
   size_t idx{};
