@@ -1285,10 +1285,10 @@ void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask,
   if (validMinMax)
   {
     auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
-    simdMin = simdProcessor.blend(simdMin, dataVec,
-                                  simdProcessor.bwAnd(simdProcessor.cmpGt2(simdMin, dataVec), byteMask));
-    simdMax = simdProcessor.blend(simdMax, dataVec,
-                                  simdProcessor.bwAnd(simdProcessor.cmpGt2(dataVec, simdMax), byteMask));
+    simdMin = simdProcessor.blend(
+        simdMin, dataVec, simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(simdMin, dataVec), byteMask));
+    simdMax = simdProcessor.blend(
+        simdMax, dataVec, simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(dataVec, simdMax), byteMask));
   }
 }
 
@@ -1300,8 +1300,8 @@ void vectorizedTextUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyM
   if (validMinMax)
   {
     auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
-    auto minComp = simdProcessor.bwAnd(simdProcessor.cmpGt2(weightsMin, swapedOrderDataVec), byteMask);
-    auto maxComp = simdProcessor.bwAnd(simdProcessor.cmpGt2(swapedOrderDataVec, weightsMax), byteMask);
+    auto minComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(weightsMin, swapedOrderDataVec), byteMask);
+    auto maxComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(swapedOrderDataVec, weightsMax), byteMask);
     simdMin = simdProcessor.blend(simdMin, dataVec, minComp);
     weightsMin = simdProcessor.blend(weightsMin, swapedOrderDataVec, minComp);
     simdMax = simdProcessor.blend(simdMax, dataVec, maxComp);

@@ -205,14 +205,14 @@ struct TypeToVecWrapperType<T, typename std::enable_if<std::is_same_v<double, T>
   using WrapperType =  vi128d_wr;
 };
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned_v<T> >::type> 
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned_v<T> >::type>
     : WidthToVecWrapperType<sizeof(T)>
 {
 };
 
 template <typename T>
     struct TypeToVecWrapperType<
-        T, typename std::enable_if<std::is_signed_v<T> &&!is_floating_point_v<T>>::type> 
+        T, typename std::enable_if<std::is_signed_v<T> &&!is_floating_point_v<T>>::type>
     : WidthToSVecWrapperType<sizeof(T)>
 {
 };
@@ -367,7 +367,7 @@ class SimdFilterProcessor<
   {
     return vbslq_s32((uint32x4_t)mask, y,x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_s32(x, y);
   }
@@ -533,7 +533,7 @@ class SimdFilterProcessor<
   {
     return vminvq_f64(x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_f64(x, y);
   }
@@ -638,7 +638,7 @@ class SimdFilterProcessor<
   {
     return vbslq_f32((uint32x4_t)mask, y,x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_f32(x, y);
   }
@@ -792,7 +792,7 @@ class SimdFilterProcessor<
   {
     return vandq_s64(x, y);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_s64(x, y);
   }
@@ -908,7 +908,7 @@ class SimdFilterProcessor<
   {
     return vbslq_u64((uint64x2_t)mask, y,x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_u64(x, y);
   }
@@ -1041,7 +1041,7 @@ class SimdFilterProcessor<
   {
     return vbslq_s32((uint32x4_t)mask, y,x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_s32(x, y);
   }
@@ -1174,7 +1174,7 @@ class SimdFilterProcessor<
   {
     return vbslq_u32((uint32x4_t)mask, y,x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_u32(x, y);
   }
@@ -1316,7 +1316,7 @@ class SimdFilterProcessor<
   {
     return vandq_s16(x, y);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_s16(x, y);
   }
@@ -1425,7 +1425,7 @@ class SimdFilterProcessor<VT, CHECK_T,
   {
     return vdupq_n_u16(fill);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_u16(x, y);
   }
@@ -1566,7 +1566,7 @@ class SimdFilterProcessor<
   {
     return vmaxvq_s8(x);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_s8(x, y);
   }
@@ -1714,7 +1714,7 @@ class SimdFilterProcessor<
   {
     return vandq_u8(x, y);
   }
-  MCS_FORCE_INLINE SimdType cmpGt2(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_u8(x, y);
   }
