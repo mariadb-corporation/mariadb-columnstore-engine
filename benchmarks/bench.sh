@@ -50,9 +50,9 @@ die() {
   exit "$code"
 }
 
-
-cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
-
+cd $PWD
+LUA_PATH=$MDB_SOURCE_PATH/columnstore/columnstore/benchmarks/?.lua
+export LUA_PATH
 DATA=$(sudo mktemp -p /var)
 eval ./$GEN > "$DATA"
 
@@ -93,4 +93,5 @@ BRANCH2_DATA=$(sysbench $SCRIPT \
         --mysql-db=test \
         --time=$TIME run | tail -n +12)
 
+cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
 python3 parse_bench.py "$BRANCH2" "$BRANCH1" "$BRANCH2_DATA" "$BRANCH1_DATA" "$TIME"
