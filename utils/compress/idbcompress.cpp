@@ -56,7 +56,7 @@ const int LEN_OFFSET = 5;
 const unsigned HEADER_SIZE = 9;
 
 // The max number of lbids to be stored in segment file.
-const uint32_t LBID_MAX_SIZE = 10;
+const uint32_t LBID_MAX_SIZE = 48;
 
 struct CompressedDBFileHeader
 {
