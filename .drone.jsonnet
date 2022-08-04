@@ -31,7 +31,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO';
 
-local clang_version = '13';
+local clang_version = '14';
 local gcc_version = '11';
 
 local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-' + gcc_version + ' 100 --slave /usr/bin/g++ g++ /usr/bin/g++-' + gcc_version + '--slave /usr/bin/gcov gcov /usr/bin/gcov-' + gcc_version + ' ';
@@ -59,9 +59,11 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
 
 local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-local update_cmake = "apt install -y apt-transport-https ca-certificates gnupg software-properties-common wget && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && apt update && apt install -y cmake";
 
-local ubuntu18_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives + ' && ' + update_cmake;
+local update_cmake = "apt install -y apt-transport-https ca-certificates gnupg software-properties-common wget && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ bionic main' && apt update && apt install -y cmake";
+local test_toolset_u18 = 'add-apt-repository -y ppa:ubuntu-toolchain-r/test';
+local ubuntu18_04_deps =  update_cmake + ' && ' + test_toolset_u18 + ' && apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
+
 local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
