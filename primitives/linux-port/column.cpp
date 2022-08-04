@@ -41,7 +41,9 @@ using namespace boost;
 #include "dataconvert.h"
 #include "mcs_decimal.h"
 #include "simd_sse.h"
+#include "simd_arm.h"
 #include "utils/common/columnwidth.h"
+#include "utils/common/bit_cast.h"
 
 #include "exceptclasses.h"
 
@@ -924,7 +926,7 @@ inline void writeColValue(uint8_t OutputType, ColResultHeader* out, uint16_t rid
   }
 }
 
-#if defined(__x86_64__)
+#if defined(__x86_64__)|| defined(__aarch64__)
 template <typename T, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty, T& Min, T& Max, T curValue,
@@ -1001,9 +1003,6 @@ inline uint16_t vectWriteColValues(
       *tmpDstVecTPtr = dataVecTPtr[j];
       ++tmpDstVecTPtr;
     }
-
-    vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition, Min, Max,
-                                              dataVecTPtr[j], in);
   }
   // Store the whole vector however one level up the stack
   // vectorizedFiltering() increases the dstArray by a number of
@@ -1069,8 +1068,6 @@ inline uint16_t vectWriteColValues(
       vectWriteColValuesLoopRIDAsignment<T, HAS_INPUT_RIDS>(ridDstArray, out, ridOffset + j, ridSrcArray, j);
       ++ridDstArray;
     }
-    vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition, Min, Max,
-                                              dataVecTPtr[j], in);
   }
   // Store the whole vector however one level up the stack
   // vectorizedFiltering() increases the dstArray by a number of
@@ -1106,14 +1103,11 @@ inline uint16_t vectWriteRIDValues(
   uint16_t j = 0;
   for (uint32_t it = 0; it < VT::vecByteSize; ++j, it += FilterMaskStep)
   {
-    MT bitMapPosition = 1 << it;
     if (writeMask & (1 << it))
     {
       vectWriteColValuesLoopRIDAsignment<T, HAS_INPUT_RIDS>(ridDstArray, out, ridOffset + j, ridSrcArray, j);
       ++ridDstArray;
     }
-    vectUpdateMinMax<T, KIND, HAS_INPUT_RIDS>(validMinMax, nonNullOrEmptyMask & bitMapPosition, Min, Max,
-                                              dataVecTPtr[j], in);
   }
   return ridDstArray - origRIDDstArray;
 }
@@ -1229,7 +1223,7 @@ void scalarFiltering(
   }
 }
 
-#if defined(__x86_64__)
+#if defined(__x86_64__)|| defined(__aarch64__)
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
@@ -1284,6 +1278,62 @@ inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType 
     return {result};
 }
 
+template <typename VT, typename SimdType>
+void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT simdProcessor,
+                            SimdType& dataVec, SimdType& simdMin, SimdType& simdMax)
+{
+  if (validMinMax)
+  {
+    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    simdMin = simdProcessor.blend(
+        simdMin, dataVec, simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(simdMin, dataVec), byteMask));
+    simdMax = simdProcessor.blend(
+        simdMax, dataVec, simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(dataVec, simdMax), byteMask));
+  }
+}
+
+template <typename VT, typename SimdType>
+void vectorizedTextUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask, VT simdProcessor,
+                                SimdType& dataVec, SimdType& simdMin, SimdType& simdMax,
+                                SimdType& swapedOrderDataVec, SimdType& weightsMin, SimdType& weightsMax)
+{
+  if (validMinMax)
+  {
+    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    auto minComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(weightsMin, swapedOrderDataVec), byteMask);
+    auto maxComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(swapedOrderDataVec, weightsMax), byteMask);
+    simdMin = simdProcessor.blend(simdMin, dataVec, minComp);
+    weightsMin = simdProcessor.blend(weightsMin, swapedOrderDataVec, minComp);
+    simdMax = simdProcessor.blend(simdMax, dataVec, maxComp);
+    weightsMax = simdProcessor.blend(weightsMax, swapedOrderDataVec, maxComp);
+  }
+}
+
+template<typename T, typename VT, typename SimdType>
+void extractMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, T& min, T& max)
+{
+  constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
+  T* simdMinVec = reinterpret_cast<T*>(&simdMin);
+  T* simdMaxVec = reinterpret_cast<T*>(&simdMax);
+  max = *std::max_element(simdMaxVec, simdMaxVec + size);
+  min = *std::min_element(simdMinVec, simdMinVec + size);
+}
+
+template<typename T, typename VT, typename SimdType>
+void extractTextMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, SimdType weightsMin,
+                       SimdType weightsMax, T& min, T& max)
+{
+  constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
+  T* simdMinVec = reinterpret_cast<T*>(&simdMin);
+  T* simdMaxVec = reinterpret_cast<T*>(&simdMax);
+  T* weightsMinVec = reinterpret_cast<T*>(&weightsMin);
+  T* weightsMaxVec = reinterpret_cast<T*>(&weightsMax);
+  auto indMin = std::min_element(weightsMinVec, weightsMinVec + size);
+  auto indMax = std::max_element(weightsMaxVec, weightsMaxVec + size);
+  min = simdMinVec[indMin - weightsMinVec];
+  max = simdMaxVec[indMax - weightsMaxVec];
+}
+
 // This routine filters input block in a vectorized manner.
 // It supports all output types, all input types.
 // It doesn't support KIND==TEXT so upper layers filters this KIND out beforehand.
@@ -1298,7 +1348,7 @@ template<typename T, typename VT, bool HAS_INPUT_RIDS, int OUTPUT_TYPE,
 void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T* srcArray,
                          const uint32_t srcSize, primitives::RIDType* ridArray, const uint16_t ridSize,
                          ParsedColumnFilter* parsedColumnFilter, const bool validMinMax, const T emptyValue,
-                         const T nullValue, T Min, T Max, const bool isNullValueMatches)
+                         const T nullValue, T min, T max, const bool isNullValueMatches)
 {
   constexpr const uint16_t WIDTH = sizeof(T);
   using SimdType = typename VT::SimdType;
@@ -1419,7 +1469,15 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       }
     }
   }
-
+  SimdType simdMin = simdProcessor.loadValue(min);;
+  SimdType simdMax = simdProcessor.loadValue(max);;
+  [[maybe_unused]] SimdType weightsMin;
+  [[maybe_unused]] SimdType weightsMax;
+  if constexpr (KIND == KIND_TEXT)
+  {
+    weightsMin = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMin).v;
+    weightsMax = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMax).v;
+  }
   // main loop
   // writeMask tells which values must get into the result. Includes values that matches filters. Can have
   // NULLs. nonEmptyMask tells which vector coords are not EMPTY magics. nonNullMask tells which vector coords
@@ -1465,13 +1523,19 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     // outside the scope of the memory allocated to out msg.
     // vectWriteColValues is empty if outputMode == OT_RID.
     uint16_t valuesWritten = vectWriteColValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(
-        simdProcessor, writeMask, nonNullOrEmptyMask, validMinMax, ridOffset, dataVecTPtr, dstArray, Min, Max,
+        simdProcessor, writeMask, nonNullOrEmptyMask, validMinMax, ridOffset, dataVecTPtr, dstArray, min, max,
         in, out, ridDstArray, ridArray);
     // Some outputType modes saves RIDs also. vectWriteRIDValues is empty for
     // OT_DATAVALUE, OT_BOTH(vectWriteColValues takes care about RIDs).
     valuesWritten = vectWriteRIDValues<T, VT, OUTPUT_TYPE, KIND, HAS_INPUT_RIDS>(
-        simdProcessor, valuesWritten, validMinMax, ridOffset, dataVecTPtr, ridDstArray, writeMask, Min, Max,
+        simdProcessor, valuesWritten, validMinMax, ridOffset, dataVecTPtr, ridDstArray, writeMask, min, max,
         in, out, nonNullOrEmptyMask, ridArray);
+
+    if constexpr (KIND != KIND_TEXT)
+      vectorizedUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax);
+    else
+      vectorizedTextUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax,
+                                 swapedOrderDataVec, weightsMin, weightsMax);
 
     // Calculate bytes written
     uint16_t bytesWritten = valuesWritten * WIDTH;
@@ -1482,6 +1546,10 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     srcArray += VECTOR_SIZE;
     ridArray += VECTOR_SIZE;
   }
+  if constexpr (KIND != KIND_TEXT)
+    extractMinMax(simdProcessor, simdMin, simdMax, min, max);
+  else
+    extractTextMinMax(simdProcessor, simdMin, simdMax, weightsMin, weightsMax, min, max);
 
   // Set the number of output values here b/c tail processing can skip this operation.
   out->NVALS = totalValuesWritten;
@@ -1490,8 +1558,8 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   out->ValidMinMax = validMinMax;
   if (validMinMax)
   {
-    out->Min = Min;
-    out->Max = Max;
+    out->Min = min;
+    out->Max = max;
   }
   // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
   // This tail also sets out::Min/Max, out::validMinMax if validMinMax is set.
@@ -1499,7 +1567,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                    ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
-                                   Min, Max, isNullValueMatches);
+                                   min, max, isNullValueMatches);
 }
 
 // This routine dispatches template function calls to reduce branching.
@@ -1627,7 +1695,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // Syscat queries mustn't follow vectorized processing path b/c PP must return
   // all values w/o any filter(even empty values filter) applied.
 
-#if defined(__x86_64__)
+#if defined(__x86_64__)|| defined(__aarch64__)
   // Don't use vectorized filtering for text based data types.
   if (WIDTH < 16 &&
     (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))
