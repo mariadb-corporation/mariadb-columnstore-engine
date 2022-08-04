@@ -2,7 +2,7 @@
 Description=mcs-exemgr
 
 # restart/start mcs-exemgr on restart/start of mcs-primproc
-PartOf=mcs-primproc.service
+# PartOf=mcs-primproc.service
 After=network.target mcs-primproc.service
 
 [Service]
