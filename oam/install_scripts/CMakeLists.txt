@@ -31,6 +31,7 @@ install(PROGRAMS columnstore-post-install
                 mcs-savebrm.py
                 mariadb-columnstore-start.sh
                 mariadb-columnstore-stop.sh
+                loop_process_starter.sh
                 DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
 install(FILES mariadb-columnstore.service
