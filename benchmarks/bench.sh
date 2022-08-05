@@ -50,7 +50,6 @@ die() {
   exit "$code"
 }
 
-cd $PWD
 LUA_PATH=$MDB_SOURCE_PATH/columnstore/columnstore/benchmarks/?.lua
 export LUA_PATH
 DATA=$(sudo mktemp -p /var)
