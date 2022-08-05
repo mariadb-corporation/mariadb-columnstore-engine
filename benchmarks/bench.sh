@@ -50,17 +50,20 @@ die() {
   exit "$code"
 }
 
+RUN_DIRECTORY=$(pwd)
 
-cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
-
+LUA_PATH=$MDB_SOURCE_PATH/columnstore/columnstore/benchmarks/?.lua
+export LUA_PATH
 DATA=$(sudo mktemp -p /var)
 eval ./$GEN > "$DATA"
 
+cd $MDB_SOURCE_PATH/columnstore/columnstore/
 git checkout $BRANCH1
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
 echo "Build done; benchmarking $BRANCH1 now"
 git checkout with_benchmarks
 #Prepare should only create the table, we will fill it with cpimport
+cd $RUN_DIRECTORY
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
@@ -75,10 +78,12 @@ BRANCH1_DATA=$(sysbench $SCRIPT \
         --mysql-db=test \
         --time=$TIME run | tail -n +12)
 
+cd $MDB_SOURCE_PATH/columnstore/columnstore/
 git checkout $BRANCH2
 sudo $MDB_SOURCE_PATH/columnstore/columnstore/build/bootstrap_mcs.sh -t RelWithDebInfo
 echo "Build done; benchmarking $BRANCH2 now"
 git checkout with_benchmarks
+cd $RUN_DIRECTORY
 sysbench $SCRIPT \
         --mysql-socket=/run/mysqld/mysqld.sock \
         --db-driver=mysql \
@@ -93,4 +98,5 @@ BRANCH2_DATA=$(sysbench $SCRIPT \
         --mysql-db=test \
         --time=$TIME run | tail -n +12)
 
+cd $MDB_SOURCE_PATH/columnstore/columnstore/benchmarks
 python3 parse_bench.py "$BRANCH2" "$BRANCH1" "$BRANCH2_DATA" "$BRANCH1_DATA" "$TIME"
