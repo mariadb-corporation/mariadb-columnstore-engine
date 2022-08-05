@@ -110,12 +110,13 @@ inline int8_t weightSub(const char* str1, size_t length1, const char* str2, size
 }
 //When the COP is COMPARE_LIKE,the str1 and str2... are used 
 inline bool compare(uint8_t COP, const char* weightArray1, size_t length1, const char* weightArray2,size_t length2, 
-                    const char* str1 = nullptr, size_t lengthStr1 = 0,const char* str21 = nullptr, size_t lengthStr2=0)
+                    const char* str1 = nullptr, size_t lengthStr1 = 0,const char* str2 = nullptr, size_t lengthStr2=0, 
+                    const datatypes::Charset* cs=nullptr)
 
 {
   if (COP & COMPARE_LIKE)
-    return like(COP & COMPARE_NOT, ConstString(str1, lengthStr1), ConstString(str2, lengthStr2));
-  int8_t cmp = weightSub(weightArray1, length1,weightArray2,length2);
+    return cs->like(COP & COMPARE_NOT, ConstString(str1, lengthStr1), ConstString(str2, lengthStr2));
+  int8_t cmp = weightSub(weightArray1, length1, str2, weightArray2);
   switch (COP)
   {
     case COMPARE_NIL: return false;
@@ -667,7 +668,7 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
       filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
       cmpResult = primitives::compare(filter->COP, weightArray, valueLength, filWeightArrayPtr[filterIndex].str(),
                           filWeightArrayPtr[filterIndex].length(),(const char*)sigptr.data, sigptr.len, (const char*)filter->data,
-                          filter->len);
+                          filter->len,&cs);
       if (!cmpResult && in->BOP != BOP_OR)
         goto no_store;
 
