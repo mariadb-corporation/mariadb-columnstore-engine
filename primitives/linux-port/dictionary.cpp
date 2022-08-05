@@ -82,6 +82,8 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
   const char* sig;
   uint16_t siglen;
 
+  idblog("in " __FUNCTION__ ", sadly.");
+
   PrimToken* retTokens;
   DataValue* retDataValues;
   int rdvOffset;
