@@ -87,13 +87,14 @@ inline int8_t weightSub(const char* str1, size_t length1, const char* str2, size
     SimdType op1 = simdProcessor.loadFrom(str1 + i);
     SimdType op2 = simdProcessor.loadFrom(str2 + i);
     res = simdProcessor.cmpNe(op1, op2);
-    if (res==0)
+    if (res!=0)
     {
-      int8_t* resPtr = reinterpret_cast<int8_t*>(&res);
+      int8_t* op1Ptr = reinterpret_cast<int8_t*>(&op1);
+      int8_t* op2Ptr = reinterpret_cast<int8_t*>(&op2);
       for (int j = 0; j < 16; ++j)
       {
-        if (resPtr[j] != 0)
-          return resPtr[j];
+        if (op1Ptr[j]-op2Ptr[j] != 0)
+          return op1Ptr[j]-op2Ptr[j];
       }
     }
   }
@@ -107,9 +108,14 @@ inline int8_t weightSub(const char* str1, size_t length1, const char* str2, size
   }
   return length1 - length2;
 }
-inline bool compare(uint8_t COP, const char* str1, size_t length1, const char* str2, size_t length2)
+//When the COP is COMPARE_LIKE,the str1 and str2... are used 
+inline bool compare(uint8_t COP, const char* weightArray1, size_t length1, const char* weightArray2,size_t length2, 
+                    const char* str1 = nullptr, size_t lengthStr1 = 0,const char* str21 = nullptr, size_t lengthStr2=0)
+
 {
-  int8_t cmp = weightSub(str1, length1, str2, length2);
+  if (COP & COMPARE_LIKE)
+    return like(COP & COMPARE_NOT, ConstString(str1, lengthStr1), ConstString(str2, lengthStr2));
+  int8_t cmp = weightSub(weightArray1, length1,weightArray2,length2);
   switch (COP)
   {
     case COMPARE_NIL: return false;
@@ -609,13 +615,13 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
         if (tmp > 0)
         {
           max = sigptr;
-          maxWeightArray = move(string(weightArray, valueLength));
+          maxWeightArray = string(weightArray, valueLength);
         }
       }
       else
       {
         max = sigptr;
-        maxWeightArray = move(string(weightArray, valueLength));
+        maxWeightArray = string(weightArray, valueLength);
       }
 
       if (min.len != 0)
@@ -624,13 +630,13 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
         if (tmp < 0)
         {
           min = sigptr;
-          minWeightArray = move(string(weightArray, valueLength));
+          minWeightArray = string(weightArray, valueLength);
         }
       }
       else
       {
         min = sigptr;
-        minWeightArray = move(string(weightArray, valueLength));
+        minWeightArray = string(weightArray, valueLength);
       }
 
       aggCount++;
@@ -660,7 +666,8 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
     {
       filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
       cmpResult = primitives::compare(filter->COP, weightArray, valueLength, filWeightArrayPtr[filterIndex].str(),
-                          filWeightArrayPtr[filterIndex].length());
+                          filWeightArrayPtr[filterIndex].length(),(const char*)sigptr.data, sigptr.len, (const char*)filter->data,
+                          filter->len);
       if (!cmpResult && in->BOP != BOP_OR)
         goto no_store;
 
