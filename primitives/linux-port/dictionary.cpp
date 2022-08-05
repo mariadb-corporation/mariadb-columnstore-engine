@@ -20,6 +20,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include <boost/scoped_array.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <sys/types.h>
@@ -33,6 +34,11 @@ using namespace std;
 #include "dataconvert.h"
 #include "string_prefixes.h"
 #include <sstream>
+#include "mcs_datatype.h"
+#include "simd_sse.h"
+#include "simd_arm.h"
+#include "hasher.h"
+#include <unordered_set>
 
 using namespace logging;
 
@@ -46,6 +52,123 @@ const char* signatureNotFound = joblist::CPSTRNOTFOUND.c_str();
 
 namespace primitives
 {
+#if defined(__x86_64__) || defined(__aarch64__)
+//only length greater than 32 the weightSub is faster than 
+inline int8_t weightSub(const char* str1, size_t length1, const char* str2, size_t length2)
+{
+  using SimdTypeWrapper = typename simd::IntegralToSIMD<uint8_t, KIND_DEFAULT>::type;
+  using VT=simd::SimdFilterProcessor<SimdTypeWrapper, uint8_t>;
+  using SimdType =VT::SimdType;
+  VT simdProcessor;
+  const uint16_t mlength = min(length1, length2);
+  uint16_t i;
+//the sse SimdFilterProcessor doesn't have the instruction like vmaxvq_u8
+#if defined(__aarch64__)
+  SimdType res;
+  for (i = 0; i <= mlength - 16; i += 16)
+  {
+    SimdType op1 = simdProcessor.loadFrom(str1 + i);
+    SimdType op2 = simdProcessor.loadFrom(str2 + i);
+    res = simdProcessor.sub(op1, op2);
+    if (simdProcessor.maxScalar(res) != 0)
+    {
+      int8_t* resPtr = reinterpret_cast<int8_t*>(&res);
+      for (int j = 0; j < 16; ++j)
+      {
+        if (resPtr[j] != 0)
+          return resPtr[j];
+      }
+    }
+  }
+#else
+  uint16_t res;
+  for (i = 0; i <= mlength - 16; i += 16)
+  {
+    SimdType op1 = simdProcessor.loadFrom(str1 + i);
+    SimdType op2 = simdProcessor.loadFrom(str2 + i);
+    res = simdProcessor.cmpNe(op1, op2);
+    if (res==0)
+    {
+      int8_t* resPtr = reinterpret_cast<int8_t*>(&res);
+      for (int j = 0; j < 16; ++j)
+      {
+        if (resPtr[j] != 0)
+          return resPtr[j];
+      }
+    }
+  }
+#endif
+  for (; i < mlength; ++i)
+  {
+    if ((str1[i] - str2[i]) != 0)
+    {
+      return str1[i] - str2[i];
+    }
+  }
+  return length1 - length2;
+}
+inline bool compare(uint8_t COP, const char* str1, size_t length1, const char* str2, size_t length2)
+{
+  int8_t cmp = weightSub(str1, length1, str2, length2);
+  switch (COP)
+  {
+    case COMPARE_NIL: return false;
+
+    case COMPARE_LT: return cmp < 0;
+
+    case COMPARE_EQ: return cmp == 0;
+
+    case COMPARE_LE: return cmp <= 0;
+
+    case COMPARE_GT: return cmp > 0;
+
+    case COMPARE_NE: return cmp != 0;
+
+    case COMPARE_GE: return cmp >= 0;
+	default:
+	return false;
+  }
+}
+class WeightArrayHasherComparator
+{
+public:
+  bool operator()(const std::string& str1, const std::string& str2) const
+  {
+    return compare(COMPARE_EQ, str1.c_str(), str1.length(), str2.c_str(), str2.length());
+  }
+};
+class WeightHasher:utils::Hasher_r
+{
+private:
+  constexpr static int seed=0x315f;
+public:
+  inline uint32_t operator()(const std::string& str) const
+  {
+	return Hasher_r::operator()(str.c_str(),str.length(),seed);
+  }
+};
+inline size_t WeightArrayFromStr(const datatypes::Charset& cs, char* dst, const char* src, size_t length)
+{
+  utils::ConstString s(src, length);
+  length = s.rtrimZero().length();
+  cs.strnxfrm(dst, src, length);
+  return length;
+}
+using DictWeightEqualityFilter=std::unordered_set<string, WeightHasher, WeightArrayHasherComparator>;
+void filter2WeightFilter(const datatypes::Charset& cs,boost::shared_ptr<DictEqualityFilter> eqFilter,DictWeightEqualityFilter* eqWeightFilter)
+{
+  if (eqFilter)
+  {
+    for (auto &x : *eqFilter)
+    {
+	  //make sure memory be allocateed in heap
+      string eqWeightArray(x.length()<16?16:x.length(),'\0');
+      size_t weightArrayLength = WeightArrayFromStr(cs,const_cast<char*>(eqWeightArray.c_str()), x.c_str(), x.length());
+      eqWeightFilter->insert(move(eqWeightArray))->resize(weightArrayLength);
+    }
+  }
+}
+#endif
 inline bool PrimitiveProcessor::compare(const datatypes::Charset& cs, uint8_t COP, const char* str1,
                                         size_t length1, const char* str2, size_t length2) throw()
 {
@@ -391,6 +514,262 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
   dict_OffsetIndex++;
 }
 
+#if defined(__x86_64__) || defined(__aarch64__)
+//vectorizedP_Dictionary use the vectorized compare.the store and no store just borrow the code in p_Dictionary
+void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint8_t>* out, bool skipNulls,
+#if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+                                      uint32_t charsetNumber, boost::shared_ptr<DictEqualityFilter> eqFilter,
+                                      uint8_t eqOp, uint64_t minMax[2])
+#else
+                                      uint32_t charsetNumber, boost::shared_ptr<DictEqualityFilter> eqFilter,
+                                      uint8_t eqOp)
+#endif
+{
+  PrimToken* outToken;
+  const DictFilterElement* filter = 0;
+  const uint8_t* in8;
+  DataValue* outValue;
+  p_DataValue min = {0, NULL}, max = {0, NULL}, sigptr = {0, NULL};
+  int tmp, filterIndex, filterOffset;
+  uint16_t aggCount;
+  bool cmpResult;
+  DictOutput header;
+  const datatypes::Charset& cs(charsetNumber);
+
+  // default size of the ouput to something sufficiently large to prevent
+  // excessive reallocation and copy when resizing
+  const unsigned DEF_OUTSIZE = 16 * 1024;
+  // use this factor to scale out size of future resize calls
+  const int SCALE_FACTOR = 2;
+  out->resize(DEF_OUTSIZE);
+
+  in8 = reinterpret_cast<const uint8_t*>(in);
+
+  {
+    void* hp = static_cast<void*>(&header);
+    memcpy(hp, in, sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+  }
+  header.ism.Command = DICT_RESULTS;
+  header.NVALS = 0;
+  header.LBID = in->LBID;
+  dict_OffsetIndex = 0;
+  filterIndex = 0;
+  aggCount = 0;
+  min.len = 0;
+  max.len = 0;
+
+  //...Initialize I/O counts
+  header.CacheIO = 0;
+  header.PhysicalIO = 0;
+
+  header.NBYTES = sizeof(DictOutput);
+
+  char filterWeightArray[4096];
+  char weightArray[1024];
+  vector<utils::ConstString> filWeightArrayPtr;
+  if (in->InputFlags == 1)
+    filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(OldGetSigParams));
+  else
+    filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(PrimToken));
+  int weightArrayOffset = 0;
+  for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
+  {
+    filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
+    size_t weightArraylength =
+        WeightArrayFromStr(cs, filterWeightArray + weightArrayOffset, (const char*)filter->data, filter->len);
+    filWeightArrayPtr.emplace_back(filterWeightArray + weightArrayOffset, weightArraylength);
+    weightArrayOffset += weightArraylength;
+    filterOffset += sizeof(DictFilterElement) + filter->len;
+  }
+  DictWeightEqualityFilter eqWeightFilter;
+  filter2WeightFilter(cs,eqFilter,&eqWeightFilter);
+  string maxWeightArray, minWeightArray;
+
+
+  for (nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType, (in->InputFlags ? true : false), skipNulls);
+       sigptr.len != -1;
+       nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType, (in->InputFlags ? true : false), skipNulls))
+  {
+#if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+    if (minMax)
+    {
+      uint64_t v = encodeStringPrefix_check_null(sigptr.data, sigptr.len, charsetNumber);
+      minMax[1] = minMax[1] < v ? v : minMax[1];
+      minMax[0] = minMax[0] > v ? v : minMax[0];
+    }
+#endif
+    size_t valueLength = WeightArrayFromStr(cs, weightArray,reinterpret_cast<const char*>(sigptr.data), sigptr.len);
+    if (in->OutputType & OT_AGGREGATE)
+    {
+      // len == 0 indicates this is the first pass
+      if (max.len != 0)
+      {
+        tmp = weightSub(weightArray, valueLength, maxWeightArray.c_str(), maxWeightArray.length());
+        if (tmp > 0)
+        {
+          max = sigptr;
+          maxWeightArray = move(string(weightArray, valueLength));
+        }
+      }
+      else
+      {
+        max = sigptr;
+        maxWeightArray = move(string(weightArray, valueLength));
+      }
+
+      if (min.len != 0)
+      {
+        tmp = weightSub(weightArray, valueLength, minWeightArray.c_str(), minWeightArray.length());
+        if (tmp < 0)
+        {
+          min = sigptr;
+          minWeightArray = move(string(weightArray, valueLength));
+        }
+      }
+      else
+      {
+        min = sigptr;
+        minWeightArray = move(string(weightArray, valueLength));
+      }
+
+      aggCount++;
+    }
+    // filter processing
+    if (in->InputFlags == 1)
+      filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(OldGetSigParams));
+    else
+      filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(PrimToken));
+
+    if (eqFilter)
+    {
+      if (eqFilter->size() > 1 && in->BOP == BOP_AND && eqOp == COMPARE_EQ)
+        goto no_store;
+
+      if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
+        goto store;
+      string strData(weightArray, valueLength);
+      bool gotIt = eqWeightFilter.find(strData)!=eqWeightFilter.end();
+      if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
+        goto store;
+
+      goto no_store;
+    }
+
+    for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
+    {
+      filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
+      cmpResult = primitives::compare(filter->COP, weightArray, valueLength, filWeightArrayPtr[filterIndex].str(),
+                          filWeightArrayPtr[filterIndex].length());
+      if (!cmpResult && in->BOP != BOP_OR)
+        goto no_store;
+
+      if (cmpResult && in->BOP != BOP_AND)
+        goto store;
+
+      filterOffset += sizeof(DictFilterElement) + filter->len;
+    }
+
+    if (filterIndex == in->NOPS && in->BOP != BOP_OR)
+    {
+    store:
+      header.NVALS++;
+
+      if (in->OutputType & OT_RID && in->InputFlags == 1)  // hack that indicates old GetSignature behavior
+      {
+        const OldGetSigParams* oldParams;
+        uint64_t* outRid;
+        oldParams = reinterpret_cast<const OldGetSigParams*>(in->tokens);
+        uint32_t newlen = header.NBYTES + 8;
+
+        if (newlen > out->size())
+        {
+          out->resize(out->size() * SCALE_FACTOR);
+        }
+
+        outRid = (uint64_t*)&(*out)[header.NBYTES];
+        // mask off the upper bit of the rid; signifies the NULL token was passed in
+        *outRid = (oldParams[dict_OffsetIndex - 1].rid & 0x7fffffffffffffffLL);
+        header.NBYTES += 8;
+      }
+
+      if (in->OutputType & OT_INPUTARG && in->InputFlags == 0)
+      {
+        uint32_t newlen = header.NBYTES + sizeof(DataValue) + filter->len;
+
+        if (newlen > out->size())
+        {
+          out->resize(out->size() * SCALE_FACTOR);
+        }
+
+        outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
+        outValue->len = filter->len;
+        memcpy(outValue->data, filter->data, filter->len);
+        header.NBYTES += sizeof(DataValue) + filter->len;
+      }
+
+      if (in->OutputType & OT_TOKEN)
+      {
+        uint32_t newlen = header.NBYTES + sizeof(PrimToken);
+
+        if (newlen > out->size())
+        {
+          out->resize(out->size() * SCALE_FACTOR);
+        }
+
+        outToken = reinterpret_cast<PrimToken*>(&(*out)[header.NBYTES]);
+        outToken->LBID = in->LBID;
+        outToken->offset = currentOffsetIndex;
+        outToken->len = filter->len;
+        header.NBYTES += sizeof(PrimToken);
+      }
+
+      if (in->OutputType & OT_DATAVALUE)
+      {
+        uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len;
+
+        if (newlen > out->size())
+        {
+          out->resize(out->size() * SCALE_FACTOR);
+        }
+
+        outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
+        outValue->len = sigptr.len;
+        memcpy(outValue->data, sigptr.data, sigptr.len);
+        header.NBYTES += sizeof(DataValue) + sigptr.len;
+      }
+    }
+
+  no_store:;  // intentional
+  }
+
+  if (in->OutputType & OT_AGGREGATE)
+  {
+    uint32_t newlen = header.NBYTES + 3 * sizeof(uint16_t) + min.len + max.len;
+
+    if (newlen > out->size())
+    {
+      out->resize(out->size() * SCALE_FACTOR);
+    }
+
+    uint16_t* tmp16 = reinterpret_cast<uint16_t*>(&(*out)[header.NBYTES]);
+    DataValue* tmpDV = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES + sizeof(uint16_t)]);
+
+    *tmp16 = aggCount;
+    tmpDV->len = min.len;
+    memcpy(tmpDV->data, min.data, min.len);
+    header.NBYTES += 2 * sizeof(uint16_t) + min.len;
+
+    tmpDV = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
+    tmpDV->len = max.len;
+    memcpy(tmpDV->data, max.data, max.len);
+    header.NBYTES += sizeof(uint16_t) + max.len;
+  }
+
+  out->resize(header.NBYTES);
+
+  memcpy(&(*out)[0], &header, sizeof(DictOutput));
+}
+#endif
 void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out, bool skipNulls,
 #if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
                                       uint32_t charsetNumber, boost::shared_ptr<DictEqualityFilter> eqFilter,
@@ -400,6 +779,14 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
                                       uint8_t eqOp)
 #endif
 {
+#if defined(__x86_64__) || defined(__aarch64__)
+#if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+  vectorizedP_Dictionary(in,out,skipNulls,charsetNumber,eqFilter,eqOp,minMax);
+#else
+  vectorizedP_Dictionary(in, out, skipNulls, charsetNumber, eqFilter, eqOp);
+#endif
+  return;
+#endif 
   PrimToken* outToken;
   const DictFilterElement* filter = 0;
   const uint8_t* in8;
@@ -477,7 +864,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
       aggCount++;
     }
-
     // filter processing
     if (in->InputFlags == 1)
       filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(OldGetSigParams));
@@ -486,7 +872,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
     if (eqFilter)
     {
-      // MCOL-4407.
+	  // MCOL-4407.
       // Support filters:
       // `where key = value0 and key = value1 {and key = value2}`
       //
@@ -503,7 +889,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
       if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
         goto store;
-
       // MCOL-1246 Trim whitespace before match
       string strData((char*)sigptr.data, sigptr.len);
       boost::trim_right_if(strData, boost::is_any_of(" "));
@@ -518,10 +903,8 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
     for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
     {
       filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
-
       cmpResult = compare(cs, filter->COP, (const char*)sigptr.data, sigptr.len, (const char*)filter->data,
                           filter->len);
-
       if (!cmpResult && in->BOP != BOP_OR)
         goto no_store;
 

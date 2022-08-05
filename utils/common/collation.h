@@ -1,16 +1,13 @@
 /*
    Copyright (C) 2020-2022 MariaDB Corporation
-
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
    the License.
-
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
@@ -208,6 +205,11 @@ class Charset
       (char*)src.str(), src.length(), flags_);
     assert(len <= sizeof(T));
     return ret;
+  }
+  size_t strnxfrm(char*dst,const char*src,size_t length) const
+  {
+	idbassert(mCharset->coll);
+    return mCharset->coll->strnxfrm(mCharset,reinterpret_cast<uchar*>(dst), length, length, reinterpret_cast<const uchar*>(src), length, flags_);
   }
 };
 

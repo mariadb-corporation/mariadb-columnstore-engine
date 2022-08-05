@@ -1567,6 +1567,11 @@ class SimdFilterProcessor<
     return 0;
   }
 
+  MCS_FORCE_INLINE SimdType sub(SimdType x,SimdType y)
+  {
+    return _mm_sub_epi8(x,y);
+  }
+
   MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
   {
     return 0xFFFF;

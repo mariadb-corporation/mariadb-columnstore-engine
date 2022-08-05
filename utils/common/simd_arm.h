@@ -212,7 +212,7 @@ struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned_v<T> >::
 
 template <typename T>
     struct TypeToVecWrapperType<
-        T, typename std::enable_if<std::is_signed_v<T> &&!is_floating_point_v<T>>::type>
+        T, typename std::enable_if<std::is_signed_v<T> &&!std::is_floating_point_v<T>>::type>
     : WidthToSVecWrapperType<sizeof(T)>
 {
 };
@@ -238,7 +238,7 @@ struct IntegralToSIMD<T, KIND,
 template <typename T, ENUM_KIND KIND>
 struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT>::type>
 {
-  using type = TypeToVecWrapperType<T>::WrapperType;
+  using type = typename TypeToVecWrapperType<T>::WrapperType;
 };
 
 template <typename T, ENUM_KIND KIND, typename ENABLE = void>
@@ -1691,10 +1691,12 @@ class SimdFilterProcessor<
   {
     return vdupq_n_u8(fill);
   }
+  
   MCS_FORCE_INLINE T maxScalar(SimdType x)
   {
     return vmaxvq_u8(x);
   }
+  
   MCS_FORCE_INLINE T minScalar(SimdType x)
   {
     return vminvq_u8(x);
@@ -1714,6 +1716,7 @@ class SimdFilterProcessor<
   {
     return vandq_u8(x, y);
   }
+  
   MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
   {
     return (SimdType)vcgtq_u8(x, y);
@@ -1756,7 +1759,12 @@ class SimdFilterProcessor<
   {
     return arm_neon_mm_movemask_epi8((ArmNeonSSEVecType)vceqq_u8(x, y)) ^ 0xFFFF;
   }
-
+  
+  MCS_FORCE_INLINE SimdType sub(SimdType x, SimdType y)
+  {
+    return vsubq_u8(x, y);
+  }
+  
   MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
   {
     return 0;

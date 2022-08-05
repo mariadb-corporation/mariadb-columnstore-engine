@@ -144,11 +144,13 @@ TEST(SimdProcessorTest, Uint8)
   uint8_t l[16]{0, 1, 2, 5, 4, 3, 8, 5, 6, 10, 5, 2, 32, 41, 2, 5};
   uint8_t r[16]{0, 1, 8, 35, 24, 13, 8, 25, 16, 10, 58, 2, 32, 41, 2, 5};
   uint8_t minlr[16]{0, 1, 2, 5, 4, 3, 8, 5, 6, 10, 5, 2, 32, 41, 2, 5};
+  int8_t sublr[16]{0,0,-6,-30,-20,-10,0,-20,-10,0,-53,0,0,0,0,0};
   uint8_t maxlr[16]{0, 1, 8, 35, 24, 13, 8, 25, 16, 10, 58, 2, 32, 41, 2, 5};
   SimdType lhs = proc.loadFrom(reinterpret_cast<char*>(l));
   SimdType rhs = proc.loadFrom(reinterpret_cast<char*>(r));
   SimdType min = proc.loadFrom(reinterpret_cast<char*>(minlr));
   SimdType max = proc.loadFrom(reinterpret_cast<char*>(maxlr));
+  SimdType subRes = proc.loadFrom(reinterpret_cast<char*>(sublr));
   for (int i = 0; i < 16; i++)
     if (l[i] > r[i])
       expect |= 1 << i;
@@ -172,6 +174,7 @@ TEST(SimdProcessorTest, Uint8)
       expect |= 1 << i;
   EXPECT_EQ(proc.cmpLt(lhs, rhs), expect);
   EXPECT_EQ(proc.cmpGe(lhs, rhs),(simd::MT) ~expect);
+  EXPECT_EQ(proc.cmpEq(proc.sub(lhs,rhs),subRes), allTrue);
 }
 
 TEST(SimdProcessorTest, Int16)

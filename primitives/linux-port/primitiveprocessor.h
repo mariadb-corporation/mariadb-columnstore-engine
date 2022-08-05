@@ -455,6 +455,15 @@ class PrimitiveProcessor
 
   void nextSig(int NVALS, const PrimToken* tokens, p_DataValue* ret, uint8_t outputFlags = 0,
                bool oldGetSigBehavior = false, bool skipNulls = false) throw();
+  void vectorizedP_Dictionary(const DictInput* in, std::vector<uint8_t>* out, bool skipNulls, uint32_t charsetNumber,
+#if !defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+                    boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp
+#else
+                    boost::shared_ptr<DictEqualityFilter> eqFilter, uint8_t eqOp,
+                    uint64_t minMax[2]  // as name suggests, [0] is min, [1] is max.
+#endif
+  );
+
 
   uint64_t masks[11];
   int dict_OffsetIndex, currentOffsetIndex;  // used by p_dictionary
