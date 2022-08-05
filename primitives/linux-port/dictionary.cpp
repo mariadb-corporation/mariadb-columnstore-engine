@@ -164,7 +164,8 @@ void filter2WeightFilter(const datatypes::Charset& cs,boost::shared_ptr<DictEqua
 	  //make sure memory be allocateed in heap
       string eqWeightArray(x.length()<16?16:x.length(),'\0');
       size_t weightArrayLength = WeightArrayFromStr(cs,const_cast<char*>(eqWeightArray.c_str()), x.c_str(), x.length());
-      eqWeightFilter->insert(move(eqWeightArray))->resize(weightArrayLength);
+      eqWeightArray.resize(weightArrayLength);
+      eqWeightFilter->insert(move(eqWeightArray));
     }
   }
 }
