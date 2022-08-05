@@ -116,7 +116,7 @@ inline bool compare(uint8_t COP, const char* weightArray1, size_t length1, const
 {
   if (COP & COMPARE_LIKE)
     return cs->like(COP & COMPARE_NOT, ConstString(str1, lengthStr1), ConstString(str2, lengthStr2));
-  int8_t cmp = weightSub(weightArray1, length1, weightArray2.length2);
+  int8_t cmp = weightSub(weightArray1, length1, weightArray2,length2);
   switch (COP)
   {
     case COMPARE_NIL: return false;
