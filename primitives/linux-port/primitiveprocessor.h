@@ -117,14 +117,14 @@ class pcfEqual128
 typedef std::tr1::unordered_set<int64_t, pcfHasher, pcfEqual> prestored_set_t;
 typedef std::tr1::unordered_set<int128_t, pcfHasher128, pcfEqual128> prestored_set_t_128;
 
-class DictEqualityFilter : public std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher,
-                                                          datatypes::CollationAwareComparator>
+class DictEqualityFilter : public std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<true>,
+                                                          datatypes::CollationAwareComparator<true>>
 {
  public:
   DictEqualityFilter(const datatypes::Charset& cs)
-   : std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher,
-                             datatypes::CollationAwareComparator>(10, datatypes::CollationAwareHasher(cs),
-                                                                  datatypes::CollationAwareComparator(cs))
+   : std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<true>,
+                             datatypes::CollationAwareComparator<true>>(10, datatypes::CollationAwareHasher<true>(cs),
+                                                                  datatypes::CollationAwareComparator<true>(cs))
   {
   }
   CHARSET_INFO& getCharset() const
