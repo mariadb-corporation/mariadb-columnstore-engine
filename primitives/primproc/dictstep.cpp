@@ -282,12 +282,12 @@ void DictStep::projectResult(string* strings)
   uint8_t* pos;
   uint16_t len;
   DictOutput* header = (DictOutput*)&result[0];
-
+idblog("project result, NVALS " << ((int)header->NVALS));
   if (header->NVALS == 0)
     return;
 
   pos = &result[sizeof(DictOutput)];
-
+idblog("des ???");
   // cout << "projectResult() l: " << primMsg->LBID << " NVALS: " << header->NVALS << endl;
   for (i = 0; i < header->NVALS; i++)
   {
@@ -322,6 +322,7 @@ void DictStep::projectResult(StringPtr* strings)
     return;
 
   pos = &result[sizeof(DictOutput)];
+idblog("des ??????");
 
   // cout << "projectResult() l: " << primMsg->LBID << " NVALS: " << header->NVALS << endl;
   for (i = 0; i < header->NVALS; i++)
