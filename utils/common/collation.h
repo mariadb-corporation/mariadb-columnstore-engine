@@ -33,6 +33,9 @@
 
 #include "exceptclasses.h"
 #include "conststring.h"
+#include "hasher.h"
+#include "simd_sse.h"
+#include "simd_arm.h"
 
 /*
   Redefine definitions used by MariaDB m_ctype.h.
@@ -134,7 +137,6 @@ class Charset
   const struct charset_info_st* mCharset;
  private:
   static constexpr uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
-
  public:
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
@@ -183,6 +185,11 @@ class Charset
     idbassert(mCharset->coll);
     return mCharset->coll->strnxfrm(mCharset, dst, dstlen, nweights, src, srclen, flags);
   }
+  size_t strnxfrm(char*dst,size_t length1,const char*src,size_t length2) const
+  {
+    idbassert(mCharset->coll);
+    return mCharset->coll->strnxfrm(mCharset,reinterpret_cast<uchar*>(dst),length1 , length1, reinterpret_cast<const uchar*>(src), length2,0);
+  }
   // The magic check that tells that bytes are mapped to weights as 1:1
   bool strnxfrmIsValid() const
   {
@@ -206,14 +213,12 @@ class Charset
     assert(len <= sizeof(T));
     return ret;
   }
-  size_t strnxfrm(char*dst,const char*src,size_t length) const
-  {
-	idbassert(mCharset->coll);
-    return mCharset->coll->strnxfrm(mCharset,reinterpret_cast<uchar*>(dst), length, length, reinterpret_cast<const uchar*>(src), length, flags_);
-  }
 };
 
-class CollationAwareHasher : public Charset
+template<bool useWeightArray=false>
+class CollationAwareHasher;
+template<>
+class CollationAwareHasher<false> : public Charset
 {
  public:
   CollationAwareHasher(const Charset& cs) : Charset(cs)
@@ -228,8 +233,32 @@ class CollationAwareHasher : public Charset
     return Charset::hash(data, len);
   }
 };
-
-class CollationAwareComparator : public Charset
+template <>
+class CollationAwareHasher<true> : public Charset, public utils::Hasher_r
+{
+ private:
+  constexpr static int seed = 0x315f;
+ public:
+  CollationAwareHasher(const Charset& cs) : Charset(cs)
+  {
+  }
+  inline uint32_t operator()(const std::string& s) const
+  {
+    utils::ConstString str(s);
+    size_t length = str.rtrimZero().length();
+    std::string weightArray(length*4, '\0'); 
+    Charset::strnxfrm(const_cast<char*>(weightArray.c_str()), weightArray.length(), str.str(), length);
+    return operator()(weightArray.c_str(), weightArray.length());
+  }
+  inline uint32_t operator()(const char* data, uint64_t len) const
+  {
+    return Hasher_r::operator()(data, len, seed);
+  }
+};
+template<bool useWeightArray=false>
+class CollationAwareComparator;
+template<>
+class CollationAwareComparator<false> : public Charset
 {
  public:
   CollationAwareComparator(const Charset& cs) : Charset(cs)
@@ -240,5 +269,23 @@ class CollationAwareComparator : public Charset
     return Charset::eq(str1, str2);
   }
 };
-
+template <>
+class CollationAwareComparator<true> : public Charset
+{
+ public:
+  CollationAwareComparator(const Charset& cs) : Charset(cs)
+  {
+  }
+  bool operator()(const std::string& str1, const std::string& str2) const
+  {
+    utils::ConstString s1(str1), s2(str2);
+    size_t length1 = s1.rtrimZero().length();
+    size_t length2 = s2.rtrimZero().length();
+    std::string weightArray1(length1 * 4, '\0');
+    std::string weightArray2(length2 * 4, '\0');
+    size_t weiLength1=Charset::strnxfrm(const_cast<char*>(weightArray1.c_str()), weightArray1.length(), s1.str(), length1);
+    size_t weiLength2=Charset::strnxfrm(const_cast<char*>(weightArray2.c_str()), weightArray2.length(), s2.str(), length2);
+    return simd::vectMemcmp(weightArray1.c_str(), weiLength1, weightArray2.c_str(), weiLength2)==0;
+  }
+};
 }  // end of namespace datatypes

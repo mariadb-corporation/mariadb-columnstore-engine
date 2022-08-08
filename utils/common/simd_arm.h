@@ -1809,6 +1809,48 @@ class SimdFilterProcessor<
   }
 };
 
+MCS_FORCE_INLINE int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
+{
+  const uint16_t mlength = min(length1, length2);
+  uint16_t i;
+  for (i = 0; i <= mlength - 16; i += 16)
+  {
+    uint8x16_t res = vsubq_u8(vld1q_u8(reinterpret_cast<const uint8_t*>(str1 + i)),
+							  vld1q_u8(reinterpret_cast<const uint8_t*>(str2 + i)));
+    if (vmaxvq_u8(res) != 0)
+    {
+      int8_t* resPtr = reinterpret_cast<int8_t*>(&res);
+      for (int j = 0; j < 16; ++j)
+      {
+        if (resPtr[j] != 0)
+          return resPtr[j];
+      }
+    }
+  }
+  for (; i <= mlength-8; i+=8)
+  {
+    uint8x8_t res = vsub_u8(vld1_u8(reinterpret_cast<const uint8_t*>(str1 + i)),
+							vld1_u8(reinterpret_cast<const uint8_t*>(str2 + i)));
+    if (vmaxv_u8(res) != 0)
+    {
+      int8_t* resPtr = reinterpret_cast<int8_t*>(&res);
+      for (int j = 0; j < 8; ++j)
+      {
+        if (resPtr[j] != 0)
+          return resPtr[j];
+      }
+    }
+  }
+  for (; i < mlength; ++i)
+  {
+    if ((str1[i] - str2[i]) != 0)
+    {
+      return str1[i] - str2[i];
+    }
+  }
+  return length1 - length2;
+}
+
 };      // namespace simd
 
 #endif

@@ -1645,6 +1645,43 @@ class SimdFilterProcessor<
   }
 };
 
+//the sse SimdFilterProcessor doesn't have the instruction like vmaxvq_u8
+//so how to implement it is different from arm neon
+MCS_FORCE_INLINE int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
+{
+  using SimdTypeWrapper = typename simd::IntegralToSIMD<uint8_t, KIND_DEFAULT>::type;
+  using VT=simd::SimdFilterProcessor<SimdTypeWrapper, uint8_t>;
+  using SimdType =VT::SimdType;
+  VT simdProcessor;
+  const uint16_t mlength = min(length1, length2);
+  uint16_t i;
+  uint16_t res;
+  for (i = 0; i <= mlength - 16; i += 16)
+  {
+    SimdType op1 = simdProcessor.loadFrom(str1 + i);
+    SimdType op2 = simdProcessor.loadFrom(str2 + i);
+    res = simdProcessor.cmpNe(op1, op2);
+    if (res!=0)
+    {
+      int8_t* op1Ptr = reinterpret_cast<int8_t*>(&op1);
+      int8_t* op2Ptr = reinterpret_cast<int8_t*>(&op2);
+      for (int j = 0; j < 16; ++j)
+      {
+        if (op1Ptr[j]-op2Ptr[j] != 0)
+          return op1Ptr[j]-op2Ptr[j];
+      }
+    }
+  }
+  for (; i < mlength; ++i)
+  {
+    if ((str1[i] - str2[i]) != 0)
+    {
+      return str1[i] - str2[i];
+    }
+  }
+  return length1 - length2;
+}
+
 }  // namespace simd
 
 #endif  // if defined(__x86_64__ )
