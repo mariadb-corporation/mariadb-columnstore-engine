@@ -596,7 +596,7 @@ idblog("storing token");
 
       if (in->OutputType & OT_DATAVALUE)
       {
-idblog("storing value " << (sigptr.data ? "'" + std::string(sigptr.data, sigptr.len) + "'" : "NULL"));
+idblog("storing value " << (sigptr.data ? "'" + std::string((char*)sigptr.data, sigptr.len) + "'" : "NULL"));
         uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len;
 
         if (newlen > out->size())
