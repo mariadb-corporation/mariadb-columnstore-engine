@@ -136,7 +136,7 @@ class Charset
  protected:
   const struct charset_info_st* mCharset;
  private:
-  static constexpr uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
+  static constexpr const uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
  public:
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
@@ -212,6 +212,10 @@ class Charset
       (char*)src.str(), src.length(), flags_);
     assert(len <= sizeof(T));
     return ret;
+  }
+  static uint getDefaultFlags()
+  {
+    return flags_;
   }
 };
 

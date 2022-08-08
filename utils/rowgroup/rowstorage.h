@@ -36,6 +36,9 @@ class RowGroupStorage;
 
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
+constexpr const size_t MaxConstStrSize = 2048ULL;
+constexpr const size_t MaxConstStrBufSize = MaxConstStrSize << 1;
+
 class RowAggStorage
 {
  public:
@@ -161,6 +164,9 @@ class RowAggStorage
    */
   inline void rowHashToIdx(uint64_t h, uint32_t& info, size_t& idx, const Data* curData) const
   {
+    // An addition from the original robin hood HM.
+    h *= fCurData->hashMultiplier_;
+    h ^= h >> 33U;
     info = curData->fInfoInc + static_cast<uint32_t>((h & INFO_MASK) >> curData->fInfoHashShift);
     idx = (h >> INIT_INFO_BITS) & curData->fMask;
   }
@@ -228,6 +234,13 @@ class RowAggStorage
 #endif
     idx += n;
     info = fCurData->fInfo[idx];
+  }
+
+  void nextHashMultiplier()
+  {
+      // adding an *even* number, so that the multiplier will always stay odd. This is necessary
+      // so that the hash stays a mixing function (and thus doesn't have any information loss).
+      fCurData->hashMultiplier_ += 0xc4ceb9fe1a85ec54;
   }
 
   /** @brief Increase internal data size if needed
@@ -325,6 +338,7 @@ class RowAggStorage
     size_t fSize{0};
     size_t fMask{0};
     size_t fMaxSize{0};
+    uint64_t hashMultiplier_{0xc4ceb9fe1a85ec53ULL};
     uint32_t fInfoInc{INIT_INFO_INC};
     uint32_t fInfoHashShift{INIT_INFO_HASH_SHIFT};
   };
