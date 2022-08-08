@@ -1647,7 +1647,7 @@ class SimdFilterProcessor<
 
 //the sse SimdFilterProcessor doesn't have the instruction like vmaxvq_u8
 //so how to implement it is different from arm neon
-MCS_FORCE_INLINE int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
+int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
 {
   using SimdTypeWrapper = typename simd::IntegralToSIMD<uint8_t, KIND_DEFAULT>::type;
   using VT=simd::SimdFilterProcessor<SimdTypeWrapper, uint8_t>;

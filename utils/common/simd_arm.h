@@ -1809,7 +1809,7 @@ class SimdFilterProcessor<
   }
 };
 
-MCS_FORCE_INLINE int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
+int8_t vectMemcmp(const char* str1, size_t length1, const char* str2, size_t length2)
 {
   const uint16_t mlength = min(length1, length2);
   uint16_t i;
