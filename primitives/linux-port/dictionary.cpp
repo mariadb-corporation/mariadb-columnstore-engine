@@ -158,7 +158,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
         if (cmpResult && h->BOP == BOP_OR)
           goto store;
 
-        argsOffset += sizeof(uint16_t) + args->len;
+        argsOffset += sizeof(DataValue) + args->len;
         args = (DataValue*)&niceInput[argsOffset];
 
         cmpResult = compare(cs, h->COP2, sig, siglen, args->data, args->len);
@@ -182,7 +182,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
           if (cmpResult && h->BOP == BOP_OR)
             goto store;
 
-          argsOffset += sizeof(uint16_t) + args->len;
+          argsOffset += sizeof(DataValue) + args->len;
           args = (DataValue*)&niceInput[argsOffset];
         }
 
@@ -263,6 +263,7 @@ idblog("returning both token and value");
         throw logging::DictionaryBufferOverflow();
       }
 
+      retDataValues->isnull = !args->data;
       retDataValues->len = args->len;
       memcpy(retDataValues->data, args->data, args->len);
       rdvOffset += sizeof(DataValue) + args->len;
@@ -570,6 +571,7 @@ idblog("why do we store filter's value???");
         }
 
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
+	outValue->isnull = !filter->data;
         outValue->len = filter->len;
         memcpy(outValue->data, filter->data, filter->len);
         header.NBYTES += sizeof(DataValue) + filter->len;
@@ -628,6 +630,7 @@ idblog("storing value");
     DataValue* tmpDV = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES + sizeof(uint16_t)]);
 
     *tmp16 = aggCount;
+    tmpDV->isnull = 0;
     tmpDV->len = min.len;
     memcpy(tmpDV->data, min.data, min.len);
     header.NBYTES += 2 * sizeof(uint16_t) + min.len;

@@ -252,13 +252,13 @@ void DictStep::processResult()
       uint8_t isnull = *pos;
       pos += 1;
       NullString ns;
+      len = *((uint16_t*)pos);
+      pos += 2;
       if (!isnull)
       {
-        len = *((uint16_t*)pos);
-        pos += 2;
 	ns.assign(pos, len);
-        pos += len;
       }
+      pos += len;
       (*strValues)[tmpResultCounter] = ns;
     }
 
