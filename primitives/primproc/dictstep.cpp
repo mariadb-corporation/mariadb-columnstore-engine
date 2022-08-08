@@ -249,6 +249,7 @@ void DictStep::processResult()
 
     if (primMsg->OutputType & OT_DATAVALUE)
     {
+idblog("fetching OT_DATAVALUE");
       uint8_t isnull = *pos;
       pos += 1;
       NullString ns;
