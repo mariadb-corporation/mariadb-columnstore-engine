@@ -327,9 +327,11 @@ idblog("des ??????");
   // cout << "projectResult() l: " << primMsg->LBID << " NVALS: " << header->NVALS << endl;
   for (i = 0; i < header->NVALS; i++)
   {
+    uint8_t isnull = *pos;
+    pos += 1;
     len = *((uint16_t*)pos);
     pos += 2;
-    strings[tmpResultCounter++] = StringPtr(pos, len);
+    strings[tmpResultCounter++] = StringPtr(isnull ? nullptr : pos, len);
     // cout << "serialized length is " << len << " string is " << strings[tmpResultCounter-1] << " string
     // length = " << 	strings[tmpResultCounter-1].length() << endl;
     pos += len;
