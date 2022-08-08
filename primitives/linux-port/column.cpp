@@ -27,6 +27,7 @@
 #include <pthread.h>
 #else
 #endif
+#include <bit>
 using namespace std;
 
 #include <boost/scoped_array.hpp>
@@ -43,7 +44,6 @@ using namespace boost;
 #include "simd_sse.h"
 #include "simd_arm.h"
 #include "utils/common/columnwidth.h"
-#include "utils/common/bit_cast.h"
 
 #include "exceptclasses.h"
 
@@ -1284,7 +1284,7 @@ void vectorizedUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyMask,
 {
   if (validMinMax)
   {
-    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    auto byteMask = std::bit_cast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
     simdMin = simdProcessor.blend(
         simdMin, dataVec, simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(simdMin, dataVec), byteMask));
     simdMax = simdProcessor.blend(
@@ -1299,7 +1299,7 @@ void vectorizedTextUpdateMinMax(const bool validMinMax, const MT nonNullOrEmptyM
 {
   if (validMinMax)
   {
-    auto byteMask = utils::bitCast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
+    auto byteMask = std::bit_cast<SimdType>(simd::bitMaskToByteMask16(nonNullOrEmptyMask));
     auto minComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(weightsMin, swapedOrderDataVec), byteMask);
     auto maxComp = simdProcessor.bwAnd(simdProcessor.cmpGtSimdType(swapedOrderDataVec, weightsMax), byteMask);
     simdMin = simdProcessor.blend(simdMin, dataVec, minComp);
