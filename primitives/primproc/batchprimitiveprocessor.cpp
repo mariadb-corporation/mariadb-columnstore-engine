@@ -145,6 +145,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  , initiatedByEM_(false)
  , weight_(0)
 {
+	idblog("setting block ptr in BPP constructor (1)");
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
   pp.setBlockPtrAux((int*)blockDataAux);
@@ -205,6 +206,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
   processorThreads = nextPowOf2(processorThreads);
   ptMask = processorThreads - 1;
 
+	idblog("setting block ptr in BPP constructor (2)");
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
   pp.setBlockPtrAux((int*)blockDataAux);
