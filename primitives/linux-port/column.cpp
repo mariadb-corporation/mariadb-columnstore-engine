@@ -1667,21 +1667,25 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     switch (in->OutputType)
     {
       case OT_RID:
+idblog("OT_RID in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_BOTH:
+idblog("OT_BOTH in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_TOKEN:
+idblog("OT_TOKEN in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_DATAVALUE:
+idblog("OT_DATAVALUE in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
@@ -1694,21 +1698,25 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     switch (in->OutputType)
     {
       case OT_RID:
+idblog("OT_RID/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_BOTH:
+idblog("OT_BOTH/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_TOKEN:
+idblog("OT_TOKEN/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_DATAVALUE:
+idblog("OT_DATAVALUE/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
@@ -1758,7 +1766,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   bool isNullValueMatches =
       matchingColValue<KIND, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
-  idblog(")generic filtercolumn) isNullValueMatches " << ((int)isNullValueMatches));
+  idblog("(generic filtercolumn) isNullValueMatches " << ((int)isNullValueMatches));
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
