@@ -516,6 +516,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::reset(mcsv1Context* context)
   ModaData* data = static_cast<ModaData*>(context->getUserData());
   data->fReturnType = context->getResultType();
   data->fColWidth = context->getColWidth();
+  data->fCs_num = context->getCharsetNumber();
   data->clear<string>();
   return mcsv1_UDAF::SUCCESS;
 }

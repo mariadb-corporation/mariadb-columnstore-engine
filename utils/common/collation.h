@@ -141,7 +141,7 @@ class Charset
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
   }
-  Charset(CHARSET_INFO* cs) : mCharset(cs ? cs : &my_charset_bin)
+  Charset(CHARSET_INFO* cs = nullptr) : mCharset(cs ? cs : &my_charset_bin)
   {
   }
   Charset(uint32_t charsetNumber);

@@ -59,7 +59,7 @@ namespace mcsv1sdk
 template <class T>
 struct hasher
 {
-  hasher(datatypes::Charset cs) {}
+  hasher(uint32_t cs_num){}
 
   inline size_t operator()(T val) const
   {
@@ -74,8 +74,7 @@ struct hasher
 template <>
 struct hasher<long double>
 {
-  hasher<long double>(datatypes::Charset cs)
-  {}
+  hasher(uint32_t cs_num){}
   inline size_t operator()(long double val) const
   {
 #ifdef MASK_LONGDOUBLE
@@ -94,21 +93,20 @@ struct hasher<long double>
 template<>
 struct hasher<string>
 {
-  hasher<string>(datatypes::Charset cs) : fHasher(cs){}
+  hasher(uint32_t cs_num) : fHasher(cs_num){}
   inline size_t operator()(string val) const
   {
     return fHasher(val.c_str(), val.size());
   }
 
 private:
-  hasher<string>() : fHasher(datatypes::Charset(8)) {} // Private makes disabled
   datatypes::CollationAwareHasher fHasher; 
 };
 
 template<class T>
 struct comparator
 {
-  comparator(datatypes::Charset cs) {}
+  comparator(uint32_t cs_num){}
 
   bool operator()(const T& lhs, const T& rhs) const
   {
@@ -119,7 +117,7 @@ struct comparator
 template <>
 struct comparator<std::string>
 {
-  comparator<std::string>(datatypes::Charset cs) : fCs(cs) {}
+  comparator(uint32_t cs_num) : fCs(cs_num) {}
 
   bool operator()(const std::string lhs, const std::string rhs) const
   {
@@ -139,8 +137,7 @@ struct ModaData : public UserData
    , fReturnType((uint32_t)execplan::CalpontSystemCatalog::UNDEFINED)
    , fColWidth(0)
    , modaImpl(NULL)
-   , fCs_num(cs_num)
-   , fCs(cs_num){};
+   , fCs_num(cs_num){}
 
   virtual ~ModaData()
   {
@@ -157,7 +154,7 @@ struct ModaData : public UserData
     {
       // Just in time creation
       fMap = new std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >(
-        10, hasher<T>(fCs),comparator<T>(fCs));
+        10, hasher<T>(fCs_num), comparator<T>(fCs_num));
     }
     return (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
   }
@@ -196,7 +193,6 @@ struct ModaData : public UserData
   uint32_t fColWidth;
   mcsv1_UDAF* modaImpl;  // A pointer to one of the Moda_impl_T concrete classes
   uint32_t fCs_num;
-  datatypes::Charset fCs;
 
  private:
   // For now, copy construction is unwanted
@@ -230,7 +226,6 @@ struct ModaData : public UserData
   void unserializeMap(messageqcpp::ByteStream& bs)
   {
     bs >> fCs_num;
-    fCs.setCharset(fCs_num);
 
     uint32_t cnt;
     T num;
