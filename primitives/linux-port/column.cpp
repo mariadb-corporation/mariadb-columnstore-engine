@@ -180,6 +180,7 @@ inline bool colCompareStr(const ColRequestHeaderDataType& type, uint8_t COP, con
                           const utils::ConstString& val2, const bool printOut = false)
 {
   int error = 0;
+idblog("comparing '" << val1.toString() << "' and '" << val2.toString() "'");
   bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
   if (error)
   {
@@ -317,6 +318,7 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
     return typeHolder.like(cop & COMPARE_NOT, subject.rtrimZero(), pattern.rtrimZero());
   }
 
+idblog("comparing, rf " << ((int)rf));
   if (!rf)
   {
     // A temporary hack for xxx_nopad_bin collations
