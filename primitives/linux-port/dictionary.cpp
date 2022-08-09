@@ -194,7 +194,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
       goto no_store;
     }
 
-    cmpResult = compare<useWeightCompare>(cs, h->COP1, sig, siglen, args->data, args->len);
+    cmpResult = compare<false>(cs, h->COP1, sig, siglen, args->data, args->len);
 
     switch (h->NVALS)
     {
@@ -218,7 +218,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
         argIndex++;
         args = (DataValue*)&niceInput[argsOffset];
 
-        cmpResult = compare<useWeightCompare>(cs, h->COP2, sig, siglen, args->data, args->len);
+        cmpResult = compare<false>(cs, h->COP2, sig, siglen, args->data, args->len);
 
         if (cmpResult)
           goto store;
@@ -231,7 +231,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
         idbassert(0);
         for (i = 0, cmpResult = true; i < h->NVALS; i++)
         {
-          cmpResult = compare<useWeightCompare>(cs, h->COP1, sig, siglen, args->data, args->len);
+          cmpResult = compare<false>(cs, h->COP1, sig, siglen, args->data, args->len);
 
           if (!cmpResult && h->BOP == BOP_AND)
             goto no_store;
