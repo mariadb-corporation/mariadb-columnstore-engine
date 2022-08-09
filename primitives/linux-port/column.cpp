@@ -180,7 +180,7 @@ inline bool colCompareStr(const ColRequestHeaderDataType& type, uint8_t COP, con
                           const utils::ConstString& val2, const bool printOut = false)
 {
   int error = 0;
-idblog("comparing '" << val1.toString() << "' and '" << val2.toString() "'");
+idblog("comparing '" << val1.toString() << "' and '" << val2.toString()  << "'");
   bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
   if (error)
   {
