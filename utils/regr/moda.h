@@ -74,7 +74,7 @@ struct hasher
 template <>
 struct hasher<long double>
 {
-  hasher<long double>(datatypes::Charset cs)
+  hasher(datatypes::Charset cs)
   {}
   inline size_t operator()(long double val) const
   {
@@ -94,14 +94,14 @@ struct hasher<long double>
 template<>
 struct hasher<string>
 {
-  hasher<string>(datatypes::Charset cs) : fHasher(cs){}
+  hasher(datatypes::Charset cs) : fHasher(cs){}
   inline size_t operator()(string val) const
   {
     return fHasher(val.c_str(), val.size());
   }
 
 private:
-  hasher<string>() : fHasher(datatypes::Charset(8)) {} // Private makes disabled
+  hasher() : fHasher(datatypes::Charset(8)) {} // Private makes disabled
   datatypes::CollationAwareHasher fHasher; 
 };
 
@@ -119,7 +119,7 @@ struct comparator
 template <>
 struct comparator<std::string>
 {
-  comparator<std::string>(datatypes::Charset cs) : fCs(cs) {}
+  comparator(datatypes::Charset cs) : fCs(cs) {}
 
   bool operator()(const std::string lhs, const std::string rhs) const
   {
