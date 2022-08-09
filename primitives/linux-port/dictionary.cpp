@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <boost/scoped_array.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <sys/types.h>
@@ -52,7 +53,7 @@ namespace primitives
 {
 #if defined(__x86_64__) || defined(__aarch64__)
 //When the COP is COMPARE_LIKE,the str1 and str2... are used 
-inline bool compare(uint8_t COP, const char* weightArray1, size_t length1, const char* weightArray2,size_t length2, 
+inline bool weightCompare(uint8_t COP, const char* weightArray1, size_t length1, const char* weightArray2,size_t length2, 
                     const char* str1, size_t lengthStr1,const char* str2 , size_t lengthStr2, 
                     const datatypes::Charset* cs)
 
@@ -82,11 +83,16 @@ inline bool compare(uint8_t COP, const char* weightArray1, size_t length1, const
 inline size_t WeightArrayFromStr(const datatypes::Charset& cs, char* dst, const char* src, size_t length)
 {
   utils::ConstString s(src, length);
-  length = s.rtrimZero().length();
+  if(!cs.noPad())
+  {
+    s.rtrimSpace();
+  }
+  length = s.length();
   return cs.strnxfrm(dst, length*4, src, length);
 }
 #endif
-inline bool PrimitiveProcessor::compare(const datatypes::Charset& cs, uint8_t COP, const char* str1,
+template<>
+inline bool PrimitiveProcessor::compare<false>(const datatypes::Charset& cs, uint8_t COP, const char* str1,
                                         size_t length1, const char* str2, size_t length2) throw()
 {
   int error = 0;
@@ -106,7 +112,15 @@ inline bool PrimitiveProcessor::compare(const datatypes::Charset& cs, uint8_t CO
   }
   return rc;
 }
-
+template<>
+inline bool PrimitiveProcessor::compare<true>(const datatypes::Charset& cs, uint8_t COP, const char* str1,
+                                        size_t length1, const char* str2, size_t length2) throw()
+{
+  vector<char>s1(length1*4),s2(length2*4);
+  size_t s1Length=WeightArrayFromStr(cs,&s1[0],str1,length1);
+  size_t s2Length=WeightArrayFromStr(cs,&s2[0],str2,length2);
+  return weightCompare(COP,&s1[0],s1Length,&s2[0],s2Length,str1,length1,str2,length2,&cs);
+}
 /*
 Notes:
         - assumes no continuation pointer
@@ -180,7 +194,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
       goto no_store;
     }
 
-    cmpResult = compare(cs, h->COP1, sig, siglen, args->data, args->len);
+    cmpResult = compare<useWeightCompare>(cs, h->COP1, sig, siglen, args->data, args->len);
 
     switch (h->NVALS)
     {
@@ -204,7 +218,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
         argIndex++;
         args = (DataValue*)&niceInput[argsOffset];
 
-        cmpResult = compare(cs, h->COP2, sig, siglen, args->data, args->len);
+        cmpResult = compare<useWeightCompare>(cs, h->COP2, sig, siglen, args->data, args->len);
 
         if (cmpResult)
           goto store;
@@ -217,7 +231,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
         idbassert(0);
         for (i = 0, cmpResult = true; i < h->NVALS; i++)
         {
-          cmpResult = compare(cs, h->COP1, sig, siglen, args->data, args->len);
+          cmpResult = compare<useWeightCompare>(cs, h->COP1, sig, siglen, args->data, args->len);
 
           if (!cmpResult && h->BOP == BOP_AND)
             goto no_store;
@@ -401,7 +415,6 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
-    ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];
 
     if (outputFlags & OT_TOKEN)
@@ -563,7 +576,6 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
       if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
         goto store;
       string strData(reinterpret_cast<const char*>(sigptr.data), sigptr.len);
-      *eqFilter;
       bool gotIt = eqFilter->find(strData)!=eqFilter->end();
       if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
         goto store;
@@ -574,7 +586,7 @@ void PrimitiveProcessor::vectorizedP_Dictionary(const DictInput* in, vector<uint
     for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
     {
       filter = reinterpret_cast<const DictFilterElement*>(&in8[filterOffset]);
-      cmpResult = primitives::compare(filter->COP, weightArray, valueLength, filWeightArrayPtr[filterIndex].str(),
+      cmpResult = primitives::weightCompare(filter->COP, weightArray, valueLength, filWeightArrayPtr[filterIndex].str(),
                           filWeightArrayPtr[filterIndex].length(),(const char*)sigptr.data, sigptr.len, (const char*)filter->data,
                           filter->len,&cs);
       if (!cmpResult && in->BOP != BOP_OR)
@@ -696,8 +708,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
                                       uint8_t eqOp)
 #endif
 {
-  const datatypes::Charset& cs(charsetNumber);
-  if(!cs.strnxfrmIsValid())goto normal;
 #if defined(__x86_64__) || defined(__aarch64__)
 #if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
   vectorizedP_Dictionary(in,out,skipNulls,charsetNumber,eqFilter,eqOp,minMax);
@@ -706,7 +716,6 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 #endif
   return;
 #endif 
-normal:
   PrimToken* outToken;
   const DictFilterElement* filter = 0;
   const uint8_t* in8;
@@ -716,6 +725,7 @@ normal:
   uint16_t aggCount;
   bool cmpResult;
   DictOutput header;
+  const datatypes::Charset& cs(charsetNumber);
 
   // default size of the ouput to something sufficiently large to prevent
   // excessive reallocation and copy when resizing

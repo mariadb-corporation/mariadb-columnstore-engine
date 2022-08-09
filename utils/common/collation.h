@@ -29,6 +29,7 @@
 #endif
 #endif  // PREFER_MY_CONFIG_H
 
+#include <vector>
 #include "mcsconfig.h"
 
 #include "exceptclasses.h"
@@ -185,10 +186,10 @@ class Charset
     idbassert(mCharset->coll);
     return mCharset->coll->strnxfrm(mCharset, dst, dstlen, nweights, src, srclen, flags);
   }
-  size_t strnxfrm(char*dst,size_t length1,const char*src,size_t length2) const
+  size_t strnxfrm(char*dst,size_t length1,const char*src,size_t length2,uint flags=0) const
   {
     idbassert(mCharset->coll);
-    return mCharset->coll->strnxfrm(mCharset,reinterpret_cast<uchar*>(dst),length1 , length1, reinterpret_cast<const uchar*>(src), length2,0);
+    return mCharset->coll->strnxfrm(mCharset,reinterpret_cast<uchar*>(dst),length1 , length1, reinterpret_cast<const uchar*>(src), length2,flags);
   }
   // The magic check that tells that bytes are mapped to weights as 1:1
   bool strnxfrmIsValid() const
@@ -217,6 +218,10 @@ class Charset
   {
     return flags_;
   }
+  bool noPad() const
+  {
+   return mCharset->state & MY_CS_NOPAD;
+  }
 };
 
 template<bool useWeightArray=false>
@@ -241,18 +246,24 @@ template <>
 class CollationAwareHasher<true> : public Charset, public utils::Hasher_r
 {
  private:
+  bool noPad=false;
   constexpr static int seed = 0x315f;
  public:
   CollationAwareHasher(const Charset& cs) : Charset(cs)
   {
+    this->noPad=Charset::noPad();
   }
   inline uint32_t operator()(const std::string& s) const
   {
     utils::ConstString str(s);
-    size_t length = str.rtrimZero().length();
-    std::string weightArray(length*4, '\0'); 
-    Charset::strnxfrm(const_cast<char*>(weightArray.c_str()), weightArray.length(), str.str(), length);
-    return operator()(weightArray.c_str(), weightArray.length());
+    if(!noPad)
+    {
+      str.rtrimSpace();
+    }
+    size_t length = str.length();
+    std::vector<char> weightArray(length*4);
+    length=Charset::strnxfrm(&weightArray[0],length*4, str.str(), length);
+    return operator()(&weightArray[0], length);
   }
   inline uint32_t operator()(const char* data, uint64_t len) const
   {
@@ -276,20 +287,28 @@ class CollationAwareComparator<false> : public Charset
 template <>
 class CollationAwareComparator<true> : public Charset
 {
+ private:
+  bool noPad=false;
  public:
   CollationAwareComparator(const Charset& cs) : Charset(cs)
   {
+    this->noPad=Charset::noPad();
   }
   bool operator()(const std::string& str1, const std::string& str2) const
   {
     utils::ConstString s1(str1), s2(str2);
-    size_t length1 = s1.rtrimZero().length();
-    size_t length2 = s2.rtrimZero().length();
-    std::string weightArray1(length1 * 4, '\0');
-    std::string weightArray2(length2 * 4, '\0');
-    size_t weiLength1=Charset::strnxfrm(const_cast<char*>(weightArray1.c_str()), weightArray1.length(), s1.str(), length1);
-    size_t weiLength2=Charset::strnxfrm(const_cast<char*>(weightArray2.c_str()), weightArray2.length(), s2.str(), length2);
-    return simd::vectMemcmp(weightArray1.c_str(), weiLength1, weightArray2.c_str(), weiLength2)==0;
+    if(!noPad)
+    {
+      s1.rtrimSpace();
+      s2.rtrimSpace();
+    }
+    size_t length1 = s1.length();
+    size_t length2 = s2.length();
+    std::vector<char> weightArray1(length1 * 4);
+    std::vector<char> weightArray2(length2 * 4);
+    size_t weiLength1=Charset::strnxfrm(&weightArray1[0], 4*length1, s1.str(), length1);
+    size_t weiLength2=Charset::strnxfrm(&weightArray2[0], 4*length2, s2.str(), length2);
+    return simd::vectMemcmp(&weightArray1[0], weiLength1, &weightArray2[0], weiLength2)==0;
   }
 };
 }  // end of namespace datatypes

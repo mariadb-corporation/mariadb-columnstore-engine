@@ -117,14 +117,16 @@ class pcfEqual128
 typedef std::tr1::unordered_set<int64_t, pcfHasher, pcfEqual> prestored_set_t;
 typedef std::tr1::unordered_set<int128_t, pcfHasher128, pcfEqual128> prestored_set_t_128;
 
-class DictEqualityFilter : public std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<true>,
-                                                          datatypes::CollationAwareComparator<true>>
+constexpr bool useWeightCompare=true;
+
+class DictEqualityFilter : public std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<useWeightCompare>,
+                                                          datatypes::CollationAwareComparator<useWeightCompare>>
 {
  public:
   DictEqualityFilter(const datatypes::Charset& cs)
-   : std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<true>,
-                             datatypes::CollationAwareComparator<true>>(10, datatypes::CollationAwareHasher<true>(cs),
-                                                                  datatypes::CollationAwareComparator<true>(cs))
+   : std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher<useWeightCompare>,
+                             datatypes::CollationAwareComparator<useWeightCompare>>(10, datatypes::CollationAwareHasher<useWeightCompare>(cs),
+                                                                  datatypes::CollationAwareComparator<useWeightCompare>(cs))
   {
   }
   CHARSET_INFO& getCharset() const
@@ -444,7 +446,7 @@ class PrimitiveProcessor
   PrimitiveProcessor& operator=(const PrimitiveProcessor& rhs);
 
   int* block;
-
+  template<bool useWeightArray=false>
   bool compare(const datatypes::Charset& cs, uint8_t COP, const char* str1, size_t length1, const char* str2,
                size_t length2) throw();
   int compare(int val1, int val2, uint8_t COP, bool lastStage) throw();
