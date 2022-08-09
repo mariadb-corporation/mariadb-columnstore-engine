@@ -1,0 +1,91 @@
+USE autopilot;
+select cidx, CDATE, INSERT(CDATE,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDATE	INSERT(CDATE,2,2,'Hello')
+1	1997-01-01	1Hello7-01-01
+select cidx, CDATE, INSERT(CDATE,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDATE	INSERT(CDATE,2,5,'Hello')
+1	1997-01-01	1Hello1-01
+select cidx, CDATE, INSERT(CDATE,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDATE	INSERT(CDATE,-1,5,'Hello')
+1	1997-01-01	1997-01-01
+select cidx, CDATE, INSERT(CDATE,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDATE	INSERT(CDATE,2,12,'Hello')
+1	1997-01-01	1Hello
+select cidx, CDATE, INSERT(CDATE,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDATE	INSERT(CDATE,1,12,NULL)
+1	1997-01-01	NULL
+select cidx, CDATETIME, INSERT(CDATETIME,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDATETIME	INSERT(CDATETIME,2,2,'Hello')
+1	1997-01-01 00:00:00	1Hello7-01-01 00:00:00
+select cidx, CDATETIME, INSERT(CDATETIME,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDATETIME	INSERT(CDATETIME,2,5,'Hello')
+1	1997-01-01 00:00:00	1Hello1-01 00:00:00
+select cidx, CDATETIME, INSERT(CDATETIME,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDATETIME	INSERT(CDATETIME,-1,5,'Hello')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CDATETIME, INSERT(CDATETIME,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDATETIME	INSERT(CDATETIME,2,12,'Hello')
+1	1997-01-01 00:00:00	1Hello:00:00
+select cidx, CDATETIME, INSERT(CDATETIME,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDATETIME	INSERT(CDATETIME,1,12,NULL)
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, INSERT(CTIME,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CTIME	INSERT(CTIME,2,2,'Hello')
+1	13:00:00	1Hello00:00
+select cidx, CTIME, INSERT(CTIME,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CTIME	INSERT(CTIME,2,5,'Hello')
+1	13:00:00	1Hello00
+select cidx, CTIME, INSERT(CTIME,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CTIME	INSERT(CTIME,-1,5,'Hello')
+1	13:00:00	13:00:00
+select cidx, CTIME, INSERT(CTIME,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CTIME	INSERT(CTIME,2,12,'Hello')
+1	13:00:00	1Hello
+select cidx, CTIME, INSERT(CTIME,1,12,NULL) from datatypetestm order by cidx;
+cidx	CTIME	INSERT(CTIME,1,12,NULL)
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,2,'Hello'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,5,'Hello'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,-1,5,'Hello'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,12,'Hello'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,1,12,NULL), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,2,'Hello'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,5,'Hello'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,-1,5,'Hello'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,12,'Hello'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,1,12,NULL), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,2,'Hello'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,5,'Hello'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,-1,5,'Hello'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,12,'Hello'), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,1,12,NULL), cidx;
+cidx	CTIME
+1	13:00:00

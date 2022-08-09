@@ -1,0 +1,8 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, LEAST(cchar1,'hi','hello','wei') from datatypetestm ;
+cidx	LEAST(cchar1,'hi','hello','wei')
+1	a
+select cidx, LEAST(cchar1,'world','mahimahi','spam') from datatypetestm ;
+cidx	LEAST(cchar1,'world','mahimahi','spam')
+1	a

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CDECIMAL10 ;
+cidx	CLONGTEXT	CDECIMAL10
+1	longtextlongtextlongtext	-9999999
+2	longtextlongtextlongtext	-9999998
+3	longtextlongtextlongtext	-9999997
+4	longtextlongtextlongtext	-9999996
+5	longtextlongtextlongtext	-9999995
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CDECIMAL10 ;
+cidx	CLONGTEXT	CDECIMAL10
+1	longtextlongtextlongtext	-9999999
+2	longtextlongtextlongtext	-9999998
+3	longtextlongtextlongtext	-9999997
+4	longtextlongtextlongtext	-9999996
+5	longtextlongtextlongtext	-9999995
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CDECIMAL10 ;
+cidx	CLONGTEXT	CDECIMAL10
+1	longtextlongtextlongtext	-9999999
+2	longtextlongtextlongtext	-9999998
+3	longtextlongtextlongtext	-9999997
+4	longtextlongtextlongtext	-9999996
+5	longtextlongtextlongtext	-9999995
+6	longtextlongtextlongtext	9999995
+7	longtextlongtextlongtext	9999996
+8	longtextlongtextlongtext	9999997
+9	longtextlongtextlongtext	9999998
+10	longtextlongtextlongtext	9999999
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CDECIMAL10 ;
+cidx	CLONGTEXT	CDECIMAL10
+6	longtextlongtextlongtext	9999995
+7	longtextlongtextlongtext	9999996
+8	longtextlongtextlongtext	9999997
+9	longtextlongtextlongtext	9999998
+10	longtextlongtextlongtext	9999999
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CDECIMAL10 ;
+cidx	CLONGTEXT	CDECIMAL10
+6	longtextlongtextlongtext	9999995
+7	longtextlongtextlongtext	9999996
+8	longtextlongtextlongtext	9999997
+9	longtextlongtextlongtext	9999998
+10	longtextlongtextlongtext	9999999

@@ -1,0 +1,106 @@
+USE autopilot;
+select cidx, CBIGINT, ACOS(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	ACOS(CBIGINT)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, ACOS(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	ACOS(CDECIMAL1)
+1	-9	NULL
+select cidx, CDECIMAL4, ACOS(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	ACOS(CDECIMAL4)
+1	-999	NULL
+select cidx, CDECIMAL4_2, ACOS(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	ACOS(CDECIMAL4_2)
+1	-9.99	NULL
+select cidx, CDECIMAL5, ACOS(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	ACOS(CDECIMAL5)
+1	-999	NULL
+select cidx, CDECIMAL9, ACOS(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	ACOS(CDECIMAL9)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, ACOS(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	ACOS(CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, ACOS(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	ACOS(CDECIMAL10)
+1	-9999999	NULL
+select cidx, CDECIMAL18, ACOS(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	ACOS(CDECIMAL18)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, ACOS(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	ACOS(CDECIMAL18_2)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, ACOS(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	ACOS(CINTEGER)
+1	-7483646	NULL
+select cidx, CSMALLINT, ACOS(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	ACOS(CSMALLINT)
+1	-766	NULL
+select cidx, CTINYINT, ACOS(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	ACOS(CTINYINT)
+1	-26	NULL
+select cidx, CDOUBLE, ACOS(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	ACOS(CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, ACOS(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	ACOS(CFLOAT)
+1	-3.40287e18	NULL
+select cidx, ACOS(0*cidx) from datatypetestm order by cidx;
+cidx	ACOS(0*cidx)
+1	1.5707963267948966
+select cidx, ACOS(60*cidx) from datatypetestm order by cidx;
+cidx	ACOS(60*cidx)
+1	NULL
+select cidx, ACOS(90*cidx) from datatypetestm order by cidx;
+cidx	ACOS(90*cidx)
+1	NULL
+select cidx, ACOS(180*cidx) from datatypetestm order by cidx;
+cidx	ACOS(180*cidx)
+1	NULL
+select cidx, ACOS(360*cidx) from datatypetestm order by cidx;
+cidx	ACOS(360*cidx)
+1	NULL
+select cidx, CBIGINT from datatypetestm order by ACOS(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by ACOS(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by ACOS(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by ACOS(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by ACOS(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by ACOS(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by ACOS(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by ACOS(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by ACOS(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by ACOS(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by ACOS(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by ACOS(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by ACOS(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by ACOS(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by ACOS(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

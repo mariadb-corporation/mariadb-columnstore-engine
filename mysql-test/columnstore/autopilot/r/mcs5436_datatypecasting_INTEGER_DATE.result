@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CDATE ;
+cidx	CINTEGER	CDATE
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CDATE ;
+cidx	CINTEGER	CDATE
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CDATE ;
+cidx	CINTEGER	CDATE
+1	-7483646	1997-01-01
+2	-7483645	1997-01-01
+3	-7483644	1997-01-02
+4	-7483643	1997-01-03
+5	-7483642	1997-01-04
+6	7483643	2009-12-28
+7	7483644	2009-12-29
+8	7483645	2009-12-30
+9	7483646	2009-12-31
+10	7483647	2009-12-31
+11	0	2009-12-31
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CDATE ;
+cidx	CINTEGER	CDATE
+1	-7483646	1997-01-01
+2	-7483645	1997-01-01
+3	-7483644	1997-01-02
+4	-7483643	1997-01-03
+5	-7483642	1997-01-04
+6	7483643	2009-12-28
+7	7483644	2009-12-29
+8	7483645	2009-12-30
+9	7483646	2009-12-31
+10	7483647	2009-12-31
+11	0	2009-12-31
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CDATE ;
+cidx	CINTEGER	CDATE
+1	-7483646	1997-01-01
+2	-7483645	1997-01-01
+3	-7483644	1997-01-02
+4	-7483643	1997-01-03
+5	-7483642	1997-01-04
+6	7483643	2009-12-28
+7	7483644	2009-12-29
+8	7483645	2009-12-30
+9	7483646	2009-12-31
+10	7483647	2009-12-31
+11	0	2009-12-31

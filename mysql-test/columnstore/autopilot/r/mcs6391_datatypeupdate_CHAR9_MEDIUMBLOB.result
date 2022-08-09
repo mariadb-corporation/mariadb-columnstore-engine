@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CMEDIUMBLOB = CCHAR9;
+SELECT CMEDIUMBLOB FROM datatypeupdate;
+CMEDIUMBLOB
+aaaaaaaaa
+ROLLBACK;

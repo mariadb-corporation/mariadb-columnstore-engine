@@ -1,0 +1,271 @@
+USE autopilot;
+select cidx, CBIGINT, IF(CBIGINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CBIGINT	IF(CBIGINT>0,1,-1)
+1	-72036854775806	-1
+select cidx, CBIGINT, IF(CBIGINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CBIGINT	IF(CBIGINT>0,1,-1)
+1	-72036854775806	-1
+select cidx, CBIGINT, IF(CBIGINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CBIGINT	IF(CBIGINT>0,1,-1)
+1	-72036854775806	-1
+select cidx, CDECIMAL1, IF(CDECIMAL1>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	IF(CDECIMAL1>0,1,-1)
+1	-9	-1
+select cidx, CDECIMAL1, IF(CDECIMAL1>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	IF(CDECIMAL1>0,1,-1)
+1	-9	-1
+select cidx, CDECIMAL1, IF(CDECIMAL1>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	IF(CDECIMAL1>0,1,-1)
+1	-9	-1
+select cidx, CDECIMAL4, IF(CDECIMAL4>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	IF(CDECIMAL4>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL4, IF(CDECIMAL4>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	IF(CDECIMAL4>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL4, IF(CDECIMAL4>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	IF(CDECIMAL4>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL4_2, IF(CDECIMAL4_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	IF(CDECIMAL4_2>0,1,-1)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, IF(CDECIMAL4_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	IF(CDECIMAL4_2>0,1,-1)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, IF(CDECIMAL4_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	IF(CDECIMAL4_2>0,1,-1)
+1	-9.99	-1
+select cidx, CDECIMAL5, IF(CDECIMAL5>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	IF(CDECIMAL5>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL5, IF(CDECIMAL5>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	IF(CDECIMAL5>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL5, IF(CDECIMAL5>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	IF(CDECIMAL5>0,1,-1)
+1	-999	-1
+select cidx, CDECIMAL9, IF(CDECIMAL9>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	IF(CDECIMAL9>0,1,-1)
+1	-999999	-1
+select cidx, CDECIMAL9, IF(CDECIMAL9>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	IF(CDECIMAL9>0,1,-1)
+1	-999999	-1
+select cidx, CDECIMAL9, IF(CDECIMAL9>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	IF(CDECIMAL9>0,1,-1)
+1	-999999	-1
+select cidx, CDECIMAL9_2, IF(CDECIMAL9_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	IF(CDECIMAL9_2>0,1,-1)
+1	-9999.99	-1
+select cidx, CDECIMAL9_2, IF(CDECIMAL9_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	IF(CDECIMAL9_2>0,1,-1)
+1	-9999.99	-1
+select cidx, CDECIMAL9_2, IF(CDECIMAL9_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	IF(CDECIMAL9_2>0,1,-1)
+1	-9999.99	-1
+select cidx, CDECIMAL10, IF(CDECIMAL10>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	IF(CDECIMAL10>0,1,-1)
+1	-9999999	-1
+select cidx, CDECIMAL10, IF(CDECIMAL10>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	IF(CDECIMAL10>0,1,-1)
+1	-9999999	-1
+select cidx, CDECIMAL10, IF(CDECIMAL10>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	IF(CDECIMAL10>0,1,-1)
+1	-9999999	-1
+select cidx, CDECIMAL18, IF(CDECIMAL18>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	IF(CDECIMAL18>0,1,-1)
+1	-9999999999999	-1
+select cidx, CDECIMAL18, IF(CDECIMAL18>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	IF(CDECIMAL18>0,1,-1)
+1	-9999999999999	-1
+select cidx, CDECIMAL18, IF(CDECIMAL18>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	IF(CDECIMAL18>0,1,-1)
+1	-9999999999999	-1
+select cidx, CDECIMAL18_2, IF(CDECIMAL18_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	IF(CDECIMAL18_2>0,1,-1)
+1	-99999999999.99	-1
+select cidx, CDECIMAL18_2, IF(CDECIMAL18_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	IF(CDECIMAL18_2>0,1,-1)
+1	-99999999999.99	-1
+select cidx, CDECIMAL18_2, IF(CDECIMAL18_2>0,1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	IF(CDECIMAL18_2>0,1,-1)
+1	-99999999999.99	-1
+select cidx, CINTEGER, IF(CINTEGER>0,1,-1) from datatypetestm order by cidx;
+cidx	CINTEGER	IF(CINTEGER>0,1,-1)
+1	-7483646	-1
+select cidx, CINTEGER, IF(CINTEGER>0,1,-1) from datatypetestm order by cidx;
+cidx	CINTEGER	IF(CINTEGER>0,1,-1)
+1	-7483646	-1
+select cidx, CINTEGER, IF(CINTEGER>0,1,-1) from datatypetestm order by cidx;
+cidx	CINTEGER	IF(CINTEGER>0,1,-1)
+1	-7483646	-1
+select cidx, CSMALLINT, IF(CSMALLINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CSMALLINT	IF(CSMALLINT>0,1,-1)
+1	-766	-1
+select cidx, CSMALLINT, IF(CSMALLINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CSMALLINT	IF(CSMALLINT>0,1,-1)
+1	-766	-1
+select cidx, CSMALLINT, IF(CSMALLINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CSMALLINT	IF(CSMALLINT>0,1,-1)
+1	-766	-1
+select cidx, CTINYINT, IF(CTINYINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CTINYINT	IF(CTINYINT>0,1,-1)
+1	-26	-1
+select cidx, CTINYINT, IF(CTINYINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CTINYINT	IF(CTINYINT>0,1,-1)
+1	-26	-1
+select cidx, CTINYINT, IF(CTINYINT>0,1,-1) from datatypetestm order by cidx;
+cidx	CTINYINT	IF(CTINYINT>0,1,-1)
+1	-26	-1
+select cidx, CDOUBLE, IF(CDOUBLE>0,1,-1) from datatypetestm order by cidx;
+cidx	CDOUBLE	IF(CDOUBLE>0,1,-1)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, IF(CDOUBLE>0,1,-1) from datatypetestm order by cidx;
+cidx	CDOUBLE	IF(CDOUBLE>0,1,-1)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, IF(CDOUBLE>0,1,-1) from datatypetestm order by cidx;
+cidx	CDOUBLE	IF(CDOUBLE>0,1,-1)
+1	-1.797693231e108	-1
+select cidx, CFLOAT, IF(CFLOAT>0,1,-1) from datatypetestm order by cidx;
+cidx	CFLOAT	IF(CFLOAT>0,1,-1)
+1	-3.40287e18	-1
+select cidx, CFLOAT, IF(CFLOAT>0,1,-1) from datatypetestm order by cidx;
+cidx	CFLOAT	IF(CFLOAT>0,1,-1)
+1	-3.40287e18	-1
+select cidx, CFLOAT, IF(CFLOAT>0,1,-1) from datatypetestm order by cidx;
+cidx	CFLOAT	IF(CFLOAT>0,1,-1)
+1	-3.40287e18	-1
+select cidx, CBIGINT from datatypetestm order by IF(CBIGINT>0,1,-1), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by IF(CBIGINT>0,1,-1), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by IF(CBIGINT>0,1,-1), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by IF(CDECIMAL1>0,1,-1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by IF(CDECIMAL1>0,1,-1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by IF(CDECIMAL1>0,1,-1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by IF(CDECIMAL4>0,1,-1), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by IF(CDECIMAL4>0,1,-1), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by IF(CDECIMAL4>0,1,-1), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by IF(CDECIMAL4_2>0,1,-1), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by IF(CDECIMAL4_2>0,1,-1), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by IF(CDECIMAL4_2>0,1,-1), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by IF(CDECIMAL5>0,1,-1), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by IF(CDECIMAL5>0,1,-1), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by IF(CDECIMAL5>0,1,-1), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by IF(CDECIMAL9>0,1,-1), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by IF(CDECIMAL9>0,1,-1), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by IF(CDECIMAL9>0,1,-1), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by IF(CDECIMAL9_2>0,1,-1), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by IF(CDECIMAL9_2>0,1,-1), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by IF(CDECIMAL9_2>0,1,-1), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by IF(CDECIMAL10>0,1,-1), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by IF(CDECIMAL10>0,1,-1), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by IF(CDECIMAL10>0,1,-1), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by IF(CDECIMAL18>0,1,-1), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by IF(CDECIMAL18>0,1,-1), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by IF(CDECIMAL18>0,1,-1), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by IF(CDECIMAL18_2>0,1,-1), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by IF(CDECIMAL18_2>0,1,-1), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by IF(CDECIMAL18_2>0,1,-1), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by IF(CINTEGER>0,1,-1), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by IF(CINTEGER>0,1,-1), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by IF(CINTEGER>0,1,-1), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by IF(CSMALLINT>0,1,-1), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by IF(CSMALLINT>0,1,-1), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by IF(CSMALLINT>0,1,-1), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by IF(CTINYINT>0,1,-1), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by IF(CTINYINT>0,1,-1), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by IF(CTINYINT>0,1,-1), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by IF(CDOUBLE>0,1,-1), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by IF(CDOUBLE>0,1,-1), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by IF(CDOUBLE>0,1,-1), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by IF(CFLOAT>0,1,-1), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by IF(CFLOAT>0,1,-1), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by IF(CFLOAT>0,1,-1), cidx;
+cidx	CFLOAT
+1	-3.40287e18

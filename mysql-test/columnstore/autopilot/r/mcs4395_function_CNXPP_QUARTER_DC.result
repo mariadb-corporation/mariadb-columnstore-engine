@@ -1,0 +1,16 @@
+USE autopilot;
+select cidx, CDATE, QUARTER(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	QUARTER(CDATE)
+1	1997-01-01	1
+select cidx, CDATETIME, QUARTER(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	QUARTER(CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CTIME, QUARTER(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	QUARTER(CTIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm order by QUARTER(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by QUARTER(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

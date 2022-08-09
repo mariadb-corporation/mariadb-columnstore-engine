@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, RTRIM(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, RTRIM(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, RTRIM(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, RTRIM(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, RTRIM(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, RTRIM(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, RTRIM(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, RTRIM(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, RTRIM(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, RTRIM(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, RTRIM(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, RTRIM(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, RTRIM(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, RTRIM(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, RTRIM(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, RTRIM(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, RTRIM(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, RTRIM(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, RTRIM(CVCHAR255) from datatypetestm order by cidx;
+select cidx, RTRIM(concat(cchar1,'Hello ')) from datatypetestm order by cidx;
+select cidx, RTRIM(concat(cchar1,' world')) from datatypetestm order by cidx;
+select cidx, RTRIM(concat(cchar1,' Howzit ')) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by RTRIM(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by RTRIM(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by RTRIM(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by RTRIM(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by RTRIM(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by RTRIM(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by RTRIM(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by RTRIM(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by RTRIM(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by RTRIM(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by RTRIM(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by RTRIM(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by RTRIM(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by RTRIM(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by RTRIM(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by RTRIM(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by RTRIM(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by RTRIM(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by RTRIM(CVCHAR255), cidx;

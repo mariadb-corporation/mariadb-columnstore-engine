@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, RPAD(CTEXT,5,'**') from datatypetestm ;
+select cidx, CTEXT, RPAD(CTEXT,5,'********') from datatypetestm ;
+select cidx, CTEXT, RPAD(CTEXT,15,'**') from datatypetestm ;
+select cidx, CTEXT, RPAD(CTEXT,15,'********') from datatypetestm ;
+select cidx, CTINYTEXT, RPAD(CTINYTEXT,5,'**') from datatypetestm ;
+select cidx, CTINYTEXT, RPAD(CTINYTEXT,5,'********') from datatypetestm ;
+select cidx, CTINYTEXT, RPAD(CTINYTEXT,15,'**') from datatypetestm ;
+select cidx, CTINYTEXT, RPAD(CTINYTEXT,15,'********') from datatypetestm ;
+select cidx, CMEDIUMTEXT, RPAD(CMEDIUMTEXT,5,'**') from datatypetestm ;
+select cidx, CMEDIUMTEXT, RPAD(CMEDIUMTEXT,5,'********') from datatypetestm ;
+select cidx, CMEDIUMTEXT, RPAD(CMEDIUMTEXT,15,'**') from datatypetestm ;
+select cidx, CMEDIUMTEXT, RPAD(CMEDIUMTEXT,15,'********') from datatypetestm ;
+select cidx, CLONGTEXT, RPAD(CLONGTEXT,5,'**') from datatypetestm ;
+select cidx, CLONGTEXT, RPAD(CLONGTEXT,5,'********') from datatypetestm ;
+select cidx, CLONGTEXT, RPAD(CLONGTEXT,15,'**') from datatypetestm ;
+select cidx, CLONGTEXT, RPAD(CLONGTEXT,15,'********') from datatypetestm ;
+select cidx, CTEXT from datatypetestm where RPAD(CTEXT,5,'**') <> 0 ;
+select cidx, CTEXT from datatypetestm where RPAD(CTEXT,5,'********') <> 0 ;
+select cidx, CTEXT from datatypetestm where RPAD(CTEXT,15,'**') <> 0 ;
+select cidx, CTEXT from datatypetestm where RPAD(CTEXT,15,'********') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where RPAD(CTINYTEXT,5,'**') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where RPAD(CTINYTEXT,5,'********') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where RPAD(CTINYTEXT,15,'**') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where RPAD(CTINYTEXT,15,'********') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where RPAD(CMEDIUMTEXT,5,'**') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where RPAD(CMEDIUMTEXT,5,'********') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where RPAD(CMEDIUMTEXT,15,'**') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where RPAD(CMEDIUMTEXT,15,'********') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where RPAD(CLONGTEXT,5,'**') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where RPAD(CLONGTEXT,5,'********') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where RPAD(CLONGTEXT,15,'**') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where RPAD(CLONGTEXT,15,'********') <> 0 ;

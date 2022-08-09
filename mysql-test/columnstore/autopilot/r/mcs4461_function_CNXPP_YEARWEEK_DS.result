@@ -1,0 +1,22 @@
+USE autopilot;
+select cidx, CDATE, YEARWEEK(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	YEARWEEK(CDATE)
+1	1997-01-01	199652
+select cidx, CDATETIME, YEARWEEK(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	YEARWEEK(CDATETIME)
+1	1997-01-01 00:00:00	199652
+select cidx, CTIME, YEARWEEK(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	YEARWEEK(CTIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, YEARWEEK('2009-02-28') from datatypetestm order by cidx;
+cidx	YEARWEEK('2009-02-28')
+1	200908
+select cidx, YEARWEEK('2009-07-04') from datatypetestm order by cidx;
+cidx	YEARWEEK('2009-07-04')
+1	200926
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

@@ -1,0 +1,146 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'a,3') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'a,3')
+1	texttexttext	0
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'b,2') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'b,2')
+1	texttexttext	0
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'z,5') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'z,5')
+1	texttexttext	0
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'a,-3') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'a,-3')
+1	texttexttext	0
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'b,-2') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'b,-2')
+1	texttexttext	0
+select cidx, CTEXT, FIND_IN_SET(CTEXT,'z,-5') from datatypetestm ;
+cidx	CTEXT	FIND_IN_SET(CTEXT,'z,-5')
+1	texttexttext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'a,3') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'a,3')
+1	tinytext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'b,2') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'b,2')
+1	tinytext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'z,5') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'z,5')
+1	tinytext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'a,-3') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'a,-3')
+1	tinytext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'b,-2') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'b,-2')
+1	tinytext	0
+select cidx, CTINYTEXT, FIND_IN_SET(CTINYTEXT,'z,-5') from datatypetestm ;
+cidx	CTINYTEXT	FIND_IN_SET(CTINYTEXT,'z,-5')
+1	tinytext	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'a,3') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'a,3')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'b,2') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'b,2')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'z,5') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'z,5')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'a,-3') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'a,-3')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'b,-2') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'b,-2')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, FIND_IN_SET(CMEDIUMTEXT,'z,-5') from datatypetestm ;
+cidx	CMEDIUMTEXT	FIND_IN_SET(CMEDIUMTEXT,'z,-5')
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'a,3') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'a,3')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'b,2') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'b,2')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'z,5') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'z,5')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'a,-3') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'a,-3')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'b,-2') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'b,-2')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, FIND_IN_SET(CLONGTEXT,'z,-5') from datatypetestm ;
+cidx	CLONGTEXT	FIND_IN_SET(CLONGTEXT,'z,-5')
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'a,3'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'b,2'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'z,5'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'a,-3'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'b,-2'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by FIND_IN_SET(CTEXT,'z,-5'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'a,3'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'b,2'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'z,5'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'a,-3'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'b,-2'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by FIND_IN_SET(CTINYTEXT,'z,-5'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'a,3'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'b,2'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'z,5'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'a,-3'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'b,-2'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by FIND_IN_SET(CMEDIUMTEXT,'z,-5'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'a,3'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'b,2'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'z,5'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'a,-3'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'b,-2'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by FIND_IN_SET(CLONGTEXT,'z,-5'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

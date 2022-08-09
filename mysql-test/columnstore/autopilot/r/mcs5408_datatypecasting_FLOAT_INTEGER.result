@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT > dtt2.CINTEGER ;
+cidx	CFLOAT	CINTEGER
+6	3.40286e18	7483643
+7	3.40286e18	7483644
+8	3.40286e18	7483645
+9	3.40287e18	7483646
+10	3.40287e18	7483647
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT >= dtt2.CINTEGER ;
+cidx	CFLOAT	CINTEGER
+6	3.40286e18	7483643
+7	3.40286e18	7483644
+8	3.40286e18	7483645
+9	3.40287e18	7483646
+10	3.40287e18	7483647
+11	0	0
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <> dtt2.CINTEGER ;
+cidx	CFLOAT	CINTEGER
+1	-3.40287e18	-7483646
+2	-3.40287e18	-7483645
+3	-3.40286e18	-7483644
+4	-3.40286e18	-7483643
+5	-3.40286e18	-7483642
+6	3.40286e18	7483643
+7	3.40286e18	7483644
+8	3.40286e18	7483645
+9	3.40287e18	7483646
+10	3.40287e18	7483647
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT < dtt2.CINTEGER ;
+cidx	CFLOAT	CINTEGER
+1	-3.40287e18	-7483646
+2	-3.40287e18	-7483645
+3	-3.40286e18	-7483644
+4	-3.40286e18	-7483643
+5	-3.40286e18	-7483642
+select dtt1.cidx, dtt1.CFLOAT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CFLOAT <= dtt2.CINTEGER ;
+cidx	CFLOAT	CINTEGER
+1	-3.40287e18	-7483646
+2	-3.40287e18	-7483645
+3	-3.40286e18	-7483644
+4	-3.40286e18	-7483643
+5	-3.40286e18	-7483642
+11	0	0

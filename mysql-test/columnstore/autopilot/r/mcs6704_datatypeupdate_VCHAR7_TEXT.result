@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CTEXT = CVCHAR7;
+SELECT CTEXT FROM datatypeupdate;
+CTEXT
+aaaaaaa
+ROLLBACK;

@@ -1,0 +1,94 @@
+USE autopilot;
+select cidx, CBIGINT, LN(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	LN(CBIGINT)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, LN(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	LN(CDECIMAL1)
+1	-9	NULL
+select cidx, CDECIMAL4, LN(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	LN(CDECIMAL4)
+1	-999	NULL
+select cidx, CDECIMAL4_2, LN(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	LN(CDECIMAL4_2)
+1	-9.99	NULL
+select cidx, CDECIMAL5, LN(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	LN(CDECIMAL5)
+1	-999	NULL
+select cidx, CDECIMAL9, LN(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	LN(CDECIMAL9)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, LN(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	LN(CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, LN(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	LN(CDECIMAL10)
+1	-9999999	NULL
+select cidx, CDECIMAL18, LN(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	LN(CDECIMAL18)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, LN(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	LN(CDECIMAL18_2)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, LN(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	LN(CINTEGER)
+1	-7483646	NULL
+select cidx, CSMALLINT, LN(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	LN(CSMALLINT)
+1	-766	NULL
+select cidx, CTINYINT, LN(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	LN(CTINYINT)
+1	-26	NULL
+select cidx, CDOUBLE, LN(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	LN(CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, LN(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	LN(CFLOAT)
+1	-3.40287e18	NULL
+select cidx, LN(-1*cidx) from datatypetestm order by cidx;
+cidx	LN(-1*cidx)
+1	NULL
+select cidx, LN(0*cidx) from datatypetestm order by cidx;
+cidx	LN(0*cidx)
+1	NULL
+select cidx, LN(2*cidx) from datatypetestm order by cidx;
+cidx	LN(2*cidx)
+1	0.6931471805599453
+select cidx, LN(265536*cidx) from datatypetestm order by cidx;
+cidx	LN(265536*cidx)
+1	12.48950570369254
+select cidx, LN(1100*cidx) from datatypetestm order by cidx;
+cidx	LN(1100*cidx)
+1	7.003065458786462
+select cidx, LN(100*cidx) from datatypetestm order by cidx;
+cidx	LN(100*cidx)
+1	4.605170185988092
+select cidx, CBIGINT from datatypetestm where LN(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where LN(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where LN(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where LN(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where LN(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where LN(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where LN(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where LN(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where LN(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where LN(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where LN(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where LN(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where LN(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CDOUBLE from datatypetestm where LN(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where LN(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT

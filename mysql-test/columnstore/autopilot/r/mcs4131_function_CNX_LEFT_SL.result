@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, LEFT(concat('helloworld',cchar1),5) from datatypetestm order by cidx;
+cidx	LEFT(concat('helloworld',cchar1),5)
+1	hello
+select cidx, LEFT(concat('helloworld',cchar1),25) from datatypetestm order by cidx;
+cidx	LEFT(concat('helloworld',cchar1),25)
+1	helloworlda

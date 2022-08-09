@@ -1,0 +1,86 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, MID(CCHAR1,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR1, MID(CCHAR1,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR2, MID(CCHAR2,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR2, MID(CCHAR2,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR3, MID(CCHAR3,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR3, MID(CCHAR3,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR4, MID(CCHAR4,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR4, MID(CCHAR4,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR5, MID(CCHAR5,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR5, MID(CCHAR5,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR6, MID(CCHAR6,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR6, MID(CCHAR6,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR7, MID(CCHAR7,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR7, MID(CCHAR7,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR8, MID(CCHAR8,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR8, MID(CCHAR8,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR9, MID(CCHAR9,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR9, MID(CCHAR9,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR255, MID(CCHAR255,5,2) from datatypetestm order by cidx;
+select cidx, CCHAR255, MID(CCHAR255,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR1, MID(CVCHAR1,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR1, MID(CVCHAR1,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR2, MID(CVCHAR2,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR2, MID(CVCHAR2,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR3, MID(CVCHAR3,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, MID(CVCHAR3,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, MID(CVCHAR4,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR4, MID(CVCHAR4,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR5, MID(CVCHAR5,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR5, MID(CVCHAR5,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR6, MID(CVCHAR6,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR6, MID(CVCHAR6,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR7, MID(CVCHAR7,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR7, MID(CVCHAR7,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR8, MID(CVCHAR8,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR8, MID(CVCHAR8,9,3) from datatypetestm order by cidx;
+select cidx, CVCHAR255, MID(CVCHAR255,5,2) from datatypetestm order by cidx;
+select cidx, CVCHAR255, MID(CVCHAR255,9,3) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm where MID(CCHAR1,5,2) <> 0 order by cidx;
+select cidx, CCHAR1 from datatypetestm where MID(CCHAR1,9,3) <> 0 order by cidx;
+select cidx, CCHAR2 from datatypetestm where MID(CCHAR2,5,2) <> 0 order by cidx;
+select cidx, CCHAR2 from datatypetestm where MID(CCHAR2,9,3) <> 0 order by cidx;
+select cidx, CCHAR3 from datatypetestm where MID(CCHAR3,5,2) <> 0 order by cidx;
+select cidx, CCHAR3 from datatypetestm where MID(CCHAR3,9,3) <> 0 order by cidx;
+select cidx, CCHAR4 from datatypetestm where MID(CCHAR4,5,2) <> 0 order by cidx;
+select cidx, CCHAR4 from datatypetestm where MID(CCHAR4,9,3) <> 0 order by cidx;
+select cidx, CCHAR5 from datatypetestm where MID(CCHAR5,5,2) <> 0 order by cidx;
+select cidx, CCHAR5 from datatypetestm where MID(CCHAR5,9,3) <> 0 order by cidx;
+select cidx, CCHAR6 from datatypetestm where MID(CCHAR6,5,2) <> 0 order by cidx;
+select cidx, CCHAR6 from datatypetestm where MID(CCHAR6,9,3) <> 0 order by cidx;
+select cidx, CCHAR7 from datatypetestm where MID(CCHAR7,5,2) <> 0 order by cidx;
+select cidx, CCHAR7 from datatypetestm where MID(CCHAR7,9,3) <> 0 order by cidx;
+select cidx, CCHAR8 from datatypetestm where MID(CCHAR8,5,2) <> 0 order by cidx;
+select cidx, CCHAR8 from datatypetestm where MID(CCHAR8,9,3) <> 0 order by cidx;
+select cidx, CCHAR9 from datatypetestm where MID(CCHAR9,5,2) <> 0 order by cidx;
+select cidx, CCHAR9 from datatypetestm where MID(CCHAR9,9,3) <> 0 order by cidx;
+select cidx, CCHAR255 from datatypetestm where MID(CCHAR255,5,2) <> 0 order by cidx;
+select cidx, CCHAR255 from datatypetestm where MID(CCHAR255,9,3) <> 0 order by cidx;
+select cidx, CVCHAR1 from datatypetestm where MID(CVCHAR1,5,2) <> 0 order by cidx;
+select cidx, CVCHAR1 from datatypetestm where MID(CVCHAR1,9,3) <> 0 order by cidx;
+select cidx, CVCHAR2 from datatypetestm where MID(CVCHAR2,5,2) <> 0 order by cidx;
+select cidx, CVCHAR2 from datatypetestm where MID(CVCHAR2,9,3) <> 0 order by cidx;
+select cidx, CVCHAR3 from datatypetestm where MID(CVCHAR3,5,2) <> 0 order by cidx;
+select cidx, CVCHAR3 from datatypetestm where MID(CVCHAR3,9,3) <> 0 order by cidx;
+select cidx, CVCHAR4 from datatypetestm where MID(CVCHAR4,5,2) <> 0 order by cidx;
+select cidx, CVCHAR4 from datatypetestm where MID(CVCHAR4,9,3) <> 0 order by cidx;
+select cidx, CVCHAR5 from datatypetestm where MID(CVCHAR5,5,2) <> 0 order by cidx;
+select cidx, CVCHAR5 from datatypetestm where MID(CVCHAR5,9,3) <> 0 order by cidx;
+select cidx, CVCHAR6 from datatypetestm where MID(CVCHAR6,5,2) <> 0 order by cidx;
+select cidx, CVCHAR6 from datatypetestm where MID(CVCHAR6,9,3) <> 0 order by cidx;
+select cidx, CVCHAR7 from datatypetestm where MID(CVCHAR7,5,2) <> 0 order by cidx;
+select cidx, CVCHAR7 from datatypetestm where MID(CVCHAR7,9,3) <> 0 order by cidx;
+select cidx, CVCHAR8 from datatypetestm where MID(CVCHAR8,5,2) <> 0 order by cidx;
+select cidx, CVCHAR8 from datatypetestm where MID(CVCHAR8,9,3) <> 0 order by cidx;
+select cidx, CVCHAR255 from datatypetestm where MID(CVCHAR255,5,2) <> 0 order by cidx;
+select cidx, CVCHAR255 from datatypetestm where MID(CVCHAR255,9,3) <> 0 order by cidx;

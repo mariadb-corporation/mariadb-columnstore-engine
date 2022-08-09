@@ -1,0 +1,226 @@
+USE autopilot;
+select cidx, CBIGINT, ELT(cidx,CCHAR3, CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	ELT(cidx,CCHAR3, CBIGINT)
+1	-72036854775806	aaa
+select cidx, CBIGINT, ELT(cidx,CCHAR3,CCHAR7, CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	ELT(cidx,CCHAR3,CCHAR7, CBIGINT)
+1	-72036854775806	aaa
+select cidx, CBIGINT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CBIGINT)
+1	-72036854775806	aaa
+select cidx, CDECIMAL1, ELT(cidx,CCHAR3, CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	ELT(cidx,CCHAR3, CDECIMAL1)
+1	-9	aaa
+select cidx, CDECIMAL1, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL1)
+1	-9	aaa
+select cidx, CDECIMAL1, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL1)
+1	-9	aaa
+select cidx, CDECIMAL4, ELT(cidx,CCHAR3, CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	ELT(cidx,CCHAR3, CDECIMAL4)
+1	-999	aaa
+select cidx, CDECIMAL4, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4)
+1	-999	aaa
+select cidx, CDECIMAL4, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4)
+1	-999	aaa
+select cidx, CDECIMAL4_2, ELT(cidx,CCHAR3, CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	ELT(cidx,CCHAR3, CDECIMAL4_2)
+1	-9.99	aaa
+select cidx, CDECIMAL4_2, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4_2)
+1	-9.99	aaa
+select cidx, CDECIMAL4_2, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4_2)
+1	-9.99	aaa
+select cidx, CDECIMAL5, ELT(cidx,CCHAR3, CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	ELT(cidx,CCHAR3, CDECIMAL5)
+1	-999	aaa
+select cidx, CDECIMAL5, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL5)
+1	-999	aaa
+select cidx, CDECIMAL5, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL5)
+1	-999	aaa
+select cidx, CDECIMAL9, ELT(cidx,CCHAR3, CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	ELT(cidx,CCHAR3, CDECIMAL9)
+1	-999999	aaa
+select cidx, CDECIMAL9, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9)
+1	-999999	aaa
+select cidx, CDECIMAL9, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9)
+1	-999999	aaa
+select cidx, CDECIMAL9_2, ELT(cidx,CCHAR3, CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	ELT(cidx,CCHAR3, CDECIMAL9_2)
+1	-9999.99	aaa
+select cidx, CDECIMAL9_2, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9_2)
+1	-9999.99	aaa
+select cidx, CDECIMAL9_2, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9_2)
+1	-9999.99	aaa
+select cidx, CDECIMAL10, ELT(cidx,CCHAR3, CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	ELT(cidx,CCHAR3, CDECIMAL10)
+1	-9999999	aaa
+select cidx, CDECIMAL10, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL10)
+1	-9999999	aaa
+select cidx, CDECIMAL10, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL10)
+1	-9999999	aaa
+select cidx, CDECIMAL18, ELT(cidx,CCHAR3, CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	ELT(cidx,CCHAR3, CDECIMAL18)
+1	-9999999999999	aaa
+select cidx, CDECIMAL18, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18)
+1	-9999999999999	aaa
+select cidx, CDECIMAL18, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18)
+1	-9999999999999	aaa
+select cidx, CDECIMAL18_2, ELT(cidx,CCHAR3, CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	ELT(cidx,CCHAR3, CDECIMAL18_2)
+1	-99999999999.99	aaa
+select cidx, CDECIMAL18_2, ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18_2)
+1	-99999999999.99	aaa
+select cidx, CDECIMAL18_2, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18_2)
+1	-99999999999.99	aaa
+select cidx, CINTEGER, ELT(cidx,CCHAR3, CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	ELT(cidx,CCHAR3, CINTEGER)
+1	-7483646	aaa
+select cidx, CINTEGER, ELT(cidx,CCHAR3,CCHAR7, CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	ELT(cidx,CCHAR3,CCHAR7, CINTEGER)
+1	-7483646	aaa
+select cidx, CINTEGER, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CINTEGER)
+1	-7483646	aaa
+select cidx, CSMALLINT, ELT(cidx,CCHAR3, CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	ELT(cidx,CCHAR3, CSMALLINT)
+1	-766	aaa
+select cidx, CSMALLINT, ELT(cidx,CCHAR3,CCHAR7, CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	ELT(cidx,CCHAR3,CCHAR7, CSMALLINT)
+1	-766	aaa
+select cidx, CSMALLINT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CSMALLINT)
+1	-766	aaa
+select cidx, CTINYINT, ELT(cidx,CCHAR3, CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	ELT(cidx,CCHAR3, CTINYINT)
+1	-26	aaa
+select cidx, CTINYINT, ELT(cidx,CCHAR3,CCHAR7, CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	ELT(cidx,CCHAR3,CCHAR7, CTINYINT)
+1	-26	aaa
+select cidx, CTINYINT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYINT)
+1	-26	aaa
+select cidx, CDOUBLE, ELT(cidx,CCHAR3, CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	ELT(cidx,CCHAR3, CDOUBLE)
+1	-1.797693231e108	aaa
+select cidx, CDOUBLE, ELT(cidx,CCHAR3,CCHAR7, CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	ELT(cidx,CCHAR3,CCHAR7, CDOUBLE)
+1	-1.797693231e108	aaa
+select cidx, CDOUBLE, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDOUBLE)
+1	-1.797693231e108	aaa
+select cidx, CFLOAT, ELT(cidx,CCHAR3, CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	ELT(cidx,CCHAR3, CFLOAT)
+1	-3.40287e18	aaa
+select cidx, CFLOAT, ELT(cidx,CCHAR3,CCHAR7, CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	ELT(cidx,CCHAR3,CCHAR7, CFLOAT)
+1	-3.40287e18	aaa
+select cidx, CFLOAT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CFLOAT)
+1	-3.40287e18	aaa
+select cidx, CBIGINT from datatypetestm where ELT(cidx,CCHAR3, CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where ELT(cidx,CCHAR3, CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where ELT(cidx,CCHAR3, CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where ELT(cidx,CCHAR3, CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where ELT(cidx,CCHAR3, CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CDOUBLE from datatypetestm where ELT(cidx,CCHAR3, CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where ELT(cidx,CCHAR3, CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT

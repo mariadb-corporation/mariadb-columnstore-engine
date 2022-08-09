@@ -1,0 +1,381 @@
+USE autopilot;
+select cidx, CCHAR1, CONCAT(CCHAR1,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR1	CONCAT(CCHAR1,CCHAR3,CCHAR7,'ALOHA')
+1	a	aaaaaaaaaaaALOHA
+select cidx, CCHAR1, CONCAT(CCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR1	CONCAT(CCHAR1,CCHAR3)
+1	a	aaaa
+select cidx, CCHAR1, CONCAT(CCHAR1,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR1	CONCAT(CCHAR1,CCHAR7)
+1	a	aaaaaaaa
+select cidx, CCHAR1, CONCAT(CCHAR1,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR1	CONCAT(CCHAR1,'ALOHA')
+1	a	aALOHA
+select cidx, CCHAR2, CONCAT(CCHAR2,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR2	CONCAT(CCHAR2,CCHAR3,CCHAR7,'ALOHA')
+1	aa	aaaaaaaaaaaaALOHA
+select cidx, CCHAR2, CONCAT(CCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR2	CONCAT(CCHAR2,CCHAR3)
+1	aa	aaaaa
+select cidx, CCHAR2, CONCAT(CCHAR2,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR2	CONCAT(CCHAR2,CCHAR7)
+1	aa	aaaaaaaaa
+select cidx, CCHAR2, CONCAT(CCHAR2,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR2	CONCAT(CCHAR2,'ALOHA')
+1	aa	aaALOHA
+select cidx, CCHAR3, CONCAT(CCHAR3,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR3	CONCAT(CCHAR3,CCHAR3,CCHAR7,'ALOHA')
+1	aaa	aaaaaaaaaaaaaALOHA
+select cidx, CCHAR3, CONCAT(CCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	CONCAT(CCHAR3,CCHAR3)
+1	aaa	aaaaaa
+select cidx, CCHAR3, CONCAT(CCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR3	CONCAT(CCHAR3,CCHAR7)
+1	aaa	aaaaaaaaaa
+select cidx, CCHAR3, CONCAT(CCHAR3,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR3	CONCAT(CCHAR3,'ALOHA')
+1	aaa	aaaALOHA
+select cidx, CCHAR4, CONCAT(CCHAR4,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR4	CONCAT(CCHAR4,CCHAR3,CCHAR7,'ALOHA')
+1	aaaa	aaaaaaaaaaaaaaALOHA
+select cidx, CCHAR4, CONCAT(CCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR4	CONCAT(CCHAR4,CCHAR3)
+1	aaaa	aaaaaaa
+select cidx, CCHAR4, CONCAT(CCHAR4,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR4	CONCAT(CCHAR4,CCHAR7)
+1	aaaa	aaaaaaaaaaa
+select cidx, CCHAR4, CONCAT(CCHAR4,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR4	CONCAT(CCHAR4,'ALOHA')
+1	aaaa	aaaaALOHA
+select cidx, CCHAR5, CONCAT(CCHAR5,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR5	CONCAT(CCHAR5,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaa	aaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR5, CONCAT(CCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR5	CONCAT(CCHAR5,CCHAR3)
+1	aaaaa	aaaaaaaa
+select cidx, CCHAR5, CONCAT(CCHAR5,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR5	CONCAT(CCHAR5,CCHAR7)
+1	aaaaa	aaaaaaaaaaaa
+select cidx, CCHAR5, CONCAT(CCHAR5,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR5	CONCAT(CCHAR5,'ALOHA')
+1	aaaaa	aaaaaALOHA
+select cidx, CCHAR6, CONCAT(CCHAR6,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR6	CONCAT(CCHAR6,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaa	aaaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR6, CONCAT(CCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR6	CONCAT(CCHAR6,CCHAR3)
+1	aaaaaa	aaaaaaaaa
+select cidx, CCHAR6, CONCAT(CCHAR6,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR6	CONCAT(CCHAR6,CCHAR7)
+1	aaaaaa	aaaaaaaaaaaaa
+select cidx, CCHAR6, CONCAT(CCHAR6,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR6	CONCAT(CCHAR6,'ALOHA')
+1	aaaaaa	aaaaaaALOHA
+select cidx, CCHAR7, CONCAT(CCHAR7,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR7	CONCAT(CCHAR7,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaa	aaaaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR7, CONCAT(CCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR7	CONCAT(CCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaaaaa
+select cidx, CCHAR7, CONCAT(CCHAR7,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	CONCAT(CCHAR7,CCHAR7)
+1	aaaaaaa	aaaaaaaaaaaaaa
+select cidx, CCHAR7, CONCAT(CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR7	CONCAT(CCHAR7,'ALOHA')
+1	aaaaaaa	aaaaaaaALOHA
+select cidx, CCHAR8, CONCAT(CCHAR8,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR8	CONCAT(CCHAR8,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaaa	aaaaaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR8, CONCAT(CCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR8	CONCAT(CCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaaaaa
+select cidx, CCHAR8, CONCAT(CCHAR8,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR8	CONCAT(CCHAR8,CCHAR7)
+1	aaaaaaaa	aaaaaaaaaaaaaaa
+select cidx, CCHAR8, CONCAT(CCHAR8,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR8	CONCAT(CCHAR8,'ALOHA')
+1	aaaaaaaa	aaaaaaaaALOHA
+select cidx, CCHAR9, CONCAT(CCHAR9,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR9	CONCAT(CCHAR9,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaaaa	aaaaaaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR9, CONCAT(CCHAR9,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR9	CONCAT(CCHAR9,CCHAR3)
+1	aaaaaaaaa	aaaaaaaaaaaa
+select cidx, CCHAR9, CONCAT(CCHAR9,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR9	CONCAT(CCHAR9,CCHAR7)
+1	aaaaaaaaa	aaaaaaaaaaaaaaaa
+select cidx, CCHAR9, CONCAT(CCHAR9,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR9	CONCAT(CCHAR9,'ALOHA')
+1	aaaaaaaaa	aaaaaaaaaALOHA
+select cidx, CCHAR255, CONCAT(CCHAR255,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR255	CONCAT(CCHAR255,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaaaaaALOHA
+select cidx, CCHAR255, CONCAT(CCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR255	CONCAT(CCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaaaaa
+select cidx, CCHAR255, CONCAT(CCHAR255,CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR255	CONCAT(CCHAR255,CCHAR7)
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaa
+select cidx, CCHAR255, CONCAT(CCHAR255,'ALOHA') from datatypetestm order by cidx;
+cidx	CCHAR255	CONCAT(CCHAR255,'ALOHA')
+1	aaaaaaaaaa	aaaaaaaaaaALOHA
+select cidx, CVCHAR1, CONCAT(CVCHAR1,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR1	CONCAT(CVCHAR1,CCHAR3,CCHAR7,'ALOHA')
+1	a	aaaaaaaaaaaALOHA
+select cidx, CVCHAR1, CONCAT(CVCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONCAT(CVCHAR1,CCHAR3)
+1	a	aaaa
+select cidx, CVCHAR1, CONCAT(CVCHAR1,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR1	CONCAT(CVCHAR1,CCHAR7)
+1	a	aaaaaaaa
+select cidx, CVCHAR1, CONCAT(CVCHAR1,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR1	CONCAT(CVCHAR1,'ALOHA')
+1	a	aALOHA
+select cidx, CVCHAR2, CONCAT(CVCHAR2,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR2	CONCAT(CVCHAR2,CCHAR3,CCHAR7,'ALOHA')
+1	aa	aaaaaaaaaaaaALOHA
+select cidx, CVCHAR2, CONCAT(CVCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONCAT(CVCHAR2,CCHAR3)
+1	aa	aaaaa
+select cidx, CVCHAR2, CONCAT(CVCHAR2,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR2	CONCAT(CVCHAR2,CCHAR7)
+1	aa	aaaaaaaaa
+select cidx, CVCHAR2, CONCAT(CVCHAR2,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR2	CONCAT(CVCHAR2,'ALOHA')
+1	aa	aaALOHA
+select cidx, CVCHAR3, CONCAT(CVCHAR3,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR3	CONCAT(CVCHAR3,CCHAR3,CCHAR7,'ALOHA')
+1	aaa	aaaaaaaaaaaaaALOHA
+select cidx, CVCHAR3, CONCAT(CVCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONCAT(CVCHAR3,CCHAR3)
+1	aaa	aaaaaa
+select cidx, CVCHAR3, CONCAT(CVCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR3	CONCAT(CVCHAR3,CCHAR7)
+1	aaa	aaaaaaaaaa
+select cidx, CVCHAR3, CONCAT(CVCHAR3,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR3	CONCAT(CVCHAR3,'ALOHA')
+1	aaa	aaaALOHA
+select cidx, CVCHAR4, CONCAT(CVCHAR4,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR4	CONCAT(CVCHAR4,CCHAR3,CCHAR7,'ALOHA')
+1	aaaa	aaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR4, CONCAT(CVCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONCAT(CVCHAR4,CCHAR3)
+1	aaaa	aaaaaaa
+select cidx, CVCHAR4, CONCAT(CVCHAR4,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR4	CONCAT(CVCHAR4,CCHAR7)
+1	aaaa	aaaaaaaaaaa
+select cidx, CVCHAR4, CONCAT(CVCHAR4,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR4	CONCAT(CVCHAR4,'ALOHA')
+1	aaaa	aaaaALOHA
+select cidx, CVCHAR5, CONCAT(CVCHAR5,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR5	CONCAT(CVCHAR5,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaa	aaaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR5, CONCAT(CVCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONCAT(CVCHAR5,CCHAR3)
+1	aaaaa	aaaaaaaa
+select cidx, CVCHAR5, CONCAT(CVCHAR5,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR5	CONCAT(CVCHAR5,CCHAR7)
+1	aaaaa	aaaaaaaaaaaa
+select cidx, CVCHAR5, CONCAT(CVCHAR5,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR5	CONCAT(CVCHAR5,'ALOHA')
+1	aaaaa	aaaaaALOHA
+select cidx, CVCHAR6, CONCAT(CVCHAR6,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR6	CONCAT(CVCHAR6,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaa	aaaaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR6, CONCAT(CVCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONCAT(CVCHAR6,CCHAR3)
+1	aaaaaa	aaaaaaaaa
+select cidx, CVCHAR6, CONCAT(CVCHAR6,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR6	CONCAT(CVCHAR6,CCHAR7)
+1	aaaaaa	aaaaaaaaaaaaa
+select cidx, CVCHAR6, CONCAT(CVCHAR6,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR6	CONCAT(CVCHAR6,'ALOHA')
+1	aaaaaa	aaaaaaALOHA
+select cidx, CVCHAR7, CONCAT(CVCHAR7,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR7	CONCAT(CVCHAR7,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaa	aaaaaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR7, CONCAT(CVCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONCAT(CVCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR7, CONCAT(CVCHAR7,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	CONCAT(CVCHAR7,CCHAR7)
+1	aaaaaaa	aaaaaaaaaaaaaa
+select cidx, CVCHAR7, CONCAT(CVCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR7	CONCAT(CVCHAR7,'ALOHA')
+1	aaaaaaa	aaaaaaaALOHA
+select cidx, CVCHAR8, CONCAT(CVCHAR8,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR8	CONCAT(CVCHAR8,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaaa	aaaaaaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR8, CONCAT(CVCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONCAT(CVCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaaaaa
+select cidx, CVCHAR8, CONCAT(CVCHAR8,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR8	CONCAT(CVCHAR8,CCHAR7)
+1	aaaaaaaa	aaaaaaaaaaaaaaa
+select cidx, CVCHAR8, CONCAT(CVCHAR8,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR8	CONCAT(CVCHAR8,'ALOHA')
+1	aaaaaaaa	aaaaaaaaALOHA
+select cidx, CVCHAR255, CONCAT(CVCHAR255,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR255	CONCAT(CVCHAR255,CCHAR3,CCHAR7,'ALOHA')
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaaaaaALOHA
+select cidx, CVCHAR255, CONCAT(CVCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONCAT(CVCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaaaaa
+select cidx, CVCHAR255, CONCAT(CVCHAR255,CCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR255	CONCAT(CVCHAR255,CCHAR7)
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaa
+select cidx, CVCHAR255, CONCAT(CVCHAR255,'ALOHA') from datatypetestm order by cidx;
+cidx	CVCHAR255	CONCAT(CVCHAR255,'ALOHA')
+1	aaaaaaaaaa	aaaaaaaaaaALOHA
+select cidx, CCHAR1 from datatypetestm where CONCAT(CCHAR1,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where CONCAT(CCHAR1,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where CONCAT(CCHAR1,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where CONCAT(CCHAR1,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where CONCAT(CCHAR2,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where CONCAT(CCHAR2,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where CONCAT(CCHAR2,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where CONCAT(CCHAR2,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where CONCAT(CCHAR3,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where CONCAT(CCHAR3,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where CONCAT(CCHAR3,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where CONCAT(CCHAR3,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where CONCAT(CCHAR4,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where CONCAT(CCHAR4,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where CONCAT(CCHAR4,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where CONCAT(CCHAR4,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where CONCAT(CCHAR5,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where CONCAT(CCHAR5,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where CONCAT(CCHAR5,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where CONCAT(CCHAR5,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where CONCAT(CCHAR6,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where CONCAT(CCHAR6,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where CONCAT(CCHAR6,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where CONCAT(CCHAR6,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where CONCAT(CCHAR7,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where CONCAT(CCHAR7,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where CONCAT(CCHAR7,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where CONCAT(CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where CONCAT(CCHAR8,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where CONCAT(CCHAR8,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where CONCAT(CCHAR8,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where CONCAT(CCHAR8,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where CONCAT(CCHAR9,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where CONCAT(CCHAR9,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where CONCAT(CCHAR9,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where CONCAT(CCHAR9,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where CONCAT(CCHAR255,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where CONCAT(CCHAR255,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where CONCAT(CCHAR255,CCHAR7) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where CONCAT(CCHAR255,'ALOHA') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where CONCAT(CVCHAR1,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where CONCAT(CVCHAR1,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where CONCAT(CVCHAR1,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where CONCAT(CVCHAR1,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where CONCAT(CVCHAR2,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where CONCAT(CVCHAR2,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where CONCAT(CVCHAR2,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where CONCAT(CVCHAR2,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where CONCAT(CVCHAR3,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where CONCAT(CVCHAR3,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where CONCAT(CVCHAR3,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where CONCAT(CVCHAR3,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where CONCAT(CVCHAR4,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where CONCAT(CVCHAR4,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where CONCAT(CVCHAR4,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where CONCAT(CVCHAR4,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where CONCAT(CVCHAR5,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where CONCAT(CVCHAR5,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where CONCAT(CVCHAR5,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where CONCAT(CVCHAR5,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where CONCAT(CVCHAR6,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where CONCAT(CVCHAR6,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where CONCAT(CVCHAR6,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where CONCAT(CVCHAR6,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where CONCAT(CVCHAR7,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where CONCAT(CVCHAR7,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where CONCAT(CVCHAR7,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where CONCAT(CVCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where CONCAT(CVCHAR8,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where CONCAT(CVCHAR8,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where CONCAT(CVCHAR8,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where CONCAT(CVCHAR8,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where CONCAT(CVCHAR255,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where CONCAT(CVCHAR255,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where CONCAT(CVCHAR255,CCHAR7) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where CONCAT(CVCHAR255,'ALOHA') <> 0 order by cidx;
+cidx	CVCHAR255

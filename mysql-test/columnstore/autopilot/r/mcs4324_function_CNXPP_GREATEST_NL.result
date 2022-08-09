@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, GREATEST(883*cidx,0*cidx,-34*cidx) from datatypetestm order by cidx;
+cidx	GREATEST(883*cidx,0*cidx,-34*cidx)
+1	883
+select cidx, GREATEST(0*cidx,-9987*cidx,3.14*cidx) from datatypetestm order by cidx;
+cidx	GREATEST(0*cidx,-9987*cidx,3.14*cidx)
+1	3.14

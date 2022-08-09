@@ -1,0 +1,23 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json = '{ "A": 0, "B": [1, 2]}';
+SELECT @json;
+INSERT INTO jsontest VALUES (1, @json, @json);
+#
+SELECT JSON_INSERT(@json, '$.C', '[3, 4]');
+#
+SELECT * FROM jsontest;
+--error 1178
+SELECT cVarchar, JSON_INSERT(cVarchar, '$.C', '[3, 4]'), cText, JSON_INSERT(cText, '$.C', '[3, 4]') from jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

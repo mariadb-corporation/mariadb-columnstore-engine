@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, POSITION('aaa' IN CTEXT) from datatypetestm ;
+select cidx, CTEXT, POSITION('zzz' IN CTEXT) from datatypetestm ;
+select cidx, CTEXT, POSITION('aaaaaaaaa' IN CTEXT) from datatypetestm ;
+select cidx, CTEXT, POSITION('zzzzzzzzz' IN CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, POSITION('aaa' IN CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, POSITION('zzz' IN CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, POSITION('aaaaaaaaa' IN CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, POSITION('zzzzzzzzz' IN CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, POSITION('aaa' IN CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, POSITION('zzz' IN CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, POSITION('aaaaaaaaa' IN CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, POSITION('zzzzzzzzz' IN CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, POSITION('aaa' IN CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, POSITION('zzz' IN CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, POSITION('aaaaaaaaa' IN CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, POSITION('zzzzzzzzz' IN CLONGTEXT) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by POSITION('aaa' IN CTEXT), cidx;
+select cidx, CTEXT from datatypetestm order by POSITION('zzz' IN CTEXT), cidx;
+select cidx, CTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CTEXT), cidx;
+select cidx, CTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by POSITION('aaa' IN CTINYTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by POSITION('zzz' IN CTINYTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CTINYTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CTINYTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('aaa' IN CMEDIUMTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('zzz' IN CMEDIUMTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CMEDIUMTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CMEDIUMTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by POSITION('aaa' IN CLONGTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by POSITION('zzz' IN CLONGTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by POSITION('aaaaaaaaa' IN CLONGTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by POSITION('zzzzzzzzz' IN CLONGTEXT), cidx;

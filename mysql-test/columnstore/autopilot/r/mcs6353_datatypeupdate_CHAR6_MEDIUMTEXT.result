@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CMEDIUMTEXT = CCHAR6;
+SELECT CMEDIUMTEXT FROM datatypeupdate;
+CMEDIUMTEXT
+aaaaaa
+ROLLBACK;

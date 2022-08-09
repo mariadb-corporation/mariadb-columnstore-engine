@@ -1,0 +1,91 @@
+USE autopilot;
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 0) from datatypetestm order by cidx;
+cidx	CDATE	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 0)
+1	1997-01-01	199701
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 1) from datatypetestm order by cidx;
+cidx	CDATE	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 1)
+1	1997-01-01	199702
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 5) from datatypetestm order by cidx;
+cidx	CDATE	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 5)
+1	1997-01-01	199706
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -1) from datatypetestm order by cidx;
+cidx	CDATE	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -1)
+1	1997-01-01	199612
+select cidx, CDATE, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -5) from datatypetestm order by cidx;
+cidx	CDATE	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -5)
+1	1997-01-01	199608
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 0) from datatypetestm order by cidx;
+cidx	CDATETIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 0)
+1	1997-01-01 00:00:00	199701
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 1) from datatypetestm order by cidx;
+cidx	CDATETIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 1)
+1	1997-01-01 00:00:00	199702
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 5) from datatypetestm order by cidx;
+cidx	CDATETIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 5)
+1	1997-01-01 00:00:00	199706
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -1) from datatypetestm order by cidx;
+cidx	CDATETIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -1)
+1	1997-01-01 00:00:00	199612
+select cidx, CDATETIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -5) from datatypetestm order by cidx;
+cidx	CDATETIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -5)
+1	1997-01-01 00:00:00	199608
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 0) from datatypetestm order by cidx;
+cidx	CTIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 0)
+1	13:00:00	199912
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 1) from datatypetestm order by cidx;
+cidx	CTIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 1)
+1	13:00:00	200001
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 5) from datatypetestm order by cidx;
+cidx	CTIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 5)
+1	13:00:00	200005
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -1) from datatypetestm order by cidx;
+cidx	CTIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -1)
+1	13:00:00	199911
+select cidx, CTIME, PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -5) from datatypetestm order by cidx;
+cidx	CTIME	PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -5)
+1	13:00:00	199907
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 0), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 1), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), 5), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -1), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATE), -5), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 0), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 1), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), 5), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -1), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CDATETIME), -5), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 0), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 1), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), 5), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -1), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by PERIOD_ADD(EXTRACT(YEAR_MONTH FROM CTIME), -5), cidx;
+cidx	CTIME
+1	13:00:00

@@ -1,0 +1,35 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, RTRIM(CTEXT) from datatypetestm ;
+cidx	CTEXT	RTRIM(CTEXT)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, RTRIM(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	RTRIM(CTINYTEXT)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, RTRIM(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	RTRIM(CMEDIUMTEXT)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, RTRIM(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	RTRIM(CLONGTEXT)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, RTRIM(concat(cchar1,'Hello ')) from datatypetestm ;
+cidx	RTRIM(concat(cchar1,'Hello '))
+1	aHello
+select cidx, RTRIM(concat(cchar1,' world')) from datatypetestm ;
+cidx	RTRIM(concat(cchar1,' world'))
+1	a world
+select cidx, RTRIM(concat(cchar1,' Howzit ')) from datatypetestm ;
+cidx	RTRIM(concat(cchar1,' Howzit '))
+1	a Howzit
+select cidx, CTEXT from datatypetestm order by RTRIM(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by RTRIM(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by RTRIM(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by RTRIM(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

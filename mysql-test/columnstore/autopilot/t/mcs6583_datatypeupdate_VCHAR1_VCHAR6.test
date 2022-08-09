@@ -1,0 +1,14 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot datatype update test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+use autopilot;
+
+START TRANSACTION;
+UPDATE datatypeupdate SET CVCHAR6 = CVCHAR1;
+SELECT CVCHAR6 FROM datatypeupdate;
+ROLLBACK;

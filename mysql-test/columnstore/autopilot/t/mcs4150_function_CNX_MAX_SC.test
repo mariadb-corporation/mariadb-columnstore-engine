@@ -1,0 +1,48 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select MAX(CCHAR1) from datatypetestm;
+select MAX(CCHAR2) from datatypetestm;
+select MAX(CCHAR3) from datatypetestm;
+select MAX(CCHAR4) from datatypetestm;
+select MAX(CCHAR5) from datatypetestm;
+select MAX(CCHAR6) from datatypetestm;
+select MAX(CCHAR7) from datatypetestm;
+select MAX(CCHAR8) from datatypetestm;
+select MAX(CCHAR9) from datatypetestm;
+select MAX(CCHAR255) from datatypetestm;
+select MAX(CVCHAR1) from datatypetestm;
+select MAX(CVCHAR2) from datatypetestm;
+select MAX(CVCHAR3) from datatypetestm;
+select MAX(CVCHAR4) from datatypetestm;
+select MAX(CVCHAR5) from datatypetestm;
+select MAX(CVCHAR6) from datatypetestm;
+select MAX(CVCHAR7) from datatypetestm;
+select MAX(CVCHAR8) from datatypetestm;
+select MAX(CVCHAR255) from datatypetestm;
+select cidx, CCHAR1, MAX(CCHAR1) from datatypetestm group by cidx, CCHAR1 order by cidx;
+select cidx, CCHAR2, MAX(CCHAR2) from datatypetestm group by cidx, CCHAR2 order by cidx;
+select cidx, CCHAR3, MAX(CCHAR3) from datatypetestm group by cidx, CCHAR3 order by cidx;
+select cidx, CCHAR4, MAX(CCHAR4) from datatypetestm group by cidx, CCHAR4 order by cidx;
+select cidx, CCHAR5, MAX(CCHAR5) from datatypetestm group by cidx, CCHAR5 order by cidx;
+select cidx, CCHAR6, MAX(CCHAR6) from datatypetestm group by cidx, CCHAR6 order by cidx;
+select cidx, CCHAR7, MAX(CCHAR7) from datatypetestm group by cidx, CCHAR7 order by cidx;
+select cidx, CCHAR8, MAX(CCHAR8) from datatypetestm group by cidx, CCHAR8 order by cidx;
+select cidx, CCHAR9, MAX(CCHAR9) from datatypetestm group by cidx, CCHAR9 order by cidx;
+select cidx, CCHAR255, MAX(CCHAR255) from datatypetestm group by cidx, CCHAR255 order by cidx;
+select cidx, CVCHAR1, MAX(CVCHAR1) from datatypetestm group by cidx, CVCHAR1 order by cidx;
+select cidx, CVCHAR2, MAX(CVCHAR2) from datatypetestm group by cidx, CVCHAR2 order by cidx;
+select cidx, CVCHAR3, MAX(CVCHAR3) from datatypetestm group by cidx, CVCHAR3 order by cidx;
+select cidx, CVCHAR4, MAX(CVCHAR4) from datatypetestm group by cidx, CVCHAR4 order by cidx;
+select cidx, CVCHAR5, MAX(CVCHAR5) from datatypetestm group by cidx, CVCHAR5 order by cidx;
+select cidx, CVCHAR6, MAX(CVCHAR6) from datatypetestm group by cidx, CVCHAR6 order by cidx;
+select cidx, CVCHAR7, MAX(CVCHAR7) from datatypetestm group by cidx, CVCHAR7 order by cidx;
+select cidx, CVCHAR8, MAX(CVCHAR8) from datatypetestm group by cidx, CVCHAR8 order by cidx;
+select cidx, CVCHAR255, MAX(CVCHAR255) from datatypetestm group by cidx, CVCHAR255 order by cidx;

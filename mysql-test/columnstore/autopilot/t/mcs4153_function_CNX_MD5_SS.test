@@ -1,0 +1,56 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, MD5(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, MD5(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, MD5(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, MD5(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, MD5(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, MD5(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, MD5(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, MD5(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, MD5(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, MD5(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, MD5(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, MD5(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, MD5(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, MD5(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, MD5(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, MD5(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, MD5(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, MD5(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, MD5(CVCHAR255) from datatypetestm order by cidx;
+select cidx, MD5('this') from datatypetestm order by cidx;
+select cidx, MD5('is') from datatypetestm order by cidx;
+select cidx, MD5('a') from datatypetestm order by cidx;
+select cidx, MD5('test') from datatypetestm order by cidx;
+select cidx, MD5('THIS') from datatypetestm order by cidx;
+select cidx, MD5('IS') from datatypetestm order by cidx;
+select cidx, MD5('A') from datatypetestm order by cidx;
+select cidx, MD5('TEST') from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm where MD5(CCHAR1) <> 0 order by cidx;
+select cidx, CCHAR2 from datatypetestm where MD5(CCHAR2) <> 0 order by cidx;
+select cidx, CCHAR3 from datatypetestm where MD5(CCHAR3) <> 0 order by cidx;
+select cidx, CCHAR4 from datatypetestm where MD5(CCHAR4) <> 0 order by cidx;
+select cidx, CCHAR5 from datatypetestm where MD5(CCHAR5) <> 0 order by cidx;
+select cidx, CCHAR6 from datatypetestm where MD5(CCHAR6) <> 0 order by cidx;
+select cidx, CCHAR7 from datatypetestm where MD5(CCHAR7) <> 0 order by cidx;
+select cidx, CCHAR8 from datatypetestm where MD5(CCHAR8) <> 0 order by cidx;
+select cidx, CCHAR9 from datatypetestm where MD5(CCHAR9) <> 0 order by cidx;
+select cidx, CCHAR255 from datatypetestm where MD5(CCHAR255) <> 0 order by cidx;
+select cidx, CVCHAR1 from datatypetestm where MD5(CVCHAR1) <> 0 order by cidx;
+select cidx, CVCHAR2 from datatypetestm where MD5(CVCHAR2) <> 0 order by cidx;
+select cidx, CVCHAR3 from datatypetestm where MD5(CVCHAR3) <> 0 order by cidx;
+select cidx, CVCHAR4 from datatypetestm where MD5(CVCHAR4) <> 0 order by cidx;
+select cidx, CVCHAR5 from datatypetestm where MD5(CVCHAR5) <> 0 order by cidx;
+select cidx, CVCHAR6 from datatypetestm where MD5(CVCHAR6) <> 0 order by cidx;
+select cidx, CVCHAR7 from datatypetestm where MD5(CVCHAR7) <> 0 order by cidx;
+select cidx, CVCHAR8 from datatypetestm where MD5(CVCHAR8) <> 0 order by cidx;
+select cidx, CVCHAR255 from datatypetestm where MD5(CVCHAR255) <> 0 order by cidx;

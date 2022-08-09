@@ -1,0 +1,100 @@
+USE autopilot;
+select cidx, CBIGINT, DEGREES(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	DEGREES(CBIGINT)
+1	-72036854775806	-4.127407748050512e15
+select cidx, CDECIMAL1, DEGREES(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	DEGREES(CDECIMAL1)
+1	-9	-515.662015617741
+select cidx, CDECIMAL4, DEGREES(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	DEGREES(CDECIMAL4)
+1	-999	-57238.48373356924
+select cidx, CDECIMAL4_2, DEGREES(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	DEGREES(CDECIMAL4_2)
+1	-9.99	-572.3848373356924
+select cidx, CDECIMAL5, DEGREES(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	DEGREES(CDECIMAL5)
+1	-999	-57238.48373356924
+select cidx, CDECIMAL9, DEGREES(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	DEGREES(CDECIMAL9)
+1	-999999	-57295722.21730281
+select cidx, CDECIMAL9_2, DEGREES(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	DEGREES(CDECIMAL9_2)
+1	-9999.99	-572957.222173028
+select cidx, CDECIMAL10, DEGREES(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	DEGREES(CDECIMAL10)
+1	-9999999	-572957737.8350437
+select cidx, CDECIMAL18, DEGREES(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	DEGREES(CDECIMAL18)
+1	-9999999999999	-572957795130765.9
+select cidx, CDECIMAL18_2, DEGREES(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	DEGREES(CDECIMAL18_2)
+1	-99999999999.99	-5729577951307.659
+select cidx, CINTEGER, DEGREES(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	DEGREES(CINTEGER)
+1	-7483646	-428781331.1699605
+select cidx, CSMALLINT, DEGREES(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	DEGREES(CSMALLINT)
+1	-766	-43888.56710702106
+select cidx, CTINYINT, DEGREES(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	DEGREES(CTINYINT)
+1	-26	-1489.6902673401405
+select cidx, CDOUBLE, DEGREES(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	DEGREES(CDOUBLE)
+1	-1.797693231e108	-1.0300023499553657e110
+select cidx, CFLOAT, DEGREES(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	DEGREES(CFLOAT)
+1	-3.40287e18	-1.949698538846972e20
+select cidx, DEGREES(PI()) from datatypetestm order by cidx;
+cidx	DEGREES(PI())
+1	180
+select cidx, DEGREES(1) from datatypetestm order by cidx;
+cidx	DEGREES(1)
+1	57.29577951308232
+select cidx, DEGREES(2) from datatypetestm order by cidx;
+cidx	DEGREES(2)
+1	114.59155902616465
+select cidx, CBIGINT from datatypetestm where DEGREES(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where DEGREES(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where DEGREES(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm where DEGREES(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm where DEGREES(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm where DEGREES(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where DEGREES(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm where DEGREES(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm where DEGREES(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where DEGREES(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where DEGREES(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm where DEGREES(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm where DEGREES(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where DEGREES(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where DEGREES(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18

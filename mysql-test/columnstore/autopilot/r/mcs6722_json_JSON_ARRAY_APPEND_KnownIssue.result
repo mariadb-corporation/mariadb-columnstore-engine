@@ -1,0 +1,45 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '[1, 2, [3, 4]]';
+SELECT @json;
+@json
+[1, 2, [3, 4]]
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_ARRAY_APPEND(@json, '$[0]', 5);
+JSON_ARRAY_APPEND(@json, '$[0]', 5)
+[[1, 5], 2, [3, 4]]
+SELECT JSON_ARRAY_APPEND(@json, '$[1]', 6);
+JSON_ARRAY_APPEND(@json, '$[1]', 6)
+[1, [2, 6], [3, 4]]
+SELECT JSON_ARRAY_APPEND(@json, '$[1]', 6, '$[2]', 7);
+JSON_ARRAY_APPEND(@json, '$[1]', 6, '$[2]', 7)
+[1, [2, 6], [3, 4, 7]]
+SELECT JSON_ARRAY_APPEND(@json, '$', 5);
+JSON_ARRAY_APPEND(@json, '$', 5)
+[1, 2, [3, 4], 5]
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	[1, 2, [3, 4]]	[1, 2, [3, 4]]
+SELECT cVarchar, JSON_ARRAY_APPEND(cVarchar, '$[0]', 5), cText, JSON_ARRAY_APPEND(cText, '$[0]', 5) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_append' isn't supported.
+SELECT cVarchar, JSON_ARRAY_APPEND(cVarchar, '$[1]', 6), cText, JSON_ARRAY_APPEND(cText, '$[1]', 6) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_append' isn't supported.
+SELECT cVarchar, JSON_ARRAY_APPEND(cVarchar, '$[1]', 6, '$[2]', 7), cText, JSON_ARRAY_APPEND(cText, '$[1]', 6, '$[2]', 7) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_append' isn't supported.
+SELECT cVarchar, JSON_ARRAY_APPEND(cVarchar, '$', 5), cText, JSON_ARRAY_APPEND(cText, '$', 5) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_append' isn't supported.
+TRUNCATE TABLE jsontest;
+SET @json = '{"A": 1, "B": [2], "C": [3, 4]}';
+SELECT @json;
+@json
+{"A": 1, "B": [2], "C": [3, 4]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_ARRAY_APPEND(@json, '$.B', 5);
+JSON_ARRAY_APPEND(@json, '$.B', 5)
+{"A": 1, "B": [2, 5], "C": [3, 4]}
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"A": 1, "B": [2], "C": [3, 4]}	{"A": 1, "B": [2], "C": [3, 4]}
+SELECT cVarchar, JSON_ARRAY_APPEND(cVarchar, '$.B', 5), cText, JSON_ARRAY_APPEND(cText, '$.B', 5) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_array_append' isn't supported.
+TRUNCATE TABLE jsontest;

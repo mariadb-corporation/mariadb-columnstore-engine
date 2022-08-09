@@ -1,0 +1,28 @@
+USE autopilot;
+select cidx, CDATE, INET_ATON(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	INET_ATON(CDATE)
+1	1997-01-01	NULL
+select cidx, CDATETIME, INET_ATON(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	INET_ATON(CDATETIME)
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, INET_ATON(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	INET_ATON(CTIME)
+1	13:00:00	NULL
+select cidx, INET_ATON('0.0.0.0') from datatypetestm order by cidx;
+cidx	INET_ATON('0.0.0.0')
+1	0
+select cidx, INET_ATON('255.255.255.255') from datatypetestm order by cidx;
+cidx	INET_ATON('255.255.255.255')
+1	4294967295
+select cidx, INET_ATON('127.0.0.1') from datatypetestm order by cidx;
+cidx	INET_ATON('127.0.0.1')
+1	2130706433
+select cidx, INET_ATON('192.168.2.1') from datatypetestm order by cidx;
+cidx	INET_ATON('192.168.2.1')
+1	3232236033
+select cidx, CDATE from datatypetestm where INET_ATON(CDATE) <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where INET_ATON(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where INET_ATON(CTIME) <> 0 order by cidx;
+cidx	CTIME

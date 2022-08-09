@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CDECIMAL1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 > dtt2.CDECIMAL1 ;
+cidx	CVCHAR255	CDECIMAL1
+1	aaaaaaaaaa	-9
+2	j	-8
+3	jj	-7
+4	jjj	-6
+5	jjjj	-5
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CDECIMAL1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 >= dtt2.CDECIMAL1 ;
+cidx	CVCHAR255	CDECIMAL1
+1	aaaaaaaaaa	-9
+2	j	-8
+3	jj	-7
+4	jjj	-6
+5	jjjj	-5
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CDECIMAL1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 <> dtt2.CDECIMAL1 ;
+cidx	CVCHAR255	CDECIMAL1
+1	aaaaaaaaaa	-9
+2	j	-8
+3	jj	-7
+4	jjj	-6
+5	jjjj	-5
+6	qqqqqqq	5
+7	qqqqqqqq	6
+8	qqqqqqqqq	7
+9	qqqqqqqqqq	8
+10	zzzzzzzzzz	9
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CDECIMAL1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 < dtt2.CDECIMAL1 ;
+cidx	CVCHAR255	CDECIMAL1
+6	qqqqqqq	5
+7	qqqqqqqq	6
+8	qqqqqqqqq	7
+9	qqqqqqqqqq	8
+10	zzzzzzzzzz	9
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CDECIMAL1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 <= dtt2.CDECIMAL1 ;
+cidx	CVCHAR255	CDECIMAL1
+6	qqqqqqq	5
+7	qqqqqqqq	6
+8	qqqqqqqqq	7
+9	qqqqqqqqqq	8
+10	zzzzzzzzzz	9

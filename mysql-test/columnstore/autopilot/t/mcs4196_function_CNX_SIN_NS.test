@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, SIN(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, SIN(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, SIN(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, SIN(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, SIN(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, SIN(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, SIN(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, SIN(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, SIN(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, SIN(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, SIN(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, SIN(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, SIN(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, SIN(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, SIN(CFLOAT) from datatypetestm order by cidx;
+select cidx, SIN(0*cidx) from datatypetestm order by cidx;
+select cidx, SIN(60*cidx) from datatypetestm order by cidx;
+select cidx, SIN(90*cidx) from datatypetestm order by cidx;
+select cidx, SIN(180*cidx) from datatypetestm order by cidx;
+select cidx, SIN(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where SIN(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where SIN(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where SIN(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where SIN(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where SIN(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where SIN(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where SIN(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where SIN(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where SIN(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where SIN(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where SIN(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where SIN(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where SIN(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where SIN(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where SIN(CFLOAT) <> 0 order by cidx;

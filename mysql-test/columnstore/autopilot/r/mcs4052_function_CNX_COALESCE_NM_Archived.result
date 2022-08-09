@@ -1,0 +1,181 @@
+USE autopilot;
+select cidx, CBIGINT, COALESCE(CBIGINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CBIGINT	COALESCE(CBIGINT,1,NULL,NULL,NULL,2)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, COALESCE(CBIGINT,NULL) from datatypetestm order by cidx;
+cidx	CBIGINT	COALESCE(CBIGINT,NULL)
+1	-72036854775806	-72036854775806
+select cidx, CDECIMAL1, COALESCE(CDECIMAL1,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	COALESCE(CDECIMAL1,1,NULL,NULL,NULL,2)
+1	-9	-9
+select cidx, CDECIMAL1, COALESCE(CDECIMAL1,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL1	COALESCE(CDECIMAL1,NULL)
+1	-9	-9
+select cidx, CDECIMAL4, COALESCE(CDECIMAL4,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	COALESCE(CDECIMAL4,1,NULL,NULL,NULL,2)
+1	-999	-999
+select cidx, CDECIMAL4, COALESCE(CDECIMAL4,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4	COALESCE(CDECIMAL4,NULL)
+1	-999	-999
+select cidx, CDECIMAL4_2, COALESCE(CDECIMAL4_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	COALESCE(CDECIMAL4_2,1,NULL,NULL,NULL,2)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, COALESCE(CDECIMAL4_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	COALESCE(CDECIMAL4_2,NULL)
+1	-9.99	-9.99
+select cidx, CDECIMAL5, COALESCE(CDECIMAL5,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	COALESCE(CDECIMAL5,1,NULL,NULL,NULL,2)
+1	-999	-999
+select cidx, CDECIMAL5, COALESCE(CDECIMAL5,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL5	COALESCE(CDECIMAL5,NULL)
+1	-999	-999
+select cidx, CDECIMAL9, COALESCE(CDECIMAL9,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	COALESCE(CDECIMAL9,1,NULL,NULL,NULL,2)
+1	-999999	-999999
+select cidx, CDECIMAL9, COALESCE(CDECIMAL9,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9	COALESCE(CDECIMAL9,NULL)
+1	-999999	-999999
+select cidx, CDECIMAL9_2, COALESCE(CDECIMAL9_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	COALESCE(CDECIMAL9_2,1,NULL,NULL,NULL,2)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, COALESCE(CDECIMAL9_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	COALESCE(CDECIMAL9_2,NULL)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL10, COALESCE(CDECIMAL10,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	COALESCE(CDECIMAL10,1,NULL,NULL,NULL,2)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, COALESCE(CDECIMAL10,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL10	COALESCE(CDECIMAL10,NULL)
+1	-9999999	-9999999
+select cidx, CDECIMAL18, COALESCE(CDECIMAL18,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	COALESCE(CDECIMAL18,1,NULL,NULL,NULL,2)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, COALESCE(CDECIMAL18,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18	COALESCE(CDECIMAL18,NULL)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18_2, COALESCE(CDECIMAL18_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	COALESCE(CDECIMAL18_2,1,NULL,NULL,NULL,2)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, COALESCE(CDECIMAL18_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	COALESCE(CDECIMAL18_2,NULL)
+1	-99999999999.99	-99999999999.99
+select cidx, CINTEGER, COALESCE(CINTEGER,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CINTEGER	COALESCE(CINTEGER,1,NULL,NULL,NULL,2)
+1	-7483646	-7483646
+select cidx, CINTEGER, COALESCE(CINTEGER,NULL) from datatypetestm order by cidx;
+cidx	CINTEGER	COALESCE(CINTEGER,NULL)
+1	-7483646	-7483646
+select cidx, CSMALLINT, COALESCE(CSMALLINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CSMALLINT	COALESCE(CSMALLINT,1,NULL,NULL,NULL,2)
+1	-766	-766
+select cidx, CSMALLINT, COALESCE(CSMALLINT,NULL) from datatypetestm order by cidx;
+cidx	CSMALLINT	COALESCE(CSMALLINT,NULL)
+1	-766	-766
+select cidx, CTINYINT, COALESCE(CTINYINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CTINYINT	COALESCE(CTINYINT,1,NULL,NULL,NULL,2)
+1	-26	-26
+select cidx, CTINYINT, COALESCE(CTINYINT,NULL) from datatypetestm order by cidx;
+cidx	CTINYINT	COALESCE(CTINYINT,NULL)
+1	-26	-26
+select cidx, CDOUBLE, COALESCE(CDOUBLE,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CDOUBLE	COALESCE(CDOUBLE,1,NULL,NULL,NULL,2)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, COALESCE(CDOUBLE,NULL) from datatypetestm order by cidx;
+cidx	CDOUBLE	COALESCE(CDOUBLE,NULL)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CFLOAT, COALESCE(CFLOAT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+cidx	CFLOAT	COALESCE(CFLOAT,1,NULL,NULL,NULL,2)
+1	-3.40287e18	-3.402865892420223e18
+select cidx, CFLOAT, COALESCE(CFLOAT,NULL) from datatypetestm order by cidx;
+cidx	CFLOAT	COALESCE(CFLOAT,NULL)
+1	-3.40287e18	-3.40287e18
+select cidx, CBIGINT from datatypetestm where COALESCE(CBIGINT,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where COALESCE(CBIGINT,NULL) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where COALESCE(CDECIMAL1,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where COALESCE(CDECIMAL1,NULL) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where COALESCE(CDECIMAL4,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where COALESCE(CDECIMAL4,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm where COALESCE(CDECIMAL4_2,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where COALESCE(CDECIMAL4_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm where COALESCE(CDECIMAL5,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where COALESCE(CDECIMAL5,NULL) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm where COALESCE(CDECIMAL9,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where COALESCE(CDECIMAL9,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where COALESCE(CDECIMAL9_2,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where COALESCE(CDECIMAL9_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm where COALESCE(CDECIMAL10,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where COALESCE(CDECIMAL10,NULL) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm where COALESCE(CDECIMAL18,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where COALESCE(CDECIMAL18,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where COALESCE(CDECIMAL18_2,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where COALESCE(CDECIMAL18_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where COALESCE(CINTEGER,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where COALESCE(CINTEGER,NULL) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm where COALESCE(CSMALLINT,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where COALESCE(CSMALLINT,NULL) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm where COALESCE(CTINYINT,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where COALESCE(CTINYINT,NULL) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where COALESCE(CDOUBLE,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where COALESCE(CDOUBLE,NULL) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where COALESCE(CFLOAT,1,NULL,NULL,NULL,2) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where COALESCE(CFLOAT,NULL) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18

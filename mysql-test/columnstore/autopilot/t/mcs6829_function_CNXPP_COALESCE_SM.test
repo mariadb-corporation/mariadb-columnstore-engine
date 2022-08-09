@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, COALESCE(CTEXT,'A',NULL) from datatypetestm ;
+select cidx, CTEXT, COALESCE(CTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CTEXT, COALESCE(CTEXT,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,'A',NULL) from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CTINYTEXT, COALESCE(CTINYTEXT,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,'A',NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CMEDIUMTEXT, COALESCE(CMEDIUMTEXT,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,'A',NULL) from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL,NULL,'B') from datatypetestm ;
+select cidx, CLONGTEXT, COALESCE(CLONGTEXT,NULL) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,'A',NULL), cidx;
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,NULL,NULL,'B'), cidx;
+select cidx, CTEXT from datatypetestm order by COALESCE(CTEXT,NULL), cidx;
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,'A',NULL), cidx;
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,NULL,NULL,'B'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by COALESCE(CTINYTEXT,NULL), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,'A',NULL), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,NULL,NULL,'B'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by COALESCE(CMEDIUMTEXT,NULL), cidx;
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,'A',NULL), cidx;
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,NULL,NULL,'B'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by COALESCE(CLONGTEXT,NULL), cidx;

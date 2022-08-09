@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, COS(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, COS(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, COS(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, COS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, COS(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, COS(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, COS(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, COS(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, COS(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, COS(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, COS(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, COS(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, COS(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, COS(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, COS(CFLOAT) from datatypetestm order by cidx;
+select cidx, COS(0*cidx) from datatypetestm order by cidx;
+select cidx, COS(60*cidx) from datatypetestm order by cidx;
+select cidx, COS(90*cidx) from datatypetestm order by cidx;
+select cidx, COS(180*cidx) from datatypetestm order by cidx;
+select cidx, COS(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by COS(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by COS(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by COS(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by COS(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by COS(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by COS(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by COS(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by COS(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by COS(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by COS(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by COS(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by COS(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by COS(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by COS(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by COS(CFLOAT), cidx;

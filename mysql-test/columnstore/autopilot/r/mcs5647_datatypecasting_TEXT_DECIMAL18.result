@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDECIMAL18 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CDECIMAL18 ;
+cidx	CTEXT	CDECIMAL18
+1	texttexttext	-9999999999999
+2	texttexttext	-9999999999998
+3	texttexttext	-9999999999997
+4	texttexttext	-9999999999996
+5	texttexttext	-9999999999995
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDECIMAL18 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CDECIMAL18 ;
+cidx	CTEXT	CDECIMAL18
+1	texttexttext	-9999999999999
+2	texttexttext	-9999999999998
+3	texttexttext	-9999999999997
+4	texttexttext	-9999999999996
+5	texttexttext	-9999999999995
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDECIMAL18 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CDECIMAL18 ;
+cidx	CTEXT	CDECIMAL18
+1	texttexttext	-9999999999999
+2	texttexttext	-9999999999998
+3	texttexttext	-9999999999997
+4	texttexttext	-9999999999996
+5	texttexttext	-9999999999995
+6	texttexttext	9999999999995
+7	texttexttext	9999999999996
+8	texttexttext	9999999999997
+9	texttexttext	9999999999998
+10	texttexttext	9999999999999
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDECIMAL18 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CDECIMAL18 ;
+cidx	CTEXT	CDECIMAL18
+6	texttexttext	9999999999995
+7	texttexttext	9999999999996
+8	texttexttext	9999999999997
+9	texttexttext	9999999999998
+10	texttexttext	9999999999999
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDECIMAL18 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CDECIMAL18 ;
+cidx	CTEXT	CDECIMAL18
+6	texttexttext	9999999999995
+7	texttexttext	9999999999996
+8	texttexttext	9999999999997
+9	texttexttext	9999999999998
+10	texttexttext	9999999999999

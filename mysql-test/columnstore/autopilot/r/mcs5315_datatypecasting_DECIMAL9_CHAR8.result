@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 > dtt2.CCHAR8 ;
+cidx	CDECIMAL9	CCHAR8
+6	999995	sssssss
+7	999996	ssssssss
+8	999997	ssssssss
+9	999998	ssssssss
+10	999999	zzzzzzzz
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 >= dtt2.CCHAR8 ;
+cidx	CDECIMAL9	CCHAR8
+6	999995	sssssss
+7	999996	ssssssss
+8	999997	ssssssss
+9	999998	ssssssss
+10	999999	zzzzzzzz
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 <> dtt2.CCHAR8 ;
+cidx	CDECIMAL9	CCHAR8
+1	-999999	aaaaaaaa
+2	-999998	h
+3	-999997	hh
+4	-999996	hhh
+5	-999995	hhhh
+6	999995	sssssss
+7	999996	ssssssss
+8	999997	ssssssss
+9	999998	ssssssss
+10	999999	zzzzzzzz
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 < dtt2.CCHAR8 ;
+cidx	CDECIMAL9	CCHAR8
+1	-999999	aaaaaaaa
+2	-999998	h
+3	-999997	hh
+4	-999996	hhh
+5	-999995	hhhh
+select dtt1.cidx, dtt1.CDECIMAL9, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL9 <= dtt2.CCHAR8 ;
+cidx	CDECIMAL9	CCHAR8
+1	-999999	aaaaaaaa
+2	-999998	h
+3	-999997	hh
+4	-999996	hhh
+5	-999995	hhhh

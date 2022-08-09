@@ -1,0 +1,91 @@
+USE autopilot;
+select cidx, CBIGINT, FLOOR(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	FLOOR(CBIGINT)
+1	-72036854775806	-72036854775806
+select cidx, CDECIMAL1, FLOOR(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	FLOOR(CDECIMAL1)
+1	-9	-9
+select cidx, CDECIMAL4, FLOOR(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	FLOOR(CDECIMAL4)
+1	-999	-999
+select cidx, CDECIMAL4_2, FLOOR(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	FLOOR(CDECIMAL4_2)
+1	-9.99	-10
+select cidx, CDECIMAL5, FLOOR(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	FLOOR(CDECIMAL5)
+1	-999	-999
+select cidx, CDECIMAL9, FLOOR(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	FLOOR(CDECIMAL9)
+1	-999999	-999999
+select cidx, CDECIMAL9_2, FLOOR(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	FLOOR(CDECIMAL9_2)
+1	-9999.99	-10000
+select cidx, CDECIMAL10, FLOOR(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	FLOOR(CDECIMAL10)
+1	-9999999	-9999999
+select cidx, CDECIMAL18, FLOOR(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	FLOOR(CDECIMAL18)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18_2, FLOOR(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	FLOOR(CDECIMAL18_2)
+1	-99999999999.99	-100000000000
+select cidx, CINTEGER, FLOOR(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	FLOOR(CINTEGER)
+1	-7483646	-7483646
+select cidx, CSMALLINT, FLOOR(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	FLOOR(CSMALLINT)
+1	-766	-766
+select cidx, CTINYINT, FLOOR(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	FLOOR(CTINYINT)
+1	-26	-26
+select cidx, CDOUBLE, FLOOR(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	FLOOR(CDOUBLE)
+1	-1.797693231e108	-1797693231000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+select cidx, CFLOAT, FLOOR(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	FLOOR(CFLOAT)
+1	-3.40287e18	-3402865892420223000
+select cidx, CBIGINT from datatypetestm order by FLOOR(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by FLOOR(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by FLOOR(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by FLOOR(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by FLOOR(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by FLOOR(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by FLOOR(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by FLOOR(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by FLOOR(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by FLOOR(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by FLOOR(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by FLOOR(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by FLOOR(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by FLOOR(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by FLOOR(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

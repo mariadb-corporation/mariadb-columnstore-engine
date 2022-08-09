@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, GREATEST('hi','hello','wei',cchar1) from datatypetestm order by cidx;
+cidx	GREATEST('hi','hello','wei',cchar1)
+1	wei
+select cidx, GREATEST('world','mahimahi','spam',cchar1) from datatypetestm order by cidx;
+cidx	GREATEST('world','mahimahi','spam',cchar1)
+1	world

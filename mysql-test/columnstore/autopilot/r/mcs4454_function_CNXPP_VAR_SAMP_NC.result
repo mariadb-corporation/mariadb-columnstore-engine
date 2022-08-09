@@ -1,0 +1,91 @@
+USE autopilot;
+select VAR_SAMP(CBIGINT) from datatypetestm;
+VAR_SAMP(CBIGINT)
+NULL
+select VAR_SAMP(CDECIMAL1) from datatypetestm;
+VAR_SAMP(CDECIMAL1)
+NULL
+select VAR_SAMP(CDECIMAL4) from datatypetestm;
+VAR_SAMP(CDECIMAL4)
+NULL
+select VAR_SAMP(CDECIMAL4_2) from datatypetestm;
+VAR_SAMP(CDECIMAL4_2)
+NULL
+select VAR_SAMP(CDECIMAL5) from datatypetestm;
+VAR_SAMP(CDECIMAL5)
+NULL
+select VAR_SAMP(CDECIMAL9) from datatypetestm;
+VAR_SAMP(CDECIMAL9)
+NULL
+select VAR_SAMP(CDECIMAL9_2) from datatypetestm;
+VAR_SAMP(CDECIMAL9_2)
+NULL
+select VAR_SAMP(CDECIMAL10) from datatypetestm;
+VAR_SAMP(CDECIMAL10)
+NULL
+select VAR_SAMP(CDECIMAL18) from datatypetestm;
+VAR_SAMP(CDECIMAL18)
+NULL
+select VAR_SAMP(CDECIMAL18_2) from datatypetestm;
+VAR_SAMP(CDECIMAL18_2)
+NULL
+select VAR_SAMP(CINTEGER) from datatypetestm;
+VAR_SAMP(CINTEGER)
+NULL
+select VAR_SAMP(CSMALLINT) from datatypetestm;
+VAR_SAMP(CSMALLINT)
+NULL
+select VAR_SAMP(CTINYINT) from datatypetestm;
+VAR_SAMP(CTINYINT)
+NULL
+select VAR_SAMP(CDOUBLE) from datatypetestm;
+VAR_SAMP(CDOUBLE)
+NULL
+select VAR_SAMP(CFLOAT) from datatypetestm;
+VAR_SAMP(CFLOAT)
+NULL
+select cidx, CBIGINT, VAR_SAMP(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+cidx	CBIGINT	VAR_SAMP(CBIGINT)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, VAR_SAMP(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+cidx	CDECIMAL1	VAR_SAMP(CDECIMAL1)
+1	-9	NULL
+select cidx, CDECIMAL4, VAR_SAMP(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+cidx	CDECIMAL4	VAR_SAMP(CDECIMAL4)
+1	-999	NULL
+select cidx, CDECIMAL4_2, VAR_SAMP(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+cidx	CDECIMAL4_2	VAR_SAMP(CDECIMAL4_2)
+1	-9.99	NULL
+select cidx, CDECIMAL5, VAR_SAMP(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+cidx	CDECIMAL5	VAR_SAMP(CDECIMAL5)
+1	-999	NULL
+select cidx, CDECIMAL9, VAR_SAMP(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+cidx	CDECIMAL9	VAR_SAMP(CDECIMAL9)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, VAR_SAMP(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+cidx	CDECIMAL9_2	VAR_SAMP(CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, VAR_SAMP(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+cidx	CDECIMAL10	VAR_SAMP(CDECIMAL10)
+1	-9999999	NULL
+select cidx, CDECIMAL18, VAR_SAMP(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+cidx	CDECIMAL18	VAR_SAMP(CDECIMAL18)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, VAR_SAMP(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+cidx	CDECIMAL18_2	VAR_SAMP(CDECIMAL18_2)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, VAR_SAMP(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+cidx	CINTEGER	VAR_SAMP(CINTEGER)
+1	-7483646	NULL
+select cidx, CSMALLINT, VAR_SAMP(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+cidx	CSMALLINT	VAR_SAMP(CSMALLINT)
+1	-766	NULL
+select cidx, CTINYINT, VAR_SAMP(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+cidx	CTINYINT	VAR_SAMP(CTINYINT)
+1	-26	NULL
+select cidx, CDOUBLE, VAR_SAMP(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+cidx	CDOUBLE	VAR_SAMP(CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, VAR_SAMP(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;
+cidx	CFLOAT	VAR_SAMP(CFLOAT)
+1	-3.40287e18	NULL

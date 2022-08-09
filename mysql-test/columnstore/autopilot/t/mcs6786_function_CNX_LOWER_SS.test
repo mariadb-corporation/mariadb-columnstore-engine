@@ -1,0 +1,21 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LOWER(CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, LOWER(CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LOWER(CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, LOWER(CLONGTEXT) from datatypetestm ;
+select cidx, LOWER(concat(cchar1,'ALOHA')) from datatypetestm ;
+select cidx, LOWER(concat(cchar1,'MAHALO')) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where LOWER(CTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LOWER(CTINYTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LOWER(CMEDIUMTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LOWER(CLONGTEXT) <> 0 ;

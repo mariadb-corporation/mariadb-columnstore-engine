@@ -1,0 +1,133 @@
+USE autopilot;
+select cidx, CCHAR1, ASCII(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	ASCII(CCHAR1)
+1	a	97
+select cidx, CCHAR2, ASCII(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	ASCII(CCHAR2)
+1	aa	97
+select cidx, CCHAR3, ASCII(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	ASCII(CCHAR3)
+1	aaa	97
+select cidx, CCHAR4, ASCII(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	ASCII(CCHAR4)
+1	aaaa	97
+select cidx, CCHAR5, ASCII(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	ASCII(CCHAR5)
+1	aaaaa	97
+select cidx, CCHAR6, ASCII(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	ASCII(CCHAR6)
+1	aaaaaa	97
+select cidx, CCHAR7, ASCII(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	ASCII(CCHAR7)
+1	aaaaaaa	97
+select cidx, CCHAR8, ASCII(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	ASCII(CCHAR8)
+1	aaaaaaaa	97
+select cidx, CCHAR9, ASCII(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	ASCII(CCHAR9)
+1	aaaaaaaaa	97
+select cidx, CCHAR255, ASCII(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	ASCII(CCHAR255)
+1	aaaaaaaaaa	97
+select cidx, CVCHAR1, ASCII(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	ASCII(CVCHAR1)
+1	a	97
+select cidx, CVCHAR2, ASCII(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	ASCII(CVCHAR2)
+1	aa	97
+select cidx, CVCHAR3, ASCII(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	ASCII(CVCHAR3)
+1	aaa	97
+select cidx, CVCHAR4, ASCII(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	ASCII(CVCHAR4)
+1	aaaa	97
+select cidx, CVCHAR5, ASCII(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	ASCII(CVCHAR5)
+1	aaaaa	97
+select cidx, CVCHAR6, ASCII(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	ASCII(CVCHAR6)
+1	aaaaaa	97
+select cidx, CVCHAR7, ASCII(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	ASCII(CVCHAR7)
+1	aaaaaaa	97
+select cidx, CVCHAR8, ASCII(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	ASCII(CVCHAR8)
+1	aaaaaaaa	97
+select cidx, CVCHAR255, ASCII(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	ASCII(CVCHAR255)
+1	aaaaaaaaaa	97
+select cidx, ASCII('NULL') from datatypetestm order by cidx;
+cidx	ASCII('NULL')
+1	78
+select cidx, ASCII('null') from datatypetestm order by cidx;
+cidx	ASCII('null')
+1	110
+select cidx, ASCII(' ') from datatypetestm order by cidx;
+cidx	ASCII(' ')
+1	32
+select cidx, ASCII(' THIS ') from datatypetestm order by cidx;
+cidx	ASCII(' THIS ')
+1	32
+select cidx, ASCII('this') from datatypetestm order by cidx;
+cidx	ASCII('this')
+1	116
+select cidx, ASCII('t') from datatypetestm order by cidx;
+cidx	ASCII('t')
+1	116
+select cidx, CCHAR1 from datatypetestm where ASCII(CCHAR1) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm where ASCII(CCHAR2) <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm where ASCII(CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm where ASCII(CCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm where ASCII(CCHAR5) <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm where ASCII(CCHAR6) <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm where ASCII(CCHAR7) <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm where ASCII(CCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm where ASCII(CCHAR9) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where ASCII(CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm where ASCII(CVCHAR1) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm where ASCII(CVCHAR2) <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm where ASCII(CVCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm where ASCII(CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm where ASCII(CVCHAR5) <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm where ASCII(CVCHAR6) <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm where ASCII(CVCHAR7) <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm where ASCII(CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where ASCII(CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

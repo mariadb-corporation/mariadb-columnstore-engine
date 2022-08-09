@@ -1,0 +1,482 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select cidx, CBIGINT, REPEAT(CBIGINT,0) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,0)
+1	-72036854775806	NULL
+select cidx, CBIGINT, REPEAT(CBIGINT,1) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,1)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, REPEAT(CBIGINT,5) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,5)
+1	-72036854775806	-72036854775806-72036854775806-72036854775806-72036854775806-72036854775806
+select cidx, CBIGINT, REPEAT(CBIGINT,NULL) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,NULL)
+1	-72036854775806	NULL
+select cidx, CBIGINT, REPEAT(CBIGINT,-1) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,-1)
+1	-72036854775806	NULL
+select cidx, CBIGINT, REPEAT(CBIGINT,-5) from datatypetestm order by cidx;
+cidx	CBIGINT	REPEAT(CBIGINT,-5)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,0) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,0)
+1	-9	NULL
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,1)
+1	-9	-9
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,5) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,5)
+1	-9	-9-9-9-9-9
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,NULL)
+1	-9	NULL
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,-1)
+1	-9	NULL
+select cidx, CDECIMAL1, REPEAT(CDECIMAL1,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL1	REPEAT(CDECIMAL1,-5)
+1	-9	NULL
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,0) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,0)
+1	-999	NULL
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,1)
+1	-999	-999
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,5) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,5)
+1	-999	-999-999-999-999-999
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,NULL)
+1	-999	NULL
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,-1)
+1	-999	NULL
+select cidx, CDECIMAL4, REPEAT(CDECIMAL4,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL4	REPEAT(CDECIMAL4,-5)
+1	-999	NULL
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,0)
+1	-9.99	NULL
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,1)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,5) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,5)
+1	-9.99	-9.99-9.99-9.99-9.99-9.99
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,NULL)
+1	-9.99	NULL
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,-1)
+1	-9.99	NULL
+select cidx, CDECIMAL4_2, REPEAT(CDECIMAL4_2,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	REPEAT(CDECIMAL4_2,-5)
+1	-9.99	NULL
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,0) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,0)
+1	-999	NULL
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,1)
+1	-999	-999
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,5)
+1	-999	-999-999-999-999-999
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,NULL)
+1	-999	NULL
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,-1)
+1	-999	NULL
+select cidx, CDECIMAL5, REPEAT(CDECIMAL5,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	REPEAT(CDECIMAL5,-5)
+1	-999	NULL
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,0) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,0)
+1	-999999	NULL
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,1)
+1	-999999	-999999
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,5) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,5)
+1	-999999	-999999-999999-999999-999999-999999
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,NULL)
+1	-999999	NULL
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,-1)
+1	-999999	NULL
+select cidx, CDECIMAL9, REPEAT(CDECIMAL9,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL9	REPEAT(CDECIMAL9,-5)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,0)
+1	-9999.99	NULL
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,1)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,5) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,5)
+1	-9999.99	-9999.99-9999.99-9999.99-9999.99-9999.99
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,NULL)
+1	-9999.99	NULL
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,-1)
+1	-9999.99	NULL
+select cidx, CDECIMAL9_2, REPEAT(CDECIMAL9_2,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	REPEAT(CDECIMAL9_2,-5)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,0) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,0)
+1	-9999999	NULL
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,1)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,5) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,5)
+1	-9999999	-9999999-9999999-9999999-9999999-9999999
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,NULL)
+1	-9999999	NULL
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,-1)
+1	-9999999	NULL
+select cidx, CDECIMAL10, REPEAT(CDECIMAL10,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL10	REPEAT(CDECIMAL10,-5)
+1	-9999999	NULL
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,0) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,0)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,1)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,5) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,5)
+1	-9999999999999	-9999999999999-9999999999999-9999999999999-9999999999999-9999999999999
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,NULL)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,-1)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18, REPEAT(CDECIMAL18,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL18	REPEAT(CDECIMAL18,-5)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,0) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,0)
+1	-99999999999.99	NULL
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,1)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,5) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,5)
+1	-99999999999.99	-99999999999.99-99999999999.99-99999999999.99-99999999999.99-99999999999.99
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,NULL)
+1	-99999999999.99	NULL
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,-1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,-1)
+1	-99999999999.99	NULL
+select cidx, CDECIMAL18_2, REPEAT(CDECIMAL18_2,-5) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	REPEAT(CDECIMAL18_2,-5)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, REPEAT(CINTEGER,0) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,0)
+1	-7483646	NULL
+select cidx, CINTEGER, REPEAT(CINTEGER,1) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,1)
+1	-7483646	-7483646
+select cidx, CINTEGER, REPEAT(CINTEGER,5) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,5)
+1	-7483646	-7483646-7483646-7483646-7483646-7483646
+select cidx, CINTEGER, REPEAT(CINTEGER,NULL) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,NULL)
+1	-7483646	NULL
+select cidx, CINTEGER, REPEAT(CINTEGER,-1) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,-1)
+1	-7483646	NULL
+select cidx, CINTEGER, REPEAT(CINTEGER,-5) from datatypetestm order by cidx;
+cidx	CINTEGER	REPEAT(CINTEGER,-5)
+1	-7483646	NULL
+select cidx, CSMALLINT, REPEAT(CSMALLINT,0) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,0)
+1	-766	NULL
+select cidx, CSMALLINT, REPEAT(CSMALLINT,1) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,1)
+1	-766	-766
+select cidx, CSMALLINT, REPEAT(CSMALLINT,5) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,5)
+1	-766	-766-766-766-766-766
+select cidx, CSMALLINT, REPEAT(CSMALLINT,NULL) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,NULL)
+1	-766	NULL
+select cidx, CSMALLINT, REPEAT(CSMALLINT,-1) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,-1)
+1	-766	NULL
+select cidx, CSMALLINT, REPEAT(CSMALLINT,-5) from datatypetestm order by cidx;
+cidx	CSMALLINT	REPEAT(CSMALLINT,-5)
+1	-766	NULL
+select cidx, CTINYINT, REPEAT(CTINYINT,0) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,0)
+1	-26	NULL
+select cidx, CTINYINT, REPEAT(CTINYINT,1) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,1)
+1	-26	-26
+select cidx, CTINYINT, REPEAT(CTINYINT,5) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,5)
+1	-26	-26-26-26-26-26
+select cidx, CTINYINT, REPEAT(CTINYINT,NULL) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,NULL)
+1	-26	NULL
+select cidx, CTINYINT, REPEAT(CTINYINT,-1) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,-1)
+1	-26	NULL
+select cidx, CTINYINT, REPEAT(CTINYINT,-5) from datatypetestm order by cidx;
+cidx	CTINYINT	REPEAT(CTINYINT,-5)
+1	-26	NULL
+select cidx, CDOUBLE, REPEAT(CDOUBLE,0) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,0)
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, REPEAT(CDOUBLE,1) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,1)
+1	-1.797693231e108	-1.79769e108
+select cidx, CDOUBLE, REPEAT(CDOUBLE,5) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,5)
+1	-1.797693231e108	-1.79769e108-1.79769e108-1.79769e108-1.79769e108-1.79769e108
+select cidx, CDOUBLE, REPEAT(CDOUBLE,NULL) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,NULL)
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, REPEAT(CDOUBLE,-1) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,-1)
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, REPEAT(CDOUBLE,-5) from datatypetestm order by cidx;
+cidx	CDOUBLE	REPEAT(CDOUBLE,-5)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, REPEAT(CFLOAT,0) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,0)
+1	-3.40287e18	NULL
+select cidx, CFLOAT, REPEAT(CFLOAT,1) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,1)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, REPEAT(CFLOAT,5) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,5)
+1	-3.40287e18	-3.40287e18-3.40287e18-3.40287e18-3.40287e18-3.40287e18
+select cidx, CFLOAT, REPEAT(CFLOAT,NULL) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,NULL)
+1	-3.40287e18	NULL
+select cidx, CFLOAT, REPEAT(CFLOAT,-1) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,-1)
+1	-3.40287e18	NULL
+select cidx, CFLOAT, REPEAT(CFLOAT,-5) from datatypetestm order by cidx;
+cidx	CFLOAT	REPEAT(CFLOAT,-5)
+1	-3.40287e18	NULL
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,0) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,1) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,5) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,NULL) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,-1) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where REPEAT(CBIGINT,-5) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,0) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,5) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,NULL) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,-1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where REPEAT(CDECIMAL1,-5) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,0) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,1) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,5) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,-1) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where REPEAT(CDECIMAL4,-5) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,0) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,1) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,5) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where REPEAT(CDECIMAL4_2,-5) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,0) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,1) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,5) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,NULL) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,-1) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where REPEAT(CDECIMAL5,-5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,0) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,1) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,5) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,-1) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where REPEAT(CDECIMAL9,-5) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,0) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,1) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,5) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where REPEAT(CDECIMAL9_2,-5) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,0) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,1) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,5) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,NULL) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,-1) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where REPEAT(CDECIMAL10,-5) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,0) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,1) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,5) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,-1) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where REPEAT(CDECIMAL18,-5) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,0) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,1) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,5) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,-1) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where REPEAT(CDECIMAL18_2,-5) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,0) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,1) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,5) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,NULL) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,-1) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where REPEAT(CINTEGER,-5) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,0) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,1) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,5) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,NULL) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,-1) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where REPEAT(CSMALLINT,-5) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,0) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,1) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,5) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,NULL) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,-1) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where REPEAT(CTINYINT,-5) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,0) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,1) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,5) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,NULL) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,-1) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where REPEAT(CDOUBLE,-5) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,0) <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,1) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,5) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,NULL) <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,-1) <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where REPEAT(CFLOAT,-5) <> 0 order by cidx;
+cidx	CFLOAT

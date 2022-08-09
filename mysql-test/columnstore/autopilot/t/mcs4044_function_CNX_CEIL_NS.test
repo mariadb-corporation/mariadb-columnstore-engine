@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, CEIL(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CEIL(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CEIL(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CEIL(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CEIL(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CEIL(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CEIL(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CEIL(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CEIL(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CEIL(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, CEIL(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CEIL(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, CEIL(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CEIL(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, CEIL(CFLOAT) from datatypetestm order by cidx;
+select cidx, CEIL(1.23*cidx) from datatypetestm order by cidx;
+select cidx, CEIL(-1.23*cidx) from datatypetestm order by cidx;
+select cidx, CEIL(0*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where CEIL(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where CEIL(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where CEIL(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where CEIL(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where CEIL(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where CEIL(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where CEIL(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where CEIL(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where CEIL(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where CEIL(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where CEIL(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where CEIL(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where CEIL(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where CEIL(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where CEIL(CFLOAT) <> 0 order by cidx;

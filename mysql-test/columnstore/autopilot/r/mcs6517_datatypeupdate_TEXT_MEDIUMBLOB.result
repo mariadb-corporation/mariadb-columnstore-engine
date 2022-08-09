@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CMEDIUMBLOB = CTEXT;
+SELECT CMEDIUMBLOB FROM datatypeupdate;
+CMEDIUMBLOB
+texttexttext
+ROLLBACK;

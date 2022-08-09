@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, DEGREES(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, DEGREES(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, DEGREES(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, DEGREES(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, DEGREES(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, DEGREES(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, DEGREES(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, DEGREES(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, DEGREES(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, DEGREES(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, DEGREES(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, DEGREES(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, DEGREES(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, DEGREES(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, DEGREES(CFLOAT) from datatypetestm order by cidx;
+select cidx, DEGREES(PI()) from datatypetestm order by cidx;
+select cidx, DEGREES(1) from datatypetestm order by cidx;
+select cidx, DEGREES(2) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by DEGREES(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by DEGREES(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by DEGREES(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by DEGREES(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by DEGREES(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by DEGREES(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by DEGREES(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by DEGREES(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by DEGREES(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by DEGREES(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by DEGREES(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by DEGREES(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by DEGREES(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by DEGREES(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by DEGREES(CFLOAT), cidx;

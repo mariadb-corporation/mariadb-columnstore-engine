@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT > dtt2.CLONGTEXT ;
+cidx	CTINYTEXT	CLONGTEXT
+1	tinytext	longtextlongtextlongtext
+2	tinytext	longtextlongtextlongtext
+3	tinytext	longtextlongtextlongtext
+4	tinytext	longtextlongtextlongtext
+5	tinytext	longtextlongtextlongtext
+6	tinytext	longtextlongtextlongtext
+7	tinytext	longtextlongtextlongtext
+8	tinytext	longtextlongtextlongtext
+9	tinytext	longtextlongtextlongtext
+10	tinytext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT >= dtt2.CLONGTEXT ;
+cidx	CTINYTEXT	CLONGTEXT
+1	tinytext	longtextlongtextlongtext
+2	tinytext	longtextlongtextlongtext
+3	tinytext	longtextlongtextlongtext
+4	tinytext	longtextlongtextlongtext
+5	tinytext	longtextlongtextlongtext
+6	tinytext	longtextlongtextlongtext
+7	tinytext	longtextlongtextlongtext
+8	tinytext	longtextlongtextlongtext
+9	tinytext	longtextlongtextlongtext
+10	tinytext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <> dtt2.CLONGTEXT ;
+cidx	CTINYTEXT	CLONGTEXT
+1	tinytext	longtextlongtextlongtext
+2	tinytext	longtextlongtextlongtext
+3	tinytext	longtextlongtextlongtext
+4	tinytext	longtextlongtextlongtext
+5	tinytext	longtextlongtextlongtext
+6	tinytext	longtextlongtextlongtext
+7	tinytext	longtextlongtextlongtext
+8	tinytext	longtextlongtextlongtext
+9	tinytext	longtextlongtextlongtext
+10	tinytext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT < dtt2.CLONGTEXT ;
+cidx	CTINYTEXT	CLONGTEXT
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <= dtt2.CLONGTEXT ;
+cidx	CTINYTEXT	CLONGTEXT

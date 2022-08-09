@@ -1,0 +1,35 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LENGTH(CTEXT) from datatypetestm ;
+cidx	CTEXT	LENGTH(CTEXT)
+1	texttexttext	12
+select cidx, CTINYTEXT, LENGTH(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	LENGTH(CTINYTEXT)
+1	tinytext	8
+select cidx, CMEDIUMTEXT, LENGTH(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	LENGTH(CMEDIUMTEXT)
+1	mediumtestmediumtest	20
+select cidx, CLONGTEXT, LENGTH(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	LENGTH(CLONGTEXT)
+1	longtextlongtextlongtext	24
+select cidx, LENGTH(concat('ALOHA',cchar1)) from datatypetestm ;
+cidx	LENGTH(concat('ALOHA',cchar1))
+1	6
+select cidx, LENGTH(concat('HAWAII',cchar1)) from datatypetestm ;
+cidx	LENGTH(concat('HAWAII',cchar1))
+1	7
+select cidx, LENGTH(concat('MELEKALIKIMAKA',cchar1)) from datatypetestm ;
+cidx	LENGTH(concat('MELEKALIKIMAKA',cchar1))
+1	15
+select cidx, CTEXT from datatypetestm order by LENGTH(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by LENGTH(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by LENGTH(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by LENGTH(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

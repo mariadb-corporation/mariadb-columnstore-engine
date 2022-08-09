@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR255, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR255 > dtt2.CSMALLINT ;
+cidx	CCHAR255	CSMALLINT
+1	aaaaaaaaaa	-766
+2	j	-765
+3	jj	-764
+4	jjj	-763
+5	jjjj	-762
+select dtt1.cidx, dtt1.CCHAR255, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR255 >= dtt2.CSMALLINT ;
+cidx	CCHAR255	CSMALLINT
+1	aaaaaaaaaa	-766
+2	j	-765
+3	jj	-764
+4	jjj	-763
+5	jjjj	-762
+select dtt1.cidx, dtt1.CCHAR255, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR255 <> dtt2.CSMALLINT ;
+cidx	CCHAR255	CSMALLINT
+1	aaaaaaaaaa	-766
+2	j	-765
+3	jj	-764
+4	jjj	-763
+5	jjjj	-762
+6	qqqqqqq	763
+7	qqqqqqqq	764
+8	qqqqqqqqq	765
+9	qqqqqqqqqq	766
+10	zzzzzzzzzz	767
+select dtt1.cidx, dtt1.CCHAR255, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR255 < dtt2.CSMALLINT ;
+cidx	CCHAR255	CSMALLINT
+6	qqqqqqq	763
+7	qqqqqqqq	764
+8	qqqqqqqqq	765
+9	qqqqqqqqqq	766
+10	zzzzzzzzzz	767
+select dtt1.cidx, dtt1.CCHAR255, dtt2.CSMALLINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR255 <= dtt2.CSMALLINT ;
+cidx	CCHAR255	CSMALLINT
+6	qqqqqqq	763
+7	qqqqqqqq	764
+8	qqqqqqqqq	765
+9	qqqqqqqqqq	766
+10	zzzzzzzzzz	767

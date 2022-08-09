@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CTINYINT ;
+cidx	CLONGTEXT	CTINYINT
+1	longtextlongtextlongtext	-26
+2	longtextlongtextlongtext	-25
+3	longtextlongtextlongtext	-24
+4	longtextlongtextlongtext	-23
+5	longtextlongtextlongtext	-22
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CTINYINT ;
+cidx	CLONGTEXT	CTINYINT
+1	longtextlongtextlongtext	-26
+2	longtextlongtextlongtext	-25
+3	longtextlongtextlongtext	-24
+4	longtextlongtextlongtext	-23
+5	longtextlongtextlongtext	-22
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CTINYINT ;
+cidx	CLONGTEXT	CTINYINT
+1	longtextlongtextlongtext	-26
+2	longtextlongtextlongtext	-25
+3	longtextlongtextlongtext	-24
+4	longtextlongtextlongtext	-23
+5	longtextlongtextlongtext	-22
+6	longtextlongtextlongtext	23
+7	longtextlongtextlongtext	24
+8	longtextlongtextlongtext	25
+9	longtextlongtextlongtext	26
+10	longtextlongtextlongtext	27
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CTINYINT ;
+cidx	CLONGTEXT	CTINYINT
+6	longtextlongtextlongtext	23
+7	longtextlongtextlongtext	24
+8	longtextlongtextlongtext	25
+9	longtextlongtextlongtext	26
+10	longtextlongtextlongtext	27
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CTINYINT ;
+cidx	CLONGTEXT	CTINYINT
+6	longtextlongtextlongtext	23
+7	longtextlongtextlongtext	24
+8	longtextlongtextlongtext	25
+9	longtextlongtextlongtext	26
+10	longtextlongtextlongtext	27

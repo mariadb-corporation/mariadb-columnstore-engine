@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select BIT_XOR(CDATE) from datatypetestm;
+select BIT_XOR(CDATETIME) from datatypetestm;
+select BIT_XOR(CTIME) from datatypetestm;
+select cidx, CDATE, BIT_XOR(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+select cidx, CDATETIME, BIT_XOR(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+select cidx, CTIME, BIT_XOR(CTIME) from datatypetestm group by cidx, CTIME order by cidx;

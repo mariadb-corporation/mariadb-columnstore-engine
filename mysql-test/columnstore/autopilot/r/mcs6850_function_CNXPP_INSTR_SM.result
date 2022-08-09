@@ -1,0 +1,98 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INSTR(CTEXT,'aaa') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'aaa')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'zz') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'zz')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'aaaaaaaaaaaa')
+1	texttexttext	0
+select cidx, CTEXT, INSTR(CTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CTEXT	INSTR(CTEXT,'zzzzzzzzzzzzzz')
+1	texttexttext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaa') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'aaa')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zz') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'zz')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'aaaaaaaaaaaa')
+1	tinytext	0
+select cidx, CTINYTEXT, INSTR(CTINYTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CTINYTEXT	INSTR(CTINYTEXT,'zzzzzzzzzzzzzz')
+1	tinytext	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaa') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'aaa')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zz') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'zz')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa')
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CMEDIUMTEXT	INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz')
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaa') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'aaa')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zz') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'zz')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'aaaaaaaaaaaa') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'aaaaaaaaaaaa')
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, INSTR(CLONGTEXT,'zzzzzzzzzzzzzz') from datatypetestm ;
+cidx	CLONGTEXT	INSTR(CLONGTEXT,'zzzzzzzzzzzzzz')
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'aaa'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'zz'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'aaaaaaaaaaaa'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by INSTR(CTEXT,'zzzzzzzzzzzzzz'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'aaa'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'zz'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'aaaaaaaaaaaa'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by INSTR(CTINYTEXT,'zzzzzzzzzzzzzz'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'aaa'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'zz'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'aaaaaaaaaaaa'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by INSTR(CMEDIUMTEXT,'zzzzzzzzzzzzzz'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'aaa'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'zz'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'aaaaaaaaaaaa'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by INSTR(CLONGTEXT,'zzzzzzzzzzzzzz'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

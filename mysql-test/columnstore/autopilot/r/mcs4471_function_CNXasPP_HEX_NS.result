@@ -1,0 +1,104 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select cidx, CBIGINT, HEX(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	HEX(CBIGINT)
+1	-72036854775806	FFFFBE7B9CDC4002
+select cidx, CDECIMAL1, HEX(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	HEX(CDECIMAL1)
+1	-9	FFFF
+select cidx, CDECIMAL4, HEX(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	HEX(CDECIMAL4)
+1	-999	FFFFFFFFFF
+select cidx, CDECIMAL4_2, HEX(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	HEX(CDECIMAL4_2)
+1	-9.99	FFFFFFFFFFFF
+select cidx, CDECIMAL5, HEX(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	HEX(CDECIMAL5)
+1	-999	FFFFFFFFFFFF
+select cidx, CDECIMAL9, HEX(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	HEX(CDECIMAL9)
+1	-999999	FFFFFFFFFFF0BDC1
+select cidx, CDECIMAL9_2, HEX(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	HEX(CDECIMAL9_2)
+1	-9999.99	FFFFFFFFFFFFD8F0
+select cidx, CDECIMAL10, HEX(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	HEX(CDECIMAL10)
+1	-9999999	FFFFFFFFFF676981
+select cidx, CDECIMAL18, HEX(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	HEX(CDECIMAL18)
+1	-9999999999999	FFFFF6E7B18D6001
+select cidx, CDECIMAL18_2, HEX(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	HEX(CDECIMAL18_2)
+1	-99999999999.99	FFFFFFE8B7891800
+select cidx, CINTEGER, HEX(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	HEX(CINTEGER)
+1	-7483646	FFFFFFFFFF8DCF02
+select cidx, CSMALLINT, HEX(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	HEX(CSMALLINT)
+1	-766	FFFFFFFFFFFF
+select cidx, CTINYINT, HEX(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	HEX(CTINYINT)
+1	-26	FFFFFFFF
+select cidx, CDOUBLE, HEX(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	HEX(CDOUBLE)
+1	-1.797693231e108	FFFFFFFFFFFFFFFF
+select cidx, CFLOAT, HEX(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	HEX(CFLOAT)
+1	-3.40287e18	D0C6978000000000
+select cidx, HEX(32) from datatypetestm order by cidx;
+cidx	HEX(32)
+1	20
+select cidx, HEX(00) from datatypetestm order by cidx;
+cidx	HEX(00)
+1	0
+select cidx, HEX(75) from datatypetestm order by cidx;
+cidx	HEX(75)
+1	4B
+select cidx, HEX(255) from datatypetestm order by cidx;
+cidx	HEX(255)
+1	FF
+select cidx, CBIGINT from datatypetestm order by HEX(CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by HEX(CDECIMAL1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by HEX(CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by HEX(CDECIMAL4_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by HEX(CDECIMAL5), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by HEX(CDECIMAL9), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by HEX(CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by HEX(CDECIMAL10), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by HEX(CDECIMAL18), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by HEX(CDECIMAL18_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by HEX(CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by HEX(CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by HEX(CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by HEX(CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by HEX(CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18

@@ -1,0 +1,66 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, WEEK(CDATE,0) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,1) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,2) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,3) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,4) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,5) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,6) from datatypetestm order by cidx;
+select cidx, CDATE, WEEK(CDATE,7) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,0) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,1) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,2) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,3) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,4) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,5) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,6) from datatypetestm order by cidx;
+select cidx, CDATETIME, WEEK(CDATETIME,7) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,0) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,1) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,2) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,3) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,4) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,5) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,6) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, WEEK(CTIME,7) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,0), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,1), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,2), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,3), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,4), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,5), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,6), cidx;
+select cidx, CDATE from datatypetestm order by WEEK(CDATE,7), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,0), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,1), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,2), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,3), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,4), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,5), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,6), cidx;
+select cidx, CDATETIME from datatypetestm order by WEEK(CDATETIME,7), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,0), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,1), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,2), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,3), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,4), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,5), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,6), cidx;
+#select cidx, CTIME from datatypetestm order by WEEK(CTIME,7), cidx;

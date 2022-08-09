@@ -1,0 +1,25 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, GET_FORMAT(DATE,'USA') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATE,'JIS') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATE,'ISO') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATE,'EUR') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATE,'INTERNAL') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATETIME,'USA') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATETIME,'JIS') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATETIME,'ISO') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATETIME,'EUR') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(DATETIME,'INTERNAL') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(TIME,'USA') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(TIME,'JIS') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(TIME,'ISO') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(TIME,'EUR') from datatypetestm order by cidx;
+select cidx, GET_FORMAT(TIME,'INTERNAL') from datatypetestm order by cidx;

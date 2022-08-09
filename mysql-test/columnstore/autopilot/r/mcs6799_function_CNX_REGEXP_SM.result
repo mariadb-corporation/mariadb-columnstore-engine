@@ -1,0 +1,186 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CTEXT REGEXP 'ssss$' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'ssss$'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP 'ggg$' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'ggg$'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP 'hhh$' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'hhh$'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP '(ttttttt)+'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP '(ssssssss)+'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP 'z$' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'z$'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP 'w*' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'w*'
+1	texttexttext	1
+select cidx, CTEXT, CTEXT REGEXP 'ww+w' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'ww+w'
+1	texttexttext	0
+select cidx, CTEXT, CTEXT REGEXP 'dd?d' from datatypetestm ;
+cidx	CTEXT	CTEXT REGEXP 'dd?d'
+1	texttexttext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ssss$' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'ssss$'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ggg$' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'ggg$'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'hhh$' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'hhh$'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP '(ttttttt)+'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP '(ssssssss)+'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'z$' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'z$'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'w*' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'w*'
+1	tinytext	1
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'ww+w' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'ww+w'
+1	tinytext	0
+select cidx, CTINYTEXT, CTINYTEXT REGEXP 'dd?d' from datatypetestm ;
+cidx	CTINYTEXT	CTINYTEXT REGEXP 'dd?d'
+1	tinytext	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ssss$' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'ssss$'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ggg$' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'ggg$'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'hhh$' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'hhh$'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP '(ttttttt)+'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP '(ssssssss)+'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'z$' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'z$'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'w*' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'w*'
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'ww+w' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'ww+w'
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, CMEDIUMTEXT REGEXP 'dd?d' from datatypetestm ;
+cidx	CMEDIUMTEXT	CMEDIUMTEXT REGEXP 'dd?d'
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ssss$' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'ssss$'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ggg$' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'ggg$'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'hhh$' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'hhh$'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP '(ttttttt)+' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP '(ttttttt)+'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP '(ssssssss)+' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP '(ssssssss)+'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'z$' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'z$'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'w*' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'w*'
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'ww+w' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'ww+w'
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, CLONGTEXT REGEXP 'dd?d' from datatypetestm ;
+cidx	CLONGTEXT	CLONGTEXT REGEXP 'dd?d'
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'ssss$' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'ggg$' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'hhh$' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP '(ttttttt)+' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP '(ssssssss)+' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'z$' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'w*' <> 0 ;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'ww+w' <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where CTEXT REGEXP 'dd?d' <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'ssss$' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'ggg$' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'hhh$' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP '(ttttttt)+' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP '(ssssssss)+' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'z$' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'w*' <> 0 ;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'ww+w' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where CTINYTEXT REGEXP 'dd?d' <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'ssss$' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'ggg$' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'hhh$' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP '(ttttttt)+' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP '(ssssssss)+' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'z$' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'w*' <> 0 ;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'ww+w' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where CMEDIUMTEXT REGEXP 'dd?d' <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'ssss$' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'ggg$' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'hhh$' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP '(ttttttt)+' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP '(ssssssss)+' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'z$' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'w*' <> 0 ;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'ww+w' <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where CLONGTEXT REGEXP 'dd?d' <> 0 ;
+cidx	CLONGTEXT

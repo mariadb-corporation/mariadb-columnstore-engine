@@ -1,0 +1,31 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, DEGREES(CTEXT) from datatypetestm ;
+cidx	CTEXT	DEGREES(CTEXT)
+1	texttexttext	0
+select cidx, CTINYTEXT, DEGREES(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	DEGREES(CTINYTEXT)
+1	tinytext	0
+select cidx, CMEDIUMTEXT, DEGREES(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	DEGREES(CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, DEGREES(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	DEGREES(CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, DEGREES(PI()) from datatypetestm ;
+cidx	DEGREES(PI())
+1	180
+select cidx, DEGREES(1) from datatypetestm ;
+cidx	DEGREES(1)
+1	57.29577951308232
+select cidx, DEGREES(2) from datatypetestm ;
+cidx	DEGREES(2)
+1	114.59155902616465
+select cidx, CTEXT from datatypetestm where DEGREES(CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where DEGREES(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where DEGREES(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where DEGREES(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT

@@ -1,0 +1,229 @@
+USE autopilot;
+select cidx, CCHAR1, REPLACE(CCHAR1,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR1	REPLACE(CCHAR1,'a','II')
+1	a	II
+select cidx, CCHAR1, REPLACE(CCHAR1,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR1	REPLACE(CCHAR1,'zz','JJ')
+1	a	a
+select cidx, CCHAR2, REPLACE(CCHAR2,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR2	REPLACE(CCHAR2,'a','II')
+1	aa	IIII
+select cidx, CCHAR2, REPLACE(CCHAR2,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR2	REPLACE(CCHAR2,'zz','JJ')
+1	aa	aa
+select cidx, CCHAR3, REPLACE(CCHAR3,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR3	REPLACE(CCHAR3,'a','II')
+1	aaa	IIIIII
+select cidx, CCHAR3, REPLACE(CCHAR3,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR3	REPLACE(CCHAR3,'zz','JJ')
+1	aaa	aaa
+select cidx, CCHAR4, REPLACE(CCHAR4,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR4	REPLACE(CCHAR4,'a','II')
+1	aaaa	IIIIIIII
+select cidx, CCHAR4, REPLACE(CCHAR4,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR4	REPLACE(CCHAR4,'zz','JJ')
+1	aaaa	aaaa
+select cidx, CCHAR5, REPLACE(CCHAR5,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR5	REPLACE(CCHAR5,'a','II')
+1	aaaaa	IIIIIIIIII
+select cidx, CCHAR5, REPLACE(CCHAR5,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR5	REPLACE(CCHAR5,'zz','JJ')
+1	aaaaa	aaaaa
+select cidx, CCHAR6, REPLACE(CCHAR6,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR6	REPLACE(CCHAR6,'a','II')
+1	aaaaaa	IIIIIIIIIIII
+select cidx, CCHAR6, REPLACE(CCHAR6,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR6	REPLACE(CCHAR6,'zz','JJ')
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, REPLACE(CCHAR7,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR7	REPLACE(CCHAR7,'a','II')
+1	aaaaaaa	IIIIIIIIIIIIII
+select cidx, CCHAR7, REPLACE(CCHAR7,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR7	REPLACE(CCHAR7,'zz','JJ')
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, REPLACE(CCHAR8,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR8	REPLACE(CCHAR8,'a','II')
+1	aaaaaaaa	IIIIIIIIIIIIIIII
+select cidx, CCHAR8, REPLACE(CCHAR8,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR8	REPLACE(CCHAR8,'zz','JJ')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, REPLACE(CCHAR9,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR9	REPLACE(CCHAR9,'a','II')
+1	aaaaaaaaa	IIIIIIIIIIIIIIIIII
+select cidx, CCHAR9, REPLACE(CCHAR9,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR9	REPLACE(CCHAR9,'zz','JJ')
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, REPLACE(CCHAR255,'a','II') from datatypetestm order by cidx;
+cidx	CCHAR255	REPLACE(CCHAR255,'a','II')
+1	aaaaaaaaaa	IIIIIIIIIIIIIIIIIIII
+select cidx, CCHAR255, REPLACE(CCHAR255,'zz','JJ') from datatypetestm order by cidx;
+cidx	CCHAR255	REPLACE(CCHAR255,'zz','JJ')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, REPLACE(CVCHAR1,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR1	REPLACE(CVCHAR1,'a','II')
+1	a	II
+select cidx, CVCHAR1, REPLACE(CVCHAR1,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR1	REPLACE(CVCHAR1,'zz','JJ')
+1	a	a
+select cidx, CVCHAR2, REPLACE(CVCHAR2,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR2	REPLACE(CVCHAR2,'a','II')
+1	aa	IIII
+select cidx, CVCHAR2, REPLACE(CVCHAR2,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR2	REPLACE(CVCHAR2,'zz','JJ')
+1	aa	aa
+select cidx, CVCHAR3, REPLACE(CVCHAR3,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR3	REPLACE(CVCHAR3,'a','II')
+1	aaa	IIIIII
+select cidx, CVCHAR3, REPLACE(CVCHAR3,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR3	REPLACE(CVCHAR3,'zz','JJ')
+1	aaa	aaa
+select cidx, CVCHAR4, REPLACE(CVCHAR4,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR4	REPLACE(CVCHAR4,'a','II')
+1	aaaa	IIIIIIII
+select cidx, CVCHAR4, REPLACE(CVCHAR4,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR4	REPLACE(CVCHAR4,'zz','JJ')
+1	aaaa	aaaa
+select cidx, CVCHAR5, REPLACE(CVCHAR5,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR5	REPLACE(CVCHAR5,'a','II')
+1	aaaaa	IIIIIIIIII
+select cidx, CVCHAR5, REPLACE(CVCHAR5,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR5	REPLACE(CVCHAR5,'zz','JJ')
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, REPLACE(CVCHAR6,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR6	REPLACE(CVCHAR6,'a','II')
+1	aaaaaa	IIIIIIIIIIII
+select cidx, CVCHAR6, REPLACE(CVCHAR6,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR6	REPLACE(CVCHAR6,'zz','JJ')
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, REPLACE(CVCHAR7,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR7	REPLACE(CVCHAR7,'a','II')
+1	aaaaaaa	IIIIIIIIIIIIII
+select cidx, CVCHAR7, REPLACE(CVCHAR7,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR7	REPLACE(CVCHAR7,'zz','JJ')
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, REPLACE(CVCHAR8,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR8	REPLACE(CVCHAR8,'a','II')
+1	aaaaaaaa	IIIIIIIIIIIIIIII
+select cidx, CVCHAR8, REPLACE(CVCHAR8,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR8	REPLACE(CVCHAR8,'zz','JJ')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, REPLACE(CVCHAR255,'a','II') from datatypetestm order by cidx;
+cidx	CVCHAR255	REPLACE(CVCHAR255,'a','II')
+1	aaaaaaaaaa	IIIIIIIIIIIIIIIIIIII
+select cidx, CVCHAR255, REPLACE(CVCHAR255,'zz','JJ') from datatypetestm order by cidx;
+cidx	CVCHAR255	REPLACE(CVCHAR255,'zz','JJ')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR1 from datatypetestm order by REPLACE(CCHAR1,'a','II'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm order by REPLACE(CCHAR1,'zz','JJ'), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by REPLACE(CCHAR2,'a','II'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm order by REPLACE(CCHAR2,'zz','JJ'), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by REPLACE(CCHAR3,'a','II'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm order by REPLACE(CCHAR3,'zz','JJ'), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by REPLACE(CCHAR4,'a','II'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm order by REPLACE(CCHAR4,'zz','JJ'), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by REPLACE(CCHAR5,'a','II'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm order by REPLACE(CCHAR5,'zz','JJ'), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by REPLACE(CCHAR6,'a','II'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm order by REPLACE(CCHAR6,'zz','JJ'), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by REPLACE(CCHAR7,'a','II'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm order by REPLACE(CCHAR7,'zz','JJ'), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by REPLACE(CCHAR8,'a','II'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm order by REPLACE(CCHAR8,'zz','JJ'), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by REPLACE(CCHAR9,'a','II'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by REPLACE(CCHAR9,'zz','JJ'), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by REPLACE(CCHAR255,'a','II'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by REPLACE(CCHAR255,'zz','JJ'), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by REPLACE(CVCHAR1,'a','II'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm order by REPLACE(CVCHAR1,'zz','JJ'), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by REPLACE(CVCHAR2,'a','II'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm order by REPLACE(CVCHAR2,'zz','JJ'), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by REPLACE(CVCHAR3,'a','II'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm order by REPLACE(CVCHAR3,'zz','JJ'), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by REPLACE(CVCHAR4,'a','II'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm order by REPLACE(CVCHAR4,'zz','JJ'), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by REPLACE(CVCHAR5,'a','II'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm order by REPLACE(CVCHAR5,'zz','JJ'), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by REPLACE(CVCHAR6,'a','II'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm order by REPLACE(CVCHAR6,'zz','JJ'), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by REPLACE(CVCHAR7,'a','II'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm order by REPLACE(CVCHAR7,'zz','JJ'), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by REPLACE(CVCHAR8,'a','II'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by REPLACE(CVCHAR8,'zz','JJ'), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by REPLACE(CVCHAR255,'a','II'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by REPLACE(CVCHAR255,'zz','JJ'), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

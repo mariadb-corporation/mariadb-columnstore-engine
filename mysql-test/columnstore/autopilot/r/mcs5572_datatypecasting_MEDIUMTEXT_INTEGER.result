@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CINTEGER ;
+cidx	CMEDIUMTEXT	CINTEGER
+1	mediumtestmediumtest	-7483646
+2	mediumtestmediumtest	-7483645
+3	mediumtestmediumtest	-7483644
+4	mediumtestmediumtest	-7483643
+5	mediumtestmediumtest	-7483642
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CINTEGER ;
+cidx	CMEDIUMTEXT	CINTEGER
+1	mediumtestmediumtest	-7483646
+2	mediumtestmediumtest	-7483645
+3	mediumtestmediumtest	-7483644
+4	mediumtestmediumtest	-7483643
+5	mediumtestmediumtest	-7483642
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CINTEGER ;
+cidx	CMEDIUMTEXT	CINTEGER
+1	mediumtestmediumtest	-7483646
+2	mediumtestmediumtest	-7483645
+3	mediumtestmediumtest	-7483644
+4	mediumtestmediumtest	-7483643
+5	mediumtestmediumtest	-7483642
+6	mediumtestmediumtest	7483643
+7	mediumtestmediumtest	7483644
+8	mediumtestmediumtest	7483645
+9	mediumtestmediumtest	7483646
+10	mediumtestmediumtest	7483647
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CINTEGER ;
+cidx	CMEDIUMTEXT	CINTEGER
+6	mediumtestmediumtest	7483643
+7	mediumtestmediumtest	7483644
+8	mediumtestmediumtest	7483645
+9	mediumtestmediumtest	7483646
+10	mediumtestmediumtest	7483647
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CINTEGER ;
+cidx	CMEDIUMTEXT	CINTEGER
+6	mediumtestmediumtest	7483643
+7	mediumtestmediumtest	7483644
+8	mediumtestmediumtest	7483645
+9	mediumtestmediumtest	7483646
+10	mediumtestmediumtest	7483647

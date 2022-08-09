@@ -1,0 +1,31 @@
+USE autopilot;
+select cidx, CDATE, INET_NTOA(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	INET_NTOA(CDATE)
+1	1997-01-01	7.205.16.126
+select cidx, CDATETIME, INET_NTOA(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	INET_NTOA(CDATETIME)
+1	1997-01-01 00:00:00	NULL
+select cidx, CTIME, INET_NTOA(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	INET_NTOA(CTIME)
+1	13:00:00	NULL
+select cidx, INET_NTOA(12) from datatypetestm order by cidx;
+cidx	INET_NTOA(12)
+1	0.0.0.12
+select cidx, INET_NTOA(123) from datatypetestm order by cidx;
+cidx	INET_NTOA(123)
+1	0.0.0.123
+select cidx, INET_NTOA(1234) from datatypetestm order by cidx;
+cidx	INET_NTOA(1234)
+1	0.0.4.210
+select cidx, INET_NTOA(12345678) from datatypetestm order by cidx;
+cidx	INET_NTOA(12345678)
+1	0.188.97.78
+select cidx, CDATE from datatypetestm order by INET_NTOA(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by INET_NTOA(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by INET_NTOA(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

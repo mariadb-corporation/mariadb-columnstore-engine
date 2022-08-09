@@ -1,0 +1,16 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CASE WHEN CDATE='9999-12-27' THEN '2009-01-01' WHEN CDATE='9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+select cidx, CDATETIME, CASE WHEN CDATETIME='9999-12-27' THEN '2009-01-01' WHEN CDATETIME='9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+select cidx, CTIME, CASE WHEN CTIME='9999-12-27' THEN '2009-01-01' WHEN CTIME='9999-12-27' THEN '2009-01-01' ELSE NULL END CaseCol from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where CASE WHEN CDATE='9999-12-27' THEN '2009-01-01' WHEN CDATE='9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where CASE WHEN CDATETIME='9999-12-27' THEN '2009-01-01' WHEN CDATETIME='9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where CASE WHEN CTIME='9999-12-27' THEN '2009-01-01' WHEN CTIME='9999-12-27' THEN '2009-01-01' ELSE NULL END <> 0 order by cidx;

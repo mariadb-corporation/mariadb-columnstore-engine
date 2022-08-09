@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CMEDIUMINT ;
+cidx	CTEXT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CMEDIUMINT ;
+cidx	CTEXT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CMEDIUMINT ;
+cidx	CTEXT	CMEDIUMINT
+1	texttexttext	1000
+2	texttexttext	1000
+3	texttexttext	1000
+4	texttexttext	1000
+5	texttexttext	1000
+6	texttexttext	1000
+7	texttexttext	1000
+8	texttexttext	1000
+9	texttexttext	1000
+10	texttexttext	1000
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CMEDIUMINT ;
+cidx	CTEXT	CMEDIUMINT
+1	texttexttext	1000
+2	texttexttext	1000
+3	texttexttext	1000
+4	texttexttext	1000
+5	texttexttext	1000
+6	texttexttext	1000
+7	texttexttext	1000
+8	texttexttext	1000
+9	texttexttext	1000
+10	texttexttext	1000
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CMEDIUMINT ;
+cidx	CTEXT	CMEDIUMINT
+1	texttexttext	1000
+2	texttexttext	1000
+3	texttexttext	1000
+4	texttexttext	1000
+5	texttexttext	1000
+6	texttexttext	1000
+7	texttexttext	1000
+8	texttexttext	1000
+9	texttexttext	1000
+10	texttexttext	1000

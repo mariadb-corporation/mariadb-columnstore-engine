@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MAKEDATE(2010, CTEXT) from datatypetestm ;
+select cidx, CTEXT, MAKEDATE(2011, CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, MAKEDATE(2010, CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, MAKEDATE(2011, CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, MAKEDATE(2010, CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, MAKEDATE(2011, CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, MAKEDATE(2010, CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, MAKEDATE(2011, CLONGTEXT) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by MAKEDATE(2010, CTEXT), cidx;
+select cidx, CTEXT from datatypetestm order by MAKEDATE(2011, CTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by MAKEDATE(2010, CTINYTEXT), cidx;
+select cidx, CTINYTEXT from datatypetestm order by MAKEDATE(2011, CTINYTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKEDATE(2010, CMEDIUMTEXT), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by MAKEDATE(2011, CMEDIUMTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by MAKEDATE(2010, CLONGTEXT), cidx;
+select cidx, CLONGTEXT from datatypetestm order by MAKEDATE(2011, CLONGTEXT), cidx;

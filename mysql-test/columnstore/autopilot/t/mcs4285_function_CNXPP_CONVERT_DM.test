@@ -1,0 +1,24 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, CONVERT(CDATE,DATE) from datatypetestm order by cidx;
+select cidx, CDATE, CONVERT(CDATE,DATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONVERT(CDATETIME,DATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, CONVERT(CDATETIME,DATETIME) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, CONVERT(CTIME,DATE) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, CONVERT(CTIME,DATETIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by CONVERT(CDATE,DATE), cidx;
+select cidx, CDATE from datatypetestm order by CONVERT(CDATE,DATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by CONVERT(CDATETIME,DATE), cidx;
+select cidx, CDATETIME from datatypetestm order by CONVERT(CDATETIME,DATETIME), cidx;
+#select cidx, CTIME from datatypetestm order by CONVERT(CTIME,DATE), cidx;
+#select cidx, CTIME from datatypetestm order by CONVERT(CTIME,DATETIME), cidx;

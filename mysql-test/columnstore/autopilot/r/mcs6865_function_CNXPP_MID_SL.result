@@ -1,0 +1,8 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, MID('this is a test',5,2) from datatypetestm ;
+cidx	MID('this is a test',5,2)
+1	 i
+select cidx, MID('hello calpont world',9,3) from datatypetestm ;
+cidx	MID('hello calpont world',9,3)
+1	lpo

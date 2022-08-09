@@ -1,0 +1,23 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INET_ATON(CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, INET_ATON(CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, INET_ATON(CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, INET_ATON(CLONGTEXT) from datatypetestm ;
+select cidx, INET_ATON('0.0.0.0') from datatypetestm ;
+select cidx, INET_ATON('255.255.255.255') from datatypetestm ;
+select cidx, INET_ATON('127.0.0.1') from datatypetestm ;
+select cidx, INET_ATON('192.168.2.1') from datatypetestm ;
+select cidx, CTEXT from datatypetestm where INET_ATON(CTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where INET_ATON(CTINYTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where INET_ATON(CMEDIUMTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where INET_ATON(CLONGTEXT) <> 0 ;

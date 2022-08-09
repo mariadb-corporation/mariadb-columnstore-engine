@@ -1,0 +1,63 @@
+# -------------------------------------------------------------- #
+# Verify if query stats is working correctly
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4011_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4011_db;
+USE mcs4011_db;
+# -------------------------------------------------------------- #
+# Enable cross engine join and query stats
+# Configure user and password in Columnstore.xml file
+# -------------------------------------------------------------- #
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
+--exec /usr/bin/mcsSetConfig QueryStats Enabled 'Y'
+# -------------------------------------------------------------- #
+# Create corresponding in the server
+# -------------------------------------------------------------- #
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+# -------------------------------------------------------------- #
+# Clear infinidb_quertstats.querystats table
+# -------------------------------------------------------------- #
+#
+delete from infinidb_querystats.querystats;
+# -------------------------------------------------------------- #
+# Create test table
+# -------------------------------------------------------------- #
+--source ../include/dbt3/createNation.inc
+RENAME TABLE nation to nation1;
+--source ../include/dbt3/createNation.inc
+--source ../include/dbt3/ldiNation1m.inc
+# -------------------------------------------------------------- #
+# Execute DML statements and queries
+# infinidb_quertstats.querystats should log the following operations:
+# SELECT, INSERT, UPDATE, DELETE, INSERT..SELECT, LDI
+# -------------------------------------------------------------- #
+select count(*) from nation where n_regionkey = 2;
+insert into nation values(25, 'Hawaiian Nation',5,'Hello world');
+update nation set n_regionkey = -1 where n_regionkey = 5;
+insert into nation1 select * from nation;
+--source ../include/dbt3/ldiNation1m.inc
+delete from nation;
+# -------------------------------------------------------------- #
+# Select from infinidb_querystats.querystats table
+# -------------------------------------------------------------- #
+select user, priority, queryType, query from infinidb_querystats.querystats;
+# -------------------------------------------------------------- #
+# Clean up
+# -------------------------------------------------------------- #
+#
+--exec /usr/bin/mcsSetConfig QueryStats Enabled 'N'
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs4011_db;

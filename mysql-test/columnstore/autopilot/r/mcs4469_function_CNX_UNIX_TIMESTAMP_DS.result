@@ -1,0 +1,25 @@
+USE autopilot;
+select cidx, CDATE, UNIX_TIMESTAMP(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	UNIX_TIMESTAMP(CDATE)
+1	1997-01-01	852076800
+select cidx, CDATETIME, UNIX_TIMESTAMP(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	UNIX_TIMESTAMP(CDATETIME)
+1	1997-01-01 00:00:00	852076800
+select cidx, CTIME, UNIX_TIMESTAMP(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	UNIX_TIMESTAMP(CTIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, UNIX_TIMESTAMP() from datatypetestm order by cidx;
+cidx	UNIX_TIMESTAMP()
+1	REPLACEDVALUE
+select cidx, UNIX_TIMESTAMP('2009-02-28') from datatypetestm order by cidx;
+cidx	UNIX_TIMESTAMP('2009-02-28')
+1	1235779200
+select cidx, UNIX_TIMESTAMP('2009-07-04') from datatypetestm order by cidx;
+cidx	UNIX_TIMESTAMP('2009-07-04')
+1	1246665600
+select cidx, CDATE from datatypetestm where UNIX_TIMESTAMP(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where UNIX_TIMESTAMP(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

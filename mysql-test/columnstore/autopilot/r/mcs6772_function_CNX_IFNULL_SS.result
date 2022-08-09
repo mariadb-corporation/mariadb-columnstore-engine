@@ -1,0 +1,31 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, IFNULL(CTEXT,'Yes') from datatypetestm ;
+cidx	CTEXT	IFNULL(CTEXT,'Yes')
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, IFNULL(CTINYTEXT,'Yes') from datatypetestm ;
+cidx	CTINYTEXT	IFNULL(CTINYTEXT,'Yes')
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, IFNULL(CMEDIUMTEXT,'Yes') from datatypetestm ;
+cidx	CMEDIUMTEXT	IFNULL(CMEDIUMTEXT,'Yes')
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, IFNULL(CLONGTEXT,'Yes') from datatypetestm ;
+cidx	CLONGTEXT	IFNULL(CLONGTEXT,'Yes')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, IFNULL(concat(cchar1,'aloha'),'Yes') from datatypetestm ;
+cidx	IFNULL(concat(cchar1,'aloha'),'Yes')
+1	aaloha
+select cidx, IFNULL(concat(cchar1,'mahalo'),'Yes') from datatypetestm ;
+cidx	IFNULL(concat(cchar1,'mahalo'),'Yes')
+1	amahalo
+select cidx, IFNULL(NULL,'Yes') from datatypetestm ;
+cidx	IFNULL(NULL,'Yes')
+1	Yes
+select cidx, CTEXT from datatypetestm where IFNULL(CTEXT,'Yes') <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where IFNULL(CTINYTEXT,'Yes') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where IFNULL(CMEDIUMTEXT,'Yes') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where IFNULL(CLONGTEXT,'Yes') <> 0 ;
+cidx	CLONGTEXT

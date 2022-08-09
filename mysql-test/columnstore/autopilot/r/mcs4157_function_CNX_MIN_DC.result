@@ -1,0 +1,19 @@
+USE autopilot;
+select MIN(CDATE) from datatypetestm;
+MIN(CDATE)
+1997-01-01
+select MIN(CDATETIME) from datatypetestm;
+MIN(CDATETIME)
+1997-01-01 00:00:00
+select MIN(CTIME) from datatypetestm;
+MIN(CTIME)
+13:00:00
+select cidx, CDATE, MIN(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+cidx	CDATE	MIN(CDATE)
+1	1997-01-01	1997-01-01
+select cidx, CDATETIME, MIN(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+cidx	CDATETIME	MIN(CDATETIME)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, MIN(CTIME) from datatypetestm group by cidx, CTIME order by cidx;
+cidx	CTIME	MIN(CTIME)
+1	13:00:00	13:00:00

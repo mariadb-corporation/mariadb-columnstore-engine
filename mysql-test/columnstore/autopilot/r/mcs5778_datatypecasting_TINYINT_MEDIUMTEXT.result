@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT > dtt2.CMEDIUMTEXT ;
+cidx	CTINYINT	CMEDIUMTEXT
+6	23	mediumtestmediumtest
+7	24	mediumtestmediumtest
+8	25	mediumtestmediumtest
+9	26	mediumtestmediumtest
+10	27	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT >= dtt2.CMEDIUMTEXT ;
+cidx	CTINYINT	CMEDIUMTEXT
+6	23	mediumtestmediumtest
+7	24	mediumtestmediumtest
+8	25	mediumtestmediumtest
+9	26	mediumtestmediumtest
+10	27	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <> dtt2.CMEDIUMTEXT ;
+cidx	CTINYINT	CMEDIUMTEXT
+1	-26	mediumtestmediumtest
+2	-25	mediumtestmediumtest
+3	-24	mediumtestmediumtest
+4	-23	mediumtestmediumtest
+5	-22	mediumtestmediumtest
+6	23	mediumtestmediumtest
+7	24	mediumtestmediumtest
+8	25	mediumtestmediumtest
+9	26	mediumtestmediumtest
+10	27	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT < dtt2.CMEDIUMTEXT ;
+cidx	CTINYINT	CMEDIUMTEXT
+1	-26	mediumtestmediumtest
+2	-25	mediumtestmediumtest
+3	-24	mediumtestmediumtest
+4	-23	mediumtestmediumtest
+5	-22	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <= dtt2.CMEDIUMTEXT ;
+cidx	CTINYINT	CMEDIUMTEXT
+1	-26	mediumtestmediumtest
+2	-25	mediumtestmediumtest
+3	-24	mediumtestmediumtest
+4	-23	mediumtestmediumtest
+5	-22	mediumtestmediumtest

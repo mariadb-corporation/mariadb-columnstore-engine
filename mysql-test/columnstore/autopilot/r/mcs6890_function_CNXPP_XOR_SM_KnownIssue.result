@@ -1,0 +1,50 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT from datatypetestm order by CTEXT XOR -1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTEXT from datatypetestm order by CTEXT XOR 0, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTEXT from datatypetestm order by CTEXT XOR 1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '-1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '0', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTEXT from datatypetestm order by CTEXT XOR '1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR -1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR 0, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR 1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '-1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '0', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CTINYTEXT from datatypetestm order by CTINYTEXT XOR '1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR -1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR 0, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR 1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '-1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '0', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CMEDIUMTEXT from datatypetestm order by CMEDIUMTEXT XOR '1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR -1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR 0, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR 1, cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '-1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '0', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.
+select cidx, CLONGTEXT from datatypetestm order by CLONGTEXT XOR '1', cidx;
+ERROR 42000: The storage engine for the table doesn't support MCS-3011: Non-supported item in Order By clause.

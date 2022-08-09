@@ -1,0 +1,46 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, ASCII(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, ASCII(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, ASCII(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, ASCII(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, ASCII(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, ASCII(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, ASCII(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, ASCII(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, ASCII(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, ASCII(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, ASCII(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, ASCII(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, ASCII(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, ASCII(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, ASCII(CFLOAT) from datatypetestm order by cidx;
+select cidx, ASCII('NULL') from datatypetestm order by cidx;
+select cidx, ASCII('null') from datatypetestm order by cidx;
+select cidx, ASCII(' ') from datatypetestm order by cidx;
+select cidx, ASCII(' THIS ') from datatypetestm order by cidx;
+select cidx, ASCII('this') from datatypetestm order by cidx;
+select cidx, ASCII('t') from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where ASCII(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where ASCII(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where ASCII(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where ASCII(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where ASCII(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where ASCII(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where ASCII(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where ASCII(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where ASCII(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where ASCII(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where ASCII(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where ASCII(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where ASCII(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where ASCII(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where ASCII(CFLOAT) <> 0 order by cidx;

@@ -1,0 +1,111 @@
+USE autopilot;
+select cidx, CCHAR1, SHA(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	SHA(CCHAR1)
+1	a	86f7e437faa5a7fce15d1ddcb9eaeaea377667b8
+select cidx, CCHAR2, SHA(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	SHA(CCHAR2)
+1	aa	e0c9035898dd52fc65c41454cec9c4d2611bfb37
+select cidx, CCHAR3, SHA(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	SHA(CCHAR3)
+1	aaa	7e240de74fb1ed08fa08d38063f6a6a91462a815
+select cidx, CCHAR4, SHA(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	SHA(CCHAR4)
+1	aaaa	70c881d4a26984ddce795f6f71817c9cf4480e79
+select cidx, CCHAR5, SHA(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	SHA(CCHAR5)
+1	aaaaa	df51e37c269aa94d38f93e537bf6e2020b21406c
+select cidx, CCHAR6, SHA(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	SHA(CCHAR6)
+1	aaaaaa	f7a9e24777ec23212c54d7a350bc5bea5477fdbb
+select cidx, CCHAR7, SHA(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	SHA(CCHAR7)
+1	aaaaaaa	e93b4e3c464ffd51732fbd6ded717e9efda28aad
+select cidx, CCHAR8, SHA(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	SHA(CCHAR8)
+1	aaaaaaaa	b480c074d6b75947c02681f31c90c668c46bf6b8
+select cidx, CCHAR9, SHA(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	SHA(CCHAR9)
+1	aaaaaaaaa	2882f38e575101ba615f725af5e59bf2333a9a68
+select cidx, CCHAR255, SHA(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	SHA(CCHAR255)
+1	aaaaaaaaaa	3495ff69d34671d1e15b33a63c1379fdedd3a32a
+select cidx, CVCHAR1, SHA(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	SHA(CVCHAR1)
+1	a	86f7e437faa5a7fce15d1ddcb9eaeaea377667b8
+select cidx, CVCHAR2, SHA(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	SHA(CVCHAR2)
+1	aa	e0c9035898dd52fc65c41454cec9c4d2611bfb37
+select cidx, CVCHAR3, SHA(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	SHA(CVCHAR3)
+1	aaa	7e240de74fb1ed08fa08d38063f6a6a91462a815
+select cidx, CVCHAR4, SHA(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	SHA(CVCHAR4)
+1	aaaa	70c881d4a26984ddce795f6f71817c9cf4480e79
+select cidx, CVCHAR5, SHA(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	SHA(CVCHAR5)
+1	aaaaa	df51e37c269aa94d38f93e537bf6e2020b21406c
+select cidx, CVCHAR6, SHA(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	SHA(CVCHAR6)
+1	aaaaaa	f7a9e24777ec23212c54d7a350bc5bea5477fdbb
+select cidx, CVCHAR7, SHA(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	SHA(CVCHAR7)
+1	aaaaaaa	e93b4e3c464ffd51732fbd6ded717e9efda28aad
+select cidx, CVCHAR8, SHA(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	SHA(CVCHAR8)
+1	aaaaaaaa	b480c074d6b75947c02681f31c90c668c46bf6b8
+select cidx, CVCHAR255, SHA(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	SHA(CVCHAR255)
+1	aaaaaaaaaa	3495ff69d34671d1e15b33a63c1379fdedd3a32a
+select cidx, SHA('THIS IS A TEST') from datatypetestm order by cidx;
+cidx	SHA('THIS IS A TEST')
+1	22bbdabf087de76a1a064a099f4b33794ccdb9e0
+select cidx, SHA('Hello, World') from datatypetestm order by cidx;
+cidx	SHA('Hello, World')
+1	907d14fb3af2b0d4f18c2d46abe8aedce17367bd
+select cidx, CCHAR1 from datatypetestm where SHA(CCHAR1) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm where SHA(CCHAR2) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where SHA(CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm where SHA(CCHAR4) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm where SHA(CCHAR5) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where SHA(CCHAR6) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where SHA(CCHAR7) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where SHA(CCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where SHA(CCHAR9) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where SHA(CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm where SHA(CVCHAR1) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm where SHA(CVCHAR2) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where SHA(CVCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm where SHA(CVCHAR4) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm where SHA(CVCHAR5) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where SHA(CVCHAR6) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where SHA(CVCHAR7) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where SHA(CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where SHA(CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

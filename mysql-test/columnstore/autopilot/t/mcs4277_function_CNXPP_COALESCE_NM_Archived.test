@@ -1,0 +1,70 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, COALESCE(CBIGINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CBIGINT, COALESCE(CBIGINT,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, COALESCE(CDECIMAL1,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, COALESCE(CDECIMAL1,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, COALESCE(CDECIMAL4,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, COALESCE(CDECIMAL4,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, COALESCE(CDECIMAL4_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, COALESCE(CDECIMAL4_2,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, COALESCE(CDECIMAL5,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, COALESCE(CDECIMAL5,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, COALESCE(CDECIMAL9,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, COALESCE(CDECIMAL9,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, COALESCE(CDECIMAL9_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, COALESCE(CDECIMAL9_2,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, COALESCE(CDECIMAL10,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, COALESCE(CDECIMAL10,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, COALESCE(CDECIMAL18,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, COALESCE(CDECIMAL18,NULL) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, COALESCE(CDECIMAL18_2,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, COALESCE(CDECIMAL18_2,NULL) from datatypetestm order by cidx;
+select cidx, CINTEGER, COALESCE(CINTEGER,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CINTEGER, COALESCE(CINTEGER,NULL) from datatypetestm order by cidx;
+select cidx, CSMALLINT, COALESCE(CSMALLINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CSMALLINT, COALESCE(CSMALLINT,NULL) from datatypetestm order by cidx;
+select cidx, CTINYINT, COALESCE(CTINYINT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CTINYINT, COALESCE(CTINYINT,NULL) from datatypetestm order by cidx;
+select cidx, CDOUBLE, COALESCE(CDOUBLE,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CDOUBLE, COALESCE(CDOUBLE,NULL) from datatypetestm order by cidx;
+select cidx, CFLOAT, COALESCE(CFLOAT,1,NULL,NULL,NULL,2) from datatypetestm order by cidx;
+select cidx, CFLOAT, COALESCE(CFLOAT,NULL) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by COALESCE(CBIGINT,1,NULL,NULL,NULL,2), cidx;
+select cidx, CBIGINT from datatypetestm order by COALESCE(CBIGINT,NULL), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by COALESCE(CDECIMAL1,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by COALESCE(CDECIMAL1,NULL), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by COALESCE(CDECIMAL4,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by COALESCE(CDECIMAL4,NULL), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by COALESCE(CDECIMAL4_2,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by COALESCE(CDECIMAL4_2,NULL), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by COALESCE(CDECIMAL5,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by COALESCE(CDECIMAL5,NULL), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by COALESCE(CDECIMAL9,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by COALESCE(CDECIMAL9,NULL), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by COALESCE(CDECIMAL9_2,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by COALESCE(CDECIMAL9_2,NULL), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by COALESCE(CDECIMAL10,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by COALESCE(CDECIMAL10,NULL), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by COALESCE(CDECIMAL18,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by COALESCE(CDECIMAL18,NULL), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by COALESCE(CDECIMAL18_2,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by COALESCE(CDECIMAL18_2,NULL), cidx;
+select cidx, CINTEGER from datatypetestm order by COALESCE(CINTEGER,1,NULL,NULL,NULL,2), cidx;
+select cidx, CINTEGER from datatypetestm order by COALESCE(CINTEGER,NULL), cidx;
+select cidx, CSMALLINT from datatypetestm order by COALESCE(CSMALLINT,1,NULL,NULL,NULL,2), cidx;
+select cidx, CSMALLINT from datatypetestm order by COALESCE(CSMALLINT,NULL), cidx;
+select cidx, CTINYINT from datatypetestm order by COALESCE(CTINYINT,1,NULL,NULL,NULL,2), cidx;
+select cidx, CTINYINT from datatypetestm order by COALESCE(CTINYINT,NULL), cidx;
+select cidx, CDOUBLE from datatypetestm order by COALESCE(CDOUBLE,1,NULL,NULL,NULL,2), cidx;
+select cidx, CDOUBLE from datatypetestm order by COALESCE(CDOUBLE,NULL), cidx;
+select cidx, CFLOAT from datatypetestm order by COALESCE(CFLOAT,1,NULL,NULL,NULL,2), cidx;
+select cidx, CFLOAT from datatypetestm order by COALESCE(CFLOAT,NULL), cidx;

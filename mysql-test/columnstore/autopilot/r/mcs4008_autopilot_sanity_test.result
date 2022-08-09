@@ -1,0 +1,105 @@
+DROP DATABASE IF EXISTS mcs4008_db;
+CREATE DATABASE mcs4008_db;
+USE mcs4008_db;
+drop table if exists orders;
+create table orders (
+o_orderkey int,
+o_custkey int,
+o_orderstatus char (1),
+o_totalprice decimal(12,2),
+o_orderdate date,
+o_orderpriority char (15),
+o_clerk char (15),
+o_shippriority int,
+o_comment varchar (79)
+) engine=columnstore;
+SHOW CREATE TABLE orders;
+Table	Create Table
+orders	CREATE TABLE `orders` (
+  `o_orderkey` int(11) DEFAULT NULL,
+  `o_custkey` int(11) DEFAULT NULL,
+  `o_orderstatus` char(1) DEFAULT NULL,
+  `o_totalprice` decimal(12,2) DEFAULT NULL,
+  `o_orderdate` date DEFAULT NULL,
+  `o_orderpriority` char(15) DEFAULT NULL,
+  `o_clerk` char(15) DEFAULT NULL,
+  `o_shippriority` int(11) DEFAULT NULL,
+  `o_comment` varchar(79) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+drop table if exists lineitem;
+create table lineitem (
+l_orderkey int,
+l_partkey int,
+l_suppkey int,
+l_linenumber bigint,
+l_quantity decimal(12,2),
+l_extendedprice decimal(12,2),
+l_discount decimal(12,2),
+l_tax decimal(12,2),
+l_returnflag char (1),
+l_linestatus char (1),
+l_shipdate date,
+l_commitdate date,
+l_receiptdate date,
+l_shipinstruct char (25),
+l_shipmode char (10),
+l_comment varchar (44)
+) engine=columnstore;
+SHOW CREATE TABLE lineitem;
+Table	Create Table
+lineitem	CREATE TABLE `lineitem` (
+  `l_orderkey` int(11) DEFAULT NULL,
+  `l_partkey` int(11) DEFAULT NULL,
+  `l_suppkey` int(11) DEFAULT NULL,
+  `l_linenumber` bigint(20) DEFAULT NULL,
+  `l_quantity` decimal(12,2) DEFAULT NULL,
+  `l_extendedprice` decimal(12,2) DEFAULT NULL,
+  `l_discount` decimal(12,2) DEFAULT NULL,
+  `l_tax` decimal(12,2) DEFAULT NULL,
+  `l_returnflag` char(1) DEFAULT NULL,
+  `l_linestatus` char(1) DEFAULT NULL,
+  `l_shipdate` date DEFAULT NULL,
+  `l_commitdate` date DEFAULT NULL,
+  `l_receiptdate` date DEFAULT NULL,
+  `l_shipinstruct` char(25) DEFAULT NULL,
+  `l_shipmode` char(10) DEFAULT NULL,
+  `l_comment` varchar(44) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+create table if not exists quicktest (c1 int, c2 char(15)) engine=columnstore;
+SHOW CREATE TABLE quicktest;
+Table	Create Table
+quicktest	CREATE TABLE `quicktest` (
+  `c1` int(11) DEFAULT NULL,
+  `c2` char(15) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+insert into quicktest values (1,'Hello');
+insert into quicktest values (2,'world');
+select * from quicktest;
+c1	c2
+1	Hello
+2	world
+update quicktest set c2='Aloha' where c2 = 'Hello';
+update quicktest set c2='My frind' where c2 = 'world';
+select * from quicktest;
+c1	c2
+1	Aloha
+2	My frind
+delete from quicktest where c1=1;
+select * from quicktest;
+c1	c2
+2	My frind
+delete from quicktest where c1=2;
+select * from quicktest;
+c1	c2
+drop table quicktest;
+set columnstore_use_import_for_batchinsert=0;
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/orders.tbl' INTO TABLE orders FIELDS TERMINATED BY '|';
+set columnstore_use_import_for_batchinsert=1;
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+select count(*) from orders;
+count(*)
+1500
+select count(*) from lineitem;
+count(*)
+6005
+DROP DATABASE mcs4008_db;

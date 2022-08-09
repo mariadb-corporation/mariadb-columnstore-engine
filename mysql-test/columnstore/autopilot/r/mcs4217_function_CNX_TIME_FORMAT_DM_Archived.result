@@ -1,0 +1,47 @@
+USE autopilot;
+select cidx, CDATE, TIME_FORMAT(CDATE,'%h %i %s') from datatypetestm order by cidx;
+cidx	CDATE	TIME_FORMAT(CDATE,'%h %i %s')
+1	1997-01-01	NULL
+select cidx, CDATE, TIME_FORMAT(CDATE,'%H:%i:%s %f') from datatypetestm order by cidx;
+cidx	CDATE	TIME_FORMAT(CDATE,'%H:%i:%s %f')
+1	1997-01-01	NULL
+select cidx, CDATE, TIME_FORMAT(CDATE,'%k:%i:%S') from datatypetestm order by cidx;
+cidx	CDATE	TIME_FORMAT(CDATE,'%k:%i:%S')
+1	1997-01-01	NULL
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%h %i %s') from datatypetestm order by cidx;
+cidx	CDATETIME	TIME_FORMAT(CDATETIME,'%h %i %s')
+1	1997-01-01 00:00:00	12 00 00
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%H:%i:%s %f') from datatypetestm order by cidx;
+cidx	CDATETIME	TIME_FORMAT(CDATETIME,'%H:%i:%s %f')
+1	1997-01-01 00:00:00	00:00:00 000000
+select cidx, CDATETIME, TIME_FORMAT(CDATETIME,'%k:%i:%S') from datatypetestm order by cidx;
+cidx	CDATETIME	TIME_FORMAT(CDATETIME,'%k:%i:%S')
+1	1997-01-01 00:00:00	0:00:00
+select cidx, CTIME, TIME_FORMAT(CTIME,'%h %i %s') from datatypetestm order by cidx;
+cidx	CTIME	TIME_FORMAT(CTIME,'%h %i %s')
+1	13:00:00	NULL
+select cidx, CTIME, TIME_FORMAT(CTIME,'%H:%i:%s %f') from datatypetestm order by cidx;
+cidx	CTIME	TIME_FORMAT(CTIME,'%H:%i:%s %f')
+1	13:00:00	NULL
+select cidx, CTIME, TIME_FORMAT(CTIME,'%k:%i:%S') from datatypetestm order by cidx;
+cidx	CTIME	TIME_FORMAT(CTIME,'%k:%i:%S')
+1	13:00:00	NULL
+select cidx, CDATE from datatypetestm where TIME_FORMAT(CDATE,'%h %i %s') <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATE from datatypetestm where TIME_FORMAT(CDATE,'%H:%i:%s %f') <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATE from datatypetestm where TIME_FORMAT(CDATE,'%k:%i:%S') <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where TIME_FORMAT(CDATETIME,'%h %i %s') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where TIME_FORMAT(CDATETIME,'%H:%i:%s %f') <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CDATETIME from datatypetestm where TIME_FORMAT(CDATETIME,'%k:%i:%S') <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where TIME_FORMAT(CTIME,'%h %i %s') <> 0 order by cidx;
+cidx	CTIME
+select cidx, CTIME from datatypetestm where TIME_FORMAT(CTIME,'%H:%i:%s %f') <> 0 order by cidx;
+cidx	CTIME
+select cidx, CTIME from datatypetestm where TIME_FORMAT(CTIME,'%k:%i:%S') <> 0 order by cidx;
+cidx	CTIME

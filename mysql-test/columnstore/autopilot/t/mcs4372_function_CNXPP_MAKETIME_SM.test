@@ -1,0 +1,86 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, MAKETIME(2010, CCHAR1, 35) from datatypetestm order by cidx;
+select cidx, CCHAR1, MAKETIME(2011, CCHAR1, 35) from datatypetestm order by cidx;
+select cidx, CCHAR2, MAKETIME(2010, CCHAR2, 35) from datatypetestm order by cidx;
+select cidx, CCHAR2, MAKETIME(2011, CCHAR2, 35) from datatypetestm order by cidx;
+select cidx, CCHAR3, MAKETIME(2010, CCHAR3, 35) from datatypetestm order by cidx;
+select cidx, CCHAR3, MAKETIME(2011, CCHAR3, 35) from datatypetestm order by cidx;
+select cidx, CCHAR4, MAKETIME(2010, CCHAR4, 35) from datatypetestm order by cidx;
+select cidx, CCHAR4, MAKETIME(2011, CCHAR4, 35) from datatypetestm order by cidx;
+select cidx, CCHAR5, MAKETIME(2010, CCHAR5, 35) from datatypetestm order by cidx;
+select cidx, CCHAR5, MAKETIME(2011, CCHAR5, 35) from datatypetestm order by cidx;
+select cidx, CCHAR6, MAKETIME(2010, CCHAR6, 35) from datatypetestm order by cidx;
+select cidx, CCHAR6, MAKETIME(2011, CCHAR6, 35) from datatypetestm order by cidx;
+select cidx, CCHAR7, MAKETIME(2010, CCHAR7, 35) from datatypetestm order by cidx;
+select cidx, CCHAR7, MAKETIME(2011, CCHAR7, 35) from datatypetestm order by cidx;
+select cidx, CCHAR8, MAKETIME(2010, CCHAR8, 35) from datatypetestm order by cidx;
+select cidx, CCHAR8, MAKETIME(2011, CCHAR8, 35) from datatypetestm order by cidx;
+select cidx, CCHAR9, MAKETIME(2010, CCHAR9, 35) from datatypetestm order by cidx;
+select cidx, CCHAR9, MAKETIME(2011, CCHAR9, 35) from datatypetestm order by cidx;
+select cidx, CCHAR255, MAKETIME(2010, CCHAR255, 35) from datatypetestm order by cidx;
+select cidx, CCHAR255, MAKETIME(2011, CCHAR255, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR1, MAKETIME(2010, CVCHAR1, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR1, MAKETIME(2011, CVCHAR1, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR2, MAKETIME(2010, CVCHAR2, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR2, MAKETIME(2011, CVCHAR2, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR3, MAKETIME(2010, CVCHAR3, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR3, MAKETIME(2011, CVCHAR3, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR4, MAKETIME(2010, CVCHAR4, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR4, MAKETIME(2011, CVCHAR4, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR5, MAKETIME(2010, CVCHAR5, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR5, MAKETIME(2011, CVCHAR5, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR6, MAKETIME(2010, CVCHAR6, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR6, MAKETIME(2011, CVCHAR6, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR7, MAKETIME(2010, CVCHAR7, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR7, MAKETIME(2011, CVCHAR7, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR8, MAKETIME(2010, CVCHAR8, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR8, MAKETIME(2011, CVCHAR8, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR255, MAKETIME(2010, CVCHAR255, 35) from datatypetestm order by cidx;
+select cidx, CVCHAR255, MAKETIME(2011, CVCHAR255, 35) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by MAKETIME(2010, CCHAR1, 35), cidx;
+select cidx, CCHAR1 from datatypetestm order by MAKETIME(2011, CCHAR1, 35), cidx;
+select cidx, CCHAR2 from datatypetestm order by MAKETIME(2010, CCHAR2, 35), cidx;
+select cidx, CCHAR2 from datatypetestm order by MAKETIME(2011, CCHAR2, 35), cidx;
+select cidx, CCHAR3 from datatypetestm order by MAKETIME(2010, CCHAR3, 35), cidx;
+select cidx, CCHAR3 from datatypetestm order by MAKETIME(2011, CCHAR3, 35), cidx;
+select cidx, CCHAR4 from datatypetestm order by MAKETIME(2010, CCHAR4, 35), cidx;
+select cidx, CCHAR4 from datatypetestm order by MAKETIME(2011, CCHAR4, 35), cidx;
+select cidx, CCHAR5 from datatypetestm order by MAKETIME(2010, CCHAR5, 35), cidx;
+select cidx, CCHAR5 from datatypetestm order by MAKETIME(2011, CCHAR5, 35), cidx;
+select cidx, CCHAR6 from datatypetestm order by MAKETIME(2010, CCHAR6, 35), cidx;
+select cidx, CCHAR6 from datatypetestm order by MAKETIME(2011, CCHAR6, 35), cidx;
+select cidx, CCHAR7 from datatypetestm order by MAKETIME(2010, CCHAR7, 35), cidx;
+select cidx, CCHAR7 from datatypetestm order by MAKETIME(2011, CCHAR7, 35), cidx;
+select cidx, CCHAR8 from datatypetestm order by MAKETIME(2010, CCHAR8, 35), cidx;
+select cidx, CCHAR8 from datatypetestm order by MAKETIME(2011, CCHAR8, 35), cidx;
+select cidx, CCHAR9 from datatypetestm order by MAKETIME(2010, CCHAR9, 35), cidx;
+select cidx, CCHAR9 from datatypetestm order by MAKETIME(2011, CCHAR9, 35), cidx;
+select cidx, CCHAR255 from datatypetestm order by MAKETIME(2010, CCHAR255, 35), cidx;
+select cidx, CCHAR255 from datatypetestm order by MAKETIME(2011, CCHAR255, 35), cidx;
+select cidx, CVCHAR1 from datatypetestm order by MAKETIME(2010, CVCHAR1, 35), cidx;
+select cidx, CVCHAR1 from datatypetestm order by MAKETIME(2011, CVCHAR1, 35), cidx;
+select cidx, CVCHAR2 from datatypetestm order by MAKETIME(2010, CVCHAR2, 35), cidx;
+select cidx, CVCHAR2 from datatypetestm order by MAKETIME(2011, CVCHAR2, 35), cidx;
+select cidx, CVCHAR3 from datatypetestm order by MAKETIME(2010, CVCHAR3, 35), cidx;
+select cidx, CVCHAR3 from datatypetestm order by MAKETIME(2011, CVCHAR3, 35), cidx;
+select cidx, CVCHAR4 from datatypetestm order by MAKETIME(2010, CVCHAR4, 35), cidx;
+select cidx, CVCHAR4 from datatypetestm order by MAKETIME(2011, CVCHAR4, 35), cidx;
+select cidx, CVCHAR5 from datatypetestm order by MAKETIME(2010, CVCHAR5, 35), cidx;
+select cidx, CVCHAR5 from datatypetestm order by MAKETIME(2011, CVCHAR5, 35), cidx;
+select cidx, CVCHAR6 from datatypetestm order by MAKETIME(2010, CVCHAR6, 35), cidx;
+select cidx, CVCHAR6 from datatypetestm order by MAKETIME(2011, CVCHAR6, 35), cidx;
+select cidx, CVCHAR7 from datatypetestm order by MAKETIME(2010, CVCHAR7, 35), cidx;
+select cidx, CVCHAR7 from datatypetestm order by MAKETIME(2011, CVCHAR7, 35), cidx;
+select cidx, CVCHAR8 from datatypetestm order by MAKETIME(2010, CVCHAR8, 35), cidx;
+select cidx, CVCHAR8 from datatypetestm order by MAKETIME(2011, CVCHAR8, 35), cidx;
+select cidx, CVCHAR255 from datatypetestm order by MAKETIME(2010, CVCHAR255, 35), cidx;
+select cidx, CVCHAR255 from datatypetestm order by MAKETIME(2011, CVCHAR255, 35), cidx;

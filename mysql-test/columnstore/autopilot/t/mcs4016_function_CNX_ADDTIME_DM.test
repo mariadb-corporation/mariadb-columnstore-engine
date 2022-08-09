@@ -1,0 +1,34 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, ADDTIME(CDATE,'01:24:59') from datatypetestm order by cidx;
+select cidx, CDATE, ADDTIME(CDATE,'01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CDATE, ADDTIME(CDATE,'1 01:24:59') from datatypetestm order by cidx;
+select cidx, CDATE, ADDTIME(CDATE,'1 01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CDATETIME, ADDTIME(CDATETIME,'01:24:59') from datatypetestm order by cidx;
+select cidx, CDATETIME, ADDTIME(CDATETIME,'01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CDATETIME, ADDTIME(CDATETIME,'1 01:24:59') from datatypetestm order by cidx;
+select cidx, CDATETIME, ADDTIME(CDATETIME,'1 01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CTIME, ADDTIME(CTIME,'01:24:59') from datatypetestm order by cidx;
+select cidx, CTIME, ADDTIME(CTIME,'01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CTIME, ADDTIME(CTIME,'1 01:24:59') from datatypetestm order by cidx;
+select cidx, CTIME, ADDTIME(CTIME,'1 01:10:02.999999') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where ADDTIME(CDATE,'01:24:59') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where ADDTIME(CDATE,'01:10:02.999999') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where ADDTIME(CDATE,'1 01:24:59') <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where ADDTIME(CDATE,'1 01:10:02.999999') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where ADDTIME(CDATETIME,'01:24:59') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where ADDTIME(CDATETIME,'01:10:02.999999') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where ADDTIME(CDATETIME,'1 01:24:59') <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where ADDTIME(CDATETIME,'1 01:10:02.999999') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where ADDTIME(CTIME,'01:24:59') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where ADDTIME(CTIME,'01:10:02.999999') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where ADDTIME(CTIME,'1 01:24:59') <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where ADDTIME(CTIME,'1 01:10:02.999999') <> 0 order by cidx;

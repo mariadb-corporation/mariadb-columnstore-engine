@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MID(CTEXT,5,2) from datatypetestm ;
+select cidx, CTEXT, MID(CTEXT,9,3) from datatypetestm ;
+select cidx, CTINYTEXT, MID(CTINYTEXT,5,2) from datatypetestm ;
+select cidx, CTINYTEXT, MID(CTINYTEXT,9,3) from datatypetestm ;
+select cidx, CMEDIUMTEXT, MID(CMEDIUMTEXT,5,2) from datatypetestm ;
+select cidx, CMEDIUMTEXT, MID(CMEDIUMTEXT,9,3) from datatypetestm ;
+select cidx, CLONGTEXT, MID(CLONGTEXT,5,2) from datatypetestm ;
+select cidx, CLONGTEXT, MID(CLONGTEXT,9,3) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by MID(CTEXT,5,2), cidx;
+select cidx, CTEXT from datatypetestm order by MID(CTEXT,9,3), cidx;
+select cidx, CTINYTEXT from datatypetestm order by MID(CTINYTEXT,5,2), cidx;
+select cidx, CTINYTEXT from datatypetestm order by MID(CTINYTEXT,9,3), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by MID(CMEDIUMTEXT,5,2), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by MID(CMEDIUMTEXT,9,3), cidx;
+select cidx, CLONGTEXT from datatypetestm order by MID(CLONGTEXT,5,2), cidx;
+select cidx, CLONGTEXT from datatypetestm order by MID(CLONGTEXT,9,3), cidx;

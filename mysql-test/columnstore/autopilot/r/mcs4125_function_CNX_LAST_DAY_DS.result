@@ -1,0 +1,27 @@
+USE autopilot;
+select cidx, CDATE, LAST_DAY(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	LAST_DAY(CDATE)
+1	1997-01-01	1997-01-31
+select cidx, CDATETIME, LAST_DAY(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	LAST_DAY(CDATETIME)
+1	1997-01-01 00:00:00	1997-01-31
+select cidx, CTIME, LAST_DAY(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	LAST_DAY(CTIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, LAST_DAY('2009-02-28') from datatypetestm order by cidx;
+cidx	LAST_DAY('2009-02-28')
+1	2009-02-28
+select cidx, LAST_DAY('2009-07-04') from datatypetestm order by cidx;
+cidx	LAST_DAY('2009-07-04')
+1	2009-07-31
+select cidx, LAST_DAY('2010-02-31') from datatypetestm order by cidx;
+cidx	LAST_DAY('2010-02-31')
+1	NULL
+Warnings:
+Warning	1292	Incorrect datetime value: '2010-02-31'
+select cidx, CDATE from datatypetestm where LAST_DAY(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where LAST_DAY(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

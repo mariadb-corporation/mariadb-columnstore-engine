@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CINTEGER ;
+cidx	CLONGTEXT	CINTEGER
+1	longtextlongtextlongtext	-7483646
+2	longtextlongtextlongtext	-7483645
+3	longtextlongtextlongtext	-7483644
+4	longtextlongtextlongtext	-7483643
+5	longtextlongtextlongtext	-7483642
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CINTEGER ;
+cidx	CLONGTEXT	CINTEGER
+1	longtextlongtextlongtext	-7483646
+2	longtextlongtextlongtext	-7483645
+3	longtextlongtextlongtext	-7483644
+4	longtextlongtextlongtext	-7483643
+5	longtextlongtextlongtext	-7483642
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CINTEGER ;
+cidx	CLONGTEXT	CINTEGER
+1	longtextlongtextlongtext	-7483646
+2	longtextlongtextlongtext	-7483645
+3	longtextlongtextlongtext	-7483644
+4	longtextlongtextlongtext	-7483643
+5	longtextlongtextlongtext	-7483642
+6	longtextlongtextlongtext	7483643
+7	longtextlongtextlongtext	7483644
+8	longtextlongtextlongtext	7483645
+9	longtextlongtextlongtext	7483646
+10	longtextlongtextlongtext	7483647
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CINTEGER ;
+cidx	CLONGTEXT	CINTEGER
+6	longtextlongtextlongtext	7483643
+7	longtextlongtextlongtext	7483644
+8	longtextlongtextlongtext	7483645
+9	longtextlongtextlongtext	7483646
+10	longtextlongtextlongtext	7483647
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CINTEGER ;
+cidx	CLONGTEXT	CINTEGER
+6	longtextlongtextlongtext	7483643
+7	longtextlongtextlongtext	7483644
+8	longtextlongtextlongtext	7483645
+9	longtextlongtextlongtext	7483646
+10	longtextlongtextlongtext	7483647

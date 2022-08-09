@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTIME, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIME > dtt2.CCHAR4 ;
+cidx	CTIME	CCHAR4
+1	11:58:28	aaaa
+2	11:58:28	d
+3	11:58:28	dd
+4	11:58:28	ddd
+5	11:58:28	dddd
+6	11:58:28	wwww
+7	11:58:28	wwww
+8	11:58:28	wwww
+9	11:58:28	wwww
+10	11:58:28	zzzz
+select dtt1.cidx, dtt1.CTIME, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIME >= dtt2.CCHAR4 ;
+cidx	CTIME	CCHAR4
+1	11:58:28	aaaa
+2	11:58:28	d
+3	11:58:28	dd
+4	11:58:28	ddd
+5	11:58:28	dddd
+6	11:58:28	wwww
+7	11:58:28	wwww
+8	11:58:28	wwww
+9	11:58:28	wwww
+10	11:58:28	zzzz
+select dtt1.cidx, dtt1.CTIME, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIME <> dtt2.CCHAR4 ;
+cidx	CTIME	CCHAR4
+1	11:58:28	aaaa
+2	11:58:28	d
+3	11:58:28	dd
+4	11:58:28	ddd
+5	11:58:28	dddd
+6	11:58:28	wwww
+7	11:58:28	wwww
+8	11:58:28	wwww
+9	11:58:28	wwww
+10	11:58:28	zzzz
+select dtt1.cidx, dtt1.CTIME, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIME < dtt2.CCHAR4 ;
+cidx	CTIME	CCHAR4
+select dtt1.cidx, dtt1.CTIME, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIME <= dtt2.CCHAR4 ;
+cidx	CTIME	CCHAR4

@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json = (SELECT JSON_OBJECT("id", 1, "name", "Monty"));
+SELECT @json;
+INSERT INTO jsontest VALUES (1, @json, @json);
+#
+SELECT * FROM jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

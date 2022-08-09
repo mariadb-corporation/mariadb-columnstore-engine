@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, CHAR_LENGTH(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CHAR_LENGTH(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CHAR_LENGTH(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CHAR_LENGTH(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CHAR_LENGTH(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CHAR_LENGTH(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CHAR_LENGTH(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CHAR_LENGTH(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CHAR_LENGTH(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CHAR_LENGTH(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, CHAR_LENGTH(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CHAR_LENGTH(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, CHAR_LENGTH(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CHAR_LENGTH(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, CHAR_LENGTH(CFLOAT) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by CHAR_LENGTH(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by CHAR_LENGTH(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by CHAR_LENGTH(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by CHAR_LENGTH(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by CHAR_LENGTH(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by CHAR_LENGTH(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by CHAR_LENGTH(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by CHAR_LENGTH(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by CHAR_LENGTH(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by CHAR_LENGTH(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by CHAR_LENGTH(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by CHAR_LENGTH(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by CHAR_LENGTH(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by CHAR_LENGTH(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by CHAR_LENGTH(CFLOAT), cidx;

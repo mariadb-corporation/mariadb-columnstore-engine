@@ -1,0 +1,30 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select GROUP_CONCAT(CTEXT) from datatypetestm;
+GROUP_CONCAT(CTEXT)
+texttexttext
+select GROUP_CONCAT(CTINYTEXT) from datatypetestm;
+GROUP_CONCAT(CTINYTEXT)
+tinytext
+select GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm;
+GROUP_CONCAT(CMEDIUMTEXT)
+mediumtestmediumtest
+select GROUP_CONCAT(CLONGTEXT) from datatypetestm;
+ERROR HY000: Internal error: MCS-2003: Aggregation/Distinct memory limit is exceeded.
+select GROUP_CONCAT('Hello') from datatypetestm;
+GROUP_CONCAT('Hello')
+Hello
+select GROUP_CONCAT('Hello, World') from datatypetestm;
+GROUP_CONCAT('Hello, World')
+Hello, World
+select cidx, CTEXT, GROUP_CONCAT(CTEXT) from datatypetestm group by cidx, CTEXT ;
+cidx	CTEXT	GROUP_CONCAT(CTEXT)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, GROUP_CONCAT(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+cidx	CTINYTEXT	GROUP_CONCAT(CTINYTEXT)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, GROUP_CONCAT(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+cidx	CMEDIUMTEXT	GROUP_CONCAT(CMEDIUMTEXT)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, GROUP_CONCAT(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;
+ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() MCS-2003: Aggregation/Distinct memory limit is exceeded.

@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, ADDTIME('1:14:25','13:14:25') from datatypetestm order by cidx;
+cidx	ADDTIME('1:14:25','13:14:25')
+1	14:28:50
+select cidx, ADDTIME('13:14:25','1:14:25') from datatypetestm order by cidx;
+cidx	ADDTIME('13:14:25','1:14:25')
+1	14:28:50

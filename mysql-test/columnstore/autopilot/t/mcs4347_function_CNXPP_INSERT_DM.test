@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, INSERT(CDATE,2,2,'Hello') from datatypetestm order by cidx;
+select cidx, CDATE, INSERT(CDATE,2,5,'Hello') from datatypetestm order by cidx;
+select cidx, CDATE, INSERT(CDATE,-1,5,'Hello') from datatypetestm order by cidx;
+select cidx, CDATE, INSERT(CDATE,2,12,'Hello') from datatypetestm order by cidx;
+select cidx, CDATE, INSERT(CDATE,1,12,NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, INSERT(CDATETIME,2,2,'Hello') from datatypetestm order by cidx;
+select cidx, CDATETIME, INSERT(CDATETIME,2,5,'Hello') from datatypetestm order by cidx;
+select cidx, CDATETIME, INSERT(CDATETIME,-1,5,'Hello') from datatypetestm order by cidx;
+select cidx, CDATETIME, INSERT(CDATETIME,2,12,'Hello') from datatypetestm order by cidx;
+select cidx, CDATETIME, INSERT(CDATETIME,1,12,NULL) from datatypetestm order by cidx;
+select cidx, CTIME, INSERT(CTIME,2,2,'Hello') from datatypetestm order by cidx;
+select cidx, CTIME, INSERT(CTIME,2,5,'Hello') from datatypetestm order by cidx;
+select cidx, CTIME, INSERT(CTIME,-1,5,'Hello') from datatypetestm order by cidx;
+select cidx, CTIME, INSERT(CTIME,2,12,'Hello') from datatypetestm order by cidx;
+select cidx, CTIME, INSERT(CTIME,1,12,NULL) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,2,'Hello'), cidx;
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,5,'Hello'), cidx;
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,-1,5,'Hello'), cidx;
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,2,12,'Hello'), cidx;
+select cidx, CDATE from datatypetestm order by INSERT(CDATE,1,12,NULL), cidx;
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,2,'Hello'), cidx;
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,5,'Hello'), cidx;
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,-1,5,'Hello'), cidx;
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,2,12,'Hello'), cidx;
+select cidx, CDATETIME from datatypetestm order by INSERT(CDATETIME,1,12,NULL), cidx;
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,2,'Hello'), cidx;
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,5,'Hello'), cidx;
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,-1,5,'Hello'), cidx;
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,2,12,'Hello'), cidx;
+select cidx, CTIME from datatypetestm order by INSERT(CTIME,1,12,NULL), cidx;

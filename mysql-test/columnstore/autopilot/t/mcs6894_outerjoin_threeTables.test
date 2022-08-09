@@ -1,0 +1,66 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot outer join test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE outerjoin;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+join region   r on n.n_regionkey = r.r_regionkey 
+join customer c on n.n_nationkey = c.c_nationkey 
+where c_custkey < 100
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+left join region   r on n.n_regionkey = r.r_regionkey 
+left join customer c on n.n_nationkey = c.c_nationkey 
+where c_custkey < 100
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+right join region   r on n.n_regionkey = r.r_regionkey 
+right join customer c on n.n_nationkey = c.c_nationkey 
+where c_custkey < 100
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+left join region   r on n.n_regionkey = r.r_regionkey 
+right join customer c on n.n_nationkey = c.c_nationkey 
+where c_custkey < 100
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+right join region   r on n.n_regionkey = r.r_regionkey 
+left join customer c on n.n_nationkey = c.c_nationkey 
+where c_custkey < 100
+order by 1, 2, 3, 4;
+#
+# filter in subquery
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+join region   r on n.n_regionkey = r.r_regionkey 
+join (select * from customer where c_custkey < 100) c on n.n_nationkey = c.c_nationkey 
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+left join region   r on n.n_regionkey = r.r_regionkey 
+left join (select * from customer where c_custkey < 100) c on n.n_nationkey = c.c_nationkey 
+order by 13, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+right join region   r on n.n_regionkey = r.r_regionkey 
+right join (select * from customer where c_custkey < 100) c on n.n_nationkey = c.c_nationkey 
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+left join region   r on n.n_regionkey = r.r_regionkey 
+right join (select * from customer where c_custkey < 100) c on n.n_nationkey = c.c_nationkey 
+order by 1, 2, 3, 4;
+#
+select c.c_custkey, n.n_nationkey, r.r_regionkey, c.*, n.*, r.* from nation n 
+right join region   r on n.n_regionkey = r.r_regionkey 
+left join (select * from customer where c_custkey < 100) c on n.n_nationkey = c.c_nationkey 
+order by 17, 2, 3, 4;
+#

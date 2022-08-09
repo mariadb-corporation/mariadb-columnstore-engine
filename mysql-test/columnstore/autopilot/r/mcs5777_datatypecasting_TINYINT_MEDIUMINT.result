@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT > dtt2.CMEDIUMINT ;
+cidx	CTINYINT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT >= dtt2.CMEDIUMINT ;
+cidx	CTINYINT	CMEDIUMINT
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <> dtt2.CMEDIUMINT ;
+cidx	CTINYINT	CMEDIUMINT
+1	-26	1000
+2	-25	1000
+3	-24	1000
+4	-23	1000
+5	-22	1000
+6	23	1000
+7	24	1000
+8	25	1000
+9	26	1000
+10	27	1000
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT < dtt2.CMEDIUMINT ;
+cidx	CTINYINT	CMEDIUMINT
+1	-26	1000
+2	-25	1000
+3	-24	1000
+4	-23	1000
+5	-22	1000
+6	23	1000
+7	24	1000
+8	25	1000
+9	26	1000
+10	27	1000
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CMEDIUMINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <= dtt2.CMEDIUMINT ;
+cidx	CTINYINT	CMEDIUMINT
+1	-26	1000
+2	-25	1000
+3	-24	1000
+4	-23	1000
+5	-22	1000
+6	23	1000
+7	24	1000
+8	25	1000
+9	26	1000
+10	27	1000

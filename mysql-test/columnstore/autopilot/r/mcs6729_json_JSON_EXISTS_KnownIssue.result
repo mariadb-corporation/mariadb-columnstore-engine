@@ -1,0 +1,31 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '{"key1":"xxxx", "key2":[1, 2, 3]}';
+SELECT @json;
+@json
+{"key1":"xxxx", "key2":[1, 2, 3]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_EXISTS(@json, "$.key2");
+JSON_EXISTS(@json, "$.key2")
+1
+SELECT JSON_EXISTS(@json, "$.key3");
+JSON_EXISTS(@json, "$.key3")
+0
+SELECT JSON_EXISTS(@json, "$.key2[1]");
+JSON_EXISTS(@json, "$.key2[1]")
+1
+SELECT JSON_EXISTS(@json, "$.key2[10]");
+JSON_EXISTS(@json, "$.key2[10]")
+0
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"key1":"xxxx", "key2":[1, 2, 3]}	{"key1":"xxxx", "key2":[1, 2, 3]}
+SELECT cVarchar, JSON_EXISTS(cVarchar, "$.key2"), cText, JSON_EXISTS(cText, "$.key2") from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_exists' isn't supported.
+SELECT cVarchar, JSON_EXISTS(cVarchar, "$.key3"), cText, JSON_EXISTS(cText, "$.key3") from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_exists' isn't supported.
+SELECT cVarchar, JSON_EXISTS(cVarchar, "$.key2[1]"), cText, JSON_EXISTS(cText, "$.key2[1]") from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_exists' isn't supported.
+SELECT cVarchar, JSON_EXISTS(cVarchar, "$.key2[10]"), cText, JSON_EXISTS(cText, "$.key2[10]") from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_exists' isn't supported.
+TRUNCATE TABLE jsontest;

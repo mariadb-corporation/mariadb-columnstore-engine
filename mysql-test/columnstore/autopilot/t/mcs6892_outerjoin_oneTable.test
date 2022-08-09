@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot outer join test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE outerjoin;
+#
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 join nation n2 on n1.n_nationkey = n2.n_nationkey;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 left  join nation n2 on n1.n_nationkey = n2.n_nationkey;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 right join nation n2 on n1.n_nationkey = n2.n_nationkey;
+#
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 join nation n2 on n1.n_nationkey = n2.n_nationkey where n1.n_nationkey >= 0;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 left  join nation n2 on n1.n_nationkey = n2.n_nationkey where n1.n_nationkey >= 0;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 left  join nation n2 on n1.n_nationkey = n2.n_nationkey where n2.n_nationkey >= 0;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 right join nation n2 on n1.n_nationkey = n2.n_nationkey where n1.n_nationkey >= 0;
+select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 right join nation n2 on n1.n_nationkey = n2.n_nationkey where n2.n_nationkey >= 0;
+#
+#select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 join (select * from nation where n_nationkey >= 10 ) n2 on n1.n_nationkey = n2.n_nationkey;
+#select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 left join (select * from nation where n_nationkey >= 10 ) n2 on n1.n_nationkey = n2.n_nationkey;
+#select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from nation n1 right join (select * from nation where n_nationkey >= 10 ) n2 on n1.n_nationkey = n2.n_nationkey;
+#select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from (select * from nation where n_nationkey >= 10 ) n1 left join nation n2 on n1.n_nationkey = n2.n_nationkey;
+#select n1.n_nationkey, n2.n_nationkey, n1.*, n2.* from (select * from nation where n_nationkey >= 10 ) n1 right join nation n2 on n1.n_nationkey = n2.n_nationkey;
+#

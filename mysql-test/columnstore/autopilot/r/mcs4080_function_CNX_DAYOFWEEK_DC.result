@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, CDATE, DAYOFWEEK(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	DAYOFWEEK(CDATE)
+1	1997-01-01	4
+select cidx, CDATETIME, DAYOFWEEK(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	DAYOFWEEK(CDATETIME)
+1	1997-01-01 00:00:00	4
+select cidx, CDATE from datatypetestm where DAYOFWEEK(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where DAYOFWEEK(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

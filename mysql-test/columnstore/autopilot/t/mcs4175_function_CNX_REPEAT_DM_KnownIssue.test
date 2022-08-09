@@ -1,0 +1,47 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=8192;
+select cidx, CDATE, REPEAT(CDATE,0) from datatypetestm order by cidx;
+select cidx, CDATE, REPEAT(CDATE,1) from datatypetestm order by cidx;
+select cidx, CDATE, REPEAT(CDATE,5) from datatypetestm order by cidx;
+select cidx, CDATE, REPEAT(CDATE,NULL) from datatypetestm order by cidx;
+select cidx, CDATE, REPEAT(CDATE,-1) from datatypetestm order by cidx;
+select cidx, CDATE, REPEAT(CDATE,-5) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,0) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,1) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,5) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,-1) from datatypetestm order by cidx;
+select cidx, CDATETIME, REPEAT(CDATETIME,-5) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,0) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,1) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,5) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,NULL) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,-1) from datatypetestm order by cidx;
+select cidx, CTIME, REPEAT(CTIME,-5) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,0) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,1) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,5) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,NULL) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,-1) <> 0 order by cidx;
+select cidx, CDATE from datatypetestm where REPEAT(CDATE,-5) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,0) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,1) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,5) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,NULL) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,-1) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where REPEAT(CDATETIME,-5) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,0) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,1) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,5) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,NULL) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,-1) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where REPEAT(CTIME,-5) <> 0 order by cidx;

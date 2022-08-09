@@ -1,0 +1,15 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, INSTR('aaa',concat('ddaaaasss',cchar1)) from datatypetestm ;
+select cidx, INSTR('aaaaaaaaaaaa',concat('kkkkaaaaaaak',cchar1)) from datatypetestm ;
+select cidx, INSTR('aa',concat('ddaakaasss',cchar1)) from datatypetestm ;
+select cidx, INSTR('aaaaaaaaaa',concat('kkkkaaaaak',cchar1)) from datatypetestm ;

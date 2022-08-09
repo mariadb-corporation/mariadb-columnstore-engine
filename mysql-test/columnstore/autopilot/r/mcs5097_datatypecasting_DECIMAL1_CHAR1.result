@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CCHAR1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 > dtt2.CCHAR1 ;
+cidx	CDECIMAL1	CCHAR1
+6	5	z
+7	6	z
+8	7	z
+9	8	z
+10	9	z
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CCHAR1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 >= dtt2.CCHAR1 ;
+cidx	CDECIMAL1	CCHAR1
+6	5	z
+7	6	z
+8	7	z
+9	8	z
+10	9	z
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CCHAR1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <> dtt2.CCHAR1 ;
+cidx	CDECIMAL1	CCHAR1
+1	-9	a
+2	-8	a
+3	-7	a
+4	-6	a
+5	-5	a
+6	5	z
+7	6	z
+8	7	z
+9	8	z
+10	9	z
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CCHAR1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 < dtt2.CCHAR1 ;
+cidx	CDECIMAL1	CCHAR1
+1	-9	a
+2	-8	a
+3	-7	a
+4	-6	a
+5	-5	a
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CCHAR1 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <= dtt2.CCHAR1 ;
+cidx	CDECIMAL1	CCHAR1
+1	-9	a
+2	-8	a
+3	-7	a
+4	-6	a
+5	-5	a

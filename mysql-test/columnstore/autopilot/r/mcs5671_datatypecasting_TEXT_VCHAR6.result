@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CVCHAR6 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CVCHAR6 ;
+cidx	CTEXT	CVCHAR6
+1	texttexttext	aaaaaa
+2	texttexttext	f
+3	texttexttext	ff
+4	texttexttext	fff
+5	texttexttext	ffff
+select dtt1.cidx, dtt1.CTEXT, dtt2.CVCHAR6 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CVCHAR6 ;
+cidx	CTEXT	CVCHAR6
+1	texttexttext	aaaaaa
+2	texttexttext	f
+3	texttexttext	ff
+4	texttexttext	fff
+5	texttexttext	ffff
+select dtt1.cidx, dtt1.CTEXT, dtt2.CVCHAR6 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CVCHAR6 ;
+cidx	CTEXT	CVCHAR6
+1	texttexttext	aaaaaa
+2	texttexttext	f
+3	texttexttext	ff
+4	texttexttext	fff
+5	texttexttext	ffff
+6	texttexttext	uuuuuu
+7	texttexttext	uuuuuu
+8	texttexttext	uuuuuu
+9	texttexttext	uuuuuu
+10	texttexttext	zzzzzz
+select dtt1.cidx, dtt1.CTEXT, dtt2.CVCHAR6 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CVCHAR6 ;
+cidx	CTEXT	CVCHAR6
+6	texttexttext	uuuuuu
+7	texttexttext	uuuuuu
+8	texttexttext	uuuuuu
+9	texttexttext	uuuuuu
+10	texttexttext	zzzzzz
+select dtt1.cidx, dtt1.CTEXT, dtt2.CVCHAR6 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CVCHAR6 ;
+cidx	CTEXT	CVCHAR6
+6	texttexttext	uuuuuu
+7	texttexttext	uuuuuu
+8	texttexttext	uuuuuu
+9	texttexttext	uuuuuu
+10	texttexttext	zzzzzz

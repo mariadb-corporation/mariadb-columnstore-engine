@@ -1,0 +1,74 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTEXT	IF(CTEXT>'aaa','Yes','No')
+1	texttexttext	Yes
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTEXT	IF(CTEXT>'aaa','Yes','No')
+1	texttexttext	Yes
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTEXT	IF(CTEXT>'aaa','Yes','No')
+1	texttexttext	Yes
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTINYTEXT	IF(CTINYTEXT>'aaa','Yes','No')
+1	tinytext	Yes
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTINYTEXT	IF(CTINYTEXT>'aaa','Yes','No')
+1	tinytext	Yes
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CTINYTEXT	IF(CTINYTEXT>'aaa','Yes','No')
+1	tinytext	Yes
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CMEDIUMTEXT	IF(CMEDIUMTEXT>'aaa','Yes','No')
+1	mediumtestmediumtest	Yes
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CMEDIUMTEXT	IF(CMEDIUMTEXT>'aaa','Yes','No')
+1	mediumtestmediumtest	Yes
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CMEDIUMTEXT	IF(CMEDIUMTEXT>'aaa','Yes','No')
+1	mediumtestmediumtest	Yes
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CLONGTEXT	IF(CLONGTEXT>'aaa','Yes','No')
+1	longtextlongtextlongtext	Yes
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CLONGTEXT	IF(CLONGTEXT>'aaa','Yes','No')
+1	longtextlongtextlongtext	Yes
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+cidx	CLONGTEXT	IF(CLONGTEXT>'aaa','Yes','No')
+1	longtextlongtextlongtext	Yes
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

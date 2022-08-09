@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTIMESTAMP, dtt2.CCHAR9 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIMESTAMP > dtt2.CCHAR9 ;
+cidx	CTIMESTAMP	CCHAR9
+1	2020-08-13 03:14:07	aaaaaaaaa
+2	2020-08-13 03:14:07	i
+3	2020-08-13 03:14:07	ii
+4	2020-08-13 03:14:07	iii
+5	2020-08-13 03:14:07	iiii
+6	2020-08-13 03:14:07	rrrrrrr
+7	2020-08-13 03:14:07	rrrrrrrr
+8	2020-08-13 03:14:07	rrrrrrrrr
+9	2020-08-13 03:14:07	rrrrrrrrr
+10	2020-08-13 03:14:07	zzzzzzzzz
+select dtt1.cidx, dtt1.CTIMESTAMP, dtt2.CCHAR9 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIMESTAMP >= dtt2.CCHAR9 ;
+cidx	CTIMESTAMP	CCHAR9
+1	2020-08-13 03:14:07	aaaaaaaaa
+2	2020-08-13 03:14:07	i
+3	2020-08-13 03:14:07	ii
+4	2020-08-13 03:14:07	iii
+5	2020-08-13 03:14:07	iiii
+6	2020-08-13 03:14:07	rrrrrrr
+7	2020-08-13 03:14:07	rrrrrrrr
+8	2020-08-13 03:14:07	rrrrrrrrr
+9	2020-08-13 03:14:07	rrrrrrrrr
+10	2020-08-13 03:14:07	zzzzzzzzz
+select dtt1.cidx, dtt1.CTIMESTAMP, dtt2.CCHAR9 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIMESTAMP <> dtt2.CCHAR9 ;
+cidx	CTIMESTAMP	CCHAR9
+1	2020-08-13 03:14:07	aaaaaaaaa
+2	2020-08-13 03:14:07	i
+3	2020-08-13 03:14:07	ii
+4	2020-08-13 03:14:07	iii
+5	2020-08-13 03:14:07	iiii
+6	2020-08-13 03:14:07	rrrrrrr
+7	2020-08-13 03:14:07	rrrrrrrr
+8	2020-08-13 03:14:07	rrrrrrrrr
+9	2020-08-13 03:14:07	rrrrrrrrr
+10	2020-08-13 03:14:07	zzzzzzzzz
+select dtt1.cidx, dtt1.CTIMESTAMP, dtt2.CCHAR9 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIMESTAMP < dtt2.CCHAR9 ;
+cidx	CTIMESTAMP	CCHAR9
+select dtt1.cidx, dtt1.CTIMESTAMP, dtt2.CCHAR9 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTIMESTAMP <= dtt2.CCHAR9 ;
+cidx	CTIMESTAMP	CCHAR9

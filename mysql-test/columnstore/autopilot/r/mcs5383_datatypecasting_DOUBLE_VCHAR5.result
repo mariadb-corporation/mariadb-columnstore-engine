@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CVCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE > dtt2.CVCHAR5 ;
+cidx	CDOUBLE	CVCHAR5
+6	1.797693227e108	vvvvv
+7	1.797693228e108	vvvvv
+8	1.797693229e108	vvvvv
+9	1.79769323e108	vvvvv
+10	1.797693231e108	zzzzz
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CVCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE >= dtt2.CVCHAR5 ;
+cidx	CDOUBLE	CVCHAR5
+6	1.797693227e108	vvvvv
+7	1.797693228e108	vvvvv
+8	1.797693229e108	vvvvv
+9	1.79769323e108	vvvvv
+10	1.797693231e108	zzzzz
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CVCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <> dtt2.CVCHAR5 ;
+cidx	CDOUBLE	CVCHAR5
+1	-1.797693231e108	aaaaa
+2	-1.79769323e108	e
+3	-1.797693229e108	ee
+4	-1.797693228e108	eee
+5	-1.797693227e108	eeee
+6	1.797693227e108	vvvvv
+7	1.797693228e108	vvvvv
+8	1.797693229e108	vvvvv
+9	1.79769323e108	vvvvv
+10	1.797693231e108	zzzzz
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CVCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE < dtt2.CVCHAR5 ;
+cidx	CDOUBLE	CVCHAR5
+1	-1.797693231e108	aaaaa
+2	-1.79769323e108	e
+3	-1.797693229e108	ee
+4	-1.797693228e108	eee
+5	-1.797693227e108	eeee
+select dtt1.cidx, dtt1.CDOUBLE, dtt2.CVCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDOUBLE <= dtt2.CVCHAR5 ;
+cidx	CDOUBLE	CVCHAR5
+1	-1.797693231e108	aaaaa
+2	-1.79769323e108	e
+3	-1.797693229e108	ee
+4	-1.797693228e108	eee
+5	-1.797693227e108	eeee

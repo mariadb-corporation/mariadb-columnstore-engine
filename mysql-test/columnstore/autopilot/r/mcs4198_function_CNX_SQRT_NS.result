@@ -1,0 +1,109 @@
+USE autopilot;
+select cidx, CBIGINT, SQRT(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	SQRT(CBIGINT)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, SQRT(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	SQRT(CDECIMAL1)
+1	-9	NULL
+select cidx, CDECIMAL4, SQRT(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	SQRT(CDECIMAL4)
+1	-999	NULL
+select cidx, CDECIMAL4_2, SQRT(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	SQRT(CDECIMAL4_2)
+1	-9.99	NULL
+select cidx, CDECIMAL5, SQRT(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	SQRT(CDECIMAL5)
+1	-999	NULL
+select cidx, CDECIMAL9, SQRT(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	SQRT(CDECIMAL9)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, SQRT(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	SQRT(CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, SQRT(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	SQRT(CDECIMAL10)
+1	-9999999	NULL
+select cidx, CDECIMAL18, SQRT(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	SQRT(CDECIMAL18)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, SQRT(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	SQRT(CDECIMAL18_2)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, SQRT(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	SQRT(CINTEGER)
+1	-7483646	NULL
+select cidx, CSMALLINT, SQRT(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	SQRT(CSMALLINT)
+1	-766	NULL
+select cidx, CTINYINT, SQRT(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	SQRT(CTINYINT)
+1	-26	NULL
+select cidx, CDOUBLE, SQRT(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	SQRT(CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, SQRT(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	SQRT(CFLOAT)
+1	-3.40287e18	NULL
+select cidx, SQRT(122) from datatypetestm order by cidx;
+cidx	SQRT(122)
+1	11.045361017187261
+select cidx, SQRT(324) from datatypetestm order by cidx;
+cidx	SQRT(324)
+1	18
+select cidx, SQRT(33) from datatypetestm order by cidx;
+cidx	SQRT(33)
+1	5.744562646538029
+select cidx, SQRT(54) from datatypetestm order by cidx;
+cidx	SQRT(54)
+1	7.3484692283495345
+select cidx, SQRT(9) from datatypetestm order by cidx;
+cidx	SQRT(9)
+1	3
+select cidx, SQRT(81) from datatypetestm order by cidx;
+cidx	SQRT(81)
+1	9
+select cidx, SQRT(1) from datatypetestm order by cidx;
+cidx	SQRT(1)
+1	1
+select cidx, SQRT(4) from datatypetestm order by cidx;
+cidx	SQRT(4)
+1	2
+select cidx, SQRT(11.2) from datatypetestm order by cidx;
+cidx	SQRT(11.2)
+1	3.3466401061363023
+select cidx, SQRT(39.457) from datatypetestm order by cidx;
+cidx	SQRT(39.457)
+1	6.281480717155788
+select cidx, SQRT(672.12) from datatypetestm order by cidx;
+cidx	SQRT(672.12)
+1	25.92527724056196
+select cidx, CBIGINT from datatypetestm where SQRT(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where SQRT(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where SQRT(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where SQRT(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where SQRT(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where SQRT(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where SQRT(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where SQRT(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where SQRT(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where SQRT(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where SQRT(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where SQRT(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where SQRT(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CDOUBLE from datatypetestm where SQRT(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where SQRT(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT

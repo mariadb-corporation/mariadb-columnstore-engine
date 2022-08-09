@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 > dtt2.CINTEGER ;
+cidx	CVCHAR255	CINTEGER
+1	aaaaaaaaaa	-7483646
+2	j	-7483645
+3	jj	-7483644
+4	jjj	-7483643
+5	jjjj	-7483642
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 >= dtt2.CINTEGER ;
+cidx	CVCHAR255	CINTEGER
+1	aaaaaaaaaa	-7483646
+2	j	-7483645
+3	jj	-7483644
+4	jjj	-7483643
+5	jjjj	-7483642
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 <> dtt2.CINTEGER ;
+cidx	CVCHAR255	CINTEGER
+1	aaaaaaaaaa	-7483646
+2	j	-7483645
+3	jj	-7483644
+4	jjj	-7483643
+5	jjjj	-7483642
+6	qqqqqqq	7483643
+7	qqqqqqqq	7483644
+8	qqqqqqqqq	7483645
+9	qqqqqqqqqq	7483646
+10	zzzzzzzzzz	7483647
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 < dtt2.CINTEGER ;
+cidx	CVCHAR255	CINTEGER
+6	qqqqqqq	7483643
+7	qqqqqqqq	7483644
+8	qqqqqqqqq	7483645
+9	qqqqqqqqqq	7483646
+10	zzzzzzzzzz	7483647
+select dtt1.cidx, dtt1.CVCHAR255, dtt2.CINTEGER from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR255 <= dtt2.CINTEGER ;
+cidx	CVCHAR255	CINTEGER
+6	qqqqqqq	7483643
+7	qqqqqqqq	7483644
+8	qqqqqqqqq	7483645
+9	qqqqqqqqqq	7483646
+10	zzzzzzzzzz	7483647

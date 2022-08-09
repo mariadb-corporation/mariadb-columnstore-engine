@@ -1,0 +1,88 @@
+USE autopilot;
+select cidx, CBIGINT, EXP(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	EXP(CBIGINT)
+1	-72036854775806	0
+select cidx, CDECIMAL1, EXP(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	EXP(CDECIMAL1)
+1	-9	0.00012340980408667956
+select cidx, CDECIMAL4, EXP(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	EXP(CDECIMAL4)
+1	-999	0
+select cidx, CDECIMAL4_2, EXP(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	EXP(CDECIMAL4_2)
+1	-9.99	0.00004585620664220731
+select cidx, CDECIMAL5, EXP(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	EXP(CDECIMAL5)
+1	-999	0
+select cidx, CDECIMAL9, EXP(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	EXP(CDECIMAL9)
+1	-999999	0
+select cidx, CDECIMAL9_2, EXP(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	EXP(CDECIMAL9_2)
+1	-9999.99	0
+select cidx, CDECIMAL10, EXP(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	EXP(CDECIMAL10)
+1	-9999999	0
+select cidx, CDECIMAL18, EXP(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	EXP(CDECIMAL18)
+1	-9999999999999	0
+select cidx, CDECIMAL18_2, EXP(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	EXP(CDECIMAL18_2)
+1	-99999999999.99	0
+select cidx, CINTEGER, EXP(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	EXP(CINTEGER)
+1	-7483646	0
+select cidx, CSMALLINT, EXP(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	EXP(CSMALLINT)
+1	-766	0
+select cidx, CTINYINT, EXP(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	EXP(CTINYINT)
+1	-26	0.000000000005109089028063325
+select cidx, CDOUBLE, EXP(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	EXP(CDOUBLE)
+1	-1.797693231e108	0
+select cidx, CFLOAT, EXP(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	EXP(CFLOAT)
+1	-3.40287e18	0
+select cidx, EXP(2*cidx) from datatypetestm order by cidx;
+cidx	EXP(2*cidx)
+1	7.38905609893065
+select cidx, EXP(-2*cidx) from datatypetestm order by cidx;
+cidx	EXP(-2*cidx)
+1	0.1353352832366127
+select cidx, EXP(0*cidx) from datatypetestm order by cidx;
+cidx	EXP(0*cidx)
+1	1
+select cidx, CBIGINT from datatypetestm where EXP(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where EXP(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where EXP(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where EXP(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm where EXP(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where EXP(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where EXP(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where EXP(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where EXP(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where EXP(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where EXP(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where EXP(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where EXP(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where EXP(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where EXP(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT

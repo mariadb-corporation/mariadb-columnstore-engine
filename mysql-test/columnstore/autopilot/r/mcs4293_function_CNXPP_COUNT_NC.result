@@ -1,0 +1,91 @@
+USE autopilot;
+select COUNT(CBIGINT) from datatypetestm;
+COUNT(CBIGINT)
+1
+select COUNT(CDECIMAL1) from datatypetestm;
+COUNT(CDECIMAL1)
+1
+select COUNT(CDECIMAL4) from datatypetestm;
+COUNT(CDECIMAL4)
+1
+select COUNT(CDECIMAL4_2) from datatypetestm;
+COUNT(CDECIMAL4_2)
+1
+select COUNT(CDECIMAL5) from datatypetestm;
+COUNT(CDECIMAL5)
+1
+select COUNT(CDECIMAL9) from datatypetestm;
+COUNT(CDECIMAL9)
+1
+select COUNT(CDECIMAL9_2) from datatypetestm;
+COUNT(CDECIMAL9_2)
+1
+select COUNT(CDECIMAL10) from datatypetestm;
+COUNT(CDECIMAL10)
+1
+select COUNT(CDECIMAL18) from datatypetestm;
+COUNT(CDECIMAL18)
+1
+select COUNT(CDECIMAL18_2) from datatypetestm;
+COUNT(CDECIMAL18_2)
+1
+select COUNT(CINTEGER) from datatypetestm;
+COUNT(CINTEGER)
+1
+select COUNT(CSMALLINT) from datatypetestm;
+COUNT(CSMALLINT)
+1
+select COUNT(CTINYINT) from datatypetestm;
+COUNT(CTINYINT)
+1
+select COUNT(CDOUBLE) from datatypetestm;
+COUNT(CDOUBLE)
+1
+select COUNT(CFLOAT) from datatypetestm;
+COUNT(CFLOAT)
+1
+select cidx, CBIGINT, COUNT(CBIGINT) from datatypetestm group by cidx, CBIGINT order by cidx;
+cidx	CBIGINT	COUNT(CBIGINT)
+1	-72036854775806	1
+select cidx, CDECIMAL1, COUNT(CDECIMAL1) from datatypetestm group by cidx, CDECIMAL1 order by cidx;
+cidx	CDECIMAL1	COUNT(CDECIMAL1)
+1	-9	1
+select cidx, CDECIMAL4, COUNT(CDECIMAL4) from datatypetestm group by cidx, CDECIMAL4 order by cidx;
+cidx	CDECIMAL4	COUNT(CDECIMAL4)
+1	-999	1
+select cidx, CDECIMAL4_2, COUNT(CDECIMAL4_2) from datatypetestm group by cidx, CDECIMAL4_2 order by cidx;
+cidx	CDECIMAL4_2	COUNT(CDECIMAL4_2)
+1	-9.99	1
+select cidx, CDECIMAL5, COUNT(CDECIMAL5) from datatypetestm group by cidx, CDECIMAL5 order by cidx;
+cidx	CDECIMAL5	COUNT(CDECIMAL5)
+1	-999	1
+select cidx, CDECIMAL9, COUNT(CDECIMAL9) from datatypetestm group by cidx, CDECIMAL9 order by cidx;
+cidx	CDECIMAL9	COUNT(CDECIMAL9)
+1	-999999	1
+select cidx, CDECIMAL9_2, COUNT(CDECIMAL9_2) from datatypetestm group by cidx, CDECIMAL9_2 order by cidx;
+cidx	CDECIMAL9_2	COUNT(CDECIMAL9_2)
+1	-9999.99	1
+select cidx, CDECIMAL10, COUNT(CDECIMAL10) from datatypetestm group by cidx, CDECIMAL10 order by cidx;
+cidx	CDECIMAL10	COUNT(CDECIMAL10)
+1	-9999999	1
+select cidx, CDECIMAL18, COUNT(CDECIMAL18) from datatypetestm group by cidx, CDECIMAL18 order by cidx;
+cidx	CDECIMAL18	COUNT(CDECIMAL18)
+1	-9999999999999	1
+select cidx, CDECIMAL18_2, COUNT(CDECIMAL18_2) from datatypetestm group by cidx, CDECIMAL18_2 order by cidx;
+cidx	CDECIMAL18_2	COUNT(CDECIMAL18_2)
+1	-99999999999.99	1
+select cidx, CINTEGER, COUNT(CINTEGER) from datatypetestm group by cidx, CINTEGER order by cidx;
+cidx	CINTEGER	COUNT(CINTEGER)
+1	-7483646	1
+select cidx, CSMALLINT, COUNT(CSMALLINT) from datatypetestm group by cidx, CSMALLINT order by cidx;
+cidx	CSMALLINT	COUNT(CSMALLINT)
+1	-766	1
+select cidx, CTINYINT, COUNT(CTINYINT) from datatypetestm group by cidx, CTINYINT order by cidx;
+cidx	CTINYINT	COUNT(CTINYINT)
+1	-26	1
+select cidx, CDOUBLE, COUNT(CDOUBLE) from datatypetestm group by cidx, CDOUBLE order by cidx;
+cidx	CDOUBLE	COUNT(CDOUBLE)
+1	-1.797693231e108	1
+select cidx, CFLOAT, COUNT(CFLOAT) from datatypetestm group by cidx, CFLOAT order by cidx;
+cidx	CFLOAT	COUNT(CFLOAT)
+1	-3.40287e18	1

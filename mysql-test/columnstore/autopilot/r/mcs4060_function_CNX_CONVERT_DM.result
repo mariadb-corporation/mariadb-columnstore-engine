@@ -1,0 +1,31 @@
+USE autopilot;
+select cidx, CDATE, CONVERT(CDATE,DATE) from datatypetestm order by cidx;
+cidx	CDATE	CONVERT(CDATE,DATE)
+1	1997-01-01	1997-01-01
+select cidx, CDATE, CONVERT(CDATE,DATETIME) from datatypetestm order by cidx;
+cidx	CDATE	CONVERT(CDATE,DATETIME)
+1	1997-01-01	1997-01-01 00:00:00
+select cidx, CDATETIME, CONVERT(CDATETIME,DATE) from datatypetestm order by cidx;
+cidx	CDATETIME	CONVERT(CDATETIME,DATE)
+1	1997-01-01 00:00:00	1997-01-01
+select cidx, CDATETIME, CONVERT(CDATETIME,DATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	CONVERT(CDATETIME,DATETIME)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00
+select cidx, CTIME, CONVERT(CTIME,DATE) from datatypetestm order by cidx;
+cidx	CTIME	CONVERT(CTIME,DATE)
+1	13:00:00	REPLACEDVALUE
+select cidx, CTIME, CONVERT(CTIME,DATETIME) from datatypetestm order by cidx;
+cidx	CTIME	CONVERT(CTIME,DATETIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, CDATE from datatypetestm where CONVERT(CDATE,DATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CONVERT(CDATE,DATETIME) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where CONVERT(CDATETIME,DATE) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where CONVERT(CDATETIME,DATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CINTEGER = CTINYINT;
+SELECT CINTEGER FROM datatypeupdate;
+CINTEGER
+-26
+ROLLBACK;

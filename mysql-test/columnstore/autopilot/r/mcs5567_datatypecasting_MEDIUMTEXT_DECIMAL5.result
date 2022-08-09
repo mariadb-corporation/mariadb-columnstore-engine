@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CDECIMAL5 ;
+cidx	CMEDIUMTEXT	CDECIMAL5
+1	mediumtestmediumtest	-999
+2	mediumtestmediumtest	-998
+3	mediumtestmediumtest	-997
+4	mediumtestmediumtest	-996
+5	mediumtestmediumtest	-995
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CDECIMAL5 ;
+cidx	CMEDIUMTEXT	CDECIMAL5
+1	mediumtestmediumtest	-999
+2	mediumtestmediumtest	-998
+3	mediumtestmediumtest	-997
+4	mediumtestmediumtest	-996
+5	mediumtestmediumtest	-995
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CDECIMAL5 ;
+cidx	CMEDIUMTEXT	CDECIMAL5
+1	mediumtestmediumtest	-999
+2	mediumtestmediumtest	-998
+3	mediumtestmediumtest	-997
+4	mediumtestmediumtest	-996
+5	mediumtestmediumtest	-995
+6	mediumtestmediumtest	995
+7	mediumtestmediumtest	996
+8	mediumtestmediumtest	997
+9	mediumtestmediumtest	998
+10	mediumtestmediumtest	999
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CDECIMAL5 ;
+cidx	CMEDIUMTEXT	CDECIMAL5
+6	mediumtestmediumtest	995
+7	mediumtestmediumtest	996
+8	mediumtestmediumtest	997
+9	mediumtestmediumtest	998
+10	mediumtestmediumtest	999
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CDECIMAL5 ;
+cidx	CMEDIUMTEXT	CDECIMAL5
+6	mediumtestmediumtest	995
+7	mediumtestmediumtest	996
+8	mediumtestmediumtest	997
+9	mediumtestmediumtest	998
+10	mediumtestmediumtest	999

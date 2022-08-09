@@ -1,0 +1,37 @@
+USE autopilot;
+select cidx, CDATE, ASCII(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	ASCII(CDATE)
+1	1997-01-01	49
+select cidx, CDATETIME, ASCII(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	ASCII(CDATETIME)
+1	1997-01-01 00:00:00	49
+select cidx, CTIME, ASCII(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	ASCII(CTIME)
+1	13:00:00	49
+select cidx, ASCII('NULL') from datatypetestm order by cidx;
+cidx	ASCII('NULL')
+1	78
+select cidx, ASCII('null') from datatypetestm order by cidx;
+cidx	ASCII('null')
+1	110
+select cidx, ASCII(' ') from datatypetestm order by cidx;
+cidx	ASCII(' ')
+1	32
+select cidx, ASCII(' THIS ') from datatypetestm order by cidx;
+cidx	ASCII(' THIS ')
+1	32
+select cidx, ASCII('this') from datatypetestm order by cidx;
+cidx	ASCII('this')
+1	116
+select cidx, ASCII('t') from datatypetestm order by cidx;
+cidx	ASCII('t')
+1	116
+select cidx, CDATE from datatypetestm where ASCII(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where ASCII(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm where ASCII(CTIME) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

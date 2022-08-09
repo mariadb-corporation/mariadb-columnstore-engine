@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=8192;
+select GROUP_CONCAT(CDATE) from datatypetestm;
+select GROUP_CONCAT(CDATETIME) from datatypetestm;
+select GROUP_CONCAT(CTIME) from datatypetestm;
+select GROUP_CONCAT('Hello') from datatypetestm;
+select GROUP_CONCAT('Hello, World') from datatypetestm;
+select cidx, CDATE, GROUP_CONCAT(CDATE) from datatypetestm group by cidx, CDATE order by cidx;
+select cidx, CDATETIME, GROUP_CONCAT(CDATETIME) from datatypetestm group by cidx, CDATETIME order by cidx;
+select cidx, CTIME, GROUP_CONCAT(CTIME) from datatypetestm group by cidx, CTIME order by cidx;

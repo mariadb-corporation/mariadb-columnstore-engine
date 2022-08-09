@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT > dtt2.CTIMESTAMP ;
+cidx	CSMALLINT	CTIMESTAMP
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT >= dtt2.CTIMESTAMP ;
+cidx	CSMALLINT	CTIMESTAMP
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <> dtt2.CTIMESTAMP ;
+cidx	CSMALLINT	CTIMESTAMP
+1	-766	2020-08-13 03:14:07
+2	-765	2020-08-13 03:14:07
+3	-764	2020-08-13 03:14:07
+4	-763	2020-08-13 03:14:07
+5	-762	2020-08-13 03:14:07
+6	763	2020-08-13 03:14:07
+7	764	2020-08-13 03:14:07
+8	765	2020-08-13 03:14:07
+9	766	2020-08-13 03:14:07
+10	767	2020-08-13 03:14:07
+11	0	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT < dtt2.CTIMESTAMP ;
+cidx	CSMALLINT	CTIMESTAMP
+1	-766	2020-08-13 03:14:07
+2	-765	2020-08-13 03:14:07
+3	-764	2020-08-13 03:14:07
+4	-763	2020-08-13 03:14:07
+5	-762	2020-08-13 03:14:07
+6	763	2020-08-13 03:14:07
+7	764	2020-08-13 03:14:07
+8	765	2020-08-13 03:14:07
+9	766	2020-08-13 03:14:07
+10	767	2020-08-13 03:14:07
+11	0	2020-08-13 03:14:07
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CTIMESTAMP from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <= dtt2.CTIMESTAMP ;
+cidx	CSMALLINT	CTIMESTAMP
+1	-766	2020-08-13 03:14:07
+2	-765	2020-08-13 03:14:07
+3	-764	2020-08-13 03:14:07
+4	-763	2020-08-13 03:14:07
+5	-762	2020-08-13 03:14:07
+6	763	2020-08-13 03:14:07
+7	764	2020-08-13 03:14:07
+8	765	2020-08-13 03:14:07
+9	766	2020-08-13 03:14:07
+10	767	2020-08-13 03:14:07
+11	0	2020-08-13 03:14:07

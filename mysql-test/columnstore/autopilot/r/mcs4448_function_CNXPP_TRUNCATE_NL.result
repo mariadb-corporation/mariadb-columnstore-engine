@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, TRUNCATE(68.9876*cidx,1) from datatypetestm order by cidx;
+cidx	TRUNCATE(68.9876*cidx,1)
+1	68.9
+select cidx, TRUNCATE(68.9876*cidx,2) from datatypetestm order by cidx;
+cidx	TRUNCATE(68.9876*cidx,2)
+1	68.98
+select cidx, TRUNCATE(68.9876*cidx,0) from datatypetestm order by cidx;
+cidx	TRUNCATE(68.9876*cidx,0)
+1	68
+select cidx, TRUNCATE(68.9876*cidx,-2) from datatypetestm order by cidx;
+cidx	TRUNCATE(68.9876*cidx,-2)
+1	0

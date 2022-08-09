@@ -1,0 +1,99 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, NULLIF(CTEXT,CCHAR4) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CCHAR9) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CCHAR255) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CVCHAR4) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CINTEGER) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CDOUBLE) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CDECIMAL9_2) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,CDATE) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,NULL) from datatypetestm ;
+select cidx, CTEXT, NULLIF(CTEXT,'Hello world') from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CCHAR4) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CCHAR9) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CCHAR255) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CVCHAR4) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CINTEGER) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CDOUBLE) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CDECIMAL9_2) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,CDATE) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, NULLIF(CTINYTEXT,'Hello world') from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CCHAR4) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CCHAR9) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CCHAR255) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CVCHAR4) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CINTEGER) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CDOUBLE) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CDECIMAL9_2) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,CDATE) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, NULLIF(CMEDIUMTEXT,'Hello world') from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CCHAR4) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CCHAR9) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CCHAR255) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CVCHAR4) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CVCHAR8) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CINTEGER) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CDOUBLE) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CDECIMAL9_2) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,CDATE) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, NULLIF(CLONGTEXT,'Hello world') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CCHAR4), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CCHAR9), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CCHAR255), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CVCHAR4), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CVCHAR8), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CINTEGER), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CDOUBLE), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CDECIMAL9_2), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,CDATE), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,NULL), cidx;
+select cidx, CTEXT from datatypetestm order by NULLIF(CTEXT,'Hello world'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CCHAR4), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CCHAR9), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CCHAR255), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CVCHAR4), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CVCHAR8), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CINTEGER), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CDOUBLE), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CDECIMAL9_2), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,CDATE), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,NULL), cidx;
+select cidx, CTINYTEXT from datatypetestm order by NULLIF(CTINYTEXT,'Hello world'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CCHAR4), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CCHAR9), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CCHAR255), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CVCHAR4), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CVCHAR8), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CINTEGER), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CDOUBLE), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CDECIMAL9_2), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,CDATE), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,NULL), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by NULLIF(CMEDIUMTEXT,'Hello world'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CCHAR4), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CCHAR9), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CCHAR255), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CVCHAR4), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CVCHAR8), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CINTEGER), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CDOUBLE), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CDECIMAL9_2), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,CDATE), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,NULL), cidx;
+select cidx, CLONGTEXT from datatypetestm order by NULLIF(CLONGTEXT,'Hello world'), cidx;

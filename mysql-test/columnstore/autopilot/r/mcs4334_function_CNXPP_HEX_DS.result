@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select cidx, CDATE, HEX(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	HEX(CDATE)
+1	1997-01-01	313939372D30312D3031
+select cidx, CDATETIME, HEX(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	HEX(CDATETIME)
+1	1997-01-01 00:00:00	313939372D30312D30312030303A30303A3030
+select cidx, CTIME, HEX(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	HEX(CTIME)
+1	13:00:00	31333A30303A3030
+select cidx, HEX('2011-05-01') from datatypetestm order by cidx;
+cidx	HEX('2011-05-01')
+1	323031312D30352D3031
+select cidx, HEX('2011-05-01 13:58:22.123456') from datatypetestm order by cidx;
+cidx	HEX('2011-05-01 13:58:22.123456')
+1	323031312D30352D30312031333A35383A32322E313233343536
+select cidx, CDATE from datatypetestm order by HEX(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by HEX(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by HEX(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

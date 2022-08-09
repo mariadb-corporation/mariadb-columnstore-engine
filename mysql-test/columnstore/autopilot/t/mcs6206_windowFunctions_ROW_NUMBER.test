@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot Window functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+use tpch1m;
+#
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY 55 ORDER BY o_custkey ,o_orderkey ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY 55 ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY o_custkey ORDER BY o_custkey ,o_orderkey ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY o_custkey ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey) ORDER BY o_custkey ,o_orderkey ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey) ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from orders order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY 55 ORDER BY o_custkey ,o_orderkey ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY 55 ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY o_custkey ORDER BY o_custkey ,o_orderkey ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY o_custkey ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey) ORDER BY o_custkey ,o_orderkey ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey) ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+select o_custkey, ROW_NUMBER() OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ,o_orderdate ) from (select * from orders where o_custkey <= 20000) s order by 1, 2;

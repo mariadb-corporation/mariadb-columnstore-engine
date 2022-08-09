@@ -1,0 +1,134 @@
+DROP DATABASE IF EXISTS mcs4004_db;
+CREATE DATABASE mcs4004_db;
+USE mcs4004_db;
+drop table if exists lineitem;
+create table lineitem (
+l_orderkey int,
+l_partkey int,
+l_suppkey int,
+l_linenumber bigint,
+l_quantity decimal(12,2),
+l_extendedprice decimal(12,2),
+l_discount decimal(12,2),
+l_tax decimal(12,2),
+l_returnflag char (1),
+l_linestatus char (1),
+l_shipdate date,
+l_commitdate date,
+l_receiptdate date,
+l_shipinstruct char (25),
+l_shipmode char (10),
+l_comment varchar (44)
+) engine=columnstore;
+SHOW CREATE TABLE lineitem;
+Table	Create Table
+lineitem	CREATE TABLE `lineitem` (
+  `l_orderkey` int(11) DEFAULT NULL,
+  `l_partkey` int(11) DEFAULT NULL,
+  `l_suppkey` int(11) DEFAULT NULL,
+  `l_linenumber` bigint(20) DEFAULT NULL,
+  `l_quantity` decimal(12,2) DEFAULT NULL,
+  `l_extendedprice` decimal(12,2) DEFAULT NULL,
+  `l_discount` decimal(12,2) DEFAULT NULL,
+  `l_tax` decimal(12,2) DEFAULT NULL,
+  `l_returnflag` char(1) DEFAULT NULL,
+  `l_linestatus` char(1) DEFAULT NULL,
+  `l_shipdate` date DEFAULT NULL,
+  `l_commitdate` date DEFAULT NULL,
+  `l_receiptdate` date DEFAULT NULL,
+  `l_shipinstruct` char(25) DEFAULT NULL,
+  `l_shipmode` char(10) DEFAULT NULL,
+  `l_comment` varchar(44) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+drop table if exists lineitem1;
+create table lineitem1 (
+l_orderkey int,
+l_partkey int,
+l_suppkey int,
+l_linenumber bigint,
+l_quantity decimal(12,2),
+l_extendedprice decimal(12,2),
+l_discount decimal(12,2),
+l_tax decimal(12,2),
+l_returnflag char (1),
+l_linestatus char (1),
+l_shipdate date,
+l_commitdate date,
+l_receiptdate date,
+l_shipinstruct char (25),
+l_shipmode char (10),
+l_comment varchar (44)
+) engine=columnstore;
+SHOW CREATE TABLE lineitem1;
+Table	Create Table
+lineitem1	CREATE TABLE `lineitem1` (
+  `l_orderkey` int(11) DEFAULT NULL,
+  `l_partkey` int(11) DEFAULT NULL,
+  `l_suppkey` int(11) DEFAULT NULL,
+  `l_linenumber` bigint(20) DEFAULT NULL,
+  `l_quantity` decimal(12,2) DEFAULT NULL,
+  `l_extendedprice` decimal(12,2) DEFAULT NULL,
+  `l_discount` decimal(12,2) DEFAULT NULL,
+  `l_tax` decimal(12,2) DEFAULT NULL,
+  `l_returnflag` char(1) DEFAULT NULL,
+  `l_linestatus` char(1) DEFAULT NULL,
+  `l_shipdate` date DEFAULT NULL,
+  `l_commitdate` date DEFAULT NULL,
+  `l_receiptdate` date DEFAULT NULL,
+  `l_shipinstruct` char(25) DEFAULT NULL,
+  `l_shipmode` char(10) DEFAULT NULL,
+  `l_comment` varchar(44) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+insert into lineitem values
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.'),
+(10,128449,3474,3,27,39890.88,0.06,0.07,'A','F','1994-01-16','1993-11-22','1994-01-23','DELIVER IN PERSON','SHIP','nal foxes wake.');
+SELECT COUNT(*) FROM lineitem;
+COUNT(*)
+30
+SELECT * INTO OUTFILE '/tmp/mcs4004.dat' FROM lineitem;
+show variables like 'columnstore_use_import_for_batchinsert';
+Variable_name	Value
+columnstore_use_import_for_batchinsert	ON
+SET columnstore_use_import_for_batchinsert = 0;
+LOAD DATA INFILE '/tmp/mcs4004.dat' INTO TABLE lineitem1;
+SET columnstore_use_import_for_batchinsert = 1;
+LOAD DATA INFILE '/tmp/mcs4004.dat' INTO TABLE lineitem1;
+SET columnstore_use_import_for_batchinsert = 2;
+LOAD DATA INFILE '/tmp/mcs4004.dat' INTO TABLE lineitem1;
+SET columnstore_use_import_for_batchinsert = default;
+show variables like 'columnstore_use_import_for_batchinsert';
+Variable_name	Value
+columnstore_use_import_for_batchinsert	ON
+LOAD DATA INFILE '/tmp/mcs4004.dat' INTO TABLE lineitem1;
+SELECT COUNT(*) FROM lineitem1;
+COUNT(*)
+120
+DROP DATABASE mcs4004_db;

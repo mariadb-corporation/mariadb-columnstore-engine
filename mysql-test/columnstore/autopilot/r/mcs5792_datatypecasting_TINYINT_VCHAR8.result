@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT > dtt2.CVCHAR8 ;
+cidx	CTINYINT	CVCHAR8
+6	23	sssssss
+7	24	ssssssss
+8	25	ssssssss
+9	26	ssssssss
+10	27	zzzzzzzz
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT >= dtt2.CVCHAR8 ;
+cidx	CTINYINT	CVCHAR8
+6	23	sssssss
+7	24	ssssssss
+8	25	ssssssss
+9	26	ssssssss
+10	27	zzzzzzzz
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <> dtt2.CVCHAR8 ;
+cidx	CTINYINT	CVCHAR8
+1	-26	aaaaaaaa
+2	-25	h
+3	-24	hh
+4	-23	hhh
+5	-22	hhhh
+6	23	sssssss
+7	24	ssssssss
+8	25	ssssssss
+9	26	ssssssss
+10	27	zzzzzzzz
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT < dtt2.CVCHAR8 ;
+cidx	CTINYINT	CVCHAR8
+1	-26	aaaaaaaa
+2	-25	h
+3	-24	hh
+4	-23	hhh
+5	-22	hhhh
+select dtt1.cidx, dtt1.CTINYINT, dtt2.CVCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYINT <= dtt2.CVCHAR8 ;
+cidx	CTINYINT	CVCHAR8
+1	-26	aaaaaaaa
+2	-25	h
+3	-24	hh
+4	-23	hhh
+5	-22	hhhh

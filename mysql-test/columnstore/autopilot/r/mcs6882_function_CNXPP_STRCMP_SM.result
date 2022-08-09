@@ -1,0 +1,194 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, STRCMP(CTEXT,CCHAR3) from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,CCHAR3)
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,CVCHAR8) from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,CVCHAR8)
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,CCHAR255) from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,CCHAR255)
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,CVCHAR255) from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,CVCHAR255)
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,'aa') from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,'aa')
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,'zzzzzz') from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,'zzzzzz')
+1	texttexttext	-1
+select cidx, CTEXT, STRCMP(CTEXT,'qqqqqqqqqq') from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,'qqqqqqqqqq')
+1	texttexttext	1
+select cidx, CTEXT, STRCMP(CTEXT,NULL) from datatypetestm ;
+cidx	CTEXT	STRCMP(CTEXT,NULL)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CCHAR3) from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,CCHAR3)
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CVCHAR8) from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,CVCHAR8)
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CCHAR255) from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,CCHAR255)
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,CVCHAR255) from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,CVCHAR255)
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'aa') from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,'aa')
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'zzzzzz') from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,'zzzzzz')
+1	tinytext	-1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,'qqqqqqqqqq') from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,'qqqqqqqqqq')
+1	tinytext	1
+select cidx, CTINYTEXT, STRCMP(CTINYTEXT,NULL) from datatypetestm ;
+cidx	CTINYTEXT	STRCMP(CTINYTEXT,NULL)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,CCHAR3)
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CVCHAR8) from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,CVCHAR8)
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CCHAR255) from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,CCHAR255)
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,CVCHAR255) from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,CVCHAR255)
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'aa') from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,'aa')
+1	mediumtestmediumtest	1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'zzzzzz') from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,'zzzzzz')
+1	mediumtestmediumtest	-1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,'qqqqqqqqqq') from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,'qqqqqqqqqq')
+1	mediumtestmediumtest	-1
+select cidx, CMEDIUMTEXT, STRCMP(CMEDIUMTEXT,NULL) from datatypetestm ;
+cidx	CMEDIUMTEXT	STRCMP(CMEDIUMTEXT,NULL)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CCHAR3) from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,CCHAR3)
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CVCHAR8) from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,CVCHAR8)
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CCHAR255) from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,CCHAR255)
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,CVCHAR255) from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,CVCHAR255)
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'aa') from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,'aa')
+1	longtextlongtextlongtext	1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'zzzzzz') from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,'zzzzzz')
+1	longtextlongtextlongtext	-1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,'qqqqqqqqqq') from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,'qqqqqqqqqq')
+1	longtextlongtextlongtext	-1
+select cidx, CLONGTEXT, STRCMP(CLONGTEXT,NULL) from datatypetestm ;
+cidx	CLONGTEXT	STRCMP(CLONGTEXT,NULL)
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,CCHAR3), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,CVCHAR8), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,CCHAR255), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,CVCHAR255), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,'aa'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,'zzzzzz'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,'qqqqqqqqqq'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by STRCMP(CTEXT,NULL), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,CCHAR3), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,CVCHAR8), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,CCHAR255), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,CVCHAR255), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,'aa'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,'zzzzzz'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,'qqqqqqqqqq'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by STRCMP(CTINYTEXT,NULL), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,CCHAR3), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,CVCHAR8), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,CCHAR255), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,CVCHAR255), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,'aa'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,'zzzzzz'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,'qqqqqqqqqq'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by STRCMP(CMEDIUMTEXT,NULL), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,CCHAR3), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,CVCHAR8), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,CCHAR255), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,CVCHAR255), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,'aa'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,'zzzzzz'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,'qqqqqqqqqq'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by STRCMP(CLONGTEXT,NULL), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

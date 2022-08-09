@@ -1,0 +1,106 @@
+USE autopilot;
+select cidx, CBIGINT, TAN(CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	TAN(CBIGINT)
+1	-72036854775806	-0.20818073995072364
+select cidx, CDECIMAL1, TAN(CDECIMAL1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	TAN(CDECIMAL1)
+1	-9	0.45231565944180985
+select cidx, CDECIMAL4, TAN(CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	TAN(CDECIMAL4)
+1	-999	0.02647002113606238
+select cidx, CDECIMAL4_2, TAN(CDECIMAL4_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	TAN(CDECIMAL4_2)
+1	-9.99	-0.6342481405408987
+select cidx, CDECIMAL5, TAN(CDECIMAL5) from datatypetestm order by cidx;
+cidx	CDECIMAL5	TAN(CDECIMAL5)
+1	-999	0.02647002113606238
+select cidx, CDECIMAL9, TAN(CDECIMAL9) from datatypetestm order by cidx;
+cidx	CDECIMAL9	TAN(CDECIMAL9)
+1	-999999	4.618430334707433
+select cidx, CDECIMAL9_2, TAN(CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	TAN(CDECIMAL9_2)
+1	-9999.99	-0.3099758351559892
+select cidx, CDECIMAL10, TAN(CDECIMAL10) from datatypetestm order by cidx;
+cidx	CDECIMAL10	TAN(CDECIMAL10)
+1	-9999999	7.267118770165242
+select cidx, CDECIMAL18, TAN(CDECIMAL18) from datatypetestm order by cidx;
+cidx	CDECIMAL18	TAN(CDECIMAL18)
+1	-9999999999999	3.5075092838902084
+select cidx, CDECIMAL18_2, TAN(CDECIMAL18_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	TAN(CDECIMAL18_2)
+1	-99999999999.99	-2.4333445166626784
+select cidx, CINTEGER, TAN(CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	TAN(CINTEGER)
+1	-7483646	48.965600064682626
+select cidx, CSMALLINT, TAN(CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	TAN(CSMALLINT)
+1	-766	0.6111908753285998
+select cidx, CTINYINT, TAN(CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	TAN(CTINYINT)
+1	-26	-1.1787535542062797
+select cidx, CDOUBLE, TAN(CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	TAN(CDOUBLE)
+1	-1.797693231e108	-1.0960724875989745
+select cidx, CFLOAT, TAN(CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	TAN(CFLOAT)
+1	-3.40287e18	-0.3459538586696811
+select cidx, TAN(0*cidx) from datatypetestm order by cidx;
+cidx	TAN(0*cidx)
+1	0
+select cidx, TAN(60*cidx) from datatypetestm order by cidx;
+cidx	TAN(60*cidx)
+1	0.320040389379563
+select cidx, TAN(90*cidx) from datatypetestm order by cidx;
+cidx	TAN(90*cidx)
+1	-1.995200412208242
+select cidx, TAN(180*cidx) from datatypetestm order by cidx;
+cidx	TAN(180*cidx)
+1	1.3386902103511544
+select cidx, TAN(360*cidx) from datatypetestm order by cidx;
+cidx	TAN(360*cidx)
+1	-3.380140413960958
+select cidx, CBIGINT from datatypetestm where TAN(CBIGINT) <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm where TAN(CDECIMAL1) <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm where TAN(CDECIMAL4) <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm where TAN(CDECIMAL4_2) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm where TAN(CDECIMAL5) <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm where TAN(CDECIMAL9) <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm where TAN(CDECIMAL9_2) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm where TAN(CDECIMAL10) <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm where TAN(CDECIMAL18) <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm where TAN(CDECIMAL18_2) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm where TAN(CINTEGER) <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm where TAN(CSMALLINT) <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm where TAN(CTINYINT) <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm where TAN(CDOUBLE) <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm where TAN(CFLOAT) <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18

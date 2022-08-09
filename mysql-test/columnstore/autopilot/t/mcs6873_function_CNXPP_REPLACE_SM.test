@@ -1,0 +1,27 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, REPLACE(CTEXT,'a','II') from datatypetestm ;
+select cidx, CTEXT, REPLACE(CTEXT,'zz','JJ') from datatypetestm ;
+select cidx, CTINYTEXT, REPLACE(CTINYTEXT,'a','II') from datatypetestm ;
+select cidx, CTINYTEXT, REPLACE(CTINYTEXT,'zz','JJ') from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPLACE(CMEDIUMTEXT,'a','II') from datatypetestm ;
+select cidx, CMEDIUMTEXT, REPLACE(CMEDIUMTEXT,'zz','JJ') from datatypetestm ;
+select cidx, CLONGTEXT, REPLACE(CLONGTEXT,'a','II') from datatypetestm ;
+select cidx, CLONGTEXT, REPLACE(CLONGTEXT,'zz','JJ') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by REPLACE(CTEXT,'a','II'), cidx;
+select cidx, CTEXT from datatypetestm order by REPLACE(CTEXT,'zz','JJ'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by REPLACE(CTINYTEXT,'a','II'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by REPLACE(CTINYTEXT,'zz','JJ'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by REPLACE(CMEDIUMTEXT,'a','II'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by REPLACE(CMEDIUMTEXT,'zz','JJ'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by REPLACE(CLONGTEXT,'a','II'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by REPLACE(CLONGTEXT,'zz','JJ'), cidx;

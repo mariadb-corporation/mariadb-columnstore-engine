@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select BIT_OR(CTEXT) from datatypetestm;
+select BIT_OR(CTINYTEXT) from datatypetestm;
+select BIT_OR(CMEDIUMTEXT) from datatypetestm;
+select BIT_OR(CLONGTEXT) from datatypetestm;
+select cidx, CTEXT, BIT_OR(CTEXT) from datatypetestm group by cidx, CTEXT ;
+select cidx, CTINYTEXT, BIT_OR(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+select cidx, CMEDIUMTEXT, BIT_OR(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+select cidx, CLONGTEXT, BIT_OR(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;

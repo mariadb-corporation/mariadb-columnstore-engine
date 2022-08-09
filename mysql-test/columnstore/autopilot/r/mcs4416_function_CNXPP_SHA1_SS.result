@@ -1,0 +1,121 @@
+USE autopilot;
+select cidx, CCHAR1, SHA1(CCHAR1) from datatypetestm order by cidx;
+cidx	CCHAR1	SHA1(CCHAR1)
+1	a	86f7e437faa5a7fce15d1ddcb9eaeaea377667b8
+select cidx, CCHAR2, SHA1(CCHAR2) from datatypetestm order by cidx;
+cidx	CCHAR2	SHA1(CCHAR2)
+1	aa	e0c9035898dd52fc65c41454cec9c4d2611bfb37
+select cidx, CCHAR3, SHA1(CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	SHA1(CCHAR3)
+1	aaa	7e240de74fb1ed08fa08d38063f6a6a91462a815
+select cidx, CCHAR4, SHA1(CCHAR4) from datatypetestm order by cidx;
+cidx	CCHAR4	SHA1(CCHAR4)
+1	aaaa	70c881d4a26984ddce795f6f71817c9cf4480e79
+select cidx, CCHAR5, SHA1(CCHAR5) from datatypetestm order by cidx;
+cidx	CCHAR5	SHA1(CCHAR5)
+1	aaaaa	df51e37c269aa94d38f93e537bf6e2020b21406c
+select cidx, CCHAR6, SHA1(CCHAR6) from datatypetestm order by cidx;
+cidx	CCHAR6	SHA1(CCHAR6)
+1	aaaaaa	f7a9e24777ec23212c54d7a350bc5bea5477fdbb
+select cidx, CCHAR7, SHA1(CCHAR7) from datatypetestm order by cidx;
+cidx	CCHAR7	SHA1(CCHAR7)
+1	aaaaaaa	e93b4e3c464ffd51732fbd6ded717e9efda28aad
+select cidx, CCHAR8, SHA1(CCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	SHA1(CCHAR8)
+1	aaaaaaaa	b480c074d6b75947c02681f31c90c668c46bf6b8
+select cidx, CCHAR9, SHA1(CCHAR9) from datatypetestm order by cidx;
+cidx	CCHAR9	SHA1(CCHAR9)
+1	aaaaaaaaa	2882f38e575101ba615f725af5e59bf2333a9a68
+select cidx, CCHAR255, SHA1(CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	SHA1(CCHAR255)
+1	aaaaaaaaaa	3495ff69d34671d1e15b33a63c1379fdedd3a32a
+select cidx, CVCHAR1, SHA1(CVCHAR1) from datatypetestm order by cidx;
+cidx	CVCHAR1	SHA1(CVCHAR1)
+1	a	86f7e437faa5a7fce15d1ddcb9eaeaea377667b8
+select cidx, CVCHAR2, SHA1(CVCHAR2) from datatypetestm order by cidx;
+cidx	CVCHAR2	SHA1(CVCHAR2)
+1	aa	e0c9035898dd52fc65c41454cec9c4d2611bfb37
+select cidx, CVCHAR3, SHA1(CVCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	SHA1(CVCHAR3)
+1	aaa	7e240de74fb1ed08fa08d38063f6a6a91462a815
+select cidx, CVCHAR4, SHA1(CVCHAR4) from datatypetestm order by cidx;
+cidx	CVCHAR4	SHA1(CVCHAR4)
+1	aaaa	70c881d4a26984ddce795f6f71817c9cf4480e79
+select cidx, CVCHAR5, SHA1(CVCHAR5) from datatypetestm order by cidx;
+cidx	CVCHAR5	SHA1(CVCHAR5)
+1	aaaaa	df51e37c269aa94d38f93e537bf6e2020b21406c
+select cidx, CVCHAR6, SHA1(CVCHAR6) from datatypetestm order by cidx;
+cidx	CVCHAR6	SHA1(CVCHAR6)
+1	aaaaaa	f7a9e24777ec23212c54d7a350bc5bea5477fdbb
+select cidx, CVCHAR7, SHA1(CVCHAR7) from datatypetestm order by cidx;
+cidx	CVCHAR7	SHA1(CVCHAR7)
+1	aaaaaaa	e93b4e3c464ffd51732fbd6ded717e9efda28aad
+select cidx, CVCHAR8, SHA1(CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	SHA1(CVCHAR8)
+1	aaaaaaaa	b480c074d6b75947c02681f31c90c668c46bf6b8
+select cidx, CVCHAR255, SHA1(CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	SHA1(CVCHAR255)
+1	aaaaaaaaaa	3495ff69d34671d1e15b33a63c1379fdedd3a32a
+select cidx, SHA1('THIS IS A TEST') from datatypetestm order by cidx;
+cidx	SHA1('THIS IS A TEST')
+1	22bbdabf087de76a1a064a099f4b33794ccdb9e0
+select cidx, SHA1('Hello, World') from datatypetestm order by cidx;
+cidx	SHA1('Hello, World')
+1	907d14fb3af2b0d4f18c2d46abe8aedce17367bd
+select cidx, CCHAR1 from datatypetestm order by SHA1(CCHAR1), cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR2 from datatypetestm order by SHA1(CCHAR2), cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR3 from datatypetestm order by SHA1(CCHAR3), cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR4 from datatypetestm order by SHA1(CCHAR4), cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR5 from datatypetestm order by SHA1(CCHAR5), cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR6 from datatypetestm order by SHA1(CCHAR6), cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR7 from datatypetestm order by SHA1(CCHAR7), cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR8 from datatypetestm order by SHA1(CCHAR8), cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR9 from datatypetestm order by SHA1(CCHAR9), cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR255 from datatypetestm order by SHA1(CCHAR255), cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR1 from datatypetestm order by SHA1(CVCHAR1), cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR2 from datatypetestm order by SHA1(CVCHAR2), cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR3 from datatypetestm order by SHA1(CVCHAR3), cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR4 from datatypetestm order by SHA1(CVCHAR4), cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR5 from datatypetestm order by SHA1(CVCHAR5), cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR6 from datatypetestm order by SHA1(CVCHAR6), cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR7 from datatypetestm order by SHA1(CVCHAR7), cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR8 from datatypetestm order by SHA1(CVCHAR8), cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR255 from datatypetestm order by SHA1(CVCHAR255), cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa

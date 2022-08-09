@@ -1,0 +1,100 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, CONVERT(CBIGINT,SIGNED) from datatypetestm order by cidx;
+select cidx, CBIGINT, CONVERT(CBIGINT,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CBIGINT, CONVERT(CBIGINT,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONVERT(CDECIMAL1,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONVERT(CDECIMAL1,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, CONVERT(CDECIMAL1,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONVERT(CDECIMAL4,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONVERT(CDECIMAL4,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, CONVERT(CDECIMAL4,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONVERT(CDECIMAL4_2,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONVERT(CDECIMAL4_2,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, CONVERT(CDECIMAL4_2,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONVERT(CDECIMAL5,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONVERT(CDECIMAL5,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, CONVERT(CDECIMAL5,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONVERT(CDECIMAL9,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONVERT(CDECIMAL9,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, CONVERT(CDECIMAL9,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONVERT(CDECIMAL9_2,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONVERT(CDECIMAL9_2,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, CONVERT(CDECIMAL9_2,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONVERT(CDECIMAL10,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONVERT(CDECIMAL10,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, CONVERT(CDECIMAL10,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONVERT(CDECIMAL18,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONVERT(CDECIMAL18,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, CONVERT(CDECIMAL18,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONVERT(CDECIMAL18_2,SIGNED) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONVERT(CDECIMAL18_2,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, CONVERT(CDECIMAL18_2,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CINTEGER, CONVERT(CINTEGER,SIGNED) from datatypetestm order by cidx;
+select cidx, CINTEGER, CONVERT(CINTEGER,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CINTEGER, CONVERT(CINTEGER,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONVERT(CSMALLINT,SIGNED) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONVERT(CSMALLINT,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CSMALLINT, CONVERT(CSMALLINT,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CTINYINT, CONVERT(CTINYINT,SIGNED) from datatypetestm order by cidx;
+select cidx, CTINYINT, CONVERT(CTINYINT,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CTINYINT, CONVERT(CTINYINT,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONVERT(CDOUBLE,SIGNED) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONVERT(CDOUBLE,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CDOUBLE, CONVERT(CDOUBLE,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CFLOAT, CONVERT(CFLOAT,SIGNED) from datatypetestm order by cidx;
+select cidx, CFLOAT, CONVERT(CFLOAT,DECIMAL(9)) from datatypetestm order by cidx;
+select cidx, CFLOAT, CONVERT(CFLOAT,DECIMAL(9,2)) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where CONVERT(CBIGINT,SIGNED) <> 0 order by cidx;
+select cidx, CBIGINT from datatypetestm where CONVERT(CBIGINT,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CBIGINT from datatypetestm where CONVERT(CBIGINT,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where CONVERT(CDECIMAL1,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where CONVERT(CDECIMAL1,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where CONVERT(CDECIMAL1,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where CONVERT(CDECIMAL4,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where CONVERT(CDECIMAL4,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where CONVERT(CDECIMAL4,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where CONVERT(CDECIMAL4_2,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where CONVERT(CDECIMAL4_2,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where CONVERT(CDECIMAL4_2,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where CONVERT(CDECIMAL5,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where CONVERT(CDECIMAL5,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where CONVERT(CDECIMAL5,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where CONVERT(CDECIMAL9,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where CONVERT(CDECIMAL9,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where CONVERT(CDECIMAL9,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where CONVERT(CDECIMAL9_2,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where CONVERT(CDECIMAL9_2,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where CONVERT(CDECIMAL9_2,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where CONVERT(CDECIMAL10,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where CONVERT(CDECIMAL10,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where CONVERT(CDECIMAL10,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where CONVERT(CDECIMAL18,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where CONVERT(CDECIMAL18,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where CONVERT(CDECIMAL18,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where CONVERT(CDECIMAL18_2,SIGNED) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where CONVERT(CDECIMAL18_2,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where CONVERT(CDECIMAL18_2,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where CONVERT(CINTEGER,SIGNED) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where CONVERT(CINTEGER,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where CONVERT(CINTEGER,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where CONVERT(CSMALLINT,SIGNED) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where CONVERT(CSMALLINT,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where CONVERT(CSMALLINT,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where CONVERT(CTINYINT,SIGNED) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where CONVERT(CTINYINT,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where CONVERT(CTINYINT,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where CONVERT(CDOUBLE,SIGNED) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where CONVERT(CDOUBLE,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where CONVERT(CDOUBLE,DECIMAL(9,2)) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where CONVERT(CFLOAT,SIGNED) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where CONVERT(CFLOAT,DECIMAL(9)) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where CONVERT(CFLOAT,DECIMAL(9,2)) <> 0 order by cidx;

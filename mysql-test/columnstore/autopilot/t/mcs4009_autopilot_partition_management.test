@@ -1,0 +1,61 @@
+# -------------------------------------------------------------- #
+# enable and disable partitions
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4009_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4009_db;
+USE mcs4009_db;
+#
+--source ../include/dbt3/createLineitem.inc
+#
+# -------------------------------------------------------------- #
+# cpimport test data
+# -------------------------------------------------------------- #
+--source ../include/dbt3/ldiLineitem1g.inc
+--source ../include/dbt3/ldiLineitem1g.inc
+--source ../include/dbt3/ldiLineitem1g.inc
+--source ../include/dbt3/ldiLineitem1g.inc
+--source ../include/dbt3/ldiLineitem1g.inc
+#--exec /usr/bin/cpimport mcs4009_db lineitem /tmp/1milrows.dat
+#--exec /usr/bin/cpimport mcs4009_db lineitem /tmp/1milrows.dat
+#--exec /usr/bin/cpimport mcs4009_db lineitem /tmp/1milrows.dat
+#--exec /usr/bin/cpimport mcs4009_db lineitem /tmp/1milrows.dat
+#--exec /usr/bin/cpimport mcs4009_db lineitem /tmp/1milrows.dat
+#
+select calshowpartitions('lineitem','l_orderkey');
+# -------------------------------------------------------------- #
+# Disable Partitions
+# -------------------------------------------------------------- #
+#
+select caldisablepartitions('lineitem','0.0.1,0.2.1,');
+select calshowpartitions('lineitem','l_orderkey');
+# -------------------------------------------------------------- #
+# Enble Partitions
+# -------------------------------------------------------------- #
+#
+select calenablepartitions('lineitem','0.0.1,0.2.1');
+select calshowpartitions('lineitem','l_orderkey');
+# -------------------------------------------------------------- #
+# Drop Partitions
+# -------------------------------------------------------------- #
+#
+select caldroppartitions('lineitem','0.0.1,0.2.1');
+select calshowpartitions('lineitem','l_orderkey');
+# -------------------------------------------------------------- #
+# Drop one more artitions
+# -------------------------------------------------------------- #
+#
+select caldroppartitions('lineitem','0.1.1');
+select calshowpartitions('lineitem','l_orderkey');
+--source ../include/dbt3/countLineitem.inc
+# -------------------------------------------------------------- #
+# clean up
+# -------------------------------------------------------------- #
+#
+DROP DATABASE mcs4009_db;

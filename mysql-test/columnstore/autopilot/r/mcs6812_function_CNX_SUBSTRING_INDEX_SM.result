@@ -1,0 +1,122 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'a',3) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'a',3)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'b',2) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'b',2)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'z',5) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'z',5)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'a',-3) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'a',-3)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'b',-2) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'b',-2)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING_INDEX(CTEXT,'z',-5) from datatypetestm ;
+cidx	CTEXT	SUBSTRING_INDEX(CTEXT,'z',-5)
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'a',3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'a',3)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'b',2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'b',2)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'z',5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'z',5)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'a',-3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'a',-3)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'b',-2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'b',-2)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING_INDEX(CTINYTEXT,'z',-5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING_INDEX(CTINYTEXT,'z',-5)
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'a',3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'a',3)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'b',2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'b',2)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'z',5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'z',5)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'a',-3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'a',-3)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'b',-2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'b',-2)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING_INDEX(CMEDIUMTEXT,'z',-5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING_INDEX(CMEDIUMTEXT,'z',-5)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'a',3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'a',3)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'b',2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'b',2)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'z',5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'z',5)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'a',-3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'a',-3)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'b',-2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'b',-2)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING_INDEX(CLONGTEXT,'z',-5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING_INDEX(CLONGTEXT,'z',-5)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'a',3) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'b',2) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'z',5) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'a',-3) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'b',-2) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING_INDEX(CTEXT,'z',-5) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'a',3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'b',2) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'z',5) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'a',-3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'b',-2) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING_INDEX(CTINYTEXT,'z',-5) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'a',3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'b',2) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'z',5) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'a',-3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'b',-2) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING_INDEX(CMEDIUMTEXT,'z',-5) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'a',3) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'b',2) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'z',5) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'a',-3) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'b',-2) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING_INDEX(CLONGTEXT,'z',-5) <> 0 ;
+cidx	CLONGTEXT

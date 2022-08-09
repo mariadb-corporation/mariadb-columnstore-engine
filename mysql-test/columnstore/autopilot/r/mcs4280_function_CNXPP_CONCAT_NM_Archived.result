@@ -1,0 +1,361 @@
+USE autopilot;
+select cidx, CBIGINT, CONCAT(CBIGINT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CBIGINT	CONCAT(CBIGINT,CCHAR3,CCHAR7,'ALOHA')
+1	-72036854775806	-72036854775806aaaaaaaaaaALOHA
+select cidx, CBIGINT, CONCAT(CBIGINT,CCHAR3) from datatypetestm order by cidx;
+cidx	CBIGINT	CONCAT(CBIGINT,CCHAR3)
+1	-72036854775806	-72036854775806aaa
+select cidx, CBIGINT, CONCAT(CBIGINT,CCHAR7) from datatypetestm order by cidx;
+cidx	CBIGINT	CONCAT(CBIGINT,CCHAR7)
+1	-72036854775806	-72036854775806aaaaaaa
+select cidx, CBIGINT, CONCAT(CBIGINT,'ALOHA') from datatypetestm order by cidx;
+cidx	CBIGINT	CONCAT(CBIGINT,'ALOHA')
+1	-72036854775806	-72036854775806ALOHA
+select cidx, CDECIMAL1, CONCAT(CDECIMAL1,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL1	CONCAT(CDECIMAL1,CCHAR3,CCHAR7,'ALOHA')
+1	-9	-9aaaaaaaaaaALOHA
+select cidx, CDECIMAL1, CONCAT(CDECIMAL1,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL1	CONCAT(CDECIMAL1,CCHAR3)
+1	-9	-9aaa
+select cidx, CDECIMAL1, CONCAT(CDECIMAL1,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL1	CONCAT(CDECIMAL1,CCHAR7)
+1	-9	-9aaaaaaa
+select cidx, CDECIMAL1, CONCAT(CDECIMAL1,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL1	CONCAT(CDECIMAL1,'ALOHA')
+1	-9	-9ALOHA
+select cidx, CDECIMAL4, CONCAT(CDECIMAL4,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL4	CONCAT(CDECIMAL4,CCHAR3,CCHAR7,'ALOHA')
+1	-999	-999aaaaaaaaaaALOHA
+select cidx, CDECIMAL4, CONCAT(CDECIMAL4,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL4	CONCAT(CDECIMAL4,CCHAR3)
+1	-999	-999aaa
+select cidx, CDECIMAL4, CONCAT(CDECIMAL4,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL4	CONCAT(CDECIMAL4,CCHAR7)
+1	-999	-999aaaaaaa
+select cidx, CDECIMAL4, CONCAT(CDECIMAL4,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL4	CONCAT(CDECIMAL4,'ALOHA')
+1	-999	-999ALOHA
+select cidx, CDECIMAL4_2, CONCAT(CDECIMAL4_2,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CONCAT(CDECIMAL4_2,CCHAR3,CCHAR7,'ALOHA')
+1	-9.99	-9.99aaaaaaaaaaALOHA
+select cidx, CDECIMAL4_2, CONCAT(CDECIMAL4_2,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CONCAT(CDECIMAL4_2,CCHAR3)
+1	-9.99	-9.99aaa
+select cidx, CDECIMAL4_2, CONCAT(CDECIMAL4_2,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CONCAT(CDECIMAL4_2,CCHAR7)
+1	-9.99	-9.99aaaaaaa
+select cidx, CDECIMAL4_2, CONCAT(CDECIMAL4_2,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	CONCAT(CDECIMAL4_2,'ALOHA')
+1	-9.99	-9.99ALOHA
+select cidx, CDECIMAL5, CONCAT(CDECIMAL5,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL5	CONCAT(CDECIMAL5,CCHAR3,CCHAR7,'ALOHA')
+1	-999	-999aaaaaaaaaaALOHA
+select cidx, CDECIMAL5, CONCAT(CDECIMAL5,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL5	CONCAT(CDECIMAL5,CCHAR3)
+1	-999	-999aaa
+select cidx, CDECIMAL5, CONCAT(CDECIMAL5,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL5	CONCAT(CDECIMAL5,CCHAR7)
+1	-999	-999aaaaaaa
+select cidx, CDECIMAL5, CONCAT(CDECIMAL5,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL5	CONCAT(CDECIMAL5,'ALOHA')
+1	-999	-999ALOHA
+select cidx, CDECIMAL9, CONCAT(CDECIMAL9,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL9	CONCAT(CDECIMAL9,CCHAR3,CCHAR7,'ALOHA')
+1	-999999	-999999aaaaaaaaaaALOHA
+select cidx, CDECIMAL9, CONCAT(CDECIMAL9,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL9	CONCAT(CDECIMAL9,CCHAR3)
+1	-999999	-999999aaa
+select cidx, CDECIMAL9, CONCAT(CDECIMAL9,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL9	CONCAT(CDECIMAL9,CCHAR7)
+1	-999999	-999999aaaaaaa
+select cidx, CDECIMAL9, CONCAT(CDECIMAL9,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL9	CONCAT(CDECIMAL9,'ALOHA')
+1	-999999	-999999ALOHA
+select cidx, CDECIMAL9_2, CONCAT(CDECIMAL9_2,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CONCAT(CDECIMAL9_2,CCHAR3,CCHAR7,'ALOHA')
+1	-9999.99	-9999.99aaaaaaaaaaALOHA
+select cidx, CDECIMAL9_2, CONCAT(CDECIMAL9_2,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CONCAT(CDECIMAL9_2,CCHAR3)
+1	-9999.99	-9999.99aaa
+select cidx, CDECIMAL9_2, CONCAT(CDECIMAL9_2,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CONCAT(CDECIMAL9_2,CCHAR7)
+1	-9999.99	-9999.99aaaaaaa
+select cidx, CDECIMAL9_2, CONCAT(CDECIMAL9_2,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	CONCAT(CDECIMAL9_2,'ALOHA')
+1	-9999.99	-9999.99ALOHA
+select cidx, CDECIMAL10, CONCAT(CDECIMAL10,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL10	CONCAT(CDECIMAL10,CCHAR3,CCHAR7,'ALOHA')
+1	-9999999	-9999999aaaaaaaaaaALOHA
+select cidx, CDECIMAL10, CONCAT(CDECIMAL10,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL10	CONCAT(CDECIMAL10,CCHAR3)
+1	-9999999	-9999999aaa
+select cidx, CDECIMAL10, CONCAT(CDECIMAL10,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL10	CONCAT(CDECIMAL10,CCHAR7)
+1	-9999999	-9999999aaaaaaa
+select cidx, CDECIMAL10, CONCAT(CDECIMAL10,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL10	CONCAT(CDECIMAL10,'ALOHA')
+1	-9999999	-9999999ALOHA
+select cidx, CDECIMAL18, CONCAT(CDECIMAL18,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL18	CONCAT(CDECIMAL18,CCHAR3,CCHAR7,'ALOHA')
+1	-9999999999999	-9999999999999aaaaaaaaaaALOHA
+select cidx, CDECIMAL18, CONCAT(CDECIMAL18,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL18	CONCAT(CDECIMAL18,CCHAR3)
+1	-9999999999999	-9999999999999aaa
+select cidx, CDECIMAL18, CONCAT(CDECIMAL18,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL18	CONCAT(CDECIMAL18,CCHAR7)
+1	-9999999999999	-9999999999999aaaaaaa
+select cidx, CDECIMAL18, CONCAT(CDECIMAL18,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL18	CONCAT(CDECIMAL18,'ALOHA')
+1	-9999999999999	-9999999999999ALOHA
+select cidx, CDECIMAL18_2, CONCAT(CDECIMAL18_2,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CONCAT(CDECIMAL18_2,CCHAR3,CCHAR7,'ALOHA')
+1	-99999999999.99	-99999999999.99aaaaaaaaaaALOHA
+select cidx, CDECIMAL18_2, CONCAT(CDECIMAL18_2,CCHAR3) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CONCAT(CDECIMAL18_2,CCHAR3)
+1	-99999999999.99	-99999999999.99aaa
+select cidx, CDECIMAL18_2, CONCAT(CDECIMAL18_2,CCHAR7) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CONCAT(CDECIMAL18_2,CCHAR7)
+1	-99999999999.99	-99999999999.99aaaaaaa
+select cidx, CDECIMAL18_2, CONCAT(CDECIMAL18_2,'ALOHA') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	CONCAT(CDECIMAL18_2,'ALOHA')
+1	-99999999999.99	-99999999999.99ALOHA
+select cidx, CINTEGER, CONCAT(CINTEGER,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CINTEGER	CONCAT(CINTEGER,CCHAR3,CCHAR7,'ALOHA')
+1	-7483646	-7483646aaaaaaaaaaALOHA
+select cidx, CINTEGER, CONCAT(CINTEGER,CCHAR3) from datatypetestm order by cidx;
+cidx	CINTEGER	CONCAT(CINTEGER,CCHAR3)
+1	-7483646	-7483646aaa
+select cidx, CINTEGER, CONCAT(CINTEGER,CCHAR7) from datatypetestm order by cidx;
+cidx	CINTEGER	CONCAT(CINTEGER,CCHAR7)
+1	-7483646	-7483646aaaaaaa
+select cidx, CINTEGER, CONCAT(CINTEGER,'ALOHA') from datatypetestm order by cidx;
+cidx	CINTEGER	CONCAT(CINTEGER,'ALOHA')
+1	-7483646	-7483646ALOHA
+select cidx, CSMALLINT, CONCAT(CSMALLINT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CSMALLINT	CONCAT(CSMALLINT,CCHAR3,CCHAR7,'ALOHA')
+1	-766	-766aaaaaaaaaaALOHA
+select cidx, CSMALLINT, CONCAT(CSMALLINT,CCHAR3) from datatypetestm order by cidx;
+cidx	CSMALLINT	CONCAT(CSMALLINT,CCHAR3)
+1	-766	-766aaa
+select cidx, CSMALLINT, CONCAT(CSMALLINT,CCHAR7) from datatypetestm order by cidx;
+cidx	CSMALLINT	CONCAT(CSMALLINT,CCHAR7)
+1	-766	-766aaaaaaa
+select cidx, CSMALLINT, CONCAT(CSMALLINT,'ALOHA') from datatypetestm order by cidx;
+cidx	CSMALLINT	CONCAT(CSMALLINT,'ALOHA')
+1	-766	-766ALOHA
+select cidx, CTINYINT, CONCAT(CTINYINT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CTINYINT	CONCAT(CTINYINT,CCHAR3,CCHAR7,'ALOHA')
+1	-26	-26aaaaaaaaaaALOHA
+select cidx, CTINYINT, CONCAT(CTINYINT,CCHAR3) from datatypetestm order by cidx;
+cidx	CTINYINT	CONCAT(CTINYINT,CCHAR3)
+1	-26	-26aaa
+select cidx, CTINYINT, CONCAT(CTINYINT,CCHAR7) from datatypetestm order by cidx;
+cidx	CTINYINT	CONCAT(CTINYINT,CCHAR7)
+1	-26	-26aaaaaaa
+select cidx, CTINYINT, CONCAT(CTINYINT,'ALOHA') from datatypetestm order by cidx;
+cidx	CTINYINT	CONCAT(CTINYINT,'ALOHA')
+1	-26	-26ALOHA
+select cidx, CDOUBLE, CONCAT(CDOUBLE,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDOUBLE	CONCAT(CDOUBLE,CCHAR3,CCHAR7,'ALOHA')
+1	-1.797693231e108	-1.79769e108aaaaaaaaaaALOHA
+select cidx, CDOUBLE, CONCAT(CDOUBLE,CCHAR3) from datatypetestm order by cidx;
+cidx	CDOUBLE	CONCAT(CDOUBLE,CCHAR3)
+1	-1.797693231e108	-1.79769e108aaa
+select cidx, CDOUBLE, CONCAT(CDOUBLE,CCHAR7) from datatypetestm order by cidx;
+cidx	CDOUBLE	CONCAT(CDOUBLE,CCHAR7)
+1	-1.797693231e108	-1.79769e108aaaaaaa
+select cidx, CDOUBLE, CONCAT(CDOUBLE,'ALOHA') from datatypetestm order by cidx;
+cidx	CDOUBLE	CONCAT(CDOUBLE,'ALOHA')
+1	-1.797693231e108	-1.79769e108ALOHA
+select cidx, CFLOAT, CONCAT(CFLOAT,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CFLOAT	CONCAT(CFLOAT,CCHAR3,CCHAR7,'ALOHA')
+1	-3.40287e18	-3.40287e18aaaaaaaaaaALOHA
+select cidx, CFLOAT, CONCAT(CFLOAT,CCHAR3) from datatypetestm order by cidx;
+cidx	CFLOAT	CONCAT(CFLOAT,CCHAR3)
+1	-3.40287e18	-3.40287e18aaa
+select cidx, CFLOAT, CONCAT(CFLOAT,CCHAR7) from datatypetestm order by cidx;
+cidx	CFLOAT	CONCAT(CFLOAT,CCHAR7)
+1	-3.40287e18	-3.40287e18aaaaaaa
+select cidx, CFLOAT, CONCAT(CFLOAT,'ALOHA') from datatypetestm order by cidx;
+cidx	CFLOAT	CONCAT(CFLOAT,'ALOHA')
+1	-3.40287e18	-3.40287e18ALOHA
+select cidx, CBIGINT from datatypetestm order by CONCAT(CBIGINT,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CONCAT(CBIGINT,CCHAR3), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CONCAT(CBIGINT,CCHAR7), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by CONCAT(CBIGINT,'ALOHA'), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT(CDECIMAL1,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT(CDECIMAL1,CCHAR3), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT(CDECIMAL1,CCHAR7), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by CONCAT(CDECIMAL1,'ALOHA'), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT(CDECIMAL4,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT(CDECIMAL4,CCHAR3), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT(CDECIMAL4,CCHAR7), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by CONCAT(CDECIMAL4,'ALOHA'), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT(CDECIMAL4_2,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT(CDECIMAL4_2,CCHAR3), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT(CDECIMAL4_2,CCHAR7), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by CONCAT(CDECIMAL4_2,'ALOHA'), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT(CDECIMAL5,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT(CDECIMAL5,CCHAR3), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT(CDECIMAL5,CCHAR7), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by CONCAT(CDECIMAL5,'ALOHA'), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT(CDECIMAL9,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT(CDECIMAL9,CCHAR3), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT(CDECIMAL9,CCHAR7), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by CONCAT(CDECIMAL9,'ALOHA'), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT(CDECIMAL9_2,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT(CDECIMAL9_2,CCHAR3), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT(CDECIMAL9_2,CCHAR7), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by CONCAT(CDECIMAL9_2,'ALOHA'), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT(CDECIMAL10,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT(CDECIMAL10,CCHAR3), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT(CDECIMAL10,CCHAR7), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by CONCAT(CDECIMAL10,'ALOHA'), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT(CDECIMAL18,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT(CDECIMAL18,CCHAR3), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT(CDECIMAL18,CCHAR7), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by CONCAT(CDECIMAL18,'ALOHA'), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT(CDECIMAL18_2,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT(CDECIMAL18_2,CCHAR3), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT(CDECIMAL18_2,CCHAR7), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by CONCAT(CDECIMAL18_2,'ALOHA'), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by CONCAT(CINTEGER,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CONCAT(CINTEGER,CCHAR3), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CONCAT(CINTEGER,CCHAR7), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by CONCAT(CINTEGER,'ALOHA'), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by CONCAT(CSMALLINT,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CONCAT(CSMALLINT,CCHAR3), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CONCAT(CSMALLINT,CCHAR7), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by CONCAT(CSMALLINT,'ALOHA'), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by CONCAT(CTINYINT,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CONCAT(CTINYINT,CCHAR3), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CONCAT(CTINYINT,CCHAR7), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by CONCAT(CTINYINT,'ALOHA'), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by CONCAT(CDOUBLE,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CONCAT(CDOUBLE,CCHAR3), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CONCAT(CDOUBLE,CCHAR7), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by CONCAT(CDOUBLE,'ALOHA'), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by CONCAT(CFLOAT,CCHAR3,CCHAR7,'ALOHA'), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CONCAT(CFLOAT,CCHAR3), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CONCAT(CFLOAT,CCHAR7), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by CONCAT(CFLOAT,'ALOHA'), cidx;
+cidx	CFLOAT
+1	-3.40287e18

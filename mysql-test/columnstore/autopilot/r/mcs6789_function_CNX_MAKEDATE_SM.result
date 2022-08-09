@@ -1,0 +1,42 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MAKEDATE(2010, CTEXT) from datatypetestm ;
+cidx	CTEXT	MAKEDATE(2010, CTEXT)
+1	texttexttext	NULL
+select cidx, CTEXT, MAKEDATE(2011, CTEXT) from datatypetestm ;
+cidx	CTEXT	MAKEDATE(2011, CTEXT)
+1	texttexttext	NULL
+select cidx, CTINYTEXT, MAKEDATE(2010, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	MAKEDATE(2010, CTINYTEXT)
+1	tinytext	NULL
+select cidx, CTINYTEXT, MAKEDATE(2011, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	MAKEDATE(2011, CTINYTEXT)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, MAKEDATE(2010, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKEDATE(2010, CMEDIUMTEXT)
+1	mediumtestmediumtest	NULL
+select cidx, CMEDIUMTEXT, MAKEDATE(2011, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	MAKEDATE(2011, CMEDIUMTEXT)
+1	mediumtestmediumtest	NULL
+select cidx, CLONGTEXT, MAKEDATE(2010, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	MAKEDATE(2010, CLONGTEXT)
+1	longtextlongtextlongtext	NULL
+select cidx, CLONGTEXT, MAKEDATE(2011, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	MAKEDATE(2011, CLONGTEXT)
+1	longtextlongtextlongtext	NULL
+select cidx, CTEXT from datatypetestm where MAKEDATE(2010, CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where MAKEDATE(2011, CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where MAKEDATE(2010, CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where MAKEDATE(2011, CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where MAKEDATE(2010, CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where MAKEDATE(2011, CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where MAKEDATE(2010, CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where MAKEDATE(2011, CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT

@@ -1,0 +1,28 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, REVERSE(CTEXT) from datatypetestm ;
+cidx	CTEXT	REVERSE(CTEXT)
+1	texttexttext	txettxettxet
+select cidx, CTINYTEXT, REVERSE(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	REVERSE(CTINYTEXT)
+1	tinytext	txetynit
+select cidx, CMEDIUMTEXT, REVERSE(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	REVERSE(CMEDIUMTEXT)
+1	mediumtestmediumtest	tsetmuidemtsetmuidem
+select cidx, CLONGTEXT, REVERSE(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	REVERSE(CLONGTEXT)
+1	longtextlongtextlongtext	txetgnoltxetgnoltxetgnol
+select cidx, REVERSE('THIS IS A TEST') from datatypetestm ;
+cidx	REVERSE('THIS IS A TEST')
+1	TSET A SI SIHT
+select cidx, REVERSE('Hello, World') from datatypetestm ;
+cidx	REVERSE('Hello, World')
+1	dlroW ,olleH
+select cidx, CTEXT from datatypetestm where REVERSE(CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where REVERSE(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where REVERSE(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where REVERSE(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT

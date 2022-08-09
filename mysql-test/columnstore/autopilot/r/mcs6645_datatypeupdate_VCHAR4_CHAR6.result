@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CCHAR6 = CVCHAR4;
+SELECT CCHAR6 FROM datatypeupdate;
+CCHAR6
+aaaa
+ROLLBACK;

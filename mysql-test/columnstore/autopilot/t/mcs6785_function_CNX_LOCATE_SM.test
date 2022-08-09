@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LOCATE('aaa',CTEXT) from datatypetestm ;
+select cidx, CTEXT, LOCATE('zz',CTEXT) from datatypetestm ;
+select cidx, CTEXT, LOCATE('aaaaaaaaaaaa',CTEXT) from datatypetestm ;
+select cidx, CTEXT, LOCATE('zzzzzzzzzzzzzz',CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, LOCATE('aaa',CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, LOCATE('zz',CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, LOCATE('aaaaaaaaaaaa',CTINYTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, LOCATE('zzzzzzzzzzzzzz',CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LOCATE('aaa',CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LOCATE('zz',CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LOCATE('aaaaaaaaaaaa',CMEDIUMTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LOCATE('zzzzzzzzzzzzzz',CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, LOCATE('aaa',CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, LOCATE('zz',CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, LOCATE('aaaaaaaaaaaa',CLONGTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, LOCATE('zzzzzzzzzzzzzz',CLONGTEXT) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where LOCATE('aaa',CTEXT) <> 0 ;
+select cidx, CTEXT from datatypetestm where LOCATE('zz',CTEXT) <> 0 ;
+select cidx, CTEXT from datatypetestm where LOCATE('aaaaaaaaaaaa',CTEXT) <> 0 ;
+select cidx, CTEXT from datatypetestm where LOCATE('zzzzzzzzzzzzzz',CTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LOCATE('aaa',CTINYTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LOCATE('zz',CTINYTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LOCATE('aaaaaaaaaaaa',CTINYTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LOCATE('zzzzzzzzzzzzzz',CTINYTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LOCATE('aaa',CMEDIUMTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LOCATE('zz',CMEDIUMTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LOCATE('aaaaaaaaaaaa',CMEDIUMTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LOCATE('zzzzzzzzzzzzzz',CMEDIUMTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LOCATE('aaa',CLONGTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LOCATE('zz',CLONGTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LOCATE('aaaaaaaaaaaa',CLONGTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LOCATE('zzzzzzzzzzzzzz',CLONGTEXT) <> 0 ;

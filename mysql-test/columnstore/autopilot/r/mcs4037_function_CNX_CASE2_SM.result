@@ -1,0 +1,286 @@
+USE autopilot;
+select cidx, CCHAR1, CASE WHEN CCHAR1='aaaa' THEN 'Y' WHEN CCHAR1='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR1	CaseCol
+1	a	NULL
+select cidx, CCHAR1, CASE WHEN CCHAR1='a' THEN 'Y' WHEN CCHAR1='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR1	CaseCol
+1	a	Y
+select cidx, CCHAR1, CASE WHEN CCHAR1='aaaaaaaaaa' THEN 'Y' WHEN CCHAR1='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR1	CaseCol
+1	a	NULL
+select cidx, CCHAR2, CASE WHEN CCHAR2='aaaa' THEN 'Y' WHEN CCHAR2='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+select cidx, CCHAR2, CASE WHEN CCHAR2='a' THEN 'Y' WHEN CCHAR2='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+select cidx, CCHAR2, CASE WHEN CCHAR2='aaaaaaaaaa' THEN 'Y' WHEN CCHAR2='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+select cidx, CCHAR3, CASE WHEN CCHAR3='aaaa' THEN 'Y' WHEN CCHAR3='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CCHAR3, CASE WHEN CCHAR3='a' THEN 'Y' WHEN CCHAR3='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CCHAR3, CASE WHEN CCHAR3='aaaaaaaaaa' THEN 'Y' WHEN CCHAR3='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CCHAR4, CASE WHEN CCHAR4='aaaa' THEN 'Y' WHEN CCHAR4='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR4	CaseCol
+1	aaaa	Y
+select cidx, CCHAR4, CASE WHEN CCHAR4='a' THEN 'Y' WHEN CCHAR4='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR4	CaseCol
+1	aaaa	NULL
+select cidx, CCHAR4, CASE WHEN CCHAR4='aaaaaaaaaa' THEN 'Y' WHEN CCHAR4='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR4	CaseCol
+1	aaaa	NULL
+select cidx, CCHAR5, CASE WHEN CCHAR5='aaaa' THEN 'Y' WHEN CCHAR5='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CCHAR5, CASE WHEN CCHAR5='a' THEN 'Y' WHEN CCHAR5='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CCHAR5, CASE WHEN CCHAR5='aaaaaaaaaa' THEN 'Y' WHEN CCHAR5='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CCHAR6, CASE WHEN CCHAR6='aaaa' THEN 'Y' WHEN CCHAR6='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CCHAR6, CASE WHEN CCHAR6='a' THEN 'Y' WHEN CCHAR6='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CCHAR6, CASE WHEN CCHAR6='aaaaaaaaaa' THEN 'Y' WHEN CCHAR6='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CCHAR7, CASE WHEN CCHAR7='aaaa' THEN 'Y' WHEN CCHAR7='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CCHAR7, CASE WHEN CCHAR7='a' THEN 'Y' WHEN CCHAR7='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CCHAR7, CASE WHEN CCHAR7='aaaaaaaaaa' THEN 'Y' WHEN CCHAR7='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CCHAR8, CASE WHEN CCHAR8='aaaa' THEN 'Y' WHEN CCHAR8='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, CASE WHEN CCHAR8='a' THEN 'Y' WHEN CCHAR8='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CCHAR8, CASE WHEN CCHAR8='aaaaaaaaaa' THEN 'Y' WHEN CCHAR8='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CCHAR9, CASE WHEN CCHAR9='aaaa' THEN 'Y' WHEN CCHAR9='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+select cidx, CCHAR9, CASE WHEN CCHAR9='a' THEN 'Y' WHEN CCHAR9='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+select cidx, CCHAR9, CASE WHEN CCHAR9='aaaaaaaaaa' THEN 'Y' WHEN CCHAR9='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+select cidx, CCHAR255, CASE WHEN CCHAR255='aaaa' THEN 'Y' WHEN CCHAR255='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR255, CASE WHEN CCHAR255='a' THEN 'Y' WHEN CCHAR255='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR255, CASE WHEN CCHAR255='aaaaaaaaaa' THEN 'Y' WHEN CCHAR255='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	Y
+select cidx, CVCHAR1, CASE WHEN CVCHAR1='aaaa' THEN 'Y' WHEN CVCHAR1='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR1	CaseCol
+1	a	NULL
+select cidx, CVCHAR1, CASE WHEN CVCHAR1='a' THEN 'Y' WHEN CVCHAR1='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR1	CaseCol
+1	a	Y
+select cidx, CVCHAR1, CASE WHEN CVCHAR1='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR1='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR1	CaseCol
+1	a	NULL
+select cidx, CVCHAR2, CASE WHEN CVCHAR2='aaaa' THEN 'Y' WHEN CVCHAR2='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+select cidx, CVCHAR2, CASE WHEN CVCHAR2='a' THEN 'Y' WHEN CVCHAR2='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+select cidx, CVCHAR2, CASE WHEN CVCHAR2='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR2='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+select cidx, CVCHAR3, CASE WHEN CVCHAR3='aaaa' THEN 'Y' WHEN CVCHAR3='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CVCHAR3, CASE WHEN CVCHAR3='a' THEN 'Y' WHEN CVCHAR3='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CVCHAR3, CASE WHEN CVCHAR3='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR3='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+select cidx, CVCHAR4, CASE WHEN CVCHAR4='aaaa' THEN 'Y' WHEN CVCHAR4='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR4	CaseCol
+1	aaaa	Y
+select cidx, CVCHAR4, CASE WHEN CVCHAR4='a' THEN 'Y' WHEN CVCHAR4='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR4	CaseCol
+1	aaaa	NULL
+select cidx, CVCHAR4, CASE WHEN CVCHAR4='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR4='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR4	CaseCol
+1	aaaa	NULL
+select cidx, CVCHAR5, CASE WHEN CVCHAR5='aaaa' THEN 'Y' WHEN CVCHAR5='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CVCHAR5, CASE WHEN CVCHAR5='a' THEN 'Y' WHEN CVCHAR5='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CVCHAR5, CASE WHEN CVCHAR5='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR5='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+select cidx, CVCHAR6, CASE WHEN CVCHAR6='aaaa' THEN 'Y' WHEN CVCHAR6='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CVCHAR6, CASE WHEN CVCHAR6='a' THEN 'Y' WHEN CVCHAR6='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CVCHAR6, CASE WHEN CVCHAR6='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR6='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+select cidx, CVCHAR7, CASE WHEN CVCHAR7='aaaa' THEN 'Y' WHEN CVCHAR7='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, CASE WHEN CVCHAR7='a' THEN 'Y' WHEN CVCHAR7='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CVCHAR7, CASE WHEN CVCHAR7='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR7='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+select cidx, CVCHAR8, CASE WHEN CVCHAR8='aaaa' THEN 'Y' WHEN CVCHAR8='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, CASE WHEN CVCHAR8='a' THEN 'Y' WHEN CVCHAR8='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CVCHAR8, CASE WHEN CVCHAR8='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR8='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+select cidx, CVCHAR255, CASE WHEN CVCHAR255='aaaa' THEN 'Y' WHEN CVCHAR255='aaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR255, CASE WHEN CVCHAR255='a' THEN 'Y' WHEN CVCHAR255='a' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR255, CASE WHEN CVCHAR255='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR255='aaaaaaaaaa' THEN 'Y' ELSE NULL END CaseCol from datatypetestm order by cidx;
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	Y
+select cidx, CCHAR1 from datatypetestm where CASE WHEN CCHAR1='aaaa' THEN 'Y' WHEN CCHAR1='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where CASE WHEN CCHAR1='a' THEN 'Y' WHEN CCHAR1='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where CASE WHEN CCHAR1='aaaaaaaaaa' THEN 'Y' WHEN CCHAR1='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where CASE WHEN CCHAR2='aaaa' THEN 'Y' WHEN CCHAR2='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where CASE WHEN CCHAR2='a' THEN 'Y' WHEN CCHAR2='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where CASE WHEN CCHAR2='aaaaaaaaaa' THEN 'Y' WHEN CCHAR2='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where CASE WHEN CCHAR3='aaaa' THEN 'Y' WHEN CCHAR3='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where CASE WHEN CCHAR3='a' THEN 'Y' WHEN CCHAR3='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where CASE WHEN CCHAR3='aaaaaaaaaa' THEN 'Y' WHEN CCHAR3='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where CASE WHEN CCHAR4='aaaa' THEN 'Y' WHEN CCHAR4='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where CASE WHEN CCHAR4='a' THEN 'Y' WHEN CCHAR4='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where CASE WHEN CCHAR4='aaaaaaaaaa' THEN 'Y' WHEN CCHAR4='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where CASE WHEN CCHAR5='aaaa' THEN 'Y' WHEN CCHAR5='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where CASE WHEN CCHAR5='a' THEN 'Y' WHEN CCHAR5='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where CASE WHEN CCHAR5='aaaaaaaaaa' THEN 'Y' WHEN CCHAR5='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where CASE WHEN CCHAR6='aaaa' THEN 'Y' WHEN CCHAR6='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where CASE WHEN CCHAR6='a' THEN 'Y' WHEN CCHAR6='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where CASE WHEN CCHAR6='aaaaaaaaaa' THEN 'Y' WHEN CCHAR6='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where CASE WHEN CCHAR7='aaaa' THEN 'Y' WHEN CCHAR7='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where CASE WHEN CCHAR7='a' THEN 'Y' WHEN CCHAR7='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where CASE WHEN CCHAR7='aaaaaaaaaa' THEN 'Y' WHEN CCHAR7='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where CASE WHEN CCHAR8='aaaa' THEN 'Y' WHEN CCHAR8='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where CASE WHEN CCHAR8='a' THEN 'Y' WHEN CCHAR8='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where CASE WHEN CCHAR8='aaaaaaaaaa' THEN 'Y' WHEN CCHAR8='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where CASE WHEN CCHAR9='aaaa' THEN 'Y' WHEN CCHAR9='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where CASE WHEN CCHAR9='a' THEN 'Y' WHEN CCHAR9='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where CASE WHEN CCHAR9='aaaaaaaaaa' THEN 'Y' WHEN CCHAR9='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where CASE WHEN CCHAR255='aaaa' THEN 'Y' WHEN CCHAR255='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where CASE WHEN CCHAR255='a' THEN 'Y' WHEN CCHAR255='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where CASE WHEN CCHAR255='aaaaaaaaaa' THEN 'Y' WHEN CCHAR255='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where CASE WHEN CVCHAR1='aaaa' THEN 'Y' WHEN CVCHAR1='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where CASE WHEN CVCHAR1='a' THEN 'Y' WHEN CVCHAR1='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where CASE WHEN CVCHAR1='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR1='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where CASE WHEN CVCHAR2='aaaa' THEN 'Y' WHEN CVCHAR2='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where CASE WHEN CVCHAR2='a' THEN 'Y' WHEN CVCHAR2='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where CASE WHEN CVCHAR2='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR2='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where CASE WHEN CVCHAR3='aaaa' THEN 'Y' WHEN CVCHAR3='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where CASE WHEN CVCHAR3='a' THEN 'Y' WHEN CVCHAR3='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where CASE WHEN CVCHAR3='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR3='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where CASE WHEN CVCHAR4='aaaa' THEN 'Y' WHEN CVCHAR4='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where CASE WHEN CVCHAR4='a' THEN 'Y' WHEN CVCHAR4='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where CASE WHEN CVCHAR4='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR4='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where CASE WHEN CVCHAR5='aaaa' THEN 'Y' WHEN CVCHAR5='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where CASE WHEN CVCHAR5='a' THEN 'Y' WHEN CVCHAR5='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where CASE WHEN CVCHAR5='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR5='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where CASE WHEN CVCHAR6='aaaa' THEN 'Y' WHEN CVCHAR6='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where CASE WHEN CVCHAR6='a' THEN 'Y' WHEN CVCHAR6='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where CASE WHEN CVCHAR6='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR6='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where CASE WHEN CVCHAR7='aaaa' THEN 'Y' WHEN CVCHAR7='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where CASE WHEN CVCHAR7='a' THEN 'Y' WHEN CVCHAR7='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where CASE WHEN CVCHAR7='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR7='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where CASE WHEN CVCHAR8='aaaa' THEN 'Y' WHEN CVCHAR8='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where CASE WHEN CVCHAR8='a' THEN 'Y' WHEN CVCHAR8='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where CASE WHEN CVCHAR8='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR8='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where CASE WHEN CVCHAR255='aaaa' THEN 'Y' WHEN CVCHAR255='aaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where CASE WHEN CVCHAR255='a' THEN 'Y' WHEN CVCHAR255='a' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where CASE WHEN CVCHAR255='aaaaaaaaaa' THEN 'Y' WHEN CVCHAR255='aaaaaaaaaa' THEN 'Y' ELSE NULL END <> 0 order by cidx;
+cidx	CVCHAR255

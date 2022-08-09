@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 > dtt2.CLONGTEXT ;
+cidx	CDECIMAL1	CLONGTEXT
+6	5	longtextlongtextlongtext
+7	6	longtextlongtextlongtext
+8	7	longtextlongtextlongtext
+9	8	longtextlongtextlongtext
+10	9	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 >= dtt2.CLONGTEXT ;
+cidx	CDECIMAL1	CLONGTEXT
+6	5	longtextlongtextlongtext
+7	6	longtextlongtextlongtext
+8	7	longtextlongtextlongtext
+9	8	longtextlongtextlongtext
+10	9	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <> dtt2.CLONGTEXT ;
+cidx	CDECIMAL1	CLONGTEXT
+1	-9	longtextlongtextlongtext
+2	-8	longtextlongtextlongtext
+3	-7	longtextlongtextlongtext
+4	-6	longtextlongtextlongtext
+5	-5	longtextlongtextlongtext
+6	5	longtextlongtextlongtext
+7	6	longtextlongtextlongtext
+8	7	longtextlongtextlongtext
+9	8	longtextlongtextlongtext
+10	9	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 < dtt2.CLONGTEXT ;
+cidx	CDECIMAL1	CLONGTEXT
+1	-9	longtextlongtextlongtext
+2	-8	longtextlongtextlongtext
+3	-7	longtextlongtextlongtext
+4	-6	longtextlongtextlongtext
+5	-5	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CDECIMAL1, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL1 <= dtt2.CLONGTEXT ;
+cidx	CDECIMAL1	CLONGTEXT
+1	-9	longtextlongtextlongtext
+2	-8	longtextlongtextlongtext
+3	-7	longtextlongtextlongtext
+4	-6	longtextlongtextlongtext
+5	-5	longtextlongtextlongtext

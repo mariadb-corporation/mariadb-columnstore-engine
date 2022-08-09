@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CONVERT(concat('HELLO',cchar1),char(1)) from datatypetestm order by cidx;
+cidx	CONVERT(concat('HELLO',cchar1),char(1))
+1	H
+select cidx, CONVERT(concat('HELLO',cchar1),CHAR(8)) from datatypetestm order by cidx;
+cidx	CONVERT(concat('HELLO',cchar1),CHAR(8))
+1	HELLOa
+select cidx, CONVERT(concat('HELLO',cchar1),CHAR(9)) from datatypetestm order by cidx;
+cidx	CONVERT(concat('HELLO',cchar1),CHAR(9))
+1	HELLOa
+select cidx, CONVERT(3.14*cidx,char(1)) from datatypetestm order by cidx;
+cidx	CONVERT(3.14*cidx,char(1))
+1	3
+select cidx, CONVERT(3.14*cidx,CHAR(8)) from datatypetestm order by cidx;
+cidx	CONVERT(3.14*cidx,CHAR(8))
+1	3.14
+select cidx, CONVERT(3.14*cidx,CHAR(9)) from datatypetestm order by cidx;
+cidx	CONVERT(3.14*cidx,CHAR(9))
+1	3.14

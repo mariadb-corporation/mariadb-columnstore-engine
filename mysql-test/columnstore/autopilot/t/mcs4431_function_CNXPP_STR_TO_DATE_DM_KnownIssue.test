@@ -1,0 +1,115 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATE, STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')) from datatypetestm order by cidx;
+select cidx, CDATETIME, STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')) from datatypetestm order by cidx;
+--replace_column 3 REPLACEDVALUE
+select cidx, CTIME, STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')), cidx;
+select cidx, CDATE from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATE,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')), cidx;
+select cidx, CDATETIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CDATETIME,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'USA')), GET_FORMAT(DATE,'USA')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'JIS')), GET_FORMAT(DATE,'JIS')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'ISO')), GET_FORMAT(DATE,'ISO')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'EUR')), GET_FORMAT(DATE,'EUR')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATE,'INTERNAL')), GET_FORMAT(DATE,'INTERNAL')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'USA')), GET_FORMAT(DATETIME,'USA')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'JIS')), GET_FORMAT(DATETIME,'JIS')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'ISO')), GET_FORMAT(DATETIME,'ISO')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'EUR')), GET_FORMAT(DATETIME,'EUR')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(DATETIME,'INTERNAL')), GET_FORMAT(DATETIME,'INTERNAL')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'USA')), GET_FORMAT(TIME,'USA')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'JIS')), GET_FORMAT(TIME,'JIS')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'ISO')), GET_FORMAT(TIME,'ISO')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'EUR')), GET_FORMAT(TIME,'EUR')), cidx;
+#select cidx, CTIME from datatypetestm order by STR_TO_DATE(DATE_FORMAT(CTIME,GET_FORMAT(TIME,'INTERNAL')), GET_FORMAT(TIME,'INTERNAL')), cidx;

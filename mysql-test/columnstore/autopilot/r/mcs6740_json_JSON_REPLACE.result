@@ -1,0 +1,16 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '{ "A": 1, "B": [2, 3]}';
+SELECT @json;
+@json
+{ "A": 1, "B": [2, 3]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_REPLACE(@json, '$.B[1]', 4);
+JSON_REPLACE(@json, '$.B[1]', 4)
+{"A": 1, "B": [2, 4]}
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{ "A": 1, "B": [2, 3]}	{ "A": 1, "B": [2, 3]}
+SELECT cVarchar, JSON_REPLACE(cVarchar, '$.B[1]', 4), cText, JSON_REPLACE(cText, '$.B[1]', 4) from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_replace' isn't supported.
+TRUNCATE TABLE jsontest;

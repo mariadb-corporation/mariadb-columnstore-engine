@@ -1,0 +1,27 @@
+USE autopilot;
+select cidx, CDATE, MICROSECOND(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	MICROSECOND(CDATE)
+1	1997-01-01	0
+select cidx, CDATETIME, MICROSECOND(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	MICROSECOND(CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CTIME, MICROSECOND(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	MICROSECOND(CTIME)
+1	13:00:00	0
+select cidx, MICROSECOND('2011-05-01') from datatypetestm order by cidx;
+cidx	MICROSECOND('2011-05-01')
+1	0
+Warnings:
+Warning	1292	Truncated incorrect time value: '2011-05-01'
+select cidx, MICROSECOND('2011-05-01 13:58:22.123456') from datatypetestm order by cidx;
+cidx	MICROSECOND('2011-05-01 13:58:22.123456')
+1	123456
+select cidx, CDATE from datatypetestm order by MICROSECOND(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by MICROSECOND(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by MICROSECOND(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

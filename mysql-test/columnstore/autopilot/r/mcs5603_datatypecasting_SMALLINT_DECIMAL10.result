@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT > dtt2.CDECIMAL10 ;
+cidx	CSMALLINT	CDECIMAL10
+1	-766	-9999999
+2	-765	-9999998
+3	-764	-9999997
+4	-763	-9999996
+5	-762	-9999995
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT >= dtt2.CDECIMAL10 ;
+cidx	CSMALLINT	CDECIMAL10
+1	-766	-9999999
+2	-765	-9999998
+3	-764	-9999997
+4	-763	-9999996
+5	-762	-9999995
+11	0	0
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <> dtt2.CDECIMAL10 ;
+cidx	CSMALLINT	CDECIMAL10
+1	-766	-9999999
+2	-765	-9999998
+3	-764	-9999997
+4	-763	-9999996
+5	-762	-9999995
+6	763	9999995
+7	764	9999996
+8	765	9999997
+9	766	9999998
+10	767	9999999
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT < dtt2.CDECIMAL10 ;
+cidx	CSMALLINT	CDECIMAL10
+6	763	9999995
+7	764	9999996
+8	765	9999997
+9	766	9999998
+10	767	9999999
+select dtt1.cidx, dtt1.CSMALLINT, dtt2.CDECIMAL10 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CSMALLINT <= dtt2.CDECIMAL10 ;
+cidx	CSMALLINT	CDECIMAL10
+6	763	9999995
+7	764	9999996
+8	765	9999997
+9	766	9999998
+10	767	9999999
+11	0	0

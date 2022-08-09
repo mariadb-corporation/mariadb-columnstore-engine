@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT > dtt2.CDATE ;
+cidx	CTINYTEXT	CDATE
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT >= dtt2.CDATE ;
+cidx	CTINYTEXT	CDATE
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <> dtt2.CDATE ;
+cidx	CTINYTEXT	CDATE
+1	tinytext	1997-01-01
+2	tinytext	1997-01-01
+3	tinytext	1997-01-02
+4	tinytext	1997-01-03
+5	tinytext	1997-01-04
+6	tinytext	2009-12-28
+7	tinytext	2009-12-29
+8	tinytext	2009-12-30
+9	tinytext	2009-12-31
+10	tinytext	2009-12-31
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT < dtt2.CDATE ;
+cidx	CTINYTEXT	CDATE
+1	tinytext	1997-01-01
+2	tinytext	1997-01-01
+3	tinytext	1997-01-02
+4	tinytext	1997-01-03
+5	tinytext	1997-01-04
+6	tinytext	2009-12-28
+7	tinytext	2009-12-29
+8	tinytext	2009-12-30
+9	tinytext	2009-12-31
+10	tinytext	2009-12-31
+select dtt1.cidx, dtt1.CTINYTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTINYTEXT <= dtt2.CDATE ;
+cidx	CTINYTEXT	CDATE
+1	tinytext	1997-01-01
+2	tinytext	1997-01-01
+3	tinytext	1997-01-02
+4	tinytext	1997-01-03
+5	tinytext	1997-01-04
+6	tinytext	2009-12-28
+7	tinytext	2009-12-29
+8	tinytext	2009-12-30
+9	tinytext	2009-12-31
+10	tinytext	2009-12-31

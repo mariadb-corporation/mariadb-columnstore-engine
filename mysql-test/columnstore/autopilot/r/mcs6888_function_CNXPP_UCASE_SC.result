@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, UCASE(CTEXT) from datatypetestm ;
+cidx	CTEXT	UCASE(CTEXT)
+1	texttexttext	TEXTTEXTTEXT
+select cidx, CTINYTEXT, UCASE(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	UCASE(CTINYTEXT)
+1	tinytext	TINYTEXT
+select cidx, CMEDIUMTEXT, UCASE(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	UCASE(CMEDIUMTEXT)
+1	mediumtestmediumtest	MEDIUMTESTMEDIUMTEST
+select cidx, CLONGTEXT, UCASE(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	UCASE(CLONGTEXT)
+1	longtextlongtextlongtext	LONGTEXTLONGTEXTLONGTEXT
+select cidx, CTEXT from datatypetestm order by UCASE(CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by UCASE(CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by UCASE(CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by UCASE(CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

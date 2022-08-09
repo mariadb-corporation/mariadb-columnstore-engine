@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMINT, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMINT > dtt2.CCHAR8 ;
+cidx	CMEDIUMINT	CCHAR8
+1	1000	aaaaaaaa
+2	1000	h
+3	1000	hh
+4	1000	hhh
+5	1000	hhhh
+6	1000	sssssss
+7	1000	ssssssss
+8	1000	ssssssss
+9	1000	ssssssss
+10	1000	zzzzzzzz
+select dtt1.cidx, dtt1.CMEDIUMINT, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMINT >= dtt2.CCHAR8 ;
+cidx	CMEDIUMINT	CCHAR8
+1	1000	aaaaaaaa
+2	1000	h
+3	1000	hh
+4	1000	hhh
+5	1000	hhhh
+6	1000	sssssss
+7	1000	ssssssss
+8	1000	ssssssss
+9	1000	ssssssss
+10	1000	zzzzzzzz
+select dtt1.cidx, dtt1.CMEDIUMINT, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMINT <> dtt2.CCHAR8 ;
+cidx	CMEDIUMINT	CCHAR8
+1	1000	aaaaaaaa
+2	1000	h
+3	1000	hh
+4	1000	hhh
+5	1000	hhhh
+6	1000	sssssss
+7	1000	ssssssss
+8	1000	ssssssss
+9	1000	ssssssss
+10	1000	zzzzzzzz
+select dtt1.cidx, dtt1.CMEDIUMINT, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMINT < dtt2.CCHAR8 ;
+cidx	CMEDIUMINT	CCHAR8
+select dtt1.cidx, dtt1.CMEDIUMINT, dtt2.CCHAR8 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMINT <= dtt2.CCHAR8 ;
+cidx	CMEDIUMINT	CCHAR8

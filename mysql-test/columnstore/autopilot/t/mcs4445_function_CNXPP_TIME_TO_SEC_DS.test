@@ -1,0 +1,19 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, TIME_TO_SEC(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIME_TO_SEC(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIME_TO_SEC(CTIME) from datatypetestm order by cidx;
+select cidx, TIME_TO_SEC('22:23:00') from datatypetestm order by cidx;
+select cidx, TIME_TO_SEC('00:39:38') from datatypetestm order by cidx;
+select cidx, TIME_TO_SEC('22:23:49 999999') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by TIME_TO_SEC(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by TIME_TO_SEC(CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by TIME_TO_SEC(CTIME), cidx;

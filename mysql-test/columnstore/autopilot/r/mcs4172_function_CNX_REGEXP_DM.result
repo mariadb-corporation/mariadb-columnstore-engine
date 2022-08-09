@@ -1,0 +1,64 @@
+USE autopilot;
+select cidx, CDATE, CDATE REGEXP '(1997)+' from datatypetestm order by cidx;
+cidx	CDATE	CDATE REGEXP '(1997)+'
+1	1997-01-01	1
+select cidx, CDATE, CDATE REGEXP '01$' from datatypetestm order by cidx;
+cidx	CDATE	CDATE REGEXP '01$'
+1	1997-01-01	1
+select cidx, CDATE, CDATE REGEXP '(59)+' from datatypetestm order by cidx;
+cidx	CDATE	CDATE REGEXP '(59)+'
+1	1997-01-01	0
+select cidx, CDATE, CDATE REGEXP '(09-12-)+' from datatypetestm order by cidx;
+cidx	CDATE	CDATE REGEXP '(09-12-)+'
+1	1997-01-01	0
+select cidx, CDATETIME, CDATETIME REGEXP '(1997)+' from datatypetestm order by cidx;
+cidx	CDATETIME	CDATETIME REGEXP '(1997)+'
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, CDATETIME REGEXP '01$' from datatypetestm order by cidx;
+cidx	CDATETIME	CDATETIME REGEXP '01$'
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, CDATETIME REGEXP '(59)+' from datatypetestm order by cidx;
+cidx	CDATETIME	CDATETIME REGEXP '(59)+'
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, CDATETIME REGEXP '(09-12-)+' from datatypetestm order by cidx;
+cidx	CDATETIME	CDATETIME REGEXP '(09-12-)+'
+1	1997-01-01 00:00:00	0
+select cidx, CTIME, CTIME REGEXP '(1997)+' from datatypetestm order by cidx;
+cidx	CTIME	CTIME REGEXP '(1997)+'
+1	13:00:00	0
+select cidx, CTIME, CTIME REGEXP '01$' from datatypetestm order by cidx;
+cidx	CTIME	CTIME REGEXP '01$'
+1	13:00:00	0
+select cidx, CTIME, CTIME REGEXP '(59)+' from datatypetestm order by cidx;
+cidx	CTIME	CTIME REGEXP '(59)+'
+1	13:00:00	0
+select cidx, CTIME, CTIME REGEXP '(09-12-)+' from datatypetestm order by cidx;
+cidx	CTIME	CTIME REGEXP '(09-12-)+'
+1	13:00:00	0
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(1997)+' <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CDATE REGEXP '01$' <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(59)+' <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(09-12-)+' <> 0 order by cidx;
+cidx	CDATE
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(1997)+' <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '01$' <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(59)+' <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(09-12-)+' <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(1997)+' <> 0 order by cidx;
+cidx	CTIME
+select cidx, CTIME from datatypetestm where CTIME REGEXP '01$' <> 0 order by cidx;
+cidx	CTIME
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(59)+' <> 0 order by cidx;
+cidx	CTIME
+select cidx, CTIME from datatypetestm where CTIME REGEXP '(09-12-)+' <> 0 order by cidx;
+cidx	CTIME

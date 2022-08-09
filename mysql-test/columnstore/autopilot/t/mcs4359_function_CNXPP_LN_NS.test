@@ -1,0 +1,46 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, LN(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, LN(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, LN(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, LN(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, LN(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, LN(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, LN(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, LN(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, LN(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, LN(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, LN(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, LN(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, LN(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, LN(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, LN(CFLOAT) from datatypetestm order by cidx;
+select cidx, LN(-1*cidx) from datatypetestm order by cidx;
+select cidx, LN(0*cidx) from datatypetestm order by cidx;
+select cidx, LN(2*cidx) from datatypetestm order by cidx;
+select cidx, LN(265536*cidx) from datatypetestm order by cidx;
+select cidx, LN(1100*cidx) from datatypetestm order by cidx;
+select cidx, LN(100*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by LN(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by LN(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by LN(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by LN(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by LN(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by LN(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by LN(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by LN(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by LN(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by LN(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by LN(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by LN(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by LN(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by LN(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by LN(CFLOAT), cidx;

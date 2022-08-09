@@ -1,0 +1,74 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3) from datatypetestm ;
+cidx	CTEXT	CONCAT_WS('-',CTEXT,CCHAR3)
+1	texttexttext	texttexttext-aaa
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+cidx	CTEXT	CONCAT_WS('-',CTEXT,CCHAR3,CCHAR7)
+1	texttexttext	texttexttext-aaa-aaaaaaa
+select cidx, CTEXT, CONCAT_WS('-',CTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+cidx	CTEXT	CONCAT_WS('-',CTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	texttexttext	texttexttext-aaa--7483646-1997-01-01-ALOHA
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3) from datatypetestm ;
+cidx	CTINYTEXT	CONCAT_WS('-',CTINYTEXT,CCHAR3)
+1	tinytext	tinytext-aaa
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+cidx	CTINYTEXT	CONCAT_WS('-',CTINYTEXT,CCHAR3,CCHAR7)
+1	tinytext	tinytext-aaa-aaaaaaa
+select cidx, CTINYTEXT, CONCAT_WS('-',CTINYTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+cidx	CTINYTEXT	CONCAT_WS('-',CTINYTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	tinytext	tinytext-aaa--7483646-1997-01-01-ALOHA
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT_WS('-',CMEDIUMTEXT,CCHAR3)
+1	mediumtestmediumtest	mediumtestmediumtest-aaa
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CCHAR7)
+1	mediumtestmediumtest	mediumtestmediumtest-aaa-aaaaaaa
+select cidx, CMEDIUMTEXT, CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+cidx	CMEDIUMTEXT	CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	mediumtestmediumtest	mediumtestmediumtest-aaa--7483646-1997-01-01-ALOHA
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3) from datatypetestm ;
+cidx	CLONGTEXT	CONCAT_WS('-',CLONGTEXT,CCHAR3)
+1	longtextlongtextlongtext	longtextlongtextlongtext-aaa
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3,CCHAR7) from datatypetestm ;
+cidx	CLONGTEXT	CONCAT_WS('-',CLONGTEXT,CCHAR3,CCHAR7)
+1	longtextlongtextlongtext	longtextlongtextlongtext-aaa-aaaaaaa
+select cidx, CLONGTEXT, CONCAT_WS('-',CLONGTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm ;
+cidx	CLONGTEXT	CONCAT_WS('-',CLONGTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	longtextlongtextlongtext	longtextlongtextlongtext-aaa--7483646-1997-01-01-ALOHA
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3,CCHAR7), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by CONCAT_WS('-',CTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3,CCHAR7), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by CONCAT_WS('-',CTINYTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CCHAR7), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by CONCAT_WS('-',CMEDIUMTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3,CCHAR7), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by CONCAT_WS('-',CLONGTEXT,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

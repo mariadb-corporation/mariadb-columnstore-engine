@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, DEGREES(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, DEGREES(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, DEGREES(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, DEGREES(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, DEGREES(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, DEGREES(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, DEGREES(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, DEGREES(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, DEGREES(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, DEGREES(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, DEGREES(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, DEGREES(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, DEGREES(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, DEGREES(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, DEGREES(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, DEGREES(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, DEGREES(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, DEGREES(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, DEGREES(CVCHAR255) from datatypetestm order by cidx;
+select cidx, DEGREES(PI()) from datatypetestm order by cidx;
+select cidx, DEGREES(1) from datatypetestm order by cidx;
+select cidx, DEGREES(2) from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by DEGREES(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by DEGREES(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by DEGREES(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by DEGREES(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by DEGREES(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by DEGREES(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by DEGREES(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by DEGREES(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by DEGREES(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by DEGREES(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by DEGREES(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by DEGREES(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by DEGREES(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by DEGREES(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by DEGREES(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by DEGREES(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by DEGREES(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by DEGREES(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by DEGREES(CVCHAR255), cidx;

@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CVCHAR6, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR6 > dtt2.CDECIMAL18_2 ;
+cidx	CVCHAR6	CDECIMAL18_2
+1	aaaaaa	-99999999999.99
+2	f	-99999999999.98
+3	ff	-99999999999.97
+4	fff	-99999999999.96
+5	ffff	-99999999999.95
+select dtt1.cidx, dtt1.CVCHAR6, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR6 >= dtt2.CDECIMAL18_2 ;
+cidx	CVCHAR6	CDECIMAL18_2
+1	aaaaaa	-99999999999.99
+2	f	-99999999999.98
+3	ff	-99999999999.97
+4	fff	-99999999999.96
+5	ffff	-99999999999.95
+select dtt1.cidx, dtt1.CVCHAR6, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR6 <> dtt2.CDECIMAL18_2 ;
+cidx	CVCHAR6	CDECIMAL18_2
+1	aaaaaa	-99999999999.99
+2	f	-99999999999.98
+3	ff	-99999999999.97
+4	fff	-99999999999.96
+5	ffff	-99999999999.95
+6	uuuuuu	99999999999.95
+7	uuuuuu	99999999999.96
+8	uuuuuu	99999999999.97
+9	uuuuuu	99999999999.98
+10	zzzzzz	99999999999.99
+select dtt1.cidx, dtt1.CVCHAR6, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR6 < dtt2.CDECIMAL18_2 ;
+cidx	CVCHAR6	CDECIMAL18_2
+6	uuuuuu	99999999999.95
+7	uuuuuu	99999999999.96
+8	uuuuuu	99999999999.97
+9	uuuuuu	99999999999.98
+10	zzzzzz	99999999999.99
+select dtt1.cidx, dtt1.CVCHAR6, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CVCHAR6 <= dtt2.CDECIMAL18_2 ;
+cidx	CVCHAR6	CDECIMAL18_2
+6	uuuuuu	99999999999.95
+7	uuuuuu	99999999999.96
+8	uuuuuu	99999999999.97
+9	uuuuuu	99999999999.98
+10	zzzzzz	99999999999.99

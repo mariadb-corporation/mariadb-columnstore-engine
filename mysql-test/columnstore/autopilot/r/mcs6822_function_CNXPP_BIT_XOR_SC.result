@@ -1,0 +1,26 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select BIT_XOR(CTEXT) from datatypetestm;
+BIT_XOR(CTEXT)
+0
+select BIT_XOR(CTINYTEXT) from datatypetestm;
+BIT_XOR(CTINYTEXT)
+0
+select BIT_XOR(CMEDIUMTEXT) from datatypetestm;
+BIT_XOR(CMEDIUMTEXT)
+0
+select BIT_XOR(CLONGTEXT) from datatypetestm;
+BIT_XOR(CLONGTEXT)
+0
+select cidx, CTEXT, BIT_XOR(CTEXT) from datatypetestm group by cidx, CTEXT ;
+cidx	CTEXT	BIT_XOR(CTEXT)
+1	texttexttext	0
+select cidx, CTINYTEXT, BIT_XOR(CTINYTEXT) from datatypetestm group by cidx, CTINYTEXT ;
+cidx	CTINYTEXT	BIT_XOR(CTINYTEXT)
+1	tinytext	0
+select cidx, CMEDIUMTEXT, BIT_XOR(CMEDIUMTEXT) from datatypetestm group by cidx, CMEDIUMTEXT ;
+cidx	CMEDIUMTEXT	BIT_XOR(CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, BIT_XOR(CLONGTEXT) from datatypetestm group by cidx, CLONGTEXT ;
+cidx	CLONGTEXT	BIT_XOR(CLONGTEXT)
+1	longtextlongtextlongtext	0

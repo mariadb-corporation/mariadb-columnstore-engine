@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 > dtt2.CMEDIUMTEXT ;
+cidx	CCHAR3	CMEDIUMTEXT
+6	xxx	mediumtestmediumtest
+7	xxx	mediumtestmediumtest
+8	xxx	mediumtestmediumtest
+9	xxx	mediumtestmediumtest
+10	zzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 >= dtt2.CMEDIUMTEXT ;
+cidx	CCHAR3	CMEDIUMTEXT
+6	xxx	mediumtestmediumtest
+7	xxx	mediumtestmediumtest
+8	xxx	mediumtestmediumtest
+9	xxx	mediumtestmediumtest
+10	zzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 <> dtt2.CMEDIUMTEXT ;
+cidx	CCHAR3	CMEDIUMTEXT
+1	aaa	mediumtestmediumtest
+2	c	mediumtestmediumtest
+3	cc	mediumtestmediumtest
+4	ccc	mediumtestmediumtest
+5	ccc	mediumtestmediumtest
+6	xxx	mediumtestmediumtest
+7	xxx	mediumtestmediumtest
+8	xxx	mediumtestmediumtest
+9	xxx	mediumtestmediumtest
+10	zzz	mediumtestmediumtest
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 < dtt2.CMEDIUMTEXT ;
+cidx	CCHAR3	CMEDIUMTEXT
+1	aaa	mediumtestmediumtest
+2	c	mediumtestmediumtest
+3	cc	mediumtestmediumtest
+4	ccc	mediumtestmediumtest
+5	ccc	mediumtestmediumtest
+select dtt1.cidx, dtt1.CCHAR3, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CCHAR3 <= dtt2.CMEDIUMTEXT ;
+cidx	CCHAR3	CMEDIUMTEXT
+1	aaa	mediumtestmediumtest
+2	c	mediumtestmediumtest
+3	cc	mediumtestmediumtest
+4	ccc	mediumtestmediumtest
+5	ccc	mediumtestmediumtest

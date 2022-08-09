@@ -1,0 +1,12 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+--replace_column 2 REPLACEDVALUE
+select cidx, SYSDATE() from datatypetestm order by cidx;

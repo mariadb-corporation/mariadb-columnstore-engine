@@ -1,0 +1,23 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INET_NTOA(CTEXT) from datatypetestm ;
+select cidx, CTINYTEXT, INET_NTOA(CTINYTEXT) from datatypetestm ;
+select cidx, CMEDIUMTEXT, INET_NTOA(CMEDIUMTEXT) from datatypetestm ;
+select cidx, CLONGTEXT, INET_NTOA(CLONGTEXT) from datatypetestm ;
+select cidx, INET_NTOA(12) from datatypetestm ;
+select cidx, INET_NTOA(123) from datatypetestm ;
+select cidx, INET_NTOA(1234) from datatypetestm ;
+select cidx, INET_NTOA(12345678) from datatypetestm ;
+select cidx, CTEXT from datatypetestm where INET_NTOA(CTEXT) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where INET_NTOA(CTINYTEXT) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where INET_NTOA(CMEDIUMTEXT) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where INET_NTOA(CLONGTEXT) <> 0 ;

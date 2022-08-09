@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, SUBSTRING_INDEX('a.b.c.d.e.f.g','.',5) from datatypetestm order by cidx;
+cidx	SUBSTRING_INDEX('a.b.c.d.e.f.g','.',5)
+1	a.b.c.d.e
+select cidx, SUBSTRING_INDEX('a.b.c.d.e.f.g','.',-5) from datatypetestm order by cidx;
+cidx	SUBSTRING_INDEX('a.b.c.d.e.f.g','.',-5)
+1	c.d.e.f.g
+select cidx, SUBSTRING_INDEX('a..b..c..d..e..f..g','..',5) from datatypetestm order by cidx;
+cidx	SUBSTRING_INDEX('a..b..c..d..e..f..g','..',5)
+1	a..b..c..d..e
+select cidx, SUBSTRING_INDEX('a..b..c..d..e..f..g','..',-5) from datatypetestm order by cidx;
+cidx	SUBSTRING_INDEX('a..b..c..d..e..f..g','..',-5)
+1	c..d..e..f..g

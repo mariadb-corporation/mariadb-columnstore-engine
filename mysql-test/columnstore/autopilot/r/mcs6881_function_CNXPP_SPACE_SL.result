@@ -1,0 +1,5 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, SPACE(cidx) from datatypetestm ;
+cidx	SPACE(cidx)
+1	 

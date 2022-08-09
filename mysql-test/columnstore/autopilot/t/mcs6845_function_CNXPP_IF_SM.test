@@ -1,0 +1,35 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTEXT, IF(CTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTINYTEXT, IF(CTINYTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CMEDIUMTEXT, IF(CMEDIUMTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CLONGTEXT, IF(CLONGTEXT>'aaa','Yes','No') from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+select cidx, CTEXT from datatypetestm order by IF(CTEXT>'aaa','Yes','No'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by IF(CTINYTEXT>'aaa','Yes','No'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by IF(CMEDIUMTEXT>'aaa','Yes','No'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by IF(CLONGTEXT>'aaa','Yes','No'), cidx;

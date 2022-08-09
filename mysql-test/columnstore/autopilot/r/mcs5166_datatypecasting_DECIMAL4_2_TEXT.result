@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 > dtt2.CTEXT ;
+cidx	CDECIMAL4_2	CTEXT
+6	9.95	texttexttext
+7	9.96	texttexttext
+8	9.97	texttexttext
+9	9.98	texttexttext
+10	9.99	texttexttext
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 >= dtt2.CTEXT ;
+cidx	CDECIMAL4_2	CTEXT
+6	9.95	texttexttext
+7	9.96	texttexttext
+8	9.97	texttexttext
+9	9.98	texttexttext
+10	9.99	texttexttext
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <> dtt2.CTEXT ;
+cidx	CDECIMAL4_2	CTEXT
+1	-9.99	texttexttext
+2	-9.98	texttexttext
+3	-9.97	texttexttext
+4	-9.96	texttexttext
+5	-9.95	texttexttext
+6	9.95	texttexttext
+7	9.96	texttexttext
+8	9.97	texttexttext
+9	9.98	texttexttext
+10	9.99	texttexttext
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 < dtt2.CTEXT ;
+cidx	CDECIMAL4_2	CTEXT
+1	-9.99	texttexttext
+2	-9.98	texttexttext
+3	-9.97	texttexttext
+4	-9.96	texttexttext
+5	-9.95	texttexttext
+select dtt1.cidx, dtt1.CDECIMAL4_2, dtt2.CTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL4_2 <= dtt2.CTEXT ;
+cidx	CDECIMAL4_2	CTEXT
+1	-9.99	texttexttext
+2	-9.98	texttexttext
+3	-9.97	texttexttext
+4	-9.96	texttexttext
+5	-9.95	texttexttext

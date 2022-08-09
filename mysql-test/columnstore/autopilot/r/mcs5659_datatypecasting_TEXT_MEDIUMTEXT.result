@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CMEDIUMTEXT ;
+cidx	CTEXT	CMEDIUMTEXT
+1	texttexttext	mediumtestmediumtest
+2	texttexttext	mediumtestmediumtest
+3	texttexttext	mediumtestmediumtest
+4	texttexttext	mediumtestmediumtest
+5	texttexttext	mediumtestmediumtest
+6	texttexttext	mediumtestmediumtest
+7	texttexttext	mediumtestmediumtest
+8	texttexttext	mediumtestmediumtest
+9	texttexttext	mediumtestmediumtest
+10	texttexttext	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CMEDIUMTEXT ;
+cidx	CTEXT	CMEDIUMTEXT
+1	texttexttext	mediumtestmediumtest
+2	texttexttext	mediumtestmediumtest
+3	texttexttext	mediumtestmediumtest
+4	texttexttext	mediumtestmediumtest
+5	texttexttext	mediumtestmediumtest
+6	texttexttext	mediumtestmediumtest
+7	texttexttext	mediumtestmediumtest
+8	texttexttext	mediumtestmediumtest
+9	texttexttext	mediumtestmediumtest
+10	texttexttext	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CMEDIUMTEXT ;
+cidx	CTEXT	CMEDIUMTEXT
+1	texttexttext	mediumtestmediumtest
+2	texttexttext	mediumtestmediumtest
+3	texttexttext	mediumtestmediumtest
+4	texttexttext	mediumtestmediumtest
+5	texttexttext	mediumtestmediumtest
+6	texttexttext	mediumtestmediumtest
+7	texttexttext	mediumtestmediumtest
+8	texttexttext	mediumtestmediumtest
+9	texttexttext	mediumtestmediumtest
+10	texttexttext	mediumtestmediumtest
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CMEDIUMTEXT ;
+cidx	CTEXT	CMEDIUMTEXT
+select dtt1.cidx, dtt1.CTEXT, dtt2.CMEDIUMTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CMEDIUMTEXT ;
+cidx	CTEXT	CMEDIUMTEXT

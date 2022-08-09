@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CINTEGER = CSMALLINT;
+SELECT CINTEGER FROM datatypeupdate;
+CINTEGER
+-766
+ROLLBACK;

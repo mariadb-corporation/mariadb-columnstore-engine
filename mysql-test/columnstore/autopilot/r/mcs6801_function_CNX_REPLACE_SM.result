@@ -1,0 +1,42 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, REPLACE(CTEXT,'a','II') from datatypetestm ;
+cidx	CTEXT	REPLACE(CTEXT,'a','II')
+1	texttexttext	texttexttext
+select cidx, CTEXT, REPLACE(CTEXT,'zz','JJ') from datatypetestm ;
+cidx	CTEXT	REPLACE(CTEXT,'zz','JJ')
+1	texttexttext	texttexttext
+select cidx, CTINYTEXT, REPLACE(CTINYTEXT,'a','II') from datatypetestm ;
+cidx	CTINYTEXT	REPLACE(CTINYTEXT,'a','II')
+1	tinytext	tinytext
+select cidx, CTINYTEXT, REPLACE(CTINYTEXT,'zz','JJ') from datatypetestm ;
+cidx	CTINYTEXT	REPLACE(CTINYTEXT,'zz','JJ')
+1	tinytext	tinytext
+select cidx, CMEDIUMTEXT, REPLACE(CMEDIUMTEXT,'a','II') from datatypetestm ;
+cidx	CMEDIUMTEXT	REPLACE(CMEDIUMTEXT,'a','II')
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, REPLACE(CMEDIUMTEXT,'zz','JJ') from datatypetestm ;
+cidx	CMEDIUMTEXT	REPLACE(CMEDIUMTEXT,'zz','JJ')
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CLONGTEXT, REPLACE(CLONGTEXT,'a','II') from datatypetestm ;
+cidx	CLONGTEXT	REPLACE(CLONGTEXT,'a','II')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, REPLACE(CLONGTEXT,'zz','JJ') from datatypetestm ;
+cidx	CLONGTEXT	REPLACE(CLONGTEXT,'zz','JJ')
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CTEXT from datatypetestm where REPLACE(CTEXT,'a','II') <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where REPLACE(CTEXT,'zz','JJ') <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where REPLACE(CTINYTEXT,'a','II') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where REPLACE(CTINYTEXT,'zz','JJ') <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where REPLACE(CMEDIUMTEXT,'a','II') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where REPLACE(CMEDIUMTEXT,'zz','JJ') <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where REPLACE(CLONGTEXT,'a','II') <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where REPLACE(CLONGTEXT,'zz','JJ') <> 0 ;
+cidx	CLONGTEXT

@@ -1,0 +1,42 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, MID(CTEXT,5,2) from datatypetestm ;
+cidx	CTEXT	MID(CTEXT,5,2)
+1	texttexttext	te
+select cidx, CTEXT, MID(CTEXT,9,3) from datatypetestm ;
+cidx	CTEXT	MID(CTEXT,9,3)
+1	texttexttext	tex
+select cidx, CTINYTEXT, MID(CTINYTEXT,5,2) from datatypetestm ;
+cidx	CTINYTEXT	MID(CTINYTEXT,5,2)
+1	tinytext	te
+select cidx, CTINYTEXT, MID(CTINYTEXT,9,3) from datatypetestm ;
+cidx	CTINYTEXT	MID(CTINYTEXT,9,3)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, MID(CMEDIUMTEXT,5,2) from datatypetestm ;
+cidx	CMEDIUMTEXT	MID(CMEDIUMTEXT,5,2)
+1	mediumtestmediumtest	um
+select cidx, CMEDIUMTEXT, MID(CMEDIUMTEXT,9,3) from datatypetestm ;
+cidx	CMEDIUMTEXT	MID(CMEDIUMTEXT,9,3)
+1	mediumtestmediumtest	stm
+select cidx, CLONGTEXT, MID(CLONGTEXT,5,2) from datatypetestm ;
+cidx	CLONGTEXT	MID(CLONGTEXT,5,2)
+1	longtextlongtextlongtext	te
+select cidx, CLONGTEXT, MID(CLONGTEXT,9,3) from datatypetestm ;
+cidx	CLONGTEXT	MID(CLONGTEXT,9,3)
+1	longtextlongtextlongtext	lon
+select cidx, CTEXT from datatypetestm where MID(CTEXT,5,2) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where MID(CTEXT,9,3) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where MID(CTINYTEXT,5,2) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where MID(CTINYTEXT,9,3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where MID(CMEDIUMTEXT,5,2) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where MID(CMEDIUMTEXT,9,3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where MID(CLONGTEXT,5,2) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where MID(CLONGTEXT,9,3) <> 0 ;
+cidx	CLONGTEXT

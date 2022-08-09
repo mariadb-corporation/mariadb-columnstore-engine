@@ -1,0 +1,26 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json1 = '{"A": 1, "B": 2, "C": {"D": 3}}';
+SET @json2 = '["A", "B", ["C", "D"], "E"]';
+SELECT @json1;
+@json1
+{"A": 1, "B": 2, "C": {"D": 3}}
+SELECT @json2;
+@json2
+["A", "B", ["C", "D"], "E"]
+INSERT INTO jsontest VALUES (1, @json1, @json1), (2, @json2, @json2);
+SELECT JSON_REMOVE(@json1, '$.C');
+JSON_REMOVE(@json1, '$.C')
+{"A": 1, "B": 2}
+SELECT JSON_REMOVE(@json2, '$[1]');
+JSON_REMOVE(@json2, '$[1]')
+["A", ["C", "D"], "E"]
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}
+2	["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]
+SELECT cVarchar, JSON_REMOVE(cVarchar, '$.C'), cText, JSON_REMOVE(cText, '$.C') from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_remove' isn't supported.
+SELECT cVarchar, JSON_REMOVE(cVarchar, '$[1]'), cText, JSON_REMOVE(cText, '$[1]') from jsontest;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_remove' isn't supported.
+TRUNCATE TABLE jsontest;

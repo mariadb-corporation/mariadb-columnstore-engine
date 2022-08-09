@@ -1,0 +1,55 @@
+USE autopilot;
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3) from datatypetestm order by cidx;
+cidx	CDATE	CONCAT_WS('-',CDATE,CCHAR3)
+1	1997-01-01	1997-01-01-aaa
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CDATE	CONCAT_WS('-',CDATE,CCHAR3,CCHAR7)
+1	1997-01-01	1997-01-01-aaa-aaaaaaa
+select cidx, CDATE, CONCAT_WS('-',CDATE,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATE	CONCAT_WS('-',CDATE,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	1997-01-01	1997-01-01-aaa--7483646-1997-01-01-ALOHA
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3) from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT_WS('-',CDATETIME,CCHAR3)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00-aaa
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT_WS('-',CDATETIME,CCHAR3,CCHAR7)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00-aaa-aaaaaaa
+select cidx, CDATETIME, CONCAT_WS('-',CDATETIME,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT_WS('-',CDATETIME,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00-aaa--7483646-1997-01-01-ALOHA
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3) from datatypetestm order by cidx;
+cidx	CTIME	CONCAT_WS('-',CTIME,CCHAR3)
+1	13:00:00	13:00:00-aaa
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3,CCHAR7) from datatypetestm order by cidx;
+cidx	CTIME	CONCAT_WS('-',CTIME,CCHAR3,CCHAR7)
+1	13:00:00	13:00:00-aaa-aaaaaaa
+select cidx, CTIME, CONCAT_WS('-',CTIME,CCHAR3,CINTEGER,CDATE,'ALOHA') from datatypetestm order by cidx;
+cidx	CTIME	CONCAT_WS('-',CTIME,CCHAR3,CINTEGER,CDATE,'ALOHA')
+1	13:00:00	13:00:00-aaa--7483646-1997-01-01-ALOHA
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3,CCHAR7), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by CONCAT_WS('-',CDATE,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3,CCHAR7), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by CONCAT_WS('-',CDATETIME,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3,CCHAR7), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by CONCAT_WS('-',CTIME,CCHAR3,CINTEGER,CDATE,'ALOHA'), cidx;
+cidx	CTIME
+1	13:00:00

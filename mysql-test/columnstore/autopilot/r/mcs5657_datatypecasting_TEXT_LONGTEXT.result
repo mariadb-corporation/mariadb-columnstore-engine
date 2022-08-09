@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CLONGTEXT ;
+cidx	CTEXT	CLONGTEXT
+1	texttexttext	longtextlongtextlongtext
+2	texttexttext	longtextlongtextlongtext
+3	texttexttext	longtextlongtextlongtext
+4	texttexttext	longtextlongtextlongtext
+5	texttexttext	longtextlongtextlongtext
+6	texttexttext	longtextlongtextlongtext
+7	texttexttext	longtextlongtextlongtext
+8	texttexttext	longtextlongtextlongtext
+9	texttexttext	longtextlongtextlongtext
+10	texttexttext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CLONGTEXT ;
+cidx	CTEXT	CLONGTEXT
+1	texttexttext	longtextlongtextlongtext
+2	texttexttext	longtextlongtextlongtext
+3	texttexttext	longtextlongtextlongtext
+4	texttexttext	longtextlongtextlongtext
+5	texttexttext	longtextlongtextlongtext
+6	texttexttext	longtextlongtextlongtext
+7	texttexttext	longtextlongtextlongtext
+8	texttexttext	longtextlongtextlongtext
+9	texttexttext	longtextlongtextlongtext
+10	texttexttext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CLONGTEXT ;
+cidx	CTEXT	CLONGTEXT
+1	texttexttext	longtextlongtextlongtext
+2	texttexttext	longtextlongtextlongtext
+3	texttexttext	longtextlongtextlongtext
+4	texttexttext	longtextlongtextlongtext
+5	texttexttext	longtextlongtextlongtext
+6	texttexttext	longtextlongtextlongtext
+7	texttexttext	longtextlongtextlongtext
+8	texttexttext	longtextlongtextlongtext
+9	texttexttext	longtextlongtextlongtext
+10	texttexttext	longtextlongtextlongtext
+select dtt1.cidx, dtt1.CTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CLONGTEXT ;
+cidx	CTEXT	CLONGTEXT
+select dtt1.cidx, dtt1.CTEXT, dtt2.CLONGTEXT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CLONGTEXT ;
+cidx	CTEXT	CLONGTEXT

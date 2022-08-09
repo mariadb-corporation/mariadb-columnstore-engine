@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, ROUND(68.9876*cidx) from datatypetestm order by cidx;
+cidx	ROUND(68.9876*cidx)
+1	69
+select cidx, ROUND(-68.9876*cidx,2) from datatypetestm order by cidx;
+cidx	ROUND(-68.9876*cidx,2)
+1	-68.99
+select cidx, ROUND(68.9876*cidx,-2) from datatypetestm order by cidx;
+cidx	ROUND(68.9876*cidx,-2)
+1	100
+select cidx, ROUND(-68.9876*cidx,-1) from datatypetestm order by cidx;
+cidx	ROUND(-68.9876*cidx,-1)
+1	-70

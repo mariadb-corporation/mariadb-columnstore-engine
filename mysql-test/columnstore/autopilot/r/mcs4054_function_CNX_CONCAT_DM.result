@@ -1,0 +1,73 @@
+USE autopilot;
+select cidx, CDATE, CONCAT(CDATE,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATE	CONCAT(CDATE,CCHAR3,CCHAR7,'ALOHA')
+1	1997-01-01	1997-01-01aaaaaaaaaaALOHA
+select cidx, CDATE, CONCAT(CDATE,CCHAR3) from datatypetestm order by cidx;
+cidx	CDATE	CONCAT(CDATE,CCHAR3)
+1	1997-01-01	1997-01-01aaa
+select cidx, CDATE, CONCAT(CDATE,CCHAR7) from datatypetestm order by cidx;
+cidx	CDATE	CONCAT(CDATE,CCHAR7)
+1	1997-01-01	1997-01-01aaaaaaa
+select cidx, CDATE, CONCAT(CDATE,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATE	CONCAT(CDATE,'ALOHA')
+1	1997-01-01	1997-01-01ALOHA
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT(CDATETIME,CCHAR3,CCHAR7,'ALOHA')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaaaaaaaaaALOHA
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR3) from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT(CDATETIME,CCHAR3)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaa
+select cidx, CDATETIME, CONCAT(CDATETIME,CCHAR7) from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT(CDATETIME,CCHAR7)
+1	1997-01-01 00:00:00	1997-01-01 00:00:00aaaaaaa
+select cidx, CDATETIME, CONCAT(CDATETIME,'ALOHA') from datatypetestm order by cidx;
+cidx	CDATETIME	CONCAT(CDATETIME,'ALOHA')
+1	1997-01-01 00:00:00	1997-01-01 00:00:00ALOHA
+select cidx, CTIME, CONCAT(CTIME,CCHAR3,CCHAR7,'ALOHA') from datatypetestm order by cidx;
+cidx	CTIME	CONCAT(CTIME,CCHAR3,CCHAR7,'ALOHA')
+1	13:00:00	13:00:00aaaaaaaaaaALOHA
+select cidx, CTIME, CONCAT(CTIME,CCHAR3) from datatypetestm order by cidx;
+cidx	CTIME	CONCAT(CTIME,CCHAR3)
+1	13:00:00	13:00:00aaa
+select cidx, CTIME, CONCAT(CTIME,CCHAR7) from datatypetestm order by cidx;
+cidx	CTIME	CONCAT(CTIME,CCHAR7)
+1	13:00:00	13:00:00aaaaaaa
+select cidx, CTIME, CONCAT(CTIME,'ALOHA') from datatypetestm order by cidx;
+cidx	CTIME	CONCAT(CTIME,'ALOHA')
+1	13:00:00	13:00:00ALOHA
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR3) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,CCHAR7) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm where CONCAT(CDATE,'ALOHA') <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR3) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,CCHAR7) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm where CONCAT(CDATETIME,'ALOHA') <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR3,CCHAR7,'ALOHA') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR3) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,CCHAR7) <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm where CONCAT(CTIME,'ALOHA') <> 0 order by cidx;
+cidx	CTIME
+1	13:00:00

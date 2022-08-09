@@ -1,0 +1,884 @@
+USE autopilot;
+select cidx, CCHAR1, STRCMP(CCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,CCHAR3)
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,CVCHAR8)
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,CCHAR255)
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,CVCHAR255)
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,'aa') from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,'aa')
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,'zzzzzz')
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,'qqqqqqqqqq')
+1	a	-1
+select cidx, CCHAR1, STRCMP(CCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CCHAR1	STRCMP(CCHAR1,NULL)
+1	a	NULL
+select cidx, CCHAR2, STRCMP(CCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,CCHAR3)
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,CVCHAR8)
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,CCHAR255)
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,CVCHAR255)
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,'aa') from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,'aa')
+1	aa	0
+select cidx, CCHAR2, STRCMP(CCHAR2,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,'zzzzzz')
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,'qqqqqqqqqq')
+1	aa	-1
+select cidx, CCHAR2, STRCMP(CCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CCHAR2	STRCMP(CCHAR2,NULL)
+1	aa	NULL
+select cidx, CCHAR3, STRCMP(CCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,CCHAR3)
+1	aaa	0
+select cidx, CCHAR3, STRCMP(CCHAR3,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,CVCHAR8)
+1	aaa	-1
+select cidx, CCHAR3, STRCMP(CCHAR3,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,CCHAR255)
+1	aaa	-1
+select cidx, CCHAR3, STRCMP(CCHAR3,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,CVCHAR255)
+1	aaa	-1
+select cidx, CCHAR3, STRCMP(CCHAR3,'aa') from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,'aa')
+1	aaa	1
+select cidx, CCHAR3, STRCMP(CCHAR3,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,'zzzzzz')
+1	aaa	-1
+select cidx, CCHAR3, STRCMP(CCHAR3,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,'qqqqqqqqqq')
+1	aaa	-1
+select cidx, CCHAR3, STRCMP(CCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CCHAR3	STRCMP(CCHAR3,NULL)
+1	aaa	NULL
+select cidx, CCHAR4, STRCMP(CCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,CCHAR3)
+1	aaaa	1
+select cidx, CCHAR4, STRCMP(CCHAR4,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,CVCHAR8)
+1	aaaa	-1
+select cidx, CCHAR4, STRCMP(CCHAR4,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,CCHAR255)
+1	aaaa	-1
+select cidx, CCHAR4, STRCMP(CCHAR4,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,CVCHAR255)
+1	aaaa	-1
+select cidx, CCHAR4, STRCMP(CCHAR4,'aa') from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,'aa')
+1	aaaa	1
+select cidx, CCHAR4, STRCMP(CCHAR4,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,'zzzzzz')
+1	aaaa	-1
+select cidx, CCHAR4, STRCMP(CCHAR4,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,'qqqqqqqqqq')
+1	aaaa	-1
+select cidx, CCHAR4, STRCMP(CCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CCHAR4	STRCMP(CCHAR4,NULL)
+1	aaaa	NULL
+select cidx, CCHAR5, STRCMP(CCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,CCHAR3)
+1	aaaaa	1
+select cidx, CCHAR5, STRCMP(CCHAR5,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,CVCHAR8)
+1	aaaaa	-1
+select cidx, CCHAR5, STRCMP(CCHAR5,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,CCHAR255)
+1	aaaaa	-1
+select cidx, CCHAR5, STRCMP(CCHAR5,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,CVCHAR255)
+1	aaaaa	-1
+select cidx, CCHAR5, STRCMP(CCHAR5,'aa') from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,'aa')
+1	aaaaa	1
+select cidx, CCHAR5, STRCMP(CCHAR5,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,'zzzzzz')
+1	aaaaa	-1
+select cidx, CCHAR5, STRCMP(CCHAR5,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,'qqqqqqqqqq')
+1	aaaaa	-1
+select cidx, CCHAR5, STRCMP(CCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CCHAR5	STRCMP(CCHAR5,NULL)
+1	aaaaa	NULL
+select cidx, CCHAR6, STRCMP(CCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,CCHAR3)
+1	aaaaaa	1
+select cidx, CCHAR6, STRCMP(CCHAR6,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,CVCHAR8)
+1	aaaaaa	-1
+select cidx, CCHAR6, STRCMP(CCHAR6,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,CCHAR255)
+1	aaaaaa	-1
+select cidx, CCHAR6, STRCMP(CCHAR6,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,CVCHAR255)
+1	aaaaaa	-1
+select cidx, CCHAR6, STRCMP(CCHAR6,'aa') from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,'aa')
+1	aaaaaa	1
+select cidx, CCHAR6, STRCMP(CCHAR6,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,'zzzzzz')
+1	aaaaaa	-1
+select cidx, CCHAR6, STRCMP(CCHAR6,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,'qqqqqqqqqq')
+1	aaaaaa	-1
+select cidx, CCHAR6, STRCMP(CCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CCHAR6	STRCMP(CCHAR6,NULL)
+1	aaaaaa	NULL
+select cidx, CCHAR7, STRCMP(CCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,CCHAR3)
+1	aaaaaaa	1
+select cidx, CCHAR7, STRCMP(CCHAR7,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,CVCHAR8)
+1	aaaaaaa	-1
+select cidx, CCHAR7, STRCMP(CCHAR7,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,CCHAR255)
+1	aaaaaaa	-1
+select cidx, CCHAR7, STRCMP(CCHAR7,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,CVCHAR255)
+1	aaaaaaa	-1
+select cidx, CCHAR7, STRCMP(CCHAR7,'aa') from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,'aa')
+1	aaaaaaa	1
+select cidx, CCHAR7, STRCMP(CCHAR7,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,'zzzzzz')
+1	aaaaaaa	-1
+select cidx, CCHAR7, STRCMP(CCHAR7,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,'qqqqqqqqqq')
+1	aaaaaaa	-1
+select cidx, CCHAR7, STRCMP(CCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CCHAR7	STRCMP(CCHAR7,NULL)
+1	aaaaaaa	NULL
+select cidx, CCHAR8, STRCMP(CCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,CCHAR3)
+1	aaaaaaaa	1
+select cidx, CCHAR8, STRCMP(CCHAR8,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CCHAR8, STRCMP(CCHAR8,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,CCHAR255)
+1	aaaaaaaa	-1
+select cidx, CCHAR8, STRCMP(CCHAR8,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,CVCHAR255)
+1	aaaaaaaa	-1
+select cidx, CCHAR8, STRCMP(CCHAR8,'aa') from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,'aa')
+1	aaaaaaaa	1
+select cidx, CCHAR8, STRCMP(CCHAR8,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,'zzzzzz')
+1	aaaaaaaa	-1
+select cidx, CCHAR8, STRCMP(CCHAR8,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,'qqqqqqqqqq')
+1	aaaaaaaa	-1
+select cidx, CCHAR8, STRCMP(CCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CCHAR8	STRCMP(CCHAR8,NULL)
+1	aaaaaaaa	NULL
+select cidx, CCHAR9, STRCMP(CCHAR9,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,CCHAR3)
+1	aaaaaaaaa	1
+select cidx, CCHAR9, STRCMP(CCHAR9,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,CVCHAR8)
+1	aaaaaaaaa	1
+select cidx, CCHAR9, STRCMP(CCHAR9,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,CCHAR255)
+1	aaaaaaaaa	-1
+select cidx, CCHAR9, STRCMP(CCHAR9,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,CVCHAR255)
+1	aaaaaaaaa	-1
+select cidx, CCHAR9, STRCMP(CCHAR9,'aa') from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,'aa')
+1	aaaaaaaaa	1
+select cidx, CCHAR9, STRCMP(CCHAR9,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,'zzzzzz')
+1	aaaaaaaaa	-1
+select cidx, CCHAR9, STRCMP(CCHAR9,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,'qqqqqqqqqq')
+1	aaaaaaaaa	-1
+select cidx, CCHAR9, STRCMP(CCHAR9,NULL) from datatypetestm order by cidx;
+cidx	CCHAR9	STRCMP(CCHAR9,NULL)
+1	aaaaaaaaa	NULL
+select cidx, CCHAR255, STRCMP(CCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,CCHAR3)
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, STRCMP(CCHAR255,CVCHAR8) from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,CVCHAR8)
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, STRCMP(CCHAR255,CCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, STRCMP(CCHAR255,CVCHAR255) from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CCHAR255, STRCMP(CCHAR255,'aa') from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,'aa')
+1	aaaaaaaaaa	1
+select cidx, CCHAR255, STRCMP(CCHAR255,'zzzzzz') from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,'zzzzzz')
+1	aaaaaaaaaa	-1
+select cidx, CCHAR255, STRCMP(CCHAR255,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,'qqqqqqqqqq')
+1	aaaaaaaaaa	-1
+select cidx, CCHAR255, STRCMP(CCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CCHAR255	STRCMP(CCHAR255,NULL)
+1	aaaaaaaaaa	NULL
+select cidx, CVCHAR1, STRCMP(CVCHAR1,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,CCHAR3)
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,CVCHAR8)
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,CCHAR255)
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,CVCHAR255)
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,'aa')
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,'zzzzzz')
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,'qqqqqqqqqq')
+1	a	-1
+select cidx, CVCHAR1, STRCMP(CVCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR1	STRCMP(CVCHAR1,NULL)
+1	a	NULL
+select cidx, CVCHAR2, STRCMP(CVCHAR2,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,CCHAR3)
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,CVCHAR8)
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,CCHAR255)
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,CVCHAR255)
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,'aa')
+1	aa	0
+select cidx, CVCHAR2, STRCMP(CVCHAR2,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,'zzzzzz')
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,'qqqqqqqqqq')
+1	aa	-1
+select cidx, CVCHAR2, STRCMP(CVCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR2	STRCMP(CVCHAR2,NULL)
+1	aa	NULL
+select cidx, CVCHAR3, STRCMP(CVCHAR3,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,CCHAR3)
+1	aaa	0
+select cidx, CVCHAR3, STRCMP(CVCHAR3,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,CVCHAR8)
+1	aaa	-1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,CCHAR255)
+1	aaa	-1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,CVCHAR255)
+1	aaa	-1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,'aa')
+1	aaa	1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,'zzzzzz')
+1	aaa	-1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,'qqqqqqqqqq')
+1	aaa	-1
+select cidx, CVCHAR3, STRCMP(CVCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR3	STRCMP(CVCHAR3,NULL)
+1	aaa	NULL
+select cidx, CVCHAR4, STRCMP(CVCHAR4,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,CCHAR3)
+1	aaaa	1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,CVCHAR8)
+1	aaaa	-1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,CCHAR255)
+1	aaaa	-1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,CVCHAR255)
+1	aaaa	-1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,'aa')
+1	aaaa	1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,'zzzzzz')
+1	aaaa	-1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,'qqqqqqqqqq')
+1	aaaa	-1
+select cidx, CVCHAR4, STRCMP(CVCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR4	STRCMP(CVCHAR4,NULL)
+1	aaaa	NULL
+select cidx, CVCHAR5, STRCMP(CVCHAR5,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,CCHAR3)
+1	aaaaa	1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,CVCHAR8)
+1	aaaaa	-1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,CCHAR255)
+1	aaaaa	-1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,CVCHAR255)
+1	aaaaa	-1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,'aa')
+1	aaaaa	1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,'zzzzzz')
+1	aaaaa	-1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,'qqqqqqqqqq')
+1	aaaaa	-1
+select cidx, CVCHAR5, STRCMP(CVCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR5	STRCMP(CVCHAR5,NULL)
+1	aaaaa	NULL
+select cidx, CVCHAR6, STRCMP(CVCHAR6,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,CCHAR3)
+1	aaaaaa	1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,CVCHAR8)
+1	aaaaaa	-1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,CCHAR255)
+1	aaaaaa	-1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,CVCHAR255)
+1	aaaaaa	-1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,'aa')
+1	aaaaaa	1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,'zzzzzz')
+1	aaaaaa	-1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,'qqqqqqqqqq')
+1	aaaaaa	-1
+select cidx, CVCHAR6, STRCMP(CVCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR6	STRCMP(CVCHAR6,NULL)
+1	aaaaaa	NULL
+select cidx, CVCHAR7, STRCMP(CVCHAR7,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,CCHAR3)
+1	aaaaaaa	1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,CVCHAR8)
+1	aaaaaaa	-1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,CCHAR255)
+1	aaaaaaa	-1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,CVCHAR255)
+1	aaaaaaa	-1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,'aa')
+1	aaaaaaa	1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,'zzzzzz')
+1	aaaaaaa	-1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,'qqqqqqqqqq')
+1	aaaaaaa	-1
+select cidx, CVCHAR7, STRCMP(CVCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR7	STRCMP(CVCHAR7,NULL)
+1	aaaaaaa	NULL
+select cidx, CVCHAR8, STRCMP(CVCHAR8,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,CCHAR3)
+1	aaaaaaaa	1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,CVCHAR8)
+1	aaaaaaaa	0
+select cidx, CVCHAR8, STRCMP(CVCHAR8,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,CCHAR255)
+1	aaaaaaaa	-1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,CVCHAR255)
+1	aaaaaaaa	-1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,'aa')
+1	aaaaaaaa	1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,'zzzzzz')
+1	aaaaaaaa	-1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,'qqqqqqqqqq')
+1	aaaaaaaa	-1
+select cidx, CVCHAR8, STRCMP(CVCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR8	STRCMP(CVCHAR8,NULL)
+1	aaaaaaaa	NULL
+select cidx, CVCHAR255, STRCMP(CVCHAR255,CCHAR3) from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,CCHAR3)
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, STRCMP(CVCHAR255,CVCHAR8) from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,CVCHAR8)
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, STRCMP(CVCHAR255,CCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,CCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, STRCMP(CVCHAR255,CVCHAR255) from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,CVCHAR255)
+1	aaaaaaaaaa	0
+select cidx, CVCHAR255, STRCMP(CVCHAR255,'aa') from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,'aa')
+1	aaaaaaaaaa	1
+select cidx, CVCHAR255, STRCMP(CVCHAR255,'zzzzzz') from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,'zzzzzz')
+1	aaaaaaaaaa	-1
+select cidx, CVCHAR255, STRCMP(CVCHAR255,'qqqqqqqqqq') from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,'qqqqqqqqqq')
+1	aaaaaaaaaa	-1
+select cidx, CVCHAR255, STRCMP(CVCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR255	STRCMP(CVCHAR255,NULL)
+1	aaaaaaaaaa	NULL
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,'aa') <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR1
+1	a
+select cidx, CCHAR1 from datatypetestm where STRCMP(CCHAR1,NULL) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,'aa') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR2
+1	aa
+select cidx, CCHAR2 from datatypetestm where STRCMP(CCHAR2,NULL) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,'aa') <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR3
+1	aaa
+select cidx, CCHAR3 from datatypetestm where STRCMP(CCHAR3,NULL) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,'aa') <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR4
+1	aaaa
+select cidx, CCHAR4 from datatypetestm where STRCMP(CCHAR4,NULL) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,'aa') <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR5
+1	aaaaa
+select cidx, CCHAR5 from datatypetestm where STRCMP(CCHAR5,NULL) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,'aa') <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR6
+1	aaaaaa
+select cidx, CCHAR6 from datatypetestm where STRCMP(CCHAR6,NULL) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,'aa') <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR7
+1	aaaaaaa
+select cidx, CCHAR7 from datatypetestm where STRCMP(CCHAR7,NULL) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,'aa') <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR8
+1	aaaaaaaa
+select cidx, CCHAR8 from datatypetestm where STRCMP(CCHAR8,NULL) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,'aa') <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR9
+1	aaaaaaaaa
+select cidx, CCHAR9 from datatypetestm where STRCMP(CCHAR9,NULL) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,CCHAR3) <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,CVCHAR8) <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,CCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,CVCHAR255) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,'aa') <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,'zzzzzz') <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CCHAR255
+1	aaaaaaaaaa
+select cidx, CCHAR255 from datatypetestm where STRCMP(CCHAR255,NULL) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,'aa') <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR1
+1	a
+select cidx, CVCHAR1 from datatypetestm where STRCMP(CVCHAR1,NULL) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,'aa') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR2
+1	aa
+select cidx, CVCHAR2 from datatypetestm where STRCMP(CVCHAR2,NULL) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,'aa') <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR3
+1	aaa
+select cidx, CVCHAR3 from datatypetestm where STRCMP(CVCHAR3,NULL) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,'aa') <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR4
+1	aaaa
+select cidx, CVCHAR4 from datatypetestm where STRCMP(CVCHAR4,NULL) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,'aa') <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR5
+1	aaaaa
+select cidx, CVCHAR5 from datatypetestm where STRCMP(CVCHAR5,NULL) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,'aa') <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR6
+1	aaaaaa
+select cidx, CVCHAR6 from datatypetestm where STRCMP(CVCHAR6,NULL) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,'aa') <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR7
+1	aaaaaaa
+select cidx, CVCHAR7 from datatypetestm where STRCMP(CVCHAR7,NULL) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,'aa') <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR8
+1	aaaaaaaa
+select cidx, CVCHAR8 from datatypetestm where STRCMP(CVCHAR8,NULL) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,CCHAR3) <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,CVCHAR8) <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,CCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,CVCHAR255) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,'aa') <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,'zzzzzz') <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,'qqqqqqqqqq') <> 0 order by cidx;
+cidx	CVCHAR255
+1	aaaaaaaaaa
+select cidx, CVCHAR255 from datatypetestm where STRCMP(CVCHAR255,NULL) <> 0 order by cidx;
+cidx	CVCHAR255

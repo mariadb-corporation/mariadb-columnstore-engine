@@ -1,0 +1,222 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, SUBSTRING(CTEXT,1) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,1)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTRING(CTEXT,5) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,5)
+1	texttexttext	texttext
+select cidx, CTEXT, SUBSTRING(CTEXT,7) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,7)
+1	texttexttext	xttext
+select cidx, CTEXT, SUBSTRING(CTEXT,8) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,8)
+1	texttexttext	ttext
+select cidx, CTEXT, SUBSTRING(CTEXT,9) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,9)
+1	texttexttext	text
+select cidx, CTEXT, SUBSTRING(CTEXT FROM 5) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT FROM 5)
+1	texttexttext	texttext
+select cidx, CTEXT, SUBSTRING(CTEXT FROM 9) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT FROM 9)
+1	texttexttext	text
+select cidx, CTEXT, SUBSTRING(CTEXT,5,2) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,5,2)
+1	texttexttext	te
+select cidx, CTEXT, SUBSTRING(CTEXT,9,3) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT,9,3)
+1	texttexttext	tex
+select cidx, CTEXT, SUBSTRING(CTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT FROM 5 FOR 2)
+1	texttexttext	te
+select cidx, CTEXT, SUBSTRING(CTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CTEXT	SUBSTRING(CTEXT FROM 9 FOR 3)
+1	texttexttext	tex
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,1) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,1)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,5)
+1	tinytext	text
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,7) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,7)
+1	tinytext	xt
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,8) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,8)
+1	tinytext	t
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,9) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,9)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT FROM 5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT FROM 5)
+1	tinytext	text
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT FROM 9) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT FROM 9)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,5,2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,5,2)
+1	tinytext	te
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT,9,3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT,9,3)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT FROM 5 FOR 2)
+1	tinytext	te
+select cidx, CTINYTEXT, SUBSTRING(CTINYTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTRING(CTINYTEXT FROM 9 FOR 3)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,1) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,1)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,5)
+1	mediumtestmediumtest	umtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,7) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,7)
+1	mediumtestmediumtest	testmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,8) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,8)
+1	mediumtestmediumtest	estmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,9) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,9)
+1	mediumtestmediumtest	stmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT FROM 5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT FROM 5)
+1	mediumtestmediumtest	umtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT FROM 9) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT FROM 9)
+1	mediumtestmediumtest	stmediumtest
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,5,2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,5,2)
+1	mediumtestmediumtest	um
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT,9,3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT,9,3)
+1	mediumtestmediumtest	stm
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT FROM 5 FOR 2)
+1	mediumtestmediumtest	um
+select cidx, CMEDIUMTEXT, SUBSTRING(CMEDIUMTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTRING(CMEDIUMTEXT FROM 9 FOR 3)
+1	mediumtestmediumtest	stm
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,1) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,1)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,5)
+1	longtextlongtextlongtext	textlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,7) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,7)
+1	longtextlongtextlongtext	xtlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,8) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,8)
+1	longtextlongtextlongtext	tlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,9) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,9)
+1	longtextlongtextlongtext	longtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT FROM 5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT FROM 5)
+1	longtextlongtextlongtext	textlongtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT FROM 9) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT FROM 9)
+1	longtextlongtextlongtext	longtextlongtext
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,5,2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,5,2)
+1	longtextlongtextlongtext	te
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT,9,3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT,9,3)
+1	longtextlongtextlongtext	lon
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT FROM 5 FOR 2)
+1	longtextlongtextlongtext	te
+select cidx, CLONGTEXT, SUBSTRING(CLONGTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTRING(CLONGTEXT FROM 9 FOR 3)
+1	longtextlongtextlongtext	lon
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,1) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,5) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,7) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,8) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,9) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT FROM 5) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT FROM 9) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,5,2) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT,9,3) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT FROM 5 FOR 2) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where SUBSTRING(CTEXT FROM 9 FOR 3) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,1) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,5) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,7) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,8) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,9) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT FROM 5) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT FROM 9) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,5,2) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT,9,3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT FROM 5 FOR 2) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where SUBSTRING(CTINYTEXT FROM 9 FOR 3) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,1) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,5) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,7) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,8) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,9) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT FROM 5) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT FROM 9) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,5,2) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT,9,3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT FROM 5 FOR 2) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where SUBSTRING(CMEDIUMTEXT FROM 9 FOR 3) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,1) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,5) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,7) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,8) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,9) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT FROM 5) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT FROM 9) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,5,2) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT,9,3) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT FROM 5 FOR 2) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where SUBSTRING(CLONGTEXT FROM 9 FOR 3) <> 0 ;
+cidx	CLONGTEXT

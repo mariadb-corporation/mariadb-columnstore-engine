@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME > dtt2.CCHAR5 ;
+cidx	CDATETIME	CCHAR5
+1	1997-01-01 00:00:00	aaaaa
+2	1997-01-01 00:00:01	e
+3	1997-01-02 00:00:01	ee
+4	1997-01-03 00:00:02	eee
+5	1997-01-04 00:00:03	eeee
+6	2009-12-31 23:59:56	vvvvv
+7	2009-12-31 23:59:57	vvvvv
+8	2009-12-31 23:59:58	vvvvv
+9	2009-12-31 23:59:59	vvvvv
+10	2009-12-31 23:59:59	zzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME >= dtt2.CCHAR5 ;
+cidx	CDATETIME	CCHAR5
+1	1997-01-01 00:00:00	aaaaa
+2	1997-01-01 00:00:01	e
+3	1997-01-02 00:00:01	ee
+4	1997-01-03 00:00:02	eee
+5	1997-01-04 00:00:03	eeee
+6	2009-12-31 23:59:56	vvvvv
+7	2009-12-31 23:59:57	vvvvv
+8	2009-12-31 23:59:58	vvvvv
+9	2009-12-31 23:59:59	vvvvv
+10	2009-12-31 23:59:59	zzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <> dtt2.CCHAR5 ;
+cidx	CDATETIME	CCHAR5
+1	1997-01-01 00:00:00	aaaaa
+2	1997-01-01 00:00:01	e
+3	1997-01-02 00:00:01	ee
+4	1997-01-03 00:00:02	eee
+5	1997-01-04 00:00:03	eeee
+6	2009-12-31 23:59:56	vvvvv
+7	2009-12-31 23:59:57	vvvvv
+8	2009-12-31 23:59:58	vvvvv
+9	2009-12-31 23:59:59	vvvvv
+10	2009-12-31 23:59:59	zzzzz
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME < dtt2.CCHAR5 ;
+cidx	CDATETIME	CCHAR5
+select dtt1.cidx, dtt1.CDATETIME, dtt2.CCHAR5 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDATETIME <= dtt2.CCHAR5 ;
+cidx	CDATETIME	CCHAR5

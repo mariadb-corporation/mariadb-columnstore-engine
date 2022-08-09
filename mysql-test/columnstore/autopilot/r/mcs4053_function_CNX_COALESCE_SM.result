@@ -1,0 +1,286 @@
+USE autopilot;
+select cidx, CCHAR1, COALESCE(CCHAR1,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR1	COALESCE(CCHAR1,'A',NULL)
+1	a	a
+select cidx, CCHAR1, COALESCE(CCHAR1,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR1	COALESCE(CCHAR1,NULL,NULL,'B')
+1	a	a
+select cidx, CCHAR1, COALESCE(CCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CCHAR1	COALESCE(CCHAR1,NULL)
+1	a	a
+select cidx, CCHAR2, COALESCE(CCHAR2,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR2	COALESCE(CCHAR2,'A',NULL)
+1	aa	aa
+select cidx, CCHAR2, COALESCE(CCHAR2,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR2	COALESCE(CCHAR2,NULL,NULL,'B')
+1	aa	aa
+select cidx, CCHAR2, COALESCE(CCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CCHAR2	COALESCE(CCHAR2,NULL)
+1	aa	aa
+select cidx, CCHAR3, COALESCE(CCHAR3,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR3	COALESCE(CCHAR3,'A',NULL)
+1	aaa	aaa
+select cidx, CCHAR3, COALESCE(CCHAR3,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR3	COALESCE(CCHAR3,NULL,NULL,'B')
+1	aaa	aaa
+select cidx, CCHAR3, COALESCE(CCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CCHAR3	COALESCE(CCHAR3,NULL)
+1	aaa	aaa
+select cidx, CCHAR4, COALESCE(CCHAR4,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR4	COALESCE(CCHAR4,'A',NULL)
+1	aaaa	aaaa
+select cidx, CCHAR4, COALESCE(CCHAR4,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR4	COALESCE(CCHAR4,NULL,NULL,'B')
+1	aaaa	aaaa
+select cidx, CCHAR4, COALESCE(CCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CCHAR4	COALESCE(CCHAR4,NULL)
+1	aaaa	aaaa
+select cidx, CCHAR5, COALESCE(CCHAR5,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR5	COALESCE(CCHAR5,'A',NULL)
+1	aaaaa	aaaaa
+select cidx, CCHAR5, COALESCE(CCHAR5,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR5	COALESCE(CCHAR5,NULL,NULL,'B')
+1	aaaaa	aaaaa
+select cidx, CCHAR5, COALESCE(CCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CCHAR5	COALESCE(CCHAR5,NULL)
+1	aaaaa	aaaaa
+select cidx, CCHAR6, COALESCE(CCHAR6,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR6	COALESCE(CCHAR6,'A',NULL)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, COALESCE(CCHAR6,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR6	COALESCE(CCHAR6,NULL,NULL,'B')
+1	aaaaaa	aaaaaa
+select cidx, CCHAR6, COALESCE(CCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CCHAR6	COALESCE(CCHAR6,NULL)
+1	aaaaaa	aaaaaa
+select cidx, CCHAR7, COALESCE(CCHAR7,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR7	COALESCE(CCHAR7,'A',NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, COALESCE(CCHAR7,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR7	COALESCE(CCHAR7,NULL,NULL,'B')
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR7, COALESCE(CCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CCHAR7	COALESCE(CCHAR7,NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CCHAR8, COALESCE(CCHAR8,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR8	COALESCE(CCHAR8,'A',NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, COALESCE(CCHAR8,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR8	COALESCE(CCHAR8,NULL,NULL,'B')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR8, COALESCE(CCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CCHAR8	COALESCE(CCHAR8,NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CCHAR9, COALESCE(CCHAR9,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR9	COALESCE(CCHAR9,'A',NULL)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, COALESCE(CCHAR9,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR9	COALESCE(CCHAR9,NULL,NULL,'B')
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR9, COALESCE(CCHAR9,NULL) from datatypetestm order by cidx;
+cidx	CCHAR9	COALESCE(CCHAR9,NULL)
+1	aaaaaaaaa	aaaaaaaaa
+select cidx, CCHAR255, COALESCE(CCHAR255,'A',NULL) from datatypetestm order by cidx;
+cidx	CCHAR255	COALESCE(CCHAR255,'A',NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, COALESCE(CCHAR255,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CCHAR255	COALESCE(CCHAR255,NULL,NULL,'B')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR255, COALESCE(CCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CCHAR255	COALESCE(CCHAR255,NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR1, COALESCE(CVCHAR1,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR1	COALESCE(CVCHAR1,'A',NULL)
+1	a	a
+select cidx, CVCHAR1, COALESCE(CVCHAR1,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR1	COALESCE(CVCHAR1,NULL,NULL,'B')
+1	a	a
+select cidx, CVCHAR1, COALESCE(CVCHAR1,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR1	COALESCE(CVCHAR1,NULL)
+1	a	a
+select cidx, CVCHAR2, COALESCE(CVCHAR2,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR2	COALESCE(CVCHAR2,'A',NULL)
+1	aa	aa
+select cidx, CVCHAR2, COALESCE(CVCHAR2,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR2	COALESCE(CVCHAR2,NULL,NULL,'B')
+1	aa	aa
+select cidx, CVCHAR2, COALESCE(CVCHAR2,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR2	COALESCE(CVCHAR2,NULL)
+1	aa	aa
+select cidx, CVCHAR3, COALESCE(CVCHAR3,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR3	COALESCE(CVCHAR3,'A',NULL)
+1	aaa	aaa
+select cidx, CVCHAR3, COALESCE(CVCHAR3,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR3	COALESCE(CVCHAR3,NULL,NULL,'B')
+1	aaa	aaa
+select cidx, CVCHAR3, COALESCE(CVCHAR3,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR3	COALESCE(CVCHAR3,NULL)
+1	aaa	aaa
+select cidx, CVCHAR4, COALESCE(CVCHAR4,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR4	COALESCE(CVCHAR4,'A',NULL)
+1	aaaa	aaaa
+select cidx, CVCHAR4, COALESCE(CVCHAR4,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR4	COALESCE(CVCHAR4,NULL,NULL,'B')
+1	aaaa	aaaa
+select cidx, CVCHAR4, COALESCE(CVCHAR4,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR4	COALESCE(CVCHAR4,NULL)
+1	aaaa	aaaa
+select cidx, CVCHAR5, COALESCE(CVCHAR5,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR5	COALESCE(CVCHAR5,'A',NULL)
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, COALESCE(CVCHAR5,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR5	COALESCE(CVCHAR5,NULL,NULL,'B')
+1	aaaaa	aaaaa
+select cidx, CVCHAR5, COALESCE(CVCHAR5,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR5	COALESCE(CVCHAR5,NULL)
+1	aaaaa	aaaaa
+select cidx, CVCHAR6, COALESCE(CVCHAR6,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR6	COALESCE(CVCHAR6,'A',NULL)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, COALESCE(CVCHAR6,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR6	COALESCE(CVCHAR6,NULL,NULL,'B')
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR6, COALESCE(CVCHAR6,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR6	COALESCE(CVCHAR6,NULL)
+1	aaaaaa	aaaaaa
+select cidx, CVCHAR7, COALESCE(CVCHAR7,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR7	COALESCE(CVCHAR7,'A',NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, COALESCE(CVCHAR7,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR7	COALESCE(CVCHAR7,NULL,NULL,'B')
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR7, COALESCE(CVCHAR7,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR7	COALESCE(CVCHAR7,NULL)
+1	aaaaaaa	aaaaaaa
+select cidx, CVCHAR8, COALESCE(CVCHAR8,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR8	COALESCE(CVCHAR8,'A',NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, COALESCE(CVCHAR8,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR8	COALESCE(CVCHAR8,NULL,NULL,'B')
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR8, COALESCE(CVCHAR8,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR8	COALESCE(CVCHAR8,NULL)
+1	aaaaaaaa	aaaaaaaa
+select cidx, CVCHAR255, COALESCE(CVCHAR255,'A',NULL) from datatypetestm order by cidx;
+cidx	CVCHAR255	COALESCE(CVCHAR255,'A',NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, COALESCE(CVCHAR255,NULL,NULL,'B') from datatypetestm order by cidx;
+cidx	CVCHAR255	COALESCE(CVCHAR255,NULL,NULL,'B')
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR255, COALESCE(CVCHAR255,NULL) from datatypetestm order by cidx;
+cidx	CVCHAR255	COALESCE(CVCHAR255,NULL)
+1	aaaaaaaaaa	aaaaaaaaaa
+select cidx, CCHAR1 from datatypetestm where COALESCE(CCHAR1,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where COALESCE(CCHAR1,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR1 from datatypetestm where COALESCE(CCHAR1,NULL) <> 0 order by cidx;
+cidx	CCHAR1
+select cidx, CCHAR2 from datatypetestm where COALESCE(CCHAR2,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where COALESCE(CCHAR2,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR2 from datatypetestm where COALESCE(CCHAR2,NULL) <> 0 order by cidx;
+cidx	CCHAR2
+select cidx, CCHAR3 from datatypetestm where COALESCE(CCHAR3,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where COALESCE(CCHAR3,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR3 from datatypetestm where COALESCE(CCHAR3,NULL) <> 0 order by cidx;
+cidx	CCHAR3
+select cidx, CCHAR4 from datatypetestm where COALESCE(CCHAR4,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where COALESCE(CCHAR4,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR4 from datatypetestm where COALESCE(CCHAR4,NULL) <> 0 order by cidx;
+cidx	CCHAR4
+select cidx, CCHAR5 from datatypetestm where COALESCE(CCHAR5,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where COALESCE(CCHAR5,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR5 from datatypetestm where COALESCE(CCHAR5,NULL) <> 0 order by cidx;
+cidx	CCHAR5
+select cidx, CCHAR6 from datatypetestm where COALESCE(CCHAR6,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where COALESCE(CCHAR6,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR6 from datatypetestm where COALESCE(CCHAR6,NULL) <> 0 order by cidx;
+cidx	CCHAR6
+select cidx, CCHAR7 from datatypetestm where COALESCE(CCHAR7,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where COALESCE(CCHAR7,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR7 from datatypetestm where COALESCE(CCHAR7,NULL) <> 0 order by cidx;
+cidx	CCHAR7
+select cidx, CCHAR8 from datatypetestm where COALESCE(CCHAR8,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where COALESCE(CCHAR8,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR8 from datatypetestm where COALESCE(CCHAR8,NULL) <> 0 order by cidx;
+cidx	CCHAR8
+select cidx, CCHAR9 from datatypetestm where COALESCE(CCHAR9,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where COALESCE(CCHAR9,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR9 from datatypetestm where COALESCE(CCHAR9,NULL) <> 0 order by cidx;
+cidx	CCHAR9
+select cidx, CCHAR255 from datatypetestm where COALESCE(CCHAR255,'A',NULL) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where COALESCE(CCHAR255,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CCHAR255 from datatypetestm where COALESCE(CCHAR255,NULL) <> 0 order by cidx;
+cidx	CCHAR255
+select cidx, CVCHAR1 from datatypetestm where COALESCE(CVCHAR1,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where COALESCE(CVCHAR1,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR1 from datatypetestm where COALESCE(CVCHAR1,NULL) <> 0 order by cidx;
+cidx	CVCHAR1
+select cidx, CVCHAR2 from datatypetestm where COALESCE(CVCHAR2,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where COALESCE(CVCHAR2,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR2 from datatypetestm where COALESCE(CVCHAR2,NULL) <> 0 order by cidx;
+cidx	CVCHAR2
+select cidx, CVCHAR3 from datatypetestm where COALESCE(CVCHAR3,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where COALESCE(CVCHAR3,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR3 from datatypetestm where COALESCE(CVCHAR3,NULL) <> 0 order by cidx;
+cidx	CVCHAR3
+select cidx, CVCHAR4 from datatypetestm where COALESCE(CVCHAR4,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where COALESCE(CVCHAR4,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR4 from datatypetestm where COALESCE(CVCHAR4,NULL) <> 0 order by cidx;
+cidx	CVCHAR4
+select cidx, CVCHAR5 from datatypetestm where COALESCE(CVCHAR5,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where COALESCE(CVCHAR5,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR5 from datatypetestm where COALESCE(CVCHAR5,NULL) <> 0 order by cidx;
+cidx	CVCHAR5
+select cidx, CVCHAR6 from datatypetestm where COALESCE(CVCHAR6,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where COALESCE(CVCHAR6,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR6 from datatypetestm where COALESCE(CVCHAR6,NULL) <> 0 order by cidx;
+cidx	CVCHAR6
+select cidx, CVCHAR7 from datatypetestm where COALESCE(CVCHAR7,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where COALESCE(CVCHAR7,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR7 from datatypetestm where COALESCE(CVCHAR7,NULL) <> 0 order by cidx;
+cidx	CVCHAR7
+select cidx, CVCHAR8 from datatypetestm where COALESCE(CVCHAR8,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where COALESCE(CVCHAR8,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR8 from datatypetestm where COALESCE(CVCHAR8,NULL) <> 0 order by cidx;
+cidx	CVCHAR8
+select cidx, CVCHAR255 from datatypetestm where COALESCE(CVCHAR255,'A',NULL) <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where COALESCE(CVCHAR255,NULL,NULL,'B') <> 0 order by cidx;
+cidx	CVCHAR255
+select cidx, CVCHAR255 from datatypetestm where COALESCE(CVCHAR255,NULL) <> 0 order by cidx;
+cidx	CVCHAR255

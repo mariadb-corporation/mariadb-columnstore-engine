@@ -1,0 +1,34 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INET_NTOA(CTEXT) from datatypetestm ;
+cidx	CTEXT	INET_NTOA(CTEXT)
+1	texttexttext	0.0.0.0
+select cidx, CTINYTEXT, INET_NTOA(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	INET_NTOA(CTINYTEXT)
+1	tinytext	0.0.0.0
+select cidx, CMEDIUMTEXT, INET_NTOA(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	INET_NTOA(CMEDIUMTEXT)
+1	mediumtestmediumtest	0.0.0.0
+select cidx, CLONGTEXT, INET_NTOA(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	INET_NTOA(CLONGTEXT)
+1	longtextlongtextlongtext	0.0.0.0
+select cidx, INET_NTOA(12) from datatypetestm ;
+cidx	INET_NTOA(12)
+1	0.0.0.12
+select cidx, INET_NTOA(123) from datatypetestm ;
+cidx	INET_NTOA(123)
+1	0.0.0.123
+select cidx, INET_NTOA(1234) from datatypetestm ;
+cidx	INET_NTOA(1234)
+1	0.0.4.210
+select cidx, INET_NTOA(12345678) from datatypetestm ;
+cidx	INET_NTOA(12345678)
+1	0.188.97.78
+select cidx, CTEXT from datatypetestm where INET_NTOA(CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where INET_NTOA(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where INET_NTOA(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where INET_NTOA(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT

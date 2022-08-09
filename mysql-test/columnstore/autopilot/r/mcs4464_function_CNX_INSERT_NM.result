@@ -1,0 +1,391 @@
+USE autopilot;
+select cidx, CBIGINT, INSERT(CBIGINT,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CBIGINT	INSERT(CBIGINT,2,2,'Hello')
+1	-72036854775806	-Hello036854775806
+select cidx, CBIGINT, INSERT(CBIGINT,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CBIGINT	INSERT(CBIGINT,2,5,'Hello')
+1	-72036854775806	-Hello854775806
+select cidx, CBIGINT, INSERT(CBIGINT,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CBIGINT	INSERT(CBIGINT,-1,5,'Hello')
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, INSERT(CBIGINT,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CBIGINT	INSERT(CBIGINT,2,12,'Hello')
+1	-72036854775806	-Hello06
+select cidx, CBIGINT, INSERT(CBIGINT,1,12,NULL) from datatypetestm order by cidx;
+cidx	CBIGINT	INSERT(CBIGINT,1,12,NULL)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, INSERT(CDECIMAL1,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL1	INSERT(CDECIMAL1,2,2,'Hello')
+1	-9	-Hello
+select cidx, CDECIMAL1, INSERT(CDECIMAL1,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL1	INSERT(CDECIMAL1,2,5,'Hello')
+1	-9	-Hello
+select cidx, CDECIMAL1, INSERT(CDECIMAL1,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL1	INSERT(CDECIMAL1,-1,5,'Hello')
+1	-9	-9
+select cidx, CDECIMAL1, INSERT(CDECIMAL1,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL1	INSERT(CDECIMAL1,2,12,'Hello')
+1	-9	-Hello
+select cidx, CDECIMAL1, INSERT(CDECIMAL1,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL1	INSERT(CDECIMAL1,1,12,NULL)
+1	-9	NULL
+select cidx, CDECIMAL4, INSERT(CDECIMAL4,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4	INSERT(CDECIMAL4,2,2,'Hello')
+1	-999	-Hello9
+select cidx, CDECIMAL4, INSERT(CDECIMAL4,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4	INSERT(CDECIMAL4,2,5,'Hello')
+1	-999	-Hello
+select cidx, CDECIMAL4, INSERT(CDECIMAL4,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4	INSERT(CDECIMAL4,-1,5,'Hello')
+1	-999	-999
+select cidx, CDECIMAL4, INSERT(CDECIMAL4,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4	INSERT(CDECIMAL4,2,12,'Hello')
+1	-999	-Hello
+select cidx, CDECIMAL4, INSERT(CDECIMAL4,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4	INSERT(CDECIMAL4,1,12,NULL)
+1	-999	NULL
+select cidx, CDECIMAL4_2, INSERT(CDECIMAL4_2,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INSERT(CDECIMAL4_2,2,2,'Hello')
+1	-9.99	-Hello99
+select cidx, CDECIMAL4_2, INSERT(CDECIMAL4_2,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INSERT(CDECIMAL4_2,2,5,'Hello')
+1	-9.99	-Hello
+select cidx, CDECIMAL4_2, INSERT(CDECIMAL4_2,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INSERT(CDECIMAL4_2,-1,5,'Hello')
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, INSERT(CDECIMAL4_2,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INSERT(CDECIMAL4_2,2,12,'Hello')
+1	-9.99	-Hello
+select cidx, CDECIMAL4_2, INSERT(CDECIMAL4_2,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	INSERT(CDECIMAL4_2,1,12,NULL)
+1	-9.99	NULL
+select cidx, CDECIMAL5, INSERT(CDECIMAL5,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL5	INSERT(CDECIMAL5,2,2,'Hello')
+1	-999	-Hello9
+select cidx, CDECIMAL5, INSERT(CDECIMAL5,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL5	INSERT(CDECIMAL5,2,5,'Hello')
+1	-999	-Hello
+select cidx, CDECIMAL5, INSERT(CDECIMAL5,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL5	INSERT(CDECIMAL5,-1,5,'Hello')
+1	-999	-999
+select cidx, CDECIMAL5, INSERT(CDECIMAL5,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL5	INSERT(CDECIMAL5,2,12,'Hello')
+1	-999	-Hello
+select cidx, CDECIMAL5, INSERT(CDECIMAL5,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL5	INSERT(CDECIMAL5,1,12,NULL)
+1	-999	NULL
+select cidx, CDECIMAL9, INSERT(CDECIMAL9,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9	INSERT(CDECIMAL9,2,2,'Hello')
+1	-999999	-Hello9999
+select cidx, CDECIMAL9, INSERT(CDECIMAL9,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9	INSERT(CDECIMAL9,2,5,'Hello')
+1	-999999	-Hello9
+select cidx, CDECIMAL9, INSERT(CDECIMAL9,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9	INSERT(CDECIMAL9,-1,5,'Hello')
+1	-999999	-999999
+select cidx, CDECIMAL9, INSERT(CDECIMAL9,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9	INSERT(CDECIMAL9,2,12,'Hello')
+1	-999999	-Hello
+select cidx, CDECIMAL9, INSERT(CDECIMAL9,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9	INSERT(CDECIMAL9,1,12,NULL)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, INSERT(CDECIMAL9_2,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INSERT(CDECIMAL9_2,2,2,'Hello')
+1	-9999.99	-Hello99.99
+select cidx, CDECIMAL9_2, INSERT(CDECIMAL9_2,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INSERT(CDECIMAL9_2,2,5,'Hello')
+1	-9999.99	-Hello99
+select cidx, CDECIMAL9_2, INSERT(CDECIMAL9_2,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INSERT(CDECIMAL9_2,-1,5,'Hello')
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, INSERT(CDECIMAL9_2,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INSERT(CDECIMAL9_2,2,12,'Hello')
+1	-9999.99	-Hello
+select cidx, CDECIMAL9_2, INSERT(CDECIMAL9_2,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	INSERT(CDECIMAL9_2,1,12,NULL)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, INSERT(CDECIMAL10,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL10	INSERT(CDECIMAL10,2,2,'Hello')
+1	-9999999	-Hello99999
+select cidx, CDECIMAL10, INSERT(CDECIMAL10,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL10	INSERT(CDECIMAL10,2,5,'Hello')
+1	-9999999	-Hello99
+select cidx, CDECIMAL10, INSERT(CDECIMAL10,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL10	INSERT(CDECIMAL10,-1,5,'Hello')
+1	-9999999	-9999999
+select cidx, CDECIMAL10, INSERT(CDECIMAL10,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL10	INSERT(CDECIMAL10,2,12,'Hello')
+1	-9999999	-Hello
+select cidx, CDECIMAL10, INSERT(CDECIMAL10,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL10	INSERT(CDECIMAL10,1,12,NULL)
+1	-9999999	NULL
+select cidx, CDECIMAL18, INSERT(CDECIMAL18,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18	INSERT(CDECIMAL18,2,2,'Hello')
+1	-9999999999999	-Hello99999999999
+select cidx, CDECIMAL18, INSERT(CDECIMAL18,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18	INSERT(CDECIMAL18,2,5,'Hello')
+1	-9999999999999	-Hello99999999
+select cidx, CDECIMAL18, INSERT(CDECIMAL18,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18	INSERT(CDECIMAL18,-1,5,'Hello')
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, INSERT(CDECIMAL18,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18	INSERT(CDECIMAL18,2,12,'Hello')
+1	-9999999999999	-Hello9
+select cidx, CDECIMAL18, INSERT(CDECIMAL18,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18	INSERT(CDECIMAL18,1,12,NULL)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, INSERT(CDECIMAL18_2,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INSERT(CDECIMAL18_2,2,2,'Hello')
+1	-99999999999.99	-Hello999999999.99
+select cidx, CDECIMAL18_2, INSERT(CDECIMAL18_2,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INSERT(CDECIMAL18_2,2,5,'Hello')
+1	-99999999999.99	-Hello999999.99
+select cidx, CDECIMAL18_2, INSERT(CDECIMAL18_2,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INSERT(CDECIMAL18_2,-1,5,'Hello')
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, INSERT(CDECIMAL18_2,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INSERT(CDECIMAL18_2,2,12,'Hello')
+1	-99999999999.99	-Hello99
+select cidx, CDECIMAL18_2, INSERT(CDECIMAL18_2,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	INSERT(CDECIMAL18_2,1,12,NULL)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, INSERT(CINTEGER,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CINTEGER	INSERT(CINTEGER,2,2,'Hello')
+1	-7483646	-Hello83646
+select cidx, CINTEGER, INSERT(CINTEGER,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CINTEGER	INSERT(CINTEGER,2,5,'Hello')
+1	-7483646	-Hello46
+select cidx, CINTEGER, INSERT(CINTEGER,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CINTEGER	INSERT(CINTEGER,-1,5,'Hello')
+1	-7483646	-7483646
+select cidx, CINTEGER, INSERT(CINTEGER,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CINTEGER	INSERT(CINTEGER,2,12,'Hello')
+1	-7483646	-Hello
+select cidx, CINTEGER, INSERT(CINTEGER,1,12,NULL) from datatypetestm order by cidx;
+cidx	CINTEGER	INSERT(CINTEGER,1,12,NULL)
+1	-7483646	NULL
+select cidx, CSMALLINT, INSERT(CSMALLINT,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CSMALLINT	INSERT(CSMALLINT,2,2,'Hello')
+1	-766	-Hello6
+select cidx, CSMALLINT, INSERT(CSMALLINT,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CSMALLINT	INSERT(CSMALLINT,2,5,'Hello')
+1	-766	-Hello
+select cidx, CSMALLINT, INSERT(CSMALLINT,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CSMALLINT	INSERT(CSMALLINT,-1,5,'Hello')
+1	-766	-766
+select cidx, CSMALLINT, INSERT(CSMALLINT,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CSMALLINT	INSERT(CSMALLINT,2,12,'Hello')
+1	-766	-Hello
+select cidx, CSMALLINT, INSERT(CSMALLINT,1,12,NULL) from datatypetestm order by cidx;
+cidx	CSMALLINT	INSERT(CSMALLINT,1,12,NULL)
+1	-766	NULL
+select cidx, CTINYINT, INSERT(CTINYINT,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CTINYINT	INSERT(CTINYINT,2,2,'Hello')
+1	-26	-Hello
+select cidx, CTINYINT, INSERT(CTINYINT,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CTINYINT	INSERT(CTINYINT,2,5,'Hello')
+1	-26	-Hello
+select cidx, CTINYINT, INSERT(CTINYINT,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CTINYINT	INSERT(CTINYINT,-1,5,'Hello')
+1	-26	-26
+select cidx, CTINYINT, INSERT(CTINYINT,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CTINYINT	INSERT(CTINYINT,2,12,'Hello')
+1	-26	-Hello
+select cidx, CTINYINT, INSERT(CTINYINT,1,12,NULL) from datatypetestm order by cidx;
+cidx	CTINYINT	INSERT(CTINYINT,1,12,NULL)
+1	-26	NULL
+select cidx, CDOUBLE, INSERT(CDOUBLE,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CDOUBLE	INSERT(CDOUBLE,2,2,'Hello')
+1	-1.797693231e108	-Hello79769e108
+select cidx, CDOUBLE, INSERT(CDOUBLE,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CDOUBLE	INSERT(CDOUBLE,2,5,'Hello')
+1	-1.797693231e108	-Hello69e108
+select cidx, CDOUBLE, INSERT(CDOUBLE,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CDOUBLE	INSERT(CDOUBLE,-1,5,'Hello')
+1	-1.797693231e108	-1.79769e108
+select cidx, CDOUBLE, INSERT(CDOUBLE,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CDOUBLE	INSERT(CDOUBLE,2,12,'Hello')
+1	-1.797693231e108	-Hello
+select cidx, CDOUBLE, INSERT(CDOUBLE,1,12,NULL) from datatypetestm order by cidx;
+cidx	CDOUBLE	INSERT(CDOUBLE,1,12,NULL)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, INSERT(CFLOAT,2,2,'Hello') from datatypetestm order by cidx;
+cidx	CFLOAT	INSERT(CFLOAT,2,2,'Hello')
+1	-3.40287e18	-Hello40287e18
+select cidx, CFLOAT, INSERT(CFLOAT,2,5,'Hello') from datatypetestm order by cidx;
+cidx	CFLOAT	INSERT(CFLOAT,2,5,'Hello')
+1	-3.40287e18	-Hello87e18
+select cidx, CFLOAT, INSERT(CFLOAT,-1,5,'Hello') from datatypetestm order by cidx;
+cidx	CFLOAT	INSERT(CFLOAT,-1,5,'Hello')
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, INSERT(CFLOAT,2,12,'Hello') from datatypetestm order by cidx;
+cidx	CFLOAT	INSERT(CFLOAT,2,12,'Hello')
+1	-3.40287e18	-Hello
+select cidx, CFLOAT, INSERT(CFLOAT,1,12,NULL) from datatypetestm order by cidx;
+cidx	CFLOAT	INSERT(CFLOAT,1,12,NULL)
+1	-3.40287e18	NULL
+select cidx, CBIGINT from datatypetestm where INSERT(CBIGINT,2,2,'Hello') <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where INSERT(CBIGINT,2,5,'Hello') <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where INSERT(CBIGINT,-1,5,'Hello') <> 0 order by cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm where INSERT(CBIGINT,2,12,'Hello') <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CBIGINT from datatypetestm where INSERT(CBIGINT,1,12,NULL) <> 0 order by cidx;
+cidx	CBIGINT
+select cidx, CDECIMAL1 from datatypetestm where INSERT(CDECIMAL1,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where INSERT(CDECIMAL1,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where INSERT(CDECIMAL1,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm where INSERT(CDECIMAL1,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL1 from datatypetestm where INSERT(CDECIMAL1,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL1
+select cidx, CDECIMAL4 from datatypetestm where INSERT(CDECIMAL4,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where INSERT(CDECIMAL4,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where INSERT(CDECIMAL4,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm where INSERT(CDECIMAL4,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4 from datatypetestm where INSERT(CDECIMAL4,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4
+select cidx, CDECIMAL4_2 from datatypetestm where INSERT(CDECIMAL4_2,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where INSERT(CDECIMAL4_2,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where INSERT(CDECIMAL4_2,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm where INSERT(CDECIMAL4_2,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL4_2 from datatypetestm where INSERT(CDECIMAL4_2,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL4_2
+select cidx, CDECIMAL5 from datatypetestm where INSERT(CDECIMAL5,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where INSERT(CDECIMAL5,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where INSERT(CDECIMAL5,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm where INSERT(CDECIMAL5,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL5 from datatypetestm where INSERT(CDECIMAL5,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL5
+select cidx, CDECIMAL9 from datatypetestm where INSERT(CDECIMAL9,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where INSERT(CDECIMAL9,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where INSERT(CDECIMAL9,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm where INSERT(CDECIMAL9,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9 from datatypetestm where INSERT(CDECIMAL9,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9
+select cidx, CDECIMAL9_2 from datatypetestm where INSERT(CDECIMAL9_2,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where INSERT(CDECIMAL9_2,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where INSERT(CDECIMAL9_2,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm where INSERT(CDECIMAL9_2,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL9_2 from datatypetestm where INSERT(CDECIMAL9_2,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL9_2
+select cidx, CDECIMAL10 from datatypetestm where INSERT(CDECIMAL10,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where INSERT(CDECIMAL10,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where INSERT(CDECIMAL10,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm where INSERT(CDECIMAL10,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL10 from datatypetestm where INSERT(CDECIMAL10,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL10
+select cidx, CDECIMAL18 from datatypetestm where INSERT(CDECIMAL18,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where INSERT(CDECIMAL18,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where INSERT(CDECIMAL18,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm where INSERT(CDECIMAL18,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18 from datatypetestm where INSERT(CDECIMAL18,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18
+select cidx, CDECIMAL18_2 from datatypetestm where INSERT(CDECIMAL18_2,2,2,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where INSERT(CDECIMAL18_2,2,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where INSERT(CDECIMAL18_2,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm where INSERT(CDECIMAL18_2,2,12,'Hello') <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CDECIMAL18_2 from datatypetestm where INSERT(CDECIMAL18_2,1,12,NULL) <> 0 order by cidx;
+cidx	CDECIMAL18_2
+select cidx, CINTEGER from datatypetestm where INSERT(CINTEGER,2,2,'Hello') <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where INSERT(CINTEGER,2,5,'Hello') <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where INSERT(CINTEGER,-1,5,'Hello') <> 0 order by cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm where INSERT(CINTEGER,2,12,'Hello') <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CINTEGER from datatypetestm where INSERT(CINTEGER,1,12,NULL) <> 0 order by cidx;
+cidx	CINTEGER
+select cidx, CSMALLINT from datatypetestm where INSERT(CSMALLINT,2,2,'Hello') <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where INSERT(CSMALLINT,2,5,'Hello') <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where INSERT(CSMALLINT,-1,5,'Hello') <> 0 order by cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm where INSERT(CSMALLINT,2,12,'Hello') <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CSMALLINT from datatypetestm where INSERT(CSMALLINT,1,12,NULL) <> 0 order by cidx;
+cidx	CSMALLINT
+select cidx, CTINYINT from datatypetestm where INSERT(CTINYINT,2,2,'Hello') <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where INSERT(CTINYINT,2,5,'Hello') <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where INSERT(CTINYINT,-1,5,'Hello') <> 0 order by cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm where INSERT(CTINYINT,2,12,'Hello') <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CTINYINT from datatypetestm where INSERT(CTINYINT,1,12,NULL) <> 0 order by cidx;
+cidx	CTINYINT
+select cidx, CDOUBLE from datatypetestm where INSERT(CDOUBLE,2,2,'Hello') <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where INSERT(CDOUBLE,2,5,'Hello') <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where INSERT(CDOUBLE,-1,5,'Hello') <> 0 order by cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm where INSERT(CDOUBLE,2,12,'Hello') <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CDOUBLE from datatypetestm where INSERT(CDOUBLE,1,12,NULL) <> 0 order by cidx;
+cidx	CDOUBLE
+select cidx, CFLOAT from datatypetestm where INSERT(CFLOAT,2,2,'Hello') <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where INSERT(CFLOAT,2,5,'Hello') <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where INSERT(CFLOAT,-1,5,'Hello') <> 0 order by cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm where INSERT(CFLOAT,2,12,'Hello') <> 0 order by cidx;
+cidx	CFLOAT
+select cidx, CFLOAT from datatypetestm where INSERT(CFLOAT,1,12,NULL) <> 0 order by cidx;
+cidx	CFLOAT

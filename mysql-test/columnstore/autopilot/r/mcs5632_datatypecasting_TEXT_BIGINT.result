@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CBIGINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CBIGINT ;
+cidx	CTEXT	CBIGINT
+1	texttexttext	-72036854775806
+2	texttexttext	-72036854775805
+3	texttexttext	-72036854775804
+4	texttexttext	-72036854775803
+5	texttexttext	-72036854775802
+select dtt1.cidx, dtt1.CTEXT, dtt2.CBIGINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CBIGINT ;
+cidx	CTEXT	CBIGINT
+1	texttexttext	-72036854775806
+2	texttexttext	-72036854775805
+3	texttexttext	-72036854775804
+4	texttexttext	-72036854775803
+5	texttexttext	-72036854775802
+select dtt1.cidx, dtt1.CTEXT, dtt2.CBIGINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CBIGINT ;
+cidx	CTEXT	CBIGINT
+1	texttexttext	-72036854775806
+2	texttexttext	-72036854775805
+3	texttexttext	-72036854775804
+4	texttexttext	-72036854775803
+5	texttexttext	-72036854775802
+6	texttexttext	72036854775803
+7	texttexttext	72036854775804
+8	texttexttext	72036854775805
+9	texttexttext	72036854775806
+10	texttexttext	72036854775807
+select dtt1.cidx, dtt1.CTEXT, dtt2.CBIGINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CBIGINT ;
+cidx	CTEXT	CBIGINT
+6	texttexttext	72036854775803
+7	texttexttext	72036854775804
+8	texttexttext	72036854775805
+9	texttexttext	72036854775806
+10	texttexttext	72036854775807
+select dtt1.cidx, dtt1.CTEXT, dtt2.CBIGINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CBIGINT ;
+cidx	CTEXT	CBIGINT
+6	texttexttext	72036854775803
+7	texttexttext	72036854775804
+8	texttexttext	72036854775805
+9	texttexttext	72036854775806
+10	texttexttext	72036854775807

@@ -1,0 +1,8 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, GREATEST('hi','hello','wei',cchar1) from datatypetestm ;
+cidx	GREATEST('hi','hello','wei',cchar1)
+1	wei
+select cidx, GREATEST('world','mahimahi','spam',cchar1) from datatypetestm ;
+cidx	GREATEST('world','mahimahi','spam',cchar1)
+1	world

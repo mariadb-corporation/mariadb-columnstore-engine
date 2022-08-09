@@ -1,0 +1,54 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CCHAR1, ASCII(CCHAR1) from datatypetestm order by cidx;
+select cidx, CCHAR2, ASCII(CCHAR2) from datatypetestm order by cidx;
+select cidx, CCHAR3, ASCII(CCHAR3) from datatypetestm order by cidx;
+select cidx, CCHAR4, ASCII(CCHAR4) from datatypetestm order by cidx;
+select cidx, CCHAR5, ASCII(CCHAR5) from datatypetestm order by cidx;
+select cidx, CCHAR6, ASCII(CCHAR6) from datatypetestm order by cidx;
+select cidx, CCHAR7, ASCII(CCHAR7) from datatypetestm order by cidx;
+select cidx, CCHAR8, ASCII(CCHAR8) from datatypetestm order by cidx;
+select cidx, CCHAR9, ASCII(CCHAR9) from datatypetestm order by cidx;
+select cidx, CCHAR255, ASCII(CCHAR255) from datatypetestm order by cidx;
+select cidx, CVCHAR1, ASCII(CVCHAR1) from datatypetestm order by cidx;
+select cidx, CVCHAR2, ASCII(CVCHAR2) from datatypetestm order by cidx;
+select cidx, CVCHAR3, ASCII(CVCHAR3) from datatypetestm order by cidx;
+select cidx, CVCHAR4, ASCII(CVCHAR4) from datatypetestm order by cidx;
+select cidx, CVCHAR5, ASCII(CVCHAR5) from datatypetestm order by cidx;
+select cidx, CVCHAR6, ASCII(CVCHAR6) from datatypetestm order by cidx;
+select cidx, CVCHAR7, ASCII(CVCHAR7) from datatypetestm order by cidx;
+select cidx, CVCHAR8, ASCII(CVCHAR8) from datatypetestm order by cidx;
+select cidx, CVCHAR255, ASCII(CVCHAR255) from datatypetestm order by cidx;
+select cidx, ASCII('NULL') from datatypetestm order by cidx;
+select cidx, ASCII('null') from datatypetestm order by cidx;
+select cidx, ASCII(' ') from datatypetestm order by cidx;
+select cidx, ASCII(' THIS ') from datatypetestm order by cidx;
+select cidx, ASCII('this') from datatypetestm order by cidx;
+select cidx, ASCII('t') from datatypetestm order by cidx;
+select cidx, CCHAR1 from datatypetestm order by ASCII(CCHAR1), cidx;
+select cidx, CCHAR2 from datatypetestm order by ASCII(CCHAR2), cidx;
+select cidx, CCHAR3 from datatypetestm order by ASCII(CCHAR3), cidx;
+select cidx, CCHAR4 from datatypetestm order by ASCII(CCHAR4), cidx;
+select cidx, CCHAR5 from datatypetestm order by ASCII(CCHAR5), cidx;
+select cidx, CCHAR6 from datatypetestm order by ASCII(CCHAR6), cidx;
+select cidx, CCHAR7 from datatypetestm order by ASCII(CCHAR7), cidx;
+select cidx, CCHAR8 from datatypetestm order by ASCII(CCHAR8), cidx;
+select cidx, CCHAR9 from datatypetestm order by ASCII(CCHAR9), cidx;
+select cidx, CCHAR255 from datatypetestm order by ASCII(CCHAR255), cidx;
+select cidx, CVCHAR1 from datatypetestm order by ASCII(CVCHAR1), cidx;
+select cidx, CVCHAR2 from datatypetestm order by ASCII(CVCHAR2), cidx;
+select cidx, CVCHAR3 from datatypetestm order by ASCII(CVCHAR3), cidx;
+select cidx, CVCHAR4 from datatypetestm order by ASCII(CVCHAR4), cidx;
+select cidx, CVCHAR5 from datatypetestm order by ASCII(CVCHAR5), cidx;
+select cidx, CVCHAR6 from datatypetestm order by ASCII(CVCHAR6), cidx;
+select cidx, CVCHAR7 from datatypetestm order by ASCII(CVCHAR7), cidx;
+select cidx, CVCHAR8 from datatypetestm order by ASCII(CVCHAR8), cidx;
+select cidx, CVCHAR255 from datatypetestm order by ASCII(CVCHAR255), cidx;

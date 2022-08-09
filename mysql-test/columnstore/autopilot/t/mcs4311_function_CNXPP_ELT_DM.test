@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, ELT(cidx,CCHAR3, CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, ELT(cidx,CCHAR3,CCHAR7, CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, ELT(cidx,CCHAR3, CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, ELT(cidx,CCHAR3,CCHAR7, CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, ELT(cidx,CCHAR3, CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, ELT(cidx,CCHAR3,CCHAR7, CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3, CDATE), cidx;
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CDATE), cidx;
+select cidx, CDATE from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3, CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3, CTIME), cidx;
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3,CCHAR7, CTIME), cidx;
+select cidx, CTIME from datatypetestm order by ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTIME), cidx;

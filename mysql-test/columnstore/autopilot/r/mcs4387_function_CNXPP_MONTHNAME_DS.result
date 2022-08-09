@@ -1,0 +1,27 @@
+USE autopilot;
+select cidx, CDATE, MONTHNAME(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	MONTHNAME(CDATE)
+1	1997-01-01	January
+select cidx, CDATETIME, MONTHNAME(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	MONTHNAME(CDATETIME)
+1	1997-01-01 00:00:00	January
+select cidx, CTIME, MONTHNAME(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	MONTHNAME(CTIME)
+1	13:00:00	REPLACEDVALUE
+select cidx, MONTHNAME('2009-02-28') from datatypetestm order by cidx;
+cidx	MONTHNAME('2009-02-28')
+1	February
+select cidx, MONTHNAME('2009-07-04') from datatypetestm order by cidx;
+cidx	MONTHNAME('2009-07-04')
+1	July
+select cidx, MONTHNAME('2010-02-31') from datatypetestm order by cidx;
+cidx	MONTHNAME('2010-02-31')
+1	NULL
+Warnings:
+Warning	1292	Incorrect datetime value: '2010-02-31'
+select cidx, CDATE from datatypetestm order by MONTHNAME(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by MONTHNAME(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

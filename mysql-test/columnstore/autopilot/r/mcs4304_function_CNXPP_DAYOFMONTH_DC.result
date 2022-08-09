@@ -1,0 +1,13 @@
+USE autopilot;
+select cidx, CDATE, DAYOFMONTH(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	DAYOFMONTH(CDATE)
+1	1997-01-01	1
+select cidx, CDATETIME, DAYOFMONTH(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	DAYOFMONTH(CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CDATE from datatypetestm order by DAYOFMONTH(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by DAYOFMONTH(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

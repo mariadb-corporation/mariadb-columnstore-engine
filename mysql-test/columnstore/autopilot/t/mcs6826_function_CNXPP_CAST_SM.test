@@ -1,0 +1,91 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(1)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(2)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(3)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(4)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(5)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(6)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(7)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(8)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(9)) from datatypetestm ;
+select cidx, CTEXT, CAST(CTEXT AS CHAR(20)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(1)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(2)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(3)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(4)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(5)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(6)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(7)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(8)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(9)) from datatypetestm ;
+select cidx, CTINYTEXT, CAST(CTINYTEXT AS CHAR(20)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(1)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(2)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(3)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(4)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(5)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(6)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(7)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(8)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(9)) from datatypetestm ;
+select cidx, CMEDIUMTEXT, CAST(CMEDIUMTEXT AS CHAR(20)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(1)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(2)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(3)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(4)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(5)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(6)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(7)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(8)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(9)) from datatypetestm ;
+select cidx, CLONGTEXT, CAST(CLONGTEXT AS CHAR(20)) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(1)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(2)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(3)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(4)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(5)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(6)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(7)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(8)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(9)), cidx;
+select cidx, CTEXT from datatypetestm order by CAST(CTEXT AS CHAR(20)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(1)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(2)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(3)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(4)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(5)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(6)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(7)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(8)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(9)), cidx;
+select cidx, CTINYTEXT from datatypetestm order by CAST(CTINYTEXT AS CHAR(20)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(1)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(2)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(3)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(4)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(5)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(6)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(7)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(8)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(9)), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by CAST(CMEDIUMTEXT AS CHAR(20)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(1)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(2)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(3)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(4)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(5)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(6)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(7)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(8)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(9)), cidx;
+select cidx, CLONGTEXT from datatypetestm order by CAST(CLONGTEXT AS CHAR(20)), cidx;

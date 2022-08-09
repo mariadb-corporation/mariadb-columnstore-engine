@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT > dtt2.CDATE ;
+cidx	CTEXT	CDATE
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT >= dtt2.CDATE ;
+cidx	CTEXT	CDATE
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <> dtt2.CDATE ;
+cidx	CTEXT	CDATE
+1	texttexttext	1997-01-01
+2	texttexttext	1997-01-01
+3	texttexttext	1997-01-02
+4	texttexttext	1997-01-03
+5	texttexttext	1997-01-04
+6	texttexttext	2009-12-28
+7	texttexttext	2009-12-29
+8	texttexttext	2009-12-30
+9	texttexttext	2009-12-31
+10	texttexttext	2009-12-31
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT < dtt2.CDATE ;
+cidx	CTEXT	CDATE
+1	texttexttext	1997-01-01
+2	texttexttext	1997-01-01
+3	texttexttext	1997-01-02
+4	texttexttext	1997-01-03
+5	texttexttext	1997-01-04
+6	texttexttext	2009-12-28
+7	texttexttext	2009-12-29
+8	texttexttext	2009-12-30
+9	texttexttext	2009-12-31
+10	texttexttext	2009-12-31
+select dtt1.cidx, dtt1.CTEXT, dtt2.CDATE from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CTEXT <= dtt2.CDATE ;
+cidx	CTEXT	CDATE
+1	texttexttext	1997-01-01
+2	texttexttext	1997-01-01
+3	texttexttext	1997-01-02
+4	texttexttext	1997-01-03
+5	texttexttext	1997-01-04
+6	texttexttext	2009-12-28
+7	texttexttext	2009-12-29
+8	texttexttext	2009-12-30
+9	texttexttext	2009-12-31
+10	texttexttext	2009-12-31

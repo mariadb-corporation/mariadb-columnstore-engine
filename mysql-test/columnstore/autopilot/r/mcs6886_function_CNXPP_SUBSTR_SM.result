@@ -1,0 +1,266 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, SUBSTR(CTEXT,1) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,1)
+1	texttexttext	texttexttext
+select cidx, CTEXT, SUBSTR(CTEXT,5) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,5)
+1	texttexttext	texttext
+select cidx, CTEXT, SUBSTR(CTEXT,7) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,7)
+1	texttexttext	xttext
+select cidx, CTEXT, SUBSTR(CTEXT,8) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,8)
+1	texttexttext	ttext
+select cidx, CTEXT, SUBSTR(CTEXT,9) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,9)
+1	texttexttext	text
+select cidx, CTEXT, SUBSTR(CTEXT FROM 5) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT FROM 5)
+1	texttexttext	texttext
+select cidx, CTEXT, SUBSTR(CTEXT FROM 9) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT FROM 9)
+1	texttexttext	text
+select cidx, CTEXT, SUBSTR(CTEXT,5,2) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,5,2)
+1	texttexttext	te
+select cidx, CTEXT, SUBSTR(CTEXT,9,3) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT,9,3)
+1	texttexttext	tex
+select cidx, CTEXT, SUBSTR(CTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT FROM 5 FOR 2)
+1	texttexttext	te
+select cidx, CTEXT, SUBSTR(CTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CTEXT	SUBSTR(CTEXT FROM 9 FOR 3)
+1	texttexttext	tex
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,1) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,1)
+1	tinytext	tinytext
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,5)
+1	tinytext	text
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,7) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,7)
+1	tinytext	xt
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,8) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,8)
+1	tinytext	t
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,9) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,9)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 5) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 5)
+1	tinytext	text
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 9) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 9)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,5,2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,5,2)
+1	tinytext	te
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,9,3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT,9,3)
+1	tinytext	NULL
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 5 FOR 2)
+1	tinytext	te
+select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 9 FOR 3)
+1	tinytext	NULL
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,1) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,1)
+1	mediumtestmediumtest	mediumtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,5)
+1	mediumtestmediumtest	umtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,7) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,7)
+1	mediumtestmediumtest	testmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,8) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,8)
+1	mediumtestmediumtest	estmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,9) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,9)
+1	mediumtestmediumtest	stmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT FROM 5) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT FROM 5)
+1	mediumtestmediumtest	umtestmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT FROM 9) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT FROM 9)
+1	mediumtestmediumtest	stmediumtest
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,5,2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,5,2)
+1	mediumtestmediumtest	um
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,9,3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,9,3)
+1	mediumtestmediumtest	stm
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT FROM 5 FOR 2)
+1	mediumtestmediumtest	um
+select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT FROM 9 FOR 3)
+1	mediumtestmediumtest	stm
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,1) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,1)
+1	longtextlongtextlongtext	longtextlongtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,5)
+1	longtextlongtextlongtext	textlongtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,7) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,7)
+1	longtextlongtextlongtext	xtlongtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,8) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,8)
+1	longtextlongtextlongtext	tlongtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,9) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,9)
+1	longtextlongtextlongtext	longtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT FROM 5) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT FROM 5)
+1	longtextlongtextlongtext	textlongtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT FROM 9) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT FROM 9)
+1	longtextlongtextlongtext	longtextlongtext
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,5,2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,5,2)
+1	longtextlongtextlongtext	te
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT,9,3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT,9,3)
+1	longtextlongtextlongtext	lon
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT FROM 5 FOR 2) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT FROM 5 FOR 2)
+1	longtextlongtextlongtext	te
+select cidx, CLONGTEXT, SUBSTR(CLONGTEXT FROM 9 FOR 3) from datatypetestm ;
+cidx	CLONGTEXT	SUBSTR(CLONGTEXT FROM 9 FOR 3)
+1	longtextlongtextlongtext	lon
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,1), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,5), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,7), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,8), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,9), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT FROM 5), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT FROM 9), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,5,2), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT,9,3), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT FROM 5 FOR 2), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by SUBSTR(CTEXT FROM 9 FOR 3), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,1), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,5), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,7), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,8), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,9), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT FROM 5), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT FROM 9), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,5,2), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT,9,3), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT FROM 5 FOR 2), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by SUBSTR(CTINYTEXT FROM 9 FOR 3), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,1), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,5), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,7), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,8), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,9), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT FROM 5), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT FROM 9), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,5,2), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT,9,3), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT FROM 5 FOR 2), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by SUBSTR(CMEDIUMTEXT FROM 9 FOR 3), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,1), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,5), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,7), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,8), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,9), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT FROM 5), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT FROM 9), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,5,2), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT,9,3), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT FROM 5 FOR 2), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by SUBSTR(CLONGTEXT FROM 9 FOR 3), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

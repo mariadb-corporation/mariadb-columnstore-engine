@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT > dtt2.CDECIMAL18_2 ;
+cidx	CMEDIUMTEXT	CDECIMAL18_2
+1	mediumtestmediumtest	-99999999999.99
+2	mediumtestmediumtest	-99999999999.98
+3	mediumtestmediumtest	-99999999999.97
+4	mediumtestmediumtest	-99999999999.96
+5	mediumtestmediumtest	-99999999999.95
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT >= dtt2.CDECIMAL18_2 ;
+cidx	CMEDIUMTEXT	CDECIMAL18_2
+1	mediumtestmediumtest	-99999999999.99
+2	mediumtestmediumtest	-99999999999.98
+3	mediumtestmediumtest	-99999999999.97
+4	mediumtestmediumtest	-99999999999.96
+5	mediumtestmediumtest	-99999999999.95
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <> dtt2.CDECIMAL18_2 ;
+cidx	CMEDIUMTEXT	CDECIMAL18_2
+1	mediumtestmediumtest	-99999999999.99
+2	mediumtestmediumtest	-99999999999.98
+3	mediumtestmediumtest	-99999999999.97
+4	mediumtestmediumtest	-99999999999.96
+5	mediumtestmediumtest	-99999999999.95
+6	mediumtestmediumtest	99999999999.95
+7	mediumtestmediumtest	99999999999.96
+8	mediumtestmediumtest	99999999999.97
+9	mediumtestmediumtest	99999999999.98
+10	mediumtestmediumtest	99999999999.99
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT < dtt2.CDECIMAL18_2 ;
+cidx	CMEDIUMTEXT	CDECIMAL18_2
+6	mediumtestmediumtest	99999999999.95
+7	mediumtestmediumtest	99999999999.96
+8	mediumtestmediumtest	99999999999.97
+9	mediumtestmediumtest	99999999999.98
+10	mediumtestmediumtest	99999999999.99
+select dtt1.cidx, dtt1.CMEDIUMTEXT, dtt2.CDECIMAL18_2 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CMEDIUMTEXT <= dtt2.CDECIMAL18_2 ;
+cidx	CMEDIUMTEXT	CDECIMAL18_2
+6	mediumtestmediumtest	99999999999.95
+7	mediumtestmediumtest	99999999999.96
+8	mediumtestmediumtest	99999999999.97
+9	mediumtestmediumtest	99999999999.98
+10	mediumtestmediumtest	99999999999.99

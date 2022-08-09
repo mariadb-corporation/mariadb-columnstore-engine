@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, COALESCE(CDATE,'2011-01-01',NULL) from datatypetestm order by cidx;
+select cidx, CDATE, COALESCE(CDATE,NULL,'2011-01-02') from datatypetestm order by cidx;
+select cidx, CDATE, COALESCE(CDATE,NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, COALESCE(CDATETIME,'2011-01-01',NULL) from datatypetestm order by cidx;
+select cidx, CDATETIME, COALESCE(CDATETIME,NULL,'2011-01-02') from datatypetestm order by cidx;
+select cidx, CDATETIME, COALESCE(CDATETIME,NULL) from datatypetestm order by cidx;
+select cidx, CTIME, COALESCE(CTIME,'2011-01-01',NULL) from datatypetestm order by cidx;
+select cidx, CTIME, COALESCE(CTIME,NULL,'2011-01-02') from datatypetestm order by cidx;
+select cidx, CTIME, COALESCE(CTIME,NULL) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,'2011-01-01',NULL), cidx;
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,NULL,'2011-01-02'), cidx;
+select cidx, CDATE from datatypetestm order by COALESCE(CDATE,NULL), cidx;
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,'2011-01-01',NULL), cidx;
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,NULL,'2011-01-02'), cidx;
+select cidx, CDATETIME from datatypetestm order by COALESCE(CDATETIME,NULL), cidx;
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,'2011-01-01',NULL), cidx;
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,NULL,'2011-01-02'), cidx;
+select cidx, CTIME from datatypetestm order by COALESCE(CTIME,NULL), cidx;

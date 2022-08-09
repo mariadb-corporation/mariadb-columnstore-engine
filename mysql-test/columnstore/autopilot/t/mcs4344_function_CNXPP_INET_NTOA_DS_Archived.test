@@ -1,0 +1,20 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, INET_NTOA(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, INET_NTOA(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, INET_NTOA(CTIME) from datatypetestm order by cidx;
+select cidx, INET_NTOA(12) from datatypetestm order by cidx;
+select cidx, INET_NTOA(123) from datatypetestm order by cidx;
+select cidx, INET_NTOA(1234) from datatypetestm order by cidx;
+select cidx, INET_NTOA(12345678) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by INET_NTOA(CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by INET_NTOA(CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by INET_NTOA(CTIME), cidx;

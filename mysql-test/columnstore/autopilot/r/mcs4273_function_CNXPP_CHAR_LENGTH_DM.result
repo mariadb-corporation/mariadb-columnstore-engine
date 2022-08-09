@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CDATE, CHAR_LENGTH(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	CHAR_LENGTH(CDATE)
+1	1997-01-01	10
+select cidx, CDATETIME, CHAR_LENGTH(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	CHAR_LENGTH(CDATETIME)
+1	1997-01-01 00:00:00	19
+select cidx, CTIME, CHAR_LENGTH(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	CHAR_LENGTH(CTIME)
+1	13:00:00	8
+select cidx, CDATE from datatypetestm order by CHAR_LENGTH(CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by CHAR_LENGTH(CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by CHAR_LENGTH(CTIME), cidx;
+cidx	CTIME
+1	13:00:00

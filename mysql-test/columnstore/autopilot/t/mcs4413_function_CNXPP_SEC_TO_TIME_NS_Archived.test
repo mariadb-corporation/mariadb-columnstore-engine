@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, SEC_TO_TIME(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, SEC_TO_TIME(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, SEC_TO_TIME(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, SEC_TO_TIME(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, SEC_TO_TIME(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, SEC_TO_TIME(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, SEC_TO_TIME(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, SEC_TO_TIME(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, SEC_TO_TIME(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, SEC_TO_TIME(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, SEC_TO_TIME(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, SEC_TO_TIME(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, SEC_TO_TIME(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, SEC_TO_TIME(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, SEC_TO_TIME(CFLOAT) from datatypetestm order by cidx;
+select cidx, SEC_TO_TIME(0) from datatypetestm order by cidx;
+select cidx, SEC_TO_TIME(3559) from datatypetestm order by cidx;
+select cidx, SEC_TO_TIME(3600) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by SEC_TO_TIME(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by SEC_TO_TIME(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by SEC_TO_TIME(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by SEC_TO_TIME(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by SEC_TO_TIME(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by SEC_TO_TIME(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by SEC_TO_TIME(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by SEC_TO_TIME(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by SEC_TO_TIME(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by SEC_TO_TIME(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by SEC_TO_TIME(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by SEC_TO_TIME(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by SEC_TO_TIME(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by SEC_TO_TIME(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by SEC_TO_TIME(CFLOAT), cidx;

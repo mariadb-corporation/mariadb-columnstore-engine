@@ -1,0 +1,18 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, MICROSECOND(CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, MICROSECOND(CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, MICROSECOND(CTIME) from datatypetestm order by cidx;
+select cidx, MICROSECOND('2011-05-01') from datatypetestm order by cidx;
+select cidx, MICROSECOND('2011-05-01 13:58:22.123456') from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm where MICROSECOND(CDATE) <> 0 order by cidx;
+select cidx, CDATETIME from datatypetestm where MICROSECOND(CDATETIME) <> 0 order by cidx;
+select cidx, CTIME from datatypetestm where MICROSECOND(CTIME) <> 0 order by cidx;

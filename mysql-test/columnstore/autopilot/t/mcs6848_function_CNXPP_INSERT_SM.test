@@ -1,0 +1,51 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, INSERT(CTEXT,2,2,'Hello') from datatypetestm ;
+select cidx, CTEXT, INSERT(CTEXT,2,5,'Hello') from datatypetestm ;
+select cidx, CTEXT, INSERT(CTEXT,-1,5,'Hello') from datatypetestm ;
+select cidx, CTEXT, INSERT(CTEXT,2,12,'Hello') from datatypetestm ;
+select cidx, CTEXT, INSERT(CTEXT,1,12,NULL) from datatypetestm ;
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,2,'Hello') from datatypetestm ;
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,5,'Hello') from datatypetestm ;
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,-1,5,'Hello') from datatypetestm ;
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,2,12,'Hello') from datatypetestm ;
+select cidx, CTINYTEXT, INSERT(CTINYTEXT,1,12,NULL) from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,2,'Hello') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,5,'Hello') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,-1,5,'Hello') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,2,12,'Hello') from datatypetestm ;
+select cidx, CMEDIUMTEXT, INSERT(CMEDIUMTEXT,1,12,NULL) from datatypetestm ;
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,2,'Hello') from datatypetestm ;
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,5,'Hello') from datatypetestm ;
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,-1,5,'Hello') from datatypetestm ;
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,2,12,'Hello') from datatypetestm ;
+select cidx, CLONGTEXT, INSERT(CLONGTEXT,1,12,NULL) from datatypetestm ;
+select cidx, CTEXT from datatypetestm order by INSERT(CTEXT,2,2,'Hello'), cidx;
+select cidx, CTEXT from datatypetestm order by INSERT(CTEXT,2,5,'Hello'), cidx;
+select cidx, CTEXT from datatypetestm order by INSERT(CTEXT,-1,5,'Hello'), cidx;
+select cidx, CTEXT from datatypetestm order by INSERT(CTEXT,2,12,'Hello'), cidx;
+select cidx, CTEXT from datatypetestm order by INSERT(CTEXT,1,12,NULL), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSERT(CTINYTEXT,2,2,'Hello'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSERT(CTINYTEXT,2,5,'Hello'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSERT(CTINYTEXT,-1,5,'Hello'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSERT(CTINYTEXT,2,12,'Hello'), cidx;
+select cidx, CTINYTEXT from datatypetestm order by INSERT(CTINYTEXT,1,12,NULL), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSERT(CMEDIUMTEXT,2,2,'Hello'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSERT(CMEDIUMTEXT,2,5,'Hello'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSERT(CMEDIUMTEXT,-1,5,'Hello'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSERT(CMEDIUMTEXT,2,12,'Hello'), cidx;
+select cidx, CMEDIUMTEXT from datatypetestm order by INSERT(CMEDIUMTEXT,1,12,NULL), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSERT(CLONGTEXT,2,2,'Hello'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSERT(CLONGTEXT,2,5,'Hello'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSERT(CLONGTEXT,-1,5,'Hello'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSERT(CLONGTEXT,2,12,'Hello'), cidx;
+select cidx, CLONGTEXT from datatypetestm order by INSERT(CLONGTEXT,1,12,NULL), cidx;

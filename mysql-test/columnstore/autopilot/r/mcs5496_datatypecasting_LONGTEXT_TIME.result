@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT > dtt2.CTIME ;
+cidx	CLONGTEXT	CTIME
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT >= dtt2.CTIME ;
+cidx	CLONGTEXT	CTIME
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <> dtt2.CTIME ;
+cidx	CLONGTEXT	CTIME
+1	longtextlongtextlongtext	11:58:28
+2	longtextlongtextlongtext	11:58:28
+3	longtextlongtextlongtext	11:58:28
+4	longtextlongtextlongtext	11:58:28
+5	longtextlongtextlongtext	11:58:28
+6	longtextlongtextlongtext	11:58:28
+7	longtextlongtextlongtext	11:58:28
+8	longtextlongtextlongtext	11:58:28
+9	longtextlongtextlongtext	11:58:28
+10	longtextlongtextlongtext	11:58:28
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT < dtt2.CTIME ;
+cidx	CLONGTEXT	CTIME
+1	longtextlongtextlongtext	11:58:28
+2	longtextlongtextlongtext	11:58:28
+3	longtextlongtextlongtext	11:58:28
+4	longtextlongtextlongtext	11:58:28
+5	longtextlongtextlongtext	11:58:28
+6	longtextlongtextlongtext	11:58:28
+7	longtextlongtextlongtext	11:58:28
+8	longtextlongtextlongtext	11:58:28
+9	longtextlongtextlongtext	11:58:28
+10	longtextlongtextlongtext	11:58:28
+select dtt1.cidx, dtt1.CLONGTEXT, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CLONGTEXT <= dtt2.CTIME ;
+cidx	CLONGTEXT	CTIME
+1	longtextlongtextlongtext	11:58:28
+2	longtextlongtextlongtext	11:58:28
+3	longtextlongtextlongtext	11:58:28
+4	longtextlongtextlongtext	11:58:28
+5	longtextlongtextlongtext	11:58:28
+6	longtextlongtextlongtext	11:58:28
+7	longtextlongtextlongtext	11:58:28
+8	longtextlongtextlongtext	11:58:28
+9	longtextlongtextlongtext	11:58:28
+10	longtextlongtextlongtext	11:58:28

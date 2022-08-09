@@ -1,0 +1,905 @@
+USE autopilot;
+select cidx, CBIGINT, NULLIF(CBIGINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CBIGINT)
+1	-72036854775806	NULL
+select cidx, CBIGINT, NULLIF(CBIGINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CINTEGER)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CDOUBLE)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CDECIMAL9_2)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,1) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,1)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,3.14) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,3.14)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,CCHAR4) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CCHAR4)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,CDATE) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,CDATE)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,NULL) from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,NULL)
+1	-72036854775806	-72036854775806
+select cidx, CBIGINT, NULLIF(CBIGINT,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CBIGINT	NULLIF(CBIGINT,'HELLO WORLD')
+1	-72036854775806	-72036854775806
+Warnings:
+Warning	1292	Truncated incorrect DECIMAL value: 'HELLO WORLD'
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CBIGINT)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CINTEGER)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CDOUBLE)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CDECIMAL9_2)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,1) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,1)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,3.14)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CCHAR4)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,CDATE)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,NULL)
+1	-9	-9
+select cidx, CDECIMAL1, NULLIF(CDECIMAL1,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL1	NULLIF(CDECIMAL1,'HELLO WORLD')
+1	-9	-9
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CBIGINT)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CINTEGER)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CDOUBLE)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CDECIMAL9_2)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,1)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,3.14)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CCHAR4)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,CDATE)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,NULL)
+1	-999	-999
+select cidx, CDECIMAL4, NULLIF(CDECIMAL4,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL4	NULLIF(CDECIMAL4,'HELLO WORLD')
+1	-999	-999
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CBIGINT)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CINTEGER)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CDOUBLE)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CDECIMAL9_2)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,1)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,3.14)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CCHAR4)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,CDATE)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,NULL)
+1	-9.99	-9.99
+select cidx, CDECIMAL4_2, NULLIF(CDECIMAL4_2,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	NULLIF(CDECIMAL4_2,'HELLO WORLD')
+1	-9.99	-9.99
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CBIGINT)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CINTEGER)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CDOUBLE)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CDECIMAL9_2)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,1) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,1)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,3.14)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CCHAR4)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,CDATE)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,NULL)
+1	-999	-999
+select cidx, CDECIMAL5, NULLIF(CDECIMAL5,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL5	NULLIF(CDECIMAL5,'HELLO WORLD')
+1	-999	-999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CBIGINT)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CINTEGER)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CDOUBLE)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CDECIMAL9_2)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,1)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,3.14)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CCHAR4)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,CDATE)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,NULL)
+1	-999999	-999999
+select cidx, CDECIMAL9, NULLIF(CDECIMAL9,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL9	NULLIF(CDECIMAL9,'HELLO WORLD')
+1	-999999	-999999
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CBIGINT)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CINTEGER)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CDOUBLE)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CDECIMAL9_2)
+1	-9999.99	NULL
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,1)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,3.14)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CCHAR4)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,CDATE)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,NULL)
+1	-9999.99	-9999.99
+select cidx, CDECIMAL9_2, NULLIF(CDECIMAL9_2,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	NULLIF(CDECIMAL9_2,'HELLO WORLD')
+1	-9999.99	-9999.99
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CBIGINT)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CINTEGER)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CDOUBLE)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CDECIMAL9_2)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,1) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,1)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,3.14)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CCHAR4)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,CDATE)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,NULL)
+1	-9999999	-9999999
+select cidx, CDECIMAL10, NULLIF(CDECIMAL10,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL10	NULLIF(CDECIMAL10,'HELLO WORLD')
+1	-9999999	-9999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CBIGINT)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CINTEGER)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CDOUBLE)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CDECIMAL9_2)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,1)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,3.14)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CCHAR4)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,CDATE)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,NULL)
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18, NULLIF(CDECIMAL18,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL18	NULLIF(CDECIMAL18,'HELLO WORLD')
+1	-9999999999999	-9999999999999
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CBIGINT)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CINTEGER)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CDOUBLE)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CDECIMAL9_2)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,1) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,1)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,3.14) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,3.14)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CCHAR4) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CCHAR4)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,CDATE) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,CDATE)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,NULL)
+1	-99999999999.99	-99999999999.99
+select cidx, CDECIMAL18_2, NULLIF(CDECIMAL18_2,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	NULLIF(CDECIMAL18_2,'HELLO WORLD')
+1	-99999999999.99	-99999999999.99
+select cidx, CINTEGER, NULLIF(CINTEGER,CBIGINT) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CBIGINT)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CINTEGER)
+1	-7483646	NULL
+select cidx, CINTEGER, NULLIF(CINTEGER,CDOUBLE) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CDOUBLE)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CDECIMAL9_2)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,1) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,1)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,3.14) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,3.14)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,CCHAR4) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CCHAR4)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,CDATE) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,CDATE)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,NULL) from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,NULL)
+1	-7483646	-7483646
+select cidx, CINTEGER, NULLIF(CINTEGER,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CINTEGER	NULLIF(CINTEGER,'HELLO WORLD')
+1	-7483646	-7483646
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CBIGINT)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CINTEGER)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CDOUBLE)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CDECIMAL9_2)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,1) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,1)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,3.14) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,3.14)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CCHAR4) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CCHAR4)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,CDATE) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,CDATE)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,NULL) from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,NULL)
+1	-766	-766
+select cidx, CSMALLINT, NULLIF(CSMALLINT,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CSMALLINT	NULLIF(CSMALLINT,'HELLO WORLD')
+1	-766	-766
+select cidx, CTINYINT, NULLIF(CTINYINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CBIGINT)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CINTEGER)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CDOUBLE)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CDECIMAL9_2)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,1) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,1)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,3.14) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,3.14)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,CCHAR4) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CCHAR4)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,CDATE) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,CDATE)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,NULL) from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,NULL)
+1	-26	-26
+select cidx, CTINYINT, NULLIF(CTINYINT,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CTINYINT	NULLIF(CTINYINT,'HELLO WORLD')
+1	-26	-26
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CBIGINT) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CBIGINT)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CINTEGER) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CINTEGER)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CDOUBLE)
+1	-1.797693231e108	NULL
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CDECIMAL9_2)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,1) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,1)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,3.14) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,3.14)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CCHAR4) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CCHAR4)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,CDATE) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,CDATE)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,NULL) from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,NULL)
+1	-1.797693231e108	-1.797693231e108
+select cidx, CDOUBLE, NULLIF(CDOUBLE,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CDOUBLE	NULLIF(CDOUBLE,'HELLO WORLD')
+1	-1.797693231e108	-1.797693231e108
+select cidx, CFLOAT, NULLIF(CFLOAT,CBIGINT) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CBIGINT)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,CINTEGER) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CINTEGER)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CDOUBLE)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CDECIMAL9_2)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,1) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,1)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,3.14) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,3.14)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,CCHAR4) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CCHAR4)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,CDATE) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,CDATE)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,NULL) from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,NULL)
+1	-3.40287e18	-3.40287e18
+select cidx, CFLOAT, NULLIF(CFLOAT,'HELLO WORLD') from datatypetestm order by cidx;
+cidx	CFLOAT	NULLIF(CFLOAT,'HELLO WORLD')
+1	-3.40287e18	-3.40287e18
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CINTEGER), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CDOUBLE), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CDECIMAL9_2), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,1), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,3.14), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CCHAR4), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,CDATE), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,NULL), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by NULLIF(CBIGINT,'HELLO WORLD'), cidx;
+cidx	CBIGINT
+1	-72036854775806
+Warnings:
+Warning	1292	Truncated incorrect DECIMAL value: 'HELLO WORLD'
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CBIGINT), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CINTEGER), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CDOUBLE), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CDECIMAL9_2), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,1), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,3.14), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CCHAR4), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,CDATE), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,NULL), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by NULLIF(CDECIMAL1,'HELLO WORLD'), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CBIGINT), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CINTEGER), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CDOUBLE), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CDECIMAL9_2), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,1), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,3.14), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CCHAR4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,CDATE), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,NULL), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by NULLIF(CDECIMAL4,'HELLO WORLD'), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CBIGINT), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CINTEGER), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CDOUBLE), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,1), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,3.14), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CCHAR4), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,CDATE), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,NULL), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by NULLIF(CDECIMAL4_2,'HELLO WORLD'), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CBIGINT), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CINTEGER), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CDOUBLE), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CDECIMAL9_2), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,1), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,3.14), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CCHAR4), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,CDATE), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,NULL), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by NULLIF(CDECIMAL5,'HELLO WORLD'), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CBIGINT), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CINTEGER), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CDOUBLE), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CDECIMAL9_2), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,1), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,3.14), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CCHAR4), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,CDATE), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,NULL), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by NULLIF(CDECIMAL9,'HELLO WORLD'), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CBIGINT), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CINTEGER), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CDOUBLE), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,1), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,3.14), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CCHAR4), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,CDATE), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,NULL), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by NULLIF(CDECIMAL9_2,'HELLO WORLD'), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CBIGINT), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CINTEGER), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CDOUBLE), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CDECIMAL9_2), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,1), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,3.14), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CCHAR4), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,CDATE), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,NULL), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by NULLIF(CDECIMAL10,'HELLO WORLD'), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CBIGINT), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CINTEGER), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CDOUBLE), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CDECIMAL9_2), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,1), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,3.14), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CCHAR4), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,CDATE), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,NULL), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by NULLIF(CDECIMAL18,'HELLO WORLD'), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CBIGINT), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CINTEGER), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CDOUBLE), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,1), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,3.14), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CCHAR4), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,CDATE), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,NULL), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by NULLIF(CDECIMAL18_2,'HELLO WORLD'), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CBIGINT), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CDOUBLE), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CDECIMAL9_2), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,1), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,3.14), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CCHAR4), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,CDATE), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,NULL), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by NULLIF(CINTEGER,'HELLO WORLD'), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CBIGINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CINTEGER), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CDOUBLE), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CDECIMAL9_2), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,1), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,3.14), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CCHAR4), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,CDATE), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,NULL), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by NULLIF(CSMALLINT,'HELLO WORLD'), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CBIGINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CINTEGER), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CDOUBLE), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CDECIMAL9_2), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,1), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,3.14), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CCHAR4), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,CDATE), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,NULL), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by NULLIF(CTINYINT,'HELLO WORLD'), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CBIGINT), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CINTEGER), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CDECIMAL9_2), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,1), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,3.14), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CCHAR4), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,CDATE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,NULL), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by NULLIF(CDOUBLE,'HELLO WORLD'), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CBIGINT), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CINTEGER), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CDOUBLE), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CDECIMAL9_2), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,1), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,3.14), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CCHAR4), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CDATE), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,NULL), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,'HELLO WORLD'), cidx;
+cidx	CFLOAT
+1	-3.40287e18

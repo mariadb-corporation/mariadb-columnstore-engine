@@ -1,0 +1,44 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, CRC32(CTEXT) from datatypetestm ;
+cidx	CTEXT	CRC32(CTEXT)
+1	texttexttext	900947067
+select cidx, CTINYTEXT, CRC32(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	CRC32(CTINYTEXT)
+1	tinytext	2414206330
+select cidx, CMEDIUMTEXT, CRC32(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	CRC32(CMEDIUMTEXT)
+1	mediumtestmediumtest	1620945530
+select cidx, CLONGTEXT, CRC32(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	CRC32(CLONGTEXT)
+1	longtextlongtextlongtext	612026442
+select cidx, CRC32('NULL') from datatypetestm ;
+cidx	CRC32('NULL')
+1	324932091
+select cidx, CRC32('null') from datatypetestm ;
+cidx	CRC32('null')
+1	634125391
+select cidx, CRC32(' ') from datatypetestm ;
+cidx	CRC32(' ')
+1	3916222277
+select cidx, CRC32(' THIS ') from datatypetestm ;
+cidx	CRC32(' THIS ')
+1	4042138972
+select cidx, CRC32('this') from datatypetestm ;
+cidx	CRC32('this')
+1	4277043751
+select cidx, CRC32('t') from datatypetestm ;
+cidx	CRC32('t')
+1	2238339752
+select cidx, CTEXT from datatypetestm where CRC32(CTEXT) <> 0 ;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm where CRC32(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm where CRC32(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm where CRC32(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

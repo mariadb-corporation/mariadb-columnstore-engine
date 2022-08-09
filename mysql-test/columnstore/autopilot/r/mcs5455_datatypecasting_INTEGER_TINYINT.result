@@ -1,0 +1,43 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER > dtt2.CTINYINT ;
+cidx	CINTEGER	CTINYINT
+6	7483643	23
+7	7483644	24
+8	7483645	25
+9	7483646	26
+10	7483647	27
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER >= dtt2.CTINYINT ;
+cidx	CINTEGER	CTINYINT
+6	7483643	23
+7	7483644	24
+8	7483645	25
+9	7483646	26
+10	7483647	27
+11	0	0
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <> dtt2.CTINYINT ;
+cidx	CINTEGER	CTINYINT
+1	-7483646	-26
+2	-7483645	-25
+3	-7483644	-24
+4	-7483643	-23
+5	-7483642	-22
+6	7483643	23
+7	7483644	24
+8	7483645	25
+9	7483646	26
+10	7483647	27
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER < dtt2.CTINYINT ;
+cidx	CINTEGER	CTINYINT
+1	-7483646	-26
+2	-7483645	-25
+3	-7483644	-24
+4	-7483643	-23
+5	-7483642	-22
+select dtt1.cidx, dtt1.CINTEGER, dtt2.CTINYINT from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CINTEGER <= dtt2.CTINYINT ;
+cidx	CINTEGER	CTINYINT
+1	-7483646	-26
+2	-7483645	-25
+3	-7483644	-24
+4	-7483643	-23
+5	-7483642	-22
+11	0	0

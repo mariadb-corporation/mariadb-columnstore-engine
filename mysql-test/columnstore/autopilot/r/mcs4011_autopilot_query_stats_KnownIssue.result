@@ -1,0 +1,51 @@
+DROP DATABASE IF EXISTS mcs4011_db;
+CREATE DATABASE mcs4011_db;
+USE mcs4011_db;
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+delete from infinidb_querystats.querystats;
+drop table if exists nation;
+create table nation (
+n_nationkey int,
+n_name char (25),
+n_regionkey int,
+n_comment varchar (152)
+) engine=columnstore;
+SHOW CREATE TABLE nation;
+Table	Create Table
+nation	CREATE TABLE `nation` (
+  `n_nationkey` int(11) DEFAULT NULL,
+  `n_name` char(25) DEFAULT NULL,
+  `n_regionkey` int(11) DEFAULT NULL,
+  `n_comment` varchar(152) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+RENAME TABLE nation to nation1;
+drop table if exists nation;
+create table nation (
+n_nationkey int,
+n_name char (25),
+n_regionkey int,
+n_comment varchar (152)
+) engine=columnstore;
+SHOW CREATE TABLE nation;
+Table	Create Table
+nation	CREATE TABLE `nation` (
+  `n_nationkey` int(11) DEFAULT NULL,
+  `n_name` char(25) DEFAULT NULL,
+  `n_regionkey` int(11) DEFAULT NULL,
+  `n_comment` varchar(152) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
+select count(*) from nation where n_regionkey = 2;
+count(*)
+5
+insert into nation values(25, 'Hawaiian Nation',5,'Hello world');
+update nation set n_regionkey = -1 where n_regionkey = 5;
+insert into nation1 select * from nation;
+LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
+delete from nation;
+select user, priority, queryType, query from infinidb_querystats.querystats;
+user	priority	queryType	query
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs4011_db;

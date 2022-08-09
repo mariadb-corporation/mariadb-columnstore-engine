@@ -1,0 +1,41 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CBIGINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CBIGINT > dtt2.CCHAR4 ;
+cidx	CBIGINT	CCHAR4
+6	72036854775803	wwww
+7	72036854775804	wwww
+8	72036854775805	wwww
+9	72036854775806	wwww
+10	72036854775807	zzzz
+select dtt1.cidx, dtt1.CBIGINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CBIGINT >= dtt2.CCHAR4 ;
+cidx	CBIGINT	CCHAR4
+6	72036854775803	wwww
+7	72036854775804	wwww
+8	72036854775805	wwww
+9	72036854775806	wwww
+10	72036854775807	zzzz
+select dtt1.cidx, dtt1.CBIGINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CBIGINT <> dtt2.CCHAR4 ;
+cidx	CBIGINT	CCHAR4
+1	-72036854775806	aaaa
+2	-72036854775805	d
+3	-72036854775804	dd
+4	-72036854775803	ddd
+5	-72036854775802	dddd
+6	72036854775803	wwww
+7	72036854775804	wwww
+8	72036854775805	wwww
+9	72036854775806	wwww
+10	72036854775807	zzzz
+select dtt1.cidx, dtt1.CBIGINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CBIGINT < dtt2.CCHAR4 ;
+cidx	CBIGINT	CCHAR4
+1	-72036854775806	aaaa
+2	-72036854775805	d
+3	-72036854775804	dd
+4	-72036854775803	ddd
+5	-72036854775802	dddd
+select dtt1.cidx, dtt1.CBIGINT, dtt2.CCHAR4 from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CBIGINT <= dtt2.CCHAR4 ;
+cidx	CBIGINT	CCHAR4
+1	-72036854775806	aaaa
+2	-72036854775805	d
+3	-72036854775804	dd
+4	-72036854775803	ddd
+5	-72036854775802	dddd

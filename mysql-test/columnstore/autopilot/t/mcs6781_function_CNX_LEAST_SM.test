@@ -1,0 +1,43 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot funcForText test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LEAST(CTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CTEXT, LEAST(CTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTEXT, LEAST(CTEXT,CCHAR7) from datatypetestm ;
+select cidx, CTEXT, LEAST(CTEXT,'MAHALO') from datatypetestm ;
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR3) from datatypetestm ;
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,CCHAR7) from datatypetestm ;
+select cidx, CTINYTEXT, LEAST(CTINYTEXT,'MAHALO') from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR3) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,CCHAR7) from datatypetestm ;
+select cidx, CMEDIUMTEXT, LEAST(CMEDIUMTEXT,'MAHALO') from datatypetestm ;
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') from datatypetestm ;
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR3) from datatypetestm ;
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,CCHAR7) from datatypetestm ;
+select cidx, CLONGTEXT, LEAST(CLONGTEXT,'MAHALO') from datatypetestm ;
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR3) <> 0 ;
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,CCHAR7) <> 0 ;
+select cidx, CTEXT from datatypetestm where LEAST(CTEXT,'MAHALO') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR3) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,CCHAR7) <> 0 ;
+select cidx, CTINYTEXT from datatypetestm where LEAST(CTINYTEXT,'MAHALO') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR3) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,CCHAR7) <> 0 ;
+select cidx, CMEDIUMTEXT from datatypetestm where LEAST(CMEDIUMTEXT,'MAHALO') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR3,CCHAR7,'MAHALO') <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR3) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,CCHAR7) <> 0 ;
+select cidx, CLONGTEXT from datatypetestm where LEAST(CLONGTEXT,'MAHALO') <> 0 ;

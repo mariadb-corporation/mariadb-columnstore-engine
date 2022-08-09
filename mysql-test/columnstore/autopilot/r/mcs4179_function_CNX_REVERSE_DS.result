@@ -1,0 +1,23 @@
+USE autopilot;
+select cidx, CDATE, REVERSE(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	REVERSE(CDATE)
+1	1997-01-01	10-10-7991
+select cidx, CDATETIME, REVERSE(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	REVERSE(CDATETIME)
+1	1997-01-01 00:00:00	00:00:00 10-10-7991
+select cidx, CTIME, REVERSE(CTIME) from datatypetestm order by cidx;
+cidx	CTIME	REVERSE(CTIME)
+1	13:00:00	00:00:31
+select cidx, REVERSE('THIS IS A TEST') from datatypetestm order by cidx;
+cidx	REVERSE('THIS IS A TEST')
+1	TSET A SI SIHT
+select cidx, REVERSE('Hello, World') from datatypetestm order by cidx;
+cidx	REVERSE('Hello, World')
+1	dlroW ,olleH
+select cidx, CDATE from datatypetestm where REVERSE(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where REVERSE(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+select cidx, CTIME from datatypetestm where REVERSE(CTIME) <> 0 order by cidx;
+cidx	CTIME

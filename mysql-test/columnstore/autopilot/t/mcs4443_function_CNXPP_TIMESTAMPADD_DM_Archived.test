@@ -1,0 +1,64 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, TIMESTAMPADD(MICROSECOND,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(SECOND,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(MINUTE,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(HOUR,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(DAY,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(WEEK,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(MONTH,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(QUARTER,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATE, TIMESTAMPADD(YEAR,5,CDATE) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(MICROSECOND,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(SECOND,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(MINUTE,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(HOUR,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(DAY,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(WEEK,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(MONTH,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(QUARTER,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CDATETIME, TIMESTAMPADD(YEAR,5,CDATETIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(MICROSECOND,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(SECOND,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(MINUTE,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(HOUR,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(DAY,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(WEEK,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(MONTH,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(QUARTER,5,CTIME) from datatypetestm order by cidx;
+select cidx, CTIME, TIMESTAMPADD(YEAR,5,CTIME) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(MICROSECOND,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(SECOND,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(MINUTE,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(HOUR,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(DAY,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(WEEK,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(MONTH,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(QUARTER,5,CDATE), cidx;
+select cidx, CDATE from datatypetestm order by TIMESTAMPADD(YEAR,5,CDATE), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(MICROSECOND,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(SECOND,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(MINUTE,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(HOUR,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(DAY,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(WEEK,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(MONTH,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(QUARTER,5,CDATETIME), cidx;
+select cidx, CDATETIME from datatypetestm order by TIMESTAMPADD(YEAR,5,CDATETIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(MICROSECOND,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(SECOND,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(MINUTE,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(HOUR,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(DAY,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(WEEK,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(MONTH,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(QUARTER,5,CTIME), cidx;
+select cidx, CTIME from datatypetestm order by TIMESTAMPADD(YEAR,5,CTIME), cidx;

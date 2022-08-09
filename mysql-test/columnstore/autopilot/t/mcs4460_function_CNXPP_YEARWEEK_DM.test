@@ -1,0 +1,66 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CDATE, YEARWEEK(CDATE,0) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,1) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,2) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,3) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,4) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,5) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,6) from datatypetestm order by cidx;
+select cidx, CDATE, YEARWEEK(CDATE,7) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,0) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,1) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,2) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,3) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,4) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,5) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,6) from datatypetestm order by cidx;
+select cidx, CDATETIME, YEARWEEK(CDATETIME,7) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,0) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,1) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,2) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,3) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,4) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,5) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,6) from datatypetestm order by cidx;
+ --replace_column 3 REPLACEDVALUE
+select cidx, CTIME, YEARWEEK(CTIME,7) from datatypetestm order by cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,0), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,1), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,2), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,3), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,4), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,5), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,6), cidx;
+select cidx, CDATE from datatypetestm order by YEARWEEK(CDATE,7), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,0), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,1), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,2), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,3), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,4), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,5), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,6), cidx;
+select cidx, CDATETIME from datatypetestm order by YEARWEEK(CDATETIME,7), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,0), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,1), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,2), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,3), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,4), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,5), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,6), cidx;
+#select cidx, CTIME from datatypetestm order by YEARWEEK(CTIME,7), cidx;

@@ -1,0 +1,7 @@
+USE autopilot;
+select cidx, POSITION(concat(cchar1,'aaa') IN 'hhaaaaahh') from datatypetestm order by cidx;
+cidx	POSITION(concat(cchar1,'aaa') IN 'hhaaaaahh')
+1	3
+select cidx, POSITION(concat(cchar1,'zzz') IN 'azzzzh') from datatypetestm order by cidx;
+cidx	POSITION(concat(cchar1,'zzz') IN 'azzzzh')
+1	1

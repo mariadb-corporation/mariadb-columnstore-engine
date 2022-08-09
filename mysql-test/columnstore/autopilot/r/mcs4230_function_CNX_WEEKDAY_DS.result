@@ -1,0 +1,19 @@
+USE autopilot;
+select cidx, CDATE, WEEKDAY(CDATE) from datatypetestm order by cidx;
+cidx	CDATE	WEEKDAY(CDATE)
+1	1997-01-01	2
+select cidx, CDATETIME, WEEKDAY(CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	WEEKDAY(CDATETIME)
+1	1997-01-01 00:00:00	2
+select cidx, WEEKDAY('2009-02-28') from datatypetestm order by cidx;
+cidx	WEEKDAY('2009-02-28')
+1	5
+select cidx, WEEKDAY('2009-07-04') from datatypetestm order by cidx;
+cidx	WEEKDAY('2009-07-04')
+1	5
+select cidx, CDATE from datatypetestm where WEEKDAY(CDATE) <> 0 order by cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm where WEEKDAY(CDATETIME) <> 0 order by cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00

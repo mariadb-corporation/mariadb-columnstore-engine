@@ -1,0 +1,45 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, ATAN(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, ATAN(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, ATAN(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, ATAN(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, ATAN(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, ATAN(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, ATAN(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, ATAN(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, ATAN(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, ATAN(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, ATAN(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, ATAN(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, ATAN(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, ATAN(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, ATAN(CFLOAT) from datatypetestm order by cidx;
+select cidx, ATAN(0*cidx) from datatypetestm order by cidx;
+select cidx, ATAN(60*cidx) from datatypetestm order by cidx;
+select cidx, ATAN(90*cidx) from datatypetestm order by cidx;
+select cidx, ATAN(180*cidx) from datatypetestm order by cidx;
+select cidx, ATAN(360*cidx) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm where ATAN(CBIGINT) <> 0 order by cidx;
+select cidx, CDECIMAL1 from datatypetestm where ATAN(CDECIMAL1) <> 0 order by cidx;
+select cidx, CDECIMAL4 from datatypetestm where ATAN(CDECIMAL4) <> 0 order by cidx;
+select cidx, CDECIMAL4_2 from datatypetestm where ATAN(CDECIMAL4_2) <> 0 order by cidx;
+select cidx, CDECIMAL5 from datatypetestm where ATAN(CDECIMAL5) <> 0 order by cidx;
+select cidx, CDECIMAL9 from datatypetestm where ATAN(CDECIMAL9) <> 0 order by cidx;
+select cidx, CDECIMAL9_2 from datatypetestm where ATAN(CDECIMAL9_2) <> 0 order by cidx;
+select cidx, CDECIMAL10 from datatypetestm where ATAN(CDECIMAL10) <> 0 order by cidx;
+select cidx, CDECIMAL18 from datatypetestm where ATAN(CDECIMAL18) <> 0 order by cidx;
+select cidx, CDECIMAL18_2 from datatypetestm where ATAN(CDECIMAL18_2) <> 0 order by cidx;
+select cidx, CINTEGER from datatypetestm where ATAN(CINTEGER) <> 0 order by cidx;
+select cidx, CSMALLINT from datatypetestm where ATAN(CSMALLINT) <> 0 order by cidx;
+select cidx, CTINYINT from datatypetestm where ATAN(CTINYINT) <> 0 order by cidx;
+select cidx, CDOUBLE from datatypetestm where ATAN(CDOUBLE) <> 0 order by cidx;
+select cidx, CFLOAT from datatypetestm where ATAN(CFLOAT) <> 0 order by cidx;

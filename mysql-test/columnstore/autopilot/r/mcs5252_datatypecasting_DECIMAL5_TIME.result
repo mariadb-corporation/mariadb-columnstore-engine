@@ -1,0 +1,44 @@
+USE autopilot;
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 > dtt2.CTIME ;
+cidx	CDECIMAL5	CTIME
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 >= dtt2.CTIME ;
+cidx	CDECIMAL5	CTIME
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 <> dtt2.CTIME ;
+cidx	CDECIMAL5	CTIME
+1	-999	11:58:28
+2	-998	11:58:28
+3	-997	11:58:28
+4	-996	11:58:28
+5	-995	11:58:28
+6	995	11:58:28
+7	996	11:58:28
+8	997	11:58:28
+9	998	11:58:28
+10	999	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 < dtt2.CTIME ;
+cidx	CDECIMAL5	CTIME
+1	-999	11:58:28
+2	-998	11:58:28
+3	-997	11:58:28
+4	-996	11:58:28
+5	-995	11:58:28
+6	995	11:58:28
+7	996	11:58:28
+8	997	11:58:28
+9	998	11:58:28
+10	999	11:58:28
+11	0	11:58:28
+select dtt1.cidx, dtt1.CDECIMAL5, dtt2.CTIME from datatypetestm1 dtt1, datatypetestm2 dtt2 where dtt1.cidx = dtt2.cidx and dtt1.CDECIMAL5 <= dtt2.CTIME ;
+cidx	CDECIMAL5	CTIME
+1	-999	11:58:28
+2	-998	11:58:28
+3	-997	11:58:28
+4	-996	11:58:28
+5	-995	11:58:28
+6	995	11:58:28
+7	996	11:58:28
+8	997	11:58:28
+9	998	11:58:28
+10	999	11:58:28
+11	0	11:58:28

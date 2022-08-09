@@ -1,0 +1,62 @@
+# -------------------------------------------------------------- #
+# Select join tables from columnstore and innodb engines
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4010_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4010_db;
+USE mcs4010_db;
+# -------------------------------------------------------------- #
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+# -------------------------------------------------------------- #
+--exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
+--exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
+# -------------------------------------------------------------- #
+# Create corresponding in the server
+# -------------------------------------------------------------- #
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+#
+# -------------------------------------------------------------- #
+# Create columnstore and innodb test tables
+# -------------------------------------------------------------- #
+--source ../include/dbt3/createNation.inc
+--source ../include/dbt3/ldiNation1m.inc
+#
+create table region (
+        r_regionkey int,
+        r_name char (25),
+        r_comment varchar (152)
+) engine=innodb;
+SHOW CREATE TABLE region;
+insert into region values (1, 'AMERICA', 'hs use ironic, even requests. s');
+insert into region values (2, 'ASIA', 'ges. thinly even pinto beans ca');
+# -------------------------------------------------------------- #
+# Execute croaa engine join queries and update
+# -------------------------------------------------------------- #
+#
+select count(*) from nation n, region r where n.n_regionkey = r.r_regionkey and r.r_regionkey = 2;
+insert into region values (5,'Hawaii','The Hawaiian Kingdom');
+select * from region;
+insert into nation values(25, 'Hawaiian Nation',5,'Hello world');
+select * from nation;
+select * from nation n, region r where n.n_regionkey = r.r_regionkey and r.r_regionkey = 5;
+update nation n, region r set n.n_nationkey = 100 where n.n_regionkey = r.r_regionkey and r.r_regionkey = 5;
+select * from nation;
+select * from region;
+# -------------------------------------------------------------- #
+# Clean up
+# -------------------------------------------------------------- #
+#
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE mcs4010_db;

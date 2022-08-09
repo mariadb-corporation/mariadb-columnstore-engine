@@ -1,0 +1,70 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, MAKETIME(2010, CBIGINT, 35) from datatypetestm order by cidx;
+select cidx, CBIGINT, MAKETIME(2011, CBIGINT, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, MAKETIME(2010, CDECIMAL1, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, MAKETIME(2011, CDECIMAL1, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, MAKETIME(2010, CDECIMAL4, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, MAKETIME(2011, CDECIMAL4, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, MAKETIME(2010, CDECIMAL4_2, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, MAKETIME(2011, CDECIMAL4_2, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, MAKETIME(2010, CDECIMAL5, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, MAKETIME(2011, CDECIMAL5, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, MAKETIME(2010, CDECIMAL9, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, MAKETIME(2011, CDECIMAL9, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, MAKETIME(2010, CDECIMAL9_2, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, MAKETIME(2011, CDECIMAL9_2, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, MAKETIME(2010, CDECIMAL10, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, MAKETIME(2011, CDECIMAL10, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, MAKETIME(2010, CDECIMAL18, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, MAKETIME(2011, CDECIMAL18, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, MAKETIME(2010, CDECIMAL18_2, 35) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, MAKETIME(2011, CDECIMAL18_2, 35) from datatypetestm order by cidx;
+select cidx, CINTEGER, MAKETIME(2010, CINTEGER, 35) from datatypetestm order by cidx;
+select cidx, CINTEGER, MAKETIME(2011, CINTEGER, 35) from datatypetestm order by cidx;
+select cidx, CSMALLINT, MAKETIME(2010, CSMALLINT, 35) from datatypetestm order by cidx;
+select cidx, CSMALLINT, MAKETIME(2011, CSMALLINT, 35) from datatypetestm order by cidx;
+select cidx, CTINYINT, MAKETIME(2010, CTINYINT, 35) from datatypetestm order by cidx;
+select cidx, CTINYINT, MAKETIME(2011, CTINYINT, 35) from datatypetestm order by cidx;
+select cidx, CDOUBLE, MAKETIME(2010, CDOUBLE, 35) from datatypetestm order by cidx;
+select cidx, CDOUBLE, MAKETIME(2011, CDOUBLE, 35) from datatypetestm order by cidx;
+select cidx, CFLOAT, MAKETIME(2010, CFLOAT, 35) from datatypetestm order by cidx;
+select cidx, CFLOAT, MAKETIME(2011, CFLOAT, 35) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by MAKETIME(2010, CBIGINT, 35), cidx;
+select cidx, CBIGINT from datatypetestm order by MAKETIME(2011, CBIGINT, 35), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by MAKETIME(2010, CDECIMAL1, 35), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by MAKETIME(2011, CDECIMAL1, 35), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by MAKETIME(2010, CDECIMAL4, 35), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by MAKETIME(2011, CDECIMAL4, 35), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by MAKETIME(2010, CDECIMAL4_2, 35), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by MAKETIME(2011, CDECIMAL4_2, 35), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by MAKETIME(2010, CDECIMAL5, 35), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by MAKETIME(2011, CDECIMAL5, 35), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by MAKETIME(2010, CDECIMAL9, 35), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by MAKETIME(2011, CDECIMAL9, 35), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by MAKETIME(2010, CDECIMAL9_2, 35), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by MAKETIME(2011, CDECIMAL9_2, 35), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by MAKETIME(2010, CDECIMAL10, 35), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by MAKETIME(2011, CDECIMAL10, 35), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by MAKETIME(2010, CDECIMAL18, 35), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by MAKETIME(2011, CDECIMAL18, 35), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by MAKETIME(2010, CDECIMAL18_2, 35), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by MAKETIME(2011, CDECIMAL18_2, 35), cidx;
+select cidx, CINTEGER from datatypetestm order by MAKETIME(2010, CINTEGER, 35), cidx;
+select cidx, CINTEGER from datatypetestm order by MAKETIME(2011, CINTEGER, 35), cidx;
+select cidx, CSMALLINT from datatypetestm order by MAKETIME(2010, CSMALLINT, 35), cidx;
+select cidx, CSMALLINT from datatypetestm order by MAKETIME(2011, CSMALLINT, 35), cidx;
+select cidx, CTINYINT from datatypetestm order by MAKETIME(2010, CTINYINT, 35), cidx;
+select cidx, CTINYINT from datatypetestm order by MAKETIME(2011, CTINYINT, 35), cidx;
+select cidx, CDOUBLE from datatypetestm order by MAKETIME(2010, CDOUBLE, 35), cidx;
+select cidx, CDOUBLE from datatypetestm order by MAKETIME(2011, CDOUBLE, 35), cidx;
+select cidx, CFLOAT from datatypetestm order by MAKETIME(2010, CFLOAT, 35), cidx;
+select cidx, CFLOAT from datatypetestm order by MAKETIME(2011, CFLOAT, 35), cidx;

@@ -1,0 +1,991 @@
+USE autopilot;
+select cidx, CBIGINT, STRCMP(CBIGINT,CTINYINT) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CTINYINT)
+1	-72036854775806	1
+select cidx, CBIGINT, STRCMP(CBIGINT,CSMALLINT) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CSMALLINT)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CINTEGER)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CBIGINT)
+1	-72036854775806	0
+select cidx, CBIGINT, STRCMP(CBIGINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CDOUBLE)
+1	-72036854775806	1
+select cidx, CBIGINT, STRCMP(CBIGINT,CFLOAT) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CFLOAT)
+1	-72036854775806	1
+select cidx, CBIGINT, STRCMP(CBIGINT,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CDECIMAL4)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,CDECIMAL9_2)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,2) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,2)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,-900) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,-900)
+1	-72036854775806	-1
+select cidx, CBIGINT, STRCMP(CBIGINT,NULL) from datatypetestm order by cidx;
+cidx	CBIGINT	STRCMP(CBIGINT,NULL)
+1	-72036854775806	NULL
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CTINYINT)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CSMALLINT)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CINTEGER)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CBIGINT)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CDOUBLE)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CFLOAT)
+1	-9	1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CDECIMAL4)
+1	-9	-1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,CDECIMAL9_2)
+1	-9	-1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,2) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,2)
+1	-9	-1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,-900)
+1	-9	-1
+select cidx, CDECIMAL1, STRCMP(CDECIMAL1,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL1	STRCMP(CDECIMAL1,NULL)
+1	-9	NULL
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CTINYINT)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CSMALLINT)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CINTEGER)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CBIGINT)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CDOUBLE)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CFLOAT)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CDECIMAL4)
+1	-999	0
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,CDECIMAL9_2)
+1	-999	-1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,2)
+1	-999	-1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,-900)
+1	-999	1
+select cidx, CDECIMAL4, STRCMP(CDECIMAL4,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4	STRCMP(CDECIMAL4,NULL)
+1	-999	NULL
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CTINYINT)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CSMALLINT)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CINTEGER)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CBIGINT)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CDOUBLE)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CFLOAT)
+1	-9.99	1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CDECIMAL4)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,CDECIMAL9_2)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,2)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,-900)
+1	-9.99	-1
+select cidx, CDECIMAL4_2, STRCMP(CDECIMAL4_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL4_2	STRCMP(CDECIMAL4_2,NULL)
+1	-9.99	NULL
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CTINYINT)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CSMALLINT)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CINTEGER)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CBIGINT)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CDOUBLE)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CFLOAT)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CDECIMAL4)
+1	-999	0
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,CDECIMAL9_2)
+1	-999	-1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,2) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,2)
+1	-999	-1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,-900)
+1	-999	1
+select cidx, CDECIMAL5, STRCMP(CDECIMAL5,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL5	STRCMP(CDECIMAL5,NULL)
+1	-999	NULL
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CTINYINT)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CSMALLINT)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CINTEGER)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CBIGINT)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CDOUBLE)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CFLOAT)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CDECIMAL4)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,CDECIMAL9_2)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,2)
+1	-999999	-1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,-900)
+1	-999999	1
+select cidx, CDECIMAL9, STRCMP(CDECIMAL9,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9	STRCMP(CDECIMAL9,NULL)
+1	-999999	NULL
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CTINYINT)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CSMALLINT)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CINTEGER)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CBIGINT)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CDOUBLE)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CFLOAT)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CDECIMAL4)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,CDECIMAL9_2)
+1	-9999.99	0
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,2)
+1	-9999.99	-1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,-900)
+1	-9999.99	1
+select cidx, CDECIMAL9_2, STRCMP(CDECIMAL9_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL9_2	STRCMP(CDECIMAL9_2,NULL)
+1	-9999.99	NULL
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CTINYINT)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CSMALLINT)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CINTEGER)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CBIGINT)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CDOUBLE)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CFLOAT)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CDECIMAL4)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,CDECIMAL9_2)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,2) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,2)
+1	-9999999	-1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,-900)
+1	-9999999	1
+select cidx, CDECIMAL10, STRCMP(CDECIMAL10,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL10	STRCMP(CDECIMAL10,NULL)
+1	-9999999	NULL
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CTINYINT)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CSMALLINT)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CINTEGER)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CBIGINT)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CDOUBLE)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CFLOAT)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CDECIMAL4)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,CDECIMAL9_2)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,2)
+1	-9999999999999	-1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,-900)
+1	-9999999999999	1
+select cidx, CDECIMAL18, STRCMP(CDECIMAL18,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18	STRCMP(CDECIMAL18,NULL)
+1	-9999999999999	NULL
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CTINYINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CTINYINT)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CSMALLINT)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CINTEGER) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CINTEGER)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CBIGINT) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CBIGINT)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CDOUBLE)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CFLOAT) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CFLOAT)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CDECIMAL4)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,CDECIMAL9_2)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,2) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,2)
+1	-99999999999.99	-1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,-900) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,-900)
+1	-99999999999.99	1
+select cidx, CDECIMAL18_2, STRCMP(CDECIMAL18_2,NULL) from datatypetestm order by cidx;
+cidx	CDECIMAL18_2	STRCMP(CDECIMAL18_2,NULL)
+1	-99999999999.99	NULL
+select cidx, CINTEGER, STRCMP(CINTEGER,CTINYINT) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CTINYINT)
+1	-7483646	1
+select cidx, CINTEGER, STRCMP(CINTEGER,CSMALLINT) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CSMALLINT)
+1	-7483646	-1
+select cidx, CINTEGER, STRCMP(CINTEGER,CINTEGER) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CINTEGER)
+1	-7483646	0
+select cidx, CINTEGER, STRCMP(CINTEGER,CBIGINT) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CBIGINT)
+1	-7483646	1
+select cidx, CINTEGER, STRCMP(CINTEGER,CDOUBLE) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CDOUBLE)
+1	-7483646	1
+select cidx, CINTEGER, STRCMP(CINTEGER,CFLOAT) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CFLOAT)
+1	-7483646	1
+select cidx, CINTEGER, STRCMP(CINTEGER,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CDECIMAL4)
+1	-7483646	-1
+select cidx, CINTEGER, STRCMP(CINTEGER,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,CDECIMAL9_2)
+1	-7483646	-1
+select cidx, CINTEGER, STRCMP(CINTEGER,2) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,2)
+1	-7483646	-1
+select cidx, CINTEGER, STRCMP(CINTEGER,-900) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,-900)
+1	-7483646	-1
+select cidx, CINTEGER, STRCMP(CINTEGER,NULL) from datatypetestm order by cidx;
+cidx	CINTEGER	STRCMP(CINTEGER,NULL)
+1	-7483646	NULL
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CTINYINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CTINYINT)
+1	-766	1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CSMALLINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CSMALLINT)
+1	-766	0
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CINTEGER)
+1	-766	1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CBIGINT)
+1	-766	1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CDOUBLE)
+1	-766	1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CFLOAT) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CFLOAT)
+1	-766	1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CDECIMAL4)
+1	-766	-1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,CDECIMAL9_2)
+1	-766	-1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,2) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,2)
+1	-766	-1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,-900) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,-900)
+1	-766	-1
+select cidx, CSMALLINT, STRCMP(CSMALLINT,NULL) from datatypetestm order by cidx;
+cidx	CSMALLINT	STRCMP(CSMALLINT,NULL)
+1	-766	NULL
+select cidx, CTINYINT, STRCMP(CTINYINT,CTINYINT) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CTINYINT)
+1	-26	0
+select cidx, CTINYINT, STRCMP(CTINYINT,CSMALLINT) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CSMALLINT)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,CINTEGER) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CINTEGER)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,CBIGINT) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CBIGINT)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CDOUBLE)
+1	-26	1
+select cidx, CTINYINT, STRCMP(CTINYINT,CFLOAT) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CFLOAT)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CDECIMAL4)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,CDECIMAL9_2)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,2) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,2)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,-900) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,-900)
+1	-26	-1
+select cidx, CTINYINT, STRCMP(CTINYINT,NULL) from datatypetestm order by cidx;
+cidx	CTINYINT	STRCMP(CTINYINT,NULL)
+1	-26	NULL
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CTINYINT) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CTINYINT)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CSMALLINT) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CSMALLINT)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CINTEGER) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CINTEGER)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CBIGINT) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CBIGINT)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CDOUBLE) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CDOUBLE)
+1	-1.797693231e108	0
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CFLOAT) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CFLOAT)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CDECIMAL4)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,CDECIMAL9_2)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,2) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,2)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,-900) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,-900)
+1	-1.797693231e108	-1
+select cidx, CDOUBLE, STRCMP(CDOUBLE,NULL) from datatypetestm order by cidx;
+cidx	CDOUBLE	STRCMP(CDOUBLE,NULL)
+1	-1.797693231e108	NULL
+select cidx, CFLOAT, STRCMP(CFLOAT,CTINYINT) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CTINYINT)
+1	-3.40287e18	1
+select cidx, CFLOAT, STRCMP(CFLOAT,CSMALLINT) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CSMALLINT)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,CINTEGER) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CINTEGER)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,CBIGINT) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CBIGINT)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,CDOUBLE) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CDOUBLE)
+1	-3.40287e18	1
+select cidx, CFLOAT, STRCMP(CFLOAT,CFLOAT) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CFLOAT)
+1	-3.40287e18	0
+select cidx, CFLOAT, STRCMP(CFLOAT,CDECIMAL4) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CDECIMAL4)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,CDECIMAL9_2) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,CDECIMAL9_2)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,2) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,2)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,-900) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,-900)
+1	-3.40287e18	-1
+select cidx, CFLOAT, STRCMP(CFLOAT,NULL) from datatypetestm order by cidx;
+cidx	CFLOAT	STRCMP(CFLOAT,NULL)
+1	-3.40287e18	NULL
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CTINYINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CSMALLINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CINTEGER), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CBIGINT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CDOUBLE), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CFLOAT), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CDECIMAL4), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,CDECIMAL9_2), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,2), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,-900), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CBIGINT from datatypetestm order by STRCMP(CBIGINT,NULL), cidx;
+cidx	CBIGINT
+1	-72036854775806
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CTINYINT), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CSMALLINT), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CINTEGER), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CBIGINT), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CDOUBLE), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CFLOAT), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CDECIMAL4), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,CDECIMAL9_2), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,2), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,-900), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL1 from datatypetestm order by STRCMP(CDECIMAL1,NULL), cidx;
+cidx	CDECIMAL1
+1	-9
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CTINYINT), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CSMALLINT), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CINTEGER), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CBIGINT), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CDOUBLE), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CFLOAT), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CDECIMAL4), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,CDECIMAL9_2), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,2), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,-900), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4 from datatypetestm order by STRCMP(CDECIMAL4,NULL), cidx;
+cidx	CDECIMAL4
+1	-999
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CTINYINT), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CSMALLINT), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CINTEGER), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CBIGINT), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CDOUBLE), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CFLOAT), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CDECIMAL4), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,2), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,-900), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL4_2 from datatypetestm order by STRCMP(CDECIMAL4_2,NULL), cidx;
+cidx	CDECIMAL4_2
+1	-9.99
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CTINYINT), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CSMALLINT), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CINTEGER), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CBIGINT), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CDOUBLE), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CFLOAT), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CDECIMAL4), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,CDECIMAL9_2), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,2), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,-900), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL5 from datatypetestm order by STRCMP(CDECIMAL5,NULL), cidx;
+cidx	CDECIMAL5
+1	-999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CTINYINT), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CSMALLINT), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CINTEGER), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CBIGINT), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CDOUBLE), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CFLOAT), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CDECIMAL4), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,CDECIMAL9_2), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,2), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,-900), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9 from datatypetestm order by STRCMP(CDECIMAL9,NULL), cidx;
+cidx	CDECIMAL9
+1	-999999
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CTINYINT), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CSMALLINT), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CINTEGER), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CBIGINT), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CDOUBLE), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CFLOAT), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CDECIMAL4), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,2), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,-900), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL9_2 from datatypetestm order by STRCMP(CDECIMAL9_2,NULL), cidx;
+cidx	CDECIMAL9_2
+1	-9999.99
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CTINYINT), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CSMALLINT), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CINTEGER), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CBIGINT), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CDOUBLE), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CFLOAT), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CDECIMAL4), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,CDECIMAL9_2), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,2), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,-900), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL10 from datatypetestm order by STRCMP(CDECIMAL10,NULL), cidx;
+cidx	CDECIMAL10
+1	-9999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CTINYINT), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CSMALLINT), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CINTEGER), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CBIGINT), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CDOUBLE), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CFLOAT), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CDECIMAL4), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,CDECIMAL9_2), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,2), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,-900), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18 from datatypetestm order by STRCMP(CDECIMAL18,NULL), cidx;
+cidx	CDECIMAL18
+1	-9999999999999
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CTINYINT), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CSMALLINT), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CINTEGER), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CBIGINT), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CDOUBLE), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CFLOAT), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CDECIMAL4), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,CDECIMAL9_2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,2), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,-900), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CDECIMAL18_2 from datatypetestm order by STRCMP(CDECIMAL18_2,NULL), cidx;
+cidx	CDECIMAL18_2
+1	-99999999999.99
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CTINYINT), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CSMALLINT), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CINTEGER), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CBIGINT), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CDOUBLE), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CFLOAT), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CDECIMAL4), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,CDECIMAL9_2), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,2), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,-900), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CINTEGER from datatypetestm order by STRCMP(CINTEGER,NULL), cidx;
+cidx	CINTEGER
+1	-7483646
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CTINYINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CSMALLINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CINTEGER), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CBIGINT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CDOUBLE), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CFLOAT), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CDECIMAL4), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,CDECIMAL9_2), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,2), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,-900), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CSMALLINT from datatypetestm order by STRCMP(CSMALLINT,NULL), cidx;
+cidx	CSMALLINT
+1	-766
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CTINYINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CSMALLINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CINTEGER), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CBIGINT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CDOUBLE), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CFLOAT), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CDECIMAL4), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,CDECIMAL9_2), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,2), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,-900), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CTINYINT from datatypetestm order by STRCMP(CTINYINT,NULL), cidx;
+cidx	CTINYINT
+1	-26
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CTINYINT), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CSMALLINT), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CINTEGER), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CBIGINT), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CDOUBLE), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CFLOAT), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CDECIMAL4), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,CDECIMAL9_2), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,2), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,-900), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CDOUBLE from datatypetestm order by STRCMP(CDOUBLE,NULL), cidx;
+cidx	CDOUBLE
+1	-1.797693231e108
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CTINYINT), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CSMALLINT), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CINTEGER), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CBIGINT), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CDOUBLE), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CFLOAT), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CDECIMAL4), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,CDECIMAL9_2), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,2), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,-900), cidx;
+cidx	CFLOAT
+1	-3.40287e18
+select cidx, CFLOAT from datatypetestm order by STRCMP(CFLOAT,NULL), cidx;
+cidx	CFLOAT
+1	-3.40287e18

@@ -1,0 +1,4 @@
+USE autopilot;
+select cidx, SPACE(cidx) from datatypetestm order by cidx;
+cidx	SPACE(cidx)
+1	 

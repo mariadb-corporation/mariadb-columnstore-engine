@@ -1,0 +1,44 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, ASCII(CTEXT) from datatypetestm ;
+cidx	CTEXT	ASCII(CTEXT)
+1	texttexttext	116
+select cidx, CTINYTEXT, ASCII(CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	ASCII(CTINYTEXT)
+1	tinytext	116
+select cidx, CMEDIUMTEXT, ASCII(CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	ASCII(CMEDIUMTEXT)
+1	mediumtestmediumtest	109
+select cidx, CLONGTEXT, ASCII(CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	ASCII(CLONGTEXT)
+1	longtextlongtextlongtext	108
+select cidx, ASCII('NULL') from datatypetestm ;
+cidx	ASCII('NULL')
+1	78
+select cidx, ASCII('null') from datatypetestm ;
+cidx	ASCII('null')
+1	110
+select cidx, ASCII(' ') from datatypetestm ;
+cidx	ASCII(' ')
+1	32
+select cidx, ASCII(' THIS ') from datatypetestm ;
+cidx	ASCII(' THIS ')
+1	32
+select cidx, ASCII('this') from datatypetestm ;
+cidx	ASCII('this')
+1	116
+select cidx, ASCII('t') from datatypetestm ;
+cidx	ASCII('t')
+1	116
+select cidx, CTEXT from datatypetestm where ASCII(CTEXT) <> 0 ;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm where ASCII(CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm where ASCII(CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm where ASCII(CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

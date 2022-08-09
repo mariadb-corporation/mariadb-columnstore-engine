@@ -1,0 +1,361 @@
+USE autopilot;
+select cidx, CDATE, EXTRACT(MICROSECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(MICROSECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(SECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(SECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(MINUTE FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(MINUTE FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(HOUR FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(HOUR FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(DAY FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(DAY FROM CDATE)
+1	1997-01-01	1
+select cidx, CDATE, EXTRACT(WEEK FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(WEEK FROM CDATE)
+1	1997-01-01	1
+select cidx, CDATE, EXTRACT(MONTH FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(MONTH FROM CDATE)
+1	1997-01-01	1
+select cidx, CDATE, EXTRACT(QUARTER FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(QUARTER FROM CDATE)
+1	1997-01-01	1
+select cidx, CDATE, EXTRACT(YEAR FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(YEAR FROM CDATE)
+1	1997-01-01	1997
+select cidx, CDATE, EXTRACT(SECOND_MICROSECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(SECOND_MICROSECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(MINUTE_MICROSECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(MINUTE_MICROSECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(MINUTE_SECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(MINUTE_SECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(HOUR_MICROSECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(HOUR_MICROSECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(HOUR_SECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(HOUR_SECOND FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(HOUR_MINUTE FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(HOUR_MINUTE FROM CDATE)
+1	1997-01-01	0
+select cidx, CDATE, EXTRACT(DAY_MICROSECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(DAY_MICROSECOND FROM CDATE)
+1	1997-01-01	1000000000000
+select cidx, CDATE, EXTRACT(DAY_SECOND FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(DAY_SECOND FROM CDATE)
+1	1997-01-01	1000000
+select cidx, CDATE, EXTRACT(DAY_MINUTE FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(DAY_MINUTE FROM CDATE)
+1	1997-01-01	10000
+select cidx, CDATE, EXTRACT(DAY_HOUR FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(DAY_HOUR FROM CDATE)
+1	1997-01-01	100
+select cidx, CDATE, EXTRACT(YEAR_MONTH FROM CDATE) from datatypetestm order by cidx;
+cidx	CDATE	EXTRACT(YEAR_MONTH FROM CDATE)
+1	1997-01-01	199701
+select cidx, CDATETIME, EXTRACT(MICROSECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(MICROSECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(SECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(SECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(MINUTE FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(MINUTE FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(HOUR FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(HOUR FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(DAY FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(DAY FROM CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, EXTRACT(WEEK FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(WEEK FROM CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, EXTRACT(MONTH FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(MONTH FROM CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, EXTRACT(QUARTER FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(QUARTER FROM CDATETIME)
+1	1997-01-01 00:00:00	1
+select cidx, CDATETIME, EXTRACT(YEAR FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(YEAR FROM CDATETIME)
+1	1997-01-01 00:00:00	1997
+select cidx, CDATETIME, EXTRACT(SECOND_MICROSECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(SECOND_MICROSECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(MINUTE_MICROSECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(MINUTE_MICROSECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(MINUTE_SECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(MINUTE_SECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(HOUR_MICROSECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(HOUR_MICROSECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(HOUR_SECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(HOUR_SECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(HOUR_MINUTE FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(HOUR_MINUTE FROM CDATETIME)
+1	1997-01-01 00:00:00	0
+select cidx, CDATETIME, EXTRACT(DAY_MICROSECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(DAY_MICROSECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	1000000000000
+select cidx, CDATETIME, EXTRACT(DAY_SECOND FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(DAY_SECOND FROM CDATETIME)
+1	1997-01-01 00:00:00	1000000
+select cidx, CDATETIME, EXTRACT(DAY_MINUTE FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(DAY_MINUTE FROM CDATETIME)
+1	1997-01-01 00:00:00	10000
+select cidx, CDATETIME, EXTRACT(DAY_HOUR FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(DAY_HOUR FROM CDATETIME)
+1	1997-01-01 00:00:00	100
+select cidx, CDATETIME, EXTRACT(YEAR_MONTH FROM CDATETIME) from datatypetestm order by cidx;
+cidx	CDATETIME	EXTRACT(YEAR_MONTH FROM CDATETIME)
+1	1997-01-01 00:00:00	199701
+select cidx, CTIME, EXTRACT(MICROSECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(MICROSECOND FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(SECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(SECOND FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(MINUTE FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(MINUTE FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(HOUR FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(HOUR FROM CTIME)
+1	13:00:00	13
+select cidx, CTIME, EXTRACT(DAY FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(DAY FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(WEEK FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(WEEK FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(MONTH FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(MONTH FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(QUARTER FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(QUARTER FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(YEAR FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(YEAR FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(SECOND_MICROSECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(SECOND_MICROSECOND FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(MINUTE_MICROSECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(MINUTE_MICROSECOND FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(MINUTE_SECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(MINUTE_SECOND FROM CTIME)
+1	13:00:00	0
+select cidx, CTIME, EXTRACT(HOUR_MICROSECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(HOUR_MICROSECOND FROM CTIME)
+1	13:00:00	1150981120
+select cidx, CTIME, EXTRACT(HOUR_SECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(HOUR_SECOND FROM CTIME)
+1	13:00:00	130000
+select cidx, CTIME, EXTRACT(HOUR_MINUTE FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(HOUR_MINUTE FROM CTIME)
+1	13:00:00	1300
+select cidx, CTIME, EXTRACT(DAY_MICROSECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(DAY_MICROSECOND FROM CTIME)
+1	13:00:00	1150981120
+select cidx, CTIME, EXTRACT(DAY_SECOND FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(DAY_SECOND FROM CTIME)
+1	13:00:00	130000
+select cidx, CTIME, EXTRACT(DAY_MINUTE FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(DAY_MINUTE FROM CTIME)
+1	13:00:00	1300
+select cidx, CTIME, EXTRACT(DAY_HOUR FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(DAY_HOUR FROM CTIME)
+1	13:00:00	13
+select cidx, CTIME, EXTRACT(YEAR_MONTH FROM CTIME) from datatypetestm order by cidx;
+cidx	CTIME	EXTRACT(YEAR_MONTH FROM CTIME)
+1	13:00:00	0
+select cidx, CDATE from datatypetestm order by EXTRACT(MICROSECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(SECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(MINUTE FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(HOUR FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(DAY FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(WEEK FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(MONTH FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(QUARTER FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(YEAR FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(SECOND_MICROSECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(MINUTE_MICROSECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(MINUTE_SECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(HOUR_MICROSECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(HOUR_SECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(HOUR_MINUTE FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(DAY_MICROSECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(DAY_SECOND FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(DAY_MINUTE FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(DAY_HOUR FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATE from datatypetestm order by EXTRACT(YEAR_MONTH FROM CDATE), cidx;
+cidx	CDATE
+1	1997-01-01
+select cidx, CDATETIME from datatypetestm order by EXTRACT(MICROSECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(SECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(MINUTE FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(HOUR FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(DAY FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(WEEK FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(MONTH FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(QUARTER FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(YEAR FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(SECOND_MICROSECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(MINUTE_MICROSECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(MINUTE_SECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(HOUR_MICROSECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(HOUR_SECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(HOUR_MINUTE FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(DAY_MICROSECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(DAY_SECOND FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(DAY_MINUTE FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(DAY_HOUR FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CDATETIME from datatypetestm order by EXTRACT(YEAR_MONTH FROM CDATETIME), cidx;
+cidx	CDATETIME
+1	1997-01-01 00:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(MICROSECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(SECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(MINUTE FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(HOUR FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(DAY FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(WEEK FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(MONTH FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(QUARTER FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(YEAR FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(SECOND_MICROSECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(MINUTE_MICROSECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(MINUTE_SECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(HOUR_MICROSECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(HOUR_SECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(HOUR_MINUTE FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(DAY_MICROSECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(DAY_SECOND FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(DAY_MINUTE FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(DAY_HOUR FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00
+select cidx, CTIME from datatypetestm order by EXTRACT(YEAR_MONTH FROM CTIME), cidx;
+cidx	CTIME
+1	13:00:00

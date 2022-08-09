@@ -1,0 +1,62 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, ELT(cidx,CCHAR3, CTEXT) from datatypetestm ;
+cidx	CTEXT	ELT(cidx,CCHAR3, CTEXT)
+1	texttexttext	aaa
+select cidx, CTEXT, ELT(cidx,CCHAR3,CCHAR7, CTEXT) from datatypetestm ;
+cidx	CTEXT	ELT(cidx,CCHAR3,CCHAR7, CTEXT)
+1	texttexttext	aaa
+select cidx, CTEXT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTEXT) from datatypetestm ;
+cidx	CTEXT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTEXT)
+1	texttexttext	aaa
+select cidx, CTINYTEXT, ELT(cidx,CCHAR3, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	ELT(cidx,CCHAR3, CTINYTEXT)
+1	tinytext	aaa
+select cidx, CTINYTEXT, ELT(cidx,CCHAR3,CCHAR7, CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	ELT(cidx,CCHAR3,CCHAR7, CTINYTEXT)
+1	tinytext	aaa
+select cidx, CTINYTEXT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYTEXT)
+1	tinytext	aaa
+select cidx, CMEDIUMTEXT, ELT(cidx,CCHAR3, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	ELT(cidx,CCHAR3, CMEDIUMTEXT)
+1	mediumtestmediumtest	aaa
+select cidx, CMEDIUMTEXT, ELT(cidx,CCHAR3,CCHAR7, CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	ELT(cidx,CCHAR3,CCHAR7, CMEDIUMTEXT)
+1	mediumtestmediumtest	aaa
+select cidx, CMEDIUMTEXT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CMEDIUMTEXT)
+1	mediumtestmediumtest	aaa
+select cidx, CLONGTEXT, ELT(cidx,CCHAR3, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	ELT(cidx,CCHAR3, CLONGTEXT)
+1	longtextlongtextlongtext	aaa
+select cidx, CLONGTEXT, ELT(cidx,CCHAR3,CCHAR7, CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	ELT(cidx,CCHAR3,CCHAR7, CLONGTEXT)
+1	longtextlongtextlongtext	aaa
+select cidx, CLONGTEXT, ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CLONGTEXT)
+1	longtextlongtextlongtext	aaa
+select cidx, CTEXT from datatypetestm where ELT(cidx,CCHAR3, CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTEXT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTEXT) <> 0 ;
+cidx	CTEXT
+select cidx, CTINYTEXT from datatypetestm where ELT(cidx,CCHAR3, CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CTINYTEXT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CTINYTEXT) <> 0 ;
+cidx	CTINYTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where ELT(cidx,CCHAR3, CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CMEDIUMTEXT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CMEDIUMTEXT) <> 0 ;
+cidx	CMEDIUMTEXT
+select cidx, CLONGTEXT from datatypetestm where ELT(cidx,CCHAR3, CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where ELT(cidx,CCHAR3,CCHAR7, CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT
+select cidx, CLONGTEXT from datatypetestm where ELT(cidx,CCHAR3,CINTEGER,CDATE,'ALOHA', CLONGTEXT) <> 0 ;
+cidx	CLONGTEXT

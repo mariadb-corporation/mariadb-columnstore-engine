@@ -1,0 +1,458 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select GROUP_CONCAT(CCHAR1,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR1,CCHAR3)
+aaaa
+select GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont')
+aaaaCalpont
+select GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' separator '#')
+aaaaCalpont
+select GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaCalpont
+select GROUP_CONCAT(CCHAR2,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR2,CCHAR3)
+aaaaa
+select GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont')
+aaaaaCalpont
+select GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' separator '#')
+aaaaaCalpont
+select GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaCalpont
+select GROUP_CONCAT(CCHAR3,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR3,CCHAR3)
+aaaaaa
+select GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont')
+aaaaaaCalpont
+select GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' separator '#')
+aaaaaaCalpont
+select GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaCalpont
+select GROUP_CONCAT(CCHAR4,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR4,CCHAR3)
+aaaaaaa
+select GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont')
+aaaaaaaCalpont
+select GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' separator '#')
+aaaaaaaCalpont
+select GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaCalpont
+select GROUP_CONCAT(CCHAR5,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR5,CCHAR3)
+aaaaaaaa
+select GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont')
+aaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' separator '#')
+aaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR6,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR6,CCHAR3)
+aaaaaaaaa
+select GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont')
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR7,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR7,CCHAR3)
+aaaaaaaaaa
+select GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont')
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR8,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR8,CCHAR3)
+aaaaaaaaaaa
+select GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont')
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR9,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR9,CCHAR3)
+aaaaaaaaaaaa
+select GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont')
+aaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR255,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CCHAR255,CCHAR3)
+aaaaaaaaaaaaa
+select GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont')
+aaaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR1,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR1,CCHAR3)
+aaaa
+select GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont')
+aaaaCalpont
+select GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' separator '#')
+aaaaCalpont
+select GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaCalpont
+select GROUP_CONCAT(CVCHAR2,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR2,CCHAR3)
+aaaaa
+select GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont')
+aaaaaCalpont
+select GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' separator '#')
+aaaaaCalpont
+select GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaCalpont
+select GROUP_CONCAT(CVCHAR3,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR3,CCHAR3)
+aaaaaa
+select GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont')
+aaaaaaCalpont
+select GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' separator '#')
+aaaaaaCalpont
+select GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaCalpont
+select GROUP_CONCAT(CVCHAR4,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR4,CCHAR3)
+aaaaaaa
+select GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont')
+aaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' separator '#')
+aaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR5,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR5,CCHAR3)
+aaaaaaaa
+select GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont')
+aaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' separator '#')
+aaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR6,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR6,CCHAR3)
+aaaaaaaaa
+select GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont')
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR7,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR7,CCHAR3)
+aaaaaaaaaa
+select GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont')
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR8,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR8,CCHAR3)
+aaaaaaaaaaa
+select GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont')
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR255,CCHAR3) from datatypetestm;
+GROUP_CONCAT(CVCHAR255,CCHAR3)
+aaaaaaaaaaaaa
+select GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont') from datatypetestm;
+GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont')
+aaaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' separator '#') from datatypetestm;
+GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' separator '#')
+aaaaaaaaaaaaaCalpont
+select GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm;
+GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+aaaaaaaaaaaaaCalpont
+select cidx, CCHAR1, GROUP_CONCAT(CCHAR1,CCHAR3) from datatypetestm group by cidx, CCHAR1 order by cidx;
+cidx	CCHAR1	GROUP_CONCAT(CCHAR1,CCHAR3)
+1	a	aaaa
+select cidx, CCHAR1, GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR1 order by cidx;
+cidx	CCHAR1	GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont')
+1	a	aaaaCalpont
+select cidx, CCHAR1, GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR1 order by cidx;
+cidx	CCHAR1	GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' separator '#')
+1	a	aaaaCalpont
+select cidx, CCHAR1, GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR1 order by cidx;
+cidx	CCHAR1	GROUP_CONCAT(CCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	a	aaaaCalpont
+select cidx, CCHAR2, GROUP_CONCAT(CCHAR2,CCHAR3) from datatypetestm group by cidx, CCHAR2 order by cidx;
+cidx	CCHAR2	GROUP_CONCAT(CCHAR2,CCHAR3)
+1	aa	aaaaa
+select cidx, CCHAR2, GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR2 order by cidx;
+cidx	CCHAR2	GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont')
+1	aa	aaaaaCalpont
+select cidx, CCHAR2, GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR2 order by cidx;
+cidx	CCHAR2	GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' separator '#')
+1	aa	aaaaaCalpont
+select cidx, CCHAR2, GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR2 order by cidx;
+cidx	CCHAR2	GROUP_CONCAT(CCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aa	aaaaaCalpont
+select cidx, CCHAR3, GROUP_CONCAT(CCHAR3,CCHAR3) from datatypetestm group by cidx, CCHAR3 order by cidx;
+cidx	CCHAR3	GROUP_CONCAT(CCHAR3,CCHAR3)
+1	aaa	aaaaaa
+select cidx, CCHAR3, GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR3 order by cidx;
+cidx	CCHAR3	GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont')
+1	aaa	aaaaaaCalpont
+select cidx, CCHAR3, GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR3 order by cidx;
+cidx	CCHAR3	GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' separator '#')
+1	aaa	aaaaaaCalpont
+select cidx, CCHAR3, GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR3 order by cidx;
+cidx	CCHAR3	GROUP_CONCAT(CCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaa	aaaaaaCalpont
+select cidx, CCHAR4, GROUP_CONCAT(CCHAR4,CCHAR3) from datatypetestm group by cidx, CCHAR4 order by cidx;
+cidx	CCHAR4	GROUP_CONCAT(CCHAR4,CCHAR3)
+1	aaaa	aaaaaaa
+select cidx, CCHAR4, GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR4 order by cidx;
+cidx	CCHAR4	GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont')
+1	aaaa	aaaaaaaCalpont
+select cidx, CCHAR4, GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR4 order by cidx;
+cidx	CCHAR4	GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' separator '#')
+1	aaaa	aaaaaaaCalpont
+select cidx, CCHAR4, GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR4 order by cidx;
+cidx	CCHAR4	GROUP_CONCAT(CCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaa	aaaaaaaCalpont
+select cidx, CCHAR5, GROUP_CONCAT(CCHAR5,CCHAR3) from datatypetestm group by cidx, CCHAR5 order by cidx;
+cidx	CCHAR5	GROUP_CONCAT(CCHAR5,CCHAR3)
+1	aaaaa	aaaaaaaa
+select cidx, CCHAR5, GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR5 order by cidx;
+cidx	CCHAR5	GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont')
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CCHAR5, GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR5 order by cidx;
+cidx	CCHAR5	GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' separator '#')
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CCHAR5, GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR5 order by cidx;
+cidx	CCHAR5	GROUP_CONCAT(CCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CCHAR6, GROUP_CONCAT(CCHAR6,CCHAR3) from datatypetestm group by cidx, CCHAR6 order by cidx;
+cidx	CCHAR6	GROUP_CONCAT(CCHAR6,CCHAR3)
+1	aaaaaa	aaaaaaaaa
+select cidx, CCHAR6, GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR6 order by cidx;
+cidx	CCHAR6	GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont')
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CCHAR6, GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR6 order by cidx;
+cidx	CCHAR6	GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' separator '#')
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CCHAR6, GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR6 order by cidx;
+cidx	CCHAR6	GROUP_CONCAT(CCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CCHAR7, GROUP_CONCAT(CCHAR7,CCHAR3) from datatypetestm group by cidx, CCHAR7 order by cidx;
+cidx	CCHAR7	GROUP_CONCAT(CCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaaaaa
+select cidx, CCHAR7, GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR7 order by cidx;
+cidx	CCHAR7	GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont')
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CCHAR7, GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR7 order by cidx;
+cidx	CCHAR7	GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' separator '#')
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CCHAR7, GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR7 order by cidx;
+cidx	CCHAR7	GROUP_CONCAT(CCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CCHAR8, GROUP_CONCAT(CCHAR8,CCHAR3) from datatypetestm group by cidx, CCHAR8 order by cidx;
+cidx	CCHAR8	GROUP_CONCAT(CCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaaaaa
+select cidx, CCHAR8, GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR8 order by cidx;
+cidx	CCHAR8	GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont')
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CCHAR8, GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR8 order by cidx;
+cidx	CCHAR8	GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' separator '#')
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CCHAR8, GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR8 order by cidx;
+cidx	CCHAR8	GROUP_CONCAT(CCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CCHAR9, GROUP_CONCAT(CCHAR9,CCHAR3) from datatypetestm group by cidx, CCHAR9 order by cidx;
+cidx	CCHAR9	GROUP_CONCAT(CCHAR9,CCHAR3)
+1	aaaaaaaaa	aaaaaaaaaaaa
+select cidx, CCHAR9, GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR9 order by cidx;
+cidx	CCHAR9	GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont')
+1	aaaaaaaaa	aaaaaaaaaaaaCalpont
+select cidx, CCHAR9, GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR9 order by cidx;
+cidx	CCHAR9	GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' separator '#')
+1	aaaaaaaaa	aaaaaaaaaaaaCalpont
+select cidx, CCHAR9, GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR9 order by cidx;
+cidx	CCHAR9	GROUP_CONCAT(CCHAR9,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaaaa	aaaaaaaaaaaaCalpont
+select cidx, CCHAR255, GROUP_CONCAT(CCHAR255,CCHAR3) from datatypetestm group by cidx, CCHAR255 order by cidx;
+cidx	CCHAR255	GROUP_CONCAT(CCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaaaaa
+select cidx, CCHAR255, GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont') from datatypetestm group by cidx, CCHAR255 order by cidx;
+cidx	CCHAR255	GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont')
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont
+select cidx, CCHAR255, GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CCHAR255 order by cidx;
+cidx	CCHAR255	GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' separator '#')
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont
+select cidx, CCHAR255, GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CCHAR255 order by cidx;
+cidx	CCHAR255	GROUP_CONCAT(CCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont
+select cidx, CVCHAR1, GROUP_CONCAT(CVCHAR1,CCHAR3) from datatypetestm group by cidx, CVCHAR1 order by cidx;
+cidx	CVCHAR1	GROUP_CONCAT(CVCHAR1,CCHAR3)
+1	a	aaaa
+select cidx, CVCHAR1, GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR1 order by cidx;
+cidx	CVCHAR1	GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont')
+1	a	aaaaCalpont
+select cidx, CVCHAR1, GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR1 order by cidx;
+cidx	CVCHAR1	GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' separator '#')
+1	a	aaaaCalpont
+select cidx, CVCHAR1, GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR1 order by cidx;
+cidx	CVCHAR1	GROUP_CONCAT(CVCHAR1,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	a	aaaaCalpont
+select cidx, CVCHAR2, GROUP_CONCAT(CVCHAR2,CCHAR3) from datatypetestm group by cidx, CVCHAR2 order by cidx;
+cidx	CVCHAR2	GROUP_CONCAT(CVCHAR2,CCHAR3)
+1	aa	aaaaa
+select cidx, CVCHAR2, GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR2 order by cidx;
+cidx	CVCHAR2	GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont')
+1	aa	aaaaaCalpont
+select cidx, CVCHAR2, GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR2 order by cidx;
+cidx	CVCHAR2	GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' separator '#')
+1	aa	aaaaaCalpont
+select cidx, CVCHAR2, GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR2 order by cidx;
+cidx	CVCHAR2	GROUP_CONCAT(CVCHAR2,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aa	aaaaaCalpont
+select cidx, CVCHAR3, GROUP_CONCAT(CVCHAR3,CCHAR3) from datatypetestm group by cidx, CVCHAR3 order by cidx;
+cidx	CVCHAR3	GROUP_CONCAT(CVCHAR3,CCHAR3)
+1	aaa	aaaaaa
+select cidx, CVCHAR3, GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR3 order by cidx;
+cidx	CVCHAR3	GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont')
+1	aaa	aaaaaaCalpont
+select cidx, CVCHAR3, GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR3 order by cidx;
+cidx	CVCHAR3	GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' separator '#')
+1	aaa	aaaaaaCalpont
+select cidx, CVCHAR3, GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR3 order by cidx;
+cidx	CVCHAR3	GROUP_CONCAT(CVCHAR3,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaa	aaaaaaCalpont
+select cidx, CVCHAR4, GROUP_CONCAT(CVCHAR4,CCHAR3) from datatypetestm group by cidx, CVCHAR4 order by cidx;
+cidx	CVCHAR4	GROUP_CONCAT(CVCHAR4,CCHAR3)
+1	aaaa	aaaaaaa
+select cidx, CVCHAR4, GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR4 order by cidx;
+cidx	CVCHAR4	GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont')
+1	aaaa	aaaaaaaCalpont
+select cidx, CVCHAR4, GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR4 order by cidx;
+cidx	CVCHAR4	GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' separator '#')
+1	aaaa	aaaaaaaCalpont
+select cidx, CVCHAR4, GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR4 order by cidx;
+cidx	CVCHAR4	GROUP_CONCAT(CVCHAR4,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaa	aaaaaaaCalpont
+select cidx, CVCHAR5, GROUP_CONCAT(CVCHAR5,CCHAR3) from datatypetestm group by cidx, CVCHAR5 order by cidx;
+cidx	CVCHAR5	GROUP_CONCAT(CVCHAR5,CCHAR3)
+1	aaaaa	aaaaaaaa
+select cidx, CVCHAR5, GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR5 order by cidx;
+cidx	CVCHAR5	GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont')
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CVCHAR5, GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR5 order by cidx;
+cidx	CVCHAR5	GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' separator '#')
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CVCHAR5, GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR5 order by cidx;
+cidx	CVCHAR5	GROUP_CONCAT(CVCHAR5,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaa	aaaaaaaaCalpont
+select cidx, CVCHAR6, GROUP_CONCAT(CVCHAR6,CCHAR3) from datatypetestm group by cidx, CVCHAR6 order by cidx;
+cidx	CVCHAR6	GROUP_CONCAT(CVCHAR6,CCHAR3)
+1	aaaaaa	aaaaaaaaa
+select cidx, CVCHAR6, GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR6 order by cidx;
+cidx	CVCHAR6	GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont')
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CVCHAR6, GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR6 order by cidx;
+cidx	CVCHAR6	GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' separator '#')
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CVCHAR6, GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR6 order by cidx;
+cidx	CVCHAR6	GROUP_CONCAT(CVCHAR6,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaa	aaaaaaaaaCalpont
+select cidx, CVCHAR7, GROUP_CONCAT(CVCHAR7,CCHAR3) from datatypetestm group by cidx, CVCHAR7 order by cidx;
+cidx	CVCHAR7	GROUP_CONCAT(CVCHAR7,CCHAR3)
+1	aaaaaaa	aaaaaaaaaa
+select cidx, CVCHAR7, GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR7 order by cidx;
+cidx	CVCHAR7	GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont')
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CVCHAR7, GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR7 order by cidx;
+cidx	CVCHAR7	GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' separator '#')
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CVCHAR7, GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR7 order by cidx;
+cidx	CVCHAR7	GROUP_CONCAT(CVCHAR7,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaa	aaaaaaaaaaCalpont
+select cidx, CVCHAR8, GROUP_CONCAT(CVCHAR8,CCHAR3) from datatypetestm group by cidx, CVCHAR8 order by cidx;
+cidx	CVCHAR8	GROUP_CONCAT(CVCHAR8,CCHAR3)
+1	aaaaaaaa	aaaaaaaaaaa
+select cidx, CVCHAR8, GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR8 order by cidx;
+cidx	CVCHAR8	GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont')
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CVCHAR8, GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR8 order by cidx;
+cidx	CVCHAR8	GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' separator '#')
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CVCHAR8, GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR8 order by cidx;
+cidx	CVCHAR8	GROUP_CONCAT(CVCHAR8,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaaa	aaaaaaaaaaaCalpont
+select cidx, CVCHAR255, GROUP_CONCAT(CVCHAR255,CCHAR3) from datatypetestm group by cidx, CVCHAR255 order by cidx;
+cidx	CVCHAR255	GROUP_CONCAT(CVCHAR255,CCHAR3)
+1	aaaaaaaaaa	aaaaaaaaaaaaa
+select cidx, CVCHAR255, GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont') from datatypetestm group by cidx, CVCHAR255 order by cidx;
+cidx	CVCHAR255	GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont')
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont
+select cidx, CVCHAR255, GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' separator '#') from datatypetestm group by cidx, CVCHAR255 order by cidx;
+cidx	CVCHAR255	GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' separator '#')
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont
+select cidx, CVCHAR255, GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC) from datatypetestm group by cidx, CVCHAR255 order by cidx;
+cidx	CVCHAR255	GROUP_CONCAT(CVCHAR255,CCHAR3,'Calpont' ORDER BY CIDX ASC)
+1	aaaaaaaaaa	aaaaaaaaaaaaaCalpont

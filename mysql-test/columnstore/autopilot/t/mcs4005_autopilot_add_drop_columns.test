@@ -1,0 +1,37 @@
+# -------------------------------------------------------------- #
+# Add and drop columns of all supported data types
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+--source ../include/have_columnstore.inc
+#
+--disable_warnings
+DROP DATABASE IF EXISTS mcs4005_db;
+--enable_warnings
+#
+CREATE DATABASE mcs4005_db;
+USE mcs4005_db;
+#
+--source ../include/dbt3/createLineitem.inc
+# -------------------------------------------------------------- #
+# test on empty lineitem table
+# -------------------------------------------------------------- #
+#
+--source ../include/alter_table_add_columns.inc
+desc lineitem;
+--source ../include/alter_table_drop_columns.inc
+desc lineitem;
+# -------------------------------------------------------------- #
+# test on 1m lineitem table
+# -------------------------------------------------------------- #
+#
+--source ../include/dbt3/ldiLineitem1m.inc
+--source ../include/alter_table_add_columns.inc
+desc lineitem;
+--source ../include/alter_table_drop_columns.inc
+desc lineitem;
+# -------------------------------------------------------------- #
+# clean up
+# -------------------------------------------------------------- #
+#
+DROP DATABASE mcs4005_db;

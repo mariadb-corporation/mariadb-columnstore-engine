@@ -1,0 +1,98 @@
+USE autopilot;
+set max_length_for_sort_data=68192;
+select cidx, CTEXT, LOCATE('aaa',CTEXT) from datatypetestm ;
+cidx	CTEXT	LOCATE('aaa',CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, LOCATE('zz',CTEXT) from datatypetestm ;
+cidx	CTEXT	LOCATE('zz',CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, LOCATE('aaaaaaaaaaaa',CTEXT) from datatypetestm ;
+cidx	CTEXT	LOCATE('aaaaaaaaaaaa',CTEXT)
+1	texttexttext	0
+select cidx, CTEXT, LOCATE('zzzzzzzzzzzzzz',CTEXT) from datatypetestm ;
+cidx	CTEXT	LOCATE('zzzzzzzzzzzzzz',CTEXT)
+1	texttexttext	0
+select cidx, CTINYTEXT, LOCATE('aaa',CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	LOCATE('aaa',CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, LOCATE('zz',CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	LOCATE('zz',CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, LOCATE('aaaaaaaaaaaa',CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	LOCATE('aaaaaaaaaaaa',CTINYTEXT)
+1	tinytext	0
+select cidx, CTINYTEXT, LOCATE('zzzzzzzzzzzzzz',CTINYTEXT) from datatypetestm ;
+cidx	CTINYTEXT	LOCATE('zzzzzzzzzzzzzz',CTINYTEXT)
+1	tinytext	0
+select cidx, CMEDIUMTEXT, LOCATE('aaa',CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	LOCATE('aaa',CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, LOCATE('zz',CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	LOCATE('zz',CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, LOCATE('aaaaaaaaaaaa',CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	LOCATE('aaaaaaaaaaaa',CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CMEDIUMTEXT, LOCATE('zzzzzzzzzzzzzz',CMEDIUMTEXT) from datatypetestm ;
+cidx	CMEDIUMTEXT	LOCATE('zzzzzzzzzzzzzz',CMEDIUMTEXT)
+1	mediumtestmediumtest	0
+select cidx, CLONGTEXT, LOCATE('aaa',CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	LOCATE('aaa',CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, LOCATE('zz',CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	LOCATE('zz',CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, LOCATE('aaaaaaaaaaaa',CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	LOCATE('aaaaaaaaaaaa',CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CLONGTEXT, LOCATE('zzzzzzzzzzzzzz',CLONGTEXT) from datatypetestm ;
+cidx	CLONGTEXT	LOCATE('zzzzzzzzzzzzzz',CLONGTEXT)
+1	longtextlongtextlongtext	0
+select cidx, CTEXT from datatypetestm order by LOCATE('aaa',CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LOCATE('zz',CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LOCATE('aaaaaaaaaaaa',CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTEXT from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CTEXT), cidx;
+cidx	CTEXT
+1	texttexttext
+select cidx, CTINYTEXT from datatypetestm order by LOCATE('aaa',CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LOCATE('zz',CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LOCATE('aaaaaaaaaaaa',CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CTINYTEXT from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CTINYTEXT), cidx;
+cidx	CTINYTEXT
+1	tinytext
+select cidx, CMEDIUMTEXT from datatypetestm order by LOCATE('aaa',CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LOCATE('zz',CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LOCATE('aaaaaaaaaaaa',CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CMEDIUMTEXT from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CMEDIUMTEXT), cidx;
+cidx	CMEDIUMTEXT
+1	mediumtestmediumtest
+select cidx, CLONGTEXT from datatypetestm order by LOCATE('aaa',CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LOCATE('zz',CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LOCATE('aaaaaaaaaaaa',CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext
+select cidx, CLONGTEXT from datatypetestm order by LOCATE('zzzzzzzzzzzzzz',CLONGTEXT), cidx;
+cidx	CLONGTEXT
+1	longtextlongtextlongtext

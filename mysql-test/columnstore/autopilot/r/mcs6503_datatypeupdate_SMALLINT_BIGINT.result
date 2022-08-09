@@ -1,0 +1,7 @@
+use autopilot;
+START TRANSACTION;
+UPDATE datatypeupdate SET CBIGINT = CSMALLINT;
+SELECT CBIGINT FROM datatypeupdate;
+CBIGINT
+-766
+ROLLBACK;

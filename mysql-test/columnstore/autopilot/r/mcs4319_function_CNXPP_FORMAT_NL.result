@@ -1,0 +1,14 @@
+USE autopilot;
+set max_length_for_sort_data=8192;
+select cidx, FORMAT(68.9876*cidx,0) from datatypetestm order by cidx;
+cidx	FORMAT(68.9876*cidx,0)
+1	69
+select cidx, FORMAT(-68.9876*cidx,1) from datatypetestm order by cidx;
+cidx	FORMAT(-68.9876*cidx,1)
+1	-69.0
+select cidx, FORMAT(68.9876*cidx,2) from datatypetestm order by cidx;
+cidx	FORMAT(68.9876*cidx,2)
+1	68.99
+select cidx, FORMAT(-68.9876*cidx,3) from datatypetestm order by cidx;
+cidx	FORMAT(-68.9876*cidx,3)
+1	-68.988

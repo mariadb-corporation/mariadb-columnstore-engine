@@ -1,0 +1,40 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot functions test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+select cidx, CBIGINT, SIGN(CBIGINT) from datatypetestm order by cidx;
+select cidx, CDECIMAL1, SIGN(CDECIMAL1) from datatypetestm order by cidx;
+select cidx, CDECIMAL4, SIGN(CDECIMAL4) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, SIGN(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL5, SIGN(CDECIMAL5) from datatypetestm order by cidx;
+select cidx, CDECIMAL9, SIGN(CDECIMAL9) from datatypetestm order by cidx;
+select cidx, CDECIMAL9_2, SIGN(CDECIMAL9_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL10, SIGN(CDECIMAL10) from datatypetestm order by cidx;
+select cidx, CDECIMAL18, SIGN(CDECIMAL18) from datatypetestm order by cidx;
+select cidx, CDECIMAL18_2, SIGN(CDECIMAL18_2) from datatypetestm order by cidx;
+select cidx, CINTEGER, SIGN(CINTEGER) from datatypetestm order by cidx;
+select cidx, CSMALLINT, SIGN(CSMALLINT) from datatypetestm order by cidx;
+select cidx, CTINYINT, SIGN(CTINYINT) from datatypetestm order by cidx;
+select cidx, CDOUBLE, SIGN(CDOUBLE) from datatypetestm order by cidx;
+select cidx, CFLOAT, SIGN(CFLOAT) from datatypetestm order by cidx;
+select cidx, CBIGINT from datatypetestm order by SIGN(CBIGINT), cidx;
+select cidx, CDECIMAL1 from datatypetestm order by SIGN(CDECIMAL1), cidx;
+select cidx, CDECIMAL4 from datatypetestm order by SIGN(CDECIMAL4), cidx;
+select cidx, CDECIMAL4_2 from datatypetestm order by SIGN(CDECIMAL4_2), cidx;
+select cidx, CDECIMAL5 from datatypetestm order by SIGN(CDECIMAL5), cidx;
+select cidx, CDECIMAL9 from datatypetestm order by SIGN(CDECIMAL9), cidx;
+select cidx, CDECIMAL9_2 from datatypetestm order by SIGN(CDECIMAL9_2), cidx;
+select cidx, CDECIMAL10 from datatypetestm order by SIGN(CDECIMAL10), cidx;
+select cidx, CDECIMAL18 from datatypetestm order by SIGN(CDECIMAL18), cidx;
+select cidx, CDECIMAL18_2 from datatypetestm order by SIGN(CDECIMAL18_2), cidx;
+select cidx, CINTEGER from datatypetestm order by SIGN(CINTEGER), cidx;
+select cidx, CSMALLINT from datatypetestm order by SIGN(CSMALLINT), cidx;
+select cidx, CTINYINT from datatypetestm order by SIGN(CTINYINT), cidx;
+select cidx, CDOUBLE from datatypetestm order by SIGN(CDOUBLE), cidx;
+select cidx, CFLOAT from datatypetestm order by SIGN(CFLOAT), cidx;
