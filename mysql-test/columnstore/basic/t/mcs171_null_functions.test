@@ -25,8 +25,9 @@ SELECT ISNULL(1);
 SELECT ISNULL('a');
 SELECT NULLIF(1, 1);
 SELECT NULLIF('abc', 'a');
+--disable_warnings
 SELECT NULLIF(1, 'abcd');
-
+--enable_warnings
 SELECT a, ISNULL(a) FROM t1;
 SELECT b, ISNULL(b) FROM t1;
 SELECT c, ISNULL(c) FROM t1;

@@ -16,7 +16,6 @@
    MA 02110-1301, USA. */
 
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include <stdint.h>
 
 #include "rebuildEM.h"
@@ -36,16 +35,80 @@ using namespace idbdatafile;
 
 namespace RebuildExtentMap
 {
-int32_t EMReBuilder::collectExtents(const string& dbRootPath)
+std::unordered_map<uint32_t, FileId> systemCatalogMap = {
+    {2073, FileId(2073, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2070, FileId(2070, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2067, FileId(2067, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2064, FileId(2064, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2076, FileId(2076, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2061, FileId(2061, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {1004, FileId(1004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 0, 0, false)},
+    {1022, FileId(1022, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1001, FileId(1001, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1023, FileId(1023, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1021, FileId(1021, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1010, FileId(1010, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1006, FileId(1006, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1002, FileId(1002, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1009, FileId(1009, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1005, FileId(1005, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 0, 0, false)},
+    {1011, FileId(1011, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1008, FileId(1008, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1007, FileId(1007, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1003, FileId(1003, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1032, FileId(1032, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1038, FileId(1038, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1033, FileId(1033, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1027, FileId(1027, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1024, FileId(1024, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1042, FileId(1042, 0, 0, 0, 8, execplan::CalpontSystemCatalog::UBIGINT, 0, 0, false)},
+    {1040, FileId(1040, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1025, FileId(1025, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1035, FileId(1035, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1028, FileId(1028, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1036, FileId(1036, 0, 0, 0, 1, execplan::CalpontSystemCatalog::CHAR, 0, 0, false)},
+    {1031, FileId(1031, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 0, 0, false)},
+    {1037, FileId(1037, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1039, FileId(1039, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
+    {1030, FileId(1030, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1034, FileId(1034, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1026, FileId(1026, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1041, FileId(1041, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {1029, FileId(1029, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, false)},
+    {2001, FileId(2001, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, true)},
+    {2004, FileId(2004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 0, 0, true)},
+};
+
+void EMReBuilder::collectFileNames(const std::string& partialPath, std::string currentPath,
+                                   std::vector<std::string>& fileNames)
+{
+  currentPath.append(partialPath);
+
+  std::list<std::string> partialPathes;
+  IDBPolicy::listDirectory(currentPath.c_str(), partialPathes);
+  if (partialPathes.size() == 0)
+  {
+    fileNames.push_back(currentPath);
+    return;
+  }
+
+  currentPath.push_back('/');
+  for (const auto& partialPath : partialPathes)
+    collectFileNames(partialPath, currentPath, fileNames);
+}
+
+int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
 {
   if (doVerbose())
   {
     std::cout << "Collect extents for the DBRoot " << dbRootPath << std::endl;
   }
 
-  for (boost::filesystem::recursive_directory_iterator dirIt(dbRootPath), dirEnd; dirIt != dirEnd; ++dirIt)
+  std::vector<std::string> fileNames;
+  collectFileNames(dbRootPath, "", fileNames);
+  for (const auto& fileName : fileNames)
   {
-    (void)collectExtent(dirIt->path().string());
+    (void)collectExtent(fileName);
   }
 
   return 0;
@@ -57,6 +120,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
   uint32_t oid;
   uint32_t partition;
   uint32_t segment;
+
   // Initialize oid, partition and segment from the given `fullFileName`.
   auto rc = WriteEngine::Convertor::fileName2Oid(fullFileName, oid, partition, segment);
   if (rc != 0)
@@ -79,107 +143,144 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     return rc;
   }
 
-  // Read and verify header.
-  char fileHeader[compress::CompressInterface::HDR_BUF_LEN * 2];
-  rc = fileOp.readHeaders(dbFile.get(), fileHeader);
-  if (rc != 0)
+  if (oid > 3000)
   {
-    // FIXME: If the file was created without a compression, it does not
-    // have a header block, so header verification fails in this case,
-    // currently we skip it, because we cannot deduce needed data to create
-    // a column extent from the blob file.
-    // Skip fileID from system catalog.
-    if (doVerbose() && oid > 3000)
+    // Read and verify header.
+    char fileHeader[compress::CompressInterface::HDR_BUF_LEN * 2];
+    rc = fileOp.readHeaders(dbFile.get(), fileHeader);
+    if (rc != 0)
     {
-      std::cerr << "Cannot read file header from the file " << fullFileName
-                << ", probably this file was created without compression. " << std::endl;
+      if (doVerbose())
+      {
+        std::cerr << "Cannot read file header from the file " << fullFileName
+                  << ", probably this file was created without compression. " << std::endl;
+      }
+      return rc;
     }
-    return rc;
-  }
 
-  if (doVerbose())
-  {
-    std::cout << "Processing file: " << fullFileName << std::endl;
-    std::cout << "fileName2Oid:  [OID: " << oid << ", partition: " << partition << ", segment: " << segment
-              << "] " << std::endl;
-  }
-
-  // Read the `colDataType` and `colWidth` from the given header.
-  const auto versionNumber = compress::CompressInterface::getVersionNumber(fileHeader);
-  // Verify header number.
-  if (versionNumber < 3)
-  {
     if (doVerbose())
     {
-      std::cerr << "File version " << versionNumber << " is not supported. " << std::endl;
+      std::cout << "Processing file: " << fullFileName << std::endl;
+      std::cout << "fileName2Oid:  [OID: " << oid << ", partition: " << partition << ", segment: " << segment
+                << "] " << std::endl;
     }
-    return -1;
-  }
 
-  auto colDataType = compress::CompressInterface::getColDataType(fileHeader);
-  auto colWidth = compress::CompressInterface::getColumnWidth(fileHeader);
-  auto blockCount = compress::CompressInterface::getBlockCount(fileHeader);
-  auto lbidCount = compress::CompressInterface::getLBIDCount(fileHeader);
-  auto compressionType = compress::CompressInterface::getCompressionType(fileHeader);
-
-  if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
-  {
-    if (doVerbose())
-      std::cout << "File header has invalid data. " << std::endl;
-
-    return -1;
-  }
-
-  auto isDict = isDictFile(colDataType, colWidth);
-  if (isDict)
-    colWidth = 8;
-
-  if (doVerbose())
-  {
-    std::cout << "Searching for HWM... " << std::endl;
-    std::cout << "Block count: " << blockCount << std::endl;
-  }
-
-  uint64_t hwm = 0;
-  rc = searchHWMInSegmentFile(oid, getDBRoot(), partition, segment, colDataType, colWidth, blockCount, isDict,
-                              compressionType, hwm);
-  if (rc != 0)
-    return rc;
-
-  if (doVerbose())
-    std::cout << "HWM is: " << hwm << std::endl;
-
-  const uint32_t extentMaxBlockCount = getEM().getExtentRows() * colWidth / BLOCK_SIZE;
-  // We found multiple extents per one segment file.
-  if (hwm >= extentMaxBlockCount)
-  {
-    for (uint32_t lbidIndex = 0; lbidIndex < lbidCount - 1; ++lbidIndex)
+    // Read the `colDataType` and `colWidth` from the given header.
+    const auto versionNumber = compress::CompressInterface::getVersionNumber(fileHeader);
+    // Verify header number.
+    if (versionNumber < 3)
     {
-      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
-      FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, /*hwm*/ 0, isDict);
+      if (doVerbose())
+      {
+        std::cerr << "File version " << versionNumber << " is not supported. " << std::endl;
+      }
+      return -1;
+    }
+
+    auto colDataType = compress::CompressInterface::getColDataType(fileHeader);
+    auto colWidth = compress::CompressInterface::getColumnWidth(fileHeader);
+    auto blockCount = compress::CompressInterface::getBlockCount(fileHeader);
+    auto lbidCount = compress::CompressInterface::getLBIDCount(fileHeader);
+    auto compressionType = compress::CompressInterface::getCompressionType(fileHeader);
+
+    if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
+    {
+      if (doVerbose())
+        std::cout << "File header has invalid data. " << std::endl;
+
+      return -1;
+    }
+
+    auto isDict = isDictFile(colDataType, colWidth);
+    if (isDict)
+      colWidth = 8;
+
+    if (doVerbose())
+    {
+      std::cout << "Searching for HWM... " << std::endl;
+      std::cout << "Block count: " << blockCount << std::endl;
+    }
+
+    uint64_t hwm = 0;
+    rc = searchHWMInSegmentFile(fullFileName, oid, getDBRoot(), partition, segment, colDataType, colWidth,
+                                blockCount, isDict, compressionType, hwm);
+
+    if (rc != 0)
+      return rc;
+
+    if (doVerbose())
+      std::cout << "HWM is: " << hwm << std::endl;
+
+    const uint32_t extentMaxBlockCount = getEM().getExtentRows() * colWidth / BLOCK_SIZE;
+    // We found multiple extents per one segment file.
+    if (hwm >= extentMaxBlockCount)
+    {
+      for (uint32_t lbidIndex = 0; lbidIndex < lbidCount - 1; ++lbidIndex)
+      {
+        auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
+        FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, /*hwm*/ 0, isDict);
+        extentMap.push_back(fileId);
+      }
+
+      // Last one has an actual HWM.
+      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidCount - 1);
+      FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, hwm, isDict);
       extentMap.push_back(fileId);
+
+      if (doVerbose())
+      {
+        std::cout << "Found multiple extents per segment file " << std::endl;
+        std::cout << "FileId is collected " << fileId << std::endl;
+      }
     }
-
-    // Last one has an actual HWM.
-    auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidCount - 1);
-    FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
-    extentMap.push_back(fileId);
-
-    if (doVerbose())
+    else
     {
-      std::cout << "Found multiple extents per segment file " << std::endl;
-      std::cout << "FileId is collected " << fileId << std::endl;
+      // One extent per segment file.
+      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, 0);
+      FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, hwm, isDict);
+      extentMap.push_back(fileId);
+
+      if (doVerbose())
+        std::cout << "FileId is collected " << fileId << std::endl;
     }
   }
   else
   {
-    // One extent per segment file.
-    auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, 0);
-    FileId fileId(oid, partition, segment, colWidth, colDataType, lbid, hwm, isDict);
-    extentMap.push_back(fileId);
+    const auto fileSize = dbFile->size();
+    if (fileSize == -1)
+    {
+      std::cerr << "IDBDataFile::size failed for the file " << fullFileName << std::endl;
+      return -1;
+    }
+
+    const uint64_t blockCount = fileSize / BLOCK_SIZE;
+    if (doVerbose())
+    {
+      std::cout << "Searching for HWM for system catalog file..." << std::endl;
+      std::cout << "Block count: " << blockCount << std::endl;
+    }
+
+    auto it = systemCatalogMap.find(oid);
+    if (it == systemCatalogMap.end())
+    {
+      std::cout << "Cannot find a system extent for OID: " << oid << std::endl;
+      std::cout << "Continuing..." << std::endl;
+      return 0;
+    }
+
+    FileId systemFileId = it->second;
+    uint64_t hwm = 0;
+    rc = searchHWMInSegmentFile(fullFileName, oid, getDBRoot(), systemFileId.partition, systemFileId.segment,
+                                systemFileId.colDataType, systemFileId.colWidth, blockCount,
+                                systemFileId.isDict, 0 /*=compressionType*/, hwm);
+    if (rc != 0)
+      return rc;
 
     if (doVerbose())
-      std::cout << "FileId is collected " << fileId << std::endl;
+      std::cout << "HWM is: " << hwm << std::endl;
+
+    systemFileId.hwm = hwm;
+    systemExtentMap.push_back(systemFileId);
   }
 
   return 0;
@@ -188,8 +289,28 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
 int32_t EMReBuilder::rebuildExtentMap()
 {
   if (doVerbose())
-  {
     std::cout << "Build extent map with size " << extentMap.size() << std::endl;
+
+  for (const auto& fileId : systemExtentMap)
+  {
+    if (fileId.hwm)
+    {
+      if (doVerbose())
+      {
+        std::cout << "Setting a HWM for system file " << fileId << std::endl;
+      }
+      try
+      {
+        getEM().setLocalHWM(fileId.oid, fileId.partition, fileId.segment, fileId.hwm, false, true);
+      }
+      catch (std::exception& e)
+      {
+        getEM().undoChanges();
+        std::cerr << "Cannot set local HWM: " << e.what() << std::endl;
+        return -1;
+      }
+      getEM().confirmChanges();
+    }
   }
 
   // We have to restore extent map by restoring individual extent in order
@@ -213,14 +334,14 @@ int32_t EMReBuilder::rebuildExtentMap()
         {
           // Create a dictionary extent for the given oid, partition,
           // segment, dbroot.
-          getEM().createDictStoreExtent(fileId.oid, getDBRoot(), fileId.partition, fileId.segment, lbid,
+          getEM().createDictStoreExtent(fileId.oid, fileId.dbroot, fileId.partition, fileId.segment, lbid,
                                         allocdSize);
         }
         else
         {
           // Create a column extent for the given oid, partition,
           // segment, dbroot and column width.
-          getEM().createColumnExtentExactFile(fileId.oid, fileId.colWidth, getDBRoot(), fileId.partition,
+          getEM().createColumnExtentExactFile(fileId.oid, fileId.colWidth, fileId.dbroot, fileId.partition,
                                               fileId.segment, fileId.colDataType, lbid, allocdSize,
                                               startBlockOffset);
         }
@@ -263,8 +384,8 @@ int32_t EMReBuilder::rebuildExtentMap()
   return 0;
 }
 
-int32_t EMReBuilder::searchHWMInSegmentFile(uint32_t oid, uint32_t dbRoot, uint32_t partition,
-                                            uint32_t segment,
+int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uint32_t oid, uint32_t dbRoot,
+                                            uint32_t partition, uint32_t segment,
                                             execplan::CalpontSystemCatalog::ColDataType colDataType,
                                             uint32_t colWidth, uint64_t blockCount, bool isDict,
                                             uint32_t compressionType, uint64_t& hwm)
@@ -275,12 +396,12 @@ int32_t EMReBuilder::searchHWMInSegmentFile(uint32_t oid, uint32_t dbRoot, uint3
     if (isDict)
     {
       chunkManagerWrapper = std::unique_ptr<ChunkManagerWrapperDict>(new ChunkManagerWrapperDict(
-          oid, dbRoot, partition, segment, colDataType, colWidth, compressionType));
+          fullFileName, oid, dbRoot, partition, segment, colDataType, colWidth, compressionType));
     }
     else
     {
       chunkManagerWrapper = std::unique_ptr<ChunkManagerWrapperColumn>(new ChunkManagerWrapperColumn(
-          oid, dbRoot, partition, segment, colDataType, colWidth, compressionType));
+          fullFileName, oid, dbRoot, partition, segment, colDataType, colWidth, compressionType));
     }
   }
   catch (...)
@@ -332,9 +453,8 @@ int32_t EMReBuilder::initializeSystemExtents()
   if (!doDisplay())
   {
     if (doVerbose())
-    {
       std::cout << "Initialize system extents from the initial state" << std::endl;
-    }
+
     try
     {
       getEM().loadFromBinaryBlob(reinterpret_cast<const char*>(BRM_saves_em_system_tables_blob));
@@ -345,48 +465,64 @@ int32_t EMReBuilder::initializeSystemExtents()
       return -1;
     }
   }
+
   return 0;
 }
 
-ChunkManagerWrapper::ChunkManagerWrapper(uint32_t oid, uint32_t dbRoot, uint32_t partition, uint32_t segment,
+ChunkManagerWrapper::ChunkManagerWrapper(const std::string& filename, uint32_t oid, uint32_t dbRoot,
+                                         uint32_t partition, uint32_t segment,
                                          execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                         uint32_t colWidth)
+                                         uint32_t colWidth, uint32_t compressionType)
  : oid(oid)
  , dbRoot(dbRoot)
  , partition(partition)
  , segment(segment)
  , colDataType(colDataType)
  , colWidth(colWidth)
+ , compressionType(compressionType)
  , size(colWidth)
  , pFileOp(nullptr)
+ , fileName(filename)
 {
 }
 
 int32_t ChunkManagerWrapper::readBlock(uint32_t blockNumber)
 {
-  auto rc = chunkManager.readBlock(pFile, blockData, blockNumber);
-  if (rc != 0)
-    return rc;
-  return 0;
+  int32_t rc = 0;
+
+  if (compressionType == 0)
+    rc = pFileOp->readDbBlocks(pFile, blockData, blockNumber, 1);
+  else
+    rc = chunkManager.readBlock(pFile, blockData, blockNumber);
+
+  return rc;
 }
 
-ChunkManagerWrapperColumn::ChunkManagerWrapperColumn(uint32_t oid, uint32_t dbRoot, uint32_t partition,
-                                                     uint32_t segment,
+ChunkManagerWrapperColumn::ChunkManagerWrapperColumn(const std::string& filename, uint32_t oid,
+                                                     uint32_t dbRoot, uint32_t partition, uint32_t segment,
                                                      execplan::CalpontSystemCatalog::ColDataType colDataType,
                                                      uint32_t colWidth, uint32_t compressionType)
- : ChunkManagerWrapper(oid, dbRoot, partition, segment, colDataType, colWidth)
+ : ChunkManagerWrapper(filename, oid, dbRoot, partition, segment, colDataType, colWidth, compressionType)
 {
-  pFileOp =
-      std::unique_ptr<WriteEngine::ColumnOpCompress1>(new WriteEngine::ColumnOpCompress1(compressionType));
-  chunkManager.fileOp(pFileOp.get());
-  // Open compressed column segment file. We will read block by block
-  // from the compressed chunks.
-  pFile = chunkManager.getSegmentFilePtr(oid, dbRoot, partition, segment, colDataType, colWidth, fileName,
-                                         "rb", size, false, false);
-  if (!pFile)
+  if (compressionType == 0)
   {
-    throw std::bad_alloc();
+    pFileOp = std::unique_ptr<WriteEngine::DbFileOp>(new WriteEngine::DbFileOp());
+    pFile = IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename.c_str(), "rb",
+                              colWidth);
   }
+  else
+  {
+    pFileOp =
+        std::unique_ptr<WriteEngine::ColumnOpCompress1>(new WriteEngine::ColumnOpCompress1(compressionType));
+    chunkManager.fileOp(pFileOp.get());
+    // Open compressed column segment file. We will read block by block
+    // from the compressed chunks.
+    pFile = chunkManager.getFilePtrByName(fileName, oid, dbRoot, partition, segment, colDataType, colWidth,
+                                          "rb", size, false, false);
+  }
+
+  if (!pFile)
+    throw std::bad_alloc();
 
   emptyValue = pFileOp->getEmptyRowValue(colDataType, colWidth);
   midOffset = (WriteEngine::BYTE_PER_BLOCK / 2);
@@ -425,21 +561,31 @@ bool ChunkManagerWrapperColumn::isEmptyValue(const uint8_t* value) const
   return false;
 }
 
-ChunkManagerWrapperDict::ChunkManagerWrapperDict(uint32_t oid, uint32_t dbRoot, uint32_t partition,
-                                                 uint32_t segment,
+ChunkManagerWrapperDict::ChunkManagerWrapperDict(const std::string& filename, uint32_t oid, uint32_t dbRoot,
+                                                 uint32_t partition, uint32_t segment,
                                                  execplan::CalpontSystemCatalog::ColDataType colDataType,
                                                  uint32_t colWidth, uint32_t compressionType)
- : ChunkManagerWrapper(oid, dbRoot, partition, segment, colDataType, colWidth)
+ : ChunkManagerWrapper(filename, oid, dbRoot, partition, segment, colDataType, colWidth, compressionType)
 {
-  pFileOp = std::unique_ptr<WriteEngine::DctnryCompress1>(new WriteEngine::DctnryCompress1(compressionType));
-  chunkManager.fileOp(pFileOp.get());
-  // Open compressed dict segment file.
-  pFile = chunkManager.getSegmentFilePtr(oid, dbRoot, partition, segment, colDataType, colWidth, fileName,
-                                         "rb", size, false, true);
-  if (!pFile)
+
+  if (compressionType == 0)
   {
-    throw std::bad_alloc();
+    pFileOp = std::unique_ptr<WriteEngine::DbFileOp>(new WriteEngine::DbFileOp());
+    pFile = IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename.c_str(), "rb",
+                              colWidth);
   }
+  else
+  {
+    pFileOp =
+        std::unique_ptr<WriteEngine::DctnryCompress1>(new WriteEngine::DctnryCompress1(compressionType));
+    chunkManager.fileOp(pFileOp.get());
+    // Open compressed dict segment file.
+    pFile = chunkManager.getFilePtrByName(fileName, oid, dbRoot, partition, segment, colDataType, colWidth,
+                                          "rb", size, false, true);
+  }
+
+  if (!pFile)
+    throw std::bad_alloc();
 
   auto dictBlockHeaderSize = WriteEngine::HDR_UNIT_SIZE + WriteEngine::NEXT_PTR_BYTES +
                              WriteEngine::HDR_UNIT_SIZE + WriteEngine::HDR_UNIT_SIZE;

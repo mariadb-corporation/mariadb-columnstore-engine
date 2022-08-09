@@ -10,19 +10,18 @@
 # token 1: error ID
 # token 2: internal error name
 # token 3: error message text to describe the error
-# 
+#
 # The tokens should be separated by one tab character. The error message text may contain
 # any character(s) except tab. The line must end with a single '\n'.
 
 # The id to treat all messages as CRITICAL
 444     ERR_ALWAYS_CRITICAL
 
-# Non support errors 1000 ~ 2000. 
+# Non support errors 1000 ~ 2000.
 # The query will go through the optimizer again with some optimization turned off
 1000	ERR_MISS_JOIN	%1% not joined.
 1001	ERR_NON_SUPPORTED_FUNCTION	Function '%1%' isn't supported.
 1002	ERR_INCOMPATIBLE_JOIN	%1% incompatible column type specified for join condition.
-1003	ERR_CIRCULAR_JOIN	Circular joins are not supported.
 1004	ERR_MIX_JOIN	Mixed %1% JOIN is not supported.
 1005	ERR_UPDATE_SUB	update with subselect in select clause is currently not supported in Columnstore.
 1006	ERR_DATATYPE_NOT_SUPPORT	Function called with unsupported datatype.
@@ -73,7 +72,7 @@
 2031	ERR_BRM_LOOKUP	Blocks are missing.  Alter or drop table in progress?
 2032	ERR_INCORRECT_VALUE	Incorrect %1% value: '%2%'.
 2033	ERR_SYSTEM_CATALOG	Error occurred when calling system catalog.
-2034	ERR_DATA_OFFLINE	At least one DBRoot required for that query is offline. 
+2034	ERR_DATA_OFFLINE	At least one DBRoot required for that query is offline.
 2035	ERR_ASSERTION_FAILURE	An internal error occurred.  Check the error log file & contact support.
 2036	ERR_PARTITION_NO_SCHEMA	No schema is specified for this partition function.
 2037	ERR_INVALID_FUNC_ARGUMENT	%1% in function arguments.
@@ -104,6 +103,8 @@
 2055	ERR_DISKAGG_TOO_BIG	Not enough memory to make disk-based aggregation. Raise TotalUmMemory if possible.
 2056	ERR_DISKAGG_FILEIO_ERROR	There was an IO error during a disk-based aggregation: %1%
 2057	ERR_JOIN_RESULT_TOO_BIG	Not enough memory to consolidate join results. Estimated %1% MB needed. TotalUmMemory is %2% MB.
+2058    ERR_DISKAGG_OVERFLOW1 The hash function used produces a lot of hash collisions (1).
+2059    ERR_DISKAGG_OVERFLOW2 The hash function used produces a lot of hash collisions (2).
 
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.
@@ -163,7 +164,7 @@
 6001	ERR_NETWORK DBRM encountered a network error, check the controllernode.
 6002	ERR_BRM_MUTEX A process crashed while holding the BRM mutex.  The lock state is unreliable.  Please restart Columnstore.
 6003	ERR_UNRECOVERABLE_LOCK_STATE Unrecoverable BRM lock state detected.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.  Please restart Columnstore.
-6004	ERR_RECOVERABLE_LOCK_STATE Attempting to fix the BRM lock state.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.  
+6004	ERR_RECOVERABLE_LOCK_STATE Attempting to fix the BRM lock state.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.
 6005	ERR_SUCCESSFUL_RECOVERY BRM lock state appears to be functional again.
 6006	ERR_HARD_FAILURE DBRM encountered, most likely, a network or disk problem performing that operation.
 
@@ -201,7 +202,7 @@
 9023	ERR_WF_OVERFLOW	'%1%' overflow.
 9024	ERR_WF_COLUMN_MISSING	'%1%' is not in tuple.
 9025	ERR_WF_UNKNOWN_BOUND	Unknown window frame start/bound type: '%1%'.
-9026	ERR_WF_NOT_IN_COL_MAP	Returned column not in intermediate result set. 
+9026	ERR_WF_NOT_IN_COL_MAP	Returned column not in intermediate result set.
 9027	ERR_WF_ARG_OUT_OF_RANGE	Argument '%1%' is out of range.
 9028	ERR_WF_NOT_ALLOWED	Window functions are not allowed in %1%.
 9029	ERR_WF_IDB_ONLY	Window function are only supported for Columnstore tables.

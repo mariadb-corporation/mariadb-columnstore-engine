@@ -27,7 +27,7 @@ class Service
  protected:
   // The read operation implicitly controls how long binary waits
   // before it starts. This is import for DMLProc to survive rollbacks. See MCOL-5105.
-  static constexpr const size_t PipeReadTimeout = 1200;
+  static constexpr const size_t PipeReadTimeout = 7200;
   // The service name, for logging
   const std::string m_name;
   // The pipe to send messages from the child to the parent

@@ -54,7 +54,6 @@ u_int64_t vbOffset = 0;
 pthread_mutex_t pthreadMutex;
 const std::vector<uint32_t> colWidthsAvailable = {1, 2, 4, 8, 16};
 const DBRootT dbroot = 1;
-const uint32_t KibiBlocks = 1024;
 
 struct Range
 {
@@ -1150,7 +1149,7 @@ static void* EMRunner(void* arg)
                 if (listSize == 0)
                     break;
 
-                struct EMEntries* tmp, *prev;
+                struct EMEntries* tmp = nullptr, *prev = nullptr;
                 int fileRand = rand_r(&randstate) % listSize;
                 int i, oid;
 

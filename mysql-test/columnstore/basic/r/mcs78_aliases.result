@@ -58,8 +58,6 @@ NULL	NULL	NULL	NULL	NULL	NULL
 0	887654321	222.32	yyyyyyyyyyyyyyyyyyyy	bbbbbbbbbbbbbbbbbbbb	1111-11-11 11:11:12
 1	-987654321	-122.32	zzzzzzzzzzzzzzzzzzzz	aaaaaaaaaaaaaaaaaaaa	1111-11-10 11:11:10
 0	-887654321	-222.32	xxxxxxxxxxxxxxxxxxxx	bbbbbbbbbbbbbbbbbbbb	1111-11-01 11:11:19
-Warnings:
-Warning	1292	Truncated incorrect DOUBLE value: 'Decimal'
 SELECT COUNT(*) AS 'Total rows' FROM t1 AS table1 , t1 AS table2 WHERE table1.t1_int = table2.t1_int;
 Total rows
 4

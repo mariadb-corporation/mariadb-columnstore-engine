@@ -28,6 +28,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -198,6 +199,7 @@ struct JobInfo
    , limitStart(0)
    , limitCount(-1)
    , joinNum(0)
+   , joinNumInView(0)
    , subLevel(0)
    , subNum(0)
    , subId(0)
@@ -291,6 +293,8 @@ struct JobInfo
   // mixed outer join
   std::map<int, uint64_t> tableSize;
   int64_t joinNum;
+  // MCOL-5061, MCOL-334.
+  int64_t joinNumInView;
 
   // for subquery
   boost::shared_ptr<int> subCount;  // # of subqueries in the query statement
@@ -365,6 +369,10 @@ struct JobInfo
   std::vector<execplan::ParseTree*> dynamicParseTreeVec;
 
   PrimitiveServerThreadPools primitiveServerThreadPools;
+  // Represents a `join edges` and `join id` to be restored in `join order` part.
+  std::map<std::pair<uint32_t, uint32_t>, int64_t> joinEdgesToRestore;
+  // Represents a pair of `table` to be on a large side and weight associated with that table.
+  std::unordered_map<uint32_t, int64_t> tablesForLargeSide;
 
  private:
   // defaults okay

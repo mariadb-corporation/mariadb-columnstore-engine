@@ -4,3 +4,4 @@ mcs212_idbExtentMax_function : 2020-11-30 bharath.bokka@mariadb.com
 mcs213_idbExtentMin_function : 2020-11-30 bharath.bokka@mariadb.com
 mcs118_charset_negative : mcs error code has changed 2022-07-07 roman.navrotskiy@mariadb.com
 mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
+udf_calshowpartitions : unstable values for min/max in the output(sometimes N/A, sometimes numbers) 2022-07-26 roman.nozdrin@mariadb.com

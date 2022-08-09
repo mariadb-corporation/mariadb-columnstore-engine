@@ -1,3 +1,4 @@
+SET GLOBAL log_bin_trust_function_creators = 1;
 DROP DATABASE IF EXISTS mcs39_db;
 CREATE DATABASE mcs39_db;
 USE mcs39_db;

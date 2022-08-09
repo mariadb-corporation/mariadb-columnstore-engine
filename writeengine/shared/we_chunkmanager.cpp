@@ -280,19 +280,20 @@ IDBDataFile* ChunkManager::getFilePtr(const FID& fid, uint16_t root, uint32_t pa
 }
 
 //------------------------------------------------------------------------------
-// Get/Return IDBDataFile* for specified OID, root, partition, and segment.
+// Get/Return IDBDataFile* by the given `filename`.
+// OID, partition and segment are needed for a file cache.
 // Function is to be used to open column/dict segment file.
 // If the IDBDataFile* is not found, then a segment file will be opened using
-// the mode (mode) and I/O buffer size (size) that is given.  Name of the
-// resulting file is returned in filename.
+// the mode (mode) and I/O buffer size (size) that is given.
 //------------------------------------------------------------------------------
-IDBDataFile* ChunkManager::getSegmentFilePtr(FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
-                                             execplan::CalpontSystemCatalog::ColDataType colDataType,
-                                             uint32_t colWidth, std::string& filename, const char* mode,
-                                             int32_t size, bool useTmpSuffix, bool isDict) const
+IDBDataFile* ChunkManager::getFilePtrByName(const std::string& filename, FID& fid, uint16_t root,
+                                            uint32_t partition, uint16_t segment,
+                                            execplan::CalpontSystemCatalog::ColDataType colDataType,
+                                            uint32_t colWidth, const char* mode, int32_t size,
+                                            bool useTmpSuffix, bool isDict) const
 {
-  CompFileData* fileData = getFileData(fid, root, partition, segment, filename, mode, size, colDataType,
-                                       colWidth, useTmpSuffix, isDict);
+  CompFileData* fileData = getFileDataByName(filename, fid, root, partition, segment, mode, size, colDataType,
+                                             colWidth, useTmpSuffix, isDict);
   return (fileData ? fileData->fFilePtr : NULL);
 }
 
@@ -328,12 +329,39 @@ CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t 
 
   // New CompFileData pointer needs to be created
   char name[FILE_NAME_SIZE];
-
   if (fFileOp->getFileName(fid, name, root, partition, segment) != NO_ERROR)
     return NULL;
 
-  CompFileData* fileData = new CompFileData(fileID, fid, colDataType, colWidth);
-  fileData->fFileName = filename = name;
+  // Initialize the given `filename`.
+  filename = name;
+  return getFileData_(fileID, filename, mode, size, colDataType, colWidth, useTmpSuffix, dctnry);
+}
+
+CompFileData* ChunkManager::getFileDataByName(const std::string& filename, const FID& fid, uint16_t root,
+                                              uint32_t partition, uint16_t segment, const char* mode,
+                                              int size, const CalpontSystemCatalog::ColDataType colDataType,
+                                              int colWidth, bool useTmpSuffix, bool dctnry) const
+{
+  FileID fileID(fid, root, partition, segment);
+  map<FileID, CompFileData*>::const_iterator mit = fFileMap.find(fileID);
+
+  WE_COMP_DBG(cout << "getFileData: fid:" << fid << " root:" << root << " part:" << partition << " seg:"
+                   << segment << " file* " << ((mit != fFileMap.end()) ? "" : "not ") << "found." << endl;)
+
+  // Get CompFileData pointer for existing Column or Dictionary store file
+  if (mit != fFileMap.end())
+    return mit->second;
+
+  return getFileData_(fileID, filename, mode, size, colDataType, colWidth, useTmpSuffix, dctnry);
+}
+
+
+CompFileData* ChunkManager::getFileData_(const FileID& fileID, const string& filename, const char* mode,
+                                         int size, const CalpontSystemCatalog::ColDataType colDataType,
+                                         int colWidth, bool useTmpSuffix, bool dctnry) const
+{
+  CompFileData* fileData = new CompFileData(fileID, fileID.fFid, colDataType, colWidth);
+  fileData->fFileName = filename;
 
   if (openFile(fileData, mode, colWidth, useTmpSuffix, __LINE__) != NO_ERROR)
   {
@@ -369,13 +397,12 @@ CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t 
     return NULL;
   }
 
-  int headerSize = compress::CompressInterface::getHdrSize(fileData->fFileHeader.fControlData);
-  int ptrSecSize = headerSize - COMPRESSED_FILE_HEADER_UNIT;
+  const int32_t headerSize = compress::CompressInterface::getHdrSize(fileData->fFileHeader.fControlData);
+  const int32_t ptrSecSize = headerSize - COMPRESSED_FILE_HEADER_UNIT;
 
   // Save segment file compression type.
-  uint32_t compressionType =
+  fileData->fCompressionType =
       compress::CompressInterface::getCompressionType(fileData->fFileHeader.fControlData);
-  fileData->fCompressionType = compressionType;
 
   if (ptrSecSize > COMPRESSED_FILE_HEADER_UNIT)
   {

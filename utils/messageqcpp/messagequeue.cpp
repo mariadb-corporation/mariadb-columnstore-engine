@@ -218,13 +218,17 @@ void MessageQueueClient::setup(bool syncProto)
 }
 
 MessageQueueClient::MessageQueueClient(const string& otherEnd, const string& config, bool syncProto)
- : fOtherEnd(otherEnd), fConfig(Config::makeConfig(config)), fLogger(31), fIsAvailable(true)
+ : fOtherEnd(otherEnd)
+ , fConfig(Config::makeConfig(config))
+ , fLogger(31)
+ , fIsAvailable(true)
+ , atTheSameHost_(false)
 {
   setup(syncProto);
 }
 
 MessageQueueClient::MessageQueueClient(const string& otherEnd, Config* config, bool syncProto)
- : fOtherEnd(otherEnd), fConfig(config), fLogger(31), fIsAvailable(true)
+ : fOtherEnd(otherEnd), fConfig(config), fLogger(31), fIsAvailable(true), atTheSameHost_(false)
 {
   if (fConfig == 0)
     fConfig = Config::makeConfig();
@@ -233,7 +237,7 @@ MessageQueueClient::MessageQueueClient(const string& otherEnd, Config* config, b
 }
 
 MessageQueueClient::MessageQueueClient(const string& dnOrIp, uint16_t port, bool syncProto)
- : fLogger(31), fIsAvailable(true)
+ : fLogger(31), fIsAvailable(true), atTheSameHost_(false)
 {
 #ifdef SKIP_IDB_COMPRESSION
   fClientSock.setSocketImpl(new InetStreamSocket());

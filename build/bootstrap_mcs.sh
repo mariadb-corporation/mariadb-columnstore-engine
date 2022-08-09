@@ -5,12 +5,10 @@
 # - the script is to be run under root.
 
 
-
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
 
 source $SCRIPT_LOCATION/utils.sh
-
 
 if [ "$EUID" -ne 0 ]
     then error "Please run script as root to install MariaDb to system paths"
@@ -20,7 +18,7 @@ fi
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
-DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "openSUSE" "Rocky")
+DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -28,7 +26,10 @@ optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}"
 optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
+optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
+optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
+
 
 source $( optparse.build )
 
@@ -73,17 +74,20 @@ install_deps()
 {
     message "Installing deps"
     if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
-        sudo apt-get -y update
+        apt-get -y update
         apt-get -y install build-essential automake libboost-all-dev bison cmake \
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
-        libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev
+        libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
+        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
+
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         yum -y install epel-release \
         && yum -y groupinstall "Development Tools" \
 	&& yum config-manager --set-enabled powertools \
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
-        && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel
+        && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel \        && yum -y install lzo-devel xz-devel lz4-devel bzip2-devel
+
         if [[ "$OS_VERSION" == "7" ]]; then
             yum -y install cmake3
             CMAKE_BIN_NAME=cmake3
@@ -93,12 +97,6 @@ install_deps()
         if [ $OS = 'Rocky' ]; then
 	    yum install -y checkpolicy
         fi
-    elif [ $OS = 'openSUSE' ]; then
-        zypper install -y bison ncurses-devel readline-devel libopenssl-devel cmake libxml2-devel gperf libaio-devel libevent-devel python-devel ruby-devel tree wget pam-devel snappy-devel libicu-devel \
-        && zypper install -y libboost_system-devel libboost_filesystem-devel libboost_thread-devel libboost_regex-devel libboost_date_time-devel libboost_chrono-devel libboost_atomic-devel \
-        && zypper install -y vim wget strace ltrace gdb  rsyslog net-tools expect perl-DBI libicu boost-devel jemalloc-devel libcurl-devel liblz4-devel lz4 \
-        && zypper install -y gcc gcc-c++ git automake libtool gtest cppunit-devel pcre2-devel systemd-devel libaio-devel snappy-devel cracklib-devel policycoreutils-devel ncurses-devel \
-        && zypper install -y make flex libcurl-devel  automake libtool rpm-build lsof iproute pam-devel perl-DBI expect createrepo
     fi
 }
 
@@ -161,9 +159,35 @@ build()
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
-                     -DWITH_UNITTESTS=YES
-                     -DWITH_BRM_UT=YES
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
+
+
+    if [[ $SKIP_UNIT_TESTS = true ]] ; then
+        warn "Unittests are not build"
+
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
+        message "Buiding with unittests"
+    fi
+
+    if [[ $RUN_BENCHMARKS = true ]] ; then
+        if [[ $MCS_BUILD_TYPE = 'Debug' ]] ; then
+            error "Benchmarks will not be build in run in Debug build Mode"
+            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            $RUN_BENCHMARKS = false
+        elif [[ $OS != 'Ubuntu' && $OS != 'Debian' ]] ; then
+            error "Benchmarks are now avaliable only at Ubuntu or Debian"
+            MAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            $RUN_BENCHMARKS = false
+        else
+            message "Compile with microbenchmarks"
+            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=YES"
+        fi
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+        info "Buiding without microbenchmarks"
+    fi
+
 
     cd $MDB_SOURCE_PATH
 
@@ -205,7 +229,6 @@ build()
     cd -
 }
 
-
 check_user_and_group()
 {
     if [ -z "$(grep mysql /etc/passwd)" ]; then
@@ -217,6 +240,30 @@ check_user_and_group()
         GroupID = `awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group`
         message "Adding group mysql with id $GroupID"
         groupadd -g GroupID mysql
+    fi
+}
+
+run_unit_tests()
+{
+    if [[ $SKIP_UNIT_TESTS = true ]] ; then
+        warn "Skipping unittests"
+    else
+        message "Running unittests"
+        cd $MDB_SOURCE_PATH
+        ctest . -R columnstore: -j $(nproc)
+        cd -
+    fi
+}
+
+run_microbenchmarks_tests()
+{
+    if [[ $RUN_BENCHMARKS = false ]] ; then
+        warn "Skipping microbenchmarks"
+    else
+        message "Runnning microbenchmarks"
+        cd $MDB_SOURCE_PATH
+        ctest . -V -R columnstore_microbenchmarks: -j $(nproc)
+        cd -
     fi
 }
 
@@ -289,7 +336,6 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     chmod 777 /var/log/mariadb/columnstore
 }
 
-
 select_branch
 
 if [[ $SKIP_DEPS = false ]] ; then
@@ -299,6 +345,8 @@ fi
 stop_service
 clean_old_installation
 build
+run_unit_tests
+run_microbenchmarks_tests
 install
 start_service
 message "$color_green FINISHED $color_normal"
