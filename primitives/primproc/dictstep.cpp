@@ -332,7 +332,7 @@ idblog("des ??????");
     len = *((uint16_t*)pos);
     pos += 2;
     strings[tmpResultCounter++] = StringPtr(isnull ? nullptr : pos, len);
-idblog("deserialized " << (isnull ? "NULL" : ("'" + std::string(pos, len) + "'")));
+idblog("deserialized " << (isnull ? "NULL" : ("'" + std::string((char*)pos, len) + "'")));
     // cout << "serialized length is " << len << " string is " << strings[tmpResultCounter-1] << " string
     // length = " << 	strings[tmpResultCounter-1].length() << endl;
     pos += len;
