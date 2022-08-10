@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -26,32 +26,41 @@
 
 namespace archcheck
 {
+
+enum class arcitecture
+{
+   DEFAULT = 0,
+   SSE4_2 = 1,
+   ASIMD = 2,
+   UNKNOWN = -1
+};
+
 #if defined(__x86_64__)
-__attribute__((target("default")))
-int checkArchitecture()
+__attribute__ ((target ("default")))
+arcitecture checkArchitecture()
 {
   // The default version.
-  return 1;
+  return arcitecture::DEFAULT;
 }
 
 __attribute__ ((target ("sse4.2")))
-int checkArchitecture ()
+arcitecture checkArchitecture ()
 {
   // version for SSE4.2
-  return 2;
+  return arcitecture::SSE4_2;
 }
 #elif defined(__aarch64__)
-int checkArchitecture()
+arcitecture checkArchitecture()
 {
   // version for arm
   if ((getauxval(AT_HWCAP) & HWCAP_ASIMD) != 0)
-    return 2;
-  return 1;
+    return arcitecture::ASIMD;
+  return arcitecture::DEFAULT;
 }
 #else
-int checkArchitecture()
+arcitecture checkArchitecture()
 {
-  return -1;
+  return arcitecture::UNKNOWN;
 }
 #endif
 }
