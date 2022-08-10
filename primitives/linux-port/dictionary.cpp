@@ -74,7 +74,7 @@ Notes:
 void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenByScanResultHeader* ret,
                                        unsigned outSize, boost::shared_ptr<DictEqualityFilter> eqFilter)
 {
-  const DataValue* args;
+  const NonNullDataValue* args;
   const uint8_t* niceBlock;  // block cast to a byte-indexed type
   const uint8_t* niceInput;  // h cast to a byte-indexed type
   const uint16_t* offsets;
@@ -123,7 +123,12 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
     siglen = offsets[offsetIndex - 1] - offsets[offsetIndex];
     sig = reinterpret_cast<const char*>(&niceBlock[offsets[offsetIndex]]);
     argsOffset = sizeof(TokenByScanRequestHeader);
+<<<<<<< HEAD
     args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
+=======
+    argIndex = 0;
+    args = reinterpret_cast<const NonNullDataValue*>(&niceInput[argsOffset]);
+>>>>>>> 79d817781... Fix that I do not like
     idblog("some bytes of args: " << std::hex << ((int)niceInput[argsOffset]) << " " << ((int)niceInput[argsOffset+1]) << " " << ((int)niceInput[argsOffset+2]) << " " << ((int)niceInput[argsOffset+3]));
 
     if (eqFilter)
@@ -161,8 +166,8 @@ idblog("comparing");
         if (cmpResult && h->BOP == BOP_OR)
           goto store;
 
-        argsOffset += sizeof(DataValue) + args->len;
-        args = (DataValue*)&niceInput[argsOffset];
+        argsOffset += sizeof(*args) + args->len;
+        args = (NonNullDataValue*)&niceInput[argsOffset];
 
         cmpResult = compare(cs, h->COP2, sig, siglen, args->data, args->len);
 
@@ -185,8 +190,8 @@ idblog("comparing");
           if (cmpResult && h->BOP == BOP_OR)
             goto store;
 
-          argsOffset += sizeof(DataValue) + args->len;
-          args = (DataValue*)&niceInput[argsOffset];
+          argsOffset += sizeof(*args) + args->len;
+          args = (NonNullDataValue*)&niceInput[argsOffset];
         }
 
         if (i == h->NVALS && cmpResult)
@@ -215,6 +220,7 @@ idblog("sending data value");
       }
       
 
+      retDataValues->isnull = retDataValues->data == nullptr;
       retDataValues->len = siglen;
       memcpy(retDataValues->data, sig, siglen);
       rdvOffset += sizeof(DataValue) + siglen;
@@ -636,6 +642,7 @@ idblog("storing value " << (sigptr.data ? "'" + std::string((char*)sigptr.data, 
     tmpDV->isnull = 0;
     tmpDV->len = min.len;
     memcpy(tmpDV->data, min.data, min.len);
+    idbassert(0); /// this is just plain wrong.
     header.NBYTES += 2 * sizeof(uint16_t) + min.len;
 
     tmpDV = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);

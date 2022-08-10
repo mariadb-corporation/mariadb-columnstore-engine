@@ -585,6 +585,12 @@ struct DataValue
   char data[];
 };
 
+struct NonNullDataValue
+{
+  uint16_t len;
+  char data[];
+};
+
 struct PrimToken
 {
   uint64_t LBID;
