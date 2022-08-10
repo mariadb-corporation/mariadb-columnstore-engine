@@ -571,7 +571,7 @@ inline bool matchingColValue(
     const ColRequestHeaderDataType& typeHolder,
     const T NULL_VALUE)  // Bit pattern representing NULL value for this column type/width
 {
-	idblog("matching col value, columnFilterMode is " << ((int)columnFilterMode));
+	idblog("matching col value, columnFilterMode is " << ((int)columnFilterMode) << ", col width is " << COL_WIDTH);
   /* In order to make filtering as fast as possible, we replaced the single generic algorithm
      with several algorithms, better tailored for more specific cases:
      empty filter, single comparison, and/or/xor comparison results, one/none of small/large set of values
@@ -579,7 +579,9 @@ inline bool matchingColValue(
   switch (columnFilterMode)
   {
     // Empty filter is always true
-    case ALWAYS_TRUE: return true;
+    case ALWAYS_TRUE:
+	    idblog("returning true");
+	    return true;
 
     // Filter consisting of exactly one comparison operation
     case SINGLE_COMPARISON:
@@ -866,6 +868,7 @@ template <typename T>
 inline void writeColValue(uint8_t OutputType, ColResultHeader* out, uint16_t rid, const T* srcArray)
 {
   // TODO move base ptr calculation one level up.
+  idblog("writeColValue " << __PRETTY_FUNCTION__);
   uint8_t* outPtr = reinterpret_cast<uint8_t*>(&out[1]);
   auto idx = out->NVALS++;
   if (OutputType & OT_RID)
