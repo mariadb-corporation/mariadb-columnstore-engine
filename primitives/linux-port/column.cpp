@@ -1617,6 +1617,7 @@ void vectorizedFiltering_(NewColRequestHeader* in, ColResultHeader* out, const T
   // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
   // This tail also sets out::Min/Max, out::validMinMax if validMinMax is set.
   uint32_t processedSoFar = rid;
+  idblog("scalar filtering 3");
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                    ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
@@ -1805,6 +1806,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   }
 #endif
   uint32_t initialRID = 0;
+  idblog("scalar filtering 2");
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
@@ -1881,6 +1883,7 @@ idblog("use vectorized filtering");
   }
 #endif
   uint32_t initialRID = 0;
+  idblog("scalar filtering 1");
   scalarFiltering<uint64_t, FT, ST, KIND_TEXT>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
