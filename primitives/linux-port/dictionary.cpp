@@ -47,6 +47,8 @@ inline bool PrimitiveProcessor::compare(const datatypes::Charset& cs, uint8_t CO
                                         size_t length1, const char* str2, size_t length2) throw()
 {
   int error = 0;
+  utils::NullString s1 (str1, length1), s2 (str2, length2);
+  idlog("comparing " << s1.safeString() << " and " << s2.safeString() << ", cop is " << ((int)COP));
   bool rc = primitives::StringComparator(cs).op(&error, COP, ConstString(str1, length1),
                                                 ConstString(str2, length2));
   if (error)
@@ -137,7 +139,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
 
       goto no_store;
     }
-
+idblog("comparing");
     cmpResult = compare(cs, h->COP1, sig, siglen, args->data, args->len);
 
     switch (h->NVALS)

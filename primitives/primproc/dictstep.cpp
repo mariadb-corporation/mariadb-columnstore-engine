@@ -609,7 +609,8 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
         // If this is a multi-block blob, get all the blocks
         // We do string copy here, should maybe have a RowGroup
         // function to append strings or something?
-        if (((newRidList[i].token >> 46) < 0x3FFFF) && ((newRidList[i].token >> 46) > 0))
+        // XXX: can NULLs be a valid value for multipart blob?
+	if (((newRidList[i].token >> 46) < 0x3FFFF) && ((newRidList[i].token >> 46) > 0))
         {
           StringPtr multi_part[1];
           uint16_t old_offset = primMsg->tokens[0].offset;
