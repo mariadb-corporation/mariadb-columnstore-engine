@@ -124,6 +124,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
     sig = reinterpret_cast<const char*>(&niceBlock[offsets[offsetIndex]]);
     argsOffset = sizeof(TokenByScanRequestHeader);
     args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
+    idblog("some bytes of args: " << std::hex << ((int)niceInput[argsOffset]) << " " << ((int)niceInput[argsOffset+1]) << " " << ((int)niceInput[argsOffset+2]) << " " << ((int)niceInput[argsOffset+3]));
 
     if (eqFilter)
     {
