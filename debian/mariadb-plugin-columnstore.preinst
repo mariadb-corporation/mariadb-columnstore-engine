@@ -5,6 +5,7 @@ set -e
 # Check for sse4.2 or neon support
 
 if [ -z $(cat /proc/cpuinfo | grep -E 'sse4_2|neon|asimd' | head -c1) ]; then
-    echo "No support found for sse4 or neon simd instructions; aborting"
+    echo "error: this machine CPU lacks of support for Intel SSE4.2 or ARM Advanced SIMD instructions.
+Columnstore requires one of this instruction sets, installation aborted"
     exit 1
 fi
