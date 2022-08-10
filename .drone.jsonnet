@@ -445,6 +445,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              },
              commands: [
                'cd /mdb/' + builddir,
+               'sleep 86400',
                testPreparation(platform),
                testRun(platform),
              ],
