@@ -3274,16 +3274,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
           precisionAggPm.push_back(-16);  // for connector to skip null check
-
-          if (isUnsigned(typeProj[colProj]))
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-          }
-          else
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-          }
-
+          typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAggPm.push_back(8);
           widthAggPm.push_back(bigIntWidth);
           colAggPm++;
