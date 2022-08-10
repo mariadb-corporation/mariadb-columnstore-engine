@@ -571,6 +571,7 @@ inline bool matchingColValue(
     const ColRequestHeaderDataType& typeHolder,
     const T NULL_VALUE)  // Bit pattern representing NULL value for this column type/width
 {
+	idblog("matching col value, columnFilterMode is " << ((int)columnFilterMode));
   /* In order to make filtering as fast as possible, we replaced the single generic algorithm
      with several algorithms, better tailored for more specific cases:
      empty filter, single comparison, and/or/xor comparison results, one/none of small/large set of values
@@ -832,6 +833,7 @@ inline bool nextColValue(
   }
   else
   {
+	  idblog("reading value");
     // Read next value in the natural order
     if (UNLIKELY(i >= srcSize))
       return false;
@@ -1148,6 +1150,7 @@ void scalarFiltering_(
       continue;
     else if (isNullValue<KIND, T>(curValue, nullValue))
     {
+	  idblog("is null value ");
       // If NULL values match the filter, write curValue to the output buffer
       if (isNullValueMatches)
         writeColValue<T>(outputType, out, rid, srcArray);
