@@ -48,7 +48,6 @@ inline bool PrimitiveProcessor::compare(const datatypes::Charset& cs, uint8_t CO
 {
   int error = 0;
   utils::NullString s1 (str1, length1), s2 (str2, length2);
-  idblog("comparing " << s1.safeString() << " and " << s2.safeString() << ", cop is " << ((int)COP));
   bool rc = primitives::StringComparator(cs).op(&error, COP, ConstString(str1, length1),
                                                 ConstString(str2, length2));
   if (error)
@@ -83,8 +82,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
   int i;
   const char* sig;
   uint16_t siglen;
-
-  idblog("in p_TokenByScan, sadly.");
 
   PrimToken* retTokens;
   DataValue* retDataValues;
@@ -123,13 +120,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
     siglen = offsets[offsetIndex - 1] - offsets[offsetIndex];
     sig = reinterpret_cast<const char*>(&niceBlock[offsets[offsetIndex]]);
     argsOffset = sizeof(TokenByScanRequestHeader);
-<<<<<<< HEAD
-    args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
-=======
-    argIndex = 0;
     args = reinterpret_cast<const NonNullDataValue*>(&niceInput[argsOffset]);
->>>>>>> 79d817781... Fix that I do not like
-    idblog("some bytes of args: " << std::hex << ((int)niceInput[argsOffset]) << " " << ((int)niceInput[argsOffset+1]) << " " << ((int)niceInput[argsOffset+2]) << " " << ((int)niceInput[argsOffset+3]));
 
     if (eqFilter)
     {
@@ -145,7 +136,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
 
       goto no_store;
     }
-idblog("comparing");
     cmpResult = compare(cs, h->COP1, sig, siglen, args->data, args->len);
 
     switch (h->NVALS)
@@ -202,10 +192,8 @@ idblog("comparing");
     }
 
   store:
-idblog("store label");
     if (h->OutputType == OT_DATAVALUE)
     {
-idblog("sending data value");
       if ((ret->NBYTES + sizeof(DataValue) + siglen) > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -230,7 +218,6 @@ idblog("sending data value");
     }
     else if (h->OutputType == OT_TOKEN)
     {
-idblog("sending token");
       if ((ret->NBYTES + sizeof(PrimToken)) > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -258,7 +245,6 @@ idblog("sending token");
      */
     else if (h->OutputType == OT_BOTH)
     {
-idblog("returning both token and value");
       if (ret->NBYTES + sizeof(PrimToken) + sizeof(DataValue) + args->len > outSize)
       {
         MessageLog logger(LoggingID(28));
@@ -549,10 +535,8 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
       // cout << "storing it, str = " << string((char *)sigptr.data, sigptr.len) << endl;
       header.NVALS++;
 
-idblog("store label, second occurence. input flags " << ((int)in->InputFlags) << ", output type " << std::hex << in->OutputType);
       if (in->OutputType & OT_RID && in->InputFlags == 1)  // hack that indicates old GetSignature behavior
       {
-idblog("old get signature behavior");
         const OldGetSigParams* oldParams;
         uint64_t* outRid;
         oldParams = reinterpret_cast<const OldGetSigParams*>(in->tokens);
@@ -571,7 +555,6 @@ idblog("old get signature behavior");
 
       if (in->OutputType & OT_INPUTARG && in->InputFlags == 0)
       {
-idblog("why do we store filter's value???");
         uint32_t newlen = header.NBYTES + sizeof(DataValue) + filter->len;
 
         if (newlen > out->size())
@@ -588,7 +571,6 @@ idblog("why do we store filter's value???");
 
       if (in->OutputType & OT_TOKEN)
       {
-idblog("storing token");
         uint32_t newlen = header.NBYTES + sizeof(PrimToken);
 
         if (newlen > out->size())
@@ -605,7 +587,6 @@ idblog("storing token");
 
       if (in->OutputType & OT_DATAVALUE)
       {
-idblog("storing value " << (sigptr.data ? "'" + std::string((char*)sigptr.data, sigptr.len) + "'" : "NULL"));
         uint32_t newlen = header.NBYTES + sizeof(DataValue) + sigptr.len;
 
         if (newlen > out->size())

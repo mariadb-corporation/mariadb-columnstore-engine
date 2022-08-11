@@ -180,7 +180,6 @@ inline bool colCompareStr(const ColRequestHeaderDataType& type, uint8_t COP, con
                           const utils::ConstString& val2, const bool printOut = false)
 {
   int error = 0;
-idblog("comparing '" << val1.toString() << "' and '" << val2.toString()  << "'");
   bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
   if (error)
   {
@@ -318,7 +317,6 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
     return typeHolder.like(cop & COMPARE_NOT, subject.rtrimZero(), pattern.rtrimZero());
   }
 
-idblog("comparing, rf " << ((int)rf));
   if (!rf)
   {
     // A temporary hack for xxx_nopad_bin collations
@@ -571,7 +569,6 @@ inline bool matchingColValue(
     const ColRequestHeaderDataType& typeHolder,
     const T NULL_VALUE)  // Bit pattern representing NULL value for this column type/width
 {
-	idblog("matching col value, columnFilterMode is " << ((int)columnFilterMode) << ", col width is " << COL_WIDTH);
   /* In order to make filtering as fast as possible, we replaced the single generic algorithm
      with several algorithms, better tailored for more specific cases:
      empty filter, single comparison, and/or/xor comparison results, one/none of small/large set of values
@@ -580,7 +577,6 @@ inline bool matchingColValue(
   {
     // Empty filter is always true
     case ALWAYS_TRUE:
-	    idblog("returning true");
 	    return true;
 
     // Filter consisting of exactly one comparison operation
@@ -835,7 +831,6 @@ inline bool nextColValue(
   }
   else
   {
-	  idblog("reading value");
     // Read next value in the natural order
     if (UNLIKELY(i >= srcSize))
       return false;
@@ -868,7 +863,6 @@ template <typename T>
 inline void writeColValue(uint8_t OutputType, ColResultHeader* out, uint16_t rid, const T* srcArray)
 {
   // TODO move base ptr calculation one level up.
-  idblog("writeColValue " << __PRETTY_FUNCTION__);
   uint8_t* outPtr = reinterpret_cast<uint8_t*>(&out[1]);
   auto idx = out->NVALS++;
   if (OutputType & OT_RID)
@@ -1153,7 +1147,6 @@ void scalarFiltering_(
       continue;
     else if (isNullValue<KIND, T>(curValue, nullValue))
     {
-	  idblog("is null value ");
       // If NULL values match the filter, write curValue to the output buffer
       if (isNullValueMatches)
         writeColValue<T>(outputType, out, rid, srcArray);
@@ -1623,7 +1616,6 @@ void vectorizedFiltering_(NewColRequestHeader* in, ColResultHeader* out, const T
   // process the tail. scalarFiltering changes out contents, e.g. Min/Max, NVALS, RIDs and values array
   // This tail also sets out::Min/Max, out::validMinMax if validMinMax is set.
   uint32_t processedSoFar = rid;
-  idblog("scalar filtering 3");
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                    ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
@@ -1676,25 +1668,21 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
     switch (in->OutputType)
     {
       case OT_RID:
-idblog("OT_RID in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_BOTH:
-idblog("OT_BOTH in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_TOKEN:
-idblog("OT_TOKEN in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_DATAVALUE:
-idblog("OT_DATAVALUE in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
@@ -1707,25 +1695,21 @@ idblog("OT_DATAVALUE in vectorized filter dispatcher");
     switch (in->OutputType)
     {
       case OT_RID:
-idblog("OT_RID/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_BOTH:
-idblog("OT_BOTH/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_TOKEN:
-idblog("OT_TOKEN/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
         break;
       case OT_DATAVALUE:
-idblog("OT_DATAVALUE/2 in vectorized filter dispatcher");
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
             nullValue, Min, Max, isNullValueMatches, blockAux);
@@ -1775,7 +1759,6 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   bool isNullValueMatches =
       matchingColValue<KIND, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
-  idblog("(generic filtercolumn) isNullValueMatches " << ((int)isNullValueMatches));
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
@@ -1812,7 +1795,6 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   }
 #endif
   uint32_t initialRID = 0;
-  idblog("scalar filtering 2");
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
@@ -1854,8 +1836,6 @@ void filterColumnData<uint64_t, KIND_UNSIGNED>(NewColRequestHeader* in, ColResul
   bool isNullValueMatches =
       matchingColValue<KIND_TEXT, WIDTH, true>(nullValue, columnFilterMode, filterSet, filterCount, filterCOPs,
                                           filterValues, filterRFs, in->colType, nullValue);
-  idblog("isNullValueMatches " << ((int)isNullValueMatches));
-  idblog("null value " << std::hex << nullValue);
 
   // ###########################
   // Boolean indicating whether to capture the min and max values
@@ -1869,7 +1849,7 @@ void filterColumnData<uint64_t, KIND_UNSIGNED>(NewColRequestHeader* in, ColResul
   // Syscat queries mustn't follow vectorized processing path b/c PP must return
   // all values w/o any filter(even empty values filter) applied.
 
-#if defined(__x86_64__) && 0
+#if defined(__x86_64__)
   // Don't use vectorized filtering for text based data types.
   if (((in->colType.strnxfrmIsValid()) ))
   {
@@ -1880,7 +1860,6 @@ void filterColumnData<uint64_t, KIND_UNSIGNED>(NewColRequestHeader* in, ColResul
 
     if (canUseFastFiltering)
     {
-idblog("use vectorized filtering");
       vectorizedFilteringDispatcher<uint64_t, KIND_TEXT, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                                      parsedColumnFilter.get(), validMinMax, emptyValue,
                                                      nullValue, Min, Max, isNullValueMatches);
@@ -1889,7 +1868,6 @@ idblog("use vectorized filtering");
   }
 #endif
   uint32_t initialRID = 0;
-  idblog("scalar filtering 1");
   scalarFiltering<uint64_t, FT, ST, KIND_TEXT>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
