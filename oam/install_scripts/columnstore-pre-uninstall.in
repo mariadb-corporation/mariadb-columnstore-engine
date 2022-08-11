@@ -18,14 +18,16 @@ else
   MDB="/usr/bin/mysql"
 fi
 
-$MDB 2> ${tmpdir}/mysql_uninstall.log <<EOD
+$MDB <<EOD
 DROP DATABASE IF EXISTS infinidb_querystats;
 DELETE FROM mysql.func WHERE dl="ha_columnstore.so";
 DELETE FROM mysql.func WHERE dl="libregr_mysql.so";
 DELETE FROM mysql.func WHERE dl="libudf_mysql.so";
+ALTER TABLE calpontsys.systable ENGINE=MyISAM;
+ALTER TABLE calpontsys.syscolumn ENGINE=MyISAM;
 DROP DATABASE IF EXISTS calpontsys;
 DROP PROCEDURE IF EXISTS infinidb_querystats.calSetUserPriority;
-DROP PROCEDURE IF EXISTS infinidb_querystats.calRemoveUserPriority(IN host VARCHAR(50), IN usr VARCHAR(50));
+DROP PROCEDURE IF EXISTS infinidb_querystats.calRemoveUserPriority;
 DROP PROCEDURE IF EXISTS infinidb_querystats.calShowProcessList;
 DROP DATABASE IF EXISTS columnstore_info;
 EOD
