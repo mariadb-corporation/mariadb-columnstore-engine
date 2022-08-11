@@ -51,8 +51,8 @@ class TestFunctor : public FairThreadPool::Functor
   ~TestFunctor(){};
   int operator()() override
   {
-    usleep(delay_);
     std::lock_guard<std::mutex> gl(globMutex);
+    usleep(delay_);
     results.push_back(id_);
     return 0;
   }
@@ -104,27 +104,30 @@ testing::AssertionResult isThisOrThat(const ResultsType& arr, const size_t idxA,
 TEST_F(FairThreadPoolTest, FairThreadPoolAdd)
 {
   SP_UM_IOSOCK sock(new messageqcpp::IOSocket);
-  auto functor1 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(1, 50000));
+  auto functor1 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(1, 150000));
   FairThreadPool::Job job1(1, 1, 1, functor1, sock, 1);
-  auto functor2 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(2, 5000));
-  FairThreadPool::Job job2(2, 1, 1, functor2, sock, 1);
+  auto functor2 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(2, 150000));
+  FairThreadPool::Job job2(2, 1, 1, functor2, sock, 2);
   auto functor3 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(3, 5000));
-  FairThreadPool::Job job3(3, 1, 2, functor3, sock, 1);
+  FairThreadPool::Job job3(3, 1, 1, functor3, sock, 1);
+  auto functor4 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(4, 5000));
+  FairThreadPool::Job job4(4, 1, 2, functor4, sock, 1);
 
   threadPool->addJob(job1);
   threadPool->addJob(job2);
   threadPool->addJob(job3);
+  threadPool->addJob(job4);
 
   while (threadPool->queueSize())
   {
-    usleep(250000);
+    usleep(350000);
   }
 
   EXPECT_EQ(threadPool->queueSize(), 0ULL);
-  EXPECT_EQ(results.size(), 3ULL);
+  EXPECT_EQ(results.size(), 4ULL);
   EXPECT_EQ(results[0], 1);
-  EXPECT_EQ(results[1], 3);
-  EXPECT_EQ(results[2], 2);
+  EXPECT_EQ(results[1], 4);
+  EXPECT_TRUE(isThisOrThat(results, 2, 2, 3, 3));
 }
 
 TEST_F(FairThreadPoolTest, FairThreadPoolRemove)
