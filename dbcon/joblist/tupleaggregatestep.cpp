@@ -1933,12 +1933,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           scaleAgg.push_back(0);
           precisionAgg.push_back(-16);  // for connector to skip null check
           typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-          }
-          else
-          {
-            typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-          }
-
           csNumAgg.push_back(8);
           widthAgg.push_back(bigIntWidth);
           colAgg++;
