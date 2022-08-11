@@ -59,6 +59,9 @@ using namespace logging;
 #include "umsocketselector.h"
 using namespace primitiveprocessor;
 
+#include "archcheck.h"
+using namespace archcheck;
+
 #include "liboamcpp.h"
 using namespace oam;
 
@@ -735,6 +738,11 @@ int ServicePrimProc::Child()
 
 int main(int argc, char** argv)
 {
+  if (checkArchitecture() != arcitecture::SSE4_2 && checkArchitecture() != arcitecture::ASIMD)
+  {
+    std::cerr << "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting. \n";
+    return 1;
+  }
   Opt opt(argc, argv);
 
   // Set locale language
