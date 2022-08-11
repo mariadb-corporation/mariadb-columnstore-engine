@@ -175,7 +175,6 @@ void DictStep::copyResultToTmpSpace(OrderedToken* ot)
 
   for (i = 0; i < header->NVALS; i++)
   {
-idblog("decoding RID");
     rid64 = *((uint64_t*)pos);
     pos += 8;
     rid16 = rid64 & 0x1fff;
@@ -185,7 +184,6 @@ idblog("decoding RID");
     if (primMsg->OutputType & OT_DATAVALUE)
     {
       NullString ns;
-idblog("decoding OT_DATAVALUE");
       uint8_t isnull = *pos;
       pos += 1;
       len = *((uint16_t*)pos);
@@ -205,8 +203,6 @@ idblog("decoding OT_DATAVALUE");
 void DictStep::copyResultToFinalPosition(OrderedToken* ot)
 {
   uint32_t i, resultPos = 0;
-
-  idblog("in copy result to final position");
 
   for (i = 0; i < inputRidCount; i++)
   {
@@ -235,8 +231,6 @@ void DictStep::processResult()
 
   pos = &result[sizeof(DictOutput)];
 
-  idblog("processResult. Output type is " << std::hex << ((int)primMsg->OutputType));
-
   for (i = 0; i < header->NVALS; i++, tmpResultCounter++)
   {
     if (primMsg->OutputType & OT_RID)
@@ -249,7 +243,6 @@ void DictStep::processResult()
 
     if (primMsg->OutputType & OT_DATAVALUE)
     {
-idblog("fetching OT_DATAVALUE");
       uint8_t isnull = *pos;
       pos += 1;
       NullString ns;
@@ -282,12 +275,10 @@ void DictStep::projectResult(string* strings)
   uint8_t* pos;
   uint16_t len;
   DictOutput* header = (DictOutput*)&result[0];
-idblog("project result, NVALS " << ((int)header->NVALS));
   if (header->NVALS == 0)
     return;
 
   pos = &result[sizeof(DictOutput)];
-idblog("des ???");
   // cout << "projectResult() l: " << primMsg->LBID << " NVALS: " << header->NVALS << endl;
   for (i = 0; i < header->NVALS; i++)
   {
@@ -322,7 +313,6 @@ void DictStep::projectResult(StringPtr* strings)
     return;
 
   pos = &result[sizeof(DictOutput)];
-idblog("des ??????");
 
   // cout << "projectResult() l: " << primMsg->LBID << " NVALS: " << header->NVALS << endl;
   for (i = 0; i < header->NVALS; i++)
@@ -332,7 +322,6 @@ idblog("des ??????");
     len = *((uint16_t*)pos);
     pos += 2;
     strings[tmpResultCounter++] = StringPtr(isnull ? nullptr : pos, len);
-idblog("deserialized " << (isnull ? "NULL" : ("'" + std::string((char*)pos, len) + "'")));
     // cout << "serialized length is " << len << " string is " << strings[tmpResultCounter-1] << " string
     // length = " << 	strings[tmpResultCounter-1].length() << endl;
     pos += len;
@@ -460,7 +449,6 @@ void DictStep::_project()
     l_lbid = ((int64_t)newRidList[i].token) >> 10;
     primMsg->LBID = (l_lbid == -1) ? l_lbid : l_lbid & 0xFFFFFFFFFL;
     primMsg->NVALS = 0;
- idblog("issuing only OT_DATAVALUE");
     primMsg->OutputType = OT_DATAVALUE;
     pt = (OldGetSigParams*)(primMsg->tokens);
 
@@ -531,7 +519,6 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
     l_lbid = ((int64_t)newRidList[i].token) >> 10;
     primMsg->LBID = (l_lbid == -1) ? l_lbid : l_lbid & 0xFFFFFFFFFL;
     primMsg->NVALS = 0;
-    idblog("issuing only OT_DATAVALUE, second occurence");
     primMsg->OutputType = OT_DATAVALUE;
     pt = (OldGetSigParams*)(primMsg->tokens);
 
