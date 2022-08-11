@@ -5192,7 +5192,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       else if (isp->sum_func() == Item_sum::SUM_BIT_FUNC)
       {
         CalpontSystemCatalog::ColType ct;
-        ct.colDataType = CalpontSystemCatalog::BIGINT;
+        ct.colDataType = CalpontSystemCatalog::UBIGINT;
         ct.colWidth = 8;
         ct.scale = 0;
         ct.precision = -16;  // borrowed to indicate skip null value check on connector

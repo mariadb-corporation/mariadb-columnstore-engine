@@ -1332,16 +1332,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
         keysAgg.push_back(key);
         scaleAgg.push_back(0);
         precisionAgg.push_back(-16);  // for connector to skip null check
-
-        if (isUnsigned(typeProj[colProj]))
-        {
-          typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-        }
-        else
-        {
-          typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-        }
-
+        typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
         csNumAgg.push_back(csNumProj[colProj]);
         widthAgg.push_back(bigIntWidth);
       }
@@ -1941,16 +1932,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           keysAgg.push_back(aggKey);
           scaleAgg.push_back(0);
           precisionAgg.push_back(-16);  // for connector to skip null check
-
-          if (isUnsigned(typeProj[colProj]))
-          {
-            typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
-          }
-          else
-          {
-            typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-          }
-
+          typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAgg.push_back(8);
           widthAgg.push_back(bigIntWidth);
           colAgg++;
@@ -3274,16 +3256,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
           precisionAggPm.push_back(-16);  // for connector to skip null check
-
-          if (isUnsigned(typeProj[colProj]))
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-          }
-          else
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-          }
-
+          typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAggPm.push_back(8);
           widthAggPm.push_back(bigIntWidth);
           colAggPm++;
@@ -4183,16 +4156,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
           precisionAggPm.push_back(-16);  // for connector to skip null check
-
-          if (isUnsigned(typeProj[colProj]))
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
-          }
-          else
-          {
-            typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-          }
-
+          typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAggPm.push_back(8);
           widthAggPm.push_back(bigIntWidth);
           ++colAggPm;

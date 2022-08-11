@@ -98,10 +98,14 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store_binary(str, length);
   }
 
-  int store_xlonglong(int64_t val) override
+  int store_longlong(int64_t val) override
   {
-    idbassert(dynamic_cast<Field_num*>(m_field));
-    return m_field->store(val, static_cast<Field_num*>(m_field)->unsigned_flag);
+    return m_field->store(val, 0);
+  }
+
+  int store_ulonglong(uint64_t val)override
+  {
+    return m_field->store(static_cast<int64_t>(val), 1);
   }
 
   int store_float(float dl) override

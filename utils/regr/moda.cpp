@@ -102,6 +102,12 @@ mcsv1_UDAF* moda::getImpl(mcsv1Context* context)
     case execplan::CalpontSystemCatalog::FLOAT: data->modaImpl = &moda_impl_float; break;
     case execplan::CalpontSystemCatalog::DOUBLE: data->modaImpl = &moda_impl_double; break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: data->modaImpl = &moda_impl_longdouble; break;
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+      data->modaImpl = &moda_impl_string; 
+      break;
+
     default: data->modaImpl = NULL;
   }
   return data->modaImpl;
@@ -125,13 +131,15 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
 
   if (!(datatypes::isNumeric(colTypes[0].dataType)))
   {
-    // The error message will be prepended with
-    // "The storage engine for the table doesn't support "
-    context->setErrorMessage("moda() with non-numeric argument");
-    return mcsv1_UDAF::ERROR;
+    if (colTypes[0].dataType != datatypes::SystemCatalog::VARCHAR &&
+        colTypes[0].dataType != datatypes::SystemCatalog::CHAR)
+    {
+      // The error message will be prepended with
+      // "The storage engine for the table doesn't support "
+      context->setErrorMessage("moda() with invalid argument");
+      return mcsv1_UDAF::ERROR;
+    }
   }
-
-  context->setResultType(colTypes[0].dataType);
 
   if (colTypes[0].dataType == execplan::CalpontSystemCatalog::DECIMAL ||
       colTypes[0].dataType == execplan::CalpontSystemCatalog::UDECIMAL)
@@ -158,8 +166,10 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
     }
 
     context->setScale(colTypes[0].scale);
+    context->setPrecision(colTypes[0].precision);
   }
-  context->setPrecision(colTypes[0].precision);
+
+  context->setResultType(colTypes[0].dataType);
 
   mcsv1_UDAF* impl = getImpl(context);
 
@@ -167,7 +177,7 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
   {
     // The error message will be prepended with
     // "The storage engine for the table doesn't support "
-    context->setErrorMessage("moda() with non-numeric argument");
+    context->setErrorMessage("moda() with implementation not found for data type");
     return mcsv1_UDAF::ERROR;
   }
 
@@ -178,6 +188,13 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
 template <class T>
 mcsv1_UDAF::ReturnCode Moda_impl_T<T>::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
+  if (!(colTypes[0].dataType == execplan::CalpontSystemCatalog::DECIMAL ||
+        colTypes[0].dataType == execplan::CalpontSystemCatalog::UDECIMAL))
+  {
+    context->setColWidth(sizeof(T));
+    context->setScale(0);
+    context->setPrecision(0);
+  }
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -196,7 +213,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::nextValue(mcsv1Context* context, ColumnDa
 {
   static_any::any& valIn = valsIn[0].columnData;
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* map = data->getMap<T>();
 
   if (valIn.empty())
   {
@@ -233,9 +250,9 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::subEvaluate(mcsv1Context* context, const 
 
   ModaData* outData = static_cast<ModaData*>(context->getUserData());
   const ModaData* inData = static_cast<const ModaData*>(userDataIn);
-  std::unordered_map<T, uint32_t, hasher<T> >* outMap = outData->getMap<T>();
-  std::unordered_map<T, uint32_t, hasher<T> >* inMap = inData->getMap<T>();
-  typename std::unordered_map<T, uint32_t, hasher<T> >::const_iterator iter;
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* outMap = outData->getMap<T>();
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* inMap = inData->getMap<T>();
+  typename std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >::const_iterator iter;
 
   for (iter = inMap->begin(); iter != inMap->end(); ++iter)
   {
@@ -255,7 +272,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
   long double avg = 0;
   T val = 0;
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* map = data->getMap<T>();
 
   if (map->size() == 0)
   {
@@ -264,7 +281,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::evaluate(mcsv1Context* context, static_an
   }
 
   avg = data->fCount ? data->fSum / data->fCount : 0;
-  typename std::unordered_map<T, uint32_t, hasher<T> >::iterator iter;
+  typename std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >::iterator iter;
 
   for (iter = map->begin(); iter != map->end(); ++iter)
   {
@@ -301,7 +318,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<T>::dropValue(mcsv1Context* context, ColumnDa
 {
   static_any::any& valDropped = valsDropped[0].columnData;
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  std::unordered_map<T, uint32_t, hasher<T> >* map = data->getMap<T>();
+  std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* map = data->getMap<T>();
 
   if (valDropped.empty())
   {
@@ -350,6 +367,9 @@ void ModaData::serialize(messageqcpp::ByteStream& bs) const
     case execplan::CalpontSystemCatalog::FLOAT: serializeMap<float>(bs); break;
     case execplan::CalpontSystemCatalog::DOUBLE: serializeMap<double>(bs); break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: serializeMap<long double>(bs); break;
+    case execplan::CalpontSystemCatalog::CHAR: 
+    case execplan::CalpontSystemCatalog::VARCHAR:
+      serializeMap<string>(bs); break; 
     default: throw std::runtime_error("ModaData::serialize with bad data type"); break;
   }
 }
@@ -387,6 +407,9 @@ void ModaData::unserialize(messageqcpp::ByteStream& bs)
     case execplan::CalpontSystemCatalog::FLOAT: unserializeMap<float>(bs); break;
     case execplan::CalpontSystemCatalog::DOUBLE: unserializeMap<double>(bs); break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: unserializeMap<long double>(bs); break;
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+      unserializeMap<string>(bs); break;
     default: throw std::runtime_error("ModaData::unserialize with bad data type"); break;
   }
 }
@@ -469,6 +492,136 @@ void ModaData::cleanup()
       clear<long double>();
       deleteMap<long double>();
       break;
-    default: throw std::runtime_error("ModaData::unserialize with bad data type"); break;
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+      clear<string>();
+      deleteMap<string>();
+      break;
+    default: throw std::runtime_error("ModaData::cleanup with bad data type"); break;
   }
 }
+
+/************************************************************************************************
+ * String Specialization
+************************************************************************************************/
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDatum* colTypes)
+{
+  cs.setCharset(context->getCharsetNumber());
+  return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::reset(mcsv1Context* context)
+{
+  ModaData* data = static_cast<ModaData*>(context->getUserData());
+  data->fReturnType = context->getResultType();
+  data->fColWidth = context->getColWidth();
+  data->fCs_num = context->getCharsetNumber();
+  data->clear<string>();
+  return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
+{
+  static_any::any& valIn = valsIn[0].columnData;
+  ModaData* data  = static_cast<ModaData*>(context->getUserData());
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map = data->getMap<string>();
+
+  if (valIn.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+
+  string val;
+  if (valIn.compatible(strTypeId))
+    val = valIn.cast<string>();
+
+  (*map)[val]++;
+
+  return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
+{
+  if (!userDataIn)
+  {
+    return mcsv1_UDAF::SUCCESS;
+  }
+
+  ModaData* outData = static_cast<ModaData*>(context->getUserData());
+  const ModaData* inData  = static_cast<const ModaData*>(userDataIn);
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* outMap  = outData->getMap<string>();
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* inMap   = inData->getMap<string>();
+  typename std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >::const_iterator iter;
+
+  for (iter = inMap->begin(); iter != inMap->end(); ++iter)
+  {
+    (*outMap)[iter->first] += iter->second;
+  }
+
+  return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::evaluate(mcsv1Context* context, static_any::any& valOut)
+{
+  uint64_t maxCnt = 0;
+  string val;
+  string lastVal;
+  ModaData* data = static_cast<ModaData*>(context->getUserData());
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map = data->getMap<string>();
+
+  if (map->size() == 0)
+  {
+    valOut = string();
+    return mcsv1_UDAF::SUCCESS;
+  }
+
+  typename std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >::iterator iter;
+
+  for (iter = map->begin(); iter != map->end(); ++iter)
+  {
+    if (iter->second > maxCnt)
+    {
+      val = iter->first;
+      lastVal = val;
+      maxCnt = iter->second;
+    }
+    else if (iter->second == maxCnt)
+    {
+      // Tie breaker: choose smallest according to collation
+      if (cs.strnncollsp(val, lastVal) < 0)
+      {
+        val = iter->first;
+      }
+    }
+  }
+
+  // If scale is > 0, then the original type was DECIMAL. Set the
+  // ResultType to DECIMAL so the delivery logic moves the decimal point.
+  if (context->getScale() > 0)
+    context->setResultType(execplan::CalpontSystemCatalog::DECIMAL);
+
+  valOut = val;
+  return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
+{
+  static_any::any& valDropped = valsDropped[0].columnData;
+  ModaData* data = static_cast<ModaData*>(context->getUserData());
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map        = data->getMap<string>();
+
+  if (valDropped.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
+  }
+
+  string val = convertAnyTo<string>(valDropped);
+
+  --data->fCount;
+  (*map)[val]--;
+
+  return mcsv1_UDAF::SUCCESS;
+}
+
+

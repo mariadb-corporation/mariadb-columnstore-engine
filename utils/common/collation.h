@@ -141,10 +141,11 @@ class Charset
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
   }
-  Charset(CHARSET_INFO* cs) : mCharset(cs ? cs : &my_charset_bin)
+  Charset(CHARSET_INFO* cs = nullptr) : mCharset(cs ? cs : &my_charset_bin)
   {
   }
   Charset(uint32_t charsetNumber);
+  void setCharset(uint32_t charsetNumber);
   CHARSET_INFO& getCharset() const
   {
     return *mCharset;
@@ -156,6 +157,10 @@ class Charset
   bool eq(const std::string& str1, const std::string& str2) const
   {
     return mCharset->strnncollsp(str1.data(), str1.length(), str2.data(), str2.length()) == 0;
+  }
+  int strnncollsp(const std::string& str1, const std::string& str2) const
+  {
+    return mCharset->strnncollsp(str1.data(), str1.length(), str2.data(), str2.length());
   }
   int strnncollsp(const utils::ConstString& str1, const utils::ConstString& str2) const
   {

@@ -135,6 +135,7 @@ struct choose_policy<any>
   };
 
 BIG_POLICY(int128_t);
+BIG_POLICY(long double);
 
 /// Specializations for small types.
 #define SMALL_POLICY(TYPE)               \

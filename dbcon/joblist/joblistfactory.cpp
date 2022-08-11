@@ -979,7 +979,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             // Changing col type based on a parm if multiple parms
             // doesn't really make sense.
             if (op != AggregateColumn::SUM && op != AggregateColumn::DISTINCT_SUM &&
-                op != AggregateColumn::AVG && op != AggregateColumn::DISTINCT_AVG)
+                op != AggregateColumn::AVG && op != AggregateColumn::DISTINCT_AVG &&
+                op != AggregateColumn::BIT_AND && op != AggregateColumn::BIT_OR && 
+                op != AggregateColumn::BIT_XOR)
             {
               updateAggregateColType(aggc, srcp, op, jobInfo);
             }
