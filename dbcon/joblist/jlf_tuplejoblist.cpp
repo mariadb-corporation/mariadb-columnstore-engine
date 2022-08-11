@@ -3632,6 +3632,22 @@ inline void updateJoinSides(uint32_t small, uint32_t large, map<uint32_t, SP_Joi
   tableInfoMap[large].fJoinedTables.insert(large);
 }
 
+inline bool needsFeForSmallSides(const JobInfo& jobInfo, const std::vector<JoinOrderData>& joins,
+                                 const std::set<uint32_t>& smallSideTid, uint32_t tableId)
+{
+  const auto it = jobInfo.joinFeTableMap.find(joins[tableId].fJoinId);
+  if (it != jobInfo.joinFeTableMap.end())
+  {
+    const set<uint32_t>& tids = it->second;
+    for (const auto si : smallSideTid)
+    {
+      if (tids.count(si))
+        return true;
+    }
+  }
+  return false;
+}
+
 // For OUTER JOIN bug @2422/2633/3437/3759, join table based on join order.
 // The largest table will be always the streaming table, other tables are always on small side.
 void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap& tableInfoMap,
@@ -3734,12 +3750,12 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
 
   for (uint64_t js = 0; js < joins.size(); js++)
   {
-    set<uint32_t> smallSideTid;
+    std::set<uint32_t> smallSideTid;
 
     if (joins[js].fJoinId != 0)
       isSemijoin = false;
 
-    vector<SP_JoinInfo> smallSides;
+    std::vector<SP_JoinInfo> smallSides;
     uint32_t tid1 = joins[js].fTid1;
     uint32_t tid2 = joins[js].fTid2;
     lastJoinId = joins[js].fJoinId;
@@ -3780,6 +3796,14 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
     for (uint64_t ns = js + 1; ns < joins.size(); js++, ns++)
     {
       // Check if FE needs table in previous smallsides.
+      if (needsFeForSmallSides(jobInfo, joins, smallSideTid, ns))
+      {
+        // Mark as `umstream` to prevent an second type of merge optimization, when CS merges smallside into
+        // current `TupleHashJoinStep`.
+        umstream = true;
+        break;
+      }
+
       uint32_t tid1 = joins[ns].fTid1;
       uint32_t tid2 = joins[ns].fTid2;
       uint32_t small = (uint32_t)-1;
@@ -3799,20 +3823,6 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
       else
       {
         break;
-      }
-
-      // check if FE needs table in previous smallsides
-      if (jobInfo.joinFeTableMap[joins[ns].fJoinId].size() > 0)
-      {
-        set<uint32_t>& tids = jobInfo.joinFeTableMap[joins[ns].fJoinId];
-
-        for (set<uint32_t>::iterator si = smallSideTid.begin(); si != smallSideTid.end(); si++)
-        {
-          if (tids.find(*si) != tids.end())
-            throw runtime_error(
-                "On clause filter involving a table not directly involved in the outer join is currently not "
-                "supported.");
-        }
       }
 
       updateJoinSides(small, large, joinInfoMap, smallSides, tableInfoMap, jobInfo);
