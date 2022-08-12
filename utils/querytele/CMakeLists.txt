@@ -13,6 +13,7 @@ set(querytele_LIB_SRCS
     queryteleprotoimpl.cpp)
 
 add_library(querytele SHARED ${querytele_LIB_SRCS})
+add_dependencies(querytele external_boost)
 
 install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

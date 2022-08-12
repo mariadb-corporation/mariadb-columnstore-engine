@@ -29,6 +29,7 @@ add_library(loggingcpp SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/messageids.h
     ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
 )
+add_dependencies(loggingcpp external_boost)
 
 install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
