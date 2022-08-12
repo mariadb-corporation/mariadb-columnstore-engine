@@ -1,44 +1,41 @@
+include(ExternalProject)
 
-# boost super build (see superbuild.md)
-
-
-configure_file(${CMAKE_CURRENT_LIST_DIR}/boost.CMakeLists.txt.in ${CMAKE_CURRENT_BINARY_DIR}/.boost/CMakeLists.txt @ONLY)
-SET(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/.boost/boost-lib)
-
-message ("-- External: Configuring Boost")
-execute_process(
-	COMMAND ${CMAKE_COMMAND} .
-    -G "${CMAKE_GENERATOR}"
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.boost
-  RESULT_VARIABLE _exec_ret
-)
-
-if(${_exec_ret})
-  message(FATAL_ERROR "Error ${_exec_ret} configuring boost dependency.")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(_toolset "gcc")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  set(_toolset "clang")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+  set(_toolset "intel-linux")
 endif()
 
-message ("-- External: Building Boost")
-execute_process(
-	COMMAND ${CMAKE_COMMAND} --build .
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.boost
-  RESULT_VARIABLE _exec_ret
+set(INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/.boost/boost-lib)
+SET(Boost_INCLUDE_DIRS "${INSTALL_LOCATION}/include")
+SET(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
+LINK_DIRECTORIES("${Boost_LIBRARY_DIRS}")
+
+set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
+
+FOREACH(name chrono filesystem program_options regex system thread)
+  SET(lib boost_${name})
+  ADD_LIBRARY(${lib} STATIC IMPORTED GLOBAL)
+  ADD_LIBRARY(Boost::${name} ALIAS ${lib})
+  ADD_DEPENDENCIES(${lib} external_boost)
+  SET (loc "${Boost_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  SET(byproducts ${byproducts} BUILD_BYPRODUCTS ${loc})
+  SET_TARGET_PROPERTIES(${lib} PROPERTIES IMPORTED_LOCATION ${loc})
+ENDFOREACH()
+
+ExternalProject_Add(external_boost
+  PREFIX .boost
+  URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
+  URL_HASH SHA256=475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39
+  CONFIGURE_COMMAND ./bootstrap.sh
+  UPDATE_COMMAND ""
+  BUILD_COMMAND ./b2 -q ${_b2args}
+  BUILD_IN_SOURCE TRUE
+  INSTALL_COMMAND ./b2 -q install ${_b2args}
+  LOG_BUILD TRUE
+  LOG_INSTALL TRUE
+  ${byproducts}
 )
-
-if(${_exec_ret})
-  message(FATAL_ERROR "Error ${_exec_ret} building boost dependency: ${_exec_ret}")
-endif()
-
-unset(_exec_ret)
-
-
-message("Boost installed localy at ${BOOST_ROOT}")
-
-
-SET(Boost_USE_STATIC_LIBS ON)
-FIND_PACKAGE(Boost 1.78.0 COMPONENTS system filesystem thread regex date_time chrono atomic)
-IF (NOT Boost_FOUND)
-    MESSAGE_ONCE(CS_NO_BOOST "Required Boost libraries not found!")
-    return()
-ENDIF()
