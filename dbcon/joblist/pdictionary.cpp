@@ -119,22 +119,22 @@ void pDictionaryStep::addFilter(int8_t COP, const string& value)
   fFilterString.append((const uint8_t*)value.c_str(), value.size());
   fFilterCount++;
 
-  if (fFilterCount == 1 && (COP == COMPARE_EQ || COP == COMPARE_NE))
-  {
-    hasEqualityFilter = true;
-    tmpCOP = COP;
-  }
+  // if (fFilterCount == 1 && (COP == COMPARE_EQ || COP == COMPARE_NE))
+  // {
+  //   hasEqualityFilter = true;
+  //   tmpCOP = COP;
+  // }
 
-  if (hasEqualityFilter)
-  {
-    if (COP != tmpCOP)
-    {
-      hasEqualityFilter = false;
-      eqFilter.clear();
-    }
-    else
-      eqFilter.push_back(value);
-  }
+  // if (hasEqualityFilter)
+  // {
+  //   if (COP != tmpCOP)
+  //   {
+  //     hasEqualityFilter = false;
+  //     eqFilter.clear();
+  //   }
+  //   else
+  //     eqFilter.push_back(value);
+  // }
 }
 
 const string pDictionaryStep::toString() const

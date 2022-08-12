@@ -405,7 +405,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
   const uint8_t* in8;
   DataValue* outValue;
   p_DataValue min = {0, NULL}, max = {0, NULL}, sigptr = {0, NULL};
-  int tmp, filterIndex, filterOffset;
+  [[maybe_unused]] int tmp, filterIndex, filterOffset;
   uint16_t aggCount;
   bool cmpResult;
   DictOutput header;
@@ -443,40 +443,40 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
        sigptr.len != -1;
        nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType, (in->InputFlags ? true : false), skipNulls))
   {
-#if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
-    if (minMax)
-    {
-      uint64_t v = encodeStringPrefix_check_null(sigptr.data, sigptr.len, charsetNumber);
-      minMax[1] = minMax[1] < v ? v : minMax[1];
-      minMax[0] = minMax[0] > v ? v : minMax[0];
-    }
-#endif
+    // #if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
+    //     if (minMax)
+    //     {
+    //       uint64_t v = encodeStringPrefix_check_null(sigptr.data, sigptr.len, charsetNumber);
+    //       minMax[1] = minMax[1] < v ? v : minMax[1];
+    //       minMax[0] = minMax[0] > v ? v : minMax[0];
+    //     }
+    // #endif
     // do aggregate processing
-    if (in->OutputType & OT_AGGREGATE)
-    {
-      // len == 0 indicates this is the first pass
-      if (max.len != 0)
-      {
-        tmp = cs.strnncollsp(sigptr.data, sigptr.len, max.data, max.len);
+    // if (in->OutputType & OT_AGGREGATE)
+    // {
+    //   // len == 0 indicates this is the first pass
+    //   if (max.len != 0)
+    //   {
+    //     tmp = cs.strnncollsp(sigptr.data, sigptr.len, max.data, max.len);
 
-        if (tmp > 0)
-          max = sigptr;
-      }
-      else
-        max = sigptr;
+    //     if (tmp > 0)
+    //       max = sigptr;
+    //   }
+    //   else
+    //     max = sigptr;
 
-      if (min.len != 0)
-      {
-        tmp = cs.strnncollsp(sigptr.data, sigptr.len, min.data, min.len);
+    //   if (min.len != 0)
+    //   {
+    //     tmp = cs.strnncollsp(sigptr.data, sigptr.len, min.data, min.len);
 
-        if (tmp < 0)
-          min = sigptr;
-      }
-      else
-        min = sigptr;
+    //     if (tmp < 0)
+    //       min = sigptr;
+    //   }
+    //   else
+    //     min = sigptr;
 
-      aggCount++;
-    }
+    //   aggCount++;
+    // }
 
     // filter processing
     if (in->InputFlags == 1)
@@ -484,36 +484,36 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
     else
       filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(PrimToken));
 
-    if (eqFilter)
-    {
-      // MCOL-4407.
-      // Support filters:
-      // `where key = value0 and key = value1 {and key = value2}`
-      //
-      // The problem occurs only when HWM > columnstore_string_scan_threshold - 1
-      // because in this case:
-      // CS uses `tryCombineDictionary` which combines `DictStep`s into one as result
-      // `eqFilter` has more than 1 filter and applies the logic below which is `or` by
-      // default.
-      // Note: The case HWM <= columnstore_string_scan_threshold - 1 has the same problem,
-      // function `p_TokenByScan`, but it does not occur because `tryCombineDictionaryScan`
-      // was turned off.
-      if (eqFilter->size() > 1 && in->BOP == BOP_AND && eqOp == COMPARE_EQ)
-        goto no_store;
+    // if (eqFilter)
+    // {
+    //   // MCOL-4407.
+    //   // Support filters:
+    //   // `where key = value0 and key = value1 {and key = value2}`
+    //   //
+    //   // The problem occurs only when HWM > columnstore_string_scan_threshold - 1
+    //   // because in this case:
+    //   // CS uses `tryCombineDictionary` which combines `DictStep`s into one as result
+    //   // `eqFilter` has more than 1 filter and applies the logic below which is `or` by
+    //   // default.
+    //   // Note: The case HWM <= columnstore_string_scan_threshold - 1 has the same problem,
+    //   // function `p_TokenByScan`, but it does not occur because `tryCombineDictionaryScan`
+    //   // was turned off.
+    //   if (eqFilter->size() > 1 && in->BOP == BOP_AND && eqOp == COMPARE_EQ)
+    //     goto no_store;
 
-      if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
-        goto store;
+    //   if (eqFilter->size() > 1 && in->BOP == BOP_OR && eqOp == COMPARE_NE)
+    //     goto store;
 
-      // MCOL-1246 Trim whitespace before match
-      string strData((char*)sigptr.data, sigptr.len);
-      boost::trim_right_if(strData, boost::is_any_of(" "));
-      bool gotIt = eqFilter->find(strData) != eqFilter->end();
+    //   // MCOL-1246 Trim whitespace before match
+    //   string strData((char*)sigptr.data, sigptr.len);
+    //   boost::trim_right_if(strData, boost::is_any_of(" "));
+    //   bool gotIt = eqFilter->find(strData) != eqFilter->end();
 
-      if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
-        goto store;
+    //   if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
+    //     goto store;
 
-      goto no_store;
-    }
+    //   goto no_store;
+    // }
 
     for (filterIndex = 0; filterIndex < in->NOPS; filterIndex++)
     {

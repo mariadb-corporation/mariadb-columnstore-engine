@@ -84,22 +84,23 @@ void DictStep::createCommand(ByteStream& bs)
   bs >> filterCount;
   bs >> tmp8;
   hasEqFilter = tmp8;
+  // hasEqFilter = false;
 
-  if (hasEqFilter)
-  {
-    string strTmp;
-    datatypes::Charset cs(charsetNumber);
-    eqFilter.reset(new primitives::DictEqualityFilter(cs));
-    bs >> eqOp;
+  // if (hasEqFilter)
+  // {
+  //   string strTmp;
+  //   datatypes::Charset cs(charsetNumber);
+  //   eqFilter.reset(new primitives::DictEqualityFilter(cs));
+  //   bs >> eqOp;
 
-    for (uint32_t i = 0; i < filterCount; i++)
-    {
-      bs >> strTmp;
-      eqFilter->insert(strTmp);
-    }
-  }
-  else
-    bs >> filterString;
+  //   for (uint32_t i = 0; i < filterCount; i++)
+  //   {
+  //     bs >> strTmp;
+  //     eqFilter->insert(strTmp);
+  //   }
+  // }
+  // else
+  bs >> filterString;
 
   Command::createCommand(bs);
 }
@@ -346,7 +347,7 @@ void DictStep::_execute()
     newRidList[i].pos = i;
   }
 
-  sort(&newRidList[0], &newRidList[bpp->ridCount], TokenSorter());
+  // sort(&newRidList[0], &newRidList[bpp->ridCount], TokenSorter());
 
   tmpResultCounter = 0;
   i = 0;
