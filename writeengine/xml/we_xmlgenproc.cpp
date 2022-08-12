@@ -332,6 +332,7 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
         int notNull = 1;
         xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_NOT_NULL], "%d", notNull);
 
+	idblog("column " << col->tableColName.column << ", def value: " << col_defaultValue.safeString());
         if (!col_defaultValue.isNull())
         {
           xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
