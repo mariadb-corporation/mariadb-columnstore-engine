@@ -1014,7 +1014,7 @@ idblog("some decimal");
 
       case execplan::CalpontSystemCatalog::DATE:
       {
-idblog("some date: " << col_DefaultValue.safeString());
+idblog("some date: " << col_defaultValue.safeString());
         int convertStatus;
         int32_t dt = dataconvert::DataConvert::convertColumnDate(col_defaultValue.str(),
                                                                  dataconvert::CALPONTDATE_ENUM, convertStatus,
