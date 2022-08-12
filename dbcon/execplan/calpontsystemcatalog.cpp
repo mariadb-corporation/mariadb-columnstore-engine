@@ -730,6 +730,10 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
       tcn.table = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
       tcn.column = ((*it)->GetStringData(0).safeString(""));
+    else
+    {
+      idblog("skipped column with OID " << (*it)->ColumnOID());
+    }
   }
 
   // temporialy memory leak fix until defaultvalue is added.
