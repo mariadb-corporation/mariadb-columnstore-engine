@@ -3286,7 +3286,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
-	idblog("i " << i << ", default value " << ctList[i].defaultValue);
+	idblog("i " << i << ", default value " << ctList[i].defaultValue.safeString());
 
         if (!ctList[i].defaultValue.isNull())
         {
@@ -5789,7 +5789,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
-	idblog("i " << i << ", default value " << ctList[i].defaultValue);
+	idblog("i " << i << ", default value " << ctList[i].defaultValue.safeString());
 
         if (!ctList[i].defaultValue.isNull())
         {
