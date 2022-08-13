@@ -15,6 +15,7 @@ set(thrift_LIB_SRCS
 add_definitions(-DTHRIFT_SQUELCH_CONSOLE_OUTPUT)
 
 add_library(thrift SHARED ${thrift_LIB_SRCS})
+add_dependencies(thrift external_boost)
 
 install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
