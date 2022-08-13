@@ -19,6 +19,7 @@ install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
 add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
+add_dependencies(regr_mysql external_boost)
 
 install(TARGETS regr_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 
