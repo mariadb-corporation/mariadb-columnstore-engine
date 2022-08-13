@@ -2,8 +2,8 @@
 Description=mcs-primproc
 
 # restart/stop mcs-primproc on restart/stop of mcs-workernode or mcs-controllernode
-# PartOf=mcs-workernode@1.service mcs-workernode@2.service
-# PartOf=mcs-controllernode.service
+PartOf=mcs-workernode@1.service mcs-workernode@2.service
+PartOf=mcs-controllernode.service
 After=network.target mcs-workernode@1.service mcs-workernode@2.service mcs-controllernode.service
 
 [Service]

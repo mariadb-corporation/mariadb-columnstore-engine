@@ -2,7 +2,7 @@
 Description=mcs-ddlproc
 
 # restart/start mcs-ddlproc on restart/start of mcs-writeengineserver
-# PartOf=mcs-writeengineserver.service
+PartOf=mcs-writeengineserver.service
 After=network.target mcs-dmlproc.service
 
 [Service]
