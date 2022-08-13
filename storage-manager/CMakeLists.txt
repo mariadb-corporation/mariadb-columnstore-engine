@@ -62,7 +62,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3)
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager Boost::chrono Boost::system Boost::thread Boost::filesystem Boost::regex pthread ${S3API_DEPS})
+target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 set_property(TARGET storagemanager PROPERTY CXX_STANDARD 20)
 
 add_executable(StorageManager src/main.cpp)

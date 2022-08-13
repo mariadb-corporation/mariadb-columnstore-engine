@@ -19,7 +19,6 @@ set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolse
 FOREACH(name chrono filesystem program_options regex system thread)
   SET(lib boost_${name})
   ADD_LIBRARY(${lib} STATIC IMPORTED GLOBAL)
-  ADD_LIBRARY(Boost::${name} ALIAS ${lib})
   ADD_DEPENDENCIES(${lib} external_boost)
   SET (loc "${Boost_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}")
   SET(byproducts ${byproducts} BUILD_BYPRODUCTS ${loc})
