@@ -238,7 +238,7 @@ struct IntegralToSIMD<T, KIND,
 template <typename T, ENUM_KIND KIND>
 struct IntegralToSIMD<T, KIND, typename std::enable_if<KIND != KIND_FLOAT>::type>
 {
-  using type = TypeToVecWrapperType<T>::WrapperType;
+  using type = typename TypeToVecWrapperType<T>::WrapperType;
 };
 
 template <typename T, ENUM_KIND KIND, typename ENABLE = void>
