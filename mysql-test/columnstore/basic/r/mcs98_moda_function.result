@@ -132,19 +132,19 @@ four
 SELECT moda(vc) FROM t2;
 moda(vc)
 five123456
-SELECT i FROM t2 WHERE i >= (SELECT moda(i) FROM t2);
+SELECT i FROM t2 WHERE i >= (SELECT moda(i) FROM t2) order by i;
 i
-74836460
+7483646
 7483646
 74836460
-7483646
-SELECT d2 FROM t2 WHERE d2 < (SELECT moda(d2) FROM t2);
+74836460
+SELECT d2 FROM t2 WHERE d2 < (SELECT moda(d2) FROM t2) order by d2;
 d2
-SELECT tu, moda(i) FROM t2 GROUP BY tu;
+SELECT tu, moda(i) FROM t2 GROUP BY tu order by tu;
 tu	moda(i)
-10	-74836460
-1	7483646
 NULL	0
+1	7483646
+10	-74836460
 SELECT floor(moda(rl)) FROM t2;
 floor(moda(rl))
 234
@@ -154,8 +154,8 @@ ceiling(moda(dbl))
 SELECT moda(floor(rl)) FROM t2;
 moda(floor(rl))
 234
-SELECT t, moda(tu) 'q1' FROM t2 GROUP BY t HAVING moda(tu) > 5;
+SELECT t, moda(tu) 'q1' FROM t2 GROUP BY t HAVING moda(tu) > 5 order by t;
 t	q1
-10	10
 -10	10
+10	10
 DROP DATABASE mcs98_db;

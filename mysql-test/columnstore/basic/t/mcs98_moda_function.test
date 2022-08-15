@@ -86,13 +86,13 @@ SELECT moda(rl) FROM t2;
 SELECT moda(dbl) FROM t2;
 SELECT moda(v) FROM t2;
 SELECT moda(vc) FROM t2;
-SELECT i FROM t2 WHERE i >= (SELECT moda(i) FROM t2);
-SELECT d2 FROM t2 WHERE d2 < (SELECT moda(d2) FROM t2);
-SELECT tu, moda(i) FROM t2 GROUP BY tu;
+SELECT i FROM t2 WHERE i >= (SELECT moda(i) FROM t2) order by i;
+SELECT d2 FROM t2 WHERE d2 < (SELECT moda(d2) FROM t2) order by d2;
+SELECT tu, moda(i) FROM t2 GROUP BY tu order by tu;
 SELECT floor(moda(rl)) FROM t2;
 SELECT ceiling(moda(dbl)) FROM t2;
 SELECT moda(floor(rl)) FROM t2;
-SELECT t, moda(tu) 'q1' FROM t2 GROUP BY t HAVING moda(tu) > 5;
+SELECT t, moda(tu) 'q1' FROM t2 GROUP BY t HAVING moda(tu) > 5 order by t;
 # Clean UP
 DROP DATABASE mcs98_db;
 
