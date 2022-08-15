@@ -23,7 +23,7 @@ class NullString
   }
   NullString(const char* str, size_t length)
   {
-    idbassert(str != nullpre || length == 0);
+    idbassert(str != nullptr || length == 0);
 
     if (str) {
       mStrPtr.reset(new std::string((const char*)str, length));
