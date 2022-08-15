@@ -21,8 +21,13 @@ class NullString
   NullString() : mStrPtr(nullptr)
   {
   }
-  NullString(const char* str, size_t length) : mStrPtr(new std::string(str, length))
+  NullString(const char* str, size_t length)
   {
+    idbassert(str != nullpre || length == 0);
+
+    if (str) {
+      mStrPtr.reset(new std::string((const char*)str, length));
+    }
   }
   explicit NullString(const std::string& str) : mStrPtr(new std::string(str))
   {
