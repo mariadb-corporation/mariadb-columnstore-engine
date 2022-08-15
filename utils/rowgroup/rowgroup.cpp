@@ -1570,6 +1570,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
             default:
             {
               NullString s = row.getStringField(j);
+#if 0
 idblog_stat(
 int nptrs;
 void* pbuf[100];
@@ -1584,6 +1585,7 @@ if (strs) {
 free(strs);
 }
 )
+#endif
 	      idblog("probably a default value: " << s.safeString());
               cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
