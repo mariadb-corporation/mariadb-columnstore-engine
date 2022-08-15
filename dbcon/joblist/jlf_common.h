@@ -286,6 +286,8 @@ struct JobInfo
 
   // bug 2634, 5311 and 5374, outjoin and predicates
   std::set<uint32_t> outerOnTable;
+  // MCOL-4715.
+  std::set<uint32_t> innerOnTable;
   std::set<uint32_t> tableHasIsNull;
   JobStepVector outerJoinExpressions;
 

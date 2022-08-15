@@ -1576,6 +1576,12 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, s
       {
         m1->second.fTypes.push_back(joinType);
         m2->second.fTypes.push_back(joinType);
+
+        if (joinType == INNER)
+        {
+          jobInfo.innerOnTable.insert(tid1);
+          jobInfo.innerOnTable.insert(tid2);
+        }
       }
 
       // need id to keep the join order
@@ -2513,12 +2519,21 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector& joinSteps, Job
 
 void outjoinPredicateAdjust(TableInfoMap& tableInfoMap, JobInfo& jobInfo)
 {
-  set<uint32_t>::iterator i = jobInfo.outerOnTable.begin();
+  std::set<uint32_t> tables = jobInfo.outerOnTable;
+  if (!tables.size())
+    return;
 
-  for (; i != jobInfo.outerOnTable.end(); i++)
+  // Mixed outer/inner joins and a table with a `null filter`.
+  for (const auto tableId : jobInfo.innerOnTable)
   {
-    // resetTableFilters(tableInfoMap[*i], jobInfo)
-    TableInfo& tblInfo = tableInfoMap[*i];
+    if (jobInfo.tableHasIsNull.find(tableId) != jobInfo.tableHasIsNull.end())
+      tables.insert(tableId);
+  }
+
+  for (const auto tableId : tables)
+  {
+    // resetTableFilters(tableInfoMap[tableId], jobInfo)
+    TableInfo& tblInfo = tableInfoMap[tableId];
 
     if (tblInfo.fTableOid != CNX_VTABLE_ID)
     {
@@ -2597,7 +2612,7 @@ void outjoinPredicateAdjust(TableInfoMap& tableInfoMap, JobInfo& jobInfo)
       }
 
       // Do not apply the primitive filters if there is an "IS NULL" in where clause.
-      if (jobInfo.tableHasIsNull.find(*i) != jobInfo.tableHasIsNull.end())
+      if (jobInfo.tableHasIsNull.find(tableId) != jobInfo.tableHasIsNull.end())
         tblInfo.fQuerySteps = onClauseFilterSteps;
     }
 
@@ -4740,6 +4755,12 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
       {
         m1->second.fTypes.push_back(joinType);
         m2->second.fTypes.push_back(joinType);
+
+        if (joinType == INNER)
+        {
+          jobInfo.innerOnTable.insert(tid1);
+          jobInfo.innerOnTable.insert(tid2);
+        }
       }
 
       // need id to keep the join order
