@@ -44,7 +44,7 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
                        'expect createrepo ';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version +'-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
@@ -76,7 +76,8 @@ local platformMap(platform, arch) =
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
-  platform_map[platform];
+  local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
+  platform_map[platform] + ' | tee ' + result + '/build.log';
 
 
 local testRun(platform) =
@@ -310,6 +311,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore" || echo "failed to grab regression results"',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
+      'ls -l /drone/src/' + result,
       'docker stop regression$${DRONE_BUILD_NUMBER} && docker rm regression$${DRONE_BUILD_NUMBER} || echo "cleanup regression failure"',
     ],
     when: {
@@ -394,6 +396,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
+               DH_BUILD_DDEBS: '1',
                BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
                AWS_ACCESS_KEY_ID: {
                  from_secret: 'aws_access_key_id',
@@ -409,6 +412,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              },
              commands: [
                'cd /mdb/' + builddir,
+               'mkdir ' + result,
                "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
                if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
                // Remove Debian build flags that could prevent ColumnStore from building
@@ -430,7 +434,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
                if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
                platformMap(platform, arch),
                'sccache --show-stats',
-               'mkdir ' + result,
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
              ],
@@ -476,7 +479,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
          (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.regression] +
          [pipeline.regressionlog] +
-         [pipeline.publish('regression')] +
+         [pipeline.publish('regressionlog')] +
          (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
