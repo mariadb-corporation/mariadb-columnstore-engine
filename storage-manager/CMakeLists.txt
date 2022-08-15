@@ -62,12 +62,10 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3)
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager Boost::chrono Boost::system Boost::thread Boost::filesystem Boost::regex pthread ${S3API_DEPS})
-set_property(TARGET storagemanager PROPERTY CXX_STANDARD 20)
+target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
 
 add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
-set_property(TARGET StorageManager PROPERTY CXX_STANDARD 20)
 
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -75,12 +73,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(unit_tests storagemanager)
-set_property(TARGET unit_tests PROPERTY CXX_STANDARD 20)
 
 add_executable(testS3Connection src/testS3Connection.cpp)
 target_compile_definitions(testS3Connection PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(testS3Connection storagemanager)
-set_property(TARGET testS3Connection PROPERTY CXX_STANDARD 11)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
