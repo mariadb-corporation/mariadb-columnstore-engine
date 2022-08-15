@@ -57,6 +57,123 @@ namespace
 {
 using MT = uint16_t;
 
+const MT nonEmptyMask2Byte[256] =
+{
+  0x0000, 0x0003, 0x000C, 0x000F, 0x0030, 0x0033, 0x003C, 0x003F,
+  0x00C0, 0x00C3, 0x00CC, 0x00CF, 0x00F0, 0x00F3, 0x00FC, 0x00FF,
+  0x0300, 0x0303, 0x030C, 0x030F, 0x0330, 0x0333, 0x033C, 0x033F,
+  0x03C0, 0x03C3, 0x03CC, 0x03CF, 0x03F0, 0x03F3, 0x03FC, 0x03FF,
+  0x0C00, 0x0C03, 0x0C0C, 0x0C0F, 0x0C30, 0x0C33, 0x0C3C, 0x0C3F,
+  0x0CC0, 0x0CC3, 0x0CCC, 0x0CCF, 0x0CF0, 0x0CF3, 0x0CFC, 0x0CFF,
+  0x0F00, 0x0F03, 0x0F0C, 0x0F0F, 0x0F30, 0x0F33, 0x0F3C, 0x0F3F,
+  0x0FC0, 0x0FC3, 0x0FCC, 0x0FCF, 0x0FF0, 0x0FF3, 0x0FFC, 0x0FFF,
+  0x3000, 0x3003, 0x300C, 0x300F, 0x3030, 0x3033, 0x303C, 0x303F,
+  0x30C0, 0x30C3, 0x30CC, 0x30CF, 0x30F0, 0x30F3, 0x30FC, 0x30FF,
+  0x3300, 0x3303, 0x330C, 0x330F, 0x3330, 0x3333, 0x333C, 0x333F,
+  0x33C0, 0x33C3, 0x33CC, 0x33CF, 0x33F0, 0x33F3, 0x33FC, 0x33FF,
+  0x3C00, 0x3C03, 0x3C0C, 0x3C0F, 0x3C30, 0x3C33, 0x3C3C, 0x3C3F,
+  0x3CC0, 0x3CC3, 0x3CCC, 0x3CCF, 0x3CF0, 0x3CF3, 0x3CFC, 0x3CFF,
+  0x3F00, 0x3F03, 0x3F0C, 0x3F0F, 0x3F30, 0x3F33, 0x3F3C, 0x3F3F,
+  0x3FC0, 0x3FC3, 0x3FCC, 0x3FCF, 0x3FF0, 0x3FF3, 0x3FFC, 0x3FFF,
+  0xC000, 0xC003, 0xC00C, 0xC00F, 0xC030, 0xC033, 0xC03C, 0xC03F,
+  0xC0C0, 0xC0C3, 0xC0CC, 0xC0CF, 0xC0F0, 0xC0F3, 0xC0FC, 0xC0FF,
+  0xC300, 0xC303, 0xC30C, 0xC30F, 0xC330, 0xC333, 0xC33C, 0xC33F,
+  0xC3C0, 0xC3C3, 0xC3CC, 0xC3CF, 0xC3F0, 0xC3F3, 0xC3FC, 0xC3FF,
+  0xCC00, 0xCC03, 0xCC0C, 0xCC0F, 0xCC30, 0xCC33, 0xCC3C, 0xCC3F,
+  0xCCC0, 0xCCC3, 0xCCCC, 0xCCCF, 0xCCF0, 0xCCF3, 0xCCFC, 0xCCFF,
+  0xCF00, 0xCF03, 0xCF0C, 0xCF0F, 0xCF30, 0xCF33, 0xCF3C, 0xCF3F,
+  0xCFC0, 0xCFC3, 0xCFCC, 0xCFCF, 0xCFF0, 0xCFF3, 0xCFFC, 0xCFFF,
+  0xF000, 0xF003, 0xF00C, 0xF00F, 0xF030, 0xF033, 0xF03C, 0xF03F,
+  0xF0C0, 0xF0C3, 0xF0CC, 0xF0CF, 0xF0F0, 0xF0F3, 0xF0FC, 0xF0FF,
+  0xF300, 0xF303, 0xF30C, 0xF30F, 0xF330, 0xF333, 0xF33C, 0xF33F,
+  0xF3C0, 0xF3C3, 0xF3CC, 0xF3CF, 0xF3F0, 0xF3F3, 0xF3FC, 0xF3FF,
+  0xFC00, 0xFC03, 0xFC0C, 0xFC0F, 0xFC30, 0xFC33, 0xFC3C, 0xFC3F,
+  0xFCC0, 0xFCC3, 0xFCCC, 0xFCCF, 0xFCF0, 0xFCF3, 0xFCFC, 0xFCFF,
+  0xFF00, 0xFF03, 0xFF0C, 0xFF0F, 0xFF30, 0xFF33, 0xFF3C, 0xFF3F,
+  0xFFC0, 0xFFC3, 0xFFCC, 0xFFCF, 0xFFF0, 0xFFF3, 0xFFFC, 0xFFFF
+};
+
+const MT nonEmptyMask4Byte[16] =
+{
+  0x0000, 0x000F, 0x00F0, 0x00FF,
+  0x0F00, 0x0F0F, 0x0FF0, 0x0FFF,
+  0xF000, 0xF00F, 0xF0F0, 0xF0FF,
+  0xFF00, 0xFF0F, 0xFFF0, 0xFFFF
+};
+
+const MT nonEmptyMask8Byte[4] =
+{
+  0x0000, 0x00FF, 0xFF00, 0xFFFF
+};
+
+const MT nonEmptyMask16Byte[2] =
+{
+  0x0000, 0xFFFF
+};
+
+inline MT getNonEmptyMask1Byte(MT* nonEmptyMaskAux, uint16_t iter)
+{
+  return nonEmptyMaskAux[iter];
+}
+
+inline MT getNonEmptyMask2Byte(MT* nonEmptyMaskAux, uint16_t iter)
+{
+  return nonEmptyMask2Byte[(nonEmptyMaskAux[iter >> 1] >> ((iter & 0x0001) << 3)) & 0x00FF];
+}
+
+inline MT getNonEmptyMask4Byte(MT* nonEmptyMaskAux, uint16_t iter)
+{
+  return nonEmptyMask4Byte[(nonEmptyMaskAux[iter >> 2] >> ((iter & 0x0003) << 2)) & 0x000F];
+}
+
+inline MT getNonEmptyMask8Byte(MT* nonEmptyMaskAux, uint16_t iter)
+{
+  return nonEmptyMask8Byte[(nonEmptyMaskAux[iter >> 3] >> ((iter & 0x0007) << 1)) & 0x0003];
+}
+
+inline MT getNonEmptyMask16Byte(MT* nonEmptyMaskAux, uint16_t iter)
+{
+  return nonEmptyMask16Byte[(nonEmptyMaskAux[iter >> 4] >> (iter & 0x000F)) & 0x0001];
+}
+
+typedef MT (*getNonEmptyMaskPtrT)(MT*, uint16_t);
+
+template <uint16_t WIDTH>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate()
+{
+  return nullptr;
+}
+
+template<>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate<1>()
+{
+  return getNonEmptyMask1Byte;
+}
+
+template<>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate<2>()
+{
+  return getNonEmptyMask2Byte;
+}
+
+template<>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate<4>()
+{
+  return getNonEmptyMask4Byte;
+}
+
+template<>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate<8>()
+{
+  return getNonEmptyMask8Byte;
+}
+
+template<>
+constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtrTemplate<16>()
+{
+  return getNonEmptyMask16Byte;
+}
+
 inline uint64_t order_swap(uint64_t x)
 {
   uint64_t ret = (x >> 56) | ((x << 40) & 0x00FF000000000000ULL) | ((x << 24) & 0x0000FF0000000000ULL) |
@@ -830,22 +947,22 @@ T getInitialMax(NewColRequestHeader* in)
 // Return true on success, false on End of Block.
 // Values are read from srcArray either in natural order or in the order defined by ridArray.
 // Empty values are skipped, unless ridArray==0 && !(OutputType & OT_RID).
-template <typename T, int COL_WIDTH>
+template <typename T, int COL_WIDTH, bool IS_AUX_COLUMN>
 inline bool nextColValue(
     T& result,      // Place for the value returned
     bool* isEmpty,  // ... and flag whether it's EMPTY
-    uint32_t*
-        index,  // Successive index either in srcArray (going from 0 to srcSize-1) or ridArray (0..ridSize-1)
+    uint32_t* index,  // Successive index either in srcArray (going from 0 to srcSize-1) or ridArray (0..ridSize-1)
     uint16_t* rid,             // Index in srcArray of the value returned
     const T* srcArray,         // Input array
     const uint32_t srcSize,    // ... and its size
     const uint16_t* ridArray,  // Optional array of indexes into srcArray, that defines the read order
     const uint16_t ridSize,    // ... and its size
     const uint8_t OutputType,  // Used to decide whether to skip EMPTY values
-    T EMPTY_VALUE)
+    const T& EMPTY_VALUE,
+    const uint8_t* blockAux,
+    uint8_t EMPTY_VALUE_AUX)
 {
   auto i = *index;  // local copy of *index to speed up loops
-  T value;          // value to be written into *result, local for the same reason
 
   if (ridArray)
   {
@@ -855,10 +972,20 @@ inline bool nextColValue(
       if (UNLIKELY(i >= ridSize))
         return false;
 
-      value = srcArray[ridArray[i]];
+      if constexpr (IS_AUX_COLUMN)
+      {
+        uint8_t valueAux = blockAux[ridArray[i]];
 
-      if (value != EMPTY_VALUE)
-        break;
+        if (valueAux != EMPTY_VALUE_AUX)
+          break;
+      }
+      else
+      {
+        T value = srcArray[ridArray[i]];
+
+        if (value != EMPTY_VALUE)
+          break;
+      }
     }
 
     *rid = ridArray[i];
@@ -872,10 +999,20 @@ inline bool nextColValue(
       if (UNLIKELY(i >= srcSize))
         return false;
 
-      value = srcArray[i];
+      if constexpr (IS_AUX_COLUMN)
+      {
+        uint8_t valueAux = blockAux[i];
 
-      if (value != EMPTY_VALUE)
-        break;
+        if (valueAux != EMPTY_VALUE_AUX)
+          break;
+      }
+      else
+      {
+        T value = srcArray[i];
+
+        if (value != EMPTY_VALUE)
+          break;
+      }
     }
 
     *rid = i;
@@ -888,12 +1025,21 @@ inline bool nextColValue(
       return false;
 
     *rid = i;
-    value = srcArray[i];
-    *isEmpty = (value == EMPTY_VALUE);
+
+    if constexpr (IS_AUX_COLUMN)
+    {
+      uint8_t valueAux = blockAux[i];
+      *isEmpty = (valueAux == EMPTY_VALUE_AUX);
+    }
+    else
+    {
+      T value = srcArray[i];
+      *isEmpty = (value == EMPTY_VALUE);
+    }
   }
 
   *index = i + 1;
-  result = value;
+  result = srcArray[*rid];
   return true;
 }
 
@@ -1179,7 +1325,9 @@ void scalarFiltering(
     const bool validMinMax,     // The flag to store min/max
     T emptyValue,               // Deduced empty value magic
     T nullValue,                // Deduced null value magic
-    T Min, T Max, const bool isNullValueMatches)
+    T Min, T Max, const bool isNullValueMatches,
+    const uint8_t* blockAux,
+    uint8_t emptyValueAux)
 {
   constexpr int WIDTH = sizeof(T);
   // Loop-local variables
@@ -1187,9 +1335,12 @@ void scalarFiltering(
   primitives::RIDType rid = 0;
   bool isEmpty = false;
 
+  auto nextColValuePtr = in->hasAuxCol ? nextColValue<T, WIDTH, true> : nextColValue<T, WIDTH, false>;
+
   // Loop over the column values, storing those matching the filter, and updating the min..max range
-  for (uint32_t i = initialRID; nextColValue<T, WIDTH>(curValue, &isEmpty, &i, &rid, srcArray, srcSize,
-                                                       ridArray, ridSize, outputType, emptyValue);)
+  for (uint32_t i = initialRID; (*nextColValuePtr)(curValue, &isEmpty, &i, &rid, srcArray, srcSize,
+                                                   ridArray, ridSize, outputType, emptyValue,
+                                                   blockAux, emptyValueAux);)
   {
     if (isEmpty)
       continue;
@@ -1334,6 +1485,34 @@ void extractTextMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, Si
   max = simdMaxVec[indMax - weightsMaxVec];
 }
 
+template<bool HAS_INPUT_RIDS>
+void buildAuxColEmptyVal(const uint16_t iterNumberAux, const uint16_t vectorSizeAux,
+                         const uint8_t** blockAux, uint8_t emptyValueAux,
+                         MT** nonEmptyMaskAux, primitives::RIDType** ridArray)
+{
+  using SimdTypeTemp = typename simd::IntegralToSIMD<uint8_t, KIND_UNSIGNED>::type;
+  using FilterTypeTemp = typename simd::StorageToFiltering<uint8_t, KIND_UNSIGNED>::type;
+  using VTAux = typename simd::SimdFilterProcessor<SimdTypeTemp, FilterTypeTemp>;
+  using SimdTypeAux = typename VTAux::SimdType;
+  using SimdWrapperTypeAux = typename VTAux::SimdWrapperType;
+  VTAux simdProcessorAux;
+  SimdTypeAux dataVecAux;
+  SimdTypeAux emptyFilterArgVecAux = simdProcessorAux.emptyNullLoadValue(emptyValueAux);
+  const uint8_t* origBlockAux = *blockAux;
+  primitives::RIDType* origRidArray = *ridArray;
+
+  for (uint16_t i = 0; i < iterNumberAux; ++i)
+  {
+    dataVecAux = simdDataLoad<VTAux, SimdWrapperTypeAux, HAS_INPUT_RIDS, uint8_t>(simdProcessorAux, *blockAux,
+      origBlockAux, *ridArray, i).v;
+    (*nonEmptyMaskAux)[i] = simdProcessorAux.nullEmptyCmpNe(dataVecAux, emptyFilterArgVecAux);
+    *blockAux += vectorSizeAux;
+    *ridArray += vectorSizeAux;
+  }
+
+  *ridArray = origRidArray;
+}
+
 // This routine filters input block in a vectorized manner.
 // It supports all output types, all input types.
 // It doesn't support KIND==TEXT so upper layers filters this KIND out beforehand.
@@ -1344,11 +1523,12 @@ void extractTextMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, Si
 // Then it takes a vector of data, run filters and logical function using pointers.
 // See the corresponding dispatcher to get more details on vector processing class.
 template<typename T, typename VT, bool HAS_INPUT_RIDS, int OUTPUT_TYPE,
-         ENUM_KIND KIND, typename FT, typename ST>
-void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T* srcArray,
-                         const uint32_t srcSize, primitives::RIDType* ridArray, const uint16_t ridSize,
-                         ParsedColumnFilter* parsedColumnFilter, const bool validMinMax, const T emptyValue,
-                         const T nullValue, T min, T max, const bool isNullValueMatches)
+         ENUM_KIND KIND, typename FT, typename ST, bool IS_AUX_COLUMN>
+void vectorizedFiltering_(NewColRequestHeader* in, ColResultHeader* out, const T* srcArray,
+                          const uint32_t srcSize, primitives::RIDType* ridArray, const uint16_t ridSize,
+                          ParsedColumnFilter* parsedColumnFilter, const bool validMinMax, const T emptyValue,
+                          const T nullValue, T min, T max, const bool isNullValueMatches,
+                          const uint8_t* blockAux, uint8_t emptyValueAux)
 {
   constexpr const uint16_t WIDTH = sizeof(T);
   using SimdType = typename VT::SimdType;
@@ -1360,7 +1540,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   SimdType dataVec;
   [[maybe_unused]] SimdType swapedOrderDataVec;
   [[maybe_unused]] auto typeHolder = in->colType;
-  SimdType emptyFilterArgVec = simdProcessor.emptyNullLoadValue(emptyValue);
+  [[maybe_unused]] SimdType emptyFilterArgVec = simdProcessor.emptyNullLoadValue(emptyValue);
   SimdType nullFilterArgVec = simdProcessor.emptyNullLoadValue(nullValue);
   MT writeMask, nonEmptyMask, nonNullMask, nonNullOrEmptyMask;
   MT initFilterMask = 0xFFFF;
@@ -1469,15 +1649,31 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
       }
     }
   }
-  SimdType simdMin = simdProcessor.loadValue(min);;
-  SimdType simdMax = simdProcessor.loadValue(max);;
+
+  SimdType simdMin = simdProcessor.loadValue(min);
+  SimdType simdMax = simdProcessor.loadValue(max);
   [[maybe_unused]] SimdType weightsMin;
   [[maybe_unused]] SimdType weightsMax;
+
   if constexpr (KIND == KIND_TEXT)
   {
     weightsMin = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMin).v;
     weightsMax = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMax).v;
   }
+
+  MT* nonEmptyMaskAux;
+
+  if constexpr (IS_AUX_COLUMN)
+  {
+    constexpr uint16_t vectorSizeAux = VT::vecByteSize;
+    uint16_t iterNumberAux = HAS_INPUT_RIDS ? ridSize / vectorSizeAux : srcSize / vectorSizeAux;
+    nonEmptyMaskAux = (MT*) alloca(sizeof(MT) * iterNumberAux);
+    buildAuxColEmptyVal<HAS_INPUT_RIDS>(iterNumberAux, vectorSizeAux, &blockAux, emptyValueAux,
+      &nonEmptyMaskAux, &ridArray);
+  }
+
+  constexpr getNonEmptyMaskPtrT getNonEmptyMaskPtr = getNonEmptyMaskPtrTemplate<WIDTH>();
+
   // main loop
   // writeMask tells which values must get into the result. Includes values that matches filters. Can have
   // NULLs. nonEmptyMask tells which vector coords are not EMPTY magics. nonNullMask tells which vector coords
@@ -1488,9 +1684,15 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     assert(!HAS_INPUT_RIDS || (HAS_INPUT_RIDS && ridSize >= ridOffset));
     dataVec = simdDataLoad<VT, SimdWrapperType, HAS_INPUT_RIDS, T>(simdProcessor, srcArray,
       origSrcArray, ridArray, i).v;
+
     if constexpr(KIND==KIND_TEXT)
       swapedOrderDataVec = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, dataVec).v;
-    nonEmptyMask = simdProcessor.nullEmptyCmpNe(dataVec, emptyFilterArgVec);
+
+    if constexpr (IS_AUX_COLUMN)
+      nonEmptyMask = (*getNonEmptyMaskPtr)(nonEmptyMaskAux, i);
+    else
+      nonEmptyMask = simdProcessor.nullEmptyCmpNe(dataVec, emptyFilterArgVec);
+
     writeMask = nonEmptyMask;
     // NULL check
     nonNullMask = simdProcessor.nullEmptyCmpNe(dataVec, nullFilterArgVec);
@@ -1518,7 +1720,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
 
     // vectWriteColValues iterates over the values in the source vec
     // to store values/RIDs into dstArray/ridDstArray.
-    // It also sets Min/Max values for the block if eligible.
+    // It also sets min/max values for the block if eligible.
     // !!! vectWriteColValues increases ridDstArray internally but it doesn't go
     // outside the scope of the memory allocated to out msg.
     // vectWriteColValues is empty if outputMode == OT_RID.
@@ -1531,11 +1733,11 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
         simdProcessor, valuesWritten, validMinMax, ridOffset, dataVecTPtr, ridDstArray, writeMask, min, max,
         in, out, nonNullOrEmptyMask, ridArray);
 
-    if constexpr (KIND != KIND_TEXT)
-      vectorizedUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax);
-    else
-      vectorizedTextUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax,
-                                 swapedOrderDataVec, weightsMin, weightsMax);
+      if constexpr (KIND != KIND_TEXT)
+        vectorizedUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax);
+      else
+        vectorizedTextUpdateMinMax(validMinMax, nonNullOrEmptyMask, simdProcessor, dataVec, simdMin, simdMax,
+                                   swapedOrderDataVec, weightsMin, weightsMax);
 
     // Calculate bytes written
     uint16_t bytesWritten = valuesWritten * WIDTH;
@@ -1546,6 +1748,7 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
     srcArray += VECTOR_SIZE;
     ridArray += VECTOR_SIZE;
   }
+
   if constexpr (KIND != KIND_TEXT)
     extractMinMax(simdProcessor, simdMin, simdMax, min, max);
   else
@@ -1567,7 +1770,33 @@ void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T*
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, origSrcArray, srcSize, origRidArray,
                                    ridSize, processedSoFar, outputType, validMinMax, emptyValue, nullValue,
-                                   min, max, isNullValueMatches);
+                                   min, max, isNullValueMatches, blockAux, emptyValueAux);
+}
+
+template<typename T, typename VT, bool HAS_INPUT_RIDS, int OUTPUT_TYPE,
+         ENUM_KIND KIND, typename FT, typename ST>
+void vectorizedFiltering(NewColRequestHeader* in, ColResultHeader* out, const T* srcArray,
+                         const uint32_t srcSize, primitives::RIDType* ridArray, const uint16_t ridSize,
+                         ParsedColumnFilter* parsedColumnFilter, const bool validMinMax, const T emptyValue,
+                         const T nullValue, T min, T max, const bool isNullValueMatches,
+                         const uint8_t* blockAux, uint8_t emptyValueAux)
+{
+  if (in->hasAuxCol)
+  {
+    vectorizedFiltering_<T, VT, HAS_INPUT_RIDS, OUTPUT_TYPE, KIND, FT, ST, true>(
+      in, out, srcArray, srcSize, ridArray, ridSize,
+      parsedColumnFilter, validMinMax, emptyValue,
+      nullValue, min, max, isNullValueMatches,
+      blockAux, emptyValueAux);
+  }
+  else
+  {
+    vectorizedFiltering_<T, VT, HAS_INPUT_RIDS, OUTPUT_TYPE, KIND, FT, ST, false>(
+      in, out, srcArray, srcSize, ridArray, ridSize,
+      parsedColumnFilter, validMinMax, emptyValue,
+      nullValue, min, max, isNullValueMatches,
+      blockAux, emptyValueAux);
+  }
 }
 
 // This routine dispatches template function calls to reduce branching.
@@ -1577,7 +1806,8 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
                                    const uint16_t ridSize, ParsedColumnFilter* parsedColumnFilter,
                                    const bool validMinMax, const STORAGE_TYPE emptyValue,
                                    const STORAGE_TYPE nullValue, STORAGE_TYPE Min, STORAGE_TYPE Max,
-                                   const bool isNullValueMatches)
+                                   const bool isNullValueMatches,
+                                   const uint8_t* blockAux, uint8_t emptyValueAux)
 {
   // Using struct to dispatch SIMD type based on integral type T.
   using SimdType = typename simd::IntegralToSIMD<STORAGE_TYPE, KIND>::type;
@@ -1592,22 +1822,22 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
       case OT_RID:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_BOTH:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_TOKEN:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_DATAVALUE:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
     }
   }
@@ -1619,22 +1849,22 @@ void vectorizedFilteringDispatcher(NewColRequestHeader* in, ColResultHeader* out
       case OT_RID:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_RID, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_BOTH:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_BOTH, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_TOKEN:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_TOKEN, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
       case OT_DATAVALUE:
         vectorizedFiltering<STORAGE_TYPE, VT, hasInput, OT_DATAVALUE, KIND, FT, ST>(
             in, out, srcArray, srcSize, ridArray, ridSize, parsedColumnFilter, validMinMax, emptyValue,
-            nullValue, Min, Max, isNullValueMatches);
+            nullValue, Min, Max, isNullValueMatches, blockAux, emptyValueAux);
         break;
     }
   }
@@ -1651,7 +1881,8 @@ template <typename T, ENUM_KIND KIND>
 void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* ridArray,
                       const uint16_t ridSize,  // Number of values in ridArray
                       int* srcArray16, const uint32_t srcSize,
-                      boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter)
+                      boost::shared_ptr<ParsedColumnFilter> parsedColumnFilter,
+                      int* blockAux)
 {
   using FT = typename IntegralTypeToFilterType<T>::type;
   using ST = typename IntegralTypeToFilterSetType<T>::type;
@@ -1677,6 +1908,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // Bit patterns in srcArray[i] representing EMPTY and NULL values
   T emptyValue = getEmptyValue<T>(dataType);
   T nullValue = getNullValue<T>(dataType);
+  uint8_t emptyValueAux = getEmptyValue<uint8_t>(execplan::AUX_COL_DATATYPE);
 
   // Precompute filter results for NULL values
   bool isNullValueMatches =
@@ -1703,13 +1935,18 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
     bool canUseFastFiltering = true;
     for (uint32_t i = 0; i < filterCount; ++i)
       if (filterRFs[i] != 0)
+      {
         canUseFastFiltering = false;
+        break;
+      }
 
     if (canUseFastFiltering)
     {
       vectorizedFilteringDispatcher<T, KIND, FT, ST>(in, out, srcArray, srcSize, ridArray, ridSize,
                                                      parsedColumnFilter.get(), validMinMax, emptyValue,
-                                                     nullValue, Min, Max, isNullValueMatches);
+                                                     nullValue, Min, Max, isNullValueMatches,
+                                                     reinterpret_cast<const uint8_t*>(blockAux),
+                                                     emptyValueAux);
       return;
     }
   }
@@ -1718,7 +1955,8 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   scalarFiltering<T, FT, ST, KIND>(in, out, columnFilterMode, filterSet, filterCount, filterCOPs,
                                    filterValues, filterRFs, in->colType, srcArray, srcSize, ridArray, ridSize,
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
-                                   isNullValueMatches);
+                                   isNullValueMatches, reinterpret_cast<const uint8_t*>(blockAux),
+                                   emptyValueAux);
 }  // end of filterColumnData
 
 }  // namespace
@@ -1753,7 +1991,8 @@ template <typename T,
 #else
           typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
 #endif
-void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
+void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
+                                                     ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
   auto dataType = (execplan::CalpontSystemCatalog::ColDataType)in->colType.DataType;
@@ -1762,7 +2001,7 @@ void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in, Co
     const uint16_t ridSize = in->NVALS;
     uint16_t* ridArray = in->getRIDArrayPtr(W);
     const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE : BLOCK_SIZE / W;
-    filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
     return;
   }
   _scanAndFilterTypeDispatcher<T>(in, out);
@@ -1778,7 +2017,8 @@ template <typename T,
 #else
           typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
 #endif
-void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
+void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
+                                                     ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
   auto dataType = (execplan::CalpontSystemCatalog::ColDataType)in->colType.DataType;
@@ -1787,7 +2027,7 @@ void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in, Co
     const uint16_t ridSize = in->NVALS;
     uint16_t* ridArray = in->getRIDArrayPtr(W);
     const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE : BLOCK_SIZE / W;
-    filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<T, KIND_FLOAT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
     return;
   }
   _scanAndFilterTypeDispatcher<T>(in, out);
@@ -1806,7 +2046,8 @@ template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t) || siz
                                                   sizeof(T) == sizeof(int128_t),
                                               T>::type* = nullptr>
 #endif
-void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
+void PrimitiveProcessor::scanAndFilterTypeDispatcher(NewColRequestHeader* in,
+                                                     ColResultHeader* out)
 {
   _scanAndFilterTypeDispatcher<T>(in, out);
 }
@@ -1821,14 +2062,15 @@ template <typename T,
 #else
           typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
 #endif
-void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
+void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
+                                                      ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
   const uint16_t ridSize = in->NVALS;
   uint16_t* ridArray = in->getRIDArrayPtr(W);
   const uint32_t itemsPerBlock = logicalBlockMode ? BLOCK_SIZE : BLOCK_SIZE / W;
 
-  filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+  filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
 }
 
 template <typename T,
@@ -1841,7 +2083,8 @@ template <typename T,
 #else
           typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
 #endif
-void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, ColResultHeader* out)
+void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in,
+                                                      ColResultHeader* out)
 {
   constexpr int W = sizeof(T);
   using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
@@ -1856,16 +2099,16 @@ void PrimitiveProcessor::_scanAndFilterTypeDispatcher(NewColRequestHeader* in, C
        dataType == execplan::CalpontSystemCatalog::TEXT) &&
       !isDictTokenScan(in))
   {
-    filterColumnData<UT, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<UT, KIND_TEXT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
     return;
   }
 
   if (datatypes::isUnsigned(dataType))
   {
-    filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+    filterColumnData<UT, KIND_UNSIGNED>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
     return;
   }
-  filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter);
+  filterColumnData<T, KIND_DEFAULT>(in, out, ridArray, ridSize, block, itemsPerBlock, parsedColumnFilter, blockAux);
 }
 
 // The entrypoint for block scanning and filtering.

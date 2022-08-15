@@ -104,7 +104,7 @@ mcs_ctype_extent_latin1	t1	c1	E9	E9
 c1
 é
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -117,7 +117,7 @@ mcs_ctype_extent_latin1	t1	c1	80FF	80FF
 c1
 ÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -130,7 +130,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFF	80FFFFFF
 c1
 ÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -143,7 +143,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ÿÿÿÿÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -157,7 +157,7 @@ mcs_ctype_extent_latin1	t1	c1	E9	E9
 c1
 é
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -170,7 +170,7 @@ mcs_ctype_extent_latin1	t1	c1	80FF	80FF
 c1
 ÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -183,7 +183,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFF	80FFFFFF
 c1
 ÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -196,7 +196,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ÿÿÿÿÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -210,7 +210,7 @@ mcs_ctype_extent_latin1	t1	c1	E9	E9
 c1
 é
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -223,7 +223,7 @@ mcs_ctype_extent_latin1	t1	c1	80FF	80FF
 c1
 ÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -236,7 +236,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFF	80FFFFFF
 c1
 ÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -249,7 +249,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ÿÿÿÿÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -263,7 +263,7 @@ mcs_ctype_extent_latin1	t1	c1	E9	E9
 c1
 é
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -276,7 +276,7 @@ mcs_ctype_extent_latin1	t1	c1	80FF	80FF
 c1
 ÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -289,7 +289,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFF	80FFFFFF
 c1
 ÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
@@ -302,7 +302,7 @@ mcs_ctype_extent_latin1	t1	c1	80FFFFFFFFFFFFFF	80FFFFFFFFFFFFFF
 c1
 ÿÿÿÿÿÿÿ€
 Level	Code	Message
-Note	9999	BlocksTouched-1; PartitionBlocksEliminated-0;
+Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;

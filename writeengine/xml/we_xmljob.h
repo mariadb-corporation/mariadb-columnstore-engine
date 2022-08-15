@@ -85,6 +85,14 @@ class XMLJob : public XMLOp
   }
 
   /**
+   * @brief Get reference to job structure
+   */
+  Job& getJob()
+  {
+    return fJob;
+  }
+
+  /**
    * @brief Load job information
    * @param fileName   Name of Job XML file to be read
    * @param bTempFile  Are we creating a temporary Job XML File that will be

@@ -659,6 +659,17 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   const ROPair tableRID(const TableName& tableName, int lower_case_table_names = 0);
 
+  /** return the OID of the table's AUX column
+   *
+   * returns the OID of the table's AUX column
+   */
+  OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
+
+  /** returns the table OID if the input OID is the AUX
+   *  column OID of the table.
+   */
+  CalpontSystemCatalog::OID isAUXColumnOID(const OID& oid);
+
   /** return the RID of the index for a table
    *
    * returns the RID of the indexes for a table
@@ -863,6 +874,14 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   typedef std::map<TableName, RID> Tablemap;
   Tablemap fTablemap;
 
+  typedef std::map<TableName, OID> TableOIDmap;
+  TableOIDmap fTableAUXColumnOIDMap;
+  boost::mutex fTableAUXColumnOIDMapLock;
+
+  typedef std::map<OID, OID> AUXColumnOIDTableOIDmap;
+  AUXColumnOIDTableOIDmap fAUXColumnOIDToTableOIDMap;
+  boost::mutex fAUXColumnOIDToTableOIDMapLock;
+
   typedef std::map<OID, ColType> Colinfomap;
   Colinfomap fColinfomap;
   boost::mutex fColinfomapLock;
@@ -907,6 +926,15 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   static uint32_t fModuleID;
 };
+
+// MCOL-5021
+const datatypes::SystemCatalog::ColDataType AUX_COL_DATATYPE = datatypes::SystemCatalog::UTINYINT;
+const int32_t AUX_COL_WIDTH = 1;
+// TODO MCOL-5021 compressionType is hardcoded to 2 (SNAPPY)
+const CalpontSystemCatalog::CompressionType AUX_COL_COMPRESSION_TYPE = CalpontSystemCatalog::COMPRESSION2;
+const std::string AUX_COL_DATATYPE_STRING = "unsigned-tinyint";
+const uint64_t AUX_COL_MINVALUE = MIN_UTINYINT;
+const uint64_t AUX_COL_MAXVALUE = MAX_UTINYINT;
 
 /** convenience function to make a TableColName from 3 strings
  */
@@ -1159,6 +1187,7 @@ const std::string MINVALUE_COL = "minvalue";
 const std::string MAXVALUE_COL = "maxvalue";
 const std::string COMPRESSIONTYPE_COL = "compressiontype";
 const std::string NEXTVALUE_COL = "nextvalue";
+const std::string AUXCOLUMNOID_COL = "auxcolumnoid";
 
 /*****************************************************
  * System tables OID definition
@@ -1182,7 +1211,8 @@ const int OID_SYSTABLE_NUMOFROWS = SYSTABLE_BASE + 8;      /** @brief total num 
 const int OID_SYSTABLE_AVGROWLEN = SYSTABLE_BASE + 9;      /** @brief avg. row length column */
 const int OID_SYSTABLE_NUMOFBLOCKS = SYSTABLE_BASE + 10;   /** @brief num. of blocks column */
 const int OID_SYSTABLE_AUTOINCREMENT = SYSTABLE_BASE + 11; /** @brief AUTOINCREMENT column */
-const int SYSTABLE_MAX = SYSTABLE_BASE + 12;               // be sure this is one more than the highest #
+const int OID_SYSTABLE_AUXCOLUMNOID = SYSTABLE_BASE + 12;  /** @brief AUXCOLUMNOID column */
+const int SYSTABLE_MAX = SYSTABLE_BASE + 13;               // be sure this is one more than the highest #
 
 /*****************************************************
  * SYSCOLUMN columns OID definition

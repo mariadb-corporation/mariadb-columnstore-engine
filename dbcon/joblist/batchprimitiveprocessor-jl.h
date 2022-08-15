@@ -115,7 +115,9 @@ class BatchPrimitiveProcessorJL
     threadCount = tc;
   }
 
-  void addFilterStep(const pColScanStep&, std::vector<BRM::LBID_t> lastScannedLBID);
+  void addFilterStep(const pColScanStep&, std::vector<BRM::LBID_t> lastScannedLBID,
+                     bool hasAuxCol, const std::vector<BRM::EMEntry>& extentsAux,
+                     execplan::CalpontSystemCatalog::OID oidAux);
   void addFilterStep(const PseudoColStep&);
   void addFilterStep(const pColStep&);
   void addFilterStep(const pDictionaryStep&);

@@ -254,7 +254,8 @@ class WriteEngineWrapper : public WEObj
    */
   EXPORT int deleteRow(const TxnID& txnid, const std::vector<CSCTypesList>& colExtentsColType,
                        std::vector<ColStructList>& colExtentsStruct, std::vector<void*>& colOldValueList,
-                       std::vector<RIDList>& ridLists, const int32_t tableOid);
+                       std::vector<RIDList>& ridLists, const int32_t tableOid,
+                       bool hasAUXCol = false);
 
   /**
    * @brief Delete a list of rows from a table
@@ -564,7 +565,8 @@ class WriteEngineWrapper : public WEObj
                              std::vector<ColStructList>& colExtentsStruct, ColValueList& colValueList,
                              std::vector<void*>& colOldValueList, std::vector<RIDList>& ridLists,
                              std::vector<DctnryStructList>& dctnryExtentsStruct,
-                             DctnryValueList& dctnryValueList, const int32_t tableOid);
+                             DctnryValueList& dctnryValueList, const int32_t tableOid,
+                             bool hasAUXCol = false);
 
   /**
    * @brief Update values into columns
@@ -720,7 +722,8 @@ class WriteEngineWrapper : public WEObj
                            const ColStructList& colStructList, const ColValueList& colValueList,
                            std::vector<void*>& colOldValueList, const RIDList& ridList,
                            const int32_t tableOid, bool convertStructFlag = true,
-                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL);
+                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL,
+                           bool hasAUXCol = false);
 
   // For update column from column to use
   int writeColumnRecords(const TxnID& txnid, const CSCTypesList& cscColTypeList,

@@ -101,7 +101,8 @@ class WE_DMLCommandProc
   EXPORT uint8_t getWrittenLbids(messageqcpp::ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId);
   int validateColumnHWMs(execplan::CalpontSystemCatalog::RIDList& ridList,
                          boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr,
-                         const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage);
+                         const std::vector<DBRootExtentInfo>& segFileInfo, const char* stage,
+                         bool hasAuxCol);
 
  private:
   WriteEngineWrapper fWEWrapper;
@@ -125,6 +126,10 @@ class WE_DMLCommandProc
   uint8_t processBatchInsertHwmFlushChunks(uint32_t tableOID, int txnID,
                                            const std::vector<BRM::FileInfo>& files,
                                            const std::vector<BRM::OID_t>& oidsToFlush, std::string& err);
+
+  void processAuxCol(const std::vector<std::string>& origVals,
+                     WriteEngine::ColValueList& colValuesList,
+                     WriteEngine::DictStrList& dicStringList);
 
   bool fIsFirstBatchPm;
   std::map<uint32_t, rowgroup::RowGroup*> rowGroups;

@@ -252,10 +252,11 @@ int ChunkManager::removeBackups(TxnID txnId)
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* ChunkManager::getFilePtr(const Column& column, uint16_t root, uint32_t partition,
                                       uint16_t segment, string& filename, const char* mode, int size,
-                                      bool useTmpSuffix) const
+                                      bool useTmpSuffix, bool isReadOnly) const
 {
   CompFileData* fileData = getFileData(column.dataFile.fid, root, partition, segment, filename, mode, size,
-                                       column.colDataType, column.colWidth, useTmpSuffix);
+                                       column.colDataType, column.colWidth, useTmpSuffix,
+                                       false, isReadOnly);
   return (fileData ? fileData->fFilePtr : NULL);
 }
 
@@ -271,7 +272,8 @@ IDBDataFile* ChunkManager::getFilePtr(const Column& column, uint16_t root, uint3
 //------------------------------------------------------------------------------
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* ChunkManager::getFilePtr(const FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
-                                      string& filename, const char* mode, int size, bool useTmpSuffix) const
+                                      string& filename, const char* mode, int size,
+                                      bool useTmpSuffix) const
 {
   CompFileData* fileData =
       getFileData(fid, root, partition, segment, filename, mode, size, CalpontSystemCatalog::VARCHAR, 8,
@@ -312,7 +314,8 @@ IDBDataFile* ChunkManager::getFilePtrByName(const std::string& filename, FID& fi
 CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t partition, uint16_t segment,
                                         string& filename, const char* mode, int size,
                                         const CalpontSystemCatalog::ColDataType colDataType, int colWidth,
-                                        bool useTmpSuffix, bool dctnry) const
+                                        bool useTmpSuffix, bool dctnry,
+                                        bool isReadOnly) const
 {
   FileID fileID(fid, root, partition, segment);
   map<FileID, CompFileData*>::const_iterator mit = fFileMap.find(fileID);
@@ -334,7 +337,7 @@ CompFileData* ChunkManager::getFileData(const FID& fid, uint16_t root, uint32_t 
 
   // Initialize the given `filename`.
   filename = name;
-  return getFileData_(fileID, filename, mode, size, colDataType, colWidth, useTmpSuffix, dctnry);
+  return getFileData_(fileID, filename, mode, size, colDataType, colWidth, useTmpSuffix, dctnry, isReadOnly);
 }
 
 CompFileData* ChunkManager::getFileDataByName(const std::string& filename, const FID& fid, uint16_t root,
@@ -358,9 +361,9 @@ CompFileData* ChunkManager::getFileDataByName(const std::string& filename, const
 
 CompFileData* ChunkManager::getFileData_(const FileID& fileID, const string& filename, const char* mode,
                                          int size, const CalpontSystemCatalog::ColDataType colDataType,
-                                         int colWidth, bool useTmpSuffix, bool dctnry) const
+                                         int colWidth, bool useTmpSuffix, bool dctnry, bool isReadOnly) const
 {
-  CompFileData* fileData = new CompFileData(fileID, fileID.fFid, colDataType, colWidth);
+  CompFileData* fileData = new CompFileData(fileID, fileID.fFid, colDataType, colWidth, isReadOnly);
   fileData->fFileName = filename;
 
   if (openFile(fileData, mode, colWidth, useTmpSuffix, __LINE__) != NO_ERROR)
@@ -370,13 +373,6 @@ CompFileData* ChunkManager::getFileData_(const FileID& fileID, const string& fil
     return NULL;
   }
 
-  fileData->fIoBuffer.reset(new char[size]);
-  fileData->fIoBSize = size;
-  // TODO-There is no current way to make this setvbuf call as IDBDataFile only
-  // accepts the USE_VBUF at construction time and then uses a buffer that it manages
-  // Can either propagate an option through the openFile() call above and let
-  // IDBDataFile manage it internally or expose a new setBuffer() option.
-  //  setvbuf(fileData->fFilePtr, fileData->fIoBuffer.get(), _IOFBF, size);
   fileData->fDctnryCol = dctnry;
   WE_COMP_DBG(cout << "open file* " << name << endl;)
 
@@ -450,10 +446,6 @@ IDBDataFile* ChunkManager::createDctnryFile(const FID& fid, int64_t width, uint1
     return NULL;
   }
 
-  fileData->fIoBuffer.reset(new char[size]);
-  fileData->fIoBSize = size;
-  //  see TODO- comment above
-  //  setvbuf(fileData->fFilePtr, fileData->fIoBuffer.get(), _IOFBF, size);
   fileData->fDctnryCol = true;
   WE_COMP_DBG(cout << "create file* " << filename << endl;)
   int hdrSize = calculateHeaderSize(width);
@@ -649,7 +641,7 @@ int ChunkManager::flushChunks(int rc, const std::map<FID, FID>& columOids)
         break;
 
       // finally update the header
-      if ((rc = writeHeader(fileData, __LINE__)) != NO_ERROR)
+      if (!fileData->fReadOnly && (rc = writeHeader(fileData, __LINE__)) != NO_ERROR)
         break;
 
       //@Bug 4977 remove log file
@@ -734,7 +726,7 @@ int ChunkManager::fetchChunkFromFile(IDBDataFile* pFile, int64_t id, ChunkData*&
         return rc;
       }
 
-      if ((rc = writeHeader(fIt->second, __LINE__)) != NO_ERROR)
+      if (!fIt->second->fReadOnly && (rc = writeHeader(fIt->second, __LINE__)) != NO_ERROR)
       {
         // logged by writeHeader
         return rc;
@@ -1138,6 +1130,7 @@ int ChunkManager::openFile(CompFileData* fileData, const char* mode, int colWidt
 {
   int rc = NO_ERROR;
   unsigned opts = IDBDataFile::USE_VBUF;
+  IDBPolicy::Contexts ctxt = IDBPolicy::WRITEENG;
 
   if (fIsHdfs)
   {
@@ -1162,7 +1155,7 @@ int ChunkManager::openFile(CompFileData* fileData, const char* mode, int colWidt
     }
   }
 
-  fileData->fFilePtr = IDBDataFile::open(IDBPolicy::getType(fileData->fFileName.c_str(), IDBPolicy::WRITEENG),
+  fileData->fFilePtr = IDBDataFile::open(IDBPolicy::getType(fileData->fFileName.c_str(), ctxt),
                                          fileData->fFileName.c_str(), mode, opts, colWidth);
 
   if (fileData->fFilePtr == NULL)
@@ -2064,8 +2057,6 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
     if ((rc == NO_ERROR) && (rc = openFile(fileData, "r+b", fileData->fColWidth, true, __LINE__)) ==
                                 NO_ERROR)  // @bug 5572 HDFS tmp file
     {
-      //          see TODO- above regarding setvbuf
-      //          setvbuf(fileData->fFilePtr, fileData->fIoBuffer.get(), _IOFBF, fileData->fIoBSize);
       fileSize = fileData->fFilePtr->size();
 
       if (fileSize == ptrs[k])

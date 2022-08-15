@@ -43,7 +43,11 @@ using namespace messageqcpp;
 
 namespace joblist
 {
-ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID)
+ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID,
+                                 bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_,
+                                 execplan::CalpontSystemCatalog::OID oidAux) :
+                                extentsAux(extentsAux_), hasAuxCol(hasAuxCol_),
+                                fOidAux(oidAux)
 {
   BRM::DBRM dbrm;
   isScan = true;
@@ -88,6 +92,7 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
   BRM::DBRM dbrm;
 
   isScan = false;
+  hasAuxCol = false;
 
   /* grab necessary vars from step */
   traceFlags = step.fTraceFlags;
@@ -160,6 +165,8 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
     BOP = prevCmd.BOP;
   }
   isScan = prevCmd.isScan;
+  hasAuxCol = prevCmd.hasAuxCol;
+  extentsAux = prevCmd.extentsAux;
   colType = prevCmd.colType;
   extents = prevCmd.extents;
   OID = prevCmd.OID;
@@ -210,6 +217,10 @@ void ColumnCommandJL::createCommand(ByteStream& bs) const
     bs << BOP;
     bs << filterCount;
   }
+  if (hasAuxCol)
+    bs << (uint8_t)1;
+  else
+    bs << (uint8_t)0;
   serializeInlineVector(bs, fLastLbid);
 
   CommandJL::createCommand(bs);
@@ -218,6 +229,9 @@ void ColumnCommandJL::createCommand(ByteStream& bs) const
 void ColumnCommandJL::runCommand(ByteStream& bs) const
 {
   bs << lbid;
+
+  if (hasAuxCol)
+    bs << lbidAux;
 }
 
 void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
@@ -247,11 +261,31 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
           "; blockNum = " << blockNum << "; OID=" << OID << " LBID=" << lbid;
       cout << os.str() << endl;
       */
-      return;
+      break;
     }
   }
 
-  throw logic_error("ColumnCommandJL: setLBID didn't find the extent for the rid.");
+  if (i == extents.size())
+  {
+    throw logic_error("ColumnCommandJL: setLBID didn't find the extent for the rid.");
+  }
+
+  uint32_t j;
+
+  for (j = 0; j < extentsAux.size(); j++)
+  {
+    if (extentsAux[j].dbRoot == dbRoot && extentsAux[j].partitionNum == partNum &&
+        extentsAux[j].segmentNum == segNum && extentsAux[j].blockOffset == (extentNum * 1 * 1024))
+    {
+      lbidAux = extentsAux[j].range.start + (blockNum * 1);
+      break;
+    }
+  }
+
+  if (hasAuxCol && j == extentsAux.size())
+  {
+    throw logic_error("ColumnCommandJL: setLBID didn't find the extent for the rid.");
+  }
 
   //		ostringstream os;
   //		os << "CCJL: rid=" << rid << "; dbroot=" << dbRoot << "; partitionNum=" << partitionNum << ";
@@ -350,6 +384,20 @@ void ColumnCommandJL::reloadExtents()
   }
 
   sort(extents.begin(), extents.end(), BRM::ExtentSorter());
+
+  if (hasAuxCol)
+  {
+    err = dbrm.getExtents(fOidAux, extentsAux);
+
+    if (err)
+    {
+      ostringstream os;
+      os << "BRM lookup error. Could not get extents for Aux OID " << fOidAux;
+      throw runtime_error(os.str());
+    }
+
+    sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
+  }
 }
 
 bool ColumnCommandJL::getIsDict()

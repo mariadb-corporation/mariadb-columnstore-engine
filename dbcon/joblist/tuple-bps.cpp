@@ -501,6 +501,7 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo)
   fRunExecuted = false;
   fSwallowRows = false;
   smallOuterJoiner = -1;
+  hasAuxCol = false;
 
   // @1098 initialize scanFlags to be true
   scanFlags.assign(numExtents, true);
@@ -528,10 +529,65 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fTableOid = rhs.tableOid();
   extentSize = rhs.extentSize;
   lbidRanges = rhs.lbidRanges;
+  hasAuxCol = false;
+  execplan::CalpontSystemCatalog::TableName tableName;
+
+  if (fTableOid >= 3000)
+  {
+    try
+    {
+      tableName = jobInfo.csc->tableName(fTableOid);
+      fOidAux = jobInfo.csc->tableAUXColumnOID(tableName);
+    }
+    catch (logging::IDBExcept& ie)
+    {
+      std::ostringstream oss;
+
+      if (ie.errorCode() == logging::ERR_TABLE_NOT_IN_CATALOG)
+      {
+        oss << "Table " << tableName.toString();
+        oss << " does not exist in the system catalog.";
+      }
+      else
+      {
+        oss << "Error getting AUX column OID for table " << tableName.toString();
+        oss << " due to:  " << ie.what();
+      }
+
+      throw runtime_error(oss.str());
+    }
+    catch(std::exception& ex)
+    {
+      std::ostringstream oss;
+      oss << "Error getting AUX column OID for table " << tableName.toString();
+      oss << " due to:  " << ex.what();
+      throw runtime_error(oss.str());
+    }
+    catch(...)
+    {
+      std::ostringstream oss;
+      oss << "Error getting AUX column OID for table " << tableName.toString();
+      throw runtime_error(oss.str());
+    }    
+
+    if (fOidAux > 3000)
+    {
+      hasAuxCol = true;
+
+      if (dbrm.getExtents(fOidAux, extentsAux))
+        throw runtime_error("TupleBPS::TupleBPS BRM extent lookup failure (1)");
+
+      sort(extentsAux.begin(), extentsAux.end(), BRM::ExtentSorter());
+
+      tr1::unordered_map<int64_t, EMEntry>& refAux = extentsMap[fOidAux];
+
+      for (uint32_t z = 0; z < extentsAux.size(); z++)
+        refAux[extentsAux[z].range.start] = extentsAux[z];
+    }
+  }
 
   /* These lines are obsoleted by initExtentMarkers.  Need to remove & retest. */
   scannedExtents = rhs.extents;
-  extentsMap[fOid] = tr1::unordered_map<int64_t, EMEntry>();
   tr1::unordered_map<int64_t, EMEntry>& ref = extentsMap[fOid];
 
   for (uint32_t z = 0; z < rhs.extents.size(); z++)
@@ -650,6 +706,7 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fRunExecuted = false;
   isFilterFeeder = false;
   smallOuterJoiner = -1;
+  hasAuxCol = false;
 
   // @1098 initialize scanFlags to be true
   scanFlags.assign(numExtents, true);
@@ -719,6 +776,7 @@ TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo)
   scanFlags.assign(numExtents, true);
   runtimeCPFlags.assign(numExtents, true);
   bop = BOP_AND;
+  hasAuxCol = false;
 
   runRan = joinRan = false;
   fDelivery = false;
@@ -827,7 +885,7 @@ void TupleBPS::setBPP(JobStep* jobStep)
 
     if (pcss != 0)
     {
-      fBPP->addFilterStep(*pcss, lastScannedLBID);
+      fBPP->addFilterStep(*pcss, lastScannedLBID, hasAuxCol, extentsAux, fOidAux);
 
       extentsMap[pcss->fOid] = tr1::unordered_map<int64_t, EMEntry>();
       tr1::unordered_map<int64_t, EMEntry>& ref = extentsMap[pcss->fOid];
@@ -1310,6 +1368,18 @@ void TupleBPS::reloadExtentLists()
 
     for (j = 0; j < extents.size(); j++)
       mref[extents[j].range.start] = extents[j];
+
+    if (cc->auxCol())
+    {
+      const vector<EMEntry>& extentsAux = cc->getExtentsAux();
+      oid = cc->getOIDAux();
+
+      extentsMap[oid] = tr1::unordered_map<int64_t, struct BRM::EMEntry>();
+      tr1::unordered_map<int64_t, struct BRM::EMEntry>& mrefAux = extentsMap[oid];
+
+      for (j = 0; j < extentsAux.size(); j++)
+        mrefAux[extentsAux[j].range.start] = extentsAux[j];
+    }
   }
 
   for (i = 0; i < projections.size(); i++)

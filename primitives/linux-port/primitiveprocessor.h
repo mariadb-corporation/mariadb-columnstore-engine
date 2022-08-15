@@ -294,6 +294,10 @@ class PrimitiveProcessor
   {
     block = data;
   }
+  void setBlockPtrAux(int* data)
+  {
+    blockAux = data;
+  }
   void setPMStatsPtr(dbbc::Stats* p)
   {
     fStatsPtr = p;
@@ -444,6 +448,7 @@ class PrimitiveProcessor
   PrimitiveProcessor& operator=(const PrimitiveProcessor& rhs);
 
   int* block;
+  int* blockAux;
 
   bool compare(const datatypes::Charset& cs, uint8_t COP, const char* str1, size_t length1, const char* str2,
                size_t length2) throw();

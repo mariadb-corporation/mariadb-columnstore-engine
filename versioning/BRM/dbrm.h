@@ -620,6 +620,18 @@ class DBRM
    */
   EXPORT int getUncommittedExtentLBIDs(VER_t transID, std::vector<LBID_t>& lbidList) throw();
 
+  // MCOL-5021
+  /** @brief Adds LBIDs to an existing list of LBIDs retrieved via call
+   *  to getUncommittedExtentLBIDs().
+   *
+   * This function iterates over lbidList to find those LBIDs which belong to
+   * the AUX column. It then finds the corresponding LBIDs for all other columns
+   * which belong to the same table as the AUX LBID and appends them to lbidList.
+   * The updated lbidList is used by invalidateUncommittedExtentLBIDs().
+   * @param lbidList (in and out) This contains the ranges of LBIDs
+   */
+  EXPORT void addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList);
+
   /** @brief Atomically prepare to copy data to the version buffer
    *
    * Atomically sets the copy flag on the specified LBID ranges

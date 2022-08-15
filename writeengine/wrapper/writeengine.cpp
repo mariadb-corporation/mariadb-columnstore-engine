@@ -997,7 +997,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
 
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
-                                  vector<RIDList>& ridLists, const int32_t tableOid)
+                                  vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol)
 {
   ColTuple curTuple;
   ColStruct curColStruct;
@@ -1065,7 +1065,7 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
   // unfortunately I don't have a better way to instruct without passing too many parameters
   m_opType = DELETE;
   rc = updateColumnRec(txnid, colExtentsColType, colExtentsStruct, colValueList, colOldValueList, ridLists,
-                       dctnryExtentsStruct, dctnryValueList, tableOid);
+                       dctnryExtentsStruct, dctnryValueList, tableOid, hasAUXCol);
   m_opType = NOOP;
 
   return rc;
@@ -4487,7 +4487,8 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
                                         vector<ColStructList>& colExtentsStruct, ColValueList& colValueList,
                                         vector<void*>& colOldValueList, vector<RIDList>& ridLists,
                                         vector<DctnryStructList>& dctnryExtentsStruct,
-                                        DctnryValueList& dctnryValueList, const int32_t tableOid)
+                                        DctnryValueList& dctnryValueList, const int32_t tableOid,
+                                        bool hasAUXCol)
 {
   int rc = 0;
   unsigned numExtents = colExtentsStruct.size();
@@ -4600,9 +4601,38 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
     // timer.start("markExtentsInvalid");
     //#endif
 
-    rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
-                              ridLists[extent], tableOid, true, ridLists[extent].size(),
-                              &currentExtentRangesPtrs);
+    bool hasFastDelete = false;
+
+    if (m_opType == DELETE && hasAUXCol)
+    {
+      hasFastDelete = Config::getFastDelete();
+    }
+
+    if (hasFastDelete)
+    {
+      ColStructList colStructListAUX(1, colStructList.back());
+      WriteEngine::CSCTypesList cscColTypeListAUX(1, cscColTypeList.back());
+      ColValueList colValueListAUX(1, colValueList.back());
+      std::vector<ExtCPInfo*> currentExtentRangesPtrsAUX(1, currentExtentRangesPtrs.back());
+
+      rc = writeColumnRecUpdate(txnid, cscColTypeListAUX, colStructListAUX, colValueListAUX, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrsAUX, hasAUXCol);
+
+      for (auto& cpInfoPtr : currentExtentRangesPtrs)
+      {
+        if (cpInfoPtr)
+        {
+          cpInfoPtr->toInvalid();
+        }
+      }
+    }
+    else
+    {
+      rc = writeColumnRecUpdate(txnid, cscColTypeList, colStructList, colValueList, colOldValueList,
+                                ridLists[extent], tableOid, true, ridLists[extent].size(),
+                                &currentExtentRangesPtrs, hasAUXCol);
+    }
 
     if (rc != NO_ERROR)
       break;
@@ -5704,7 +5734,8 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
                                              const ColValueList& colValueList, vector<void*>& colOldValueList,
                                              const RIDList& ridList, const int32_t tableOid,
                                              bool convertStructFlag, ColTupleList::size_type nRows,
-                                             std::vector<ExtCPInfo*>* cpInfos)
+                                             std::vector<ExtCPInfo*>* cpInfos,
+                                             bool hasAUXCol)
 {
   bool bExcp;
   int rc = 0;
@@ -5730,7 +5761,8 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
   std::vector<VBRange> freeList;
   vector<vector<uint32_t> > fboLists;
   vector<vector<LBIDRange> > rangeLists;
-  rc = processBeginVBCopy(txnid, colStructList, ridList, freeList, fboLists, rangeLists, rangeListTot);
+  rc = processBeginVBCopy(txnid, ((m_opType == DELETE && hasAUXCol) ? ColStructList(1, colStructList.back()) : colStructList),
+                          ridList, freeList, fboLists, rangeLists, rangeListTot);
 
   if (rc != NO_ERROR)
   {
@@ -5800,7 +5832,9 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
     }
 
     string segFile;
-    rc = colOp->openColumnFile(curCol, segFile, true, IO_BUFF_SIZE);  // @bug 5572 HDFS tmp file
+    bool isReadOnly = (m_opType == DELETE && hasAUXCol && (i != colStructList.size() - 1));
+
+    rc = colOp->openColumnFile(curCol, segFile, true, IO_BUFF_SIZE, isReadOnly);  // @bug 5572 HDFS tmp file
 
     if (rc != NO_ERROR)
       break;
@@ -5811,7 +5845,6 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
       aFile.oid = curColStruct.dataOid;
       aFile.partitionNum = curColStruct.fColPartition;
       aFile.dbRoot = curColStruct.fColDbRoot;
-      ;
       aFile.segmentNum = curColStruct.fColSegment;
       aFile.compType = curColStruct.fCompressionType;
       files.push_back(aFile);
@@ -5823,13 +5856,19 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 
     if (!idbdatafile::IDBPolicy::useHdfs())
     {
-      if (rangeListTot.size() > 0)
+      if (rangeListTot.size() > 0 &&
+          (m_opType != DELETE || !hasAUXCol || (i == colStructList.size() - 1)))
       {
-        if (freeList[0].size >= (blocksProcessed + rangeLists[i].size()))
+        ColStructList::size_type j = i;
+
+        if (m_opType == DELETE && hasAUXCol && (i == colStructList.size() - 1))
+          j = 0;
+
+        if (freeList[0].size >= (blocksProcessed + rangeLists[j].size()))
         {
           aRange.vbOID = freeList[0].vbOID;
           aRange.vbFBO = freeList[0].vbFBO + blocksProcessed;
-          aRange.size = rangeLists[i].size();
+          aRange.size = rangeLists[j].size();
           curFreeList.push_back(aRange);
         }
         else
@@ -5844,7 +5883,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
           {
             aRange.vbOID = freeList[1].vbOID;
             aRange.vbFBO = freeList[1].vbFBO + blocksProcessedThisOid;
-            aRange.size = rangeLists[i].size() - blockUsed;
+            aRange.size = rangeLists[j].size() - blockUsed;
             curFreeList.push_back(aRange);
             blocksProcessedThisOid += aRange.size;
           }
@@ -5855,10 +5894,10 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
           }
         }
 
-        blocksProcessed += rangeLists[i].size();
+        blocksProcessed += rangeLists[j].size();
 
         rc = BRMWrapper::getInstance()->writeVB(curCol.dataFile.pFile, (BRM::VER_t)txnid,
-                                                curColStruct.dataOid, fboLists[i], rangeLists[i], colOp,
+                                                curColStruct.dataOid, fboLists[j], rangeLists[j], colOp,
                                                 curFreeList, curColStruct.fColDbRoot, true);
       }
     }
@@ -5923,7 +5962,10 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 #ifdef PROFILE
       timer.start("writeRows ");
 #endif
-      rc = colOp->writeRows(curCol, totalRow, ridList, valArray, oldValArray, true);
+      if (!isReadOnly)
+        rc = colOp->writeRows(curCol, totalRow, ridList, valArray, oldValArray, true);
+      else
+        rc = colOp->writeRowsReadOnly(curCol, totalRow, ridList, oldValArray);
 #ifdef PROFILE
       timer.stop("writeRows ");
 #endif
@@ -5931,10 +5973,9 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 
     updateMaxMinRange(1, totalRow, cscColTypeList[i], curColStruct.colType,
                       m_opType == DELETE ? NULL : valArray, oldValArray, cpInfo, false);
-    // timer.start("Delete:closefile");
-    colOp->clearColumn(curCol);
 
-    // timer.stop("Delete:closefile");
+    colOp->clearColumn(curCol, !isReadOnly);
+
     if (valArray != NULL)
     {
       free(valArray);
@@ -5953,18 +5994,16 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 
   }  // end of for (i = 0)
 
-  // timer.start("Delete:purgePrimProcFdCache");
   if ((idbdatafile::IDBPolicy::useHdfs()) && (files.size() > 0))
     cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
 
-  // timer.stop("Delete:purgePrimProcFdCache");
   if (rangeListTot.size() > 0)
     BRMWrapper::getInstance()->writeVBEnd(txnid, rangeListTot);
 
   // timer.stop("Delete:writecolrec");
-  //#ifdef PROFILE
-  // timer.finish();
-  //#endif
+#ifdef PROFILE
+  timer.finish();
+#endif
   return rc;
 }
 

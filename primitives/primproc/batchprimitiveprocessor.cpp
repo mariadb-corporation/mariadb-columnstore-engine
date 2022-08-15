@@ -147,6 +147,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor()
 {
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
+  pp.setBlockPtrAux((int*)blockDataAux);
   pthread_mutex_init(&objLock, NULL);
 }
 
@@ -206,6 +207,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
 
   pp.setLogicalBlockMode(true);
   pp.setBlockPtr((int*)blockData);
+  pp.setBlockPtrAux((int*)blockDataAux);
   sendThread = bppst;
   pthread_mutex_init(&objLock, NULL);
   initBPP(b);
@@ -600,8 +602,8 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w, con
 
   /* init vars not part of the BS */
   currentBlockOffset = 0;
-  memset(relLBID.get(), 0, sizeof(uint64_t) * (projectCount + 1));
-  memset(asyncLoaded.get(), 0, sizeof(bool) * (projectCount + 1));
+  memset(relLBID.get(), 0, sizeof(uint64_t) * (projectCount + 2));
+  memset(asyncLoaded.get(), 0, sizeof(bool) * (projectCount + 2));
 
   buildVSSCache(count);
 #ifdef __FreeBSD__
@@ -1156,9 +1158,11 @@ void BatchPrimitiveProcessor::initProcessor()
   }
 
   // @bug 1269, initialize data used by execute() for async loading blocks
-  // +1 for the scan filter step with no predicate, if any
-  relLBID.reset(new uint64_t[projectCount + 1]);
-  asyncLoaded.reset(new bool[projectCount + 1]);
+  // +2 for:
+  //    1. the scan filter step with no predicate, if any
+  //    2. AUX column
+  relLBID.reset(new uint64_t[projectCount + 2]);
+  asyncLoaded.reset(new bool[projectCount + 2]);
 }
 
 /* This version does a join on projected rows */
@@ -1466,6 +1470,19 @@ void BatchPrimitiveProcessor::execute()
           loadBlockAsync(col->getLBID(), versionInfo, txnID, col->getCompType(), &cachedIO, &physIO,
                          LBIDTrace, sessionID, &counterLock, &busyLoaderCount, sendThread, &vssCache);
           asyncLoaded[p] = true;
+        }
+
+        if (col->hasAuxCol())
+        {
+          asyncLoaded[p + 1] = asyncLoaded[p + 1] && (relLBID[p + 1] % blocksReadAhead != 0);
+          relLBID[p + 1] += 1;
+
+          if (!asyncLoaded[p + 1])
+          {
+            loadBlockAsync(col->getLBIDAux(), versionInfo, txnID, 2, &cachedIO, &physIO,
+                           LBIDTrace, sessionID, &counterLock, &busyLoaderCount, sendThread, &vssCache);
+            asyncLoaded[p + 1] = true;
+          }
         }
 
         asyncLoadProjectColumns();

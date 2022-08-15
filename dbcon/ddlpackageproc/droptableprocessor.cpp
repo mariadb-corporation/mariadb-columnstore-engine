@@ -89,6 +89,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   CalpontSystemCatalog::RIDList tableColRidList;
   CalpontSystemCatalog::DictOIDList dictOIDList;
   execplan::CalpontSystemCatalog::ROPair roPair;
+  CalpontSystemCatalog::OID tableAUXColOid;
   std::string errorMsg;
   ByteStream bytestream;
   uint64_t uniqueId = 0;
@@ -145,6 +146,15 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     try
     {
       roPair = systemCatalogPtr->tableRID(tableName);
+
+      if (tableName.schema.compare(execplan::CALPONT_SCHEMA) == 0)
+      {
+        tableAUXColOid = 0;
+      }
+      else
+      {
+        tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(tableName);
+      }
     }
     catch (IDBExcept& ie)
     {
@@ -580,6 +590,18 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     return result;
   }
 
+  // MCOL-5021 Valid AUX column OID for a table is > 3000
+  // Tables that were created before this feature was added will have
+  // tableAUXColOid = 0
+  if (tableAUXColOid > 3000)
+  {
+    oidList.push_back(tableAUXColOid);
+    CalpontSystemCatalog::ROPair auxRoPair;
+    auxRoPair.rid = 0;
+    auxRoPair.objnum = tableAUXColOid;
+    tableColRidList.push_back(auxRoPair);
+  }
+
   // Save the oids to a file
   try
   {
@@ -765,6 +787,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
   std::vector<CalpontSystemCatalog::OID> columnOidList;
   std::vector<CalpontSystemCatalog::OID> allOidList;
+  CalpontSystemCatalog::OID tableAuxColOid;
   CalpontSystemCatalog::RIDList tableColRidList;
   CalpontSystemCatalog::DictOIDList dictOIDList;
   execplan::CalpontSystemCatalog::ROPair roPair;
@@ -905,6 +928,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     userTableName.table = truncTableStmt.fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
+    tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
 
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
 
@@ -915,6 +939,12 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
         columnOidList.push_back(tableColRidList[i].objnum);
         allOidList.push_back(tableColRidList[i].objnum);
       }
+    }
+
+    if (tableAuxColOid > 3000)
+    {
+      columnOidList.push_back(tableAuxColOid);
+      allOidList.push_back(tableAuxColOid);
     }
 
     for (unsigned i = 0; i < dictOIDList.size(); i++)
