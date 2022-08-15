@@ -2651,6 +2651,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         SimpleColumn* sc = new SimpleColumn();
         CalpontSystemCatalog::TableColName tcn = gwi.csc->colName(oidlist[j].objnum);
         CalpontSystemCatalog::ColType ct = gwi.csc->colType(oidlist[j].objnum);
+	idblog("building simple column, ct's default value is " << ct.defaultValue.safeString());
         sc->columnName(tcn.column);
         sc->tableName(tcn.table, lower_case_table_names);
         sc->schemaName(tcn.schema, lower_case_table_names);
