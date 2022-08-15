@@ -6324,7 +6324,7 @@ void CalpontSystemCatalog::checkSysCatVer()
 
 CalpontSystemCatalog::ColType::ColType()
  : constraintType(NO_CONSTRAINT)
- , defaultValue("")
+ //, defaultValue("") // should be NULL, not an empty string.
  , colPosition(-1)
  , compressionType(NO_COMPRESSION)
  , columnOID(0)
