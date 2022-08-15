@@ -44,7 +44,7 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
                        'expect createrepo ';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version +'-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
@@ -394,6 +394,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
+               DH_BUILD_DDEBS: '1',
                BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
                AWS_ACCESS_KEY_ID: {
                  from_secret: 'aws_access_key_id',
@@ -409,7 +410,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
              },
              commands: [
                'cd /mdb/' + builddir,
-               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
+               'mkdir ' + result,
+               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh | tee " + result + '/build.log',
                if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
                // Remove Debian build flags that could prevent ColumnStore from building
                "sed -i '/-DPLUGIN_COLUMNSTORE=NO/d' debian/rules",
@@ -430,7 +432,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
                if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
                platformMap(platform, arch),
                'sccache --show-stats',
-               'mkdir ' + result,
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
              ],
