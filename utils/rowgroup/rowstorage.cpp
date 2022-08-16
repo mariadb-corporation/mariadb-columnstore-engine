@@ -152,12 +152,15 @@ namespace rowgroup
 {
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
 {
-  uint64_t ret = 0;
+  uint64_t ret = 0xe17a1465ULL;
   if (lastCol >= r.getColumnCount())
     return 0;
 
   datatypes::MariaDBHasher h;
+  utils::Hasher64_r columnHasher;
+
   bool strHashUsed = false;
+
   for (uint32_t i = 0; i <= lastCol; ++i)
   {
     switch (r.getColType(i))
@@ -167,34 +170,44 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
       case execplan::CalpontSystemCatalog::BLOB:
       case execplan::CalpontSystemCatalog::TEXT:
       {
+        auto cs = r.getCharset(i);
         auto strColValue = r.getConstString(i);
-        if (strColValue.length() > MaxConstStrSize)
+        auto strColValueLen = strColValue.length();
+        if (strColValueLen > MaxConstStrSize || strColValueLen <= 2)
         {
-          h.add(r.getCharset(i), strColValue);
+          h.add(cs, strColValue);
           strHashUsed = true;
         }
         else
         {
-          auto cs = r.getCharset(i);
-          uchar buf[MaxConstStrBufSize];
-          uint nActualWeights = cs->strnxfrm(buf, MaxConstStrBufSize, MaxConstStrBufSize,
-            reinterpret_cast<const uchar*>(strColValue.str()), strColValue.length(),
-            datatypes::Charset::getDefaultFlags());
-          ret = hashData(buf, nActualWeights, ret);
+          // This is rselatively big stack allocation.
+          // It is aligned for future vectorization of hash calculation.
+          uchar buf[MaxConstStrBufSize] __attribute__((aligned(64)));
+          // Pay attention to the last strxfrm argument value.
+          // It is called flags and in many cases it has padding
+          // enabled(MY_STRXFRM_PAD_WITH_SPACE bit). With padding enabled
+          // strxfrm returns MaxConstStrBufSize bytes and not the actual
+          // weights array length. Here I disable padding.
+          auto charset = datatypes::Charset(cs);
+          size_t nActualWeights =
+              charset.strnxfrm(buf, MaxConstStrBufSize, MaxConstStrBufSize,
+                               reinterpret_cast<const uchar*>(strColValue.str()), strColValue.length(), 0);
+          ret = columnHasher(reinterpret_cast<const void*>(buf), nActualWeights, ret);
         }
         break;
       }
-      default: ret = hashData(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
+      default: ret = columnHasher(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
     }
   }
 
+  // The properties of the hash produced are worse if MDB hasher results are incorporated
+  // so late but these results must be used very infrequently.
   if (strHashUsed)
   {
     uint64_t strhash = h.finalize();
-    ret = hashData(&strhash, sizeof(strhash), ret);
+    ret = columnHasher(&strhash, sizeof(strhash), ret);
   }
-
-  return ret;
+  return columnHasher.finalize(ret, lastCol << 2);
 }
 
 /** @brief NoOP interface to LRU-cache used by RowGroupStorage & HashStorage
