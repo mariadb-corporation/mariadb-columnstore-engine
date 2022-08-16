@@ -128,7 +128,7 @@ moda(dbl)
 12345678.91011
 SELECT moda(v) FROM t2;
 moda(v)
-four
+five
 SELECT moda(vc) FROM t2;
 moda(vc)
 five123456
