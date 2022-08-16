@@ -64,6 +64,13 @@ class ConstString
     }
     return *this;
   }
+  ConstString& rtrimSpaces()
+  {
+    for (; mLength && mStr[mLength - 1] == ' '; --mLength)
+    {
+    }
+    return *this;
+  }
 };
 
 }  // namespace utils
