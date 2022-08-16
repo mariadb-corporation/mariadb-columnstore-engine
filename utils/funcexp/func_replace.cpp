@@ -71,6 +71,8 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 
   size_t toLen = tostr.length();
 
+  size_t lensDiff = toLen < fromLen ? toLen : toLen - fromLen;
+
   bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
   string newstr;
   size_t pos = 0;
