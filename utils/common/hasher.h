@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <stdint.h>
 #include <string.h>
+#include <string>
 #include "mcs_basic_types.h"
 
 namespace utils
@@ -201,6 +203,81 @@ class Hasher_r
     seed = fmix(seed);
     return seed;
   }
+};
+
+// This stream hasher was borrowed from RobinHood
+class Hasher64_r
+{
+ public:
+  inline uint64_t operator()(const void* ptr, uint32_t len, uint64_t x = 0ULL)
+  {
+    auto const* const data64 = static_cast<uint64_t const*>(ptr);
+    uint64_t h = seed ^ (len * m);
+
+    std::size_t const n_blocks = len / 8;
+    if (x)
+    {
+      x *= m;
+      x ^= x >> r;
+      x *= m;
+      h ^= x;
+      h *= m;
+    }
+    for (std::size_t i = 0; i < n_blocks; ++i)
+    {
+      uint64_t k;
+      memcpy(&k, data64 + i, sizeof(k));
+
+      k *= m;
+      k ^= k >> r;
+      k *= m;
+
+      h ^= k;
+      h *= m;
+    }
+
+    auto const* const data8 = reinterpret_cast<uint8_t const*>(data64 + n_blocks);
+    switch (len & 7U)
+    {
+      case 7:
+        h ^= static_cast<uint64_t>(data8[6]) << 48U;
+        // FALLTHROUGH
+      case 6:
+        h ^= static_cast<uint64_t>(data8[5]) << 40U;
+        // FALLTHROUGH
+      case 5:
+        h ^= static_cast<uint64_t>(data8[4]) << 32U;
+        // FALLTHROUGH
+      case 4:
+        h ^= static_cast<uint64_t>(data8[3]) << 24U;
+        // FALLTHROUGH
+      case 3:
+        h ^= static_cast<uint64_t>(data8[2]) << 16U;
+        // FALLTHROUGH
+      case 2:
+        h ^= static_cast<uint64_t>(data8[1]) << 8U;
+        // FALLTHROUGH
+      case 1:
+        h ^= static_cast<uint64_t>(data8[0]);
+        h *= m;
+        // FALLTHROUGH
+      default: break;
+    }
+    return h;
+  }
+
+  inline uint64_t finalize(uint64_t h, uint64_t len) const
+  {
+    h ^= h >> r;
+    h *= m;
+    h ^= h >> r;
+    return h;
+  }
+
+ private:
+  static constexpr uint64_t m = 0xc6a4a7935bd1e995ULL;
+  static constexpr uint64_t seed = 0xe17a1465ULL;
+  static constexpr unsigned int r = 47;
 };
 
 class Hasher128
