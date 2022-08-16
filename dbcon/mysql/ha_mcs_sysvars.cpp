@@ -39,6 +39,8 @@ static MYSQL_THDVAR_ENUM(compression_type, PLUGIN_VAR_RQCMDARG,
                          "SNAPPY segment files are Snappy compressed (default);"
 #ifdef HAVE_LZ4
                          "LZ4 segment files are LZ4 compressed;",
+# else
+			 ,
 #endif
                          NULL,                              // check
                          NULL,                              // update

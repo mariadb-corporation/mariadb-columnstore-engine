@@ -27,8 +27,10 @@
 #ifndef UTILS_HASHER_H
 #define UTILS_HASHER_H
 
+#include <cstddef>
 #include <stdint.h>
 #include <string.h>
+#include <string>
 #include "mcs_basic_types.h"
 
 namespace utils
@@ -141,23 +143,24 @@ class Hasher
 class Hasher_r
 {
  public:
-  inline uint32_t operator()(const char* data, uint64_t len, uint32_t seed) const
+  using HashDataType = uint32_t;
+  inline uint32_t operator()(const char* data, uint32_t len, HashDataType seed) const
   {
     const int nblocks = len / 4;
 
-    uint32_t h1 = seed;
+    HashDataType h1 = seed;
 
-    const uint32_t c1 = 0xcc9e2d51;
-    const uint32_t c2 = 0x1b873593;
+    const HashDataType c1 = 0xcc9e2d51;
+    const HashDataType c2 = 0x1b873593;
 
     //----------
     // body
 
-    const uint32_t* blocks = (const uint32_t*)(data + nblocks * 4);
+    const HashDataType* blocks = (const HashDataType*)(data + nblocks * 4);
 
     for (int i = -nblocks; i; i++)
     {
-      uint32_t k1 = blocks[i];
+      HashDataType k1 = blocks[i];
 
       k1 *= c1;
       k1 = rotl32(k1, 15);
@@ -173,7 +176,7 @@ class Hasher_r
 
     const uint8_t* tail = (const uint8_t*)(data + nblocks * 4);
 
-    uint32_t k1 = 0;
+    HashDataType k1 = 0;
 
     switch (len & 3)
     {
@@ -196,12 +199,88 @@ class Hasher_r
     return h1;
   }
 
-  inline uint32_t finalize(uint32_t seed, uint32_t len) const
+  inline HashDataType finalize(HashDataType seed, uint32_t len) const
   {
     seed ^= len;
     seed = fmix(seed);
     return seed;
   }
+};
+
+// This stream hasher was borrowed from RobinHood
+class Hasher64_r
+{
+ public:
+  using HashDataType = uint64_t;
+  inline uint64_t operator()(const void* ptr, uint32_t len, HashDataType x = 0ULL) const
+  {
+    auto const* const data64 = static_cast<HashDataType const*>(ptr);
+    HashDataType h = seed ^ (len * m);
+
+    std::size_t const n_blocks = len / 8;
+    if (x)
+    {
+      x *= m;
+      x ^= x >> r;
+      x *= m;
+      h ^= x;
+      h *= m;
+    }
+    for (std::size_t i = 0; i < n_blocks; ++i)
+    {
+      HashDataType k;
+      memcpy(&k, data64 + i, sizeof(k));
+
+      k *= m;
+      k ^= k >> r;
+      k *= m;
+
+      h ^= k;
+      h *= m;
+    }
+
+    auto const* const data8 = reinterpret_cast<uint8_t const*>(data64 + n_blocks);
+    switch (len & 7U)
+    {
+      case 7:
+        h ^= static_cast<HashDataType>(data8[6]) << 48U;
+        // FALLTHROUGH
+      case 6:
+        h ^= static_cast<HashDataType>(data8[5]) << 40U;
+        // FALLTHROUGH
+      case 5:
+        h ^= static_cast<HashDataType>(data8[4]) << 32U;
+        // FALLTHROUGH
+      case 4:
+        h ^= static_cast<HashDataType>(data8[3]) << 24U;
+        // FALLTHROUGH
+      case 3:
+        h ^= static_cast<HashDataType>(data8[2]) << 16U;
+        // FALLTHROUGH
+      case 2:
+        h ^= static_cast<HashDataType>(data8[1]) << 8U;
+        // FALLTHROUGH
+      case 1:
+        h ^= static_cast<HashDataType>(data8[0]);
+        h *= m;
+        // FALLTHROUGH
+      default: break;
+    }
+    return h;
+  }
+
+  inline uint64_t finalize(HashDataType h, uint64_t len) const
+  {
+    h ^= h >> r;
+    h *= m;
+    h ^= h >> r;
+    return h;
+  }
+
+ private:
+  static constexpr HashDataType m = 0xc6a4a7935bd1e995ULL;
+  static constexpr HashDataType seed = 0xe17a1465ULL;
+  static constexpr unsigned int r = 47;
 };
 
 class Hasher128

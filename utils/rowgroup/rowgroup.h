@@ -578,10 +578,13 @@ class Row
 
   // these are for cases when you already know the type definitions are the same.
   // a fcn to check the type defs seperately doesn't exist yet.  No normalization.
+  template <typename H = utils::Hasher_r>
   inline uint64_t hash(uint32_t lastCol) const;  // generates a hash for cols [0-lastCol]
-  inline uint64_t hash() const;                  // generates a hash for all cols
-  inline void colUpdateHasher(datatypes::MariaDBHasher& hM, const utils::Hasher_r& h, const uint32_t col,
-                              uint32_t& intermediateHash) const;
+  template <typename H = utils::Hasher_r>
+  inline uint64_t hash() const;  // generates a hash for all cols
+  template <typename H>
+  inline void colUpdateHasher(datatypes::MariaDBHasher& hM, const H& h, const uint32_t col,
+                              typename H::HashDataType& intermediateHash) const;
   inline void colUpdateHasherTypeless(datatypes::MariaDBHasher& hasher, uint32_t keyColsIdx,
                                       const std::vector<uint32_t>& keyCols,
                                       const std::vector<uint32_t>* smallSideKeyColumnsIds,
@@ -909,8 +912,9 @@ inline utils::ConstString Row::getConstString(uint32_t colIndex) const
                                  : getShortConstString(colIndex);
 }
 
-inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM, const utils::Hasher_r& h, const uint32_t col,
-                                 uint32_t& intermediateHash) const
+template <typename H>
+inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM, const H& h, const uint32_t col,
+                                 typename H::HashDataType& intermediateHash) const
 {
   switch (getColType(col))
   {
@@ -1371,19 +1375,21 @@ inline void Row::setRid(uint64_t rid)
   *((uint16_t*)data) = rid & 0xffff;
 }
 
+template <typename H>
 inline uint64_t Row::hash() const
 {
-  return hash(columnCount - 1);
+  return hash<H>(columnCount - 1);
 }
 
+template <typename H>
 inline uint64_t Row::hash(uint32_t lastCol) const
 {
   // Use two hash classes. MariaDBHasher for text-based
   // collation-aware data types and Hasher_r for all other data types.
   // We deliver a hash that is a combination of both hashers' results.
-  utils::Hasher_r h;
+  H h;
   datatypes::MariaDBHasher hM;
-  uint32_t intermediateHash = 0;
+  typename H::HashDataType intermediateHash = 0;
 
   // Sometimes we ask this to hash 0 bytes, and it comes through looking like
   // lastCol = -1.  Return 0.
@@ -1393,7 +1399,7 @@ inline uint64_t Row::hash(uint32_t lastCol) const
   for (uint32_t i = 0; i <= lastCol; i++)
     colUpdateHasher(hM, h, i, intermediateHash);
 
-  return utils::HashFamily(h, intermediateHash, lastCol << 2, hM).finalize();
+  return utils::HashFamily<H>(h, intermediateHash, lastCol << 2, hM).finalize();
 }
 
 inline bool Row::equals(const Row& r2) const
@@ -1525,8 +1531,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
-  //convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL)
+  // const; void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 

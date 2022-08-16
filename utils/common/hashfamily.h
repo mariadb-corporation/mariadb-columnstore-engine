@@ -23,10 +23,11 @@
 
 namespace utils
 {
+template <typename H>
 class HashFamily
 {
  public:
-  HashFamily(const utils::Hasher_r& h, const uint64_t intermediateHash, const uint64_t len,
+  HashFamily(const H& h, const uint64_t intermediateHash, const uint64_t len,
              const datatypes::MariaDBHasher& hM)
    : mHasher(h), mMariaDBHasher(hM), mHasher_rHash(intermediateHash), mHasher_rLen(len)
   {
@@ -44,7 +45,7 @@ class HashFamily
   constexpr static uint64_t seed = 1009ULL;
   constexpr static uint64_t factor = 9176ULL;
 
-  const utils::Hasher_r& mHasher;
+  const H& mHasher;
   const datatypes::MariaDBHasher& mMariaDBHasher;
   const uint64_t mHasher_rHash;
   const uint32_t mHasher_rLen;

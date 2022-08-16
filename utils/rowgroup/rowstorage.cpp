@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
+#include "hasher.h"
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
@@ -79,122 +80,13 @@ std::string errorString(int errNo)
   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
   return {buf};
 }
-
-inline uint64_t hashData(const void* ptr, uint32_t len, uint64_t x = 0ULL)
-{
-  static constexpr uint64_t m = 0xc6a4a7935bd1e995ULL;
-  static constexpr uint64_t seed = 0xe17a1465ULL;
-  static constexpr unsigned int r = 47;
-
-  auto const* const data64 = static_cast<uint64_t const*>(ptr);
-  uint64_t h = seed ^ (len * m);
-
-  std::size_t const n_blocks = len / 8;
-  if (x)
-  {
-    x *= m;
-    x ^= x >> r;
-    x *= m;
-    h ^= x;
-    h *= m;
-  }
-  for (std::size_t i = 0; i < n_blocks; ++i)
-  {
-    uint64_t k;
-    memcpy(&k, data64 + i, sizeof(k));
-
-    k *= m;
-    k ^= k >> r;
-    k *= m;
-
-    h ^= k;
-    h *= m;
-  }
-
-  auto const* const data8 = reinterpret_cast<uint8_t const*>(data64 + n_blocks);
-  switch (len & 7U)
-  {
-    case 7:
-      h ^= static_cast<uint64_t>(data8[6]) << 48U;
-      // FALLTHROUGH
-    case 6:
-      h ^= static_cast<uint64_t>(data8[5]) << 40U;
-      // FALLTHROUGH
-    case 5:
-      h ^= static_cast<uint64_t>(data8[4]) << 32U;
-      // FALLTHROUGH
-    case 4:
-      h ^= static_cast<uint64_t>(data8[3]) << 24U;
-      // FALLTHROUGH
-    case 3:
-      h ^= static_cast<uint64_t>(data8[2]) << 16U;
-      // FALLTHROUGH
-    case 2:
-      h ^= static_cast<uint64_t>(data8[1]) << 8U;
-      // FALLTHROUGH
-    case 1:
-      h ^= static_cast<uint64_t>(data8[0]);
-      h *= m;
-      // FALLTHROUGH
-    default: break;
-  }
-
-  h ^= h >> r;
-  h *= m;
-  h ^= h >> r;
-
-  return h;
-}
-
 }  // anonymous namespace
 
 namespace rowgroup
 {
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
 {
-  uint64_t ret = 0;
-  if (lastCol >= r.getColumnCount())
-    return 0;
-
-  datatypes::MariaDBHasher h;
-  bool strHashUsed = false;
-  for (uint32_t i = 0; i <= lastCol; ++i)
-  {
-    switch (r.getColType(i))
-    {
-      case execplan::CalpontSystemCatalog::CHAR:
-      case execplan::CalpontSystemCatalog::VARCHAR:
-      case execplan::CalpontSystemCatalog::BLOB:
-      case execplan::CalpontSystemCatalog::TEXT:
-      {
-        auto strColValue = r.getConstString(i);
-        if (strColValue.length() > MaxConstStrSize)
-        {
-          h.add(r.getCharset(i), strColValue);
-          strHashUsed = true;
-        }
-        else
-        {
-          auto cs = r.getCharset(i);
-          uchar buf[MaxConstStrBufSize];
-          uint nActualWeights = cs->strnxfrm(buf, MaxConstStrBufSize, MaxConstStrBufSize,
-            reinterpret_cast<const uchar*>(strColValue.str()), strColValue.length(),
-            datatypes::Charset::getDefaultFlags());
-          ret = hashData(buf, nActualWeights, ret);
-        }
-        break;
-      }
-      default: ret = hashData(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
-    }
-  }
-
-  if (strHashUsed)
-  {
-    uint64_t strhash = h.finalize();
-    ret = hashData(&strhash, sizeof(strhash), ret);
-  }
-
-  return ret;
+  return r.hash<utils::Hasher64_r>(lastCol);
 }
 
 /** @brief NoOP interface to LRU-cache used by RowGroupStorage & HashStorage
