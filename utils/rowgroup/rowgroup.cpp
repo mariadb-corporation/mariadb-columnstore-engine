@@ -1110,7 +1110,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
 
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
-  idbassert(columnCount);
+  //idbassert(columnCount);
   //idblog("constructing from complete data with " << columnCount << " columns");
 }
 
