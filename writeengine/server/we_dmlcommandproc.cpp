@@ -92,7 +92,7 @@ WE_DMLCommandProc::~WE_DMLCommandProc()
   dbRootExtTrackerVec.clear();
 }
 
-void WE_DMLCommandProc::processAuxCol(const std::vector<utils:NullString>& origVals,
+void WE_DMLCommandProc::processAuxCol(const std::vector<utils::NullString>& origVals,
                                       WriteEngine::ColValueList& colValuesList,
                                       WriteEngine::DictStrList& dicStringList)
 {
