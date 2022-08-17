@@ -92,7 +92,7 @@ WE_DMLCommandProc::~WE_DMLCommandProc()
   dbRootExtTrackerVec.clear();
 }
 
-void WE_DMLCommandProc::processAuxCol(const std::vector<std::string>& origVals,
+void WE_DMLCommandProc::processAuxCol(const std::vector<utils:NullString>& origVals,
                                       WriteEngine::ColValueList& colValuesList,
                                       WriteEngine::DictStrList& dicStringList)
 {
@@ -105,7 +105,8 @@ void WE_DMLCommandProc::processAuxCol(const std::vector<std::string>& origVals,
     auxColTuple.data = (uint8_t)1;
     auxColTuples.push_back(auxColTuple);
     //@Bug 2515. Only pass string values to write engine
-    auxDicStrings.push_back("");
+    utils::NullString ns;
+    auxDicStrings.push_back(ns);
   }
 
   colValuesList.push_back(auxColTuples);
