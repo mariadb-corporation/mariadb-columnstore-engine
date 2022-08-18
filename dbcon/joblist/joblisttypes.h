@@ -45,7 +45,7 @@ const uint32_t UINTEMPTYROW = 0xFFFFFFFF;
 const uint16_t USMALLINTNULL = 0xFFFE;
 const uint16_t USMALLINTEMPTYROW = 0xFFFF;
 const uint8_t UTINYINTNULL = 0xFE;
-const uint8_t UTINYINTEMPTYROW = 0xFF;
+constexpr uint8_t UTINYINTEMPTYROW = 0xFF;
 
 const uint32_t FLOATNULL = 0xFFAAAAAA;
 const uint32_t FLOATEMPTYROW = 0xFFAAAAAB;
