@@ -155,9 +155,9 @@ extern "C"
       return result;
     }
 
-    const char* table = args->args[0];
+    const char* bucket = args->args[0];
     const char* filename = args->args[1];
-    const char* bucket = args->args[2];
+    const char* table = args->args[3];
 
     ulong cmapi_port = get_cmapi_port(_current_thd());
     const char* cmapi_host = get_cmapi_host(_current_thd());
@@ -169,7 +169,7 @@ extern "C"
     const char* secret = get_s3_secret(thd);
     const char* key = get_s3_key(thd);
     const char* region = get_s3_region(thd);
-    const char* database = args->arg_count != 4 ? thd->get_db() : args->args[3];
+    const char* database = args->args[2];
 
     return columnstore_dataload_impl(initData->curl, initData->result, length, bucket, table, filename,
                                      database, secret, key, region, cmapi_host, cmapi_port, cmapi_version,
@@ -178,9 +178,9 @@ extern "C"
 
   my_bool columnstore_dataload_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 3 && args->arg_count != 4)
+    if (args->arg_count != 4)
     {
-      strcpy(message, "COLUMNSTORE_DATALOAD() takes three or four arguments: (table, filename, bucket) or (table, filename, bucket, database)");
+      strcpy(message, "columnstore_dataload needs 4 arguments: (bucket, file_name, db_name, table)");
       return 1;
     }
 

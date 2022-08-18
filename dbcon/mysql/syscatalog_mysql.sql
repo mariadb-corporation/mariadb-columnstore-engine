@@ -43,18 +43,4 @@ create table if not exists syscolumn (`schema` varchar(128),
                         compressiontype integer,
 						nextvalue bigint) engine=columnstore comment='SCHEMA SYNC ONLY';
 
-
-DELIMITER //
-CREATE OR REPLACE PROCEDURE columnstore_load_from_s3 (in tablename varchar(256) CHARACTER SET utf8,
-                                                      in filename varchar(256) CHARACTER SET utf8,
-                                                      in bucket varchar(256) CHARACTER SET utf8,
-                                                      in dbname varchar(256) CHARACTER SET utf8)
-LANGUAGE SQL
-NOT DETERMINISTIC
-MODIFIES SQL DATA
-SQL SECURITY INVOKER
-BEGIN
-    select columnstore_dataload(tablename, filename, bucket, dbname);
-END //
-
 DELIMITER ;
