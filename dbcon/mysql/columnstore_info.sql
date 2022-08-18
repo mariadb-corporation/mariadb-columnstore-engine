@@ -120,4 +120,17 @@ create or replace procedure columnstore_upgrade() SQL SECURITY INVOKER
     END LOOP;
 END //
 
+CREATE OR REPLACE PROCEDURE load_from_s3 (in bucket varchar(256) CHARACTER SET utf8,
+                                          in filename varchar(256) CHARACTER SET utf8,
+                                          in dbname varchar(256) CHARACTER SET utf8,
+                                          in table_name varchar(256) CHARACTER SET utf8)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+    select columnstore_dataload(bucket, filename, dbname, table_name);
+END //
+
+
 DELIMITER ;
