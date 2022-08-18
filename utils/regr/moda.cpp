@@ -589,7 +589,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::evaluate(mcsv1Context* context, stat
     else if (iter->second == maxCnt)
     {
       // Tie breaker: choose smallest according to collation
-      if (cs.strnncollsp(val, lastVal) < 0)
+      if (cs.strnncollsp(iter->first, lastVal) < 0)
       {
         val = iter->first;
       }
