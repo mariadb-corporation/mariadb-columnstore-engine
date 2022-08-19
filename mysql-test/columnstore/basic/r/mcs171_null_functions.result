@@ -40,7 +40,7 @@ SELECT NULLIF(1, 'abcd');
 NULLIF(1, 'abcd')
 1
 Warnings:
-Warning	1292	Truncated incorrect DOUBLE value: 'abcd'
+Warning	1292	Truncated incorrect DECIMAL value: 'abcd'
 SELECT a, ISNULL(a) FROM t1;
 a	ISNULL(a)
 NULL	1
