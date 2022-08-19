@@ -20,21 +20,23 @@ l_shipmode char (10),
 l_comment varchar (44)
 ) engine=columnstore DEFAULT CHARSET=utf8mb3;
 LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
 SELECT COUNT(*) FROM lineitem;
 COUNT(*)
-59986052
+179958156
 SET autocommit=off;
 UPDATE lineitem SET l_orderkey=-1, l_linenumber=-1;
 SELECT COUNT(*) FROM lineitem where l_orderkey=-1 and l_linenumber=-1;
 COUNT(*)
-59986052
+179958156
 rollback;
 SELECT COUNT(*) FROM lineitem where l_orderkey=-1 and l_linenumber=-1;
 COUNT(*)
 0
-update lineitem set l_orderkey=-2, l_linenumber=-2,l_comment='hello';
+update lineitem set l_orderkey=-2, l_linenumber=-2, l_comment='hello', l_shipinstruct=l_shipmode;
 ERROR HY000: Internal error: CAL0002: Update Failed:  MCS-2008: The version buffer overflowed. Increase VersionBufferFileSize or limit the rows to be processed.
-SELECT COUNT(*) FROM lineitem where l_orderkey=-2 and l_linenumber=-2 and l_comment='hello';
+SELECT COUNT(*) FROM lineitem where l_orderkey=-2 and l_linenumber=-2 and l_comment='hello' and l_shipinstruct=l_shipmode;
 COUNT(*)
 0
 DROP DATABASE mcs7000_db;
