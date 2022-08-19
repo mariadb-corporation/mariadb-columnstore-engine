@@ -935,6 +935,7 @@ const CalpontSystemCatalog::CompressionType AUX_COL_COMPRESSION_TYPE = CalpontSy
 const std::string AUX_COL_DATATYPE_STRING = "unsigned-tinyint";
 const uint64_t AUX_COL_MINVALUE = MIN_UTINYINT;
 const uint64_t AUX_COL_MAXVALUE = MAX_UTINYINT;
+constexpr uint8_t AUX_COL_EMPTYVALUE = joblist::UTINYINTEMPTYROW;
 
 /** convenience function to make a TableColName from 3 strings
  */
