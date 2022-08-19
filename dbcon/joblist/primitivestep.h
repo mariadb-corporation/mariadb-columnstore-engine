@@ -544,6 +544,7 @@ class pColScanStep : public JobStep
 /** @brief class pDictionaryStep
  *
  */
+#define USEEQFILTERTHRESHOLD 6
 class pDictionaryStep : public JobStep
 {
  public:
