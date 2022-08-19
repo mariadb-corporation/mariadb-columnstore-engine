@@ -1981,7 +1981,7 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // Syscat queries mustn't follow vectorized processing path b/c PP must return
   // all values w/o any filter(even empty values filter) applied.
 
-#if defined(__x86_64__)|| defined(__aarch64__)
+#if defined(__x86_64__)
   // Don't use vectorized filtering for text based data types.
   if (WIDTH < 16 &&
     (KIND != KIND_TEXT || (KIND == KIND_TEXT && in->colType.strnxfrmIsValid()) ))
