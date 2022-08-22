@@ -1668,7 +1668,8 @@ void RowAggStorage::dump()
 
   constexpr const int freeMemLimit = 50ULL * 1024ULL * 1024ULL;
 
-  const int64_t leaveFree = fNumOfInputRGPerThread * fRowGroupOut->getRowSize() * getBucketSize();
+  const int64_t rowSize = fRowGroupOut->getSizeWithStrings() / fRowGroupOut->getRowCount() * fMaxRows;
+  const int64_t leaveFree = fNumOfInputRGPerThread * (rowSize + getBucketSize()) * fMaxRows;
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
   while (true)
