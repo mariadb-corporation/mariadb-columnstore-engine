@@ -19,3 +19,4 @@ j6_key
 19
 20
 NULL
+drop table j6;

@@ -19,3 +19,4 @@ j16_key
 29
 30
 NULL
+drop table j16;

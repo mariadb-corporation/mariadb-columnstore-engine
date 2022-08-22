@@ -19,3 +19,4 @@ j11_key
 24
 25
 NULL
+drop table j11;

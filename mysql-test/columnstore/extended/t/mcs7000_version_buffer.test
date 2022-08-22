@@ -37,6 +37,8 @@ l_comment varchar (44)
 # LDI 10g dataset for the lineitem table
 # -------------------------------------------------------------- #
 LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
+LOAD DATA INFILE '/data/qa/source/dbt3/10g/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';
 SELECT COUNT(*) FROM lineitem;
 #
 # Version buffer positive test - successful update expected
@@ -48,8 +50,8 @@ SELECT COUNT(*) FROM lineitem where l_orderkey=-1 and l_linenumber=-1;
 # Version buffer negative test - overflow error expected
 --error 1815
 --error ER_INTERNAL_ERROR
-update lineitem set l_orderkey=-2, l_linenumber=-2,l_comment='hello';
-SELECT COUNT(*) FROM lineitem where l_orderkey=-2 and l_linenumber=-2 and l_comment='hello';
+update lineitem set l_orderkey=-2, l_linenumber=-2, l_comment='hello', l_shipinstruct=l_shipmode;
+SELECT COUNT(*) FROM lineitem where l_orderkey=-2 and l_linenumber=-2 and l_comment='hello' and l_shipinstruct=l_shipmode;
 #
 DROP DATABASE mcs7000_db;
 #
