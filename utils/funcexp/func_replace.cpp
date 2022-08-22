@@ -71,19 +71,22 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
   if (binaryCmp)
   {
     // Count the number of fromstr in strend so we can reserve buffer space.
-    int count = 0;
-    do
+    size_t count = 0;
+    while ( string::npos != (pos = str.find(fromstr, pos)))
     {
       ++count;
-      pos = str.find(fromstr, pos + fromLen);
-    } while (pos != string::npos);
+      pos += fromLen;
+    }
 
-    newstr.reserve(strLen + (count * ((int)toLen - (int)fromLen)) + 1);
+    if (count == 0)
+    {
+      return str;
+    }
+
+    newstr.reserve(strLen + (count * (toLen - fromLen)) + 1);
 
     uint32_t i = 0;
     pos = str.find(fromstr);
-    if (pos == string::npos)
-      return str;
     // Move the stuff into newstr
     do
     {
