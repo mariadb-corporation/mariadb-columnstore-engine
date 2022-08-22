@@ -20,6 +20,7 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "idbcompress.h"
+#include <random>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -367,6 +368,9 @@ class RowAggStorage
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
   rowgroup::RowGroup* fKeysRowGroup;
+  std::random_device fRD;
+  std::mt19937 fRandGen;
+  std::uniform_int_distribution<uint8_t> fRandDistr;
 };
 
 }  // namespace rowgroup
