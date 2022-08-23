@@ -2873,7 +2873,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
       if (valOut.compatible(strTypeId))
       {
         string s = valOut.cast<string>();
-	strOut.assign((s);
+	strOut.assign(s);
         fRow.setStringField(strOut, colOut);
         bSetSuccess = true;
       }
