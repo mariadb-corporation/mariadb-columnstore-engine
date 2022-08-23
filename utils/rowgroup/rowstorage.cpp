@@ -1666,6 +1666,8 @@ void RowAggStorage::dump()
   if (!fEnabledDiskAggregation)
     return;
 
+  constexpr const int freeMemLimit = 50ULL * 1024ULL * 1024ULL;
+
   const int64_t leaveFree = fNumOfInputRGPerThread * fRowGroupOut->getRowSize() * getBucketSize();
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
@@ -1695,6 +1697,10 @@ void RowAggStorage::dump()
   else if (fAllowGenerations &&
            freeMem < totalMem / 10 * 3 &&
            fRandDistr(fRandGen) < 30)
+  {
+    startNewGeneration();
+  }
+  else if (fAllowGenerations && fMM->getFree() < freeMemLimit)
   {
     startNewGeneration();
   }
