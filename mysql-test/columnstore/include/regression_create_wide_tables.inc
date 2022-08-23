@@ -53,7 +53,7 @@ c47 varchar(1000),
 c48 varchar(1000),
 c49 varchar(1000),
 c50 varchar(1000)
-)engine=columnstore;
+)engine=columnstore DEFAULT CHARSET=latin1;
 
 create table wide2 (
 id int(11)       ,
@@ -78,4 +78,4 @@ c18 varchar(2000),
 c19 varchar(4000),
 c20 varchar(4000),
 c_temp varchar(16)
-)engine=columnstore;
+)engine=columnstore DEFAULT CHARSET=latin1;
