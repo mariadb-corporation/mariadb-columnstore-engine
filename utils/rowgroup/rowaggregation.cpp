@@ -2869,9 +2869,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+      // XXX: check for empty valOut value? E.g., we can use nullptr inside any.
       if (valOut.compatible(strTypeId))
       {
-        strOut = valOut.cast<utils::NullString>();
+        auto s = valOut.cast<string>();
+	strOut.assign((s);
         fRow.setStringField(strOut, colOut);
         bSetSuccess = true;
       }
