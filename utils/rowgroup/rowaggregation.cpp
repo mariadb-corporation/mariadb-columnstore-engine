@@ -2872,7 +2872,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
       // XXX: check for empty valOut value? E.g., we can use nullptr inside any.
       if (valOut.compatible(strTypeId))
       {
-        auto s = valOut.cast<string>();
+        string s = valOut.cast<string>();
 	strOut.assign((s);
         fRow.setStringField(strOut, colOut);
         bSetSuccess = true;
