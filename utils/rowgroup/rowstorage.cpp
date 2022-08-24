@@ -79,73 +79,6 @@ std::string errorString(int errNo)
   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
   return {buf};
 }
-
-inline uint64_t hashData(const void* ptr, uint32_t len, uint64_t x = 0ULL)
-{
-  static constexpr uint64_t m = 0xc6a4a7935bd1e995ULL;
-  static constexpr uint64_t seed = 0xe17a1465ULL;
-  static constexpr unsigned int r = 47;
-
-  auto const* const data64 = static_cast<uint64_t const*>(ptr);
-  uint64_t h = seed ^ (len * m);
-
-  std::size_t const n_blocks = len / 8;
-  if (x)
-  {
-    x *= m;
-    x ^= x >> r;
-    x *= m;
-    h ^= x;
-    h *= m;
-  }
-  for (std::size_t i = 0; i < n_blocks; ++i)
-  {
-    uint64_t k;
-    memcpy(&k, data64 + i, sizeof(k));
-
-    k *= m;
-    k ^= k >> r;
-    k *= m;
-
-    h ^= k;
-    h *= m;
-  }
-
-  auto const* const data8 = reinterpret_cast<uint8_t const*>(data64 + n_blocks);
-  switch (len & 7U)
-  {
-    case 7:
-      h ^= static_cast<uint64_t>(data8[6]) << 48U;
-      // FALLTHROUGH
-    case 6:
-      h ^= static_cast<uint64_t>(data8[5]) << 40U;
-      // FALLTHROUGH
-    case 5:
-      h ^= static_cast<uint64_t>(data8[4]) << 32U;
-      // FALLTHROUGH
-    case 4:
-      h ^= static_cast<uint64_t>(data8[3]) << 24U;
-      // FALLTHROUGH
-    case 3:
-      h ^= static_cast<uint64_t>(data8[2]) << 16U;
-      // FALLTHROUGH
-    case 2:
-      h ^= static_cast<uint64_t>(data8[1]) << 8U;
-      // FALLTHROUGH
-    case 1:
-      h ^= static_cast<uint64_t>(data8[0]);
-      h *= m;
-      // FALLTHROUGH
-    default: break;
-  }
-
-  h ^= h >> r;
-  h *= m;
-  h ^= h >> r;
-
-  return h;
-}
-
 }  // anonymous namespace
 
 namespace rowgroup
@@ -157,7 +90,10 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
     return 0;
 
   datatypes::MariaDBHasher h;
+  utils::Hasher64_r columnHasher;
+
   bool strHashUsed = false;
+
   for (uint32_t i = 0; i <= lastCol; ++i)
   {
     switch (r.getColType(i))
@@ -167,34 +103,47 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
       case execplan::CalpontSystemCatalog::BLOB:
       case execplan::CalpontSystemCatalog::TEXT:
       {
+        auto cs = r.getCharset(i);
         auto strColValue = r.getConstString(i);
-        if (strColValue.length() > MaxConstStrSize)
+        auto strColValueLen = strColValue.length();
+        if (strColValueLen > MaxConstStrSize)
         {
-          h.add(r.getCharset(i), strColValue);
+          h.add(cs, strColValue);
           strHashUsed = true;
         }
         else
         {
-          auto cs = r.getCharset(i);
-          uchar buf[MaxConstStrBufSize];
-          uint nActualWeights = cs->strnxfrm(buf, MaxConstStrBufSize, MaxConstStrBufSize,
-            reinterpret_cast<const uchar*>(strColValue.str()), strColValue.length(),
-            datatypes::Charset::getDefaultFlags());
-          ret = hashData(buf, nActualWeights, ret);
+          // This is relatively big stack allocation.
+          // It is aligned for future vectorization of hash calculation.
+          uchar buf[MaxConstStrBufSize] __attribute__((aligned(64)));
+          // Pay attention to the last strxfrm argument value.
+          // It is called flags and in many cases it has padding
+          // enabled(MY_STRXFRM_PAD_WITH_SPACE bit). With padding enabled
+          // strxfrm returns MaxConstStrBufSize bytes and not the actual
+          // weights array length. Here I disable padding.
+          auto charset = datatypes::Charset(cs);
+          auto trimStrColValue = strColValue.rtrimSpaces();
+          // The padding is disabled b/c we previously use rtrimSpaces().
+          // strColValueLen is used here.
+          size_t nActualWeights = charset.strnxfrm(buf, MaxConstStrBufSize, strColValueLen,
+                                                   reinterpret_cast<const uchar*>(trimStrColValue.str()),
+                                                   trimStrColValue.length(), 0);
+          ret = columnHasher(reinterpret_cast<const void*>(buf), nActualWeights, ret);
         }
         break;
       }
-      default: ret = hashData(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
+      default: ret = columnHasher(r.getData() + r.getOffset(i), r.getColumnWidth(i), ret); break;
     }
   }
 
+  // The properties of the hash produced are worse if MDB hasher results are incorporated
+  // so late but these results must be used very infrequently.
   if (strHashUsed)
   {
     uint64_t strhash = h.finalize();
-    ret = hashData(&strhash, sizeof(strhash), ret);
+    ret = columnHasher(&strhash, sizeof(strhash), ret);
   }
-
-  return ret;
+  return columnHasher.finalize(ret, lastCol << 2);
 }
 
 /** @brief NoOP interface to LRU-cache used by RowGroupStorage & HashStorage
@@ -352,6 +301,11 @@ class MemManager
     return std::numeric_limits<int64_t>::max();
   }
 
+  virtual int64_t getConfigured() const
+  {
+    return std::numeric_limits<int64_t>::max();
+  }
+
   virtual bool isStrict() const
   {
     return false;
@@ -397,6 +351,11 @@ class RMMemManager : public MemManager
   {
     release(fMemUsed);
     fMemUsed = 0;
+  }
+
+  int64_t getConfigured() const final
+  {
+    return fRm->getConfiguredUMMemLimit();
   }
 
   int64_t getFree() const final
@@ -1537,6 +1496,9 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, R
  , fTmpDir(tmpDir)
  , fRowGroupOut(rowGroupOut)
  , fKeysRowGroup(keysRowGroup)
+ , fRD()
+ , fRandGen(fRD())
+ , fRandDistr(0, 100)
 {
   char suffix[PATH_MAX];
   snprintf(suffix, sizeof(suffix), "/p%u-t%p/", getpid(), this);
@@ -1704,6 +1666,8 @@ void RowAggStorage::dump()
   if (!fEnabledDiskAggregation)
     return;
 
+  constexpr const int freeMemLimit = 50ULL * 1024ULL * 1024ULL;
+
   const int64_t leaveFree = fNumOfInputRGPerThread * fRowGroupOut->getRowSize() * getBucketSize();
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
@@ -1722,10 +1686,21 @@ void RowAggStorage::dump()
       break;
   }
 
+  int64_t totalMem = fMM->getConfigured();
   // If the generations are allowed and there are less than half of
   // rowgroups in memory, then we start a new generation
   if (fAllowGenerations && fStorage->fLRU->size() < fStorage->fRGDatas.size() / 2 &&
       fStorage->fRGDatas.size() > 10)
+  {
+    startNewGeneration();
+  }
+  else if (fAllowGenerations &&
+           freeMem < totalMem / 10 * 3 &&
+           fRandDistr(fRandGen) < 30)
+  {
+    startNewGeneration();
+  }
+  else if (fAllowGenerations && fMM->getFree() < freeMemLimit)
   {
     startNewGeneration();
   }

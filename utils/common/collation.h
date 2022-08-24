@@ -183,6 +183,10 @@ class Charset
   {
     return flags_;
   }
+  size_t strnxfrm(uchar* dst, size_t dstlen, uint nweights, const uchar* src, size_t srclen, uint flags)
+  {
+    return mCharset->coll->strnxfrm(mCharset, dst, dstlen, nweights, src, srclen, flags);
+  }
 };
 
 class CollationAwareHasher : public Charset
