@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-
+   Copyright (C) 2016-2022 MariaDB Corporation
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -295,6 +295,9 @@ class LBIDRange : public messageqcpp::Serializeable
   uint32_t size;
 
   EXPORT LBIDRange();
+  LBIDRange(const LBID_t aStart, const uint32_t aSize) : start(aStart), size(aSize)
+  {
+  }
   EXPORT LBIDRange(const LBIDRange& l);
   EXPORT LBIDRange(const InlineLBIDRange& l);
   EXPORT LBIDRange& operator=(const LBIDRange& l);
