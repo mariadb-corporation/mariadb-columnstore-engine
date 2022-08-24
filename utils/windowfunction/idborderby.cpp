@@ -831,7 +831,9 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
         }
         else if (fRow1.getColumnWidth(*i) == datatypes::MAXDECIMALWIDTH)
         {
-          eq = (*fRow1.getBinaryField<int128_t>(*i) == *fRow2.getBinaryField<int128_t>(*i));
+          datatypes::TSInt128 left = fRow1.getTSInt128Field(*i);
+          datatypes::TSInt128 right = fRow2.getTSInt128Field(*i);
+          eq = left.getValue() == right.getValue();
         }
         break;
       }
