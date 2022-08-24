@@ -49,14 +49,16 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
 
   hasEqFilter = dict.hasEqualityFilter;
 
-  if (hasEqFilter)
+  if (hasEqFilter && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
   {
     eqOp = dict.tmpCOP;
     eqFilter = dict.eqFilter;
   }
   else
+  {
+    hasEqFilter=false;
     filterString = dict.fFilterString;
-
+  }
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
 }

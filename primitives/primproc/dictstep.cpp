@@ -346,8 +346,6 @@ void DictStep::_execute()
     newRidList[i].pos = i;
   }
 
-  sort(&newRidList[0], &newRidList[bpp->ridCount], TokenSorter());
-
   tmpResultCounter = 0;
   i = 0;
 
