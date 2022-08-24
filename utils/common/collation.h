@@ -135,8 +135,10 @@ class Charset
 {
  protected:
   const struct charset_info_st* mCharset;
+
  private:
   static constexpr const uint flags_ = MY_STRXFRM_PAD_WITH_SPACE | MY_STRXFRM_PAD_TO_MAXLEN;
+
  public:
   Charset(CHARSET_INFO& cs) : mCharset(&cs)
   {
@@ -187,7 +189,7 @@ class Charset
   }
   size_t strnxfrm(uchar* dst, size_t dstlen, uint nweights, const uchar* src, size_t srclen, uint flags)
   {
-    idbassert(mCharset->coll);
+    assert(mCharset->coll);
     return mCharset->coll->strnxfrm(mCharset, dst, dstlen, nweights, src, srclen, flags);
   }
   // The magic check that tells that bytes are mapped to weights as 1:1
@@ -195,21 +197,21 @@ class Charset
   {
     return (mCharset->state & MY_CS_NON1TO1) == 0;
   }
-  template<typename T>
+  template <typename T>
   T strnxfrm(const char* src) const
   {
     T ret = 0;
-    size_t len __attribute__((unused)) = mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T),
-      src, sizeof(T), flags_);
+    size_t len __attribute__((unused)) =
+        mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T), src, sizeof(T), flags_);
     assert(len <= sizeof(T));
     return ret;
   }
-  template<typename T>
-  T strnxfrm(const utils::ConstString &src) const
+  template <typename T>
+  T strnxfrm(const utils::ConstString& src) const
   {
     T ret = 0;
-    size_t len __attribute__((unused)) = mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T),
-      (char*)src.str(), src.length(), flags_);
+    size_t len __attribute__((unused)) =
+        mCharset->strnxfrm((char*)&ret, sizeof(T), sizeof(T), (char*)src.str(), src.length(), flags_);
     assert(len <= sizeof(T));
     return ret;
   }
