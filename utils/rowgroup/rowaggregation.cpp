@@ -868,7 +868,7 @@ void RowAggregation::initMapData(const Row& rowIn)
         if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
         {
           uint32_t colOutOffset = fRow.getOffset(colOut);
-          fRow.setBinaryField_offset(rowIn.getBinaryField<int128_t>(colIn), sizeof(int128_t), colOutOffset);
+          fRow.setBinaryField_offset(rowIn.getTSInt128Field(colIn).getValPtr(), sizeof(int128_t), colOutOffset);
         }
         else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
         {
@@ -1128,7 +1128,7 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
     {
       if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
       {
-        updateIntMinMax(rowIn.getBinaryField<int128_t>(colIn), fRow.getBinaryField<int128_t>(colOut), colOut,
+        updateIntMinMax(rowIn.getTSInt128Field(colIn).getValPtr(), fRow.getTSInt128Field(colOut).getValPtr(), colOut,
                         funcType);
       }
       else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
@@ -1260,7 +1260,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
       isWideDataType = width == datatypes::MAXDECIMALWIDTH;
       if (LIKELY(isWideDataType))
       {
-        int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+        int128_t* dec = rowIn.getTSInt128Field(colIn).getValPtr();
         wideValInPtr = reinterpret_cast<void*>(dec);
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
@@ -1329,8 +1329,8 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
   {
     if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = *valOutPtr + valIn;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      int128_t sum = valOut + valIn;
       fRow.setBinaryField(&sum, colOut);
     }
     else
@@ -1344,8 +1344,8 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
     int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
     if (LIKELY(!isNull(fRowGroupOut, fRow, colOut)))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = *valOutPtr + *dec;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      int128_t sum = valOut + *dec;
       fRow.setBinaryField(&sum, colOut);
     }
     else
@@ -1793,7 +1793,7 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
       isWideDataType = width == datatypes::MAXDECIMALWIDTH;
       if (LIKELY(isWideDataType))
       {
-        int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+        int128_t* dec = rowIn.getTSInt128Field(colIn).getValPtr();
         wideValInPtr = reinterpret_cast<void*>(dec);
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
@@ -1859,8 +1859,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
   {
     if (LIKELY(notFirstValue))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = *valOutPtr + valIn;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      int128_t sum = valOut + valIn;
       fRow.setBinaryField(&sum, colOut);
     }
     else
@@ -1874,8 +1874,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
     int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
     if (LIKELY(notFirstValue))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = *valOutPtr + *dec;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      int128_t sum = valOut + *dec;
       fRow.setBinaryField(&sum, colOut);
     }
     else
@@ -1925,7 +1925,7 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
       if (LIKELY(fRowGroupIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
       {
         // To save from unaligned memory
-        datatypes::TSInt128 val128In(rowIn.getBinaryField<int128_t>(colIn));
+        datatypes::TSInt128 val128In = rowIn.getTSInt128Field(colIn);
         valIn = static_cast<long double>(val128In.toTFloat128());
       }
       else if (fRowGroupIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
@@ -4182,7 +4182,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
       isWideDataType = width == datatypes::MAXDECIMALWIDTH;
       if (LIKELY(isWideDataType))
       {
-        int128_t* dec = rowIn.getBinaryField<int128_t>(colIn);
+        int128_t* dec = rowIn.getTSInt128Field(colIn).getValPtr();
         wideValInPtr = reinterpret_cast<void*>(dec);
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
@@ -4236,8 +4236,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
   {
     if (LIKELY(cnt > 0))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = valIn + *valOutPtr;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      int128_t sum = valIn + valOut;
       fRow.setBinaryField(&sum, colOut);
       fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
     }
@@ -4253,8 +4253,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
     int128_t* dec = reinterpret_cast<int128_t*>(wideValInPtr);
     if (LIKELY(cnt > 0))
     {
-      int128_t* valOutPtr = fRow.getBinaryField<int128_t>(colOut);
-      int128_t sum = *valOutPtr + *dec;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();;
+      int128_t sum = valOut + *dec;
       fRow.setBinaryField(&sum, colOut);
       fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
     }
