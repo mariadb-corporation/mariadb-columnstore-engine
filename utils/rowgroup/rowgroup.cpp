@@ -995,7 +995,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
   sprintf(t, "%p", &(cs.getCharset()));
   char t2[100];
   sprintf(t, "%p", other_charset;
-  idblog("comparing with charset pointer " << t ", other charset pointer " << t2);
+  idblog("comparing with charset pointer " << t << ", other charset pointer " << t2);
       if (cs.strnncollsp(getConstString(col), r2.getConstString(col)))
       {
         return false;
