@@ -552,8 +552,7 @@ int TypeHandlerXDecimal::storeValueToField64(rowgroup::Row& row, int pos, StoreF
 
 int TypeHandlerXDecimal::storeValueToField128(rowgroup::Row& row, int pos, StoreField* f) const
 {
-  int128_t* decPtr = row.getTSInt128Field(pos).getValPtr();
-  return f->store_decimal128(datatypes::Decimal(0, f->scale(), f->precision(), decPtr));
+  return f->store_decimal128(datatypes::Decimal(row.getTSInt128Field(pos), f->scale(), f->precision()));
 }
 
 int TypeHandlerStr::storeValueToFieldBlobText(rowgroup::Row& row, int pos, StoreField* f) const

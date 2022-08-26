@@ -526,7 +526,7 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
       }
       else if (width == datatypes::MAXDECIMALWIDTH)
       {
-        datatypes::TSInt128::assignPtrPtr(&t, fRow.getTSInt128Field(i).getValPtr());
+        t = fRow.getTSInt128Field(i).getValue();
       }
       break;
     }

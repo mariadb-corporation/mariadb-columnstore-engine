@@ -559,7 +559,7 @@ class RowAggregation : public messageqcpp::Serializeable
     copyRow(fNullRow, &row);
   }
 
-  inline void updateIntMinMax(int128_t* val1, int128_t* val2, int64_t col, int func);
+  inline void updateIntMinMax(int128_t val1, int128_t val2, int64_t col, int func);
   inline void updateIntMinMax(int64_t val1, int64_t val2, int64_t col, int func);
   inline void updateUintMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);
   inline void updateCharMinMax(uint64_t val1, uint64_t val2, int64_t col, int func);

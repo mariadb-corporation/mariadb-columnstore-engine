@@ -3111,9 +3111,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             {
               if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
               {
-                datatypes::Decimal dec(0, fetchColScales[fetchColPos],
-                                       rowGroups[txnId]->getPrecision()[fetchColPos],
-                                       row.getTSInt128Field(fetchColPos).getValPtr());
+                datatypes::Decimal dec(row.getTSInt128Field(fetchColPos), fetchColScales[fetchColPos],
+                                       rowGroups[txnId]->getPrecision()[fetchColPos]);
                 value = dec.toString(true);
                 break;
               }
@@ -3466,9 +3465,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               {
                 if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                 {
-                  datatypes::Decimal dec(0, fetchColScales[fetchColPos],
-                                         rowGroups[txnId]->getPrecision()[fetchColPos],
-                                         row.getTSInt128Field(fetchColPos).getValPtr());
+                  datatypes::Decimal dec(row.getTSInt128Field(fetchColPos), fetchColScales[fetchColPos],
+                                         rowGroups[txnId]->getPrecision()[fetchColPos]);
                   value = dec.toString(true);
                   break;
                 }

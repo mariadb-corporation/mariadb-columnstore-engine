@@ -442,8 +442,7 @@ class Row
   inline datatypes::Decimal getDecimalField(uint32_t colIndex) const
   {
     if (LIKELY(getColumnWidth(colIndex) == datatypes::MAXDECIMALWIDTH))
-      return datatypes::Decimal(0, (int)getScale(colIndex), getPrecision(colIndex),
-                                getTSInt128Field(colIndex).getValPtr());
+      return datatypes::Decimal(getTSInt128Field(colIndex), (int)getScale(colIndex), getPrecision(colIndex));
     return datatypes::Decimal(datatypes::TSInt64(getIntField(colIndex)), (int)getScale(colIndex),
                               getPrecision(colIndex));
   }
@@ -515,11 +514,6 @@ class Row
   inline const uint8_t* getVarBinaryField(uint32_t colIndex) const;
   inline const uint8_t* getVarBinaryField(uint32_t& len, uint32_t colIndex) const;
   inline void setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex);
-
-
-  template <typename T>
-  inline T* getBinaryField_offset(uint32_t offset) const;
-
   inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
   inline void setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<mcsv1sdk::UserData> userData,
                           uint32_t len, uint32_t colIndex);
@@ -1014,13 +1008,6 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
 }
 
-
-template <typename T>
-inline T* Row::getBinaryField_offset(uint32_t offset) const
-{
-  return reinterpret_cast<T*>(&data[offset]);
-}
-
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 {
   if (inStringTable(colIndex))
@@ -1346,7 +1333,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
 
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
-  out.setBinaryField(getTSInt128Field(srcIndex).getValPtr(), destIndex);
+  out.setInt128Field(getTSInt128Field(srcIndex).getValue(), destIndex);
 }
 
 inline void Row::setRid(uint64_t rid)

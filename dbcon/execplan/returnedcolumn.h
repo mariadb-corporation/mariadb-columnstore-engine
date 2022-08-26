@@ -372,7 +372,6 @@ class ReturnedColumn : public TreeNode
  protected:
   std::string fErrMsg;     /// error occured in evaluation
   uint32_t fInputIndex;    /// index to the input rowgroup
-  uint32_t fInputOffset;   /// index to the input rowgroup
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
 };
