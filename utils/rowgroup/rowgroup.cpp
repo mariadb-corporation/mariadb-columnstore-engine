@@ -1027,6 +1027,9 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
   {
     const_cast<CHARSET_INFO**>(charsets)[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
+  char t[100];
+  sprintf(t, "%p", charsets[col]);
+  idblog("returning charset pointer " << t << ", number is " << ((int)charsetNumbers[col]));
   return charsets[col];
 }
 
