@@ -990,6 +990,12 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     if (UNLIKELY(typeHasCollation(columnType)))
     {
       datatypes::Charset cs(getCharset(col));
+  CHARSET_INFO* other_charset = r2.getCharset(col);
+  char t[100];
+  sprintf(t, "%p", &(cs.getCharSet()));
+  char t2[100];
+  sprintf(t, "%p", other_charset;
+  idblog("comparing with charset pointer " << t ", other charset pointer " << t2);
       if (cs.strnncollsp(getConstString(col), r2.getConstString(col)))
       {
         return false;
@@ -1444,12 +1450,12 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
       {
-idblog("apply mapping for text likes");
+//idblog("apply mapping for text likes");
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
       }
       else if (UNLIKELY(in.isLongString(i)))
         {
-idblog("apply mapping for varchar likes");
+//idblog("apply mapping for varchar likes");
 //idblog("apply mapping");
         //  idblog_stat(utils::ConstString t = in.getConstString(i);)
 		  out->setStringField(in.getConstString(i), mapping[i]);
@@ -1589,7 +1595,7 @@ free(strs);
 }
 )
 #endif
-	      idblog("probably a default value: " << s.safeString());
+	      //idblog("probably a default value: " << s.safeString());
               cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
           }

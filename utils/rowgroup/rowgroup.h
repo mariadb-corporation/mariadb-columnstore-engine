@@ -978,7 +978,7 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
       CHARSET_INFO* cs = getCharset(rowKeyColIdx);
   char t[100];
   sprintf(t, "%p", cs);
-  idblog("hashing with charset pointer " << t );
+  idblog("hashing with charset pointer " << t << ", string is '" << getConstString(rowKeyColIdx).toString() << "'");
       h.add(cs, getConstString(rowKeyColIdx));
       break;
     }
