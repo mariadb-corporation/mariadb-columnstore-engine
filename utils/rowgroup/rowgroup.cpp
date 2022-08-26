@@ -979,8 +979,8 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
   // hasCollation is true if there is any column of type CHAR, VARCHAR or TEXT
   // useStringTable is true if any field declared > max inline field size, including BLOB
   // For memcmp to be correct, both must be false.
-  if (!hasCollation && !useStringTable && !r2.hasCollation && !r2.useStringTable)
-    return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
+  //if (!hasCollation && !useStringTable && !r2.hasCollation && !r2.useStringTable)
+  //  return !(memcmp(&data[offsets[0]], &r2.data[offsets[0]], offsets[lastCol + 1] - offsets[0]));
 
   // There are strings involved, so we need to check each column
   // because binary equality is not equality for many charsets/collations
