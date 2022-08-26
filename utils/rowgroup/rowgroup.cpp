@@ -992,7 +992,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
       datatypes::Charset cs(getCharset(col));
   CHARSET_INFO* other_charset = r2.getCharset(col);
   char t[100];
-  sprintf(t, "%p", &(cs.getCharSet()));
+  sprintf(t, "%p", &(cs.getCharset()));
   char t2[100];
   sprintf(t, "%p", other_charset;
   idblog("comparing with charset pointer " << t ", other charset pointer " << t2);
