@@ -1162,7 +1162,6 @@ int DictScanJob::operator()()
 
       loadBlock(cmd->LBID, verInfo, cmd->Hdr.TransactionID, cmd->CompType, data, &wasBlockInCache,
                 &blocksRead, fLBIDTraceOn, session);
-idblog("setting block ptr before p_TokenByScan");
       pproc.setBlockPtr((int*)data);
       pproc.p_TokenByScan(cmd, output, output_buf_size, eqFilter);
 

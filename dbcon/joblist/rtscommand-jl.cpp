@@ -41,7 +41,6 @@ RTSCommandJL::RTSCommandJL(const pColStep& c, const pDictionaryStep& d)
   col.reset(new ColumnCommandJL(c));
   dict.reset(new DictStepJL(d));
   /* XXXPAT: Need to validate the width; critical for tuple return functionality */
-idblog("RTSCommand from colstep and dictstep, colstep realwidth " << c.realWidth);
   dict->setWidth(c.realWidth);
   OID = d.oid();
   colName = d.name();
@@ -54,7 +53,6 @@ RTSCommandJL::RTSCommandJL(const PassThruStep& p, const pDictionaryStep& d)
 
   dict.reset(new DictStepJL(d));
   /* XXXPAT: Need to validate the width; critical for tuple return functionality */
-idblog("RTSCommand from passthrustep and dictstep, passthrustep realwidth " << p.realWidth);
   dict->setWidth(p.realWidth);
   OID = d.oid();
   colName = d.name();

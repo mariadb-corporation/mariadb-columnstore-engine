@@ -68,7 +68,6 @@ class ColumnResult
 
   void PutStringData(const NullString& s)
   {
-	  idblog("putting string data " << s.safeString());
     stringData.push_back(s);
     dcount++;
   }
