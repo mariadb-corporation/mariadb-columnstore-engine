@@ -133,7 +133,7 @@ int8_t setupCwd()
   string workdir = startup::StartUp::tmpDir();
 
   if (workdir.length() == 0)
-    workdir = ".";
+    workdir = std::string(".");
 
   int8_t rc = chdir(workdir.c_str());
   return rc;
