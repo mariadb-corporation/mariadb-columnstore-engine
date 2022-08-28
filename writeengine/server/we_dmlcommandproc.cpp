@@ -205,7 +205,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
         colStruct.colDataType = colType.colDataType;
 
         dctnryStruct.fCharsetNumber = colType.charsetNumber;
-  
+
 	if (colStruct.tokenFlag)
         {
           dctnryStruct.dctnryOid = colType.ddn.dictOID;
@@ -1656,7 +1656,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
     }
 
     // @Bug 5996 validate hwm before starts
-    // TODO MCOL-5021 hasAuxCol is hardcoded to false; add support here. 
+    // TODO MCOL-5021 hasAuxCol is hardcoded to false; add support here.
     rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting", false);
 
     if (rc != 0)
@@ -3111,9 +3111,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             {
               if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
               {
-                datatypes::Decimal dec(0, fetchColScales[fetchColPos],
-                                       rowGroups[txnId]->getPrecision()[fetchColPos],
-                                       row.getBinaryField<int128_t>(fetchColPos));
+                datatypes::Decimal dec(row.getTSInt128Field(fetchColPos), fetchColScales[fetchColPos],
+                                       rowGroups[txnId]->getPrecision()[fetchColPos]);
                 value = dec.toString(true);
                 break;
               }
@@ -3466,9 +3465,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               {
                 if (fetchColColwidths[fetchColPos] == datatypes::MAXDECIMALWIDTH)
                 {
-                  datatypes::Decimal dec(0, fetchColScales[fetchColPos],
-                                         rowGroups[txnId]->getPrecision()[fetchColPos],
-                                         row.getBinaryField<int128_t>(fetchColPos));
+                  datatypes::Decimal dec(row.getTSInt128Field(fetchColPos), fetchColScales[fetchColPos],
+                                         rowGroups[txnId]->getPrecision()[fetchColPos]);
                   value = dec.toString(true);
                   break;
                 }

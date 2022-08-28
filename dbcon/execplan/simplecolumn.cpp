@@ -489,12 +489,6 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 // @todo move to inline
 void SimpleColumn::evaluate(Row& row, bool& isNull)
 {
-  // TODO Move this block into an appropriate place
-  if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
-  {
-    fInputOffset = row.getOffset(fInputIndex);
-  }
-
   bool isNull2 = row.isNullValue(fInputIndex);
 
   if (isNull2)
@@ -632,8 +626,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
       {
         case 16:
         {
-          datatypes::TSInt128::assignPtrPtr(&fResult.decimalVal.s128Value,
-                                            row.getBinaryField_offset<int128_t>(fInputOffset));
+          fResult.decimalVal.s128Value = row.getTSInt128Field(fInputIndex).getValue();
           break;
         }
         case 1:

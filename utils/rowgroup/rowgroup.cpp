@@ -589,7 +589,7 @@ string Row::toString(uint32_t rownum) const
         case CalpontSystemCatalog::UDECIMAL:
           if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
           {
-            datatypes::Decimal dec(0, scale[i], precision[i], getBinaryField<int128_t>(i));
+            datatypes::Decimal dec(getTSInt128Field(i), scale[i], precision[i]);
             os << dec << " ";
             break;
           }
@@ -1023,7 +1023,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
       }
       else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
       {
-        if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
+        if (getTSInt128Field(col).getValue() != r2.getTSInt128Field(col).getValue())
           return false;
       }
       else if (getUintField(col) != r2.getUintField(col))
@@ -1456,7 +1456,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       // Migrate to offset based methods here
       // code precision 2 width convertor
       else if (UNLIKELY(datatypes::isWideDecimalType(in.getColTypes()[i], in.getColumnWidth(i))))
-        out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16, out->getOffset(mapping[i]));
+        out->setInt128Field(in.getTSInt128Field(i).getValue(), mapping[i]);
       else if (in.isUnsigned(i))
         out->setUintField(in.getUintField(i), mapping[i]);
       else

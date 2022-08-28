@@ -368,7 +368,7 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
       }
       else if (datatypes::isWideDecimalType(fRow.getColType(i), fRow.getColumnWidth(i)))
       {
-        row.copyBinaryField<int128_t>(fRow, i, mapping[i]);
+        row.copyBinaryField(fRow, i, mapping[i]);
       }
     }
     else
