@@ -1089,7 +1089,7 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
     grabEMIndex(WRITE);
   }
 
-  for (it = cpMap.begin(); it != cpMap.end(); ++it)
+  for (auto it = cpMap.begin(); it != cpMap.end(); /* bottom erase will increase */)
   {
     auto emIt = findByLBID(it->first);
     if (emIt == fExtentMapRBTree->end())
@@ -1265,7 +1265,7 @@ void ExtentMap::mergeExtentsMaxMin(CPMaxMinMergeMap_t& cpMap, bool useLock)
       return;  // Leave when all extents in map are matched
 
     // Deleting objects from map, may speed up successive searches
-    cpMap.erase(it);
+    it = cpMap.erase(it);
   }
 
   throw logic_error("ExtentMap::mergeExtentsMaxMin(): lbid not found");
