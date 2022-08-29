@@ -473,7 +473,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
          ] +
          [pipeline.publish()] +
          (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
-         (if (event != 'custom') && (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] else []) +
+         #(if (event != 'custom') && (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
          (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
