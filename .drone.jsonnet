@@ -321,7 +321,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
   },
   dockerfile:: {
     name: 'dockerfile',
-    depends_on: ['publish pkg', 'smoke'],
+    depends_on: ['publish pkg'],
     failure: 'ignore',
     image: 'alpine/git',
     commands: [
