@@ -37,28 +37,6 @@
 #include <tr1/unordered_map>
 #ifndef _UNORDERED_MAP_FIX_
 #define _UNORDERED_MAP_FIX_
-#ifndef __LP64__
-
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 2
-// This is needed for /usr/include/c++/4.1.1/tr1/functional on 32-bit compiles
-// tr1_hashtable_define_trivial_hash(long long int);
-namespace std
-{
-namespace tr1
-{
-template <>
-struct hash<long long int> : public std::unary_function<long long int, std::size_t>
-{
-  std::size_t operator()(long long int val) const
-  {
-    return static_cast<std::size_t>(val);
-  }
-};
-}  // namespace tr1
-}  // namespace std
-#endif  // if __GNUC__
-
-#endif  // if !__LP64__
 #endif  //_UNORDERED_MAP_FIX_
 #else
 #include <unordered_map>

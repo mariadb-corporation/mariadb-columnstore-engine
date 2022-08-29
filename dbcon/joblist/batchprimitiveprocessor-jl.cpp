@@ -890,7 +890,8 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
 
         if (joinResults.get() == NULL)
         {
-          joinResults.reset(new vector<uint32_t>[8192]);
+          auto * newVector = new vector<uint32_t>[8192];
+          joinResults.reset(newVector);
           tJoiners[j]->setPMJoinResults(joinResults, threadID);
         }
 

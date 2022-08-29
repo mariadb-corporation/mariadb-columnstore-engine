@@ -124,7 +124,7 @@ class ColExtInfEntry
  *  the last input Row number in the extent, as the key.
  */
 //------------------------------------------------------------------------------
-struct uint64Hasher : public std::unary_function<RID, std::size_t>
+struct uint64Hasher
 {
   std::size_t operator()(RID val) const
   {
