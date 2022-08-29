@@ -64,8 +64,7 @@ int64_t Func_greatest::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
       greatestStr = str1;
   }
 
-  uint64_t tmp = (uint64_t)greatestStr;
-  return (int64_t)tmp;
+  return (int64_t)greatestStr;
 }
 
 uint64_t Func_greatest::getUintVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
