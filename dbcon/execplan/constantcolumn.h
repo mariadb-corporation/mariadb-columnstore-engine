@@ -197,7 +197,7 @@ class ConstantColumn : public ReturnedColumn
   /** Constant column on the filte can always be moved into derived table */
   virtual void setDerivedTable()
   {
-    fDerivedTable = "*";
+    fDerivedTable = std::string("*");
   }
 
  private:

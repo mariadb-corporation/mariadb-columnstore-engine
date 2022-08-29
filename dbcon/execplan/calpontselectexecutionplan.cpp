@@ -42,7 +42,7 @@ using namespace querytele;
 namespace
 {
 template <class T>
-struct deleter : public unary_function<T&, void>
+struct deleter
 {
   void operator()(T& x)
   {
