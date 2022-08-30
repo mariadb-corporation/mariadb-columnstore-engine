@@ -22,7 +22,8 @@ FOREACH(name chrono filesystem program_options regex system thread)
   ADD_DEPENDENCIES(${lib} external_boost)
   SET (loc "${Boost_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}")
   SET(byproducts ${byproducts} BUILD_BYPRODUCTS ${loc})
-  SET_TARGET_PROPERTIES(${lib} PROPERTIES IMPORTED_LOCATION ${loc})
+  SET_TARGET_PROPERTIES(${lib} PROPERTIES IMPORTED_LOCATION ${loc}
+                                          EXCLUDE_FROM_ALL TRUE)
 ENDFOREACH()
 
 ExternalProject_Add(external_boost
@@ -36,5 +37,6 @@ ExternalProject_Add(external_boost
   INSTALL_COMMAND ./b2 -q install ${_b2args}
   LOG_BUILD TRUE
   LOG_INSTALL TRUE
+  EXCLUDE_FROM_ALL TRUE
   ${byproducts}
 )
