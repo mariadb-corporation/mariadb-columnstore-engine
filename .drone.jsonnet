@@ -250,6 +250,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       // where are we now?
       'cd mariadb-columnstore-regression-test',
+      'git checkout armfix',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
