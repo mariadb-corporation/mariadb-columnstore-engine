@@ -1,7 +1,7 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  develop: ['ubuntu:22.04'],
   'develop-6': ['centos:7', 'rockylinux:8', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
@@ -11,7 +11,7 @@ local servers = {
 };
 
 local platforms_arm = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  develop: ['ubuntu:22.04'],
   'develop-6': ['rockylinux:8'],
 };
 
