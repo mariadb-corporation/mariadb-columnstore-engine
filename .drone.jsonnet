@@ -65,6 +65,9 @@ local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recom
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
 
 
+local ubuntu2202deps = "apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev ";
+
+
 local platformMap(platform, arch) =
   local clang_force = if (arch == 'arm64') then ' && export CXX=/usr/bin/clang++ && export CC=/usr/bin/clang ';
   local platform_map = {
@@ -74,7 +77,7 @@ local platformMap(platform, arch) =
     'debian:10': deb_build_deps + ' && ' + debian10_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
     'debian:11': deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
     'ubuntu:20.04': ubuntu20_04_deps + ' && ' + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
-    'ubuntu:22.04': deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
+    'ubuntu:22.04': ubuntu2202deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
   platform_map[platform] + ' | tee ' + result + '/build.log';
