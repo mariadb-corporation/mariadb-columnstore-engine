@@ -1,5 +1,5 @@
 Package: mariadb-plugin-columnstore
-Architecture: amd64
+Architecture: any
 Depends: binutils,
          libjemalloc1 | libjemalloc2,
          libsnappy1 | libsnappy1v5,
