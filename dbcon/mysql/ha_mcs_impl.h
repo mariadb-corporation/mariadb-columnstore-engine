@@ -44,7 +44,7 @@ extern int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected
                                                  const std::vector<COND*>& condStack);
 extern int ha_mcs_impl_delete_row();
 extern int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos);
-extern int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table);
+extern int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool isSelectLexUnit = false);
 extern int ha_mcs_impl_select_next(uchar* buf, TABLE* table, long timeZone);
 extern int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table);
 extern int ha_mcs_impl_group_by_next(TABLE* table, long timeZone);

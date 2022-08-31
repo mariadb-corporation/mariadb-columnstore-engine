@@ -45,7 +45,8 @@ group_by_handler* create_columnstore_group_by_handler(THD* thd, Query* query);
 
 derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* derived);
 
-select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
+select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit);
+select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_unit);
 
 /* Variables for example share methods */
 
@@ -1835,6 +1836,7 @@ static int columnstore_init_func(void* p)
   mcs_hton->create_group_by = create_columnstore_group_by_handler;
   mcs_hton->create_derived = create_columnstore_derived_handler;
   mcs_hton->create_select = create_columnstore_select_handler;
+  mcs_hton->create_unit = create_columnstore_unit_handler;
   mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
 #ifdef HAVE_PSI_INTERFACE
