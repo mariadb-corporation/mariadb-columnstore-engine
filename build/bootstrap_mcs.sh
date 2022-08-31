@@ -4,7 +4,6 @@
 # - the server's source code is two directories above the MCS engine source.
 # - the script is to be run under root.
 
-
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
 
@@ -45,6 +44,7 @@ fi
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
+CTEST_BIN_NAME=ctest
 
 select_branch()
 {
@@ -65,7 +65,7 @@ select_branch()
     fi
 
     cd $SCRIPT_LOCATION
-    CURRENT_BRANCH=$(git branch --show-current)
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     cd -
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
@@ -82,21 +82,22 @@ install_deps()
         liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
 
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
-        yum -y install epel-release \
-        && yum -y groupinstall "Development Tools" \
-	&& yum config-manager --set-enabled powertools \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
-        && yum -y install vim wget strace ltrace gdb  rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel \        && yum -y install lzo-devel xz-devel lz4-devel bzip2-devel
-
         if [[ "$OS_VERSION" == "7" ]]; then
-            yum -y install cmake3
+            yum -y install cmake3 epel-release centos-release-scl
             CMAKE_BIN_NAME=cmake3
+            CTEST_BIN_NAME=ctest3
         else
             yum -y install cmake
         fi
         if [ $OS = 'Rocky' ]; then
-	    yum install -y checkpolicy
+           yum -y groupinstall "Development Tools" && yum config-manager --set-enabled powertools
+           yum install -y checkpolicy
         fi
+        yum -y install epel-release \
+        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+        && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
+        && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel install lzo-devel xz-devel lz4-devel bzip2-devel \
+        && yum -y install pcre2-devel
     fi
 }
 
@@ -159,7 +160,8 @@ build()
                      -DBUILD_CONFIG=mysql_release
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
-                     -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX"
+                     -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
+                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
 
 
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
@@ -185,7 +187,7 @@ build()
         fi
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
-        info "Buiding without microbenchmarks"
+        message "Buiding without microbenchmarks"
     fi
 
 
@@ -250,7 +252,7 @@ run_unit_tests()
     else
         message "Running unittests"
         cd $MDB_SOURCE_PATH
-        ctest . -R columnstore: -j $(nproc)
+        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc)
         cd -
     fi
 }
@@ -262,7 +264,7 @@ run_microbenchmarks_tests()
     else
         message "Runnning microbenchmarks"
         cd $MDB_SOURCE_PATH
-        ctest . -V -R columnstore_microbenchmarks: -j $(nproc)
+        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc)
         cd -
     fi
 }
