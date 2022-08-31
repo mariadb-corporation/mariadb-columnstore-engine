@@ -728,20 +728,22 @@ int ha_mcs_group_by_handler::end_scan()
   DBUG_RETURN(rc);
 }
 
-/*@brief  create_columnstore_select_handler- Creates handler*/
-/************************************************************
+/*@brief  create_columnstore_select_handler_- Creates handler
+************************************************************
  * DESCRIPTION:
  * Creates a select handler if there is no non-equi JOIN, e.g
  * t1.c1 > t2.c2 and logical OR in the filter predicates.
  * More details in server/sql/select_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
- *    select_lex - SELECT_LEX* that describes the query.
+ *    sel_lex - SELECT_LEX* that describes the query.
+ *    sel_unit - SELECT_LEX_UNIT* that describes the query.
+ *    Only one of sel_lex and sel_unit is not null.
  * RETURN:
  *    select_handler if possible
  *    NULL in other case
  ***********************************************************/
-select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
+select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit)
 {
   mcs_select_handler_mode_t select_handler_mode = get_select_handler_mode(thd);
 
@@ -778,60 +780,96 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
     return nullptr;
   }
 
-  // Iterate and traverse through the item list and the JOIN cond
-  // and do not create SH if the unsupported (set_user_var)
-  // function is present.
-  TABLE_LIST* table_ptr = select_lex->get_table_list();
-  for (; table_ptr; table_ptr = table_ptr->next_global)
+  std::vector<SELECT_LEX*> select_lex_vec;
+
+  if (sel_unit && !sel_lex)
   {
-    if (check_user_var(table_ptr->select_lex))
+    for (SELECT_LEX* sl = sel_unit->first_select(); sl; sl = sl->next_select())
     {
-      return nullptr;
+      select_lex_vec.push_back(sl);
+    }
+  }
+  else
+  {
+    select_lex_vec.push_back(sel_lex);
+  }
+
+  for (size_t i = 0; i < select_lex_vec.size(); i++)
+  {
+    SELECT_LEX* select_lex = select_lex_vec[i];
+
+    // Iterate and traverse through the item list and the JOIN cond
+    // and do not create SH if the unsupported (set_user_var)
+    // function is present.
+    TABLE_LIST* table_ptr = select_lex->get_table_list();
+    for (; table_ptr; table_ptr = table_ptr->next_global)
+    {
+      if (check_user_var(table_ptr->select_lex))
+      {
+        return nullptr;
+      }
     }
   }
 
   // We apply dedicated rewrites from MDB here so MDB's data structures
   // becomes dirty and CS has to raise an error in case of any problem
   // or unsupported feature.
-  ha_columnstore_select_handler* handler = new ha_columnstore_select_handler(thd, select_lex);
+  ha_columnstore_select_handler* handler;
 
-  JOIN* join = select_lex->join;
-
-  if (select_lex->first_cond_optimization && select_lex->handle_derived(thd->lex, DT_MERGE))
+  if (sel_unit && sel_lex)
   {
-    if (!thd->is_error())
-    {
-      my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in select_lex::handle_derived()");
-    }
-
-    return handler;
+    handler = new ha_columnstore_select_handler(thd, sel_lex, sel_unit);
+  }
+  else if (sel_unit)
+  {
+    handler = new ha_columnstore_select_handler(thd, sel_unit);
+  }
+  else
+  {
+    handler = new ha_columnstore_select_handler(thd, sel_lex);
   }
 
-  // This is partially taken from JOIN::optimize_inner() in sql/sql_select.cc
-  if (select_lex->first_cond_optimization)
+  for (size_t i = 0; i < select_lex_vec.size(); i++)
   {
-    create_explain_query_if_not_exists(thd->lex, thd->mem_root);
-    Query_arena *arena, backup;
-    arena = thd->activate_stmt_arena_if_needed(&backup);
-    COND* conds = join->conds;
-    select_lex->where = conds;
+    SELECT_LEX* select_lex = select_lex_vec[i];
+    JOIN* join = select_lex->join;
 
-    if (isPS)
+    if (select_lex->first_cond_optimization && select_lex->handle_derived(thd->lex, DT_MERGE))
     {
-      select_lex->prep_where = conds ? conds->copy_andor_structure(thd) : 0;
+      if (!thd->is_error())
+      {
+        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in select_lex::handle_derived()");
+      }
+
+      return handler;
     }
 
-    select_lex->update_used_tables();
+    // This is partially taken from JOIN::optimize_inner() in sql/sql_select.cc
+    if (select_lex->first_cond_optimization)
+    {
+      create_explain_query_if_not_exists(thd->lex, thd->mem_root);
+      Query_arena *arena, backup;
+      arena = thd->activate_stmt_arena_if_needed(&backup);
+      COND* conds = join->conds;
+      select_lex->where = conds;
 
-    if (arena)
-      thd->restore_active_arena(arena, &backup);
+      if (isPS)
+      {
+        select_lex->prep_where = conds ? conds->copy_andor_structure(thd) : 0;
+      }
+
+      select_lex->update_used_tables();
+
+      if (arena)
+        thd->restore_active_arena(arena, &backup);
 
 #ifdef DEBUG_WALK_COND
-    if (conds)
-    {
-      conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
-    }
+      if (conds)
+      {
+        conds->traverse_cond(cal_impl_if::debug_walk, NULL, Item::POSTFIX);
+      }
 #endif
+    }
   }
 
   // Attempt to execute the query using the select handler.
@@ -840,69 +878,45 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
   // Skip execution for EXPLAIN queries
   if (!thd->lex->describe)
   {
-    // This is taken from JOIN::optimize()
-    join->fields = &select_lex->item_list;
-
-    // Instantiate handler::table, which is the place for the result set.
-    if (handler->prepare())
+    for (size_t i = 0; i < select_lex_vec.size(); i++)
     {
-      // check fallback
-      if (select_handler_mode == mcs_select_handler_mode_t::AUTO)  // columnstore_select_handler=AUTO
+      SELECT_LEX* select_lex = select_lex_vec[i];
+      JOIN* join = select_lex->join;
+
+      // This is taken from JOIN::optimize()
+      join->fields = &select_lex->item_list;
+
+      // Instantiate handler::table, which is the place for the result set.
+      if ((i == 0) && handler->prepare())
       {
-        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999,
-                     "MCS select_handler execution failed. Falling back to server execution");
-        restore_query_state(handler);
-        delete handler;
-        return nullptr;
+        // check fallback
+        if (select_handler_mode == mcs_select_handler_mode_t::AUTO)  // columnstore_select_handler=AUTO
+        {
+          push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999,
+                       "MCS select_handler execution failed. Falling back to server execution");
+          restore_query_state(handler);
+          delete handler;
+          return nullptr;
+        }
+
+        // error out
+        if (!thd->is_error())
+        {
+          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in handler->prepare()");
+        }
+
+        return handler;
       }
 
-      // error out
-      if (!thd->is_error())
-      {
-        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in handler->prepare()");
-      }
+      // Prepare query execution
+      // This is taken from JOIN::exec_inner()
+      if (!select_lex->outer_select() &&                             // (1)
+          select_lex != select_lex->master_unit()->fake_select_lex)  // (2)
+        thd->lex->set_limit_rows_examined();
 
-      return handler;
-    }
-
-    // Prepare query execution
-    // This is taken from JOIN::exec_inner()
-    if (!select_lex->outer_select() &&                             // (1)
-        select_lex != select_lex->master_unit()->fake_select_lex)  // (2)
-      thd->lex->set_limit_rows_examined();
-
-    if (!join->tables_list && (join->table_count || !select_lex->with_sum_func) &&
-        !select_lex->have_window_funcs())
-    {
-      if (!thd->is_error())
-      {
-        restore_query_state(handler);
-        delete handler;
-        return nullptr;
-      }
-
-      return handler;
-    }
-
-    if (!join->zero_result_cause && join->exec_const_cond && !join->exec_const_cond->val_int())
-      join->zero_result_cause = "Impossible WHERE noticed after reading const tables";
-
-    // We've called exec_const_cond->val_int(). This may have caused an error.
-    if (unlikely(thd->is_error()))
-    {
-      // error out
-      handler->pushdown_init_rc = 1;
-      return handler;
-    }
-
-    if (join->zero_result_cause)
-    {
-      if (join->select_lex->have_window_funcs() && join->send_row_on_empty_set())
-      {
-        join->const_tables = join->table_count;
-        join->first_select = sub_select_postjoin_aggr;
-      }
-      else
+      if ((!sel_unit || sel_lex) && !join->tables_list &&
+          (join->table_count || !select_lex->with_sum_func) &&
+          !select_lex->have_window_funcs())
       {
         if (!thd->is_error())
         {
@@ -913,23 +927,56 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
 
         return handler;
       }
-    }
 
-    if ((join->select_lex->options & OPTION_SCHEMA_TABLE) &&
-        get_schema_tables_result(join, PROCESSED_BY_JOIN_EXEC))
-    {
-      if (!thd->is_error())
+      if (!join->zero_result_cause && join->exec_const_cond && !join->exec_const_cond->val_int())
+        join->zero_result_cause = "Impossible WHERE noticed after reading const tables";
+
+      // We've called exec_const_cond->val_int(). This may have caused an error.
+      if (unlikely(thd->is_error()))
       {
-        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in get_schema_tables_result()");
+        // error out
+        handler->pushdown_init_rc = 1;
+        return handler;
       }
 
-      return handler;
+      if (join->zero_result_cause)
+      {
+        if (join->select_lex->have_window_funcs() && join->send_row_on_empty_set())
+        {
+          join->const_tables = join->table_count;
+          join->first_select = sub_select_postjoin_aggr;
+        }
+        else
+        {
+          if (!thd->is_error())
+          {
+            restore_query_state(handler);
+            delete handler;
+            return nullptr;
+          }
+
+          return handler;
+        }
+      }
+
+      if ((join->select_lex->options & OPTION_SCHEMA_TABLE) &&
+          get_schema_tables_result(join, PROCESSED_BY_JOIN_EXEC))
+      {
+        if (!thd->is_error())
+        {
+          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in get_schema_tables_result()");
+        }
+
+        return handler;
+      }
     }
 
     handler->scan_initialized = true;
     mcs_handler_info mhi(reinterpret_cast<void*>(handler), SELECT);
 
-    if ((handler->pushdown_init_rc = ha_mcs_impl_pushdown_init(&mhi, handler->table)))
+    bool isSelectLexUnit = (sel_unit && !sel_lex) ? true : false;
+
+    if ((handler->pushdown_init_rc = ha_mcs_impl_pushdown_init(&mhi, handler->table, isSelectLexUnit)))
     {
       // check fallback
       if (select_handler_mode == mcs_select_handler_mode_t::AUTO)
@@ -967,14 +1014,29 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
       return handler;
     }
 
-    // Unset select_lex::first_cond_optimization
-    if (select_lex->first_cond_optimization)
+    for (size_t i = 0; i < select_lex_vec.size(); i++)
     {
-      first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
+      SELECT_LEX* select_lex = select_lex_vec[i];
+
+      // Unset select_lex::first_cond_optimization
+      if (select_lex->first_cond_optimization)
+      {
+        first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
+      }
     }
   }
 
   return handler;
+}
+
+select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex, SELECT_LEX_UNIT* sel_unit)
+{
+  return create_columnstore_select_handler_(thd, select_lex, sel_unit);
+}
+
+select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_unit)
+{
+  return create_columnstore_select_handler_(thd, 0, sel_unit);
 }
 
 /***********************************************************
@@ -982,16 +1044,53 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
  * select_handler constructor
  * PARAMETERS:
  *    thd - THD pointer.
- *    select_lex - sematic tree for the query.
+ *    sel_lex - semantic tree for the query.
  ***********************************************************/
-ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
- : select_handler(thd, mcs_hton)
+ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX* sel_lex)
+ : select_handler(thd, mcs_hton, sel_lex)
  , prepared(false)
  , scan_ended(false)
  , scan_initialized(false)
  , pushdown_init_rc(0)
 {
-  select = select_lex;
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * select_handler constructor
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    sel_unit - semantic tree for the query.
+ ***********************************************************/
+ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX_UNIT* sel_unit)
+ : select_handler(thd, mcs_hton, sel_unit)
+ , prepared(false)
+ , scan_ended(false)
+ , scan_initialized(false)
+ , pushdown_init_rc(0)
+{
+  const char* timeZone = thd->variables.time_zone->get_name()->ptr();
+  dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * select_handler constructor
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    sel_lex - semantic tree for the query.
+ *    sel_unit - unit containing SELECT_LEX's
+ ***********************************************************/
+ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX* sel_lex,
+                                                             SELECT_LEX_UNIT* sel_unit)
+ : select_handler(thd, mcs_hton, sel_lex, sel_unit)
+ , prepared(false)
+ , scan_ended(false)
+ , scan_initialized(false)
+ , pushdown_init_rc(0)
+{
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
@@ -1074,7 +1173,7 @@ bool ha_columnstore_select_handler::prepare()
 
   prepared = true;
 
-  if ((!table && !(table = create_tmp_table(thd, select))) || table->fill_item_list(&result_columns))
+  if ((!table && !(table = create_tmp_table(thd))) || table->fill_item_list(&result_columns))
   {
     pushdown_init_rc = 1;
     DBUG_RETURN(true);

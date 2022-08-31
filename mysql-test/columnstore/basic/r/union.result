@@ -5,6 +5,9 @@ USE mcs_union;
 #
 # MCOL-4700 Wrong result of a UNION for INT and INT UNSIGNED
 #
+# Move the UNIONs from the subqueries to outer selects and add
+# ORDER BY clause after MCOL-5222 is fixed
+#
 CREATE TABLE t1 (a INT, b INT UNSIGNED);
 INSERT INTO t1 VALUES (-1, 1), (-1, 1), (-2, 2);
 SELECT * FROM (SELECT * FROM t1 UNION SELECT * FROM t1) tu ORDER BY b;
@@ -861,5 +864,28 @@ a
 1
 16777213
 9223372036854775807
+DROP TABLE t1,t2;
+#
+# Union of tables containing different string data types
+#
+# Uncomment the actual SELECTs and add ORDER BY clause
+# after MCOL-5222 is fixed
+#
+CREATE TABLE t1 (a CHAR(6));
+INSERT INTO t1 VALUES ('t13abc'), ('t13xx'), ('common');
+CREATE TABLE t2 (a VARCHAR(8));
+INSERT INTO t2 VALUES ('t14abcde'), ('t14xyzzz'), ('common');
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT * FROM t2 UNION ALL SELECT * FROM t1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 DROP TABLE t1,t2;
 DROP DATABASE mcs_union;
