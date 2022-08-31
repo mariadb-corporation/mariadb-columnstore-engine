@@ -151,7 +151,9 @@ class ha_columnstore_select_handler : public select_handler
   // This will be used to restore to the original state later in case
   // query execution fails using the select_handler.
   cal_impl_if::TableOuterJoinMap tableOuterJoinMap;
-  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel_lex);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX_UNIT* sel_unit);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit);
   ~ha_columnstore_select_handler();
   int init_scan() override;
   int next_row() override;

@@ -6567,7 +6567,8 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
  * RETURNS
  *  error id as an int
  ***********************************************************/
-int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep)
+int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
+                bool isSelectHandlerTop, bool isSelectLexUnit)
 {
   // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
   // all tables on FROM list must have at least one col in colmap
@@ -6706,7 +6707,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // Existed pushdown handlers won't get in this scope
   // except UNION pushdown that is to come.
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
-  if (!isUnion && select_lex.master_unit()->is_unit_op())
+  if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
     // MCOL-2178 isUnion member only assigned, never used
     // MIGR::infinidb_vtable.isUnion = true;
@@ -7264,7 +7265,8 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
  *  error id as an int
  ***********************************************************/
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
-                  bool isSelectHandlerTop, const std::vector<COND*>& condStack)
+                  bool isSelectHandlerTop, bool isSelectLexUnit,
+                  const std::vector<COND*>& condStack)
 {
 #ifdef DEBUG_WALK_COND
   cerr << "getSelectPlan()" << endl;
@@ -7292,7 +7294,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   CalpontSelectExecutionPlan::SelectList derivedTbList;
   // @bug 1796. Remember table order on the FROM list.
   gwi.clauseType = FROM;
-  if ((rc = processFrom(isUnion, select_lex, gwi, csep)))
+  if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop,
+                        isSelectLexUnit)))
   {
     return rc;
   }
@@ -8685,9 +8688,10 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
   return 0;
 }
 
-int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
+                       bool isSelectLexUnit)
 {
-  SELECT_LEX& select_lex = *handler->select;
+  SELECT_LEX& select_lex = handler->select_lex ? *handler->select_lex : *handler->lex_unit->first_select();
 
   if (select_lex.where)
   {
@@ -8699,7 +8703,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   convertOuterJoinToInnerJoin(&select_lex.top_join_list, gwi.tableOnExprList, gwi.condList,
                               handler->tableOuterJoinMap);
 
-  int status = getSelectPlan(gwi, select_lex, csep, false, true);
+  int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
   if (status > 0)
     return ER_INTERNAL_ERROR;

@@ -1392,7 +1392,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     gwi.clauseType = WHERE;
 
-    if (getSelectPlan(gwi, select_lex, updateCP, false, false, condStack) !=
+    if (getSelectPlan(gwi, select_lex, updateCP, false, false, false, condStack) !=
         0)  //@Bug 3030 Modify the error message for unsupported functions
     {
       if (gwi.cs_vtable_is_update_with_derive)
@@ -4814,7 +4814,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
  * RETURN:
  *    rc as int
  ***********************************************************/
-int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
+int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool isSelectLexUnit)
 {
   IDEBUG(cout << "pushdown_init for table " << endl);
   THD* thd = current_thd;
@@ -5002,7 +5002,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
       if (handler_info->hndl_type == mcs_handler_types_t::SELECT)
       {
         sh = reinterpret_cast<ha_columnstore_select_handler*>(handler_info->hndl_ptr);
-        status = cs_get_select_plan(sh, thd, csep, gwi);
+        status = cs_get_select_plan(sh, thd, csep, gwi, isSelectLexUnit);
       }
       else if (handler_info->hndl_type == DERIVED)
       {
