@@ -1,8 +1,8 @@
 local events = ['pull_request', 'cron'];
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['centos:7', 'rockylinux:8', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-6': ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local servers = {
@@ -11,12 +11,12 @@ local servers = {
 };
 
 local platforms_arm = {
-  develop: ['rockylinux:8'],
+  develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
   'develop-6': ['rockylinux:8'],
 };
 
 local any_branch = '**';
-local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:10', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
+local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
 local platforms_arm_custom = ['rockylinux:8'];
 
 local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
@@ -25,14 +25,14 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_release ' +
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
-                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES' +
+                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES ' +
                    '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
                    '-DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO';
 
-local clang_version = '14';
-local gcc_version = '11';
+local clang_version = '13';
+local gcc_version = '10';
 
 local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-' + gcc_version + ' 100 --slave /usr/bin/g++ g++ /usr/bin/g++-' + gcc_version + '--slave /usr/bin/gcov gcov /usr/bin/gcov-' + gcc_version + ' ';
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
@@ -57,12 +57,12 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
 
-local debian10_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
+local bootstrap_deps = "apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ";
 
 
 local platformMap(platform, arch) =
@@ -71,10 +71,9 @@ local platformMap(platform, arch) =
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'debian:10': deb_build_deps + ' && ' + debian10_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=buster' debian/autobake-deb.sh",
-    'debian:11': deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
-    'ubuntu:20.04': ubuntu20_04_deps + ' && ' + turnon_clang + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
-    'ubuntu:22.04': deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
+    'debian:11':    bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
+    'ubuntu:20.04': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + ubuntu20_04_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
+    'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
   platform_map[platform] + ' | tee ' + result + '/build.log';
@@ -85,7 +84,6 @@ local testRun(platform) =
     'centos:7': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'rockylinux:9': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
-    'debian:10': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'debian:11': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:20.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
     'ubuntu:22.04': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
@@ -98,7 +96,6 @@ local testPreparation(platform) =
     'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:10': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
@@ -236,7 +233,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
     name: 'regression',
     depends_on: ['smoke'],
     image: 'docker:git',
-    [if event == 'cron' then 'failure']: 'ignore',
+    [if (event == 'cron' || arch == 'arm64') then 'failure']: 'ignore',
+
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-' + regression_tests + '}',
