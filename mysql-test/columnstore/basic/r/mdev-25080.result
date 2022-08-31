@@ -1,0 +1,114 @@
+#
+# MDEV-25080: Allow pushdown of queries involving UNIONs
+# in outer select to foreign engines
+#
+# Uncomment the actual SELECTs and add ORDER BY clause
+# after MCOL-5222 is fixed
+#
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+DROP DATABASE IF EXISTS mdev25080;
+CREATE DATABASE mdev25080;
+USE mdev25080;
+CREATE TABLE t1 (a varchar(30)) ENGINE=ColumnStore;
+CREATE TABLE t2 (a varchar(30)) ENGINE=ColumnStore;
+CREATE TABLE t3 (a varchar(30)) ENGINE=MyISAM;
+CREATE TABLE t4 (a varchar(30)) ENGINE=MyISAM;
+INSERT INTO t1 VALUES ('abc'), ('bcd'), ('cde');
+INSERT INTO t2 VALUES ('bcd'), ('cde'), ('def'), ('efg');
+INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
+INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
+# Pushdown of the whole UNION
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+# UNION with a foreign engine
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+# More than two SELECTs in a UNIT:
+EXPLAIN SELECT * FROM t1 UNION
+SELECT * FROM t2 UNION ALL
+SELECT * FROM t1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN (SELECT * FROM t1 UNION
+SELECT * FROM t2) UNION ALL
+SELECT * FROM t1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN SELECT * FROM t1 UNION
+SELECT * FROM t2 UNION ALL
+SELECT * FROM t3 UNION
+SELECT * FROM t4;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN (SELECT * FROM t1 UNION
+SELECT * FROM t2) UNION ALL
+(SELECT * FROM t3 UNION
+SELECT * FROM t4);
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXPLAIN
+SELECT count(*) FROM t1 UNION
+SELECT count(*) FROM t2 UNION ALL
+SELECT count(*)+20 FROM t2 UNION
+SELECT count(*)+5 FROM t1;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+# UNION inside a derived table: the whole derived table must be pushed
+SELECT a FROM
+(SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
+a
+abc
+bcd
+bcd
+cde
+cde
+def
+efg
+EXPLAIN
+SELECT a FROM
+(SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT a FROM
+(SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
+a
+abc
+bcd
+cde
+t3_myisam1
+t3_myisam2
+t3_myisam3
+EXPLAIN
+SELECT a FROM
+(SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+# Prepared statements
+PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
+  SELECT * FROM t2";
+EXECUTE stmt;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXECUTE stmt;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t1 UNION
+  SELECT * FROM t2)";
+EXECUTE stmt;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+EXECUTE stmt;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+DROP USER 'cejuser'@'localhost';
+DROP TABLE t1, t2, t3, t4;
+DROP DATABASE mdev25080;
