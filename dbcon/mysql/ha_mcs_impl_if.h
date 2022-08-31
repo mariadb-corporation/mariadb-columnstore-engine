@@ -396,9 +396,9 @@ int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_in
 int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, execplan::SCSEP& csep,
                         gp_walk_info& gwi);
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, execplan::SCSEP& csep,
-                       gp_walk_info& gwi);
+                       gp_walk_info& gwi, bool isSelectLexUnit);
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false,
-                  bool isSelectHandlerTop = false,
+                  bool isSelectHandlerTop = false, bool isSelectLexUnit = false,
                   const std::vector<COND*>& condStack = std::vector<COND*>());
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi,
                  bool isUnion = false);

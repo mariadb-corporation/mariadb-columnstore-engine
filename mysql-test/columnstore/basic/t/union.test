@@ -12,6 +12,9 @@ USE mcs_union;
 --echo #
 --echo # MCOL-4700 Wrong result of a UNION for INT and INT UNSIGNED
 --echo #
+--echo # Move the UNIONs from the subqueries to outer selects and add
+--echo # ORDER BY clause after MCOL-5222 is fixed
+--echo #
 
 CREATE TABLE t1 (a INT, b INT UNSIGNED);
 INSERT INTO t1 VALUES (-1, 1), (-1, 1), (-2, 2);
@@ -271,6 +274,27 @@ CREATE TABLE t2 (a INT UNSIGNED);
 INSERT INTO t2 VALUES (0),(1),(0xFFFFFF-2);
 SELECT * FROM (SELECT a FROM t1 UNION ALL SELECT a FROM t2) tu ORDER BY a;
 SELECT * FROM (SELECT a FROM t2 UNION ALL SELECT a FROM t1) tu ORDER BY a;
+DROP TABLE t1,t2;
+
+--echo #
+--echo # Union of tables containing different string data types
+--echo #
+--echo # Uncomment the actual SELECTs and add ORDER BY clause
+--echo # after MCOL-5222 is fixed
+--echo #
+
+CREATE TABLE t1 (a CHAR(6));
+INSERT INTO t1 VALUES ('t13abc'), ('t13xx'), ('common');
+CREATE TABLE t2 (a VARCHAR(8));
+INSERT INTO t2 VALUES ('t14abcde'), ('t14xyzzz'), ('common');
+#SELECT * FROM t1 UNION SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+#SELECT * FROM t2 UNION ALL SELECT * FROM t1;
+EXPLAIN SELECT * FROM t2 UNION ALL SELECT * FROM t1;
+#SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
+#SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
 DROP TABLE t1,t2;
 
 DROP DATABASE mcs_union;
