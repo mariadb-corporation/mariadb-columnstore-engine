@@ -2359,11 +2359,11 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
       [this]()
       {
         utils::setThreadName("PPSHServerThr");
-        auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+        auto* exeMgrDecPtr = (exemgr::globServiceExeMgr) ? exemgr::globServiceExeMgr->getDec() : nullptr;
         while (!exeMgrDecPtr)
         {
           sleep(1);
-          exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+          exeMgrDecPtr = (exemgr::globServiceExeMgr) ? exemgr::globServiceExeMgr->getDec() : nullptr;
         }
         // These empty SPs have "same-host" messaging semantics.
         SP_UM_IOSOCK outIos(nullptr);
