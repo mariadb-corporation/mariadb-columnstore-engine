@@ -140,8 +140,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterTemplatedCode)(b
   {
     state.PauseTiming();
     constexpr const uint8_t W = 1;
-    setUp1EqFilter<W>();
     inTestRunSetUp("col1block.cdf", W, SystemCatalog::CHAR, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -169,8 +169,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1Byte1FilterVectorizedCode)(
   {
     state.PauseTiming();
     constexpr const uint8_t W = 1;
-    setUp1EqFilter<W>();
     inTestRunSetUp("col1block.cdf", W, SystemCatalog::TINYINT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -198,8 +198,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterTemplatedCode)(b
   {
     state.PauseTiming();
     constexpr const uint8_t W = 2;
-    setUp1EqFilter<W>();
     inTestRunSetUp("col2block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -213,8 +213,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan2Byte1FilterVectorizedCode)(
   {
     state.PauseTiming();
     constexpr const uint8_t W = 2;
-    setUp1EqFilter<W>();
     inTestRunSetUp("col2block.cdf", W, SystemCatalog::TINYINT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -243,8 +243,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan4ByteVectorizedCode)(benchma
   {
     state.PauseTiming();
     constexpr const uint8_t W = 4;
-    setUp1EqFilter<W>();
     inTestRunSetUp("col4block.cdf", W, SystemCatalog::TINYINT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -272,8 +272,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterTemplatedCode)(b
   {
     constexpr const uint8_t W = 8;
     state.PauseTiming();
-    setUp1EqFilter<W>();
     inTestRunSetUp("col8block.cdf", W, SystemCatalog::INT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
@@ -301,8 +301,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterVectorizedCode)(
   {
     constexpr const uint8_t W = 8;
     state.PauseTiming();
-    setUp1EqFilter<W>();
     inTestRunSetUp("col8block.cdf", W, SystemCatalog::TINYINT, OT_DATAVALUE, args);
+    setUp1EqFilter<W>();
     state.ResumeTiming();
     runFilterBenchTemplated<W>();
   }
