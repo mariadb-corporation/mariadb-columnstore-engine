@@ -1,0 +1,72 @@
+DROP DATABASE IF EXISTS json_object_db;
+CREATE DATABASE json_object_db;
+USE json_object_db;
+# ----------------------------------------------------------------------
+# Test of JSON_OBJECT function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(l TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO t1 VALUES('a');
+SELECT json_object(l) FROM t1;
+ERROR 42000: Incorrect parameter count in the call to native function 'json_object'
+SELECT json_object(l, 1, 'b') FROM t1;
+ERROR 42000: Incorrect parameter count in the call to native function 'json_object'
+# Null arg
+TRUNCATE t1;
+INSERT INTO t1 values(null);
+SELECT JSON_OBJECT(l, 1) FROM t1;
+JSON_OBJECT(l, 1)
+{"": 1}
+SELECT JSON_OBJECT(1, l) FROM t1;
+JSON_OBJECT(1, l)
+{"1": null}
+# Valid arg
+TRUNCATE t1;
+INSERT INTO t1 values('a');
+SELECT JSON_OBJECT(l, null) FROM t1;
+JSON_OBJECT(l, null)
+{"a": null}
+SELECT JSON_OBJECT(l, 1) FROM t1;
+JSON_OBJECT(l, 1)
+{"a": 1}
+SELECT JSON_OBJECT(l, 1, 'b', 'foo') FROM t1;
+JSON_OBJECT(l, 1, 'b', 'foo')
+{"a": 1, "b": "foo"}
+SELECT JSON_OBJECT(l, 1, 'b', 'foo','c','{ "d": "e" }') FROM t1;
+JSON_OBJECT(l, 1, 'b', 'foo','c','{ "d": "e" }')
+{"a": 1, "b": "foo", "c": "{ \"d\": \"e\" }"}
+SELECT JSON_OBJECT(l, true, 'b', false, 'c', null ) FROM t1;
+JSON_OBJECT(l, true, 'b', false, 'c', null )
+{"a": true, "b": false, "c": null}
+SELECT JSON_OBJECT(l, 'true', 'b', 'false', 'c', null ) FROM t1;
+JSON_OBJECT(l, 'true', 'b', 'false', 'c', null )
+{"a": "true", "b": "false", "c": null}
+SELECT JSON_VALID(json_object(l, 1 )) from t1;
+JSON_VALID(json_object(l, 1 ))
+1
+# Long key
+TRUNCATE t1;
+INSERT INTO t1 values('a');
+# SELECT JSON_OBJECT(REPEAT(l, 64 * 1024), 1) FROM t1;
+# Non-string keys are cast to CHAR
+TRUNCATE t1;
+INSERT INTO t1 values('a');
+SELECT JSON_OBJECT(1, l) FROM t1;
+JSON_OBJECT(1, l)
+{"1": "a"}
+SELECT JSON_OBJECT(CAST(1 AS CHAR), l) FROM t1;
+JSON_OBJECT(CAST(1 AS CHAR), l)
+{"1": "a"}
+SELECT JSON_OBJECT(true, l) FROM t1;
+JSON_OBJECT(true, l)
+{"1": "a"}
+SELECT JSON_OBJECT(CAST(true AS CHAR), l) FROM t1;
+JSON_OBJECT(CAST(true AS CHAR), l)
+{"1": "a"}
+SELECT JSON_OBJECT(false, l) FROM t1;
+JSON_OBJECT(false, l)
+{"0": "a"}
+SELECT JSON_OBJECT(CAST(false AS CHAR), l) FROM t1;
+JSON_OBJECT(CAST(false AS CHAR), l)
+{"0": "a"}
+DROP TABLE t1;
+DROP DATABASE json_object_db;

@@ -1,0 +1,44 @@
+DROP DATABASE IF EXISTS json_equals_db;
+CREATE DATABASE json_equals_db;
+USE json_equals_db;
+# ----------------------------------------------------------------------
+# Test of JSON_EQUALS function.
+# ----------------------------------------------------------------------
+# Return 1 
+CREATE TABLE t1(l LONGTEXT, r LONGTEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('{"a":1,"b":2}','{"a":1,"b":2}');
+INSERT INTO t1 VALUES('{"a":1,"b":2}','{"b":2,"a":1}');
+INSERT INTO t1 VALUES('{"a":1,"b":2}','{"a":  1,"b":  2}');
+INSERT INTO t1 VALUES('{"a":    1,"b":2}','{"b":2,"a":1}');
+INSERT INTO t1 VALUES('[1,2]','[1,2]');
+INSERT INTO t1 VALUES('[1,2]','[1   ,  2]');
+INSERT INTO t1 VALUES(1,1);
+SELECT JSON_EQUALS(l, r) FROM t1;
+JSON_EQUALS(l, r)
+1
+1
+1
+1
+1
+1
+1
+# Return 0
+TRUNCATE t1;
+INSERT INTO t1 VALUES('{"a":1,"b":3}','{"a":1,"b":2}');
+INSERT INTO t1 VALUES('[1,2]','[2,1]');
+INSERT INTO t1 VALUES(1,2);
+SELECT JSON_EQUALS(l, r) FROM t1;
+JSON_EQUALS(l, r)
+0
+0
+0
+# NULL
+TRUNCATE t1;
+INSERT INTO t1 VALUES('["a",true,{"e":false},null','["a",true,{"e":false},null');
+INSERT INTO t1 VALUES('s1',"s1");
+SELECT JSON_EQUALS(l, r) FROM t1;
+JSON_EQUALS(l, r)
+NULL
+NULL
+DROP TABLE t1;
+DROP DATABASE json_equals_db;

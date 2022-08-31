@@ -1,0 +1,27 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+
+DROP DATABASE IF EXISTS json_normalize_db;
+--enable_warnings
+
+CREATE DATABASE json_normalize_db; 
+USE json_normalize_db;
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_NORMALIZE function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('{"key2":"v2","key1":"v1"}');
+INSERT INTO t1 VALUES('{"key2":   "v2",  "key1":"v1"}');
+INSERT INTO t1 VALUES('{"key1":   "v2",  "key1":"v1"}');
+INSERT INTO t1 VALUES('{"key1":   "v2",  "key2":"v1"}');
+INSERT INTO t1 VALUES('{}');
+INSERT INTO t1 VALUES('{     }');
+INSERT INTO t1 VALUES('"123"');
+INSERT INTO t1 VALUES('[   1,2,3]');
+INSERT INTO t1 VALUES('[]');
+INSERT INTO t1 VALUES('[      ]');
+INSERT INTO t1 VALUES(null);
+INSERT INTO t1 VALUES('{"key1":value1}');
+SELECT JSON_NORMALIZE(l) from t1;
+DROP TABLE t1;
+DROP DATABASE json_normalize_db;

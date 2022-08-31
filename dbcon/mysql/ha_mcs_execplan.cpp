@@ -3550,6 +3550,35 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
   return rc;
 }
 
+// parse the boolean fields to string "true" or "false"
+ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& nonSupport)
+{
+  ConstantColumn* cc = NULL;
+
+  if (gwi.thd)
+  {
+    {
+      if (!item->fixed())
+      {
+        item->fix_fields(gwi.thd, (Item**)&item);
+      }
+    }
+  }
+  int64_t val = static_cast<int64_t>(item->val_int());
+  cc = new ConstantColumnSInt(colType_MysqlToIDB(item), val ? "true" : "false", val);
+
+  if (cc)
+    cc->timeZone(gwi.timeZone);
+
+  if (cc && item->name.length)
+    cc->alias(item->name.str);
+
+  if (cc)
+    cc->charsetNumber(item->collation.collation->number);
+
+  return cc;
+}
+
 ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
   if (get_fe_conn_info_ptr() == NULL)
@@ -4013,7 +4042,24 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           return NULL;
         }
 
-        ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+        ReturnedColumn* rc = NULL;
+
+
+        // Special treatment for json functions
+        // All boolean arguments will be parsed as boolean string true(false)
+        // E.g. the result of `SELECT JSON_ARRAY(true, false)` should be [true, false] instead of [1, 0]
+        bool mayHasBoolArg = ((funcName == "json_insert" || funcName == "json_replace" ||
+                              funcName == "json_set" || funcName == "json_array_append" ||
+                              funcName == "json_array_insert") && i != 0 && i % 2 == 0) ||
+                             (funcName == "json_array") ||
+                             (funcName == "json_object" && i % 2 == 1);
+        bool isBoolType =
+            (ifp->arguments()[i]->const_item() && ifp->arguments()[i]->type_handler()->is_bool_type());
+
+        if (mayHasBoolArg && isBoolType)
+          rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
+        else
+          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
         if (!rc && ifp->arguments()[i]->type() == Item::REF_ITEM)

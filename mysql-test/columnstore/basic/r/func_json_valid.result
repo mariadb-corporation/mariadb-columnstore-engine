@@ -1,0 +1,191 @@
+DROP DATABASE IF EXISTS json_valid_db;
+CREATE DATABASE json_valid_db;
+USE json_valid_db;
+# ----------------------------------------------------------------------
+# Test of JSON_VALID function.
+# ----------------------------------------------------------------------
+#
+# String literal - valid JSON
+#
+CREATE TABLE t1(l LONGTEXT) ENGINE = COLUMNSTORE;
+INSERT INTO
+t1
+VALUES
+('123'),
+('-123'),
+('5000000000'),
+('-5000000000'),
+('1.23'),
+('"123"'),
+('true'),
+('false'),
+('null'),
+('{"address": "Trondheim"}'),
+(JSON_OBJECT()),
+(JSON_OBJECT(1, 2)),
+(JSON_ARRAY()),
+(JSON_ARRAY(1, 2));
+SELECT
+l AS raw,
+JSON_VALID(l) AS is_valid,
+JSON_VALID(JSON_COMPACT(l)) AS compact
+FROM
+t1;
+raw	is_valid	compact
+123	1	1
+-123	1	1
+5000000000	1	1
+-5000000000	1	1
+1.23	1	1
+"123"	1	1
+true	1	1
+false	1	1
+null	1	1
+{"address": "Trondheim"}	1	1
+{}	1	1
+{"1": 2}	1	1
+[]	1	1
+[1, 2]	1	1
+#
+# String literal - invalid JSON
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+('12 3'),
+('{key:value}'),
+('{key:value'),
+('[1,2,]'),
+('[1,2');
+SELECT
+l AS raw,
+JSON_VALID(l) AS is_valid,
+JSON_VALID(JSON_COMPACT(l)) AS compact
+FROM
+t1;
+raw	is_valid	compact
+12 3	0	NULL
+{key:value}	0	NULL
+{key:value	0	NULL
+[1,2,]	0	NULL
+[1,2	0	NULL
+#
+# String literal - not in UTF-8
+#
+TRUNCATE t1;
+SET
+NAMES 'ascii';
+INSERT INTO
+t1
+VALUES
+('123');
+SELECT
+l AS raw,
+JSON_VALID(l) AS is_valid,
+JSON_VALID(JSON_COMPACT(l)) AS compact
+FROM
+t1;
+raw	is_valid	compact
+123	1	1
+SET
+NAMES 'utf8';
+#
+# Bare NULL
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+(NULL);
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+NULL
+#
+# Function result - string
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+(UPPER('"abc"'));
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+1
+#
+# Function result - string not in UTF-8
+#
+TRUNCATE t1;
+SET
+NAMES 'latin1';
+INSERT INTO
+t1
+VALUES
+(UPPER('"abc"'));
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+1
+SET
+NAMES 'utf8';
+#
+# Function result - date, not valid as JSON without CAST
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+(CAST('2015-01-15' AS DATE));
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+0
+#
+# The date string doesn't parse as JSON text, so wrong:
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+(
+CAST(
+CAST('2015-01-15' AS DATE) AS CHAR CHARACTER SET 'utf8'
+        )
+);
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+0
+#
+# Function result - NULL
+#
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+(UPPER(NULL));
+INSERT INTO
+t1
+VALUES
+(UPPER(CAST(NULL AS CHAR)));
+SELECT
+JSON_VALID(l)
+FROM
+t1;
+JSON_VALID(l)
+NULL
+NULL
+DROP TABLE t1;
+DROP DATABASE json_valid_db;

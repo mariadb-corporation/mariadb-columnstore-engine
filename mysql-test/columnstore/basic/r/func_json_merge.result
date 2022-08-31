@@ -1,0 +1,105 @@
+DROP DATABASE IF EXISTS json_merge_db;
+CREATE DATABASE json_merge_db;
+USE json_merge_db;
+# ----------------------------------------------------------------------
+# Test of JSON_MERGE function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(l TEXT, r TEXT) ENGINE = columnstore;
+INSERT INTO t1 VALUES('[1, 2, 3]','[4, 5, 6]');
+# Not enough args
+SELECT JSON_MERGE() FROM t1;
+ERROR 42000: Incorrect parameter count in the call to native function 'JSON_MERGE'
+SELECT JSON_MERGE(l) FROM t1;
+ERROR 42000: Incorrect parameter count in the call to native function 'JSON_MERGE'
+SELECT JSON_MERGE(NULL) FROM t1;
+ERROR 42000: Incorrect parameter count in the call to native function 'JSON_MERGE'
+# Null args
+SELECT JSON_MERGE(NULL, r) FROM t1;
+JSON_MERGE(NULL, r)
+NULL
+SELECT JSON_MERGE(l, NULL) FROM t1;
+JSON_MERGE(l, NULL)
+NULL
+SELECT JSON_MERGE(NULL, l, r) FROM t1;
+JSON_MERGE(NULL, l, r)
+NULL
+SELECT JSON_MERGE(l, NULL, r) FROM t1;
+JSON_MERGE(l, NULL, r)
+NULL
+SELECT JSON_MERGE(l, r, NULL) FROM t1;
+JSON_MERGE(l, r, NULL)
+NULL
+# Invalid JSON text
+error ER_INVALID_JSON_TEXT_IN_PARAM
+SELECT JSON_MERGE(l, '[4, 5, 6') FROM t1;
+JSON_MERGE(l, '[4, 5, 6')
+NULL
+error ER_INVALID_JSON_TEXT_IN_PARAM
+SELECT JSON_MERGE('[1, 2, 3', r) FROM t1;
+JSON_MERGE('[1, 2, 3', r)
+NULL
+# Good JSON_MERGE() Expressions 
+TRUNCATE t1;
+INSERT INTO t1 VALUES('1', '2' );
+INSERT INTO t1 VALUES('1', '[2, 3]' );
+INSERT INTO t1 VALUES('[1, 2]', '3' );
+INSERT INTO t1 VALUES('1', '{ "a": 2 }' );
+INSERT INTO t1 VALUES('{ "a": 2 }', '1' );
+INSERT INTO t1 VALUES('[1, 2]', '[3, 4]' );
+INSERT INTO t1 VALUES('{ "a": 2 }', '{ "b": 3}' );
+INSERT INTO t1 VALUES('[1, 2]', '{ "a": 2 }' );
+INSERT INTO t1 VALUES('{ "a": 2 }', '[1, 2]' );
+INSERT INTO t1 VALUES('{"a": 1, "b": 2 }', '{"b": 3, "d": 4 }' );
+INSERT INTO t1 VALUES('{"a": 1, "b": 2 }', '{"b": [3, 4], "d": 4 }' );
+INSERT INTO t1 VALUES('{"a": 1, "b": [2, 3] }', '{"b": 4, "d": 4 }' );
+INSERT INTO t1 VALUES('{"a": 1, "b": 2 }', '{"b": {"e": 7, "f": 8}, "d": 4 }' );
+INSERT INTO t1 VALUES('{"b": {"e": 7, "f": 8}, "d": 4 }', '{"a": 1, "b": 2 }' );
+INSERT INTO t1 VALUES('{"a": 1, "b": [2, 9] }', '{"b": [10, 11], "d": 4 }' );
+INSERT INTO t1 VALUES('{"a": 1, "b": [2, 9] }', '{"b": {"e": 7, "f": 8}, "d": 4 }' );
+INSERT INTO t1 VALUES('{"b": {"e": 7, "f": 8}, "d": 4 }', '{"a": 1, "b": [2, 9] }' );
+INSERT INTO t1 VALUES('{"b": {"e": 7, "f": 8}, "d": 4 }', '{ "a": 1, "b": {"e": 20, "g": 21 } }' );
+INSERT INTO t1 VALUES('{ "a" : "foo", "b" : [ true, { "c" : 123 } ] }', '[ 5, 6]');
+INSERT INTO t1 VALUES('{ "a" : "foo", "b" : [ true, { "c" : 123 } ] }', '{ "b": [ false, 34 ] }');
+INSERT INTO t1 VALUES('{ "a" : "foo", "b" : [ true, { "c" : 123 } ] }','{ "b": "bar" }');
+INSERT INTO t1 VALUES('{ "a" : { "b" : 1 } }','{ "a" : { "c" : 1 } }');
+SELECT JSON_MERGE(l, r) FROM t1;
+JSON_MERGE(l, r)
+[1, 2]
+[1, 2, 3]
+[1, 2, 3]
+[1, {"a": 2}]
+[{"a": 2}, 1]
+[1, 2, 3, 4]
+{"a": 2, "b": 3}
+[1, 2, {"a": 2}]
+[{"a": 2}, 1, 2]
+{"a": 1, "b": [2, 3], "d": 4}
+{"a": 1, "b": [2, 3, 4], "d": 4}
+{"a": 1, "b": [2, 3, 4], "d": 4}
+{"a": 1, "b": [2, {"e": 7, "f": 8}], "d": 4}
+{"b": [{"e": 7, "f": 8}, 2], "d": 4, "a": 1}
+{"a": 1, "b": [2, 9, 10, 11], "d": 4}
+{"a": 1, "b": [2, 9, {"e": 7, "f": 8}], "d": 4}
+{"b": [{"e": 7, "f": 8}, 2, 9], "d": 4, "a": 1}
+{"b": {"e": [7, 20], "f": 8, "g": 21}, "d": 4, "a": 1}
+[{"a": "foo", "b": [true, {"c": 123}]}, 5, 6]
+{"a": "foo", "b": [true, {"c": 123}, false, 34]}
+{"a": "foo", "b": [true, {"c": 123}, "bar"]}
+{"a": {"b": 1, "c": 1}}
+CREATE TABLE t2(l1 TEXT, l2 TEXT, l3 TEXT) ENGINE = columnstore;
+INSERT INTO t2 VALUES('1', '2', '3' );
+INSERT INTO t2 VALUES('[1, 2 ]', '3', '[4, 5]' );
+INSERT INTO t2 VALUES
+( 
+'{ "a": true, "b": { "c": 3, "d": 4 }, "e": [ 1, 2 ] }',
+'{ "d": false, "b": { "g": 3, "d": 5 }, "f": [ 1, 2 ] }',
+'{ "m": true, "b": { "h": 8, "d": 4 }, "e": [ 3, 4 ] }'
+);
+SELECT JSON_MERGE(l1, l2, l3) from t2;
+JSON_MERGE(l1, l2, l3)
+[1, 2, 3]
+[1, 2, 3, 4, 5]
+{"a": true, "b": {"c": 3, "d": [4, 5, 4], "g": 3, "h": 8}, "e": [1, 2, 3, 4], "d": false, "f": [1, 2], "m": true}
+DROP TABLE t1;
+DROP TABLE t2;
+DROP DATABASE json_merge_db;
