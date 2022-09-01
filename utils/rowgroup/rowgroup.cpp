@@ -1659,7 +1659,10 @@ RGData RowGroup::duplicate()
     }
   }
   else
+  {
+idblog("duplicating RowGroup with memcpy");
     memcpy(ret.rowData.get(), data, getDataSize());
+  }
 
   return ret;
 }
