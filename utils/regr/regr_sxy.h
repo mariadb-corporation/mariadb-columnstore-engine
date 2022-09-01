@@ -70,7 +70,7 @@ class regr_sxy : public mcsv1_UDAF
 
   virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
-  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  // virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
  protected:
 };
