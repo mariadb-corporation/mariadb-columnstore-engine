@@ -1635,7 +1635,7 @@ RGData RowGroup::duplicate()
 {
   RGData ret(*this, getRowCount());
 
-  if (useStringTable)
+  if (useStringTable || true)
   {
     // this isn't a straight memcpy of everything b/c it might be remapping strings.
     // think about a big memcpy + a remap operation; might be faster.
