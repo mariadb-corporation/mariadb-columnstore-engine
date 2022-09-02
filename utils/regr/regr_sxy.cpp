@@ -147,20 +147,27 @@ mcsv1_UDAF::ReturnCode regr_sxy::evaluate(mcsv1Context* context, static_any::any
   }
   return mcsv1_UDAF::SUCCESS;
 }
-/*
+
 mcsv1_UDAF::ReturnCode regr_sxy::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
   double valy = toDouble(valsDropped[0]);
   double valx = toDouble(valsDropped[1]);
   struct regr_sxy_data* data = (struct regr_sxy_data*)context->getUserData()->data;
 
-  data->avgy -= valy;
-
-  data->avgx -= valx;
-
-  data->cxy -= valx * valy;
+  long double avgyPrev = data->avgy;
+  long double avgxPrev = data->avgx;
+  long double cxyPrev = data->cxy;
   --data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dx = valx - avgxPrev;
+
+  avgyPrev -= (valy - avgyPrev) / cnt;
+  avgxPrev -= dx / cnt;
+  cxyPrev -= dx * (valy - avgyPrev);
+
+  data->avgx = avgxPrev;
+  data->avgy = avgyPrev;
+  data->cxy = cxyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
-*/
