@@ -20,7 +20,6 @@ SELECT JSON_VALUE(@json1, '$.key1');
 SELECT JSON_VALUE(@json2, '$.key1');
 #
 SELECT * FROM jsontest;
---error 1178
 SELECT cVarchar, JSON_VALUE(cVarchar, '$.key1'), cText, JSON_VALUE(cText, '$.key1') from jsontest;
 #
 TRUNCATE TABLE jsontest;

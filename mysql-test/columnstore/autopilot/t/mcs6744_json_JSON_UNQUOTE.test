@@ -20,12 +20,10 @@ INSERT INTO jsontest VALUES (1, @json2, @json2);
 #
 SELECT JSON_UNQUOTE(@json1);
 SELECT JSON_UNQUOTE(@json2);
---error 1178
 SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
 #
 SET @@sql_mode = 'NO_BACKSLASH_ESCAPES';
 SELECT JSON_UNQUOTE(@json2);
---error 1178
 SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
 TRUNCATE TABLE jsontest;
 #

@@ -23,9 +23,7 @@ SELECT @tmpstr2;
 INSERT INTO jsontest VALUES (1, @tmpstr1, @tmpstr1);
 #
 SELECT * FROM jsontest;
---error 1178
 SELECT cVarchar, JSON_VALID(cVarchar), cText, JSON_VALID(cText) from jsontest;
---error 1178
 SELECT cVarchar, JSON_VALID(CONCAT(cVarchar,'HELLO WORLD')), cText, JSON_VALID(CONCAT(cText,'HELLO WORLD')) from jsontest;
 #
 TRUNCATE TABLE jsontest;
