@@ -47,8 +47,6 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   size_t strSize = strlen(str.c_str());
 
-  idblog("quote(): argument is '" << str << "', argument's size " << str.size());
-
   string result;
   result.reserve(((strSize + 1) * 1.3) + 2);
 
@@ -76,8 +74,6 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   }
 
   result.push_back('\'');
-
-  idblog("quote(): result is '" << result << "'");
 
   return result;
 }
