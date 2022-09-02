@@ -1,0 +1,26 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json = '[1, 2, [3, 4]]';
+SELECT @json;
+INSERT INTO jsontest VALUES (1, @json, @json);
+#
+SELECT JSON_ARRAY_INSERT(@json, '$[0]', 5);
+SELECT JSON_ARRAY_INSERT(@json, '$[1]', 6);
+SELECT JSON_ARRAY_INSERT(@json, '$[1]', 6, '$[2]', 7);
+#
+SELECT * FROM jsontest;
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[0]', 5), cText, JSON_ARRAY_INSERT(cText, '$[0]', 5) from jsontest;
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6) from jsontest;
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6, '$[2]', 7), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6, '$[2]', 7) from jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

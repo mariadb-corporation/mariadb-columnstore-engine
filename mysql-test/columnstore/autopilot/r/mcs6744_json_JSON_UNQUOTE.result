@@ -1,0 +1,31 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json1 = '"Monty"';
+SET @json2 = 'Si\bng\ting';
+SELECT @json1;
+@json1
+"Monty"
+SELECT @json2;
+@json2
+Sing	ing
+INSERT INTO jsontest VALUES (1, @json1, @json1);
+INSERT INTO jsontest VALUES (1, @json2, @json2);
+SELECT JSON_UNQUOTE(@json1);
+JSON_UNQUOTE(@json1)
+Monty
+SELECT JSON_UNQUOTE(@json2);
+JSON_UNQUOTE(@json2)
+Sing	ing
+SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
+cVarchar	JSON_UNQUOTE(cVarchar)	cText	JSON_UNQUOTE(cText)
+"Monty"	Monty	"Monty"	Monty
+Sing	ing	Sing	ing	Sing	ing	Sing	ing
+SET @@sql_mode = 'NO_BACKSLASH_ESCAPES';
+SELECT JSON_UNQUOTE(@json2);
+JSON_UNQUOTE(@json2)
+Sing	ing
+SELECT cVarchar, JSON_UNQUOTE(cVarchar), cText, JSON_UNQUOTE(cText) from jsontest;
+cVarchar	JSON_UNQUOTE(cVarchar)	cText	JSON_UNQUOTE(cText)
+"Monty"	Monty	"Monty"	Monty
+Sing	ing	Sing	ing	Sing	ing	Sing	ing
+TRUNCATE TABLE jsontest;
