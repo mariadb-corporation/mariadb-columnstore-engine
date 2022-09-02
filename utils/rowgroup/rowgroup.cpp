@@ -400,6 +400,7 @@ RGData::~RGData()
 
 void RGData::serialize(ByteStream& bs, uint32_t amount) const
 {
+	idblog("serializing rgdata, amount " << amount);
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
@@ -429,11 +430,13 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   uint8_t tmp8;
 
   bs.peek(sig);
-
+idblog("is it RGData?");
   if (sig == RGDATA_SIG)
   {
+	  idblog("deserializing rgdata");
     bs >> sig;
     bs >> amount;
+	  idblog("deserializing rgdata, amount " << amount << ", def amount " << defAmount);
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);
@@ -1237,6 +1240,7 @@ void RowGroup::serialize(ByteStream& bs) const
   bs << (uint8_t)hasLongStringField;
   bs << sTableThreshold;
   bs.append((uint8_t*)&forceInline[0], sizeof(bool) * columnCount);
+  idblog("serializing row group");
 }
 
 void RowGroup::deserialize(ByteStream& bs)
@@ -1273,6 +1277,7 @@ void RowGroup::deserialize(ByteStream& bs)
 
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  idblog("deserializing row group");
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const

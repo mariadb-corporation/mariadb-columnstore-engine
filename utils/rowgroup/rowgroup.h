@@ -917,7 +917,7 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   uint32_t offset = offsets[colIndex];
   //idbassert(getColumnWidth(colIndex) < 8); // we have to be sure these are SHORT strings, not VARCHAR(8191).
   const char* src = (const char*)&data[offset];
-  if (!getNullMark(colIndex))
+  if (!isNullValue(colIndex))
   {
 //utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
 //idblog("getShortConstString[" << colIndex << "]: '" << t.toString() << "'");
