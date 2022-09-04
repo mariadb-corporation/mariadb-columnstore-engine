@@ -568,6 +568,9 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
   pRows->initRow(&rowIn);
   pRows->getRow(0, &rowIn);
 
+  if (pRows->getRowCount() == 0)
+    return;
+
   for (uint64_t i = 0; i < pRows->getRowCount(); ++i)
   {
     aggregateRow(rowIn);
@@ -582,6 +585,9 @@ void RowAggregation::addRowGroup(const RowGroup* pRows, vector<std::pair<Row::Po
   // if (countSpecial(pRows))
   Row rowIn;
   pRows->initRow(&rowIn);
+
+  if (inRows.empty())
+    return;
 
   for (const auto& inRow : inRows)
   {
