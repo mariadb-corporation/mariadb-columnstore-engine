@@ -1669,8 +1669,12 @@ void RowAggStorage::dump()
 
   constexpr const int freeMemLimit = 50ULL * 1024ULL * 1024ULL;
 
-  const int64_t rowSize = fRowGroupOut->getSizeWithStrings() / fRowGroupOut->getRowCount() * fMaxRows;
-  const int64_t leaveFree = fNumOfInputRGPerThread * (rowSize + getBucketSize()) * fMaxRows;
+  const int64_t rowSize = fRowGroupOut->getSizeWithStrings() / fRowGroupOut->getRowCount();
+  const int64_t extKeysSize = fExtKeys
+                              ? fKeysRowGroup->getSizeWithStrings() / fKeysRowGroup->getRowCount()
+                              : 0;
+  const int64_t leaveFree = fNumOfInputRGPerThread * (rowSize + extKeysSize + getBucketSize()) * fMaxRows;
+
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
   while (true)
@@ -1689,6 +1693,7 @@ void RowAggStorage::dump()
   }
 
   int64_t totalMem = fMM->getConfigured();
+
   // If the generations are allowed and there are less than half of
   // rowgroups in memory, then we start a new generation
   if (fAllowGenerations && fStorage->fLRU->size() < fStorage->fRGDatas.size() / 2 &&
