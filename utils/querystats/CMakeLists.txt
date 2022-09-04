@@ -1,3 +1,7 @@
+include_directories(BEFORE
+  ${CMAKE_BINARY_DIR}/libmariadb/include
+  ${CMAKE_SOURCE_DIR}/libmariadb/include)
+add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
 
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 

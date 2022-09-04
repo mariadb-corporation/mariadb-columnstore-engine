@@ -15,7 +15,7 @@ set(colxml_SRCS colxml.cpp)
 
 add_executable(colxml ${colxml_SRCS})
 
-target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS})
+target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${ENGINE_WRITE_LIBS})
 
 install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 

@@ -1,3 +1,7 @@
+include_directories(BEFORE
+  ${CMAKE_BINARY_DIR}/libmariadb/include
+  ${CMAKE_SOURCE_DIR}/libmariadb/include)
+add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
 
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
 
@@ -66,7 +70,7 @@ install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engin
 
 if (WITH_ORDERBY_UT)
     add_executable(job_orderby_tests orderby-tests.cpp)
-    target_link_libraries(job_orderby_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    target_link_libraries(job_orderby_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     install(TARGETS job_orderby_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 endif()
 
