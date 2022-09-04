@@ -1,4 +1,12 @@
+include_directories(BEFORE
+  ${CMAKE_BINARY_DIR}/libmariadb/include
+  ${CMAKE_SOURCE_DIR}/libmariadb/include)
+add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
+
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
+
+
+########### next target ###############
 
 set(joblist_LIB_SRCS
     anydatalist.cpp
@@ -54,15 +62,8 @@ set(joblist_LIB_SRCS
     windowfunctionstep.cpp
     ${ENGINE_SRC_DIR}/tools/passwd/secrets.cpp)
 
-########### next target ###############
-
-add_library(joblist_server STATIC ${joblist_LIB_SRCS})
-
-########### next target ###############
-
-add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
-
 add_library(joblist SHARED ${joblist_LIB_SRCS})
+target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
 add_dependencies(joblist loggingcpp)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
