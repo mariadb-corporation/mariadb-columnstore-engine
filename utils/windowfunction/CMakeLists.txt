@@ -32,6 +32,6 @@ install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstor
 
 if (WITH_SORTING_COMPARATORS_UT)
     add_executable(comparators_tests comparators-tests.cpp)
-    target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     install(TARGETS comparators_tests DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 endif()
