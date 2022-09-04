@@ -1,3 +1,6 @@
+include_directories(BEFORE
+  ${CMAKE_BINARY_DIR}/libmariadb/include
+  ${CMAKE_SOURCE_DIR}/libmariadb/include)
 
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
