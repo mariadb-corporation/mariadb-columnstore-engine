@@ -1451,6 +1451,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
   for (i = 0; i < in.getColumnCount(); i++)
     if (mapping[i] != -1)
     {
+idblog("applying mapping. our type is " << ((int)getColTypes()[mapping[i]]) << ", other's type is " << ((int)in.getColTypes()[i]) << ", our width is " << getColumnWidth(mapping[i]) << " other's column width is " << in.getColumnWidth(i));
       if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
