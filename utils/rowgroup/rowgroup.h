@@ -872,7 +872,7 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
     default:
-      idblog("getIntField colIndex " << colIndex << ", width " << getColumnWidith(colIndex));
+      idblog("getIntField colIndex " << colIndex << ", width " << getColumnWidth(colIndex));
       idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
