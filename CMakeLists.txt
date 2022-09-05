@@ -41,6 +41,10 @@ ELSE()
   ENDIF()
 ENDIF()
 
+# There is an inconsistency b/w default char signedness at ARM and x86.
+# This flag explicitly sets char as signed.
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
+
 UNSET(CMAKE_CXX_STANDARD)
 SET(CMAKE_CXX_EXTENSIONS FALSE)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
