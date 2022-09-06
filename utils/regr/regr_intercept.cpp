@@ -39,10 +39,10 @@ static Add_regr_intercept_ToUDAFMap addToMap;
 struct regr_intercept_data
 {
   uint64_t cnt;
-  long double sumx;
-  long double sumx2;  // sum of (x squared)
-  long double sumy;
-  long double sumxy;  // sum of x * y
+  long double avgx;
+  long double cx;
+  long double avgy;
+  long double cxy;
 };
 
 mcsv1_UDAF::ReturnCode regr_intercept::init(mcsv1Context* context, ColumnDatum* colTypes)
@@ -75,10 +75,10 @@ mcsv1_UDAF::ReturnCode regr_intercept::reset(mcsv1Context* context)
 {
   struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
   data->cnt = 0;
-  data->sumx = 0.0;
-  data->sumx2 = 0.0;
-  data->sumy = 0.0;
-  data->sumxy = 0.0;
+  data->avgx = 0.0;
+  data->cx = 0.0;
+  data->avgy = 0.0;
+  data->cxy = 0.0;
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -88,12 +88,27 @@ mcsv1_UDAF::ReturnCode regr_intercept::nextValue(mcsv1Context* context, ColumnDa
   double valx = toDouble(valsIn[1]);
   struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
 
-  data->sumy += valy;
-  data->sumx += valx;
-  data->sumx2 += valx * valx;
-
-  data->sumxy += valx * valy;
+  long double avgyPrev = data->avgy;
+  long double avgxPrev = data->avgx;
+  long double cxPrev = data->cx;
+  long double cxyPrev = data->cxy;
   ++data->cnt;
+  uint64_t cnt = data->cnt;
+
+  long double dx = valx - avgxPrev;
+  long double dy = valy - avgyPrev;
+
+  avgyPrev += dy / cnt;
+  avgxPrev += dx / cnt;
+
+  cxPrev += dx * (valx - avgxPrev);
+
+  cxyPrev += dx * (valy - avgyPrev);
+
+  data->avgx = avgxPrev;
+  data->avgy = avgyPrev;
+  data->cx = cxPrev;
+  data->cxy = cxyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -108,11 +123,34 @@ mcsv1_UDAF::ReturnCode regr_intercept::subEvaluate(mcsv1Context* context, const 
   struct regr_intercept_data* outData = (struct regr_intercept_data*)context->getUserData()->data;
   struct regr_intercept_data* inData = (struct regr_intercept_data*)userDataIn->data;
 
-  outData->sumx += inData->sumx;
-  outData->sumx2 += inData->sumx2;
-  outData->sumy += inData->sumy;
-  outData->sumxy += inData->sumxy;
-  outData->cnt += inData->cnt;
+  uint64_t outCnt = outData->cnt;
+  long double outAvgx = outData->avgx;
+  long double outAvgy = outData->avgy;
+  long double outCx = outData->cx;
+  long double outCxy = outData->cxy;
+
+  uint64_t inCnt = inData->cnt;
+  long double inAvgx = inData->avgx;
+  long double inAvgy = inData->avgy;
+  long double inCx = inData->cx;
+  long double inCxy = inData->cxy;
+
+  uint64_t resCnt = inCnt + outCnt;
+  long double deltax = outAvgx - inAvgx;
+  long double deltay = outAvgy - inAvgy;
+
+  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+  long double resAvgy = inAvgy + deltay * outCnt / resCnt;
+
+  long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
+
+  long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
+
+  outData->avgx = resAvgx;
+  outData->avgy = resAvgy;
+  outData->cx = resCx;
+  outData->cxy = resCxy;
+  outData->cnt = resCnt;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -123,18 +161,14 @@ mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_an
   long double N = data->cnt;
   if (N > 1)
   {
-    long double sumx = data->sumx;
-    long double sumy = data->sumy;
-    long double sumx2 = data->sumx2;
-    long double sumxy = data->sumxy;
+    long double avgx = data->avgx;
+    long double avgy = data->avgy;
+    long double cx = data->cx;
+    long double cxy = data->cxy;
     // regr_intercept is AVG(y) - slope(y,x)*avg(x)
-    // We do some algebra and we can get a slightly smaller calculation
-    long double numerator = sumy * sumx2 - sumx * sumxy;
-    long double var_pop =
-        (N * sumx2) - (sumx * sumx);  // Not realy var_pop, but sort of after some reductions
-    if (var_pop > 0)
+    if (cx > 0)
     {
-      valOut = static_cast<double>(numerator / var_pop);
+      valOut = static_cast<double>(avgy - cxy / cx * avgx);
     }
   }
   return mcsv1_UDAF::SUCCESS;
@@ -146,12 +180,27 @@ mcsv1_UDAF::ReturnCode regr_intercept::dropValue(mcsv1Context* context, ColumnDa
   double valx = toDouble(valsDropped[1]);
   struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
 
-  data->sumy -= valy;
-  data->sumx -= valx;
-  data->sumx2 -= valx * valx;
-
-  data->sumxy -= valx * valy;
+  long double avgyPrev = data->avgy;
+  long double avgxPrev = data->avgx;
+  long double cxPrev = data->cx;
+  long double cxyPrev = data->cxy;
   --data->cnt;
+  uint64_t cnt = data->cnt;
+
+  long double dx = valx - avgxPrev;
+  long double dy = valy - avgyPrev;
+
+  avgyPrev -= dy / cnt;
+  avgxPrev -= dx / cnt;
+
+  cxPrev -= dx * (valx - avgxPrev);
+
+  cxyPrev -= dx * (valy - avgyPrev);
+
+  data->avgx = avgxPrev;
+  data->avgy = avgyPrev;
+  data->cx = cxPrev;
+  data->cxy = cxyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
