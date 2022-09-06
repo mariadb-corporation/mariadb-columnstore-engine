@@ -39,9 +39,9 @@ static Add_covar_pop_ToUDAFMap addToMap;
 struct covar_pop_data
 {
   uint64_t cnt;
-  long double sumx;
-  long double sumy;
-  long double sumxy;  // sum of x * y
+  long double avgx;
+  long double avgy;
+  long double cxy;
 };
 
 mcsv1_UDAF::ReturnCode covar_pop::init(mcsv1Context* context, ColumnDatum* colTypes)
@@ -74,9 +74,9 @@ mcsv1_UDAF::ReturnCode covar_pop::reset(mcsv1Context* context)
 {
   struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
   data->cnt = 0;
-  data->sumx = 0.0;
-  data->sumy = 0.0;
-  data->sumxy = 0.0;
+  data->avgx = 0.0;
+  data->avgy = 0.0;
+  data->cxy = 0.0;
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -86,12 +86,18 @@ mcsv1_UDAF::ReturnCode covar_pop::nextValue(mcsv1Context* context, ColumnDatum* 
   double valx = toDouble(valsIn[1]);
   struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
 
-  data->sumy += valy;
-  data->sumx += valx;
-
-  data->sumxy += valx * valy;
-
+  long double avgyPrev = data->avgy;
+  long double avgxPrev = data->avgx;
+  long double cxyPrev = data->cxy;
   ++data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dx = valx - avgxPrev;
+  avgyPrev += (valy - avgyPrev)/cnt;
+  avgxPrev += dx / cnt;
+  cxyPrev += dx * (valy - avgyPrev);
+  data->avgx = avgxPrev;
+  data->avgy = avgyPrev;
+  data->cxy = cxyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -106,10 +112,27 @@ mcsv1_UDAF::ReturnCode covar_pop::subEvaluate(mcsv1Context* context, const UserD
   struct covar_pop_data* outData = (struct covar_pop_data*)context->getUserData()->data;
   struct covar_pop_data* inData = (struct covar_pop_data*)userDataIn->data;
 
-  outData->sumx += inData->sumx;
-  outData->sumy += inData->sumy;
-  outData->sumxy += inData->sumxy;
-  outData->cnt += inData->cnt;
+  uint64_t outCnt = outData->cnt;
+  long double outAvgx = outData->avgx;
+  long double outAvgy = outData->avgy;
+  long double outCxy = outData->cxy;
+
+  uint64_t inCnt = inData->cnt;
+  long double inAvgx = inData->avgx;
+  long double inAvgy = inData->avgy;
+  long double inCxy = inData->cxy;
+
+  uint64_t resCnt = inCnt + outCnt;
+  long double deltax = outAvgx - inAvgx;
+  long double deltay = outAvgy - inAvgy;
+  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+  long double resAvgy = inAvgy + deltay * outCnt / resCnt;
+  long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
+
+  outData->avgx = resAvgx;
+  outData->avgy = resAvgy;
+  outData->cxy = resCxy;
+  outData->cnt = resCnt;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -120,11 +143,7 @@ mcsv1_UDAF::ReturnCode covar_pop::evaluate(mcsv1Context* context, static_any::an
   double N = data->cnt;
   if (N > 0)
   {
-    long double sumx = data->sumx;
-    long double sumy = data->sumy;
-    long double sumxy = data->sumxy;
-
-    long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+    long double covar_pop = data->cxy / N;
     valOut = static_cast<double>(covar_pop);
   }
   return mcsv1_UDAF::SUCCESS;
@@ -136,11 +155,20 @@ mcsv1_UDAF::ReturnCode covar_pop::dropValue(mcsv1Context* context, ColumnDatum* 
   double valx = toDouble(valsDropped[1]);
   struct covar_pop_data* data = (struct covar_pop_data*)context->getUserData()->data;
 
-  data->sumy -= valy;
-  data->sumx -= valx;
-
-  data->sumxy -= valx * valy;
+  long double avgyPrev = data->avgy;
+  long double avgxPrev = data->avgx;
+  long double cxyPrev = data->cxy;
   --data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dx = valx - avgxPrev;
+
+  avgyPrev -= (valy - avgyPrev) / cnt;
+  avgxPrev -= dx / cnt;
+  cxyPrev -= dx * (valy - avgyPrev);
+
+  data->avgx = avgxPrev;
+  data->avgy = avgyPrev;
+  data->cxy = cxyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }

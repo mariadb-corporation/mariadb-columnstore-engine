@@ -39,8 +39,8 @@ static Add_regr_sxx_ToUDAFMap addToMap;
 struct regr_sxx_data
 {
   uint64_t cnt;
-  long double sumx;
-  long double sumx2;  // sum of (x squared)
+  long double avgx;
+  long double cx;
 };
 
 mcsv1_UDAF::ReturnCode regr_sxx::init(mcsv1Context* context, ColumnDatum* colTypes)
@@ -73,8 +73,8 @@ mcsv1_UDAF::ReturnCode regr_sxx::reset(mcsv1Context* context)
 {
   struct regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
   data->cnt = 0;
-  data->sumx = 0.0;
-  data->sumx2 = 0.0;
+  data->avgx = 0.0;
+  data->cx = 0.0;
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -82,11 +82,15 @@ mcsv1_UDAF::ReturnCode regr_sxx::nextValue(mcsv1Context* context, ColumnDatum* v
 {
   double valx = toDouble(valsIn[1]);
   struct regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
-
-  data->sumx += valx;
-  data->sumx2 += valx * valx;
-
+  long double avgxPrev = data->avgx;
+  long double cxPrev = data->cx;
   ++data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dx = valx - avgxPrev;
+  avgxPrev += dx / cnt;
+  cxPrev += dx * (valx - avgxPrev);
+  data->avgx = avgxPrev;
+  data->cx = cxPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -101,9 +105,24 @@ mcsv1_UDAF::ReturnCode regr_sxx::subEvaluate(mcsv1Context* context, const UserDa
   struct regr_sxx_data* outData = (struct regr_sxx_data*)context->getUserData()->data;
   struct regr_sxx_data* inData = (struct regr_sxx_data*)userDataIn->data;
 
-  outData->sumx += inData->sumx;
-  outData->sumx2 += inData->sumx2;
-  outData->cnt += inData->cnt;
+  uint64_t outCnt = outData->cnt;
+  long double outAvgx = outData->avgx;
+  long double outCx = outData->cx;
+
+  uint64_t inCnt = inData->cnt;
+  long double inAvgx = inData->avgx;
+  long double inCx = inData->cx;
+
+  uint64_t resCnt = inCnt + outCnt;
+  long double deltax = outAvgx - inAvgx;
+
+  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+
+  long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
+
+  outData->avgx = resAvgx;
+  outData->cx = resCx;
+  outData->cnt = resCnt;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -114,7 +133,7 @@ mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any
   long double N = data->cnt;
   if (N > 0)
   {
-    long double regr_sxx = (data->sumx2 - (data->sumx * data->sumx / N));
+    long double regr_sxx = data->cx;
     if (regr_sxx < 0)  // catch -0
       regr_sxx = 0;
     valOut = static_cast<double>(regr_sxx);
@@ -126,11 +145,15 @@ mcsv1_UDAF::ReturnCode regr_sxx::dropValue(mcsv1Context* context, ColumnDatum* v
 {
   double valx = toDouble(valsDropped[1]);
   struct regr_sxx_data* data = (struct regr_sxx_data*)context->getUserData()->data;
-
-  data->sumx -= valx;
-  data->sumx2 -= valx * valx;
-
+  long double avgxPrev = data->avgx;
+  long double cxPrev = data->cx;
   --data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dx = valx - avgxPrev;
+  avgxPrev -= dx / cnt;
+  cxPrev -= dx * (valx - avgxPrev);
+  data->avgx = avgxPrev;
+  data->cx = cxPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
