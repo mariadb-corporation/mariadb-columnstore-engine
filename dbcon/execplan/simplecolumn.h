@@ -287,8 +287,7 @@ class SimpleColumn : public ReturnedColumn
       fResult.strVal.dropString();
       return fResult.strVal;
     }
-    result = TreeNode::getStrVal(fTimeZone);
-    return result;
+    return TreeNode::getStrVal(fTimeZone);
   }
 
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
