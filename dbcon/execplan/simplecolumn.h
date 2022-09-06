@@ -282,8 +282,12 @@ class SimpleColumn : public ReturnedColumn
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
-    auto& result = TreeNode::getStrVal(fTimeZone);
-    isNull = result.isNull();
+    if (isNull)
+    {
+      fResult.strVal.dropString();
+      return fResult.strVal;
+    }
+    result = TreeNode::getStrVal(fTimeZone);
     return result;
   }
 
