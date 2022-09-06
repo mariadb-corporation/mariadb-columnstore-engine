@@ -621,10 +621,15 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     {
 	    idblog("converting DECIMAL to string in getStrVal()");
       if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
+      {
         // Explicit path for TSInt128 decimals with low precision
-        fResult.strVal.assign(fResult.decimalVal.toString(true));
+        //fResult.strVal.assign(fResult.decimalVal.toString(true));
+        fResult.strVal = fResult.decimalVal.toNullString(true);
+      }
       else
-        fResult.strVal.assign(fResult.decimalVal.toString());
+      {
+        fResult.strVal = fResult.decimalVal.toNullString(false);
+      }
       break;
     }
 
