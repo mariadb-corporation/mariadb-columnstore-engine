@@ -6,7 +6,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
                      ${SERVER_SOURCE_ROOT_DIR}/storage/maria )
 
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
-SET(S3API_DEPS marias3 curl CACHE INTERNAL "S3API_DEPS")
+SET(S3API_DEPS marias3 CACHE INTERNAL "S3API_DEPS")
 
 
 SET ( libcalmysql_SRCS
