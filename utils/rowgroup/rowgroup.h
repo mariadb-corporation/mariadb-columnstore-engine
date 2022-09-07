@@ -949,9 +949,6 @@ inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM, const utils::Hash
     case execplan::CalpontSystemCatalog::TEXT:
     {
       CHARSET_INFO* cs = getCharset(col);
-  char t[100];
-  sprintf(t, "%p", cs);
-  idblog("hashing with charset pointer " << t );
       hM.add(cs, getConstString(col));
       break;
     }
@@ -978,10 +975,6 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
     case datatypes::SystemCatalog::TEXT:
     {
       CHARSET_INFO* cs = getCharset(rowKeyColIdx);
-  char t[100];
-  sprintf(t, "%p", cs);
-  idblog("hashing with charset pointer " << t);
-  idblog("hashing string is '" << getConstString(rowKeyColIdx).toString() << "'");
       h.add(cs, getConstString(rowKeyColIdx));
       break;
     }
