@@ -123,9 +123,10 @@ class NullString
       mStrPtr->resize(newSize, pad);
     }
   }
-  void dropString()
+  NullString& dropString()
   {
     mStrPtr.reset();
+    return (*this);
   }
   void assign(const uint8_t* p, size_t len)
   {

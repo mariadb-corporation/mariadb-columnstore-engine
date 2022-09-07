@@ -619,7 +619,6 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     case CalpontSystemCatalog::DECIMAL:
     case CalpontSystemCatalog::UDECIMAL:
     {
-	    idblog("converting DECIMAL to string in getStrVal()");
       if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
       {
         // Explicit path for TSInt128 decimals with low precision

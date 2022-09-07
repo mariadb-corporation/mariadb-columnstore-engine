@@ -112,7 +112,7 @@ class ArithmeticOperator : public Operator
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
     evaluate(row, isNull, lop, rop);
-    return TreeNode::getStrVal(fTimeZone);
+    return isNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
   }
   using Operator::getIntVal;
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
