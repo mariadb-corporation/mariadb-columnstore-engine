@@ -1,0 +1,29 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '[1, 2, [3, 4]]';
+SELECT @json;
+@json
+[1, 2, [3, 4]]
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_EXTRACT(@json, '$[1]');
+JSON_EXTRACT(@json, '$[1]')
+2
+SELECT JSON_EXTRACT(@json, '$[2]');
+JSON_EXTRACT(@json, '$[2]')
+[3, 4]
+SELECT JSON_EXTRACT(@json, '$[2][1]');
+JSON_EXTRACT(@json, '$[2][1]')
+4
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	[1, 2, [3, 4]]	[1, 2, [3, 4]]
+SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[1]'), cText, JSON_EXTRACT(cText, '$[1]') from jsontest;
+cVarchar	JSON_EXTRACT(cVarchar, '$[1]')	cText	JSON_EXTRACT(cText, '$[1]')
+[1, 2, [3, 4]]	2	[1, 2, [3, 4]]	2
+SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[2]'), cText, JSON_EXTRACT(cText, '$[2]') from jsontest;
+cVarchar	JSON_EXTRACT(cVarchar, '$[2]')	cText	JSON_EXTRACT(cText, '$[2]')
+[1, 2, [3, 4]]	[3, 4]	[1, 2, [3, 4]]	[3, 4]
+SELECT cVarchar, JSON_EXTRACT(cVarchar, '$[2][1]'), cText, JSON_EXTRACT(cText, '$[2][1]') from jsontest;
+cVarchar	JSON_EXTRACT(cVarchar, '$[2][1]')	cText	JSON_EXTRACT(cText, '$[2][1]')
+[1, 2, [3, 4]]	4	[1, 2, [3, 4]]	4
+TRUNCATE TABLE jsontest;

@@ -1,0 +1,17 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '{ "A":1,"B":[2,3]}';
+SELECT @json;
+@json
+{ "A":1,"B":[2,3]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_LOOSE(@json);
+JSON_LOOSE(@json)
+{"A": 1, "B": [2, 3]}
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{ "A":1,"B":[2,3]}	{ "A":1,"B":[2,3]}
+SELECT cVarchar, JSON_LOOSE(cVarchar), cText, JSON_LOOSE(cText) from jsontest;
+cVarchar	JSON_LOOSE(cVarchar)	cText	JSON_LOOSE(cText)
+{ "A":1,"B":[2,3]}	{"A": 1, "B": [2, 3]}	{ "A":1,"B":[2,3]}	{"A": 1, "B": [2, 3]}
+TRUNCATE TABLE jsontest;

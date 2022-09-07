@@ -1,0 +1,31 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json1 = '{"A": 1, "B": {"C": 2}}';
+SET @json2 = '{"A": 1, "B": 2, "C": {"D": 3}}';
+SELECT @json1;
+@json1
+{"A": 1, "B": {"C": 2}}
+SELECT @json2;
+@json2
+{"A": 1, "B": 2, "C": {"D": 3}}
+INSERT INTO jsontest VALUES (1, @json1, @json1);
+INSERT INTO jsontest VALUES (1, @json2, @json2);
+SELECT JSON_KEYS('{"A": 1, "B": {"C": 2}}');
+JSON_KEYS('{"A": 1, "B": {"C": 2}}')
+["A", "B"]
+SELECT JSON_KEYS('{"A": 1, "B": 2, "C": {"D": 3}}', '$.C');
+JSON_KEYS('{"A": 1, "B": 2, "C": {"D": 3}}', '$.C')
+["D"]
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"A": 1, "B": {"C": 2}}	{"A": 1, "B": {"C": 2}}
+1	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}
+SELECT cVarchar, JSON_KEYS(cVarchar), cText, JSON_KEYS(cText) from jsontest;
+cVarchar	JSON_KEYS(cVarchar)	cText	JSON_KEYS(cText)
+{"A": 1, "B": {"C": 2}}	["A", "B"]	{"A": 1, "B": {"C": 2}}	["A", "B"]
+{"A": 1, "B": 2, "C": {"D": 3}}	["A", "B", "C"]	{"A": 1, "B": 2, "C": {"D": 3}}	["A", "B", "C"]
+SELECT cVarchar, JSON_KEYS(cVarchar, '$.C'), cText, JSON_KEYS(cText, '$.C') from jsontest;
+cVarchar	JSON_KEYS(cVarchar, '$.C')	cText	JSON_KEYS(cText, '$.C')
+{"A": 1, "B": {"C": 2}}	NULL	{"A": 1, "B": {"C": 2}}	NULL
+{"A": 1, "B": 2, "C": {"D": 3}}	["D"]	{"A": 1, "B": 2, "C": {"D": 3}}	["D"]
+TRUNCATE TABLE jsontest;

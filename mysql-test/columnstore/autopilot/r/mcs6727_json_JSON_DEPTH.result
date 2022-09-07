@@ -1,0 +1,31 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+INSERT INTO jsontest VALUES (1,'[]', '[]'), (2, 'true', 'true'), (3, '{}', '{}');
+INSERT INTO jsontest VALUES (4,'[1, 2, 3]', '[1, 2, 3]'), (5, '[[], {}, []]', '[[], {}, []]');
+INSERT INTO jsontest VALUES (6,'[1, 2, [3, 4, 5, 6], 7]', '[1, 2, [3, 4, 5, 6], 7]');
+SELECT JSON_DEPTH('[]'), JSON_DEPTH('true'), JSON_DEPTH('{}');
+JSON_DEPTH('[]')	JSON_DEPTH('true')	JSON_DEPTH('{}')
+1	1	1
+SELECT JSON_DEPTH('[1, 2, 3]'), JSON_DEPTH('[[], {}, []]');
+JSON_DEPTH('[1, 2, 3]')	JSON_DEPTH('[[], {}, []]')
+2	2
+SELECT JSON_DEPTH('[1, 2, [3, 4, 5, 6], 7]');
+JSON_DEPTH('[1, 2, [3, 4, 5, 6], 7]')
+3
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	[]	[]
+2	true	true
+3	{}	{}
+4	[1, 2, 3]	[1, 2, 3]
+5	[[], {}, []]	[[], {}, []]
+6	[1, 2, [3, 4, 5, 6], 7]	[1, 2, [3, 4, 5, 6], 7]
+SELECT cVarchar, JSON_DEPTH(cVarchar), cText, JSON_DEPTH(cText) from jsontest;
+cVarchar	JSON_DEPTH(cVarchar)	cText	JSON_DEPTH(cText)
+[]	1	[]	1
+true	1	true	1
+{}	1	{}	1
+[1, 2, 3]	2	[1, 2, 3]	2
+[[], {}, []]	2	[[], {}, []]	2
+[1, 2, [3, 4, 5, 6], 7]	3	[1, 2, [3, 4, 5, 6], 7]	3
+TRUNCATE TABLE jsontest;

@@ -1,0 +1,30 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json1 = '{"A": 1, "B": 2, "C": {"D": 3}}';
+SET @json2 = '["A", "B", ["C", "D"], "E"]';
+SELECT @json1;
+@json1
+{"A": 1, "B": 2, "C": {"D": 3}}
+SELECT @json2;
+@json2
+["A", "B", ["C", "D"], "E"]
+INSERT INTO jsontest VALUES (1, @json1, @json1), (2, @json2, @json2);
+SELECT JSON_REMOVE(@json1, '$.C');
+JSON_REMOVE(@json1, '$.C')
+{"A": 1, "B": 2}
+SELECT JSON_REMOVE(@json2, '$[1]');
+JSON_REMOVE(@json2, '$[1]')
+["A", ["C", "D"], "E"]
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}
+2	["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]
+SELECT cVarchar, JSON_REMOVE(cVarchar, '$.C'), cText, JSON_REMOVE(cText, '$.C') from jsontest;
+cVarchar	JSON_REMOVE(cVarchar, '$.C')	cText	JSON_REMOVE(cText, '$.C')
+{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2}	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2}
+["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]
+SELECT cVarchar, JSON_REMOVE(cVarchar, '$[1]'), cText, JSON_REMOVE(cText, '$[1]') from jsontest;
+cVarchar	JSON_REMOVE(cVarchar, '$[1]')	cText	JSON_REMOVE(cText, '$[1]')
+{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}	{"A": 1, "B": 2, "C": {"D": 3}}
+["A", "B", ["C", "D"], "E"]	["A", ["C", "D"], "E"]	["A", "B", ["C", "D"], "E"]	["A", ["C", "D"], "E"]
+TRUNCATE TABLE jsontest;

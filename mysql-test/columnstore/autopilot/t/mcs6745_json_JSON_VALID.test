@@ -1,0 +1,30 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @tmpstr1 = '{"id": 1, "name": "Monty"}';
+SET @tmpstr2 = '{"id": 1, "name": "Monty", "oddfield"}';
+#
+SET @flag1 = (SELECT JSON_VALID(@tmpstr1));
+SET @flag2 = (SELECT JSON_VALID(@tmpstr2));
+#
+SELECT @flag1;
+SELECT @flag2;
+SELECT @tmpstr1;
+SELECT @tmpstr2;
+# string is valid, string 2 is not
+INSERT INTO jsontest VALUES (1, @tmpstr1, @tmpstr1);
+#
+SELECT * FROM jsontest;
+SELECT cVarchar, JSON_VALID(cVarchar), cText, JSON_VALID(cText) from jsontest;
+SELECT cVarchar, JSON_VALID(CONCAT(cVarchar,'HELLO WORLD')), cText, JSON_VALID(CONCAT(cText,'HELLO WORLD')) from jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

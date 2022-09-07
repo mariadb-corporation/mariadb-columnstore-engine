@@ -9,14 +9,14 @@
 USE autopilot;
 #
 TRUNCATE TABLE jsontest;
-SET @json = '{"A": 1, "B": 2, "C": 3}';
+SET @json = '["A", [{"B": "1"}], {"C":"AB"}, {"D":"BC"}]';
 SELECT @json;
 INSERT INTO jsontest VALUES (1, @json, @json);
 #
-SELECT JSON_TYPE(@json);
+SELECT JSON_SEARCH(@json, 'one', 'AB');
 #
 SELECT * FROM jsontest;
-SELECT cVarchar, JSON_TYPE(cVarchar), cText, JSON_TYPE(cText) from jsontest;
+SELECT cVarchar, JSON_SEARCH(cVarchar, 'one', 'AB'), cText, JSON_SEARCH(cText, 'one', 'AB') from jsontest;
 #
 TRUNCATE TABLE jsontest;
 #

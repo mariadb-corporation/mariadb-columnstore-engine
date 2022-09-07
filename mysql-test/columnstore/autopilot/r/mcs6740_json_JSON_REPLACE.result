@@ -12,5 +12,6 @@ SELECT * FROM jsontest;
 cInt	cVarchar	cText
 1	{ "A": 1, "B": [2, 3]}	{ "A": 1, "B": [2, 3]}
 SELECT cVarchar, JSON_REPLACE(cVarchar, '$.B[1]', 4), cText, JSON_REPLACE(cText, '$.B[1]', 4) from jsontest;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function 'json_replace' isn't supported.
+cVarchar	JSON_REPLACE(cVarchar, '$.B[1]', 4)	cText	JSON_REPLACE(cText, '$.B[1]', 4)
+{ "A": 1, "B": [2, 3]}	{"A": 1, "B": [2, 4]}	{ "A": 1, "B": [2, 3]}	{"A": 1, "B": [2, 4]}
 TRUNCATE TABLE jsontest;

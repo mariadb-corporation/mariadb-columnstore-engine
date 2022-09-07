@@ -16,7 +16,6 @@ INSERT INTO jsontest VALUES (1, @json, @json);
 SELECT JSON_REPLACE(@json, '$.B[1]', 4);
 #
 SELECT * FROM jsontest;
---error 1178
 SELECT cVarchar, JSON_REPLACE(cVarchar, '$.B[1]', 4), cText, JSON_REPLACE(cText, '$.B[1]', 4) from jsontest;
 #
 TRUNCATE TABLE jsontest;

@@ -1,0 +1,17 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '{ "A": 0, "B": [1, 2]}';
+SELECT @json;
+@json
+{ "A": 0, "B": [1, 2]}
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_INSERT(@json, '$.C', '[3, 4]');
+JSON_INSERT(@json, '$.C', '[3, 4]')
+{"A": 0, "B": [1, 2], "C": "[3, 4]"}
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	{ "A": 0, "B": [1, 2]}	{ "A": 0, "B": [1, 2]}
+SELECT cVarchar, JSON_INSERT(cVarchar, '$.C', '[3, 4]'), cText, JSON_INSERT(cText, '$.C', '[3, 4]') from jsontest;
+cVarchar	JSON_INSERT(cVarchar, '$.C', '[3, 4]')	cText	JSON_INSERT(cText, '$.C', '[3, 4]')
+{ "A": 0, "B": [1, 2]}	{"A": 0, "B": [1, 2], "C": "[3, 4]"}	{ "A": 0, "B": [1, 2]}	{"A": 0, "B": [1, 2], "C": "[3, 4]"}
+TRUNCATE TABLE jsontest;
