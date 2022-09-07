@@ -188,7 +188,7 @@ class WindowFunctionColumn : public ReturnedColumn
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     evaluate(row, isNull);
-    return TreeNode::getStrVal(fTimeZone);
+    return isNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
   }
 
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
