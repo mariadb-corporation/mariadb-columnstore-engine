@@ -163,7 +163,7 @@ class Operator : public TreeNode
   using TreeNode::getStrVal;
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
-    isNull = fResult.strVal.isNull();
+    isNull = isNull || fResult.strVal.isNull();
     return fResult.strVal;
   }
   using TreeNode::getIntVal;
