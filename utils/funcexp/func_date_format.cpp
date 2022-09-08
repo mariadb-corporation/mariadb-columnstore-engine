@@ -393,6 +393,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
   }
 
   const string& format = parm[1]->data()->getStrVal(row, isNull).safeString("");
+  idblog("format is " << format << ", is null " << ((int)isNull));
 
   return helpers::IDB_date_format(dt, format);
 }
