@@ -302,7 +302,7 @@ if (strs) {
 free(strs);
 }
 #endif
-    return isNull ? fResult.strVal.dropString() : fResult.strVal;
+    return fResult.strVal;
   }
   /**
    * F&E
