@@ -574,7 +574,6 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
           {
             tmpStr.dropString();
           }
-	  idblog("default value (point 2) " << tmpStr.safeString());
           colTuple.data = tmpStr;
         }
         else if (NULLABLE_COL == column.tableColName.column)
@@ -961,7 +960,6 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
           tmpStr.dropString();
           // colTuple.data = column.colType.getNullValueForType();
 	}
-	idblog("default value " << tmpStr.safeString());
         colTuple.data = tmpStr;
       }
       else if (NULLABLE_COL == column.tableColName.column)
