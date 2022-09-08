@@ -129,10 +129,12 @@ free(strs);
   {
 //idblog("setting const val: " << constval.safeString());
     fConstval = constval;
+    fResult.strVal = constval;
   }
   inline void constval(const std::string& constval)
   {
     fConstval.assign(constval);
+    fResult.strVal.assign(constval);
   }
   /**
    * accessor
