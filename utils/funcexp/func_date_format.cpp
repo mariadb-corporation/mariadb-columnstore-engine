@@ -392,6 +392,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     default: isNull = true; return "";
   }
 
+  idblog("is null before getStrVal " << ((int)isNull));
   const string& format = parm[1]->data()->getStrVal(row, isNull).safeString("");
   idblog("format is " << format << ", is null " << ((int)isNull));
 
