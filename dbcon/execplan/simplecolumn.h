@@ -281,9 +281,11 @@ class SimpleColumn : public ReturnedColumn
   }
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    evaluate(row, isNull);
-    if (isNull)
+    bool localIsNull;
+    evaluate(row, localIsNull);
+    if (localIsNull)
     {
+      isNull = isNull || localIsNull;
       fResult.strVal.dropString();
       return fResult.strVal;
     }
