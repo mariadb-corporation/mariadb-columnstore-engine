@@ -114,16 +114,24 @@ mcsv1_UDAF::ReturnCode regr_sxx::subEvaluate(mcsv1Context* context, const UserDa
   long double inCx = inData->cx;
 
   uint64_t resCnt = inCnt + outCnt;
-  long double deltax = outAvgx - inAvgx;
+  if (resCnt == 0)
+  {
+    outData->avgx = 0;
+    outData->cx = 0;
+    outData->cnt = 0;
+  }
+  else
+  {
+    long double deltax = outAvgx - inAvgx;
 
-  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+    long double resAvgx = inAvgx + deltax * outCnt / resCnt;
 
-  long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
+    long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
 
-  outData->avgx = resAvgx;
-  outData->cx = resCx;
-  outData->cnt = resCnt;
-
+    outData->avgx = resAvgx;
+    outData->cx = resCx;
+    outData->cnt = resCnt;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
 

@@ -136,22 +136,32 @@ mcsv1_UDAF::ReturnCode regr_intercept::subEvaluate(mcsv1Context* context, const 
   long double inCxy = inData->cxy;
 
   uint64_t resCnt = inCnt + outCnt;
-  long double deltax = outAvgx - inAvgx;
-  long double deltay = outAvgy - inAvgy;
+  if (resCnt == 0)
+  {
+    outData->avgx = 0;
+    outData->avgy = 0;
+    outData->cx = 0;
+    outData->cxy = 0;
+    outData->cnt = 0;
+  }
+  else
+  {
+    long double deltax = outAvgx - inAvgx;
+    long double deltay = outAvgy - inAvgy;
 
-  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
-  long double resAvgy = inAvgy + deltay * outCnt / resCnt;
+    long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+    long double resAvgy = inAvgy + deltay * outCnt / resCnt;
 
-  long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
+    long double resCx = outCx + inCx + deltax * deltax * inCnt * outCnt / resCnt;
 
-  long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
+    long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
 
-  outData->avgx = resAvgx;
-  outData->avgy = resAvgy;
-  outData->cx = resCx;
-  outData->cxy = resCxy;
-  outData->cnt = resCnt;
-
+    outData->avgx = resAvgx;
+    outData->avgy = resAvgy;
+    outData->cx = resCx;
+    outData->cxy = resCxy;
+    outData->cnt = resCnt;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
 
