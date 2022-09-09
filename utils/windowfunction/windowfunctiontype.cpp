@@ -692,6 +692,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARBINARY: // XXX: I guess it is right to do that. TODO: we can add TEXT here too.
     {
 //			uint64_t len = fRow.getColumnWidth(pos);

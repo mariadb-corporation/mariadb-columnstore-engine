@@ -661,6 +661,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
 
   if (valOut.compatible(strTypeId))
   {
+	  idblog("valOut is compatible with std::string");
     strOut = valOut.cast<std::string>();
     // Convert the string to numeric type, just in case.
     intOut = atol(strOut.c_str());
@@ -671,6 +672,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
   }
   else
   {
+	  idblog("default for incompatible valOut type");
     strOut = oss.str();
   }
 
@@ -754,12 +756,15 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::BLOB:
+      idblog("working upon CHAR-compatible type in valOut");
       if (valOut.empty())
       {
+	      idblog("valOut is empty");
         setValue(colDataType, b, e, c, (utils::NullString*)NULL);
       }
       else
       {
+	      idblog("valOut contains <<" << strOut << ">>");
         utils::NullString nullStrOut(strOut);
         setValue(colDataType, b, e, c, &nullStrOut);
       }
