@@ -2707,10 +2707,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.empty())
   {
+	  idblog("empty valOut");
     // Fields are initialized to NULL, which is what we want for empty;
     return;
   }
-
+idblog("non-empty valOut");
   int64_t intOut;
   uint64_t uintOut;
   float floatOut;
