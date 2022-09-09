@@ -188,6 +188,7 @@ class WindowFunctionColumn : public ReturnedColumn
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     bool localIsNull;
+    idblog("evaluating wfc getStrVal");
     evaluate(row, localIsNull);
     isNull = isNull || localIsNull;
     return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
