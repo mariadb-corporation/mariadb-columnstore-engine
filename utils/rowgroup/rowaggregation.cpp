@@ -2927,6 +2927,7 @@ idblog("non-empty valOut");
 void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 {
   execplan::CalpontSystemCatalog::ColDataType colDataType = fRowGroupOut->getColTypes()[colOut];
+  idblog("set UDAF any value");
 
   // This may seem a bit convoluted. Users shouldn't return a type
   // that they didn't set in mcsv1_UDAF::init(), but this
@@ -3035,6 +3036,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.compatible(strTypeId))
   {
+	  idblog("compatible with strTypeID");
     strOut = valOut.cast<utils::NullString>();
     // Convert the string to numeric type, just in case.
     intOut = atol(strOut.str());
@@ -3045,6 +3047,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
   }
   else
   {
+	  idblog("incompatible with any type");
     strOut.assign(oss.str());
   }
 
@@ -3099,7 +3102,9 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::TEXT: fRow.setStringField(strOut, colOut); break;
+    case execplan::CalpontSystemCatalog::TEXT:
+						  idblog("textual in set UDAF any value");
+						  fRow.setStringField(strOut, colOut); break;
 
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::CLOB:
