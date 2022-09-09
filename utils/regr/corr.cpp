@@ -218,23 +218,32 @@ mcsv1_UDAF::ReturnCode corr::dropValue(mcsv1Context* context, ColumnDatum* valsD
   long double cxyPrev = data->cxy;
   --data->cnt;
   uint64_t cnt = data->cnt;
+  if (cnt == 0)
+  {
+    data->avgx = 0;
+    data->avgy = 0;
+    data->varx = 0;
+    data->vary = 0;
+    data->cxy = 0;
+  }
+  else
+  {
+    long double dx = valx - avgxPrev;
+    long double dy = valy - avgyPrev;
 
-  long double dx = valx - avgxPrev;
-  long double dy = valy - avgyPrev;
+    avgyPrev -= dy / cnt;
+    avgxPrev -= dx / cnt;
 
-  avgyPrev -= dy / cnt;
-  avgxPrev -= dx / cnt;
+    varxPrev -= dx * (valx - avgxPrev);
+    varyPrev -= dy * (valy - avgyPrev);
 
-  varxPrev -= dx * (valx - avgxPrev);
-  varyPrev -= dy * (valy - avgyPrev);
+    cxyPrev -= dx * (valy - avgyPrev);
 
-  cxyPrev -= dx * (valy - avgyPrev);
-
-  data->avgx = avgxPrev;
-  data->avgy = avgyPrev;
-  data->varx = varxPrev;
-  data->vary = varyPrev;
-  data->cxy = cxyPrev;
-
+    data->avgx = avgxPrev;
+    data->avgy = avgyPrev;
+    data->varx = varxPrev;
+    data->vary = varyPrev;
+    data->cxy = cxyPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }

@@ -193,21 +193,29 @@ mcsv1_UDAF::ReturnCode regr_slope::dropValue(mcsv1Context* context, ColumnDatum*
   long double cxyPrev = data->cxy;
   --data->cnt;
   uint64_t cnt = data->cnt;
+  if (cnt == 0)
+  {
+    data->avgx = 0;
+    data->avgy = 0;
+    data->cx = 0;
+    data->cxy = 0;
+  }
+  else
+  {
+    long double dx = valx - avgxPrev;
+    long double dy = valy - avgyPrev;
 
-  long double dx = valx - avgxPrev;
-  long double dy = valy - avgyPrev;
+    avgyPrev -= dy / cnt;
+    avgxPrev -= dx / cnt;
 
-  avgyPrev -= dy / cnt;
-  avgxPrev -= dx / cnt;
+    cxPrev -= dx * (valx - avgxPrev);
 
-  cxPrev -= dx * (valx - avgxPrev);
+    cxyPrev -= dx * (valy - avgyPrev);
 
-  cxyPrev -= dx * (valy - avgyPrev);
-
-  data->avgx = avgxPrev;
-  data->avgy = avgyPrev;
-  data->cx = cxPrev;
-  data->cxy = cxyPrev;
-
+    data->avgx = avgxPrev;
+    data->avgy = avgyPrev;
+    data->cx = cxPrev;
+    data->cxy = cxyPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }

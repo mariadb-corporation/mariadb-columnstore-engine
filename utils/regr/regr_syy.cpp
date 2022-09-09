@@ -158,11 +158,18 @@ mcsv1_UDAF::ReturnCode regr_syy::dropValue(mcsv1Context* context, ColumnDatum* v
   long double cyPrev = data->cy;
   --data->cnt;
   uint64_t cnt = data->cnt;
-  long double dy = valy - avgyPrev;
-  avgyPrev -= dy / cnt;
-  cyPrev -= dy * (valy - avgyPrev);
-  data->avgy = avgyPrev;
-  data->cy = cyPrev;
-
+  if (cnt == 0)
+  {
+    data->avgy = 0;
+    data->cx = 0;
+  }
+  else
+  {
+    long double dy = valy - avgyPrev;
+    avgyPrev -= dy / cnt;
+    cyPrev -= dy * (valy - avgyPrev);
+    data->avgy = avgyPrev;
+    data->cy = cyPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
