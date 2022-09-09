@@ -161,7 +161,7 @@ mcsv1_UDAF::ReturnCode regr_syy::dropValue(mcsv1Context* context, ColumnDatum* v
   if (cnt == 0)
   {
     data->avgy = 0;
-    data->cx = 0;
+    data->cy = 0;
   }
   else
   {
