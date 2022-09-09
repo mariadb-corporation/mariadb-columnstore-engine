@@ -11,6 +11,16 @@ z	REGR_COUNT(y, x)
 NULL	0
 aaa	4
 bbb	3
+SELECT z, REGR_COUNT(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
+z	REGR_COUNT(y, x) OVER (PARTITION BY z ORDER BY z)
+NULL	0
+aaa	4
+aaa	4
+aaa	4
+aaa	4
+bbb	3
+bbb	3
+bbb	3
 SELECT REGR_COUNT(y) FROM t1;
 ERROR HY000: Can't initialize function 'regr_count'; regr_count() requires two arguments
 DROP DATABASE mcs197_db;
