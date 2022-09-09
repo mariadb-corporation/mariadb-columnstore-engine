@@ -11,6 +11,16 @@ z	REGR_R2(y, x)
 NULL	NULL
 aaa	0.9798973217047071
 bbb	1
+SELECT z, REGR_R2(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
+z	REGR_R2(y, x) OVER (PARTITION BY z ORDER BY z)
+NULL	NULL
+aaa	0.9798973217047071
+aaa	0.9798973217047071
+aaa	0.9798973217047071
+aaa	0.9798973217047071
+bbb	1
+bbb	1
+bbb	1
 SELECT REGR_R2(y) FROM t1;
 ERROR HY000: Can't initialize function 'regr_r2'; regr_r2() requires two arguments
 DROP DATABASE mcs199_db;

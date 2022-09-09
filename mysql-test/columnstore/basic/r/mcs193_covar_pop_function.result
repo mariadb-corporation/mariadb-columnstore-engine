@@ -11,4 +11,14 @@ z	COVAR_POP(y, x)
 NULL	NULL
 aaa	44.5
 bbb	26
+SELECT z, COVAR_POP(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
+z	COVAR_POP(y, x) OVER (PARTITION BY z ORDER BY z)
+NULL	NULL
+aaa	44.5
+aaa	44.5
+aaa	44.5
+aaa	44.5
+bbb	26
+bbb	26
+bbb	26
 DROP DATABASE mcs193_db;
