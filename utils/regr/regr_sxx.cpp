@@ -157,11 +157,18 @@ mcsv1_UDAF::ReturnCode regr_sxx::dropValue(mcsv1Context* context, ColumnDatum* v
   long double cxPrev = data->cx;
   --data->cnt;
   uint64_t cnt = data->cnt;
-  long double dx = valx - avgxPrev;
-  avgxPrev -= dx / cnt;
-  cxPrev -= dx * (valx - avgxPrev);
-  data->avgx = avgxPrev;
-  data->cx = cxPrev;
-
+  if (cnt == 0)
+  {
+    data->avgx = 0;
+    data->cx = 0;
+  }
+  else
+  {
+    long double dx = valx - avgxPrev;
+    avgxPrev -= dx / cnt;
+    cxPrev -= dx * (valx - avgxPrev);
+    data->avgx = avgxPrev;
+    data->cx = cxPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }

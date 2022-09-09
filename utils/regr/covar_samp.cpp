@@ -173,14 +173,23 @@ mcsv1_UDAF::ReturnCode covar_samp::dropValue(mcsv1Context* context, ColumnDatum*
   long double cxyPrev = data->cxy;
   --data->cnt;
   uint64_t cnt = data->cnt;
-  long double dx = valx - avgxPrev;
+  if (cnt == 0)
+  {
+    data->avgx = 0;
+    data->avgy = 0;
+    data->cxy = 0;
+  }
+  else
+  {
+    long double dx = valx - avgxPrev;
 
-  avgyPrev -= (valy - avgyPrev) / cnt;
-  avgxPrev -= dx / cnt;
-  cxyPrev -= dx * (valy - avgyPrev);
+    avgyPrev -= (valy - avgyPrev) / cnt;
+    avgxPrev -= dx / cnt;
+    cxyPrev -= dx * (valy - avgyPrev);
 
-  data->avgx = avgxPrev;
-  data->avgy = avgyPrev;
-  data->cxy = cxyPrev;
+    data->avgx = avgxPrev;
+    data->avgy = avgyPrev;
+    data->cxy = cxyPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
