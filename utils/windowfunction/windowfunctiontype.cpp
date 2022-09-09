@@ -377,7 +377,7 @@ void WindowFunctionType::setValue<utils::NullString>(int ct, int64_t b, int64_t 
   {
     if (j % 1000 == 0 && fStep->cancelled())
       break;
-
+idblog("setValue, value is {{" << v->safeString() << "}}");
     fRow.setData(getPointer((*fRowData)[j]));
     setValue(i, *v);
   }
