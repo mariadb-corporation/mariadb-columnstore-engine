@@ -143,24 +143,35 @@ mcsv1_UDAF::ReturnCode corr::subEvaluate(mcsv1Context* context, const UserData* 
   long double inCxy = inData->cxy;
 
   uint64_t resCnt = inCnt + outCnt;
-  long double deltax = outAvgx - inAvgx;
-  long double deltay = outAvgy - inAvgy;
+  if (resCnt == 0)
+  {
+    outData->avgx = 0;
+    outData->avgy = 0;
+    outData->varx = 0;
+    outData->vary = 0;
+    outData->cxy = 0;
+    outData->cnt = 0;
+  }
+  else
+  {
+    long double deltax = outAvgx - inAvgx;
+    long double deltay = outAvgy - inAvgy;
 
-  long double resAvgx = inAvgx + deltax * outCnt / resCnt;
-  long double resAvgy = inAvgy + deltay * outCnt / resCnt;
+    long double resAvgx = inAvgx + deltax * outCnt / resCnt;
+    long double resAvgy = inAvgy + deltay * outCnt / resCnt;
 
-  long double resVarx = outVarx + inVarx + deltax * deltax * inCnt * outCnt / resCnt;
-  long double resVary = outVary + inVary + deltay * deltay * inCnt * outCnt / resCnt;
+    long double resVarx = outVarx + inVarx + deltax * deltax * inCnt * outCnt / resCnt;
+    long double resVary = outVary + inVary + deltay * deltay * inCnt * outCnt / resCnt;
 
-  long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
+    long double resCxy = outCxy + inCxy + deltax * deltay * inCnt * outCnt / resCnt;
 
-  outData->avgx = resAvgx;
-  outData->avgy = resAvgy;
-  outData->varx = resVarx;
-  outData->vary = resVary;
-  outData->cxy = resCxy;
-  outData->cnt = resCnt;
-
+    outData->avgx = resAvgx;
+    outData->avgy = resAvgy;
+    outData->varx = resVarx;
+    outData->vary = resVary;
+    outData->cxy = resCxy;
+    outData->cnt = resCnt;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
 
