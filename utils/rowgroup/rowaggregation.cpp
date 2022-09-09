@@ -2000,6 +2000,7 @@ void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
                             uint64_t& funcColsIdx, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
+	idblog("doUDAF");
   std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
   if (UNLIKELY(rgContextColl != nullptr))
   {
@@ -2270,7 +2271,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
           {
             datum.columnData = rowIn.getStringField(colIn);
           }
-
+idblog("doUDAF assigned string");
           break;
         }
 
@@ -4447,6 +4448,7 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
                                 uint64_t& funcColsIdx, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
+	idblog("doUDAF 2");
   static_any::any valOut;
   std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
   if (UNLIKELY(rgContextColl != nullptr))
