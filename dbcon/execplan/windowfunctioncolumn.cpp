@@ -487,6 +487,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
         default:
         {
           const auto str = row.getStringField(fInputIndex);
+	  idblog("str evaluated: {{" << str.safeString() << "}}");
           if (str.isNull())
 	  {
             isNull = true;
