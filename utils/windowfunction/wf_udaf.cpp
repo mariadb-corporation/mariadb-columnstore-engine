@@ -550,6 +550,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
   static const static_any::any& doubleTypeId = (double)1;
   static const std::string typeStr;
   static const static_any::any& strTypeId = typeStr;
+idblog("WF_udaf::SetUDAFValue");
 
   CDT colDataType = fRow.getColType(colOut);
 
