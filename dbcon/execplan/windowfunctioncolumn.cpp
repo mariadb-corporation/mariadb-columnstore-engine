@@ -397,6 +397,7 @@ void WindowFunctionColumn::adjustResultType()
 
 void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 {
+	idblog("WFC evaluate");
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::DATE:
