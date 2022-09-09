@@ -185,6 +185,7 @@ class WindowFunctionColumn : public ReturnedColumn
    *                 F&E framework                           *
    ***********************************************************/
  public:
+  using TreeNode::getStrVal();
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     bool localIsNull;
