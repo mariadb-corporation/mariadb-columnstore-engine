@@ -658,136 +658,140 @@ string Row::toCSV() const
   return os.str();
 }
 
+void Row::setToNull(uint32_t colIndex)
+{
+  setNullMark(colIndex, true); // mark as null.
+  switch (types[colIndex])
+  {
+    case CalpontSystemCatalog::TINYINT: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
+
+    case CalpontSystemCatalog::SMALLINT:
+      *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
+      break;
+
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::INT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL);
+      break;
+
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::FLOATNULL);
+      break;
+
+    case CalpontSystemCatalog::DATE:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::DATENULL);
+      break;
+
+    case CalpontSystemCatalog::BIGINT:
+      if (precision[colIndex] != 9999)
+        *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
+      else  // work around for count() in outer join result.
+        *((uint64_t*)&data[offsets[colIndex]]) = 0;
+
+      break;
+
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DOUBLENULL; break;
+
+    case CalpontSystemCatalog::LONGDOUBLE:
+      *((long double*)&data[offsets[colIndex]]) = joblist::LONGDOUBLENULL;
+      break;
+
+    case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL; break;
+
+    case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL; break;
+
+    case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMENULL; break;
+
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::STRINT:
+    {
+      if (inStringTable(colIndex))
+      {
+        utils::NullString nullstr;
+ //idblog("setting field with " << nullstr.safeString());
+        setStringField(nullstr, colIndex);
+        break;
+      }
+
+      uint32_t len = getColumnWidth(colIndex);
+
+      switch (len)
+      {
+        case 1: data[offsets[colIndex]] = joblist::CHAR1NULL; break;
+
+        case 2: *((uint16_t*)&data[offsets[colIndex]]) = joblist::CHAR2NULL; break;
+
+        case 3:
+        case 4: *((uint32_t*)&data[offsets[colIndex]]) = joblist::CHAR4NULL; break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 8: *((uint64_t*)&data[offsets[colIndex]]) = joblist::CHAR8NULL; break;
+
+        default:
+          setNullMark(colIndex, true);
+          break;
+      }
+
+      break;
+    }
+
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    {
+      uint32_t len = getColumnWidth(colIndex);
+
+      switch (len)
+      {
+        case 1: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
+
+        case 2: *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
+
+        case 4: *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL); break;
+
+        case 16:
+        {
+          int128_t* s128ValuePtr = (int128_t*)(&data[offsets[colIndex]]);
+          datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
+        }
+        break;
+        default: *((int64_t*)&data[offsets[colIndex]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
+      }
+
+      break;
+    }
+
+    case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
+
+    case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL; break;
+
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[colIndex]]) = joblist::UINTNULL; break;
+
+    case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[colIndex]]) = joblist::UBIGINTNULL; break;
+
+    default:
+      ostringstream os;
+      os << "Row::initToNull(): got bad column type (" << types[colIndex] << ").  Width=" << getColumnWidth(colIndex)
+         << endl;
+      os << toString();
+      throw logic_error(os.str());
+  }
+}
 void Row::initToNull()
 {
   uint32_t i;
 
   for (i = 0; i < columnCount; i++)
   {
-    setNullMark(i, true); // mark as null.
-    switch (types[i])
-    {
-      case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
-
-      case CalpontSystemCatalog::SMALLINT:
-        *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
-        break;
-
-      case CalpontSystemCatalog::MEDINT:
-      case CalpontSystemCatalog::INT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL);
-        break;
-
-      case CalpontSystemCatalog::FLOAT:
-      case CalpontSystemCatalog::UFLOAT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::FLOATNULL);
-        break;
-
-      case CalpontSystemCatalog::DATE:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::DATENULL);
-        break;
-
-      case CalpontSystemCatalog::BIGINT:
-        if (precision[i] != 9999)
-          *((uint64_t*)&data[offsets[i]]) = joblist::BIGINTNULL;
-        else  // work around for count() in outer join result.
-          *((uint64_t*)&data[offsets[i]]) = 0;
-
-        break;
-
-      case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[i]]) = joblist::DOUBLENULL; break;
-
-      case CalpontSystemCatalog::LONGDOUBLE:
-        *((long double*)&data[offsets[i]]) = joblist::LONGDOUBLENULL;
-        break;
-
-      case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[i]]) = joblist::DATETIMENULL; break;
-
-      case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[i]]) = joblist::TIMESTAMPNULL; break;
-
-      case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[i]]) = joblist::TIMENULL; break;
-
-      case CalpontSystemCatalog::VARBINARY:
-      case CalpontSystemCatalog::BLOB:
-      case CalpontSystemCatalog::CHAR:
-      case CalpontSystemCatalog::VARCHAR:
-      case CalpontSystemCatalog::TEXT:
-      case CalpontSystemCatalog::STRINT:
-      {
-        if (inStringTable(i))
-        {
-          utils::NullString nullstr;
-	  //idblog("setting field with " << nullstr.safeString());
-          setStringField(nullstr, i);
-          break;
-        }
-
-        uint32_t len = getColumnWidth(i);
-
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::CHAR1NULL; break;
-
-          case 2: *((uint16_t*)&data[offsets[i]]) = joblist::CHAR2NULL; break;
-
-          case 3:
-          case 4: *((uint32_t*)&data[offsets[i]]) = joblist::CHAR4NULL; break;
-
-          case 5:
-          case 6:
-          case 7:
-          case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
-
-          default:
-            setNullMark(i, true);
-            break;
-        }
-
-        break;
-      }
-
-      case CalpontSystemCatalog::DECIMAL:
-      case CalpontSystemCatalog::UDECIMAL:
-      {
-        uint32_t len = getColumnWidth(i);
-
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::TINYINTNULL; break;
-
-          case 2: *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
-
-          case 4: *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL); break;
-
-          case 16:
-          {
-            int128_t* s128ValuePtr = (int128_t*)(&data[offsets[i]]);
-            datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
-          }
-          break;
-          default: *((int64_t*)&data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
-        }
-
-        break;
-      }
-
-      case CalpontSystemCatalog::UTINYINT: data[offsets[i]] = joblist::UTINYINTNULL; break;
-
-      case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[i]]) = joblist::USMALLINTNULL; break;
-
-      case CalpontSystemCatalog::UMEDINT:
-      case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[i]]) = joblist::UINTNULL; break;
-
-      case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[i]]) = joblist::UBIGINTNULL; break;
-
-      default:
-        ostringstream os;
-        os << "Row::initToNull(): got bad column type (" << types[i] << ").  Width=" << getColumnWidth(i)
-           << endl;
-        os << toString();
-        throw logic_error(os.str());
-    }
+    setToNull(i);
   }
 }
 

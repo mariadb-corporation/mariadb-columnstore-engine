@@ -560,6 +560,7 @@ class Row
   inline void markRow();
   inline void zeroRid();
   inline bool isMarked();
+  void setToNull(uint32_t colIndex);
   void initToNull();
 
   inline void usesStringTable(bool b)
@@ -1086,8 +1087,12 @@ free(strs);
     if (str.str())
     {
       memcpy(buf, str.str(), length);
+      memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
     }
-    memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
+    else
+    {
+      setToNull(colIndex);
+    }
   }
 //idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)));
 }
