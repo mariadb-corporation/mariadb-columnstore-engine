@@ -278,7 +278,7 @@ ENDIF()
 IF (INSTALL_LAYOUT)
     SET (MARIADB_STRING_LIBS dbug strings mysys)
 ELSE()
-    SET (MARIADB_STRING_LIBS    -L${SERVER_BUILD_INCLUDE_DIR}/../strings/ libstrings.a -L${SERVER_BUILD_INCLUDE_DIR}/../mysys/ libmysys.a -L${SERVER_BUILD_INCLUDE_DIR}/../dbug/ libdbug.a)
+    SET (MARIADB_STRING_LIBS -L${SERVER_BUILD_INCLUDE_DIR}/../mysys/ libmysys.a -L${SERVER_BUILD_INCLUDE_DIR}/../strings/ libstrings.a -L${SERVER_BUILD_INCLUDE_DIR}/../dbug/ libdbug.a)
 ENDIF()
 
 #SET (ENGINE_UTILS_BOOSTIDB_INCLUDE    "{CMAKE_CURRENT_SOURCE_DIR}/utils/boost_idb")
