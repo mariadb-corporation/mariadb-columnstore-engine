@@ -74,6 +74,7 @@ Columnstore Engine	COLUMNSTORE ENGINE
 SELECT col1, col2, CONCAT(col1,col2) FROM t1;
 col1	col2	CONCAT(col1,col2)
 NULL	NULL	NULL
+		 
 aaa	zzzzzzzzzz	aaazzzzzzzzzz
 klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	klm, nopqrstabcdefghijklmno, pqrsuvwxyz
 MariaDB, Columnstore	mariadb, COLUMNSTORE	MariaDB, Columnstoremariadb, COLUMNSTORE

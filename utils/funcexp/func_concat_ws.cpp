@@ -112,10 +112,10 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     str += tmp;
   }
 
-  if (str.empty()) // XXX: this is not right, again. empty strings are not nulls anymore.
-    isNull = true;
-  else
-    isNull = false;
+  //if (str.empty()) // XXX: this is not right, again. empty strings are not nulls anymore.
+  //  isNull = true;
+  //else
+  //  isNull = false;
 
   return str;
 }
