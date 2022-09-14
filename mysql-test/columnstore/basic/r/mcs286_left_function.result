@@ -15,9 +15,9 @@ mariadb c
 SELECT b, LEFT(b, 0) FROM t1 ORDER BY 1;
 b	LEFT(b, 0)
 NULL	NULL
-columnstore	NULL
-Innodb	NULL
-mariadb	NULL
+columnstore	
+Innodb	
+mariadb	
 SELECT b, LEFT(b, -1) FROM t1 ORDER BY 1;
 b	LEFT(b, -1)
 NULL	NULL
