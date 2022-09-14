@@ -188,7 +188,7 @@ class WindowFunctionColumn : public ReturnedColumn
   using TreeNode::getStrVal;
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    bool localIsNull;
+    bool localIsNull = false;
     idblog("evaluating wfc getStrVal");
     evaluate(row, localIsNull);
     isNull = isNull || localIsNull;

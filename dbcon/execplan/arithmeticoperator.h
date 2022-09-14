@@ -111,7 +111,7 @@ class ArithmeticOperator : public Operator
   using Operator::getStrVal;
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
-    bool localIsNull;
+    bool localIsNull = false;
     evaluate(row, localIsNull, lop, rop);
     isNull = isNull || localIsNull;
     return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);

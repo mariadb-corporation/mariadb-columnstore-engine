@@ -281,7 +281,7 @@ class SimpleColumn : public ReturnedColumn
   }
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    bool localIsNull;
+    bool localIsNull = false;
     evaluate(row, localIsNull);
     if (localIsNull)
     {

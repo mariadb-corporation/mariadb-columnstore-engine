@@ -358,7 +358,7 @@ class AggregateColumn : public ReturnedColumn
    */
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    bool localIsNull;
+    bool localIsNull = false;
     evaluate(row, localIsNull);
     isNull = isNull || localIsNull;
     return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
