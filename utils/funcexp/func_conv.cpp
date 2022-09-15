@@ -285,7 +285,7 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   int64_t to_base = parm[2]->data()->getIntVal(row, isNull);
 
   if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
-      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || !(res.length()))
+      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2)
   {
     isNull = true;
     return "";
@@ -297,8 +297,6 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
     dec = (int64_t)convStrToNum(res.safeString(""), from_base, true);
 
   str = helpers::convNumToStr(dec, ans, to_base);
-
-  isNull = str.empty(); // XXX: this is wrong.
 
   return str;
 }
