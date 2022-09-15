@@ -353,7 +353,7 @@ string Func_nullif::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 
   if (isNull)
   {
-    isNull = false;
+    //isNull = false; // NULLIF(NULL, ...) is NULL, according to server's results.
     return "";
   }
 
