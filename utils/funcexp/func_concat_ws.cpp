@@ -114,6 +114,12 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     str += tmp;
   }
 
+  if (firstTime) {
+    // all arguments are NULL.
+    isNull = true;
+    return str;
+  }
+
   //if (str.empty()) // XXX: this is not right, again. empty strings are not nulls anymore.
   //  isNull = true;
   //else
