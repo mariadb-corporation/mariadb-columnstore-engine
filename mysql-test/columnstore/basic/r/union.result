@@ -863,7 +863,7 @@ a
 9223372036854775807
 DROP TABLE t1,t2;
 #
-# Decimal With Same Signedness And Precision Union
+# Decimal With Same Signedness, Precision and Scale Union
 #
 CREATE TABLE t1 (a DECIMAL(38), b DECIMAL(38,10), c DECIMAL(38,38));
 INSERT INTO t1 VALUES (-125, -1.25, -0.125);

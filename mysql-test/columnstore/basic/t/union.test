@@ -274,7 +274,7 @@ SELECT * FROM (SELECT a FROM t2 UNION ALL SELECT a FROM t1) tu ORDER BY a;
 DROP TABLE t1,t2;
 
 --echo #
---echo # Decimal With Same Signedness And Precision Union
+--echo # Decimal With Same Signedness, Precision and Scale Union
 --echo #
 
 CREATE TABLE t1 (a DECIMAL(38), b DECIMAL(38,10), c DECIMAL(38,38));
