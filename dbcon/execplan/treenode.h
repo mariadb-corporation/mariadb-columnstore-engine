@@ -606,7 +606,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 	  std::string tmpCat = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
 	  tmpCat += tmp;
-          fResult.strVal.assign(tmp);
+          fResult.strVal.assign(tmpCat);
         }
 
         //				snprintf(tmp, 312, "%e", fResult.doubleVal);
