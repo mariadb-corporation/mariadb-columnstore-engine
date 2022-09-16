@@ -68,9 +68,6 @@ int64_t Func_ifnull::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 
 string Func_ifnull::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-  if (isNull)
-    return string();
-
   const auto& r = parm[0]->data()->getStrVal(row, isNull);
 
   if (isNull)
