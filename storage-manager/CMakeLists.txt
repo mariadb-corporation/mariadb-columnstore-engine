@@ -79,10 +79,6 @@ add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(unit_tests storagemanager)
 
-target_compile_options(unit_tests PRIVATE -fsanitize=address)
-target_link_options(unit_tests PRIVATE -fsanitize=address)
-
-
 add_executable(testS3Connection src/testS3Connection.cpp)
 target_compile_definitions(testS3Connection PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(testS3Connection storagemanager)
