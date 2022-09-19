@@ -1097,31 +1097,6 @@ free(strs);
 //idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)));
 }
 
-inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
-{
-  if (inStringTable(colIndex))
-    return getConstString(colIndex).toString();
-
-  return std::string((char*)&data[offsets[colIndex] + 2], *((uint16_t*)&data[offsets[colIndex]]));
-}
-template <typename T>
-inline T* Row::getBinaryField(uint32_t colIndex) const
-{
-  return getBinaryField_offset<T>(offsets[colIndex]);
-}
-
-template <typename T>
-inline T* Row::getBinaryField(T* argtype, uint32_t colIndex) const
-{
-  return getBinaryField_offset<T>(offsets[colIndex]);
-}
-
-template <typename T>
-inline T* Row::getBinaryField_offset(uint32_t offset) const
-{
-  return reinterpret_cast<T*>(&data[offset]);
-}
-
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 {
   if (inStringTable(colIndex))
