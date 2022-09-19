@@ -28,7 +28,7 @@ CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
 bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                          CalpontSystemCatalog::ColType& type)
 {
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+  const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
@@ -45,9 +45,10 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
     if (!isModeConst)
       isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
-    string mode = fp[1]->data()->getStrVal(row, isNull);
+    auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return false;
+    string mode = mode_ns.unsageStringRef();
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")

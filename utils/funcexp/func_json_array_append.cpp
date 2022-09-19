@@ -27,7 +27,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   if (isNull)
     return "";
 
-  const string view js = js_ns.unsafeStringRef();
+  const string_view js = js_ns.unsafeStringRef();
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
