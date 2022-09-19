@@ -23,10 +23,12 @@ CalpontSystemCatalog::ColType Func_json_length::operationType(FunctionParm& fp,
 int64_t Func_json_length::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                     execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 0;
 
+  const string_view js = js_ns.unsafeStringRef();
+  
   json_engine_t jsEg;
   int length = 0;
   int err;

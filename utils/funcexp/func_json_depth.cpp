@@ -22,10 +22,11 @@ CalpontSystemCatalog::ColType Func_json_depth::operationType(FunctionParm& fp,
 int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 0;
 
+  const string_view js = js_ns.unsafeStringRef();
   int depth = 0, currDepth = 0;
   bool incDepth = true;
 

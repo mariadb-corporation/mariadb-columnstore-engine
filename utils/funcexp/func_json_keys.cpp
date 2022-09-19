@@ -54,9 +54,11 @@ CalpontSystemCatalog::ColType Func_json_keys::operationType(FunctionParm& fp,
 string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                  execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
+  
+  const string_view js = js_ns.unsafeStringRef();
 
   IntType keySize = 0;
   string ret;

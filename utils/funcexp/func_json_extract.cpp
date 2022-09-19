@@ -17,9 +17,10 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
                                  bool compareWhole = true)
 {
   bool isNull = false;
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 1;
+  const string_view js = js_ns.unsafeStringRef();
   const char* rawJS = js.data();
   json_engine_t jsEg, savJSEg;
   json_path_t p;

@@ -23,10 +23,11 @@ CalpontSystemCatalog::ColType Func_json_array_insert::operationType(FunctionParm
 string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
+  const string_view js = js_ns.unsafeStringRef();
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
   json_engine_t jsEg;

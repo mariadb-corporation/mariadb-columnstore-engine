@@ -24,10 +24,11 @@ CalpontSystemCatalog::ColType Func_json_exists::operationType(FunctionParm& fp,
 bool Func_json_exists::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                   CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
+  const string_view js = js_ns.unsafeStringRef();
   int jsErr = 0;
   json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
