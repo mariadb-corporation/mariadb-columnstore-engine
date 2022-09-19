@@ -129,7 +129,7 @@ namespace
     d /= exp10(in.getScale(i));
     os.precision(15);
     os << d;
-    utils::NullString ns(os.str())
+    utils::NullString ns(os.str());
     out->setStringField(ns, i);
   }
 
