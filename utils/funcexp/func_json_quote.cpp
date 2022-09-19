@@ -32,7 +32,7 @@ std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   if (isNull || !isCharType(fp[0]->data()->resultType().colDataType))
     return "";
 
-  const string_view js = ns.unsafeStringRef();
+  const string_view js = js_ns.unsafeStringRef();
 
   string ret("\"");
 
