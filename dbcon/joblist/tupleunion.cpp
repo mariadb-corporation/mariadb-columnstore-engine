@@ -305,7 +305,8 @@ namespace
   void normalizeDateToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::dateToString(in.getUintField(i));
-    out->setStringField(d, i);
+    utils::NullString ns(d);
+    out->setStringField(ns, i);
   }
 
   void normalizeDatetimeToDatetime(const Row& in, Row* out, uint32_t i) 
@@ -355,7 +356,8 @@ namespace
   void normalizeDatetimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::datetimeToString(in.getUintField(i));
-    out->setStringField(d, i);
+    utils::NullString ns(d);
+    out->setStringField(ns, i);
   }
 
   void normalizeTimestampToTimestamp(const Row& in, Row* out, uint32_t i) 
@@ -409,7 +411,8 @@ namespace
   void normalizeTimestampToString(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     string d = DataConvert::timestampToString(in.getUintField(i), fTimeZone);
-    out->setStringField(d, i);
+    utils::NullString ns(d);
+    out->setStringField(ns, i);
   }
 
   void normalizeTimeToTime(const Row& in, Row* out, uint32_t i) 
@@ -420,7 +423,8 @@ namespace
   void normalizeTimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::timeToString(in.getIntField(i));
-    out->setStringField(d, i);
+    utils::NullString ns(d);
+    out->setStringField(ns, i);
   }
 
   void normalizeXFloatToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
