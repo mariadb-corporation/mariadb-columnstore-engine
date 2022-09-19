@@ -129,14 +129,16 @@ namespace
     d /= exp10(in.getScale(i));
     os.precision(15);
     os << d;
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str())
+    out->setStringField(ns, i);
   }
 
   void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getIntField(i);
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str())
+    out->setStringField(ns, i);
   }
 
   void normalizeIntToXFloat(const Row& in, Row* out, uint32_t i) 
@@ -206,14 +208,16 @@ namespace
     d /= exp10(in.getScale(i));
     os.precision(15);
     os << d;
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str());
+    out->setStringField(ns, i);
   }
 
   void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getUintField(i);
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str());
+    out->setStringField(ns, i);
   }
 
   void normalizUintToXFloat(const Row& in, Row* out, uint32_t i) 
@@ -509,7 +513,8 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str());
+    out->setStringField(ns, i);
   }
 
   void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i) 
@@ -518,7 +523,8 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str());
+    out->setStringField(ns, i);
   }
 
   void normalizeXFloatToWideXDecimal(const Row& in, Row* out, uint32_t i) 
@@ -593,7 +599,8 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    out->setStringField(os.str(), i);
+    utils::NullString ns(os.str());
+    out->setStringField(ns, i);
   }
 
   void normalizeLongDoubleToXDecimalInt128(const Row& in, Row* out, uint32_t i) 
@@ -675,14 +682,14 @@ namespace
     int128_t val128 = 0;
     in.getInt128Field(i, val128);
     datatypes::Decimal dec(0, in.getScale(i), in.getPrecision(i), val128);
-    out->setStringField(dec.toString(), i);
+    out->setStringField(dec.toNullString(), i);
   }
 
   void normalizeXDecimalToString(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     datatypes::Decimal dec(val, in.getScale(i), in.getPrecision(i));
-    out->setStringField(dec.toString(), i);
+    out->setStringField(dec.toNullString(), i);
   }
 
   void normalizeBlobVarbinary(const Row& in, Row* out, uint32_t i) 
