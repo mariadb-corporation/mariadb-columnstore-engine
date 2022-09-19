@@ -137,7 +137,7 @@ namespace
   {
     ostringstream os;
     os << in.getIntField(i);
-    utils::NullString ns(os.str())
+    utils::NullString ns(os.str());
     out->setStringField(ns, i);
   }
 
