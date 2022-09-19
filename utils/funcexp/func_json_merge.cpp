@@ -232,7 +232,7 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const auto js2 = fp[i]->data()->getStrVal(row, isNull);
+    const auto js2_ns = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
       goto error;
 

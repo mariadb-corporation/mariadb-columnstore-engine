@@ -45,7 +45,7 @@ bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& 
 bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm)
 {
   bool nullVal = false;
-  const string_view js = parm->data()->getStrVal(row, nullVal);
+  const string_view js = parm->data()->getStrVal(row, nullVal).safeString("");
   if (nullVal)
   {
     ret.append("\"\": ");
@@ -62,7 +62,7 @@ bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row,
 bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm)
 {
   bool nullVal = false;
-  const string_view js = parm->data()->getStrVal(row, nullVal);
+  const string_view js = parm->data()->getStrVal(row, nullVal).safeString();
   if (nullVal)
   {
     ret.append("null");
@@ -344,7 +344,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
     markConstFlag(path, parm);
 
   bool isNull = false;
-  const string_view jsp = parm->data()->getStrVal(row, isNull);
+  const string_view jsp = parm->data()->getStrVal(row, isNull).safeString("");
 
   if (isNull || setupJSPath(&path.p, getCharset(parm), jsp, wildcards))
     return 1;

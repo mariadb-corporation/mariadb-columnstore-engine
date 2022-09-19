@@ -22,9 +22,11 @@ CalpontSystemCatalog::ColType Func_json_unquote::operationType(FunctionParm& fp,
 std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
+
+  const string_view js = js_ns.unsafeStringRef();
 
   json_engine_t jsEg;
   int strLen;
