@@ -48,7 +48,7 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
     auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return false;
-    string mode = mode_ns.unsageStringRef();
+    string mode = mode_ns.unsafeStringRef();
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")
