@@ -67,12 +67,13 @@ const int s3err_to_errno[] = {
     EBADMSG,       // 4 MS3_ERR_RESPONSE_PARSE
     ECOMM,         // 5 MS3_ERR_REQUEST_ERROR
     ENOMEM,        // 6 MS3_ERR_OOM
-    EINVAL,  // 7 MS3_ERR_IMPOSSIBLE.  Will have to look through the code to find out what this is exactly.
+    EINVAL,        // 7 MS3_ERR_IMPOSSIBLE.  Will have to look through the code to find out what this is exactly.
     EKEYREJECTED,  // 8 MS3_ERR_AUTH
     ENOENT,        // 9 MS3_ERR_NOT_FOUND
     EPROTO,        // 10 MS3_ERR_SERVER
     EMSGSIZE,      // 11 MS3_ERR_TOO_BIG
-    EKEYREJECTED   // 12 MS3_ERR_AUTH_ROLE
+    EKEYREJECTED,  // 12 MS3_ERR_AUTH_ROLE
+    EFAULT         // 13 MS3_ERR_ENDPOINT
 };
 
 const char* s3err_msgs[] = {"All is well",
@@ -87,7 +88,8 @@ const char* s3err_msgs[] = {"All is well",
                             "Object not found",
                             "Unknown error code in response",
                             "Data to PUT is too large; 4GB maximum length",
-                            "Authentication failed, token has expired"};
+                            "Authentication failed, token has expired",
+                            "Configured bucket does not match endpoint location"};
 
 S3Storage::ScopedConnection::ScopedConnection(S3Storage* s, ms3_st* m) : s3(s), conn(m)
 {
@@ -506,6 +508,9 @@ int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, co
       logger->log(LOG_ERR, "S3Storage::putObject(): failed to PUT, got '%s'.  bucket = %s, key = %s.",
                   s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
     errno = s3err_to_errno[s3err];
+    if (s3err == MS3_ERR_ENDPOINT)
+      logger->log(LOG_ERR, "S3Storage::putObject(): Bucket location not match provided endpoint:, bucket = %s, endpoint = %s.",
+                  bucket.c_str(), endpoint.c_str());
     return -1;
   }
   return 0;
