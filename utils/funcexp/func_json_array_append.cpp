@@ -52,7 +52,7 @@ idblog("checking whether path parsed");
 
     initJSEngine(jsEg, cs, tmpJS);
 
-idblog("locating path");
+idblog("locating path in $$" << tmpJS << "$$");
     if (locateJSPath(jsEg, path))
       goto error;
 
