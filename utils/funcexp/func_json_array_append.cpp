@@ -27,6 +27,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   if (isNull)
     return "";
 
+idblog("JSON $$" << js_ns.safeString() << "$$");
   const string_view js = js_ns.safeString("");
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
