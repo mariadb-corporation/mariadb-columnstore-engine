@@ -342,6 +342,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
   // check if path column is const
   if (!path.constant)
     markConstFlag(path, parm);
+  idblog("parsing path $$" << parm->data()->getStrVal(row, isNull).safeString("") << "$$");
 
   bool isNull = false;
   const string_view jsp = parm->data()->getStrVal(row, isNull).safeString("");
