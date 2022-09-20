@@ -365,8 +365,7 @@ RGData::RGData(const RowGroup& rg)
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
-//	idblog("RGData reinit, rowCount " << rowCount);
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);// idblog("after resetting rowData");
+  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -380,7 +379,6 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
-// idblog("afte rmemset");
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -400,7 +398,6 @@ RGData::~RGData()
 
 void RGData::serialize(ByteStream& bs, uint32_t amount) const
 {
-	idblog("serializing rgdata, amount " << amount);
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
@@ -430,13 +427,10 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   uint8_t tmp8;
 
   bs.peek(sig);
-idblog("is it RGData?");
   if (sig == RGDATA_SIG)
   {
-	  idblog("deserializing rgdata");
     bs >> sig;
     bs >> amount;
-	  idblog("deserializing rgdata, amount " << amount << ", def amount " << defAmount);
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);
@@ -714,7 +708,6 @@ void Row::setToNull(uint32_t colIndex)
       if (inStringTable(colIndex))
       {
         utils::NullString nullstr;
- //idblog("setting field with " << nullstr.safeString());
         setStringField(nullstr, colIndex);
         break;
       }
@@ -997,12 +990,6 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     if (UNLIKELY(typeHasCollation(columnType)))
     {
       datatypes::Charset cs(getCharset(col));
-  CHARSET_INFO* other_charset = r2.getCharset(col);
-  char t[100];
-  sprintf(t, "%p", &(cs.getCharset()));
-  char t2[100];
-  sprintf(t, "%p", other_charset);
-  idblog("comparing with charset pointer " << t << ", other charset pointer " << t2);
       if (cs.strnncollsp(getConstString(col), r2.getConstString(col)))
       {
         return false;
@@ -1040,9 +1027,6 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
   {
     const_cast<CHARSET_INFO**>(charsets)[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
-  char t[100];
-  sprintf(t, "%p", charsets[col]);
-  idblog("returning charset pointer " << t << ", number is " << ((int)charsetNumbers[col]));
   return charsets[col];
 }
 
@@ -1065,7 +1049,6 @@ RowGroup::RowGroup()
   charsets.reserve(10);
   scale.reserve(10);
   precision.reserve(10);
-  //idblog("default RowGroup constructor");
 }
 
 RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const vector<uint32_t>& roids,
@@ -1127,7 +1110,6 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
   //idbassert(columnCount);
-  //idblog("constructing from complete data with " << columnCount << " columns");
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1160,7 +1142,6 @@ RowGroup::RowGroup(const RowGroup& r)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  //idblog("constructing from RowGroup with " << columnCount << " columns");
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1191,8 +1172,6 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
-
-  //idblog("rowgroup assignment, " << columnCount << " columns.");
 
   //idbassert(columnCount);
   return *this;
@@ -1244,7 +1223,6 @@ void RowGroup::serialize(ByteStream& bs) const
   bs << (uint8_t)hasLongStringField;
   bs << sTableThreshold;
   bs.append((uint8_t*)&forceInline[0], sizeof(bool) * columnCount);
-  idblog("serializing row group");
 }
 
 void RowGroup::deserialize(ByteStream& bs)
@@ -1281,7 +1259,6 @@ void RowGroup::deserialize(ByteStream& bs)
 
   // Set all the charsets to NULL for jit initialization.
   charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
-  idblog("deserializing row group");
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const
@@ -1455,21 +1432,15 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
   for (i = 0; i < in.getColumnCount(); i++)
     if (mapping[i] != -1)
     {
-idblog("applying mapping. our type is " << ((int)out->getColTypes()[mapping[i]]) << ", other's type is " << ((int)in.getColTypes()[i]) << ", our width is " << out->getColumnWidth(mapping[i]) << " other's column width is " << in.getColumnWidth(i));
       if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
       {
-//idblog("apply mapping for text likes");
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
       }
       else if (UNLIKELY(in.isLongString(i)))
         {
-//idblog("apply mapping for varchar likes");
-//idblog("apply mapping");
-        //  idblog_stat(utils::ConstString t = in.getConstString(i);)
 		  out->setStringField(in.getConstString(i), mapping[i]);
-	  //idblog("setting string field [" << mapping[i] << "] again: " << (t.str() ? "NULL" : "'" + t.toString() + "'"));
 	}
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
@@ -1589,23 +1560,6 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
             default:
             {
               NullString s = row.getStringField(j);
-#if 0
-idblog_stat(
-int nptrs;
-void* pbuf[100];
-char** strs;
-nptrs = backtrace(pbuf, 100);
-strs = backtrace_symbols(pbuf, nptrs);
-for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
-idblog("    stk: " << i << ": " << s);
-}
-if (strs) {
-free(strs);
-}
-)
-#endif
-	      //idblog("probably a default value: " << s.safeString());
               cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
           }
@@ -1670,7 +1624,6 @@ RGData RowGroup::duplicate()
   }
   else
   {
-idblog("duplicating RowGroup with memcpy");
     memcpy(ret.rowData.get(), data, getDataSize());
   }
 
