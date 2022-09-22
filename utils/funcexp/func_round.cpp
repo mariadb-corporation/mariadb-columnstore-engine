@@ -498,7 +498,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
         else
           x = ceil(x - 0.5);
 
-        decimal.value = x <= INT64_MIN ? INT64_MIN : x >= INT64_MAX ? INT64_MAX : int64_t(x);
+        decimal.value = static_cast<long>(x <= INT64_MIN ? INT64_MIN : x >= INT64_MAX ? INT64_MAX : int64_t(x));
         decimal.scale = s;
       }
     }
