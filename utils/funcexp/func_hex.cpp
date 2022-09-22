@@ -80,8 +80,9 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
     {
       const auto& arg = parm[0]->data()->getStrVal(row, isNull);
       scoped_array<char> hexPtr(new char[strlen(arg.str()) * 2 + 1]);
-      octet2hex(hexPtr.get(), arg.str(), strlen(arg.str()));
-      return string(hexPtr.get(), strlen(arg.str()) * 2);
+      octet2hex(hexPtr.get(), arg.str(), arg.length());
+      return string(hexPtr.get(), arg.length() * 2);
+//      return string(hexPtr.get(), strlen(arg.str()) * 2);
     }
 
     case CalpontSystemCatalog::DOUBLE:
