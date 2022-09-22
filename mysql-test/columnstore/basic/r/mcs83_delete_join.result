@@ -3,8 +3,8 @@ CREATE DATABASE mcs83_db;
 USE mcs83_db;
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'bbb'),(3, 'ccc'),(4, 'ddd'),(5, 'aa'),(6, ''),(7, 'aaaaa');
-INSERT INTO t2 VALUES (NULL, ''),(1, 'hhhh'),(3, 'iii'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'm'),(11, 'nnn');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'bbb'),(3, 'ccc'),(4, 'ddd'),(5, 'aa'),(6, ''),(7, 'aaaaa');
+INSERT INTO t2 VALUES (NULL, NULL),(1, 'hhhh'),(3, 'iii'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'm'),(11, 'nnn');
 SELECT * FROM t1 ORDER BY t1_int;
 t1_int	t1_char
 NULL	NULL
