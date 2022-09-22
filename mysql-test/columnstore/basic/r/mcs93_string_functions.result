@@ -25,6 +25,7 @@ MariaDB, Columnstore
 SELECT col2 FROM t1;
 col2
 NULL
+
 zzzzzzzzzz
 abcdefghijklmno, pqrsuvwxyz    
 mariadb, COLUMNSTORE
@@ -74,7 +75,7 @@ Columnstore Engine	COLUMNSTORE ENGINE
 SELECT col1, col2, CONCAT(col1,col2) FROM t1;
 col1	col2	CONCAT(col1,col2)
 NULL	NULL	NULL
-		 
+		
 aaa	zzzzzzzzzz	aaazzzzzzzzzz
 klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	klm, nopqrstabcdefghijklmno, pqrsuvwxyz
 MariaDB, Columnstore	mariadb, COLUMNSTORE	MariaDB, Columnstoremariadb, COLUMNSTORE
@@ -98,7 +99,7 @@ Columnstore Engine	COLUMNSTORE ENGINE	ConcatColumnstore Engine COLUMNSTORE ENGIN
 SELECT col1, col2, CONCAT(col2, ' string123# ', col1) FROM t1;
 col1	col2	CONCAT(col2, ' string123# ', col1)
 NULL	NULL	NULL
-		 string123#
+		 string123# 
 aaa	zzzzzzzzzz	zzzzzzzzzz string123# aaa
 klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz string123# klm, nopqrst
 MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE string123# MariaDB, Columnstore
@@ -122,7 +123,7 @@ Columnstore Engine	COLUMNSTORE ENGINE	COLUMNSTORE ENGINE....Columnstore Engine
 SELECT col1, col2, CONCAT_WS(' string123# ', col2, col1) FROM t1;
 col1	col2	CONCAT_WS(' string123# ', col2, col1)
 NULL	NULL	NULL
-		 string123#
+		 string123# 
 aaa	zzzzzzzzzz	zzzzzzzzzz string123# aaa
 klm, nopqrst	abcdefghijklmno, pqrsuvwxyz	abcdefghijklmno, pqrsuvwxyz string123# klm, nopqrst
 MariaDB, Columnstore	mariadb, COLUMNSTORE	mariadb, COLUMNSTORE string123# MariaDB, Columnstore
@@ -222,32 +223,32 @@ COLUMNSTORE ENGINE	COLUMNSTORE ENGINE
 SELECT col1, SUBSTRING(col1, 5), col2, SUBSTRING(col2, 8) FROM t1;
 col1	SUBSTRING(col1, 5)	col2	SUBSTRING(col2, 8)
 NULL	NULL	NULL	NULL
-	NULL		NULL
-aaa	NULL	zzzzzzzzzz	zzz
+			
+aaa		zzzzzzzzzz	zzz
 klm, nopqrst	 nopqrst	abcdefghijklmno, pqrsuvwxyz	hijklmno, pqrsuvwxyz
 MariaDB, Columnstore	aDB, Columnstore	mariadb, COLUMNSTORE	, COLUMNSTORE
 Columnstore Engine	mnstore Engine	COLUMNSTORE ENGINE	TORE ENGINE
 SELECT col1, SUBSTRING(col1, 5, 4), col2, SUBSTRING(col2, 8, 3) FROM t1;
 col1	SUBSTRING(col1, 5, 4)	col2	SUBSTRING(col2, 8, 3)
 NULL	NULL	NULL	NULL
-	NULL		NULL
-aaa	NULL	zzzzzzzzzz	zzz
+			NULL
+aaa		zzzzzzzzzz	zzz
 klm, nopqrst	 nop	abcdefghijklmno, pqrsuvwxyz	hij
 MariaDB, Columnstore	aDB,	mariadb, COLUMNSTORE	, C
 Columnstore Engine	mnst	COLUMNSTORE ENGINE	TOR
 SELECT col1, SUBSTRING(col1, -5), col2, SUBSTRING(col2, -8) FROM t1;
 col1	SUBSTRING(col1, -5)	col2	SUBSTRING(col2, -8)
 NULL	NULL	NULL	NULL
-	NULL		NULL
-aaa	NULL	zzzzzzzzzz	zzzzzzzz
+			
+aaa		zzzzzzzzzz	zzzzzzzz
 klm, nopqrst	pqrst	abcdefghijklmno, pqrsuvwxyz	rsuvwxyz
 MariaDB, Columnstore	store	mariadb, COLUMNSTORE	UMNSTORE
 Columnstore Engine	ngine	COLUMNSTORE ENGINE	E ENGINE
 SELECT col1, SUBSTRING(col1, -5, 4), col2, SUBSTRING(col2, -8, 3) FROM t1;
 col1	SUBSTRING(col1, -5, 4)	col2	SUBSTRING(col2, -8, 3)
 NULL	NULL	NULL	NULL
-	NULL		NULL
-aaa	NULL	zzzzzzzzzz	zzz
+			
+aaa		zzzzzzzzzz	zzz
 klm, nopqrst	pqrs	abcdefghijklmno, pqrsuvwxyz	rsu
 MariaDB, Columnstore	stor	mariadb, COLUMNSTORE	UMN
 Columnstore Engine	ngin	COLUMNSTORE ENGINE	E E
