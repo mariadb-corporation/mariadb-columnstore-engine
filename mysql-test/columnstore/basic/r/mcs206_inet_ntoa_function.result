@@ -5,7 +5,7 @@ CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
 SELECT a, INET_NTOA(a) FROM t1 ORDER BY a;
 a	INET_NTOA(a)
-	NULL
+NULL	NULL
 1	0.0.0.1
 2	0.0.0.2
 3	0.0.0.3
@@ -15,7 +15,7 @@ a	INET_NTOA(a)
 7	0.0.0.7
 SELECT b, INET_NTOA(b) FROM t1 ORDER BY b;
 b	INET_NTOA(b)
-	NULL
+NULL	NULL
 aaa	0.0.0.0
 aaa	0.0.0.0
 aaa	0.0.0.0
