@@ -56,21 +56,21 @@ mariadb database	ariadb database
 SELECT b, MID(b,0,0) FROM t1;
 b	MID(b,0,0)
 NULL	NULL
-columnstore engine	NULL
-mariadb database	NULL
+columnstore engine	
+mariadb database	
 SELECT b, MID(b,1,0) FROM t1;
 b	MID(b,1,0)
 NULL	NULL
-columnstore engine	NULL
-mariadb database	NULL
+columnstore engine	
+mariadb database	
 SELECT b, MID(b,0,1) FROM t1;
 b	MID(b,0,1)
 NULL	NULL
-columnstore engine	NULL
-mariadb database	NULL
+columnstore engine	
+mariadb database	
 SELECT b, MID(b,-1,0) FROM t1;
 b	MID(b,-1,0)
 NULL	NULL
-columnstore engine	NULL
-mariadb database	NULL
+columnstore engine	
+mariadb database	
 DROP DATABASE mcs219_db;
