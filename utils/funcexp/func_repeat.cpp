@@ -62,7 +62,10 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     return "";
 
   if (count < 1)
+  {
+    isNull = true;
     return "";
+  }
 
   // calculate size of buffer to allocate
 
@@ -73,6 +76,7 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   if (result == NULL)
   {
+    isNull = true;
     return "";
   }
 
@@ -81,7 +85,10 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   for (int i = 0; i < count; i++)
   {
     if (strcat(result, str.c_str()) == NULL)  // questionable check
+    {
+      isNull = true;
       return "";
+    }
   }
 
   std::string res(result);
