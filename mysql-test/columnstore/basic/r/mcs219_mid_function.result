@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs219_db;
 CREATE DATABASE mcs219_db;
 USE mcs219_db;
 CREATE TABLE t1 (a INT, b CHAR(35))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'columnstore engine'),(2, 'mariadb database');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'columnstore engine'),(2, 'mariadb database');
 SELECT b, MID(b,4,5) FROM t1;
 b	MID(b,4,5)
 NULL	NULL
