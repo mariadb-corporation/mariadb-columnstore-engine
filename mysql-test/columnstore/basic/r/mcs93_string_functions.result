@@ -231,7 +231,7 @@ Columnstore Engine	mnstore Engine	COLUMNSTORE ENGINE	TORE ENGINE
 SELECT col1, SUBSTRING(col1, 5, 4), col2, SUBSTRING(col2, 8, 3) FROM t1;
 col1	SUBSTRING(col1, 5, 4)	col2	SUBSTRING(col2, 8, 3)
 NULL	NULL	NULL	NULL
-			NULL
+			
 aaa		zzzzzzzzzz	zzz
 klm, nopqrst	 nop	abcdefghijklmno, pqrsuvwxyz	hij
 MariaDB, Columnstore	aDB,	mariadb, COLUMNSTORE	, C
