@@ -440,7 +440,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
       if (!isNull)
       {
         x *= p;
-        decimal.value = (int64_t)x;
+        decimal.value = x <= INT64_MIN ? INT64_MIN : x >= INT64_MAX ? INT64_MAX : int64_t(x);
         decimal.scale = s;
       }
     }
