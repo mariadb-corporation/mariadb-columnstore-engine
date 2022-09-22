@@ -30,7 +30,6 @@ uint32_t calcNumberOfBuckets(ssize_t availMem, uint32_t numOfThreads, uint32_t n
                              uint32_t groupsPerThread, uint32_t inRowSize, uint32_t outRowSize,
                              bool enabledDiskAggr);
 
-class MemManager;
 class RowPosHashStorage;
 using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
@@ -239,9 +238,9 @@ class RowAggStorage
 
   void nextHashMultiplier()
   {
-      // adding an *even* number, so that the multiplier will always stay odd. This is necessary
-      // so that the hash stays a mixing function (and thus doesn't have any information loss).
-      fCurData->hashMultiplier_ += 0xc4ceb9fe1a85ec54;
+    // adding an *even* number, so that the multiplier will always stay odd. This is necessary
+    // so that the hash stays a mixing function (and thus doesn't have any information loss).
+    fCurData->hashMultiplier_ += 0xc4ceb9fe1a85ec54;
   }
 
   /** @brief Increase internal data size if needed
@@ -358,7 +357,7 @@ class RowAggStorage
 
   Row fKeyRow;
 
-  std::unique_ptr<MemManager> fMM;
+  std::unique_ptr<joblist::MemManager> fMM;
   uint32_t fNumOfInputRGPerThread;
   bool fAggregated = true;
   bool fAllowGenerations;
