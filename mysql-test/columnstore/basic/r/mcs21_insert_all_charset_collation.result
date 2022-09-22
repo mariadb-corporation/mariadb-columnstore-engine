@@ -97,7 +97,7 @@ CREATE TABLE t_latin1(name VARCHAR(20)) CHARSET latin1 ENGINE=Columnstore;
 INSERT INTO t_latin1 VALUES(0x00),(0x01),(0x02),(0x03),(0x04),(0x05),(0x06),(0x07);
 SELECT hex(name) FROM t_latin1;
 hex(name)
-NULL
+00
 01
 02
 03
