@@ -1,89 +1,241 @@
 #!/usr/bin/env python3
+import configparser
+import fcntl
+import json
+import logging
+import os
+import socket
+import ssl
+import struct
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-import configparser
-
-XML_CONFIG_PATH = '/etc/columnstore/Columnstore.xml'
-SM_CONFIG_PATH = '/etc/columnstore/storagemanager.cnf'
-REST_REQUEST_TO = 10
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 
-def get_version():
-    return '0.4.0'
+MCS_SYSCONF_DIR = '@ENGINE_SYSCONFDIR@'
+MCS_ETC_PATH  = os.path.join(MCS_SYSCONF_DIR, 'columnstore')
+CMAPI_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'cmapi_server.conf')
+MCS_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
+SM_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
+MCS_BIN_DIR = '@ENGINE_BINDIR@'
+SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
+HALF_A_MINUTE = 30
+LOCALHOST = '127.0.0.1'
+API_VERSION = '0.4.0'
+API_PORT = '8640'
 
 
-def get_port():
-    return '8640'
+def get_api_key():
+    """Get API key from cmapi config file.
+
+    :return: return api key
+    :rtype: str
+    """
+    cmapi_config = configparser.ConfigParser()
+    cmapi_config.read(CMAPI_CONFIG_PATH)
+    # dequote?
+    return cmapi_config.get('Authentication', 'x-api-key', fallback='')
+
+
+def get_unverified_context():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
+def cmapi_available():
+    """Check if CMAPI server is running.
+
+    :return: is CMAPI running or not
+    :rtype: bool
+    """
+    logging.debug('Detecting CMAPI is up and running.')
+    url = 'https://{}:{}/notfound'.format(LOCALHOST, API_PORT)
+    request = Request(method='POST', url=url)
+    ctx = get_unverified_context()
+    try:
+        with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+            _ = req.read().decode('utf-8')
+    except HTTPError as exc:
+        if exc.code == 404:
+            return True
+    except URLError:
+        logging.info('CMAPI seems to be unavailable.')
+    except Exception:
+        logging.error(
+            'Undefined error while trying to check CMAPI availabale.',
+            exc_info=True
+        )
+    return False
+
+
+def get_ip_address_by_nic(ifname):
+    """Get ip address for nic.
+
+    :param ifname: network intarface name
+    :type ifname: str
+    :return: ip address
+    :rtype: str
+    """
+    # doesn't work on windows,
+    # OpenBSD and probably doesn't on FreeBSD/pfSense either
+    ip_addr = ''
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        ip_addr = socket.inet_ntoa(
+            fcntl.ioctl(
+                s.fileno(),
+                0x8915,  # SIOCGIFADDR "socket ioctl get interface address"
+                struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+            )[20:24]
+        )
+    except Exception as exc:
+        logging.debug(
+            'Exception while getting IP address of an "{}" interface'.format(
+                ifname
+            ),
+            exc_info=True
+        )
+    finally:
+        s.close()
+    return ip_addr
+
+
+def is_primary_fallback(current_hostname):
+    """Detect is node primary or not without cmapi.
+
+    :param current_hostname: hostname or FQDN
+    :type current_hostname: str
+    :return: is node primary
+    :rtype: bool
+    """
+    logging.debug(
+        'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
+    )
+    hostnames = set()
+    for _, nic_name in socket.if_nameindex():
+        ip_addr = get_ip_address_by_nic(nic_name)
+        if ip_addr:
+            hostnames_3tuple = socket.gethostbyaddr(ip_addr)
+            hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
+    logging.debug('Found hostnames {}.'.format(hostnames))
+    return current_hostname in hostnames
+
+
+def is_node_primary(conf_root):
+    """Detect is current node primary or not.
+
+    :param conf_root: xml config root element
+    :type conf_root: xml.etree.ElementTree.ElementTree
+    :return: primary or not
+    :rtype: bool
+    """
+    if cmapi_available():
+        url = 'https://{}:{}/cmapi/{}/node/primary'.format(
+            LOCALHOST, API_PORT, API_VERSION
+        )
+        ctx = get_unverified_context()
+        # Actually for this endpoint no need to provide api key cause it's
+        # not required
+        request = Request(
+            method='GET', url=url, headers={'x-api-key': get_api_key()}
+        )
+
+        success = False
+        try:
+            with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+                response = req.read()
+            success = True
+        except HTTPError as exc:
+            logging.warning(
+                'Something goes wrong while requesting primary status ',
+                'through api.',
+                'Got response code "{}" with reason "{}".'.format(
+                    exc.code, exc.reason
+                )
+            )
+        except URLError:
+            logging.warning(
+                'CMAPI became unavailable while trying',
+                'to request primary status.'
+            )
+        except Exception:
+            logging.error(
+                'Undefined exception while trying to request primary status.',
+                exc_info=True
+            )
+
+        if success:
+            dict_response = json.loads(response.decode('utf-8'))
+            is_primary = dict_response.get('is_primary', False)
+            if is_primary and is_primary in ('True', 'true'):
+                is_primary = True
+            return is_primary
+
+    logging.info('Trying to detect primary without cmapi running.')
+    # text in tag have to be hostname or FQDN
+    return is_primary_fallback(conf_root.find('./DBRM_Controller/IPAddr').text)
 
 
 if __name__ == '__main__':
     master_addr = ''
     pm_count = 0
+    logging.basicConfig(
+        format='%(levelname)s: %(message)s', level=logging.DEBUG
+    )
+    logging.debug('Loading Columnstore.xml.')
     try:
-        cs_config = ET.parse(XML_CONFIG_PATH)
+        cs_config = ET.parse(MCS_CONFIG_PATH)
         config_root = cs_config.getroot()
         master_addr = config_root.find('./DBRM_Controller/IPAddr').text
-        pm_count = int(config_root.find('./SystemModuleConfig/ModuleCount3').text)
+        pm_count = int(
+            config_root.find('./SystemModuleConfig/ModuleCount3').text
+        )
+        logging.debug('Succesfully loaded Columnstore.xml.')
     except (FileNotFoundError, AttributeError, ValueError) as e:
-        print("Exception had been raised. Continue anyway")
-        print(str(e))
+        # is it correct case?
+        logging.error(
+            'Exception while loading Columnstore.xml. Continue anyway.',
+            exc_info=True
+        )
 
-    storage = 'LocalStorage'
+    logging.debug('Reading SM config.')
     sm_config = configparser.ConfigParser()
     files_read = len(sm_config.read(SM_CONFIG_PATH))
-    if files_read == 1:
-        storage = sm_config.get('ObjectStorage', 'service')
+    storage = sm_config.get(
+        'ObjectStorage', 'service', fallback='LocalStorage'
+    )
 
-    default_addr = '127.0.0.1'   
-    savebrm = '@ENGINE_BINDIR@/save_brm'
     is_primary = False
 
     # For multi-node with local storage or default installations
-    multi_with_local_storage = storage.lower() != 's3' and master_addr != default_addr
-    if multi_with_local_storage is True or master_addr == default_addr:
-        # This might be not a primary in a multi-node cluster but we are safe 
+    multi_with_local_storage = (
+        storage.lower() != 's3' and master_addr != LOCALHOST
+    )
+    if multi_with_local_storage or master_addr == LOCALHOST:
+        # This might be not a primary in a multi-node cluster but we are safe
         # to save BRM locally
         is_primary = True
-        if multi_with_local_storage is True:
-            print('This is a multi-node installation with a local-storage.')
+        if multi_with_local_storage:
+            logging.info(
+                'Detected a multi-node installation with a local-storage.'
+            )
         else:
-            print(' This is a single-node installation.')
+            logging.info('Detected a single-node installation.')
     else:
         has_requests = False
-        try:
-            import requests
-            requests.packages.urllib3.disable_warnings()
-            has_requests = True
-        except ImportError as e:
-            print('requests Python module does not exist. \
-    Please install CMAPI first.')
-        if has_requests is True:
-            try:
-                print('Requesting for the primary node status.')
-                api_version = get_version()
-                api_port = get_port()
-                url = "https://{}:{}/cmapi/{}/node/primary".format(default_addr, \
-    api_port, api_version)
-                resp = requests.get(url, 
-                                 verify=False,
-                                 timeout=REST_REQUEST_TO)
-                if (resp.status_code != 200):
-                    print("Error sending GET /node/primary.")
-                else:
-                    is_primary = resp.json()['is_primary'] == 'True'
-            except:
-                print('Failed to request.')
-                print(str(e))
+        is_primary = is_node_primary(config_root)
 
     if is_primary is True:
         try:
-            retcode = subprocess.call(savebrm, shell=True)
-            if retcode < 0:
-                print('{} exits with {}.'.format(cmd, retcode))
-                sys.exit(0)
-        except OSError as e:
-                print(str(e))
-                sys.exit(0)
-
+            retcode = subprocess.check_call(SAVEBRM, shell=True)
+        except subprocess.CalledProcessError as exc:
+            logging.error('{} exits with {}.'.format(exc.cmd, exc.returncode))
+            sys.exit(1)
+        except OSError:
+            logging.error('Os error while calling savebrm', exc_info=True)
+            sys.exit(0)
     sys.exit(0)
