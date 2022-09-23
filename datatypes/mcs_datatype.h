@@ -574,6 +574,14 @@ inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unione
   }
 }
 
+inline void promoteDecimal(datatypes::SystemCatalog::TypeHolderStd& unionedType, const datatypes::SystemCatalog::TypeHolderStd& type)
+{
+  const int32_t beforePointDigits = std::max(type.precision - type.scale, unionedType.precision - unionedType.scale);
+  const int32_t afterPointDigits = std::max(type.scale, unionedType.scale);
+  unionedType.scale = afterPointDigits;
+  unionedType.precision = beforePointDigits + afterPointDigits;
+}
+
 /**
     @brief The method netects whether type sum and avg aggregate will have
     wide decimal underlying type
