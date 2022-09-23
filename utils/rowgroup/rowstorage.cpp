@@ -1556,9 +1556,10 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
                                        !fEnabledDiskAggregation, fCompressor.get()));
     if (fExtKeys)
     {
-      fKeysStorage = new RowGroupStorage(fTmpDir, fKeysRowGroup, fMaxRows, fMM->getResourceManaged(),
+      fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, fKeysRowGroup, fMaxRows, fMM->getResourceManaged(),
                                          fMM->getSessionLimit(), !fEnabledDiskAggregation,
-                                         !fEnabledDiskAggregation, fCompressor.get());
+                                         !fEnabledDiskAggregation, fCompressor.get()));
+      fKeysStorage = fRealKeysStorage.get();
     }
     else
     {
