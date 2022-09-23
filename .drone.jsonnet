@@ -6,7 +6,8 @@ local platforms = {
 };
 
 local servers = {
-  develop: ['10.9', '10.6-enterprise'],
+  //develop: ['10.9', '10.6-enterprise'],
+  develop: ['10.6-enterprise'],
   'develop-6': ['10.6-enterprise'],
 };
 
@@ -62,7 +63,7 @@ local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb h
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = "apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ";
+local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
 
 
 local platformMap(platform, arch) =
@@ -71,7 +72,7 @@ local platformMap(platform, arch) =
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'debian:11':    bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
+    'debian:11': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
     'ubuntu:20.04': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + ubuntu20_04_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
@@ -516,17 +517,18 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.9']), platforms.develop) +
-              std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
+  depends_on:  //std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.9']), platforms.develop) +
+    std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
 
-              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.9']), platforms_arm.develop) +
-              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
+    //std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.9']), platforms_arm.develop) +
+    std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
 
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
+    std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
 
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']) +
+    std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']) +
 
-              ['develop-6 ubuntu:22.04 ' + event + ' amd64 10.9'],
+    //['develop-6 ubuntu:22.04 ' + event + ' amd64 10.9'],
+    '',
 };
 
 
@@ -537,10 +539,10 @@ local FinalPipeline(branch, event) = {
   for s in servers[b]
   for e in events
 ] +
-[
-  Pipeline('develop-6', 'ubuntu:22.04', e, 'amd64', '10.9')
-  for e in events
-] +
+//[
+//  Pipeline('develop-6', 'ubuntu:22.04', e, 'amd64', '10.9')
+//  for e in events
+//] +
 [
   Pipeline(b, p, e, 'arm64', s)
   for b in std.objectFields(platforms_arm)
