@@ -525,10 +525,9 @@ local FinalPipeline(branch, event) = {
 
     std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
 
-    std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']) +
+    std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']),
 
-    //['develop-6 ubuntu:22.04 ' + event + ' amd64 10.9'],
-    '',
+  //['develop-6 ubuntu:22.04 ' + event + ' amd64 10.9'],
 };
 
 
