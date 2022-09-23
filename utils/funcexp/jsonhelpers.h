@@ -9,7 +9,7 @@
 #include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
-#include <json_lib.h>
+//#include <json_lib.h>
 
 #include "collation.h"
 #include "functor_json.h"
@@ -19,6 +19,8 @@
 #include "treenode.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+
+#include "delete_me_json_lib.h"
 
 namespace funcexp
 {

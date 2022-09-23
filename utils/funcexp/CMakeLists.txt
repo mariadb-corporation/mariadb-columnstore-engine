@@ -144,6 +144,7 @@ set(funcexp_LIB_SRCS
     func_year.cpp
     func_yearweek.cpp
     jsonhelpers.cpp
+    delete_me_json_lib.c
     sql_crypt.cpp)
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
