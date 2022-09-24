@@ -7,6 +7,8 @@ endif()
 
 if(WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
+
+if(WITH_UNITTESTS)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     set(cxxflags "")
     set(linkflags "")
@@ -27,15 +29,17 @@ if(WITH_UNITTESTS)
                    -DCMAKE_SHARED_LINKER_FLAGS=${linkflags} -DCMAKE_MODULE_LINKER_FLAGS=${linkflags}
     )
 
-    # this is a workaround for gtest's bug still not closed https://github.com/google/googletest/issues/3659
+    # this is a workaround for gtest's bug still not closed
+    # https://github.com/google/googletest/issues/3659
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        my_check_and_set_compiler_flag("-U__cpp_char8_t")
+        MY_CHECK_AND_SET_COMPILER_FLAG("-U__cpp_char8_t")
     endif()
 
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+
     # lib64 for RPM-based distros
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib ${EXTERNAL_INSTALL_LOCATION}/lib64)
-    set(GTEST_LIBRARIES gtest gtest_main pthread)
+    set(GTEST_LIBRARIES gtest gtest_main gmock gmock_main pthread)
     include(GoogleTest)
 
     # GoogleTest tests
@@ -81,6 +85,11 @@ if(WITH_UNITTESTS)
     add_dependencies(simd_processors googletest)
     columnstore_link(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
+
+    add_executable(modified_pdqsort modified_pdqsort.cpp)
+    add_dependencies(modified_pdqsort googletest)
+    target_link_libraries(modified_pdqsort ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET modified_pdqsort TEST_PREFIX columnstore:)
 
     add_executable(fair_threadpool_test fair_threadpool.cpp)
     add_dependencies(fair_threadpool_test googletest)
