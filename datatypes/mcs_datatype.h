@@ -17,6 +17,7 @@
    MA 02110-1301, USA. */
 #pragma once
 
+#include <cstdint>
 #include <sstream>
 #include <boost/any.hpp>
 #include "exceptclasses.h"
@@ -225,6 +226,14 @@ class SystemCatalog
     LONGDOUBLE,           /* @bug3241, dev and variance calculation only */
     STRINT,               /* @bug3532, string as int for fast comparison */
     UNDEFINED,            /*!< Undefined - used in UDAF API */
+    // CHAR_1BYTE,
+    // CHAR_2BYTES,
+    // CHAR_4BYTES,
+    // CHAR_8BYTES,
+    // VARCHAR_1BYTE,
+    // VARCHAR_2BYTES,
+    // VARCHAR_4BYTES,
+    // VARCHAR_8BYTES,
   };
 
   // XXX: It is assumed here that ALL TYPES have width, scale and precision.
@@ -586,6 +595,109 @@ inline bool hasUnderlyingWideDecimalForSumAndAvg(datatypes::SystemCatalog::ColDa
 {
   return datatypes::isSignedInteger(type) || datatypes::isUnsigned(type);
 }
+
+template <SystemCatalog::ColDataType ColType, typename T = void>
+struct _ColDataTypeToIntegralType
+{
+  typedef T type;
+};
+
+template <SystemCatalog::ColDataType ColType>
+struct ColDataTypeToIntegralType : _ColDataTypeToIntegralType<ColType>
+{
+};
+// Bit types
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::BIT> : _ColDataTypeToIntegralType<SystemCatalog::BIT, int8_t>
+{
+};
+// Integer types
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::TINYINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::TINYINT, int8_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::SMALLINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::SMALLINT, int16_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::MEDINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::MEDINT, int32_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::INT> : _ColDataTypeToIntegralType<SystemCatalog::INT, int32_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::BIGINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::BIGINT, int64_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UTINYINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::UTINYINT, uint8_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::USMALLINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::USMALLINT, uint16_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UMEDINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::UMEDINT, uint32_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::UINT, uint32_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UBIGINT>
+ : _ColDataTypeToIntegralType<SystemCatalog::UBIGINT, uint64_t>
+{
+};
+// Float types
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::FLOAT>
+ : _ColDataTypeToIntegralType<SystemCatalog::FLOAT, float>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::DOUBLE>
+ : _ColDataTypeToIntegralType<SystemCatalog::DOUBLE, double>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UFLOAT>
+ : _ColDataTypeToIntegralType<SystemCatalog::UFLOAT, float>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::UDOUBLE>
+ : _ColDataTypeToIntegralType<SystemCatalog::UDOUBLE, double>
+{
+};
+// Date,time types
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::DATE>
+ : _ColDataTypeToIntegralType<SystemCatalog::DATE, uint32_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::DATETIME>
+ : _ColDataTypeToIntegralType<SystemCatalog::DATETIME, uint64_t>
+{
+};
+template <>
+struct ColDataTypeToIntegralType<SystemCatalog::TIME>
+ : _ColDataTypeToIntegralType<SystemCatalog::TIME, uint64_t>
+{
+};
 
 }  // end of namespace datatypes
 

@@ -538,7 +538,6 @@ class Row
   // that's not string-table safe, this one is
   inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
-
   inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
   std::string toString(uint32_t rownum = 0) const;
@@ -1084,7 +1083,7 @@ inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 
 inline datatypes::TSInt128 Row::getTSInt128Field(uint32_t colIndex) const
 {
-  const int128_t* ptr = reinterpret_cast<int128_t*>(&data[offsets[colIndex]]);;
+  const int128_t* ptr = reinterpret_cast<int128_t*>(&data[offsets[colIndex]]);
   return datatypes::TSInt128(ptr);
 }
 
@@ -1330,7 +1329,6 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
   }
 }
 
-
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
   out.setInt128Field(getTSInt128Field(srcIndex).getValue(), destIndex);
@@ -1434,6 +1432,16 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setData(uint8_t* d);
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
+  // add numerics only concept check
+  template <enum datatypes::SystemCatalog::ColDataType ColType, typename T>
+  T getColumnValue(const uint32_t columnID, const uint32_t rowID) const
+  {
+    assert(data);
+    size_t valueOffset = getOffsets()[columnID] + rowID * getRowSize();
+    // check the out of bounds invariant somehow
+    T* valuePtr = reinterpret_cast<T*>(&data[valueOffset]);  // the cast is questionable here
+    return *valuePtr;
+  }
 
   uint32_t getStatus() const;
   void setStatus(uint16_t);
@@ -1495,8 +1503,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
-  //convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL)
+  // const; void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
@@ -2153,4 +2161,3 @@ inline void RGData::getRow(uint32_t num, Row* row)
 }
 
 }  // namespace rowgroup
-
