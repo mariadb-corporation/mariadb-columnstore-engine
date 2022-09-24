@@ -1,0 +1,484 @@
+/* Copyright (C) 2022 MariaDB Corporation, Inc.
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITH`OUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
+
+//  $Id: FlatOrderBy.cpp 9581 2013-05-31 13:46:14Z pleblanc $
+
+#include <iostream>
+//#define NDEBUG
+#include <cassert>
+#include <string>
+#include "calpontsystemcatalog.h"
+using namespace std;
+
+#include <boost/shared_array.hpp>
+using namespace boost;
+
+#include "errorids.h"
+#include "exceptclasses.h"
+using namespace logging;
+
+#include "rowgroup.h"
+using namespace rowgroup;
+
+#include "jlf_common.h"
+#include "orderby.h"
+#include "utils/common/modified_pdqsort.h"
+
+using namespace ordering;
+
+namespace joblist
+{
+// const uint64_t FlatOrderBy::fMaxUncommited = 102400;  // 100KiB - make it configurable?
+
+// FlatOrderBy class implementation
+FlatOrderBy::FlatOrderBy() : start_(0), count_(-1)
+{
+  // fRule.fIdbCompare = this;
+}
+
+FlatOrderBy::~FlatOrderBy()
+{
+}
+
+void FlatOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool invertRules,
+                             bool isMultiThreaded)
+{
+  //   fRm = jobInfo.rm;
+  // Watch out and re-check the defaults !!!
+  mm_.reset(new joblist::RMMemManager(jobInfo.rm, jobInfo.umMemLimit));
+
+  //   fErrorCode = ERR_LIMIT_TOO_BIG;
+
+  // locate column position in the rowgroup
+  //   map<uint32_t, uint32_t> keyToIndexMap;
+
+  //   for (uint64_t i = 0; i < rg.getKeys().size(); ++i)
+  //   {
+  //     if (keyToIndexMap.find(rg.getKeys()[i]) == keyToIndexMap.end())
+  //       keyToIndexMap.insert(make_pair(rg.getKeys()[i], i));
+  //   }
+
+  //   vector<pair<uint32_t, bool> >::const_iterator i = jobInfo.orderByColVec.begin();
+
+  //   for (; i != jobInfo.orderByColVec.end(); i++)
+  //   {
+  //     map<uint32_t, uint32_t>::iterator j = keyToIndexMap.find(i->first);
+  //     idbassert(j != keyToIndexMap.end());
+
+  //     // fOrderByCond.push_back(IdbSortSpec(j->second, i->second ^ invertRules));
+  //   }
+
+  // limit row count info
+  //   if (isMultiThreaded)
+  //   {
+  //     // CS can't apply offset at the first stage
+  //     // otherwise it looses records.
+  //     start_ = 0;
+  //     count_ = jobInfo.limitStart + jobInfo.limitCount;
+  //   }
+  //   else
+  {
+    start_ = jobInfo.limitStart;
+    count_ = jobInfo.limitCount;
+  }
+  rg_ = rg;
+
+  //   IdbOrderBy::initialize(rg);
+}
+
+// This must return a proper number of key columns and
+// not just a column count.
+uint64_t FlatOrderBy::getKeyLength() const
+{
+  return rg_.getColumnCount();
+  //   return fRow0.getColumnCount();
+}
+
+bool FlatOrderBy::addBatch(rowgroup::RGData& rgData)
+{
+  bool isFailure = false;
+  rg_.setData(&rgData);
+  auto rowCount = rg_.getRowCount();
+  auto bytes = rg_.getSizeWithStrings(rowCount);
+  if (!mm_->acquire(bytes))
+  {
+    cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
+    throw IDBExcept(ERR_LIMIT_TOO_BIG);
+  }
+
+  rgDatas_.push_back(rgData);
+
+  return isFailure;
+}
+
+bool FlatOrderBy::sortByColumn(const uint32_t columnId)
+{
+  bool isFailure = false;
+  switch (rg_.getColType(columnId))
+  {
+    case execplan::CalpontSystemCatalog::TINYINT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::INT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumn_<execplan::CalpontSystemCatalog::BIGINT, StorageType, EncodedKeyType>(
+          columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    {
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    {
+      break;
+    }
+
+    default: break;
+  }
+  return isFailure;
+}
+
+// For numeric datatypes only
+// add numerics only concept check
+template <enum datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
+{
+  bool isFailure = false;
+  std::vector<EncodedKeyType> keys;
+  std::vector<PermutationType> nulls;
+  rowgroup::Row r;
+  // Replace with a constexpr
+  auto nullValue = sorting::getNullValue<StorageType>(ColType);
+
+  RGDataOrRowIDType rgDataId = 0;
+  for (auto& rgData : rgDatas_)
+  {
+    // set rgdata
+    rg_.setData(&rgData);
+    rg_.initRow(&r);    // Row iterator call seems unreasonably costly here
+    rg_.getRow(0, &r);  // get first row
+    auto rowCount = rg_.getRowCount();
+    auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * rowCount;
+    if (!mm_->acquire(bytes))
+    {
+      cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
+      throw IDBExcept(ERR_LIMIT_TOO_BIG);
+    }
+
+    permutation_.resize(permutation_.size() + rowCount);
+
+    for (decltype(rowCount) i = 0; i < rowCount; ++i)
+    {
+      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType>(columnID, i);
+      if (value != nullValue)
+      {
+        keys.push_back(value);
+        permutation_.push_back({rgDataId, i});
+      }
+      else
+      {
+        nulls.push_back({rgDataId, i});
+      }
+    }
+    ++rgDataId;
+  }
+  // count sorting for types with width < 8 bytes.
+  // use sorting class
+  // sorting must move permute members when keys are moved
+  std::sort(keys.begin(), keys.end(), std::less());
+  // sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
+  //                      std::less<EncodedKeyType>());
+  // sort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(), cmp::less<KeyIntegralType>());
+  // must save permutation
+  return isFailure;
+}
+
+// template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
+// bool FlatOrderBy::distributionSortByColumn_(const uint32_t columnId)
+// {
+//   bool isFailure = false;
+//   return isFailure;
+// }
+
+void FlatOrderBy::processRow(const rowgroup::Row& row)
+{
+  // //   // check if this is a distinct row
+  // //   if (fDistinct && fDistinctMap->find(row.getPointer()) != fDistinctMap->end())
+  // //     return;
+
+  // //   // @bug5312, limit count is 0, do nothing.
+  // //   if (count_ == 0)
+  // //     return;
+
+  // //   // if the row count is less than the limit
+  // //   if (fOrderByQueue.size() < start_ + count_)
+  // //   {
+  // //     copyRow(row, &fRow0);
+  // //     OrderByRow newRow(fRow0, fRule);
+  // //     fOrderByQueue.push(newRow);
+
+  // //     uint64_t memSizeInc = sizeof(newRow);
+  // //     fUncommitedMemory += memSizeInc;
+  // //     if (fUncommitedMemory >= fMaxUncommited)
+  // //     {
+  // //       if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+  // //       {
+  // //         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+  // //         throw IDBExcept(fErrorCode);
+  // //       }
+  // //       fMemSize += fUncommitedMemory;
+  // //       fUncommitedMemory = 0;
+  // //     }
+
+  // //     // add to the distinct map
+  // //     if (fDistinct)
+  // //       fDistinctMap->insert(fRow0.getPointer());
+
+  // //     fRowGroup.incRowCount();
+  // //     fRow0.nextRow();
+
+  // //     if (fRowGroup.getRowCount() >= fRowsPerRG)
+  // //     {
+  // //       fDataQueue.push(fData);
+  // //       uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
+
+  // //       if (!fRm->getMemory(newSize, fSessionMemLimit))
+  // //       {
+  // //         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+  // //         throw IDBExcept(fErrorCode);
+  // //       }
+  // //       fMemSize += newSize;
+
+  // //       fData.reinit(fRowGroup, fRowsPerRG);
+  // //       fRowGroup.setData(&fData);
+  // //       fRowGroup.resetRowGroup(0);
+  // //       fRowGroup.getRow(0, &fRow0);
+  // //     }
+  //   }
+
+  //   else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), fOrderByQueue.top().fData))
+  //   {
+  //     OrderByRow swapRow = fOrderByQueue.top();
+  //     row1.setData(swapRow.fData);
+  //     copyRow(row, &row1);
+
+  //     if (fDistinct)
+  //     {
+  //       fDistinctMap->erase(fOrderByQueue.top().fData);
+  //       fDistinctMap->insert(row1.getPointer());
+  //     }
+
+  //     fOrderByQueue.pop();
+  //     fOrderByQueue.push(swapRow);
+  //   }
+}
+
+/*
+ * The f() copies top element from an ordered queue into a row group. It
+ * does this backwards to syncronise sorting orientation with the server.
+ * The top row from the queue goes last into the returned set.
+ */
+void FlatOrderBy::finalize()
+{
+  //   if (fUncommitedMemory > 0)
+  //   {
+  //     if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+  //     {
+  //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+  //       throw IDBExcept(fErrorCode);
+  //     }
+  //     fMemSize += fUncommitedMemory;
+  //     fUncommitedMemory = 0;
+  //   }
+
+  //   queue<RGData> tempQueue;
+  //   if (fRowGroup.getRowCount() > 0)
+  //     fDataQueue.push(fData);
+
+  //   if (fOrderByQueue.size() > 0)
+  //   {
+  //     // *DRRTUY Very memory intensive. CS needs to account active
+  //     // memory only and release memory if needed.
+  //     uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
+
+  //     if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
+  //     {
+  //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+  //       throw IDBExcept(fErrorCode);
+  //     }
+  //     fMemSize += memSizeInc;
+
+  //     uint64_t offset = 0;
+  //     uint64_t i = 0;
+  //     // Reduce queue size by an offset value if it applicable.
+  //     uint64_t queueSizeWoOffset = fOrderByQueue.size() > start_ ? fOrderByQueue.size() - start_ : 0;
+  //     list<RGData> tempRGDataList;
+
+  //     if (count_ <= queueSizeWoOffset)
+  //     {
+  //       offset = count_ % fRowsPerRG;
+  //       if (!offset && count_ > 0)
+  //         offset = fRowsPerRG;
+  //     }
+  //     else
+  //     {
+  //       offset = queueSizeWoOffset % fRowsPerRG;
+  //       if (!offset && queueSizeWoOffset > 0)
+  //         offset = fRowsPerRG;
+  //     }
+
+  //     list<RGData>::iterator tempListIter = tempRGDataList.begin();
+
+  //     i = 0;
+  //     uint32_t rSize = fRow0.getSize();
+  //     uint64_t preLastRowNumb = fRowsPerRG - 1;
+  //     fData.reinit(fRowGroup, fRowsPerRG);
+  //     fRowGroup.setData(&fData);
+  //     fRowGroup.resetRowGroup(0);
+  //     // *DRRTUY This approach won't work with
+  //     // OFSET > fRowsPerRG
+  //     offset = offset != 0 ? offset - 1 : offset;
+  //     fRowGroup.getRow(offset, &fRow0);
+
+  //     while ((fOrderByQueue.size() > start_) && (i++ < count_))
+  //     {
+  //       const OrderByRow& topRow = fOrderByQueue.top();
+  //       row1.setData(topRow.fData);
+  //       copyRow(row1, &fRow0);
+  //       fRowGroup.incRowCount();
+  //       offset--;
+  //       fRow0.prevRow(rSize);
+  //       fOrderByQueue.pop();
+
+  //       // if RG has fRowsPerRG rows
+  //       if (offset == (uint64_t)-1)
+  //       {
+  //         tempRGDataList.push_front(fData);
+
+  //         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
+  //         {
+  //           cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+  //           throw IDBExcept(fErrorCode);
+  //         }
+  //         fMemSize += memSizeInc;
+
+  //         fData.reinit(fRowGroup, fRowsPerRG);
+  //         fRowGroup.setData(&fData);
+  //         fRowGroup.resetRowGroup(0);  // ?
+  //         fRowGroup.getRow(preLastRowNumb, &fRow0);
+  //         offset = preLastRowNumb;
+  //       }
+  //     }
+  //     // Push the last/only group into the queue.
+  //     if (fRowGroup.getRowCount() > 0)
+  //       tempRGDataList.push_front(fData);
+
+  //     for (tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
+  //       tempQueue.push(*tempListIter);
+
+  //     fDataQueue = tempQueue;
+  //   }
+}
+
+const string FlatOrderBy::toString() const
+{
+  ostringstream oss;
+  oss << "FlatOrderBy   cols: ";
+  //   vector<IdbSortSpec>::const_iterator i = fOrderByCond.begin();
+
+  //   for (; i != fOrderByCond.end(); i++)
+  //     oss << "(" << i->fIndex << "," << ((i->fAsc) ? "Asc" : "Desc") << ","
+  //         << ((i->fNf) ? "null first" : "null last") << ") ";
+
+  //   oss << " start-" << start_ << " count-" << count_;
+
+  //   if (fDistinct)
+  //     oss << " distinct";
+
+  //   oss << endl;
+
+  return oss.str();
+}
+
+}  // namespace joblist
