@@ -2,6 +2,8 @@ include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${EN
 
 if (WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
+
+if(WITH_UNITTESTS)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     ExternalProject_Add(googletest
         GIT_REPOSITORY https://github.com/google/googletest
@@ -11,18 +13,18 @@ if (WITH_UNITTESTS)
 
     # this is a workaround for gtest's bug still not closed
     # https://github.com/google/googletest/issues/3659
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         MY_CHECK_AND_SET_COMPILER_FLAG("-U__cpp_char8_t")
     endif()
 
-
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+
     # lib64 for RPM-based distros
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib ${EXTERNAL_INSTALL_LOCATION}/lib64)
-    set(GTEST_LIBRARIES gtest gtest_main pthread)
+    set(GTEST_LIBRARIES gtest gtest_main gmock gmock_main pthread)
     include(GoogleTest)
 
-    #GoogleTest tests
+    # GoogleTest tests
     add_executable(rowgroup_tests rowgroup-tests.cpp)
     add_dependencies(rowgroup_tests googletest)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
@@ -60,6 +62,11 @@ if (WITH_UNITTESTS)
     target_link_libraries(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
 
+    add_executable(modified_pdqsort modified_pdqsort.cpp)
+    add_dependencies(modified_pdqsort googletest)
+    target_link_libraries(modified_pdqsort ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET modified_pdqsort TEST_PREFIX columnstore:)
+
     add_executable(fair_threadpool_test fair_threadpool.cpp)
     add_dependencies(fair_threadpool_test googletest)
     target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
@@ -82,11 +89,10 @@ if (WITH_UNITTESTS)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 endif()
 
-if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+if(WITH_MICROBENCHMARKS AND(NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     find_package(benchmark REQUIRED)
     add_executable(primitives_scan_bench primitives_scan_bench.cpp)
     target_include_directories(primitives_scan_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
     target_link_libraries(primitives_scan_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
     add_test(NAME columnstore_microbenchmarks:primitives_scan_bench, COMMAND primitives_scan_bench)
 endif()
-
