@@ -2979,7 +2979,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
           promoteDecimal(unionedType, type);
           if (unionedType.precision > datatypes::INT128MAXPRECISION)
           {
-            throw logging::QueryDataExcept("Decimal::joinColTypeForUnion() bad scale", logging::formatErr);
+            throw runtime_error("Decimal::joinColTypeForUnion() bad scale.");
           }
           unionedType.precision = datatypes::INT128MAXPRECISION;
 
