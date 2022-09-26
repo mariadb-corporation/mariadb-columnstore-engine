@@ -1426,6 +1426,7 @@ int del_me_json_find_path(json_engine_t *je,
   do
   {
     json_path_step_t *cur_step= *p_cur_step;
+    json_log("cur_step %p", cur_step);
     switch (je->state)
     {
     case JST_KEY:
