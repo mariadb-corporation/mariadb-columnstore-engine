@@ -1127,11 +1127,11 @@ static int json_path_transitions[N_PATH_STATES][N_PATH_CLASSES]=
 int json_path_setup(json_path_t *p,
                     CHARSET_INFO *i_cs, const uchar *str, const uchar *end)
 {
-	json_log("setting path with i_cs %p", i_cs);
  int c_len, t_next, state= PS_GO, is_negative_index= 0, is_last= 0,
   prev_value=0, is_to= 0, *cur_val;
   enum json_path_step_types double_wildcard= JSON_PATH_KEY_NULL;
   json_string_setup(&p->s, i_cs, str, end);
+	json_log("setting path with i_cs %p", i_cs);
 
   p->steps[0].type= JSON_PATH_ARRAY_WILD;
   p->last_step= p->steps;
