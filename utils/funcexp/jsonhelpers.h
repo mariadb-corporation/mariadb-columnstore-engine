@@ -82,7 +82,7 @@ inline static void markConstFlag(JSONPath& path, const execplan::SPTP& parm)
   path.constant = (dynamic_cast<execplan::ConstantColumn*>(parm->data()) != nullptr);
 }
 
-int cmpJSPath(const json_path_t* a, const json_path_t* b, enum json_value_types vt,
+int cmpJSPath(const del_me_json_path_t* a, const del_me_json_path_t* b, enum del_me_json_value_types vt,
               const int* arraySize = nullptr);
 
 inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
@@ -90,9 +90,9 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
   return parm->data()->resultType().getCharset();
 }
 
-inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const string_view& js)
+inline void initJSEngine(del_me_json_engine_t& jsEg, const CHARSET_INFO* jsCS, const string_view& js)
 {
-  json_scan_start(&jsEg, jsCS, (const uchar*)js.data(), (const uchar*)js.data() + js.size());
+  del_me_json_scan_start(&jsEg, jsCS, (const uchar*)js.data(), (const uchar*)js.data() + js.size());
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);
@@ -104,7 +104,7 @@ inline void initJSPaths(vector<JSONPath>& paths, FunctionParm& fp, const int sta
       paths.push_back(JSONPath{});
 }
 
-bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
+bool matchJSPath(const vector<funcexp::JSONPath>& paths, const del_me_json_path_t* p, del_me_json_value_types valType,
                  const int* arrayCounter = nullptr, bool exact = true);
 }  // namespace helpers
 }  // namespace funcexp
