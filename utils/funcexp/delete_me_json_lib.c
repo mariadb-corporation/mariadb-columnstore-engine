@@ -23,12 +23,12 @@
   So we're going to need the UTF16 charset capabilities. Let's import
   them from the utf16 charset.
 */
-int del_me_my_utf16_uni(CHARSET_INFO *cs,
+int my_utf16_uni(CHARSET_INFO *cs,
                  my_wc_t *pwc, const uchar *s, const uchar *e);
-int del_me_my_uni_utf16(CHARSET_INFO *cs, my_wc_t wc, uchar *s, uchar *e);
+int my_uni_utf16(CHARSET_INFO *cs, my_wc_t wc, uchar *s, uchar *e);
 
 
-void del_me_json_string_set_str(json_string_t *s,
+void json_string_set_str(json_string_t *s,
                          const uchar *str, const uchar *end)
 {
   s->c_str= str;
@@ -36,7 +36,7 @@ void del_me_json_string_set_str(json_string_t *s,
 }
 
 
-void del_me_json_string_set_cs(json_string_t *s, CHARSET_INFO *i_cs)
+void json_string_set_cs(json_string_t *s, CHARSET_INFO *i_cs)
 {
   s->cs= i_cs;
   s->error= 0;

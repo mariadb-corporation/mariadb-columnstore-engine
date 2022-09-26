@@ -14,7 +14,7 @@ extern "C" {
   character that caused the error, and the c_str is the position
   in string where the error occurs.
 */
-enum del_me_json_errors {
+enum json_errors {
   JE_BAD_CHR= -1,      /* Invalid character, charset handler cannot read it. */
 
   JE_NOT_JSON_CHR= -2, /* Character met not used in JSON. */
@@ -32,7 +32,7 @@ enum del_me_json_errors {
 };
 
 
-typedef struct del_me_st_json_string_t
+typedef struct st_json_string_t
 {
   const uchar *c_str;    /* Current position in JSON string */
   const uchar *str_end;  /* The end on the string. */
@@ -43,11 +43,11 @@ typedef struct del_me_st_json_string_t
 
   my_charset_conv_mb_wc wc; /* UNICODE conversion function. */
                             /* It's taken out of the cs just to speed calls. */
-} del_me_json_string_t;
+} json_string_t;
 
 
-void del_me_json_string_set_cs(del_me_json_string_t *s, CHARSET_INFO *i_cs);
-void del_me_json_string_set_str(del_me_json_string_t *s,
+void json_string_set_cs(json_string_t *s, CHARSET_INFO *i_cs);
+void json_string_set_str(json_string_t *s,
                          const uchar *str, const uchar *end);
 #define json_next_char(j) \
   (j)->wc((j)->cs, &(j)->c_next, (j)->c_str, (j)->str_end)
@@ -58,7 +58,7 @@ void del_me_json_string_set_str(del_me_json_string_t *s,
   It takes into account possible escapings, so if for instance
   the string is '\b', the read_string_const_chr() sets 8.
 */
-int del_me_json_read_string_const_chr(del_me_json_string_t *js);
+int json_read_string_const_chr(json_string_t *js);
 
 
 /*
@@ -72,7 +72,7 @@ int del_me_json_read_string_const_chr(del_me_json_string_t *js);
 
 
 /* Path step types - actually bitmasks to let '&' or '|' operations. */
-enum del_me_json_path_step_types
+enum json_path_step_types
 {
   JSON_PATH_KEY_NULL=0,
   JSON_PATH_KEY=1,   /* Must be equal to JSON_VALUE_OBJECT. */
@@ -89,29 +89,29 @@ enum del_me_json_path_step_types
 };
 
 
-typedef struct del_me_st_json_path_step_t
+typedef struct st_json_path_step_t
 {
-  enum del_me_json_path_step_types type;  /* The type of the step -   */
+  enum json_path_step_types type;  /* The type of the step -   */
                                    /* see json_path_step_types */
   const uchar *key; /* Pointer to the beginning of the key. */
   const uchar *key_end;  /* Pointer to the end of the key. */
   int n_item;  /* Item number in an array. No meaning for the key step. */
   int n_item_end; /* Last index of the range. */
-} del_me_json_path_step_t;
+} json_path_step_t;
 
 
-typedef struct del_me_st_json_path_t
+typedef struct st_json_path_t
 {
-  del_me_json_string_t s;  /* The string to be parsed. */
-  del_me_json_path_step_t steps[JSON_DEPTH_LIMIT]; /* Steps of the path. */
-  del_me_json_path_step_t *last_step; /* Points to the last step. */
+  json_string_t s;  /* The string to be parsed. */
+  json_path_step_t steps[JSON_DEPTH_LIMIT]; /* Steps of the path. */
+  json_path_step_t *last_step; /* Points to the last step. */
 
   int mode_strict; /* TRUE if the path specified as 'strict' */
-  enum del_me_json_path_step_types types_used; /* The '|' of all step's 'type'-s */
-} del_me_json_path_t;
+  enum json_path_step_types types_used; /* The '|' of all step's 'type'-s */
+} json_path_t;
 
 
-int del_me_json_path_setup(del_me_json_path_t *p,
+int json_path_setup(json_path_t *p,
                     CHARSET_INFO *i_cs, const uchar *str, const uchar *end);
 
 
@@ -164,7 +164,7 @@ int del_me_json_path_setup(del_me_json_path_t *p,
 
 
 /* These are JSON parser states that user can expect and handle.  */
-enum del_me_json_states {
+enum json_states {
   JST_VALUE,       /* value found      */
   JST_KEY,         /* key found        */
   JST_OBJ_START,   /* object           */
@@ -175,7 +175,7 @@ enum del_me_json_states {
 };
 
 
-enum del_me_json_value_types
+enum json_value_types
 {
   JSON_VALUE_UNINITIALIZED=0,
   JSON_VALUE_OBJECT=1,
@@ -188,7 +188,7 @@ enum del_me_json_value_types
 };
 
 
-enum del_me_json_num_flags
+enum json_num_flags
 {
   JSON_NUM_NEG=1,        /* Number is negative. */
   JSON_NUM_FRAC_PART=2,  /* The fractional part is not empty. */
@@ -196,9 +196,9 @@ enum del_me_json_num_flags
 };
 
 
-typedef struct del_me_st_json_engine_t
+typedef struct st_json_engine_t
 {
-  del_me_json_string_t s;  /* String to parse. */
+  json_string_t s;  /* String to parse. */
   int sav_c_len;    /* Length of the current character.
                        Can be more than 1 for multibyte charsets */
 
@@ -206,7 +206,7 @@ typedef struct del_me_st_json_engine_t
                 It tells us what construction of JSON we've just read. */
 
   /* These values are only set after the json_read_value() call. */
-  enum del_me_json_value_types value_type; /* type of the value.*/
+  enum json_value_types value_type; /* type of the value.*/
   const uchar *value;      /* Points to the value. */
   const uchar *value_begin;/* Points to where the value starts in the JSON. */
   int value_escaped;       /* Flag telling if the string value has escaping.*/
@@ -228,12 +228,12 @@ typedef struct del_me_st_json_engine_t
   int stack[JSON_DEPTH_LIMIT]; /* Keeps the stack of nested JSON structures. */
   int stack_p;                 /* The 'stack' pointer. */
   volatile uchar *killed_ptr;
-} del_me_json_engine_t;
+} json_engine_t;
 
 
-int del_me_json_scan_start(del_me_json_engine_t *je,
+int json_scan_start(json_engine_t *je,
                         CHARSET_INFO *i_cs, const uchar *str, const uchar *end);
-int del_me_json_scan_next(del_me_json_engine_t *j);
+int json_scan_next(json_engine_t *j);
 
 
 /*
@@ -252,14 +252,14 @@ int del_me_json_scan_next(del_me_json_engine_t *j);
   }
 */
 
-int del_me_json_read_keyname_chr(del_me_json_engine_t *j);
+int json_read_keyname_chr(json_engine_t *j);
 
 
 /*
   Check if the name of the current JSON key matches
   the step of the path.
 */
-int del_me_json_key_matches(del_me_json_engine_t *je, json_string_t *k);
+int json_key_matches(json_engine_t *je, json_string_t *k);
 
 
 /*
@@ -284,7 +284,7 @@ int del_me_json_key_matches(del_me_json_engine_t *je, json_string_t *k);
       ... etc
     }
 */
-int del_me_json_read_value(del_me_json_engine_t *j);
+int json_read_value(json_engine_t *j);
 
 
 /*
@@ -300,10 +300,10 @@ int del_me_json_read_value(del_me_json_engine_t *j);
   }
 */
 
-int del_me_json_skip_key(del_me_json_engine_t *j);
+int json_skip_key(json_engine_t *j);
 
 
-typedef const int *del_me_json_level_t;
+typedef const int *json_level_t;
 
 /*
   json_skip_to_level() makes parser quickly get out of nested
@@ -316,7 +316,7 @@ typedef const int *del_me_json_level_t;
 */
 #define json_get_level(j) (j->stack_p)
 
-int del_me_json_skip_to_level(del_me_json_engine_t *j, int level);
+int json_skip_to_level(json_engine_t *j, int level);
 
 /*
   json_skip_level() works as above with just current structure.
@@ -330,7 +330,7 @@ int del_me_json_skip_to_level(del_me_json_engine_t *j, int level);
   works as json_skip_level() but also counts items on the current
   level skipped.
 */
-int del_me_json_skip_level_and_count(del_me_json_engine_t *j, int *n_items_skipped);
+int json_skip_level_and_count(json_engine_t *j, int *n_items_skipped);
 
 #define json_skip_array_item json_skip_key
 
@@ -357,24 +357,24 @@ int del_me_json_skip_level_and_count(del_me_json_engine_t *j, int *n_items_skipp
   Non-zero return means no matches found.
   Check je->s.error to see if there was an error in JSON.
 */
-int del_me_json_find_path(del_me_json_engine_t *je,
-                   del_me_json_path_t *p, del_me_json_path_step_t **p_cur_step,
+int json_find_path(json_engine_t *je,
+                   json_path_t *p, json_path_step_t **p_cur_step,
                    int *array_counters);
 
 
-typedef struct del_me_st_json_find_paths_t
+typedef struct st_json_find_paths_t
 {
   uint n_paths;
-  del_me_json_path_t *paths;
+  json_path_t *paths;
   uint cur_depth;
   uint *path_depths;
   int array_counters[JSON_DEPTH_LIMIT];
-} del_me_json_find_paths_t;
+} json_find_paths_t;
 
 
-int del_me_json_find_paths_first(del_me_json_engine_t *je, del_me_json_find_paths_t *state,
-                          uint n_paths, del_me_json_path_t *paths, uint *path_depths);
-int del_me_json_find_paths_next(del_me_json_engine_t *je, del_me_json_find_paths_t *state);
+int json_find_paths_first(json_engine_t *je, json_find_paths_t *state,
+                          uint n_paths, json_path_t *paths, uint *path_depths);
+int json_find_paths_next(json_engine_t *je, json_find_paths_t *state);
 
 
 #define JSON_ERROR_OUT_OF_SPACE  (-1)
@@ -386,7 +386,7 @@ int del_me_json_find_paths_next(del_me_json_engine_t *je, del_me_json_find_paths
   Returns negative integer in the case of an error,
   the length of the result otherwise.
 */
-int del_me_json_unescape(CHARSET_INFO *json_cs,
+int json_unescape(CHARSET_INFO *json_cs,
                   const uchar *json_str, const uchar *json_end,
                   CHARSET_INFO *res_cs,
                   uchar *res, uchar *res_end);
@@ -400,14 +400,14 @@ int del_me_json_unescape(CHARSET_INFO *json_cs,
     JSON_ERROR_OUT_OF_SPACE    Not enough space in the provided buffer
     JSON_ERROR_ILLEGAL_SYMBOL  Source symbol cannot be represented in JSON
 */
-int del_me_json_escape(CHARSET_INFO *str_cs, const uchar *str, const uchar *str_end,
+int json_escape(CHARSET_INFO *str_cs, const uchar *str, const uchar *str_end,
                 CHARSET_INFO *json_cs, uchar *json, uchar *json_end);
 
 
 /*
   Appends the ASCII string to the json with the charset conversion.
 */
-int del_me_json_append_ascii(CHARSET_INFO *json_cs,
+int json_append_ascii(CHARSET_INFO *json_cs,
                       uchar *json, uchar *json_end,
                       const uchar *ascii, const uchar *ascii_end);
 
@@ -421,27 +421,27 @@ int del_me_json_append_ascii(CHARSET_INFO *json_cs,
      }
 */
 
-int del_me_json_get_path_start(del_me_json_engine_t *je, CHARSET_INFO *i_cs,
+int json_get_path_start(json_engine_t *je, CHARSET_INFO *i_cs,
                         const uchar *str, const uchar *end,
-                        del_me_json_path_t *p);
+                        json_path_t *p);
 
 
-int del_me_json_get_path_next(del_me_json_engine_t *je, del_me_json_path_t *p);
+int json_get_path_next(json_engine_t *je, json_path_t *p);
 
-int del_me_json_path_compare(const del_me_json_path_t *a, const del_me_json_path_t *b,
+int json_path_compare(const json_path_t *a, const json_path_t *b,
                       enum json_value_types vt, const int* array_size_counter);
 
-int del_me_json_valid(const char *js, size_t js_len, CHARSET_INFO *cs);
+int json_valid(const char *js, size_t js_len, CHARSET_INFO *cs);
 
-int del_me_json_locate_key(const char *js, const char *js_end,
+int json_locate_key(const char *js, const char *js_end,
                     const char *kname,
                     const char **key_start, const char **key_end,
                     int *comma_pos);
 
-int del_me_json_normalize(DYNAMIC_STRING *result,
+int json_normalize(DYNAMIC_STRING *result,
                    const char *s, size_t size, CHARSET_INFO *cs);
 
-int del_me_json_skip_array_and_count(del_me_json_engine_t *j, int* n_item);
+int json_skip_array_and_count(json_engine_t *j, int* n_item);
 
 #ifdef  __cplusplus
 }
