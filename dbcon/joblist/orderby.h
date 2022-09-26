@@ -137,7 +137,11 @@ struct JobInfo;
 class FlatOrderBy
 {
   using RGDataOrRowIDType = uint32_t;
-  using PermutationType = RGDataOrRowIDType[2];
+  // using PermutationType = RGDataOrRowIDType[2];
+  struct PermutationType
+  {
+    uint64_t rgdataID : 32 {}, rowID : 24 {}, flags : 8 {};
+  };
 
  public:
   FlatOrderBy();
