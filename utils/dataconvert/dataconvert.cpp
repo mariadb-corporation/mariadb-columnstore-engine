@@ -2974,12 +2974,23 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UDECIMAL:
 
+          if ((isDecimal(type.colDataType)) && (isDecimal(unionedType.colDataType)))
+          {
+            // if (type.precision == unionedType.precision && unionedType.precision == 38)
+            // {
+            //   if (type.scale != unionedType.scale)
+            //   {
+            //     throw logging::QueryDataExcept("Decimal::joinColTypeForUnion() bad scale", logging::formatErr);
+            //   }
+            // }
+          }
+
           // unionedType.precision = std::max(type.precision, unionedType.precision);
           // unionedType.scale = std::max(type.scale, unionedType.scale);
           promoteDecimal(unionedType, type);
           if (unionedType.precision > datatypes::INT128MAXPRECISION)
           {
-            throw runtime_error("Decimal::joinColTypeForUnion() bad scale.");
+            throw logging::QueryDataExcept("Decimal::joinColTypeForUnion() bad scale", logging::formatErr);
           }
           unionedType.precision = datatypes::INT128MAXPRECISION;
 

@@ -905,7 +905,7 @@ a	b	c
 # Decimal With Same Signedness, Precision and Different Scale Union
 #
 SELECT * FROM (SELECT a FROM t1 UNION ALL SELECT c FROM t1) tu ORDER BY a;
-ERROR HY000: Internal error: MCS-2004: Cannot connect to ExeMgr.
+ERROR HY000: Internal error: Decimal::joinColTypeForUnion() bad scale
 DROP TABLE t1;
 DROP TABLE t2;
 CREATE TABLE t1 (a DECIMAL(2), b DECIMAL(2,2));
