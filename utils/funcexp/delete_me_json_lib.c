@@ -1414,7 +1414,7 @@ int json_key_matches(json_engine_t *je, json_string_t *k)
 }
 
 
-int json_find_path(json_engine_t *je,
+int del_me_json_find_path(json_engine_t *je,
                    json_path_t *p, json_path_step_t **p_cur_step,
                    int *array_counters)
 {

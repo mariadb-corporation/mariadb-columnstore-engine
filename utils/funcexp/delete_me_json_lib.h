@@ -357,7 +357,7 @@ int json_skip_level_and_count(json_engine_t *j, int *n_items_skipped);
   Non-zero return means no matches found.
   Check je->s.error to see if there was an error in JSON.
 */
-int json_find_path(json_engine_t *je,
+int del_me_json_find_path(json_engine_t *je,
                    json_path_t *p, json_path_step_t **p_cur_step,
                    int *array_counters);
 
