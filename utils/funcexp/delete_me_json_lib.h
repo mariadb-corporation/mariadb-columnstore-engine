@@ -43,7 +43,7 @@ typedef struct del_me_st_json_string_t
 
   my_charset_conv_mb_wc wc; /* UNICODE conversion function. */
                             /* It's taken out of the cs just to speed calls. */
-} json_string_t;
+} del_me_json_string_t;
 
 
 void del_me_json_string_set_cs(del_me_json_string_t *s, CHARSET_INFO *i_cs);
