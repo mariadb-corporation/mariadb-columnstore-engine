@@ -62,14 +62,18 @@ def get_unverified_context():
     return ctx
 
 
-def cmapi_available():
+def cmapi_available(host=LOCALHOST):
     """Check if CMAPI server is running.
 
+    :param host: host address to check
+    :type host: str
     :return: is CMAPI running or not
     :rtype: bool
     """
-    logging.debug('Detecting CMAPI is up and running.')
-    url = 'https://{}:{}/notfound'.format(LOCALHOST, API_PORT)
+    logging.debug(
+        'Detecting CMAPI is up and running on {}.'.format(host)
+    )
+    url = 'https://{}:{}/notfound'.format(host, API_PORT)
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
     try:
@@ -189,6 +193,8 @@ def is_node_primary(conf_root):
             is_primary = dict_response.get('is_primary', False)
             if is_primary and is_primary in ('True', 'true'):
                 is_primary = True
+            else:
+                is_primary = False
             return is_primary
 
     logging.info('Trying to detect primary without cmapi running.')
@@ -206,7 +212,7 @@ def get_meta(conf_root, meta_type):
     :return: meta data
     :rtype: bytes
     """
-    logging.info('Pulling {meta_type} from the primary node.')
+    logging.info('Pulling {} from the primary node.'.format(meta_type))
     primary_address = conf_root.find('./DBRM_Controller/IPAddr').text
     url = 'https://{}:{}/cmapi/{}/node/meta/{}'.format(
         primary_address, API_PORT, API_VERSION, meta_type
@@ -215,8 +221,7 @@ def get_meta(conf_root, meta_type):
     api_key = get_api_key()
     if len(api_key) == 0:
         logging.error(
-            'Failed to find API key in {}.'.format(CMAPI_CONFIG_PATH),
-            file=sys.stderr
+            'Failed to find API key in {}.'.format(CMAPI_CONFIG_PATH)
         )
         sys.exit(1)
     headers = {'x-api-key': api_key}
@@ -362,26 +367,37 @@ if __name__ == '__main__':
             is_primary = False
             try:
                 is_primary = is_node_primary(config_root)
+                primary_address = config_root.find(
+                    './DBRM_Controller/IPAddr'
+                ).text
                 # Download BRM files from the primary node via CMAPI.
                 if not is_primary:
-                    meta_elems = ['em', 'journal', 'vbbm', 'vss']
-                    for meta_type in meta_elems:
-                        meta_data = get_meta(config_root, meta_type)
-                        # Store BRM files locally to load them up
-                        dbrmroot = BYPASS_SM_PATH
-                        if not os.path.exists(dbrmroot):
-                            os.makedirs(dbrmroot)
-                            if use_systemd:
-                                shutil.chown(dbrmroot, USER, GROUP)
+                    if cmapi_available(primary_address):
+                        meta_elems = ['em', 'journal', 'vbbm', 'vss']
+                        for meta_type in meta_elems:
+                            meta_data = get_meta(config_root, meta_type)
+                            # Store BRM files locally to load them up
+                            dbrmroot = BYPASS_SM_PATH
+                            if not os.path.exists(dbrmroot):
+                                os.makedirs(dbrmroot)
+                                if use_systemd:
+                                    shutil.chown(dbrmroot, USER, GROUP)
 
-                        current_name = '{}_{}'.format(dbrmroot, meta_type)
+                            current_name = '{}_{}'.format(dbrmroot, meta_type)
 
-                        logging.info(
-                            'Saving {} to {}'.format(meta_type, current_name)
-                        )
-                        path = Path(current_name)
-                        path.write_bytes(meta_data)
-                        shutil.chown(current_name, USER, GROUP)
+                            logging.info(
+                                'Saving {} to {}'.format(
+                                    meta_type, current_name
+                                )
+                            )
+                            path = Path(current_name)
+                            path.write_bytes(meta_data)
+                            shutil.chown(current_name, USER, GROUP)
+                        else:
+                            logging.info(
+                                'Cmapi is not running on primary node. '
+                                'Skip loading metafiles.'
+                            )
 
             except Exception as exc:
                 logging.error(

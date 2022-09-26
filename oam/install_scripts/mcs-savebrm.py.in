@@ -173,6 +173,8 @@ def is_node_primary(conf_root):
             is_primary = dict_response.get('is_primary', False)
             if is_primary and is_primary in ('True', 'true'):
                 is_primary = True
+            else:
+                is_primary = False
             return is_primary
 
     logging.info('Trying to detect primary without cmapi running.')
