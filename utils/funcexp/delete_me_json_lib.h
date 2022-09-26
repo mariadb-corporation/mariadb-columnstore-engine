@@ -443,6 +443,8 @@ int json_normalize(DYNAMIC_STRING *result,
 
 int json_skip_array_and_count(json_engine_t *j, int* n_item);
 
+void json_log(const char* fmt, ...);
+
 #ifdef  __cplusplus
 }
 #endif

@@ -373,3 +373,17 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 }
 }  // namespace helpers
 }  // namespace funcexp
+
+
+#include <stdarg.h>
+
+extern "C"
+void json_log(const char* fmt, ...) {
+	va_list vl;
+	char t[1000];
+	va_start(vl, fmt);
+	vsnprintf(t, sizeof(t) - 2, fmt, vl);
+	string s(t);
+	idblog("json_log: " << s);
+} /* json_log */
+
