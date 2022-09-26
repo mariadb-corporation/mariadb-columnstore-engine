@@ -33,7 +33,7 @@ static const int NO_WILDCARD_ALLOWED = 1;
   Checks if the path has '.*' '[*]' or '**' constructions
   and sets the NO_WILDCARD_ALLOWED error if the case.
 */
-int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards);
+int setupJSPath(del_me_json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards);
 
 // Return true if err occur, let the outer function handle the exception
 bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& js, const CHARSET_INFO* jsCS);
@@ -44,12 +44,12 @@ static const int TAB_SIZE_LIMIT = 8;
 static const char tab_arr[TAB_SIZE_LIMIT + 1] = "        ";
 
 // Format the json using format mode
-int doFormat(json_engine_t* je, string& niceJS, Func_json_format::FORMATS mode, int tabSize = 4);
+int doFormat(del_me_json_engine_t* je, string& niceJS, Func_json_format::FORMATS mode, int tabSize = 4);
 
 static const int SHOULD_END_WITH_ARRAY = 2;
 static const int TRIVIAL_PATH_NOT_ALLOWED = 3;
 
-bool findKeyInObject(json_engine_t* jsEg, json_string_t* key);
+bool findKeyInObject(del_me_json_engine_t* jsEg, del_me_json_string_t* key);
 
 #ifdef MYSQL_GE_1009
 using IntType = int;
@@ -62,11 +62,11 @@ using IntType = uint;
   before 10.9: uint* array_counters
   after 10.9: int* array_counters
  */
-inline static int locateJSPath(json_engine_t& jsEg, JSONPath& path, int* jsErr = nullptr)
+inline static int locateJSPath(del_me_json_engine_t& jsEg, JSONPath& path, int* jsErr = nullptr)
 {
   IntType arrayCounters[JSON_DEPTH_LIMIT];
   path.currStep = path.p.steps;
-  if (json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
+  if (del_me_json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
   {
 	  idblog("error finding path " << ((int64_t)jsEg.s.error));
     if (jsErr && jsEg.s.error)

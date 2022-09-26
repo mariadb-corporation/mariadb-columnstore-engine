@@ -29,10 +29,10 @@ struct JSONPath
   JSONPath() : constant(false), parsed(false), currStep(nullptr)
   {
   }
-  json_path_t p;
+  del_me_json_path_t p;
   bool constant;  // check if the argument is constant
   bool parsed;    // check if the argument is parsed
-  json_path_step_t* currStep;
+  del_me_json_path_step_t* currStep;
 };
 
 class JSONEgWrapper : public json_engine_t
@@ -40,7 +40,7 @@ class JSONEgWrapper : public json_engine_t
  public:
   JSONEgWrapper(CHARSET_INFO* cs, const uchar* str, const uchar* end)
   {
-    json_scan_start(this, cs, str, end);
+    del_me_json_scan_start(this, cs, str, end);
   }
   JSONEgWrapper(const std::string& str, CHARSET_INFO* cs)
    : JSONEgWrapper(cs, (const uchar*)str.data(), (const uchar*)str.data() + str.size())
