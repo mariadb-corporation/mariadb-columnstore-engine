@@ -254,11 +254,11 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
       if (value != nullValue)
       {
         keys.push_back(value);
-        permutation_.push_back({rgDataId, i});
+        permutation_.push_back({rgDataId, i, 0});
       }
       else
       {
-        nulls.push_back({rgDataId, i});
+        nulls.push_back({rgDataId, i, 0});
       }
     }
     ++rgDataId;
@@ -266,11 +266,8 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
   // count sorting for types with width < 8 bytes.
   // use sorting class
   // sorting must move permute members when keys are moved
-  std::sort(keys.begin(), keys.end(), std::less());
-  // sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
-  //                      std::less<EncodedKeyType>());
-  // sort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(), cmp::less<KeyIntegralType>());
-  // must save permutation
+  sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
+                       std::less<EncodedKeyType>());
   return isFailure;
 }
 
@@ -283,75 +280,6 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
 
 void FlatOrderBy::processRow(const rowgroup::Row& row)
 {
-  // //   // check if this is a distinct row
-  // //   if (fDistinct && fDistinctMap->find(row.getPointer()) != fDistinctMap->end())
-  // //     return;
-
-  // //   // @bug5312, limit count is 0, do nothing.
-  // //   if (count_ == 0)
-  // //     return;
-
-  // //   // if the row count is less than the limit
-  // //   if (fOrderByQueue.size() < start_ + count_)
-  // //   {
-  // //     copyRow(row, &fRow0);
-  // //     OrderByRow newRow(fRow0, fRule);
-  // //     fOrderByQueue.push(newRow);
-
-  // //     uint64_t memSizeInc = sizeof(newRow);
-  // //     fUncommitedMemory += memSizeInc;
-  // //     if (fUncommitedMemory >= fMaxUncommited)
-  // //     {
-  // //       if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
-  // //       {
-  // //         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-  // //         throw IDBExcept(fErrorCode);
-  // //       }
-  // //       fMemSize += fUncommitedMemory;
-  // //       fUncommitedMemory = 0;
-  // //     }
-
-  // //     // add to the distinct map
-  // //     if (fDistinct)
-  // //       fDistinctMap->insert(fRow0.getPointer());
-
-  // //     fRowGroup.incRowCount();
-  // //     fRow0.nextRow();
-
-  // //     if (fRowGroup.getRowCount() >= fRowsPerRG)
-  // //     {
-  // //       fDataQueue.push(fData);
-  // //       uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
-
-  // //       if (!fRm->getMemory(newSize, fSessionMemLimit))
-  // //       {
-  // //         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-  // //         throw IDBExcept(fErrorCode);
-  // //       }
-  // //       fMemSize += newSize;
-
-  // //       fData.reinit(fRowGroup, fRowsPerRG);
-  // //       fRowGroup.setData(&fData);
-  // //       fRowGroup.resetRowGroup(0);
-  // //       fRowGroup.getRow(0, &fRow0);
-  // //     }
-  //   }
-
-  //   else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), fOrderByQueue.top().fData))
-  //   {
-  //     OrderByRow swapRow = fOrderByQueue.top();
-  //     row1.setData(swapRow.fData);
-  //     copyRow(row, &row1);
-
-  //     if (fDistinct)
-  //     {
-  //       fDistinctMap->erase(fOrderByQueue.top().fData);
-  //       fDistinctMap->insert(row1.getPointer());
-  //     }
-
-  //     fOrderByQueue.pop();
-  //     fOrderByQueue.push(swapRow);
-  //   }
 }
 
 /*
