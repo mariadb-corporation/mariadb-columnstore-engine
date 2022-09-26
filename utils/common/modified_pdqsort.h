@@ -120,6 +120,7 @@ inline void mod_insertion_sort(Iter begin, Iter end, PermIter perm_begin, PermIt
     Iter sift_1 = cur - 1;
     PermIter perm_sift = perm_cur;
     PermIter perm_sift_1 = perm_cur - 1;
+    PermIter end_2 = perm_end + 2;
 
     // Compare first so we can avoid 2 moves for an element already positioned correctly.
     if (comp(*sift, *sift_1))
@@ -132,7 +133,7 @@ inline void mod_insertion_sort(Iter begin, Iter end, PermIter perm_begin, PermIt
         *sift-- = PDQSORT_PREFER_MOVE(*sift_1);
         *perm_sift-- = PDQSORT_PREFER_MOVE(*perm_sift_1);
 
-      } while (sift != begin && comp(tmp, *--sift_1) && --perm_sift_1 != perm_end + 10);
+      } while (sift != begin && --perm_sift_1 != end_2 && comp(tmp, *--sift_1));
       // WIP I presume --perm_sift_1 != sift_1 is always true
 
       *sift = PDQSORT_PREFER_MOVE(tmp);
@@ -190,6 +191,7 @@ inline void mod_unguarded_insertion_sort(Iter begin, Iter end, PermIter perm_beg
     Iter sift_1 = cur - 1;
     PermIter perm_sift = perm_cur;
     PermIter perm_sift_1 = perm_cur - 1;
+    PermIter end_2 = perm_end + 2;
 
     // Compare first so we can avoid 2 moves for an element already positioned correctly.
     if (comp(*sift, *sift_1))
@@ -201,7 +203,7 @@ inline void mod_unguarded_insertion_sort(Iter begin, Iter end, PermIter perm_beg
       {
         *sift-- = PDQSORT_PREFER_MOVE(*sift_1);
         *perm_sift-- = PDQSORT_PREFER_MOVE(*perm_sift_1);
-      } while (comp(tmp, *--sift_1) && --perm_sift_1 != perm_end + 10);
+      } while (--perm_sift_1 != end_2 && comp(tmp, *--sift_1));
 
       *sift = PDQSORT_PREFER_MOVE(tmp);
       *perm_sift = PDQSORT_PREFER_MOVE(perm_tmp);
@@ -258,6 +260,7 @@ inline bool mod_partial_insertion_sort(Iter begin, Iter end, PermIter perm_begin
 
   std::size_t limit = 0;
   PermIter perm_cur = perm_begin + 1;
+  PermIter end_2 = perm_end + 2;
   // WIP permutation and key array sizes must be identical
   for (Iter cur = begin + 1; cur != end; ++cur, ++perm_cur)
   {
@@ -277,7 +280,7 @@ inline bool mod_partial_insertion_sort(Iter begin, Iter end, PermIter perm_begin
       {
         *sift-- = PDQSORT_PREFER_MOVE(*sift_1);
         *perm_sift-- = PDQSORT_PREFER_MOVE(*perm_sift_1);
-      } while (sift != begin && comp(tmp, *--sift_1) && --perm_sift_1 != perm_end + 10);
+      } while (sift != begin && --perm_sift_1 != end_2 && comp(tmp, *--sift_1));
       // WIP I presume --perm_sift_1 != sift_1 is always true
 
       *sift = PDQSORT_PREFER_MOVE(tmp);
@@ -366,6 +369,50 @@ inline void swap_offsets(Iter first, Iter last, unsigned char* offsets_l, unsign
       *l = PDQSORT_PREFER_MOVE(*r);
     }
     *r = PDQSORT_PREFER_MOVE(tmp);
+  }
+}
+
+template <class Iter, class PermIter>
+inline void mod_swap_offsets(Iter first, Iter last, PermIter perm_first, PermIter perm_last,
+                             unsigned char* offsets_l, unsigned char* offsets_r, size_t num, bool use_swaps)
+{
+  using T = typename std::iterator_traits<Iter>::value_type;
+  using PermT = typename std::iterator_traits<PermIter>::value_type;
+
+  if (use_swaps)
+  {
+    // This case is needed for the descending distribution, where we need
+    // to have proper swapping for pdqsort to remain O(n).
+    for (size_t i = 0; i < num; ++i)
+    {
+      std::iter_swap(first + offsets_l[i], last - offsets_r[i]);
+      std::iter_swap(perm_first + offsets_l[i], perm_last - offsets_r[i]);
+    }
+  }
+  else if (num > 0)
+  {
+    Iter l = first + offsets_l[0];
+    Iter r = last - offsets_r[0];
+    PermIter p_l = perm_first + offsets_l[0];
+    PermIter p_r = perm_last - offsets_r[0];
+
+    T tmp(PDQSORT_PREFER_MOVE(*l));
+    PermT perm_tmp(PDQSORT_PREFER_MOVE(*p_l));
+    *l = PDQSORT_PREFER_MOVE(*r);
+    *p_l = PDQSORT_PREFER_MOVE(*p_r);
+    for (size_t i = 1; i < num; ++i)
+    {
+      l = first + offsets_l[i];
+      p_l = perm_first + offsets_l[i];
+      *r = PDQSORT_PREFER_MOVE(*l);
+      *p_r = PDQSORT_PREFER_MOVE(*p_l);
+      r = last - offsets_r[i];
+      p_r = perm_last - offsets_r[i];
+      *l = PDQSORT_PREFER_MOVE(*r);
+      *p_l = PDQSORT_PREFER_MOVE(*p_r);
+    }
+    *r = PDQSORT_PREFER_MOVE(tmp);
+    *p_r = PDQSORT_PREFER_MOVE(perm_tmp);
   }
 }
 
@@ -546,6 +593,226 @@ inline std::pair<Iter, bool> partition_right_branchless(Iter begin, Iter end, Co
   return std::make_pair(pivot_pos, already_partitioned);
 }
 
+template <class Iter, class PermIter, class Compare>
+inline std::tuple<Iter, PermIter, bool> mod_partition_right_branchless(Iter begin, Iter end,
+                                                                       PermIter perm_begin, PermIter perm_end,
+                                                                       Compare comp)
+{
+  using T = typename std::iterator_traits<Iter>::value_type;
+  using PermT = typename std::iterator_traits<PermIter>::value_type;
+
+  // Move pivot into local for speed.
+  T pivot(PDQSORT_PREFER_MOVE(*begin));
+  PermT perm_pivot(PDQSORT_PREFER_MOVE(*perm_begin));
+
+  Iter first = begin;
+  Iter last = end;
+  PermIter perm_first = perm_begin;
+  PermIter perm_last = perm_end;
+  PermIter perm_last_2 = perm_end + 2;
+
+  // Find the first element greater than or equal than the pivot (the median of 3 guarantees
+  // this exists).
+  while (++perm_first != perm_last_2 && comp(*++first, pivot))
+    ;
+
+  // Find the first element strictly smaller than the pivot. We have to guard this search if
+  // there was no element before *first.
+  if (first - 1 == begin)
+    while (first < last && --perm_last != perm_last_2 && !comp(*--last, pivot))
+      ;
+  else
+    while (--perm_last != perm_last_2 && !comp(*--last, pivot))
+      ;
+
+  // If the first pair of elements that should be swapped to partition are the same element,
+  // the passed in sequence already was correctly partitioned.
+  bool already_partitioned = first >= last;
+  if (!already_partitioned)
+  {
+    std::iter_swap(first, last);
+    std::iter_swap(perm_first, perm_last);
+
+    ++first;
+    ++perm_first;
+
+    // The following branchless partitioning is derived from "BlockQuicksort: How Branch
+    // Mispredictions don’t affect Quicksort" by Stefan Edelkamp and Armin Weiss, but
+    // heavily micro-optimized.
+    unsigned char offsets_l_storage[block_size + cacheline_size];
+    unsigned char offsets_r_storage[block_size + cacheline_size];
+    unsigned char* offsets_l = align_cacheline(offsets_l_storage);
+    unsigned char* offsets_r = align_cacheline(offsets_r_storage);
+
+    Iter offsets_l_base = first;
+    Iter offsets_r_base = last;
+    PermIter perm_offsets_l_base = perm_first;
+    PermIter perm_offsets_r_base = perm_last;
+    size_t num_l, num_r, start_l, start_r;
+    num_l = num_r = start_l = start_r = 0;
+
+    while (first < last)
+    {
+      // Fill up offset blocks with elements that are on the wrong side.
+      // First we determine how much elements are considered for each offset block.
+      size_t num_unknown = last - first;
+      size_t left_split = num_l == 0 ? (num_r == 0 ? num_unknown / 2 : num_unknown) : 0;
+      size_t right_split = num_r == 0 ? (num_unknown - left_split) : 0;
+
+      // Fill the offset blocks.
+      if (left_split >= block_size)
+      {
+        for (size_t i = 0; i < block_size;)
+        {
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+        }
+      }
+      else
+      {
+        for (size_t i = 0; i < left_split;)
+        {
+          offsets_l[num_l] = i++;
+          num_l += !comp(*first, pivot);
+          ++first;
+          ++perm_first;
+        }
+      }
+
+      if (right_split >= block_size)
+      {
+        for (size_t i = 0; i < block_size;)
+        {
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+        }
+      }
+      else
+      {
+        for (size_t i = 0; i < right_split;)
+        {
+          offsets_r[num_r] = ++i;
+          num_r += comp(*--last, pivot);
+          --perm_last;
+        }
+      }
+
+      // Swap elements and update block sizes and first/last boundaries.
+      size_t num = std::min(num_l, num_r);
+      mod_swap_offsets(offsets_l_base, offsets_r_base, perm_offsets_l_base, perm_offsets_r_base,
+                       offsets_l + start_l, offsets_r + start_r, num, num_l == num_r);
+      num_l -= num;
+      num_r -= num;
+      start_l += num;
+      start_r += num;
+
+      if (num_l == 0)
+      {
+        start_l = 0;
+        offsets_l_base = first;
+        perm_offsets_l_base = perm_first;
+      }
+
+      if (num_r == 0)
+      {
+        start_r = 0;
+        offsets_r_base = last;
+        perm_offsets_r_base = perm_last;
+      }
+    }
+
+    // We have now fully identified [first, last)'s proper position. Swap the last elements.
+    if (num_l)
+    {
+      offsets_l += start_l;
+      // WIP It might worth to duplicate the loop
+      while (num_l--)
+      {
+        std::iter_swap(offsets_l_base + offsets_l[num_l], --last);
+        std::iter_swap(perm_offsets_l_base + offsets_l[num_l], --perm_last);
+      }
+      first = last;
+      perm_first = perm_last;
+    }
+    if (num_r)
+    {
+      offsets_r += start_r;
+      // WIP It might worth to duplicate the loop
+      while (num_r--)
+      {
+        std::iter_swap(offsets_r_base - offsets_r[num_r], first), ++first;
+        std::iter_swap(perm_offsets_r_base - offsets_r[num_r], perm_first), ++perm_first;
+      }
+      last = first;
+      perm_last = perm_first;
+    }
+  }
+
+  // Put the pivot in the right place.
+  Iter pivot_pos = first - 1;
+  PermIter perm_pivot_pos = perm_first - 1;
+
+  *begin = PDQSORT_PREFER_MOVE(*pivot_pos);
+  *pivot_pos = PDQSORT_PREFER_MOVE(pivot);
+
+  *perm_begin = PDQSORT_PREFER_MOVE(*perm_pivot_pos);
+  *perm_pivot_pos = PDQSORT_PREFER_MOVE(perm_pivot);
+
+  return {pivot_pos, perm_pivot_pos, already_partitioned};
+}
+
 // Partitions [begin, end) around pivot *begin using comparison function comp. Elements equal
 // to the pivot are put in the right-hand partition. Returns the position of the pivot after
 // partitioning and whether the passed sequence already was correctly partitioned. Assumes the
@@ -709,7 +976,7 @@ inline std::pair<Iter, PermIter> mod_partition_left(Iter begin, Iter end, PermIt
   using PermT = typename std::iterator_traits<PermIter>::value_type;
 
   T pivot(PDQSORT_PREFER_MOVE(*begin));
-  PermT perm_pivot(PDQSORT_PREFER_MOVE(*begin));
+  PermT perm_pivot(PDQSORT_PREFER_MOVE(*perm_begin));
   Iter first = begin;
   Iter last = end;
 
@@ -908,14 +1175,14 @@ inline void mod_pdqsort_loop(Iter begin, Iter end, PermIter perm_begin, PermIter
     {
       auto [begin_, perm_begin_] = mod_partition_left(begin, end, perm_begin, perm_end, comp);
       begin = PDQSORT_PREFER_MOVE(++begin_);
-      perm_begin = PDQSORT_PREFER_MOVE(++perm_begin);
+      perm_begin = PDQSORT_PREFER_MOVE(++perm_begin_);
       continue;
     }
 
     // Partition and get results.
-    // std::pair<Iter, bool> part_result =
-    //     Branchless ? partition_right_branchless(begin, end, comp) : partition_right(begin, end, comp);
     auto [pivot_pos_, perm_pivot_pos_, already_partitioned] =
+        // Branchless ? mod_partition_right_branchless(begin, end, perm_begin, perm_end, comp)
+        //            : mod_partition_right(begin, end, perm_begin, perm_end, comp);
         mod_partition_right(begin, end, perm_begin, perm_end, comp);
 
     Iter pivot_pos = PDQSORT_PREFER_MOVE(pivot_pos_);
@@ -998,7 +1265,7 @@ inline void mod_pdqsort_loop(Iter begin, Iter end, PermIter perm_begin, PermIter
 
     // Sort the left partition first using recursion and do tail recursion elimination for
     // the right-hand partition.
-    mod_pdqsort_loop<Iter, PermIter, Compare, Branchless>(begin, pivot_pos, perm_begin, perm_end, comp,
+    mod_pdqsort_loop<Iter, PermIter, Compare, Branchless>(begin, pivot_pos, perm_begin, perm_pivot_pos, comp,
                                                           bad_allowed, leftmost);
     begin = pivot_pos + 1;
     perm_begin = perm_pivot_pos + 1;
@@ -1055,6 +1322,15 @@ inline void pdqsort_branchless(Iter begin, Iter end, Compare comp)
     return;
   modified_pdqsort_detail::pdqsort_loop<Iter, Compare, true>(begin, end, comp,
                                                              modified_pdqsort_detail::log2(end - begin));
+}
+
+template <class Iter, class PermIter, class Compare>
+inline void mod_pdqsort_branchless(Iter begin, Iter end, PermIter perm_begin, PermIter perm_end, Compare comp)
+{
+  if (begin == end)
+    return;
+  modified_pdqsort_detail::mod_pdqsort_loop<Iter, PermIter, Compare, true>(
+      begin, end, perm_begin, perm_end, comp, modified_pdqsort_detail::log2(end - begin));
 }
 
 template <class Iter>
