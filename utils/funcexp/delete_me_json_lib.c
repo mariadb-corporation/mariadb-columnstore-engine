@@ -809,6 +809,7 @@ int json_scan_start(json_engine_t *je,
 {
   static const uchar no_time_to_die= 0;
 
+  json_log("starting scan with i_cs %p", i_cs);
   json_string_setup(&je->s, i_cs, str, end);
   je->stack[0]= JST_DONE;
   je->stack_p= 0;
@@ -1126,6 +1127,7 @@ static int json_path_transitions[N_PATH_STATES][N_PATH_CLASSES]=
 int json_path_setup(json_path_t *p,
                     CHARSET_INFO *i_cs, const uchar *str, const uchar *end)
 {
+	json_log("setting path with i_cs %p", i_cs);
  int c_len, t_next, state= PS_GO, is_negative_index= 0, is_last= 0,
   prev_value=0, is_to= 0, *cur_val;
   enum json_path_step_types double_wildcard= JSON_PATH_KEY_NULL;
@@ -1433,6 +1435,7 @@ int del_me_json_find_path(json_engine_t *je,
       DBUG_ASSERT(cur_step->type & JSON_PATH_KEY);
       if (!(cur_step->type & JSON_PATH_WILD))
       {
+	      json_log("trying to match");
         json_string_set_str(&key_name, cur_step->key, cur_step->key_end);
         if (!json_key_matches(je, &key_name))
         {
