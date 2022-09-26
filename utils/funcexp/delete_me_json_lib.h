@@ -362,7 +362,7 @@ int del_me_json_find_path(del_me_json_engine_t *je,
                    int *array_counters);
 
 
-typedef struct st_json_find_paths_t
+typedef struct del_me_st_json_find_paths_t
 {
   uint n_paths;
   del_me_json_path_t *paths;
