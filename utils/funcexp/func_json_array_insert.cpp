@@ -23,11 +23,10 @@ CalpontSystemCatalog::ColType Func_json_array_insert::operationType(FunctionParm
 string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
+  const auto& js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
-  const string_view js = js_ns.unsafeStringRef();
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
   json_engine_t jsEg;
@@ -36,7 +35,7 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 
   initJSPaths(paths, fp, 1, 2);
 
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
     const char* rawJS = tmpJS.data();
@@ -123,7 +122,7 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     }
 
     // tmpJS save the json string for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 

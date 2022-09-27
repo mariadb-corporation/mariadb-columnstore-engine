@@ -227,16 +227,14 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   json_engine_t jsEg1, jsEg2;
 
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   string retJS;
 
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const auto js2_ns = fp[i]->data()->getStrVal(row, isNull);
+    const auto js2 = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
       goto error;
-
-    const string_view js2 = js_ns.unsafeStringRef();
 
     initJSEngine(jsEg1, js1CS, tmpJS);
     initJSEngine(jsEg2, getCharset(fp[i]), js2);
@@ -245,7 +243,7 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
       goto error;
 
     // tmpJS save the merge result for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 
