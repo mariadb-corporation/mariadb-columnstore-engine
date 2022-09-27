@@ -91,7 +91,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     /* we only care about the first found value */
     if (!compareWhole)
     {
-      retJS = js;
+      retJS = js.safeString("");
       return 0;
     }
 
