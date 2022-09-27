@@ -102,7 +102,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       if (mayMulVal)
         savJSEg = jsEg;
       if (json_skip_level(&jsEg))
-        goto error;
+        return 1;
       valLen = jsEg.s.c_str - value;
       if (mayMulVal)
         jsEg = savJSEg;
