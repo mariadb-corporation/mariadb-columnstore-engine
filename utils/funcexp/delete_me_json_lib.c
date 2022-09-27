@@ -1422,7 +1422,8 @@ int del_me_json_find_path(json_engine_t *je,
 {
   json_string_t key_name;
   int res= 0;
-
+  char t[100+5];
+json_log("setting key namei's charset");
   json_string_set_cs(&key_name, p->s.cs);
 
   do
@@ -1435,7 +1436,12 @@ int del_me_json_find_path(json_engine_t *je,
       DBUG_ASSERT(cur_step->type & JSON_PATH_KEY);
       if (!(cur_step->type & JSON_PATH_WILD))
       {
-	      json_log("trying to match");
+	      size_t len = cur_step->key_end - cur_step->key;
+	      if (len > 100) {
+		      len = 100;
+	      }
+	      strncpy(t, cur_step->key, len);
+	      json_log("trying to match <<%s>>", t);
         json_string_set_str(&key_name, cur_step->key, cur_step->key_end);
         if (!json_key_matches(je, &key_name))
         {
