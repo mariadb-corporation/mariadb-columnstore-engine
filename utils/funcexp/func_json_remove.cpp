@@ -62,7 +62,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       }
     }
 
-    initJSEngine(jsEg, cs, rawJS);
+    initJSEngine(jsEg, cs, tmpJS);
 
     if (path.p.last_step < path.p.steps)
       goto v_found;

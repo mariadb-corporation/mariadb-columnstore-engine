@@ -243,7 +243,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 {
   // JSON_MERGE_PATCH return NULL if any argument is NULL
   bool isEmpty = false, hasNullArg = false;
-  const string_view js = fp[0]->data()->getStrVal(row, hasNullArg).safeString("");
+  const auto js = fp[0]->data()->getStrVal(row, hasNullArg);
 
   hasNullArg = isNull;
 
@@ -252,11 +252,11 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   json_engine_t jsEg1, jsEg2;
   jsEg1.s.error = jsEg2.s.error = 0;
 
-  string tmpJS{js};
+  string tmpJS(js);
   string retJS;
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const string_view js2 = fp[i]->data()->getStrVal(row, isNull).safeString("");
+    const auto js2 = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
     {
       hasNullArg = true;
@@ -287,7 +287,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
   next:
     // tmpJS save the merge result for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 
