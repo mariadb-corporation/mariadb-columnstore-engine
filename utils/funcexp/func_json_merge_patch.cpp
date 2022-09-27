@@ -252,7 +252,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   json_engine_t jsEg1, jsEg2;
   jsEg1.s.error = jsEg2.s.error = 0;
 
-  string tmpJS(js);
+  string tmpJS(js.safeString(""));
   string retJS;
   for (size_t i = 1; i < fp.size(); i++)
   {
@@ -294,7 +294,8 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   if (hasNullArg)
     goto error;
 
-  initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
+  utils::NullString tmpJSns(tmpJS);
+  initJSEngine(jsEg1, getCharset(fp[0]), tmpJSns);
   retJS.clear();
   if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
     goto error;
