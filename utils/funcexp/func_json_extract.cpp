@@ -137,7 +137,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   utils::NullString retJS_ns(retJS);
   initJSEngine(jsEg, getCharset(fp[0]), retJS_ns);
   if (doFormat(&jsEg, tmp, Func_json_format::LOOSE))
-    goto error;
+    return 1;
 
   retJS.clear();
   retJS.swap(tmp);

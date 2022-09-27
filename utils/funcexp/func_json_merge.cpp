@@ -217,11 +217,9 @@ CalpontSystemCatalog::ColType Func_json_merge::operationType(FunctionParm& fp,
 string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
-
-  const string_view js = js_ns.unsafeStringRef();
 
   const CHARSET_INFO* js1CS = getCharset(fp[0]);
 
