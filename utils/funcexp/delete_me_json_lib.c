@@ -1440,7 +1440,8 @@ json_log("setting key namei's charset");
 	      if (len > 100) {
 		      len = 100;
 	      }
-	      strncpy(t, cur_step->key, len);
+	      strncpy((void*)t, (void*)cur_step->key, len);
+	      t[len] = 0;
 	      json_log("trying to match <<%s>>", t);
         json_string_set_str(&key_name, cur_step->key, cur_step->key_end);
         if (!json_key_matches(je, &key_name))
