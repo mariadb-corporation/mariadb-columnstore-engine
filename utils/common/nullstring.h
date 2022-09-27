@@ -160,6 +160,15 @@ class NullString
     // fall to std::string equality.
     return (*mStrPtr) == (*a.mStrPtr);
   }
+  bool operator ==(const std::string& a) const
+  {
+    if (!mStrPtr)
+    {
+      return false;
+    }
+    // fall to std::string equality.
+    return (*mStrPtr) == a;
+  }
   bool operator <(const NullString& a) const
   {
     // order NULLs first.

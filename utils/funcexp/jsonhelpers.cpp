@@ -72,7 +72,7 @@ bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, e
   datatypes::SystemCatalog::ColDataType dataType = parm->data()->resultType().colDataType;
   if (dataType == datatypes::SystemCatalog::BIGINT && (js == "true" || js == "false"))
   {
-    ret.append(js);
+    ret.append(js.safeString(""));
     return false;
   }
 
