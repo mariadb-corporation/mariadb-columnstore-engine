@@ -43,23 +43,20 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
     JSONPath& path = paths[j];
-idblog("checking whether path parsed");
+
     if (!path.parsed && parseJSPath(path, row, fp[i], false))
       goto error;
 
     initJSEngine(jsEg, cs, tmpJS);
 
-idblog("locating path in $$" << tmpJS << "$$");
     if (locateJSPath(jsEg, path))
       goto error;
 
-    idblog("reading value");
     if (json_read_value(&jsEg))
       goto error;
 
     if (jsEg.value_type == JSON_VALUE_ARRAY)
     {
-	    idblog("array");
       int itemSize;
       if (json_skip_level_and_count(&jsEg, &itemSize))
         goto error;
@@ -67,10 +64,8 @@ idblog("locating path in $$" << tmpJS << "$$");
       arrEnd = jsEg.s.c_str - jsEg.sav_c_len;
       strRestLen = jsLen - (arrEnd - (const uchar*)rawJS);
       retJS.append(rawJS, arrEnd - (const uchar*)rawJS);
-      idblog("itemsize");
       if (itemSize)
         retJS.append(", ");
-      idblog("append js value");
       if (appendJSValue(retJS, cs, row, fp[i + 1]))
         goto error;
 
@@ -83,7 +78,6 @@ idblog("locating path in $$" << tmpJS << "$$");
       /* Wrap as an array. */
       retJS.append(rawJS, (const char*)jsEg.value_begin - rawJS);
       start = jsEg.value_begin;
-idblog("not an array");
       if (jsEg.value_type == JSON_VALUE_OBJECT)
       {
 	      idblog("object");
@@ -97,7 +91,6 @@ idblog("not an array");
       retJS.append("[");
       retJS.append((const char*)start, end - start);
       retJS.append(", ");
-      idblog("appending value");
       if (appendJSValue(retJS, cs, row, fp[i + 1]))
         goto error;
       retJS.append("]");
