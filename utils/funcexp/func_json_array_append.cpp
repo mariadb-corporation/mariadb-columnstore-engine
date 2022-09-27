@@ -37,7 +37,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 
   initJSPaths(paths, fp, 1, 2);
 
-  utils::NullString tmpJS{js};
+  utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
     const char* rawJS = tmpJS.str();
