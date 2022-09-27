@@ -31,7 +31,7 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 
   json_engine_t jsEg;
   string retJS;
-  retJS.reserve(js.size() + 8);
+  retJS.reserve(js.length() + 8);
 
   initJSPaths(paths, fp, 1, 2);
 

@@ -17,11 +17,10 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
                                  bool compareWhole = true)
 {
   bool isNull = false;
-  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 1;
-  const string_view js = js_ns.unsafeStringRef();
-  const char* rawJS = js.data();
+  const char* rawJS = js.str();
   json_engine_t jsEg, savJSEg;
   json_path_t p;
   const uchar* value;
@@ -67,7 +66,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       retJS.append("[");
   }
 
-  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.size(), &p);
+  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.length(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
@@ -135,7 +134,8 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   if (mayMulVal)
     retJS.append("]");
 
-  initJSEngine(jsEg, getCharset(fp[0]), retJS);
+  utils::NullString retJS_ns(retJS);
+  initJSEngine(jsEg, getCharset(fp[0]), retJS_ns);
   if (doFormat(&jsEg, tmp, Func_json_format::LOOSE))
     goto error;
 
