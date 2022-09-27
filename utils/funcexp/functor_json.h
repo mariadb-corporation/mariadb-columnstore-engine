@@ -435,7 +435,7 @@ class Func_json_contains : public Func_Bool
   JSONPath path;
   bool arg2Const;
   bool arg2Parsed;  // argument 2 is a constant or has been parsed
-  std::string_view arg2Val;
+  utils::NullString arg2Val;
 
  public:
   Func_json_contains() : Func_Bool("json_contains"), arg2Const(false), arg2Parsed(false), arg2Val("")

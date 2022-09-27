@@ -38,8 +38,8 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
-    const char* rawJS = tmpJS.data();
-    const size_t jsLen = tmpJS.size();
+    const char* rawJS = tmpJS.str();
+    const size_t jsLen = tmpJS.length();
     JSONPath& path = paths[j];
     if (!path.parsed)
     {

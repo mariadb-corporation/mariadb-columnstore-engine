@@ -160,16 +160,14 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                     CalpontSystemCatalog::ColType& type)
 {
   bool isNullJS = false, isNullVal = false;
-  const auto& js_ns = fp[0]->data()->getStrVal(row, isNullJS);
-  const auto& val_ns = fp[1]->data()->getStrVal(row, isNullVal);
+  const auto& js = fp[0]->data()->getStrVal(row, isNullJS);
+  const auto& val = fp[1]->data()->getStrVal(row, isNullVal);
   if (isNullJS || isNullVal)
   {
     isNull = true;
     return false;
   }
 
-  const string_view js = js_ns.unsafeStringRef();
-  const string_view val = val_ns.unsafeStringRef();
   bool result = false;
 
   if (!arg2Parsed)
