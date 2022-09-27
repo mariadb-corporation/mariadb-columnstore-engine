@@ -22,11 +22,9 @@ CalpontSystemCatalog::ColType Func_json_type::operationType(FunctionParm& fp,
 string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                  execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
-
-  const string_view js = js_ns.unsafeStringRef();
 
   json_engine_t jsEg;
   string result;
