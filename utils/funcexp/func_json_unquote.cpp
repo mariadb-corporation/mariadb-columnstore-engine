@@ -35,7 +35,7 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   json_read_value(&jsEg);
 
   if (unlikely(jsEg.s.error) || jsEg.value_type != JSON_VALUE_STRING)
-    return js.data();
+    return js.safeString();
 
   char* buf = (char*)alloca(jsEg.value_len);
   if ((strLen = json_unescape(cs, jsEg.value, jsEg.value + jsEg.value_len, &my_charset_utf8mb3_general_ci,

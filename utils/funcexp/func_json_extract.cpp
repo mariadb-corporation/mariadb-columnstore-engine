@@ -43,7 +43,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     JSONPath& path = paths[i - 1];
     path.p.types_used = JSON_PATH_KEY_NULL;
     if (!path.parsed && parseJSPath(path, row, fp[i]))
-      goto error;
+      return 1;
 
 #ifdef MYSQL_GE_1009
     hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
@@ -73,7 +73,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 #ifdef MYSQL_GE_1009
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
-      goto error;
+      return 1;
 #endif
 
 #ifdef MYSQL_GE_1009
@@ -125,11 +125,11 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   }
 
   if (unlikely(jsEg.s.error))
-    goto error;
+    return 1;
 
   if (!notFirstVal)
     /* Nothing was found. */
-    goto error;
+    return 1;
 
   if (mayMulVal)
     retJS.append("]");
@@ -144,8 +144,6 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 
   return 0;
 
-error:
-  return 1;
 }
 
 CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,
