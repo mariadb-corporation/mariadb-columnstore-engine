@@ -41,6 +41,7 @@ USE mcs19_db;
 --error ER_DBACCESS_DENIED_ERROR
 CREATE DATABASE mcs19_db1;
 CREATE TABLE t1(col INT) ENGINE=InnoDB;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 INSERT INTO t1 VALUES(1);
 SELECT * FROM t1;
