@@ -34,6 +34,7 @@ CREATE TABLE t1
  t1_DATE DATE,
  t1_TIME TIME
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 set columnstore_compression_type=1;
@@ -45,6 +46,7 @@ CREATE TABLE t2
  t2_DATE DATE,
  t2_TIME TIME
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
 SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
