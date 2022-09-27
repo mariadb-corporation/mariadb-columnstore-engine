@@ -1422,7 +1422,7 @@ int del_me_json_find_path(json_engine_t *je,
 {
   json_string_t key_name;
   int res= 0;
-  char t[100+5];
+  uchar t[100+5];
 json_log("setting key namei's charset");
   json_string_set_cs(&key_name, p->s.cs);
 
