@@ -130,6 +130,11 @@ class Func_Str : public Func
         break;
     }
 
+    if (isNull)
+    {
+      return;
+    }
+
     exponent = (int)floor(log10(fabsl(floatVal)));
     base = floatVal * pow(10, -1.0 * exponent);
 

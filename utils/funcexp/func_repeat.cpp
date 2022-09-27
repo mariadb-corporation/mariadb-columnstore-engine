@@ -53,7 +53,7 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   stringValue(fp[0], row, isNull, str);
 
-  if (str.empty() || str == "")
+  if (isNull)
     return "";
 
   int count = fp[1]->data()->getIntVal(row, isNull);
