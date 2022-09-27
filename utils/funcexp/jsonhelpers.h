@@ -35,7 +35,7 @@ static const int NO_WILDCARD_ALLOWED = 1;
 int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards);
 
 // Return true if err occur, let the outer function handle the exception
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& js, const CHARSET_INFO* jsCS);
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS);
 bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 
