@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #define PREFER_MY_CONFIG_H
@@ -90,9 +89,9 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
   return parm->data()->resultType().getCharset();
 }
 
-inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const string_view& js)
+inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const utils::NullString& js)
 {
-  json_scan_start(&jsEg, jsCS, (const uchar*)js.data(), (const uchar*)js.data() + js.size());
+  json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end);
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);
