@@ -274,7 +274,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
         goto next;
 
       hasNullArg = false;
-      retJS.append(js2.data());
+      retJS.append(js2.str());
       goto next;
     }
 
