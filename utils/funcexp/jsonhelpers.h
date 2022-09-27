@@ -91,7 +91,7 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
 
 inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const utils::NullString& js)
 {
-  json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end);
+  json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end());
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);
