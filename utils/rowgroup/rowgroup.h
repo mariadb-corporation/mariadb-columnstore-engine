@@ -1593,11 +1593,11 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
   // add numerics only concept check
-  template <enum datatypes::SystemCatalog::ColDataType ColType, typename T>
-  T getColumnValue(const uint32_t columnID, const uint32_t rowID) const
+  template <datatypes::SystemCatalog::ColDataType CT, typename T>
+  T getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data);
-    size_t valueOffset = getOffsets()[columnID] + rowID * getRowSize();
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
     // check the out of bounds invariant somehow
     T* valuePtr = reinterpret_cast<T*>(&data[valueOffset]);  // the cast is questionable here
     return *valuePtr;

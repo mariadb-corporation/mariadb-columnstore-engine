@@ -20,11 +20,15 @@
 
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <boost/thread/thread.hpp>
 
+#include "funcexp.h"
+#include "jlf_common.h"
 #include "jobstep.h"
 #include "limitedorderby.h"
+#include "orderby.h"
 
 namespace joblist
 {
@@ -73,6 +77,24 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   {
     fOrderBy = lob;
   }
+  void addOrderBy(const JobInfo& jobInfo)
+  {
+    // WIP enables multithreaded sorting using PQ
+    if (fLimitStart + fLimitCount <= ReasonableLimit || jobInfo.orderByThreads > 1)
+    {
+      fOrderBy = new LimitedOrderBy();
+    }
+    else if (jobInfo.orderByThreads == 1)
+    {
+      flatOrderBy_.reset(new FlatOrderBy());
+    }
+
+    if (jobInfo.orderByThreads > 1)
+    {
+      setParallelOp();
+    }
+    setMaxThreads(jobInfo.orderByThreads);
+  }
   void addConstant(TupleConstantStep* tcs)
   {
     fConstant = tcs;
@@ -107,6 +129,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void execute(uint32_t);
   void executeNoOrderBy();
   void executeWithOrderBy();
+  void executeWithOrderByFlatOrderBy();
   void executeParallelOrderBy(uint64_t id);
   void executeNoOrderByWithDistinct();
   void checkAndAllocateMemory4RGData(const rowgroup::RowGroup& rowGroup);
@@ -114,6 +137,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
+
+  static constexpr const uint64_t ReasonableLimit = 10000ULL;
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -163,6 +188,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   bool fParallelOp;
 
   LimitedOrderBy* fOrderBy;
+  std::unique_ptr<FlatOrderBy> flatOrderBy_;
   TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;

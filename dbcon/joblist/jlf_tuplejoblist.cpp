@@ -652,6 +652,8 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
       //				cout << "1 setting project BPP for " << tbps->toString() << " with "
       //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
       //<< endl;
+      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
+      //<< endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -2076,6 +2078,8 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
+            { return a.second < b.second; });
             [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
             { return a.second < b.second; });
 
@@ -4351,12 +4355,6 @@ namespace joblist
 void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
                   IDBQueryType queryType)
 {
-  // TODO MCOL-894 we don't need to run sorting|distinct
-  // every time
-  //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
-  //            (jobInfo.constantCol == CONST_COL_EXIST) ||
-  //            (jobInfo.hasDistinct))
-  //    {
   if (!jobInfo.annexStep)
   {
     jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
@@ -4367,10 +4365,7 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
 
   if (!jobInfo.orderByColVec.empty())
   {
-    tas->addOrderBy(new LimitedOrderBy());
-    if (jobInfo.orderByThreads > 1)
-      tas->setParallelOp();
-    tas->setMaxThreads(jobInfo.orderByThreads);
+    tas->addOrderBy(jobInfo);
   }
 
   if (queryType != IDBQueryType::UNION)
@@ -4381,7 +4376,6 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
     if (jobInfo.hasDistinct)
       tas->setDistinct();
   }
-  //    }
 
   auto* tds = dynamic_cast<TupleDeliveryStep*>(deliverySteps[CNX_VTABLE_ID].get());
   RowGroup rg = tds->getDeliveredRowGroup();
