@@ -15,9 +15,9 @@ b cs
 SELECT b, RIGHT(b, 0) FROM t1 ORDER BY 1;
 b	RIGHT(b, 0)
 NULL	NULL
-columnstore	NULL
-Innodb	NULL
-mariadb	NULL
+columnstore	
+Innodb	
+mariadb	
 SELECT b, RIGHT(b, -1) FROM t1 ORDER BY 1;
 b	RIGHT(b, -1)
 NULL	NULL
