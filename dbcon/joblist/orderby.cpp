@@ -96,6 +96,32 @@ void FlatOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool in
     count_ = jobInfo.limitCount;
   }
   rg_ = rg;
+  rgOut_ = rg;
+  data_.reinit(rg_, 2);
+  rg_.setData(&data_);
+  rg_.resetRowGroup(0);
+  rg_.initRow(&inRow_);
+  rg_.initRow(&outRow_);
+  rg_.getRow(0, &inRow_);
+  rg_.getRow(1, &outRow_);
+
+  map<uint32_t, uint32_t> keyToIndexMap;
+  auto& keys = rg.getKeys();
+  for (uint64_t i = 0; i < keys.size(); ++i)
+  {
+    if (keyToIndexMap.find(keys[i]) == keyToIndexMap.end())
+      keyToIndexMap.insert(make_pair(keys[i], i));
+  }
+
+  // TupleAnnexStep execute sends duplicates b/c it has access to RowGroup
+  // but ORDER BY columns are described in JobList::orderByColVec.
+  for (auto [key, sortDirection] : jobInfo.orderByColVec)
+  {
+    auto j = keyToIndexMap.find(key);
+    idbassert(j != keyToIndexMap.end());
+    auto [keyId, rgColumnID] = *j;
+    jobListorderByRGColumnIDs_.push_back({rgColumnID, sortDirection});
+  }
 
   //   IdbOrderBy::initialize(rg);
 }
@@ -125,9 +151,24 @@ bool FlatOrderBy::addBatch(rowgroup::RGData& rgData)
   return isFailure;
 }
 
+bool FlatOrderBy::sort()
+{
+  bool isFailure = false;
+  for (auto [rgColumnID, sortDirection] : jobListorderByRGColumnIDs_)
+  {
+    if (sortByColumn(rgColumnID))
+    {
+      isFailure = true;
+      return isFailure;
+    }
+  }
+  return isFailure;
+}
+
 bool FlatOrderBy::sortByColumn(const uint32_t columnId)
 {
   bool isFailure = false;
+
   switch (rg_.getColType(columnId))
   {
     case execplan::CalpontSystemCatalog::TINYINT:
@@ -221,7 +262,7 @@ bool FlatOrderBy::sortByColumn(const uint32_t columnId)
 
 // For numeric datatypes only
 // add numerics only concept check
-template <enum datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
 bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
 {
   bool isFailure = false;
@@ -246,7 +287,7 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
       throw IDBExcept(ERR_LIMIT_TOO_BIG);
     }
 
-    permutation_.resize(permutation_.size() + rowCount);
+    permutation_.reserve(permutation_.size() + rowCount);
 
     for (decltype(rowCount) i = 0; i < rowCount; ++i)
     {
@@ -267,7 +308,8 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
   // use sorting class
   // sorting must move permute members when keys are moved
   sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
-                       std::less<EncodedKeyType>());
+                       std::greater<EncodedKeyType>());
+
   return isFailure;
 }
 
@@ -282,25 +324,13 @@ void FlatOrderBy::processRow(const rowgroup::Row& row)
 {
 }
 
-/*
- * The f() copies top element from an ordered queue into a row group. It
- * does this backwards to syncronise sorting orientation with the server.
- * The top row from the queue goes last into the returned set.
- */
 void FlatOrderBy::finalize()
 {
-  //   if (fUncommitedMemory > 0)
-  //   {
-  //     if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
-  //     {
-  //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-  //       throw IDBExcept(fErrorCode);
-  //     }
-  //     fMemSize += fUncommitedMemory;
-  //     fUncommitedMemory = 0;
-  //   }
-
+  // Signal getData() to return false if perm is empty. Impossible case though.
+  flatCurPermutationDiff_ = (permutation_.size() > 0) ? permutation_.size() : -1;
   //   queue<RGData> tempQueue;
+
+  // WIP check how it is this
   //   if (fRowGroup.getRowCount() > 0)
   //     fDataQueue.push(fData);
 
@@ -387,6 +417,43 @@ void FlatOrderBy::finalize()
 
   //     fDataQueue = tempQueue;
   //   }
+}
+
+// returns false when finishes
+bool FlatOrderBy::getData(rowgroup::RGData& data)
+{
+  static constexpr IterDiffT rgMaxSize = rowgroup::rgCommonSize;
+  auto rowsToReturn = std::min(rgMaxSize, flatCurPermutationDiff_);
+  // This reduces the global row counter by the number of rows returned by this getData() call.
+  flatCurPermutationDiff_ -= rowsToReturn;
+  // This negation is to convert a number of rows into array idx.
+  auto i = rowsToReturn - 1;
+  if (i < 0)
+  {
+    return false;
+  }
+
+  data.reinit(rgOut_, rowsToReturn);
+  rgOut_.setData(&data);
+  rgOut_.resetRowGroup(0);
+  rgOut_.initRow(&outRow_);
+  rgOut_.getRow(0, &outRow_);
+
+  for (; i >= 0; --i)
+  {
+    // find src row, copy into dst row
+    // RGData::getRow but need to init an arg row first
+    assert(static_cast<size_t>(i) < permutation_.size() && permutation_[i].rgdataID < rgDatas_.size());
+    // Get RowPointer
+    rgDatas_[permutation_[i].rgdataID].getRow(permutation_[i].rowID, &inRow_);
+    std::cout << "inRow i " << i << inRow_.toString() << std::endl;
+    copyRow(inRow_, &outRow_);
+    outRow_.nextRow();  // I don't like this way of iterating the rows
+    std::cout << "outRow i " << i << outRow_.toString() << std::endl;
+  }
+  rgOut_.setRowCount(rowsToReturn);
+  std::cout << rgOut_.toString() << std::endl;
+  return true;
 }
 
 const string FlatOrderBy::toString() const

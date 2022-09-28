@@ -191,6 +191,11 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
       fOrderBy->distinct(fDistinct);
       fOrderBy->initialize(rgIn, jobInfo);
     }
+    else if (flatOrderBy_.get())
+    {
+      // WIP no distinct yet
+      flatOrderBy_->initialize(rgIn, jobInfo);
+    }
   }
 
   if (fConstant == NULL)
@@ -270,7 +275,7 @@ void TupleAnnexStep::run()
     for (uint32_t id = 1; id <= fMaxThreads; id++)
     {
       fInputIteratorsList[id] = fInputDL->getIterator();
-      fRunnersList[id - 1] = jobstepThreadPool.invoke(Runner(this, id));
+      fRunnersList[id - 1] = jobstepThreadPool.invoke([this, id]() { this->execute(id); });
     }
   }
   else
@@ -281,7 +286,7 @@ void TupleAnnexStep::run()
       throw logic_error("Input is not a RowGroup data list.");
 
     fInputIterator = fInputDL->getIterator();
-    fRunner = jobstepThreadPool.invoke(Runner(this));
+    fRunner = jobstepThreadPool.invoke([this]() { this->execute(); });
   }
 }
 
@@ -352,11 +357,21 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
 void TupleAnnexStep::execute()
 {
   if (fOrderBy)
+  {
     executeWithOrderBy();
+  }
+  else if (flatOrderBy_.get())
+  {
+    executeWithOrderByFlatOrderBy();
+  }
   else if (fDistinct)
+  {
     executeNoOrderByWithDistinct();
+  }
   else
+  {
     executeNoOrderBy();
+  }
 
   StepTeleStats sts;
   sts.query_uuid = fQueryUuid;
@@ -675,6 +690,106 @@ void TupleAnnexStep::executeWithOrderBy()
         if (fRowGroupOut.getRowCount() > 0)
         {
           fRowsReturned += fRowGroupOut.getRowCount();
+          fOutputDL->insert(rgDataOut);
+        }
+      }
+    }
+  }
+  catch (...)
+  {
+    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeWithOrderBy()");
+  }
+
+  while (more)
+    more = fInputDL->next(fInputIterator, &rgDataIn);
+
+  // Bug 3136, let mini stats to be formatted if traceOn.
+  fOutputDL->endOfInput();
+}
+
+void TupleAnnexStep::executeWithOrderByFlatOrderBy()
+{
+  utils::setThreadName("TASwOrdFlat");
+  RGData rgDataIn;
+  RGData rgDataOut;
+  bool more = false;
+
+  try
+  {
+    more = fInputDL->next(fInputIterator, &rgDataIn);
+
+    if (traceOn())
+      dlTimes.setFirstReadTime();
+
+    StepTeleStats sts;
+    sts.query_uuid = fQueryUuid;
+    sts.step_uuid = fStepUuid;
+    sts.msg_type = StepTeleStats::ST_START;
+    sts.total_units_of_work = 1;
+    postStepStartTele(sts);
+
+    while (more && !cancelled())
+    {
+      flatOrderBy_->addBatch(rgDataIn);
+      // fRowGroupIn.setData(&rgDataIn);
+      // fRowGroupIn.getRow(0, &fRowIn);
+
+      // for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
+      // {
+      //   fOrderBy->processRow(fRowIn);
+      //   fRowIn.nextRow();
+      // }
+
+      more = fInputDL->next(fInputIterator, &rgDataIn);
+    }
+
+    if (flatOrderBy_->sort())
+    {
+      // do something
+    }
+
+    flatOrderBy_->finalize();
+
+    if (!cancelled())
+    {
+      while (flatOrderBy_->getData(rgDataIn))
+      {
+        // if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
+        {
+          rgDataOut = rgDataIn;
+          // WIP This is very cost inefficent to just calc rows
+          fRowGroupOut.setData(&rgDataOut);
+        }
+        // else
+        // {
+        //   fRowGroupIn.setData(&rgDataIn);
+        //   fRowGroupIn.getRow(0, &fRowIn);
+
+        //   rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+        //   fRowGroupOut.setData(&rgDataOut);
+        //   fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+        //   fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
+        //   fRowGroupOut.getRow(0, &fRowOut);
+
+        //   for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
+        //   {
+        //     if (fConstant)
+        //       fConstant->fillInConstants(fRowIn, fRowOut);
+        //     else
+        //       copyRow(fRowIn, &fRowOut);
+
+        //     fRowGroupOut.incRowCount();
+        //     fRowOut.nextRow();
+        //     fRowIn.nextRow();
+        //   }
+        // }
+
+        //  WIP It is too costly to init RowGroup to use see the number of records.
+        auto rows = fRowGroupOut.getRowCount();
+        if (rows > 0)
+        {
+          fRowsReturned += rows;
           fOutputDL->insert(rgDataOut);
         }
       }

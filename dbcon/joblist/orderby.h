@@ -25,7 +25,7 @@
 #include <vector>
 #include "resourcemanager.h"
 #include "rowgroup.h"
-#include "../../utils/windowfunction/idborderby.h"
+#include "jlf_common.h"
 
 namespace sorting
 {
@@ -134,10 +134,12 @@ struct JobInfo;
 // This version is for subqueries, limit the result set to fit in memory,
 // use ORDER BY to make the results consistent.
 // The actual output are the first or last # of rows, which are NOT ordered.
+
+// There is an important invariant that the code of this class must hold,
+// namely rg_ must be init-ed only once.
 class FlatOrderBy
 {
   using RGDataOrRowIDType = uint32_t;
-  // using PermutationType = RGDataOrRowIDType[2];
   struct PermutationType
   {
     uint64_t rgdataID : 32 {}, rowID : 24 {}, flags : 8 {};
@@ -150,8 +152,10 @@ class FlatOrderBy
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
+  bool sort();
   bool sortByColumn(const uint32_t columnId);
-  template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
+  bool getData(rowgroup::RGData& data);
+  template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   bool exchangeSortByColumn_(const uint32_t columnId);
   // template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   // bool distributionSortByColumn_(const uint32_t columnId);
@@ -170,10 +174,20 @@ class FlatOrderBy
   uint64_t count_;
   uint64_t uncommitedMemory_;
   static const uint64_t maxUncommited_;
+  joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
   std::vector<rowgroup::RGData> rgDatas_;
   std::vector<PermutationType> permutation_;
   std::unique_ptr<joblist::MemManager> mm_;
+  using IterDiffT = std::iterator_traits<decltype(permutation_)::iterator>::difference_type;
+  IterDiffT flatCurPermutationDiff_ = 0;
+  // Scratch desk
+  rowgroup::RGData data_;
+  // It is possible to use rg_ member only but there is a potential to shoot in the foot
+  // setting different RGDatas in two points in the code of this class methods.
+  rowgroup::RowGroup rgOut_;
+  rowgroup::Row inRow_;
+  rowgroup::Row outRow_;
 };
 
 }  // namespace joblist
