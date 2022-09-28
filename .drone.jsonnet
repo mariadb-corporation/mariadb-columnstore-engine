@@ -555,10 +555,10 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom')
+  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
   for p in platforms_custom
 ] +
 [
-  Pipeline(any_branch, p, 'custom', 'arm64')
+  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
   for p in platforms_arm_custom
 ]
