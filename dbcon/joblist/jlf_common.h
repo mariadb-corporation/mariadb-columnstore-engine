@@ -177,6 +177,8 @@ struct TupleKeyInfo
  *
  */
 //------------------------------------------------------------------------------
+using OrderByKeysType = std::vector<std::pair<uint32_t, bool> >;
+
 struct JobInfo
 {
   JobInfo(ResourceManager* r)
@@ -244,7 +246,7 @@ struct JobInfo
   std::vector<std::pair<uint32_t, int> > returnedColVec;
 
   // order by and limit
-  std::vector<std::pair<uint32_t, bool> > orderByColVec;
+  OrderByKeysType orderByColVec;
   uint64_t limitStart;
   uint64_t limitCount;
   uint32_t orderByThreads;
