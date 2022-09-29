@@ -160,7 +160,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
   }
 
-  json_get_path_start(&jsEg, cs, (const uchar*)js.data(), (const uchar*)js.data() + js.size(), &p);
+  json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
