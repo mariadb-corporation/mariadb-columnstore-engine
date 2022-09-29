@@ -641,7 +641,7 @@ class Func_json_search : public Func_Str
                         execplan::CalpontSystemCatalog::ColType& type);
 
  private:
-  int cmpJSValWild(json_engine_t* jsEg, const string_view& cmpStr, const CHARSET_INFO* cs);
+  int cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs);
 };
 /** @brief Func_json_extract_string class
  */
