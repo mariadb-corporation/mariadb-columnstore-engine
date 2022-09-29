@@ -279,8 +279,12 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
 
     initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
+    idblog("doing merge patch");
     if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))
+    {
+	    idblog("some error");
       goto error;
+    }
 
     if (isEmpty)
       retJS.append("null");
