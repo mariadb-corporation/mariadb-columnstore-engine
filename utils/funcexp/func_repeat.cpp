@@ -80,7 +80,7 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     return "";
   }
 
-  memset((char*)result, 0, size);
+  memset((char*)result, 0, size + 1);
 
   for (int i = 0; i < count; i++)
   {
