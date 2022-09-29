@@ -243,7 +243,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 {
   // JSON_MERGE_PATCH return NULL if any argument is NULL
   bool isEmpty = false, hasNullArg = false;
-  const auto js = fp[0]->data()->getStrVal(row, hasNullArg);
+  const auto& js = fp[0]->data()->getStrVal(row, hasNullArg);
 
   hasNullArg = isNull;
 
@@ -256,7 +256,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   string retJS;
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const auto js2 = fp[i]->data()->getStrVal(row, isNull);
+    const auto& js2 = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
     {
       hasNullArg = true;
