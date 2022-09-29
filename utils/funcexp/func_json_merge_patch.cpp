@@ -294,15 +294,16 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     tmpJS.assign(retJS);
     retJS.clear();
   }
-
+idblog("end of loop");
   if (hasNullArg)
     goto error;
 
   initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
   retJS.clear();
+  idblog("formatting");
   if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
     goto error;
-
+idblog("returning ");
   isNull = false;
   return retJS;
 
