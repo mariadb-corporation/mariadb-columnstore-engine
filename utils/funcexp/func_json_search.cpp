@@ -89,8 +89,8 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 {
   string ret;
   bool isNullJS = false, isNullVal = false;
-  const string_view js = fp[0]->data()->getStrVal(row, isNull).safeString("");
-  const string_view cmpStr = fp[2]->data()->getStrVal(row, isNull).safeString("");
+  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+  const auto& cmpStr = fp[2]->data()->getStrVal(row, isNull);
   if (isNullJS || isNullVal)
   {
     isNull = true;
@@ -102,7 +102,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (!isModeConst)
       isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
-    auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
+    auto mode_ns& = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return "";
     string mode = mode_ns.unsafeStringRef();
@@ -126,7 +126,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       return "";
     }
     bool isNullEscape = false;
-    const string_view escapeStr = fp[3]->data()->getStrVal(row, isNullEscape).safeString("");
+    const auto& escapeStr = fp[3]->data()->getStrVal(row, isNullEscape);
     if (escapeStr.size() > 1)
     {
       isNull = true;

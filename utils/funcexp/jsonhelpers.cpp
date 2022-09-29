@@ -346,6 +346,10 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
   bool isNull = false;
   idblog("parsing path $$" << parm->data()->getStrVal(row, isNull).safeString() << "$$");
   const auto& jsp = parm->data()->getStrVal(row, isNull);
+  char t[1000];
+  sprintf(t, "path %d, jsp c_str() %p", &path, jsp.str());
+  string tt(t);
+  idblog(tt);
 
   if (isNull || setupJSPath(&path.p, getCharset(parm), jsp, wildcards))
     return 1;
