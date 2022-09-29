@@ -127,12 +127,12 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
     bool isNullEscape = false;
     const auto& escapeStr = fp[3]->data()->getStrVal(row, isNullEscape);
-    if (escapeStr.size() > 1)
+    if (escapeStr.length() > 1)
     {
       isNull = true;
       return "";
     }
-    escape = isNullEscape ? '\\' : escapeStr[0];
+    escape = isNullEscape ? '\\' : escapeStr.safeString("")[0];
   }
 
   json_engine_t jsEg;
