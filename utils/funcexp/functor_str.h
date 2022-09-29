@@ -145,7 +145,6 @@ class Func_Str : public Func
     }
     else
     {
-	    idblog("not NAN");
       snprintf(buf, 20, "%.5Lf", base);
       fFloatStr = execplan::removeTrailing0(buf, 20);
       snprintf(buf, 20, "e%02d", exponent);
