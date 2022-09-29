@@ -54,11 +54,11 @@ namespace funcexp
 {
 const static int wildOne = '_';
 const static int wildMany = '%';
-int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const string_view& cmpStr, const CHARSET_INFO* cs)
+int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString()& cmpStr, const CHARSET_INFO* cs)
 {
   if (jsEg->value_type != JSON_VALUE_STRING || !jsEg->value_escaped)
     return cs->wildcmp((const char*)jsEg->value, (const char*)(jsEg->value + jsEg->value_len),
-                       (const char*)cmpStr.data(), (const char*)cmpStr.data() + cmpStr.size(), escape,
+                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape,
                        wildOne, wildMany)
                ? 0
                : 1;
@@ -71,7 +71,7 @@ int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const string_view& cmpSt
                                 (uchar*)buf, (uchar*)(buf + strLen))) <= 0)
       return 0;
 
-    return cs->wildcmp(buf, buf + strLen, cmpStr.data(), cmpStr.data() + cmpStr.size(), escape, wildOne,
+    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne,
                        wildMany)
                ? 0
                : 1;
