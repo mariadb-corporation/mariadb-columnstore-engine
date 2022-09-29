@@ -102,10 +102,10 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (!isModeConst)
       isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
-    auto mode_ns& = fp[1]->data()->getStrVal(row, isNull);
+    const auto& mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return "";
-    string mode = mode_ns.unsafeStringRef();
+    string mode = mode_ns.safeString("");
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")
