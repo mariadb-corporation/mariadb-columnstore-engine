@@ -257,6 +257,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   for (size_t i = 1; i < fp.size(); i++)
   {
     const auto& js2 = fp[i]->data()->getStrVal(row, isNull);
+    idblog("read arg ((" << js2.safeString() << "))");
     if (isNull)
     {
       hasNullArg = true;
