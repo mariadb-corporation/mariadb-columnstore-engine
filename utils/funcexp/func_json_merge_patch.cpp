@@ -71,9 +71,14 @@ int copyValuePatch(string& retJS, json_engine_t* jsEg)
 
 int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool& isEmpty)
 {
-  if (json_read_value(jsEg1) || json_read_value(jsEg2))
+  if (json_read_value(jsEg1))
   {
-	  idblog("unable to read value");
+	  idblog("unable to read first value");
+    return 1;
+  }
+  if (json_read_value(jsEg2))
+  {
+	  idblog("unable to read second value");
     return 1;
   }
 
