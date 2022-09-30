@@ -72,7 +72,10 @@ int copyValuePatch(string& retJS, json_engine_t* jsEg)
 int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool& isEmpty)
 {
   if (json_read_value(jsEg1) || json_read_value(jsEg2))
+  {
+	  idblog("unable to read value");
     return 1;
+  }
 
   if (jsEg1->value_type == JSON_VALUE_OBJECT && jsEg2->value_type == JSON_VALUE_OBJECT)
   {
