@@ -100,7 +100,10 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       } while (json_read_keyname_chr(jsEg1) == 0);
 
       if (jsEg1->s.error)
+      {
+	      idblog("unable to read keyname");
         return 1;
+      }
 
       savLen = retJS.size();
 
@@ -122,13 +125,19 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg2, &keyName))
         {
           if (jsEg2->s.error || json_skip_key(jsEg2))
+	  {
+		  idblog("unable to match or skip");
             return 2;
+	  }
           continue;
         }
 
         /* Json_2 has same key as Json_1. Merge them. */
         if ((ires = doMergePatch(retJS, jsEg1, jsEg2, mrgEmpty)))
+	{
+		idblog("recursive call returned " << ires);
           return ires;
+	}
 
         if (mrgEmpty)
           retJS = retJS.substr(0, savLen);
@@ -144,7 +153,10 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       keyStart = jsEg1->s.c_str;
       /* Just append the Json_1 key value. */
       if (json_skip_key(jsEg1))
+      {
+	      idblog("unable to skip");
         return 1;
+      }
       retJS.append((const char*)keyStart, jsEg1->s.c_str - keyStart);
       firstKey = 0;
 
@@ -168,7 +180,10 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       } while (json_read_keyname_chr(jsEg2) == 0);
 
       if (jsEg2->s.error)
+      {
+	      idblog("unable to read key name, second");
         return 1;
+      }
 
       *jsEg1 = savJSEg1;
       while (json_scan_next(jsEg1) == 0 && jsEg1->state != JST_OBJ_END)
@@ -178,11 +193,17 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg1, &keyName))
         {
           if (jsEg1->s.error || json_skip_key(jsEg1))
+	  {
+		  idblog("unable to match or skip, second");
             return 2;
+	  }
           continue;
         }
         if (json_skip_key(jsEg2) || json_skip_level(jsEg1))
+	{
+		idblog("unable to skip key or level");
           return 1;
+	}
         goto continue_j2;
       }
 
@@ -199,14 +220,20 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       retJS.append("\":");
 
       if (json_read_value(jsEg2))
+      {
+	      idblog("unable to read value");
         return 1;
+      }
 
       if (jsEg2->value_type == JSON_VALUE_NULL)
         retJS = retJS.substr(0, savLen);
       else
       {
         if (copyValuePatch(retJS, jsEg2))
+	{
+		idblog("unable to copy value patch");
           return 1;
+	}
         firstKey = 0;
       }
 
@@ -219,11 +246,17 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
   else
   {
     if (!json_value_scalar(jsEg1) && json_skip_level(jsEg1))
+    {
+	    idblog("not a scalar or cannot skip level");
       return 1;
+    }
 
     isEmpty = (jsEg2->value_type == JSON_VALUE_NULL);
     if (!isEmpty && copyValuePatch(retJS, jsEg2))
+    {
+	    idblog("not empty and unable to copy");
       return 1;
+    }
   }
 
   return 0;
