@@ -286,8 +286,6 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   bool isEmpty = false, hasNullArg = false;
   const auto& js = fp[0]->data()->getStrVal(row, hasNullArg);
 
-  hasNullArg = isNull;
-
   isNull = false;
 
   json_engine_t jsEg1, jsEg2;
