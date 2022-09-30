@@ -233,7 +233,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
     name: 'regression',
     depends_on: ['smoke'],
     image: 'docker:git',
-    [if (event == 'cron' || arch == 'arm64') then 'failure']: 'ignore',
+    [if (event == 'cron') then 'failure']: 'ignore',
 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
