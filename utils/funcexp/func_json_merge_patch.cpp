@@ -321,7 +321,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
 
     initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
-    idblog("doing merge patch, tmpJS /" << tmppJS.safeString() << "', js2 '" << js2.safeString() << "'.");
+    idblog("doing merge patch, tmpJS /" << tmpJS.safeString() << "', js2 '" << js2.safeString() << "'.");
     if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))
     {
 	    idblog("some error");
