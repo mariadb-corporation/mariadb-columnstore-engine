@@ -144,6 +144,10 @@ class FlatOrderBy
   {
     uint64_t rgdataID : 32 {}, rowID : 24 {}, flags : 8 {};
   };
+  using PermutationVec = std::vector<PermutationType>;
+  using PermutationVecIter = std::vector<PermutationType>::iterator;
+  using IterDiffT = std::iterator_traits<PermutationVecIter>::difference_type;
+  using Ranges2SortQueue = std::queue<std::pair<PermutationVecIter, PermutationVecIter>>;
 
  public:
   FlatOrderBy();
@@ -153,10 +157,16 @@ class FlatOrderBy
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
   bool sort();
-  bool sortByColumn(const uint32_t columnId);
+  bool sortByColumn(const uint32_t columnId, const bool sortDirection);
   bool getData(rowgroup::RGData& data);
   template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
-  bool exchangeSortByColumn_(const uint32_t columnId);
+  bool exchangeSortByColumn_(const uint32_t columnId, const bool sortDirection);
+  template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+  void fillUpPermutationKeysNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
+                                  std::vector<PermutationType>& nulls);
+  template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+  void fillKeysAndNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys, PermutationVec& nulls,
+                        PermutationVecIter begin, PermutationVecIter end);
   // template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   // bool distributionSortByColumn_(const uint32_t columnId);
 
@@ -179,8 +189,8 @@ class FlatOrderBy
   std::vector<rowgroup::RGData> rgDatas_;
   std::vector<PermutationType> permutation_;
   std::unique_ptr<joblist::MemManager> mm_;
-  using IterDiffT = std::iterator_traits<decltype(permutation_)::iterator>::difference_type;
   IterDiffT flatCurPermutationDiff_ = 0;
+  Ranges2SortQueue ranges2Sort_;
   // Scratch desk
   rowgroup::RGData data_;
   // It is possible to use rg_ member only but there is a potential to shoot in the foot

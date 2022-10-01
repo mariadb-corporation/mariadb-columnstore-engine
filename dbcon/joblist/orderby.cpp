@@ -156,7 +156,7 @@ bool FlatOrderBy::sort()
   bool isFailure = false;
   for (auto [rgColumnID, sortDirection] : jobListorderByRGColumnIDs_)
   {
-    if (sortByColumn(rgColumnID))
+    if (sortByColumn(rgColumnID, sortDirection))
     {
       isFailure = true;
       return isFailure;
@@ -165,7 +165,7 @@ bool FlatOrderBy::sort()
   return isFailure;
 }
 
-bool FlatOrderBy::sortByColumn(const uint32_t columnId)
+bool FlatOrderBy::sortByColumn(const uint32_t columnId, const bool sortDirection)
 {
   bool isFailure = false;
 
@@ -221,7 +221,7 @@ bool FlatOrderBy::sortByColumn(const uint32_t columnId)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumn_<execplan::CalpontSystemCatalog::BIGINT, StorageType, EncodedKeyType>(
-          columnId);
+          columnId, sortDirection);
     }
 
     case execplan::CalpontSystemCatalog::DATETIME:
@@ -260,18 +260,13 @@ bool FlatOrderBy::sortByColumn(const uint32_t columnId)
   return isFailure;
 }
 
-// For numeric datatypes only
-// add numerics only concept check
 template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
+void FlatOrderBy::fillUpPermutationKeysNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
+                                             std::vector<PermutationType>& nulls)
 {
-  bool isFailure = false;
-  std::vector<EncodedKeyType> keys;
-  std::vector<PermutationType> nulls;
   rowgroup::Row r;
   // Replace with a constexpr
   auto nullValue = sorting::getNullValue<StorageType>(ColType);
-
   RGDataOrRowIDType rgDataId = 0;
   for (auto& rgData : rgDatas_)
   {
@@ -304,12 +299,122 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID)
     }
     ++rgDataId;
   }
+}
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+void FlatOrderBy::fillKeysAndNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
+                                   PermutationVec& nulls, PermutationVecIter begin, PermutationVecIter end)
+{
+  rowgroup::Row r;
+  // Replace with a constexpr
+  auto nullValue = sorting::getNullValue<StorageType>(ColType);
+  RGDataOrRowIDType rgDataId = 0;
+  // !!!!!!!!!! data set sizes don't match here.
+  // Длина keys не равна длине диапазона permutation_ - надо как-то учесть или выбросить
+  // null-ы.
+  for (auto permutation : permutation_)
+  {
+    // set rgdata
+    rg_.setData(&rgDatas_[permutation.rgdataID]);
+    rg_.initRow(&r);  // Row iterator call seems unreasonably costly here
+                      // rg_.getRow(permutation.rowID, &r);  // get first row
+    EncodedKeyType value = rg_.getColumnValue<ColType, StorageType>(columnID, i);
+    if (value != nullValue)
+    {
+      keys.push_back(value);
+    }
+    else
+    {
+      nulls.push_back(permutation);
+    }
+  }
+  ++rgDataId;
+}
+
+// For numeric datatypes only
+// add numerics only concept check
+// This function uses iterators extensively. Be careful to not alter iterator after it is assigned.
+template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
+bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID, const bool sortDirection)
+{
+  bool isFailure = false;
+  std::vector<EncodedKeyType> keys_;
+  PermutationVec nulls_;
+  if (permutation_.empty())
+  {
+    fillUpPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, keys_, nulls_);
+    ranges2Sort_.push({permutation_.begin(), permutation_.end()});
+  }
+
   // count sorting for types with width < 8 bytes.
   // use sorting class
   // sorting must move permute members when keys are moved
-  sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
-                       std::greater<EncodedKeyType>());
+  // Comp complexity O(logN*N), mem compl O(N)
+  // Use iterators from the stack
+  // while (!sameValuesRanges_.empty())
+  // {
+  //   auto [sameValuesRangeBegin, sameValuesRangeEnd] = sameValuesRanges_.top();
+  //   sameValuesRanges_.pop();
+  //   if (sortDirection)
+  //   {
+  //     sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
+  //                          std::less<EncodedKeyType>());
+  //   }
+  //   else
+  //   {
+  //     sorting::mod_pdqsort(keys.begin(), keys.end(), permutation_.begin(), permutation_.end(),
+  //                          std::greater<EncodedKeyType>());
+  //   }
+  // }
 
+  while (!ranges2Sort_.empty())
+  {
+    auto [sameValuesRangeBegin, sameValuesRangeEnd] = ranges2Sort_.front();
+    ranges2Sort_.pop();
+    // Grab RAM
+    auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) *
+                 std::distance(sameValuesRangeBegin, sameValuesRangeEnd);
+    if (!mm_->acquire(bytes))
+    {
+      cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
+      throw IDBExcept(ERR_LIMIT_TOO_BIG);
+    }
+
+    std::vector<EncodedKeyType> keys;
+    PermutationVec nulls;
+    // This is the first column sorting and keys, nulls were already filled up previously.
+    if (!keys_.empty() || !nulls_.empty())
+    {
+      keys = std::move(keys_);
+      nulls = std::move(nulls_);
+    }
+    else
+    {
+      fillKeysAndNulls<ColType, StorageType>(columnID, keys, nulls, sameValuesRangeBegin, sameValuesRangeEnd);
+    }
+
+    auto permBegin = permutation_.begin() + (std::distance(permutation_.begin(), sameValuesRangeBegin));
+    auto permEnd = permutation_.begin() + (std::distance(permutation_.begin(), sameValuesRangeEnd));
+    assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
+    большой логический косяк - диапазон permutation_ потенциально содержит null-ы в середине, а с краю
+    могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
+    if (sortDirection)
+    {
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
+    }
+    else
+    {
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
+    }
+
+    permutation_.insert(permEnd, nulls.begin(), nulls.end());
+    // !!! FREE RAM
+  }
+
+  // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
+
+  // Add NULL from the back
+  // permutation_.insert(permutation_.end(), nulls.begin(), nulls.end());
   return isFailure;
 }
 
