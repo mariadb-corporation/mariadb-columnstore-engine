@@ -732,15 +732,6 @@ void TupleAnnexStep::executeWithOrderByFlatOrderBy()
     while (more && !cancelled())
     {
       flatOrderBy_->addBatch(rgDataIn);
-      // fRowGroupIn.setData(&rgDataIn);
-      // fRowGroupIn.getRow(0, &fRowIn);
-
-      // for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
-      // {
-      //   fOrderBy->processRow(fRowIn);
-      //   fRowIn.nextRow();
-      // }
-
       more = fInputDL->next(fInputIterator, &rgDataIn);
     }
 
