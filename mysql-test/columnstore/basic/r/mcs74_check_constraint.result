@@ -33,7 +33,7 @@ ERROR 23000: CONSTRAINT `c1` failed for `mcs74_db`.`t2`
 SELECT * FROM t2;
 t1_char
 NULL
-NULL
+
 CREATE TABLE t3(
 t3_decimal DECIMAL(5,2),
 t3_blob BLOB,
