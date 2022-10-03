@@ -40,15 +40,7 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
-  int widSum = 0;
-  for (const auto fpi : fp)
-  {
-    widSum += fpi->data()->resultType().colWidth;
-  }
-  auto temp = fp[0]->data()->resultType();
-  temp.colWidth = widSum;
-  resultType.colWidth = widSum;
-  return temp;
+  return fp[0]->data()->resultType();
 }
 
 // Returns the string that results from concatenating the arguments.
