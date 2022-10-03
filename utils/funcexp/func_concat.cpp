@@ -43,7 +43,7 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
   int widSum = 0;
   for (const auto fpi : fp)
   {
-    switch (fpi->data()->resultType().colType) {
+    switch (fpi->data()->resultType().colDataType) {
       case DECIMAL:
       case UDECIMAL:
 	widSum += fpi->data()->resultType().precision + 2;
