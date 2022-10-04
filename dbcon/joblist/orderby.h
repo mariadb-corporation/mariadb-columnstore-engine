@@ -162,11 +162,13 @@ class FlatOrderBy
   template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   bool exchangeSortByColumn_(const uint32_t columnId, const bool sortDirection);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void fillUpPermutationKeysNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
-                                  std::vector<PermutationType>& nulls);
+  void initialPermutationKeysNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
+                                   std::vector<PermutationType>& nulls);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void fillKeysAndNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys, PermutationVec& nulls,
-                        PermutationVecIter begin, PermutationVecIter end);
+  void loopIterKeysNullsPerm(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
+                             PermutationVec& nulls, PermutationVec& permutation, PermutationVecIter begin,
+                             PermutationVecIter end);
+  Ranges2SortQueue populateRanges(PermutationVecIter begin, PermutationVecIter end);
   // template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   // bool distributionSortByColumn_(const uint32_t columnId);
 
