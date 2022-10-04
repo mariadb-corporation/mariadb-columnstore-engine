@@ -32,10 +32,10 @@ t1_int	t1_char	t2_int	t2_char
 3	ccc	3	iii
 5	eee	5	jjj
 7	ggggg	7	kkkk
-NULL	NULL	NULL	NULL
-2	bbb	NULL	NULL
-4	ddd	NULL	NULL
-6	ffff	NULL	NULL
+NULL		NULL	
+2	bbb	NULL	
+4	ddd	NULL	
+6	ffff	NULL	
 SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int;
 t1_int	t1_char	t2_int	t2_char
 NULL	NULL	NULL	NULL
@@ -43,9 +43,9 @@ NULL	NULL	NULL	NULL
 3	ccc	3	iii
 5	eee	5	jjj
 7	ggggg	7	kkkk
-NULL	NULL	9	lll
-NULL	NULL	11	m
-NULL	NULL	13	nnn
+NULL		9	lll
+NULL		11	m
+NULL		13	nnn
 SELECT * FROM t1;
 t1_int	t1_char
 NULL	
@@ -58,7 +58,7 @@ NULL
 7	ggggg
 SELECT * FROM t2;
 t2_int	t2_char
-NULL	NULL
+NULL	
 1	hhhh
 3	iii
 5	jjj
