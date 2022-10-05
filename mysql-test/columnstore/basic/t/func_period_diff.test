@@ -8,6 +8,12 @@
 
 --echo # Narrow decimal rounding
 
+--disable_warnings
+DROP DATABASE IF EXISTS period_diff_db;
+--enable_warnings
+CREATE DATABASE period_diff_db; 
+USE period_diff_db;
+
 CREATE TABLE t1 (a DECIMAL(18,1));
 INSERT INTO t1 VALUES (200101.9);
 SELECT PERIOD_DIFF(a, 200101) FROM t1;
@@ -41,3 +47,4 @@ INSERT INTO t1 VALUES (9223372036854775807.0-1000);
 INSERT INTO t1 VALUES (9223372036854775807.0+1000);
 SELECT a, PERIOD_DIFF(200101,a) FROM t1 ORDER BY 2;
 DROP TABLE t1;
+DROP DATABASE period_diff_db;
