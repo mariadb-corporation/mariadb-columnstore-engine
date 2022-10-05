@@ -39,7 +39,7 @@ ddd
 SELECT t1_char FROM t1 WHERE EXISTS (SELECT 1 FROM t2 WHERE t2_int IS NULL) ORDER BY 1;
 t1_char
 NULL
-NULL
+
 aaa
 aaa
 aaa
