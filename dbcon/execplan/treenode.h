@@ -873,8 +873,8 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.str(), NULL);
+      //idbassert(fResult.strVal.str());
+      return strtod(fResult.strVal.safeString("").c_str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
