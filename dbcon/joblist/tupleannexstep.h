@@ -79,7 +79,6 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   }
   void addOrderBy(const JobInfo& jobInfo)
   {
-    // WIP enables multithreaded sorting using PQ
     if (fLimitStart + fLimitCount <= ReasonableLimit || jobInfo.orderByThreads > 1)
     {
       fOrderBy = new LimitedOrderBy();
