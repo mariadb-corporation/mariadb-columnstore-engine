@@ -334,14 +334,45 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, std::vector<Enc
     }
   }
 }
-FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(PermutationVecIter begin, PermutationVecIter end)
+
+template <typename EncodedKeyType>
+FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
+    const IterDiffT beginOffset, typename std::vector<EncodedKeyType>::const_iterator begin,
+    typename std::vector<EncodedKeyType>::const_iterator end)
 {
+  // Single column only sorting
   if (jobListorderByRGColumnIDs_.size() == 1)
+    return {};
+  if (std::distance(begin, end) <= 1)
     return {};
 
   FlatOrderBy::Ranges2SortQueue ranges;
+  auto rangeItLeft = begin;
+  auto rangeItRight = begin + 1;
+  for (; rangeItRight != end; ++rangeItRight)
+  {
+    if (*rangeItLeft == *rangeItRight)
+      continue;
+    // left it value doesn't match right it value
+    auto dist = std::distance(rangeItLeft, rangeItRight);
+    if (dist > 1)
+    {
+      ranges.push({beginOffset + std::distance(begin, rangeItLeft),
+                   beginOffset + std::distance(begin, rangeItRight)});
+    }
+    rangeItLeft = rangeItRight;
+  }
+  // rangeItRight == end here thus reducing it by one to stay in range
+  auto dist = std::distance(rangeItLeft, rangeItRight);
+  if (dist > 1)
+  {
+    {
+      ranges.push({beginOffset + std::distance(begin, rangeItLeft),
+                   beginOffset + std::distance(begin, rangeItRight)});
+    }
+  }
 
-  return {};
+  return ranges;
 }
 
 // For numeric datatypes only
@@ -356,7 +387,7 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID, const bool sort
   if (permutation_.empty())
   {
     initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, keys_, nulls_);
-    ranges2Sort_.push({permutation_.begin(), permutation_.end()});
+    ranges2Sort_.push({0, permutation_.size()});
   }
 
   // count sorting for types with width < 8 bytes.
@@ -381,10 +412,13 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID, const bool sort
   // }
 
   // Add stopped check into this and other loops
+  Ranges2SortQueue ranges2Sort;
   while (!ranges2Sort_.empty())
   {
-    auto [sameValuesRangeBegin, sameValuesRangeEnd] = ranges2Sort_.front();
-    auto permCurRangeBeginEndDist = std::distance(sameValuesRangeBegin, sameValuesRangeEnd);
+    auto [sameValuesRangeBeginDist, sameValuesRangeEndDist] = ranges2Sort_.front();
+    auto sameValuesRangeBegin = permutation_.begin() + sameValuesRangeBeginDist;
+    auto sameValuesRangeEnd = permutation_.begin() + sameValuesRangeEndDist;
+    auto permCurRangeBeginEndDist = sameValuesRangeEndDist - sameValuesRangeBeginDist;
     auto permutationBeginEndDist = std::distance(permutation_.begin(), permutation_.end());
     ranges2Sort_.pop();
     // Grab RAM  keys + permutation. NULLS are not accounted
@@ -412,7 +446,6 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID, const bool sort
       if (permCurRangeBeginEndDist == permutationBeginEndDist)
       {
         permutation = std::move(permutation_);
-        // !!!!!!!!!!!!!!!!!
         loopIterKeysNullsPerm<ColType, StorageType>(columnID, keys, nulls, permutation, permutation.begin(),
                                                     permutation.end());
       }
@@ -432,28 +465,54 @@ bool FlatOrderBy::exchangeSortByColumn_(const uint32_t columnID, const bool sort
     // могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
     if (sortDirection)
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
     }
     else
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
     }
+    // Use && here
+    auto ranges = populateRanges<EncodedKeyType>(sameValuesRangeBeginDist, keys.begin(), keys.end());
+    while (!ranges.empty())
+    {
+      auto range = ranges.front();
+      ranges.pop();
+      ranges2Sort.push(range);
+    }
+
+    // Add NULL from the back
     permutation.insert(permutation.end(), nulls.begin(), nulls.end());
-    // auto permBegin = permutation_.begin() + (std::distance(permutation_.begin(), sameValuesRangeBegin));
+    // Adding NULLs range into ranges
+    if (nulls.size() > 1)
+    {
+      // left = offset + keys.size, right = offset + keys.size + nulls.size
+      auto left = sameValuesRangeBeginDist + std::distance(keys.begin(), keys.end());
+      auto right = sameValuesRangeBeginDist +
+                   std::distance(keys.begin(), keys.end() + std::distance(nulls.begin(), nulls.end()));
+      ranges2Sort.push({left, right});
+    }
+    // Populating permutation_ with a sorted run produced by this iteration.
     if (permCurRangeBeginEndDist == permutationBeginEndDist)
+    {
       permutation_ = std::move(permutation);
+    }
     else
-      permutation_.insert(sameValuesRangeBegin, permutation.begin(), permutation.end());
-    // permutation_.insert(permEnd, nulls.begin(), nulls.end());
+    {
+      assert(sameValuesRangeBegin + std::distance(permutation.begin(), permutation.end()) !=
+             permutation_.end() + 1);
+      for (auto it = permutation.begin(); it != permutation.end(); ++it)
+      {
+        *sameValuesRangeBegin = *it;
+        ++sameValuesRangeBegin;
+      }
+    }
     // !!! FREE RAM
     mm_->release(bytes);
   }
   // Check if copy ellision works here.
-  ranges2Sort_ = populateRanges(permutation_.begin(), permutation_.end());
   // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
+  ranges2Sort_ = std::move(ranges2Sort);
 
-  // Add NULL from the back
-  // permutation_.insert(permutation_.end(), nulls.begin(), nulls.end());
   return isFailure;
 }
 
@@ -472,95 +531,6 @@ void FlatOrderBy::finalize()
 {
   // Signal getData() to return false if perm is empty. Impossible case though.
   flatCurPermutationDiff_ = (permutation_.size() > 0) ? permutation_.size() : -1;
-  //   queue<RGData> tempQueue;
-
-  // WIP check how it is this
-  //   if (fRowGroup.getRowCount() > 0)
-  //     fDataQueue.push(fData);
-
-  //   if (fOrderByQueue.size() > 0)
-  //   {
-  //     // *DRRTUY Very memory intensive. CS needs to account active
-  //     // memory only and release memory if needed.
-  //     uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
-
-  //     if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
-  //     {
-  //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-  //       throw IDBExcept(fErrorCode);
-  //     }
-  //     fMemSize += memSizeInc;
-
-  //     uint64_t offset = 0;
-  //     uint64_t i = 0;
-  //     // Reduce queue size by an offset value if it applicable.
-  //     uint64_t queueSizeWoOffset = fOrderByQueue.size() > start_ ? fOrderByQueue.size() - start_ : 0;
-  //     list<RGData> tempRGDataList;
-
-  //     if (count_ <= queueSizeWoOffset)
-  //     {
-  //       offset = count_ % fRowsPerRG;
-  //       if (!offset && count_ > 0)
-  //         offset = fRowsPerRG;
-  //     }
-  //     else
-  //     {
-  //       offset = queueSizeWoOffset % fRowsPerRG;
-  //       if (!offset && queueSizeWoOffset > 0)
-  //         offset = fRowsPerRG;
-  //     }
-
-  //     list<RGData>::iterator tempListIter = tempRGDataList.begin();
-
-  //     i = 0;
-  //     uint32_t rSize = fRow0.getSize();
-  //     uint64_t preLastRowNumb = fRowsPerRG - 1;
-  //     fData.reinit(fRowGroup, fRowsPerRG);
-  //     fRowGroup.setData(&fData);
-  //     fRowGroup.resetRowGroup(0);
-  //     // *DRRTUY This approach won't work with
-  //     // OFSET > fRowsPerRG
-  //     offset = offset != 0 ? offset - 1 : offset;
-  //     fRowGroup.getRow(offset, &fRow0);
-
-  //     while ((fOrderByQueue.size() > start_) && (i++ < count_))
-  //     {
-  //       const OrderByRow& topRow = fOrderByQueue.top();
-  //       row1.setData(topRow.fData);
-  //       copyRow(row1, &fRow0);
-  //       fRowGroup.incRowCount();
-  //       offset--;
-  //       fRow0.prevRow(rSize);
-  //       fOrderByQueue.pop();
-
-  //       // if RG has fRowsPerRG rows
-  //       if (offset == (uint64_t)-1)
-  //       {
-  //         tempRGDataList.push_front(fData);
-
-  //         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
-  //         {
-  //           cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-  //           throw IDBExcept(fErrorCode);
-  //         }
-  //         fMemSize += memSizeInc;
-
-  //         fData.reinit(fRowGroup, fRowsPerRG);
-  //         fRowGroup.setData(&fData);
-  //         fRowGroup.resetRowGroup(0);  // ?
-  //         fRowGroup.getRow(preLastRowNumb, &fRow0);
-  //         offset = preLastRowNumb;
-  //       }
-  //     }
-  //     // Push the last/only group into the queue.
-  //     if (fRowGroup.getRowCount() > 0)
-  //       tempRGDataList.push_front(fData);
-
-  //     for (tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
-  //       tempQueue.push(*tempListIter);
-
-  //     fDataQueue = tempQueue;
-  //   }
 }
 
 // returns false when finishes
