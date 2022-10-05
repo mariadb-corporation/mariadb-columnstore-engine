@@ -13,7 +13,7 @@ NULL	NULL
 3	ccc
 4	ddd
 5	aa
-6	NULL
+6	
 7	aaaaa
 SELECT * FROM t2 ORDER BY t2_int;
 t2_int	t2_char
@@ -21,7 +21,7 @@ NULL	NULL
 1	hhhh
 3	iii
 5	jjj
-6	NULL
+6	
 7	lll
 9	m
 11	nnn
@@ -32,14 +32,14 @@ NULL	NULL
 2	bbb
 3	ccc
 4	ddd
-6	NULL
+6	
 DELETE t2 FROM t2 LEFT JOIN t1 ON t1.t1_int=t2.t2_int WHERE t2.t2_int IS NULL;
 SELECT * FROM t2 ORDER BY t2_int;
 t2_int	t2_char
 1	hhhh
 3	iii
 5	jjj
-6	NULL
+6	
 7	lll
 9	m
 11	nnn
