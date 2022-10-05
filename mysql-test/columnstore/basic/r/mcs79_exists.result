@@ -29,7 +29,7 @@ t2_int	t2_char
 1	eee
 3	ccc
 5	jjj
-6	NULL
+6	
 7	lll
 SELECT t1_char FROM t1 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t1.t1_int = t2.t2_int) ORDER BY t1_char;
 t1_char
@@ -48,7 +48,7 @@ ddd
 eee
 SELECT t1_char, t1_int FROM t1 WHERE EXISTS (SELECT 1 FROM t2 WHERE t2_int IS NULL) AND t1_int > 5 ORDER BY 1;
 t1_char	t1_int
-NULL	6
+	6
 eee	7
 SELECT t1_int FROM t1 WHERE EXISTS (SELECT t3_int FROM t3 WHERE t1.t1_int = t3.t3_int);
 t1_int
