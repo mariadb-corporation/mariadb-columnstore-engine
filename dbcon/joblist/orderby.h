@@ -147,7 +147,7 @@ class FlatOrderBy
   using PermutationVec = std::vector<PermutationType>;
   using PermutationVecIter = std::vector<PermutationType>::iterator;
   using IterDiffT = std::iterator_traits<PermutationVecIter>::difference_type;
-  using Ranges2SortQueue = std::queue<std::pair<PermutationVecIter, PermutationVecIter>>;
+  using Ranges2SortQueue = std::queue<std::pair<IterDiffT, IterDiffT>>;
 
  public:
   FlatOrderBy();
@@ -168,7 +168,10 @@ class FlatOrderBy
   void loopIterKeysNullsPerm(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
                              PermutationVec& nulls, PermutationVec& permutation, PermutationVecIter begin,
                              PermutationVecIter end);
-  Ranges2SortQueue populateRanges(PermutationVecIter begin, PermutationVecIter end);
+  template <typename EncodedKeyType>
+  Ranges2SortQueue populateRanges(const IterDiffT beginOffset,
+                                  typename std::vector<EncodedKeyType>::const_iterator begin,
+                                  typename std::vector<EncodedKeyType>::const_iterator end);
   // template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   // bool distributionSortByColumn_(const uint32_t columnId);
 
