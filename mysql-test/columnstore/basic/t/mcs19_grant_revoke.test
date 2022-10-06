@@ -58,11 +58,11 @@ SHOW GRANTS FOR 'user1'@'localhost';
 --error ER_DBACCESS_DENIED_ERROR
 USE mcs19_db;
 --disable_abort_on_error
---replace_regex /(`mcs19_db`.)//
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 INSERT INTO mcs19_db.t1 VALUES(2);
---replace_regex /(`mcs19_db`.)//
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 SELECT * FROM mcs19_db.t1;
---replace_regex /(`mcs19_db`.)//
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 CREATE TABLE mcs19_db.t1;
 --enable_abort_on_error
 
