@@ -317,7 +317,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::CLOB:
     {
-idblog("anyVal: " << anyVal.type().name);
+idblog("anyVal: " << anyVal.type().name());
       utils::NullString i = boost::any_cast<utils::NullString>(anyVal);
       idblog("anyVal has been cast to " << i.safeString());
       if (i.isNull())
