@@ -57,15 +57,14 @@ SELECT USER();
 SHOW GRANTS FOR 'user1'@'localhost';
 --error ER_DBACCESS_DENIED_ERROR
 USE mcs19_db;
---error ER_TABLEACCESS_DENIED_ERROR
+--disable_abort_on_error
 --replace_regex /(`mcs19_db`.)//
 INSERT INTO mcs19_db.t1 VALUES(2);
---error ER_TABLEACCESS_DENIED_ERROR
 --replace_regex /(`mcs19_db`.)//
 SELECT * FROM mcs19_db.t1;
---error ER_TABLEACCESS_DENIED_ERROR
 --replace_regex /(`mcs19_db`.)//
 CREATE TABLE mcs19_db.t1;
+--enable_abort_on_error
 
 # Clean up
 connection default;
