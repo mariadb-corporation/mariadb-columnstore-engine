@@ -225,18 +225,11 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
   bool pushWarning = false;
   bool nullFlag = (str == NULL);
   boost::any anyVal;
-  if (nullFlag)
+  anyVal = ct.convertColumnData((nullFlag ? "" : str), pushWarning, fTimeZone, nullFlag, true, false);
+  // Out of range values are treated as NULL as discussed during design review.
+  if (pushWarning)
   {
     anyVal = ct.getNullValueForType();
-  }
-  else
-  {
-    anyVal = ct.convertColumnData((nullFlag ? "" : str), pushWarning, fTimeZone, nullFlag, true, false);
-    // Out of range values are treated as NULL as discussed during design review.
-    if (pushWarning)
-    {
-      anyVal = ct.getNullValueForType();
-    }
   }
 
   switch (ct.colDataType)
