@@ -317,7 +317,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
       }
       else
       {
-	std::string& j = i.unsafeStringRef();
+	std::string j = i.unsafeStringRef();
         // bug 1932, pad nulls up to the size of v
         j.resize(sizeof(rv), 0);
         rv = *((uint64_t*)j.data());
