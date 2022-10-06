@@ -310,10 +310,17 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::CLOB:
     {
-      std::string i = boost::any_cast<std::string>(anyVal);
-      // bug 1932, pad nulls up to the size of v
-      i.resize(sizeof(rv), 0);
-      rv = *((uint64_t*)i.data());
+      if (nullFlag)
+      {
+        rv = joblist::CHAR8NULL;
+      }
+      else
+      {
+        utils::NullString i = boost::any_cast<utils::NullString>(anyVal);
+        // bug 1932, pad nulls up to the size of v
+        i.unsafeStringRef().resize(sizeof(rv), 0);
+        rv = *((uint64_t*)i.str());
+      }
     }
     break;
 
