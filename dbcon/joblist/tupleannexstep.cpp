@@ -745,7 +745,7 @@ void TupleAnnexStep::executeWithOrderByFlatOrderBy()
       more = fInputDL->next(fInputIterator, &rgDataIn);
     }
 
-    if (flatOrderBy_->sort())
+    if (flatOrderBy_->sortCF())
     {
       // do something
     }
