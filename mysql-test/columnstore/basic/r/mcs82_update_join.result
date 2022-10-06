@@ -13,7 +13,7 @@ NULL	NULL
 3	ccc
 4	ddd
 5	aa
-6	NULL
+6	
 7	aaaaa
 UPDATE t1 JOIN t2 on t1.t1_int=t2.t2_int SET t1.t1_char='sssss';
 SELECT * FROM t1 ORDER BY t1_int;
@@ -44,7 +44,7 @@ NULL	NULL
 1	hhhh
 3	iii
 5	jjj
-6	NULL
+6	
 7	lll
 9	m
 11	nnn
