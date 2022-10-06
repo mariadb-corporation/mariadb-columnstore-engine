@@ -130,6 +130,18 @@ namespace joblist
 // forward reference
 struct JobInfo;
 
+template <bool TrueCheck>
+concept IsTrue = requires
+{
+  requires TrueCheck == true;
+};
+
+template <bool FalseCheck>
+concept IsFalse = requires
+{
+  requires FalseCheck == false;
+};
+
 // ORDER BY with LIMIT class
 // This version is for subqueries, limit the result set to fit in memory,
 // use ORDER BY to make the results consistent.
@@ -157,17 +169,34 @@ class FlatOrderBy
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
   bool sort();
+  bool sortCF();
   bool sortByColumn(const uint32_t columnId, const bool sortDirection);
+  template <bool IsFirst>
+  bool sortByColumnCF(joblist::OrderByKeysType columns);
+
   bool getData(rowgroup::RGData& data);
   template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
   bool exchangeSortByColumn_(const uint32_t columnId, const bool sortDirection);
+  // template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
+  // bool exchangeSortByFirstColumnCF_(const uint32_t columnId, const bool sortDirection,
+  //                                   joblist::OrderByKeysType columns);
+  template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
+            typename EncodedKeyType>
+  requires IsFalse<IsFirst>
+  bool exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
+                               joblist::OrderByKeysType columns);
+  template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
+            typename EncodedKeyType>
+  requires IsTrue<IsFirst>
+  bool exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
+                               joblist::OrderByKeysType columns);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void initialPermutationKeysNulls(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
-                                   std::vector<PermutationType>& nulls);
+  void initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
+                                   std::vector<EncodedKeyType>& keys, std::vector<PermutationType>& nulls);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void loopIterKeysNullsPerm(const uint32_t columnID, std::vector<EncodedKeyType>& keys,
-                             PermutationVec& nulls, PermutationVec& permutation, PermutationVecIter begin,
-                             PermutationVecIter end);
+  void loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst,
+                             std::vector<EncodedKeyType>& keys, PermutationVec& nulls,
+                             PermutationVec& permutation, PermutationVecIter begin, PermutationVecIter end);
   template <typename EncodedKeyType>
   Ranges2SortQueue populateRanges(const IterDiffT beginOffset,
                                   typename std::vector<EncodedKeyType>::const_iterator begin,
