@@ -196,7 +196,7 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
       ct.precision = row.getPrecision(i);
     }
 
-    int64_t v = convertValuenum<int64_t>(value, ct);
+    int64_t v = convertValueNum<int64_t>(value, ct);
     row.setIntField(v, i);
   }
 }
