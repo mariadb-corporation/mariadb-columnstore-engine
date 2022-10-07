@@ -62,7 +62,7 @@ local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb h
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = "apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ";
+local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
 
 
 local platformMap(platform, arch) =
@@ -71,7 +71,7 @@ local platformMap(platform, arch) =
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'debian:11':    bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
+    'debian:11': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
     'ubuntu:20.04': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + ubuntu20_04_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
@@ -250,7 +250,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
       'docker cp ' + result + ' regression$${DRONE_BUILD_NUMBER}:/',
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
