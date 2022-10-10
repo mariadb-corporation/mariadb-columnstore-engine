@@ -221,7 +221,7 @@ inline void CrossEngineStep::addRow(RGData& data)
 template <typename T>
 T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::ColType& ct_)
 {
-  CalpontSystemCatalog::ColType ct(ct);
+  CalpontSystemCatalog::ColType ct(ct_);
 idblog("ct_ colDataType " << ((int)ct_.colDataType) << ", ct_.width " << ((int)ct_.colWidth) << "ct colDataType " << ((int)ct.colDataType) << ", ct.width " << ((int)ct.colWidth));
   T rv = 0;
   bool pushWarning = false;
