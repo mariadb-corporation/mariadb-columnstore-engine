@@ -221,8 +221,6 @@ inline void CrossEngineStep::addRow(RGData& data)
 template <typename T>
 T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::ColType& ct_)
 {
-  CalpontSystemCatalog::ColType ct(ct_);
-idblog("ct_ colDataType " << ((int)ct_.colDataType) << ", ct_.width " << ((int)ct_.colWidth) << "ct colDataType " << ((int)ct.colDataType) << ", ct.width " << ((int)ct.colWidth));
   T rv = 0;
   bool pushWarning = false;
   bool nullFlag = (str == NULL);
@@ -312,18 +310,15 @@ idblog("ct_ colDataType " << ((int)ct_.colDataType) << ", ct_.width " << ((int)c
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::CLOB:
     {
-idblog("anyVal: " << anyVal.type().name() << ", width " << ((int)ct.colWidth) << ", type is " << ((int)ct.colDataType));
-      utils::NullString i = boost::any_cast<utils::NullString>(anyVal);
-      idblog("anyVal has been cast to " << i.safeString());
-      if (i.isNull())
+      if (nullFlag)
       {
         rv = joblist::CHAR8NULL; // SZ: I hate that.
       }
       else
       {
-	std::string j = i.unsafeStringRef();
+        utils::NullString i = boost::any_cast<std::string>(anyVal);
         // bug 1932, pad nulls up to the size of v
-        j.resize(sizeof(rv), 0);
+        i.resize(sizeof(rv), 0);
         rv = *((uint64_t*)j.data());
       }
     }
