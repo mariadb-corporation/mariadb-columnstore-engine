@@ -43,9 +43,9 @@ NULL	NULL	NULL
 3	ccc	3	iii
 5	eee	5	jjj
 7	ggggg	7	kkkk
-NULL		9	lll
-NULL		11	m
-NULL		13	nnn
+NULL	NULL	9	lll
+NULL	NULL	11	m
+NULL	NULL	13	nnn
 SELECT * FROM t1;
 t1_int	t1_char
 NULL	
