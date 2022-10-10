@@ -219,7 +219,7 @@ inline void CrossEngineStep::addRow(RGData& data)
 
 // simplified version of convertValueNum() in jlf_execplantojoblist.cpp.
 template <typename T>
-T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::ColType& ct_)
+T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::ColType& ct)
 {
   T rv = 0;
   bool pushWarning = false;
