@@ -169,6 +169,7 @@ bool FlatOrderBy::sortCF()
 {
   bool isFailure = false;
   constexpr const bool isFirst = true;
+  // std::cout << "sortCF jobListorderByRGColumnIDs_ size " << jobListorderByRGColumnIDs_.size() << std::endl;
   if (sortByColumnCF<isFirst>(jobListorderByRGColumnIDs_))
   {
     isFailure = true;
@@ -182,8 +183,9 @@ template <bool IsFirst>
 bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
 {
   const bool isFailure = false;
+  // std::cout << "sortByColumnCF columns size " << columns.size() << std::endl;
+
   const auto [columnId, sortDirection] = columns.front();
-  columns.erase(columns.begin());
   switch (rg_.getColType(columnId))
   {
     case execplan::CalpontSystemCatalog::TINYINT:
@@ -412,6 +414,9 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
   {
     permutation_.insert(permutation_.end(), nulls.begin(), nulls.end());
   }
+
+  // rg_.setData(&rgDatas_[0]);
+  // std::cout << "initialPermutationKeysNulls " << rg_.toString() << std::endl;
 }
 
 template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
@@ -691,71 +696,71 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
   // MCS finally reads records from TAS in opposite to nullsFirst value,
   // if nullsFirst is true the NULLS will be in the end and vice versa.
   const bool nullsFirst = !sortDirection;
-  std::vector<EncodedKeyType> keys;
-  PermutationVec nulls;
-  PermutationVec permutation;
-  // Grab RAM  keys + permutation. NULLS are counted also.
-
-  initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, nullsFirst, keys, nulls);
   auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * rgDatas_.size() *
-               rowgroup::rgCommonSize;  // WIP hardcode
-  if (!mm_->acquire(bytes))
+               rowgroup::rgCommonSize;
   {
-    cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(ERR_LIMIT_TOO_BIG);
-  }
-  // This is the first column sorting and keys, nulls were already filled up previously.
-  permutation = std::move(permutation_);
+    std::vector<EncodedKeyType> keys;
+    PermutationVec nulls;
+    PermutationVec permutation;
+    // Grab RAM  keys + permutation. NULLS are counted also.
 
-  auto permBegin = (nullsFirst) ? permutation.begin() + nulls.size() : permutation.begin();
-  auto permEnd = (nullsFirst) ? permutation.end() : permutation.end() - nulls.size();
-  assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
-  assert(permutation.size() == keys.size() + ((nullsFirst) ? 0 : nulls.size()));
-  // большой логический косяк - диапазон permutation_ потенциально содержит null-ы в середине, а с краю
-  // могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
-  // sortDirection is true = ASC
-  if (sortDirection)
-  {
-    sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
-  }
-  else
-  {
-    sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
-  }
-  // Use && here
-  FlatOrderBy::Ranges2SortQueue ranges4Sort;
-  if (!columns.empty())
-  {
-    ranges4Sort = populateRanges<EncodedKeyType>(nulls.size(), keys.begin(), keys.end());
+    initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, nullsFirst, keys, nulls);
 
-    // Adding NULLs range into ranges
-    if (nulls.size() > 1)
+    if (!mm_->acquire(bytes))
     {
-      if (sortDirection)
+      cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
+      throw IDBExcept(ERR_LIMIT_TOO_BIG);
+    }
+    // This is the first column sorting and keys, nulls were already filled up previously.
+    permutation = std::move(permutation_);
+
+    auto permBegin = (nullsFirst) ? permutation.begin() + nulls.size() : permutation.begin();
+    auto permEnd = (nullsFirst) ? permutation.end() : permutation.end() - nulls.size();
+    assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
+    assert(permutation.size() == keys.size() + ((nullsFirst) ? 0 : nulls.size()));
+    // большой логический косяк - диапазон permutation_ потенциально содержит null-ы в середине, а с краю
+    // могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
+    // sortDirection is true = ASC
+    if (sortDirection)
+    {
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
+    }
+    else
+    {
+      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
+    }
+    // Use && here
+    FlatOrderBy::Ranges2SortQueue ranges4Sort;
+    if (columns.size() > 1)
+    {
+      ranges4Sort =
+          populateRanges<EncodedKeyType>((nullsFirst) ? nulls.size() : 0ULL, keys.begin(), keys.end());
+
+      // Adding NULLs range into ranges
+      if (nulls.size() > 1)
       {
-        ranges4Sort.push({keys.size(), permutation.size()});
-      }
-      else
-      {
-        ranges4Sort.push({0, nulls.size()});
+        if (sortDirection)
+        {
+          ranges4Sort.push({keys.size(), permutation.size()});
+        }
+        else
+        {
+          ranges4Sort.push({0, nulls.size()});
+        }
       }
     }
+
+    permutation_ = std::move(permutation);
+
+    // Check if copy ellision works here.
+    // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
+    ranges2Sort_ = std::move(ranges4Sort);
   }
-
-  permutation_ = std::move(permutation);
-
-  // Check if copy ellision works here.
-  // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
-  ranges2Sort_ = std::move(ranges4Sort);
-
-  if (!columns.empty())
+  if (columns.size() > 1)
   {
-    keys.clear();
-    keys.shrink_to_fit();
-    nulls.clear();
-    nulls.shrink_to_fit();
     // !!! FREE RAM
     mm_->release(bytes);
+    columns.erase(columns.begin());
     return sortByColumnCF<false>(columns);
   }
   return isFailure;
@@ -767,6 +772,8 @@ requires IsFalse<IsFirst>
 bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
                                           joblist::OrderByKeysType columns)
 {
+  // std::cout << " sortByColumnCF_  1 columns.size() " << columns.size() << std::endl;
+
   bool isFailure = false;
   // ASC = true, DESC = false
   // MCS finally reads records from TAS in opposite to nullsFirst value,
@@ -778,6 +785,13 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
   while (!ranges2Sort_.empty())
   {
     auto [sameValuesRangeBeginDist, sameValuesRangeEndDist] = ranges2Sort_.front();
+    // for (auto p : permutation_)
+    // {
+    //   std::cout << " perm " << p.rowID << " ";
+    // }
+    // std::cout << std::endl;
+    // std::cout << "The next column iter left " << sameValuesRangeBeginDist << " right "
+    //           << sameValuesRangeEndDist << std::endl;
     auto sameValuesRangeBegin = permutation_.begin() + sameValuesRangeBeginDist;
     auto sameValuesRangeEnd = permutation_.begin() + sameValuesRangeEndDist;
     auto permCurRangeBeginEndDist = sameValuesRangeEndDist - sameValuesRangeBeginDist;
@@ -827,9 +841,12 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
       sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
     }
     // Use && here
-    if (!columns.empty())
+    if (columns.size() > 1)
     {
-      auto ranges = populateRanges<EncodedKeyType>(sameValuesRangeBeginDist, keys.begin(), keys.end());
+      // std::cout << "nulls size " << nulls.size() << std::endl;
+      auto ranges = populateRanges<EncodedKeyType>(
+          (nullsFirst) ? sameValuesRangeBeginDist + nulls.size() : sameValuesRangeBeginDist, keys.begin(),
+          keys.end());
       while (!ranges.empty())
       {
         auto range = ranges.front();
@@ -840,11 +857,12 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
       {
         if (sortDirection)
         {
-          ranges4Sort.push({keys.size(), permutation.size()});
+          ranges4Sort.push({sameValuesRangeBeginDist + keys.size(),
+                            sameValuesRangeBeginDist + keys.size() + nulls.size()});
         }
         else
         {
-          ranges4Sort.push({0, nulls.size()});
+          ranges4Sort.push({sameValuesRangeBeginDist, sameValuesRangeBeginDist + nulls.size()});
         }
       }
     }
@@ -878,8 +896,10 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
   // Check if copy ellision works here.
   // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
   ranges2Sort_ = std::move(ranges4Sort);
-  if (!columns.empty())
+  // std::cout << " sortByColumnCF_  2 columns.size() " << columns.size() << std::endl;
+  if (columns.size() > 1)
   {
+    columns.erase(columns.begin());
     return sortByColumnCF<false>(columns);
   }
 
