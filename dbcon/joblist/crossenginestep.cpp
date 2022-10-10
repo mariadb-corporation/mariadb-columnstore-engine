@@ -316,10 +316,10 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
       }
       else
       {
-        utils::NullString i = boost::any_cast<std::string>(anyVal);
+        std::string i = boost::any_cast<std::string>(anyVal);
         // bug 1932, pad nulls up to the size of v
         i.resize(sizeof(rv), 0);
-        rv = *((uint64_t*)j.data());
+        rv = *((uint64_t*)i.data());
       }
     }
     break;
