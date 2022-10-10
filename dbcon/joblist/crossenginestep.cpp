@@ -222,6 +222,7 @@ template <typename T>
 T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::ColType& ct_)
 {
   CalpontSystemCatalog::ColType ct(ct);
+idblog("ct_ colDataType " << ((int)ct_.colDataType) << ", ct_.width " << ((int)ct_.colWidth) << "ct colDataType " << ((int)ct.colDataType) << ", ct.width " << ((int)ct.colWidth));
   T rv = 0;
   bool pushWarning = false;
   bool nullFlag = (str == NULL);
