@@ -781,7 +781,6 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
       string view(sc->viewName());
       string schema(sc->schemaName());
 
-      //			string name(sc->columnName());
       if (!sc->schemaName().empty())
       {
         ct = sc->colType();
