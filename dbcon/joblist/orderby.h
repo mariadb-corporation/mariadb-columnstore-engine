@@ -142,11 +142,6 @@ concept IsFalse = requires
   requires FalseCheck == false;
 };
 
-// ORDER BY with LIMIT class
-// This version is for subqueries, limit the result set to fit in memory,
-// use ORDER BY to make the results consistent.
-// The actual output are the first or last # of rows, which are NOT ordered.
-
 // There is an important invariant that the code of this class must hold,
 // namely rg_ must be init-ed only once.
 class FlatOrderBy
@@ -168,18 +163,11 @@ class FlatOrderBy
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
-  bool sort();
   bool sortCF();
-  bool sortByColumn(const uint32_t columnId, const bool sortDirection);
   template <bool IsFirst>
   bool sortByColumnCF(joblist::OrderByKeysType columns);
 
   bool getData(rowgroup::RGData& data);
-  template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
-  bool exchangeSortByColumn_(const uint32_t columnId, const bool sortDirection);
-  // template <datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
-  // bool exchangeSortByFirstColumnCF_(const uint32_t columnId, const bool sortDirection,
-  //                                   joblist::OrderByKeysType columns);
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
   requires IsFalse<IsFirst>
@@ -201,8 +189,6 @@ class FlatOrderBy
   Ranges2SortQueue populateRanges(const IterDiffT beginOffset,
                                   typename std::vector<EncodedKeyType>::const_iterator begin,
                                   typename std::vector<EncodedKeyType>::const_iterator end);
-  // template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
-  // bool distributionSortByColumn_(const uint32_t columnId);
 
   uint64_t getKeyLength() const;
   uint64_t getLimitCount() const

@@ -1924,6 +1924,51 @@ inline void Row::getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* exten
     *rowNum = getRelRid();
 }
 
+inline void copyRowM(const Row& in, Row* out, uint32_t colCount)
+{
+  if (&in == out)
+    return;
+
+  // out->setRid(in.getRelRid());
+
+  if (!in.usesStringTable() && !out->usesStringTable())
+  {
+    memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
+    return;
+  }
+
+  for (uint32_t i = 0; i < colCount; i++)
+  {
+    if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
+    {
+      out->setVarBinaryField(in.getVarBinaryStringField(i), i);
+    }
+    else if (UNLIKELY(in.isLongString(i)))
+    {
+      out->setStringField(in.getConstString(i), i);
+    }
+    else if (UNLIKELY(in.isShortString(i)))
+    {
+      out->setUintField(in.getUintField(i), i);
+    }
+    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+    {
+      out->setLongDoubleField(in.getLongDoubleField(i), i);
+    }
+    else if (UNLIKELY(datatypes::isWideDecimalType(in.getColType(i), in.getColumnWidth(i))))
+    {
+      in.copyBinaryField(*out, i, i);
+    }
+    else
+    {
+      out->setIntField(in.getIntField(i), i);
+    }
+  }
+}
+
 inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 {
   if (&in == out)
