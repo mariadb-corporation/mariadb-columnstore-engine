@@ -55,6 +55,7 @@ if (WITH_UNITTESTS)
     gtest_add_tests(TARGET column_scan_filter_tests TEST_PREFIX columnstore:)
 
     add_executable(simd_processors simd_processors.cpp)
+    target_compile_options(simd_processors PRIVATE -Wno-error)
     add_dependencies(simd_processors googletest)
     target_link_libraries(simd_processors ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
