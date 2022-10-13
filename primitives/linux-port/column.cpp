@@ -58,7 +58,7 @@ namespace
 template <ENUM_KIND KIND, typename VT, typename T>
 inline typename VT::MaskType getNonEmptyMaskAux(typename VT::MaskType* nonEmptyMaskAux, uint16_t iter)
 {
-  VT proc;
+  [[maybe_unused]] VT proc;
   if constexpr (sizeof(T) == sizeof(uint8_t))
   {
     return nonEmptyMaskAux[iter];
@@ -1469,7 +1469,7 @@ void vectorizedFiltering_(NewColRequestHeader* in, ColResultHeader* out, const T
     weightsMin = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMin).v;
     weightsMax = simdSwapedOrderDataLoad<KIND, VT, SimdWrapperType, T>(typeHolder, simdProcessor, simdMax).v;
   }
-  MT* nonEmptyMaskAux;
+  [[maybe_unused]] MT* nonEmptyMaskAux;
 
   if constexpr (IS_AUX_COLUMN)
   {
