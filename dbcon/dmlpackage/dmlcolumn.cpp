@@ -78,7 +78,6 @@ int DMLColumn::read(messageqcpp::ByteStream& bytestream)
   }
 
 
-  // bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fisNULL);
   bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsFromCol);
   bytestream >> (uint32_t&)fFuncScale;
   return retval;
