@@ -30,7 +30,10 @@ std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull || !isCharType(fp[0]->data()->resultType().colDataType))
+  {
+    isNull = true;
     return "";
+  }
 
   string ret("\"");
 
