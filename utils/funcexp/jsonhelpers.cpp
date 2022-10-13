@@ -29,6 +29,7 @@ bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullSt
 {
   const int jsLen = js.length();
   const char* rawJS = js.str();
+  idblog("escaping " << js.safeString());
   int strLen = jsLen * 12 * jsCS->mbmaxlen / jsCS->mbminlen;
   char* buf = (char*)alloca(strLen);
   if ((strLen = json_escape(retCS, (const uchar*)rawJS, (const uchar*)rawJS + jsLen, jsCS, (uchar*)buf,
