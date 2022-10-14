@@ -2206,7 +2206,9 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   gp_walk_info gwi(timeZoneOffset);
   gwi.thd = thd;
 
-  if (thd->slave_thread && !get_replication_slave(thd) && isDMLStatement(thd->lex->sql_command))
+  if (thd->slave_thread && !get_replication_slave(thd) &&
+      (isDMLStatement(thd->lex->sql_command) ||
+       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return 0;
 
     // check whether the system is ready to process statement.
@@ -2580,7 +2582,9 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone)
 {
   THD* thd = current_thd;
 
-  if (thd->slave_thread && !get_replication_slave(thd) && isDMLStatement(thd->lex->sql_command))
+  if (thd->slave_thread && !get_replication_slave(thd) &&
+      (isDMLStatement(thd->lex->sql_command) ||
+       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return HA_ERR_END_OF_FILE;
 
   if (isMCSTableUpdate(thd) || isMCSTableDelete(thd))
@@ -2659,7 +2663,9 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
   int rc = 0;
   THD* thd = current_thd;
 
-  if (thd->slave_thread && !get_replication_slave(thd) && isDMLStatement(thd->lex->sql_command))
+  if (thd->slave_thread && !get_replication_slave(thd) &&
+      (isDMLStatement(thd->lex->sql_command) ||
+       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return 0;
 
   cal_connection_info* ci = nullptr;
