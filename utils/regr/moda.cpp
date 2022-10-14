@@ -622,7 +622,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::dropValue(mcsv1Context* context, Col
     return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
   }
 
-  idbassert(0 && "incorrect logic - does not account for NullString")
+  idbassert(0 && "incorrect logic - does not account for NullString");
   string val = convertAnyTo<string>(valDropped);
 
   --data->fCount;
