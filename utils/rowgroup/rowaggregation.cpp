@@ -2876,8 +2876,8 @@ idblog("non-empty valOut");
       if (valOut.compatible(strTypeId))
       {
 	      idblog("it is compatible with the string type!!!");
-        string s = valOut.cast<string>();
-	strOut.assign(s);
+        utils::NullString s = valOut.cast<utils::NullString();
+	strOut = s;
         fRow.setStringField(strOut, colOut);
         bSetSuccess = true;
       }
