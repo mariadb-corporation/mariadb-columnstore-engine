@@ -229,7 +229,7 @@ inline utils::NullString getStringNullValue()
 
 namespace rowgroup
 {
-const std::string typeStr;
+const utils::NullString typeStr;
 const static_any::any& RowAggregation::charTypeId((char)1);
 const static_any::any& RowAggregation::scharTypeId((signed char)1);
 const static_any::any& RowAggregation::shortTypeId((short)1);
