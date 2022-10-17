@@ -638,7 +638,7 @@ class Row
     return data[getInternalSize() + col];
   }
 
-  void setNullMark(uint32_t col, bool isNull)
+  void setNullMark(uint32_t col, bool isNull) const
   {
     data[getInternalSize() + col] = isNull;
   }
