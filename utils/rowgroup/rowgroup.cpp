@@ -401,6 +401,7 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
+  idblog("serialize rgdata, amount " << amount);
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -431,6 +432,7 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   {
     bs >> sig;
     bs >> amount;
+	  idblog("deserializing RGData, def amount " << defAmount << ", amount read " << amount);
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);
@@ -1603,6 +1605,8 @@ RGData RowGroup::duplicate()
   {
     // this isn't a straight memcpy of everything b/c it might be remapping strings.
     // think about a big memcpy + a remap operation; might be faster.
+    // SZ: copy columns (can even be donw COW style), not rows. even memcpy approach for
+    // columns is safer.
     Row r1, r2;
     RowGroup rg(*this);
     rg.setData(&ret);
