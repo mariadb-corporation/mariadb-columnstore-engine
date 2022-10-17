@@ -4746,6 +4746,8 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows)
   pRows->initRow(&rowIn);
   pRows->getRow(0, &rowIn);
 
+  idblog("add row group");
+
   for (i = 0; i < pRows->getRowCount(); ++i, rowIn.nextRow())
   {
     /* TODO: We can make the functors a little smarter and avoid doing this copy before the
@@ -4771,6 +4773,7 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows,
 
   pRows->initRow(&rowIn);
 
+  idblog("add row group II");
   for (i = 0; i < inRows.size(); ++i, rowIn.nextRow())
   {
     rowIn.setData(inRows[i].first);
