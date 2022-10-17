@@ -722,6 +722,7 @@ void ColumnCommand::removeRowsFromRowGroup(RowGroup& rg)
     {
       bpp->relRids[newIdx] = rid;
       // we use a memcpy here instead of copyRow() to avoid expanding the string table;
+      idblog("does it blow up here?");
       memcpy(newRow.getData(), oldRow.getData(), newRow.getSize());
     }
 

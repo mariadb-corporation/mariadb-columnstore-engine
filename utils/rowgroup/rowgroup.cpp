@@ -402,6 +402,9 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
   idblog("serialize rgdata, amount " << amount);
+  char t[100];
+  sprintf(t, "%pp", rowData.get());
+  idblog("row data pointer " << std::string(t));
   bs.append(rowData.get(), amount);
 
   if (strings)

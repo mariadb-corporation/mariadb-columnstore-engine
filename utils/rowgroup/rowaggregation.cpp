@@ -2877,7 +2877,9 @@ idblog("non-empty valOut");
       {
 	      idblog("it is compatible with the string type!!!");
         utils::NullString s = valOut.cast<utils::NullString>();
-	      idblog("s " << s.safeString() << ", fRow data size " << fRow.getSize());
+	char t[100];
+	sprintf(t, "%p", fRow.getData());
+	      idblog("s " << s.safeString() << ", fRow data size " << fRow.getSize() << ", data pointer " << std::string(t));
         fRow.setStringField(s, colOut);
         bSetSuccess = true;
       }
