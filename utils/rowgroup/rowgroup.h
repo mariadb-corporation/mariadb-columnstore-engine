@@ -2018,12 +2018,13 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 
   out->setRid(in.getRelRid());
 
-  if (!in.usesStringTable() && !out->usesStringTable())
-  {
-    //memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
-    memcpy(out->getData(), in.getData(), std::min(in.getSize(), out->getSize()));
-    return;
-  }
+  // XXX: this code will copy data incorrectly if sizes of columns differ. Not only for strings, but for eveything.
+  //if (!in.usesStringTable() && !out->usesStringTable())
+  //{
+  //  //memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
+  //  memcpy(out->getData(), in.getData(), std::min(in.getSize(), out->getSize()));
+  //  return;
+  //}
 
   for (uint32_t i = 0; i < colCount; i++)
   {
