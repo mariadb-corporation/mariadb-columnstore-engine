@@ -2877,7 +2877,7 @@ idblog("non-empty valOut");
       {
 	      idblog("it is compatible with the string type!!!");
         utils::NullString s = valOut.cast<utils::NullString>();
-	      idblog("s " << s.safeString());
+	      idblog("s " << s.safeString() << ", fRow data size " << fRom.getSize());
         fRow.setStringField(s, colOut);
         bSetSuccess = true;
       }
