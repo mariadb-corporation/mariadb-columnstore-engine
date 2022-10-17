@@ -1392,6 +1392,7 @@ inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 {
   uint32_t n = offsets[destIndex + 1] - offsets[destIndex];
   memmove(&data[offsets[destIndex]], &data[offsets[srcIndex]], n);
+  setNullMark(destIndex, getNullMark(srcIndex));
 }
 
 inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
