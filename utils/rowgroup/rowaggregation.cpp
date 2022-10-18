@@ -2880,6 +2880,9 @@ idblog("non-empty valOut");
 	char t[100];
 	sprintf(t, "%p", fRow.getData());
 	      idblog("s " << s.safeString() << ", fRow data size " << fRow.getSize() << ", data pointer " << std::string(t));
+	      if (fRow.getColumnCount() >= 2) {
+		      idblog("    first col width " << fRow.getColumnWidth(0) << ", second column width " << fRow.getColumnWidth(1));
+	      }
         fRow.setStringField(s, colOut);
         bSetSuccess = true;
       }
