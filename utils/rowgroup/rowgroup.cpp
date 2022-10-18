@@ -508,6 +508,7 @@ Row::Row(const Row& r)
  , forceInline(r.forceInline)
  , userDataStore(NULL)
 {
+idbassert(offsets[0] == 0);
 }
 
 Row::~Row()
