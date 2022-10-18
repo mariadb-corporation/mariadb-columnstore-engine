@@ -2038,7 +2038,9 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     }
     else if (UNLIKELY(in.isLongString(i)))
     {
-	    idblog("copying long string");
+	    utils::ConstString cs = in.getConstString(i);
+	    utils::NullString ns(cs.str(),cs.length());
+	    idblog("copying long string: " << ns.safeString());
       out->setStringField(in.getConstString(i), i);
     }
     else if (UNLIKELY(in.isShortString(i)))
