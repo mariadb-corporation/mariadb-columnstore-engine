@@ -287,12 +287,9 @@ class WESDHandler
   // set of PM specific vector entries
   typedef std::vector<WESplClient*> WESplClients;
   WESplClients fWeSplClients;
-  enum
-  {
-    MAX_PMS = 512,
-    MAX_QSIZE = 10,
-    MAX_WES_QSIZE = 100
-  };
+  static constexpr int MAX_PMS {512};
+  static constexpr int MAX_QSIZE {10};
+  static constexpr int MAX_WES_QSIZE {100};
 
   typedef std::vector<std::string> StrVec;
   StrVec fBrmRptVec;

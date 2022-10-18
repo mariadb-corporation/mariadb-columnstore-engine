@@ -208,13 +208,9 @@ class WEDataLoader : public Observer
   };
 
  public:
-  enum
-  {
-    MIN_QSIZE = 25,
-    MAX_QSIZE = 250
-  };
+  static constexpr int MIN_QSIZE {25};
+  static constexpr int MAX_QSIZE {250};
 
- public:
   SimpleSysLog* fpSysLog;
 };
 
