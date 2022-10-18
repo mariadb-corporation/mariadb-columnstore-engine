@@ -81,6 +81,7 @@ using namespace cal_impl_if;
 #include "selectfilter.h"
 #include "existsfilter.h"
 #include "groupconcatcolumn.h"
+#include "jsonarrayaggcolumn.h"
 #include "outerjoinonfilter.h"
 #include "intervalcolumn.h"
 #include "udafcolumn.h"
@@ -2904,6 +2905,14 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
       return rc;
     }
 
+    case Item_sum::JSON_ARRAYAGG_FUNC:
+    {
+      Item_func_group_concat* gc = (Item_func_group_concat*)isp;
+      ac->aggOp(AggregateColumn::JSON_ARRAYAGG);
+      ac->distinct(gc->get_distinct());
+      return rc;
+    }
+
     case Item_sum::SUM_BIT_FUNC:
     {
       string funcName = isp->func_name();
@@ -4922,6 +4931,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   {
     ac = new GroupConcatColumn(gwi.sessionid);
   }
+  else if (isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
+  {
+    ac = new JsonArrayAggColumn(gwi.sessionid);
+  }
   else if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
   {
     ac = new UDAFColumn(gwi.sessionid);
@@ -4950,7 +4963,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   try
   {
     // special parsing for group_concat
-    if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+    if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC || isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
     {
       Item_func_group_concat* gc = (Item_func_group_concat*)isp;
       vector<SRCP> orderCols;
@@ -5018,7 +5031,14 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       }
 
       rowCol->columnVec(selCols);
-      (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
+      if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+      {
+        (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
+      }
+      else
+      {
+        (dynamic_cast<JsonArrayAggColumn*>(ac))->orderCols(orderCols);
+      }
       parm.reset(rowCol);
       ac->aggParms().push_back(parm);
 
@@ -5026,7 +5046,14 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       {
         string separator;
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
-        (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+        if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+        {
+          (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+        }
+        else
+        {
+          (dynamic_cast<JsonArrayAggColumn*>(ac))->separator(separator);
+        }
       }
     }
     else if (isSupportedAggregateWithOneConstArg(isp, sfitempp))
@@ -5244,7 +5271,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         ct.precision = -16;  // borrowed to indicate skip null value check on connector
         ac->resultType(ct);
       }
-      else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+      else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC ||
+               isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
       {
         // Item_func_group_concat* gc = (Item_func_group_concat*)isp;
         CalpontSystemCatalog::ColType ct;
