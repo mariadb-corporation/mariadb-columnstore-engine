@@ -5896,7 +5896,7 @@ void TupleAggregateStep::pruneAuxColumns()
     memmove(row2.getData(), row1.getData(), row2.getSize());
     for (uint32_t j = 0; j < row1.getColumnCount(); j++)
     {
-      row2.setNullMark(j, row2.getNullMark(j));
+      row2.setNullMark(j, row1.getNullMark(j));
     }
   }
 }
