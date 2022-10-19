@@ -5888,16 +5888,16 @@ void TupleAggregateStep::pruneAuxColumns()
 
   for (uint64_t i = 1; i < rowCount; i++)
   {
+    for (uint32_t j = 0; j < row2.getColumnCount(); j++)
+    {
+      row2.setNullMark(j, row1.getNullMark(j));
+    }
     // skip the first row
     row1.nextRow();
     row2.nextRow();
 
     // bug4463, memmove for src, dest overlap
     memmove(row2.getData(), row1.getData(), row2.getSize());
-    for (uint32_t j = 0; j < row2.getColumnCount(); j++)
-    {
-      row2.setNullMark(j, row1.getNullMark(j));
-    }
   }
   for (uint32_t j = 0; j < row2.getColumnCount(); j++)
   {
