@@ -5886,7 +5886,7 @@ void TupleAggregateStep::pruneAuxColumns()
   fRowGroupDelivered.initRow(&row2);
   fRowGroupDelivered.getRow(0, &row2);
 
-  for (uint64_t i = 0; i < rowCount; i++)
+  for (uint64_t i = 1; i < rowCount; i++)
   {
     // skip the first row
     row1.nextRow();
@@ -5898,6 +5898,10 @@ void TupleAggregateStep::pruneAuxColumns()
     {
       row2.setNullMark(j, row1.getNullMark(j));
     }
+  }
+  for (uint32_t j = 0; j < row2.getColumnCount(); j++)
+  {
+    row2.setNullMark(j, row1.getNullMark(j));
   }
 }
 
