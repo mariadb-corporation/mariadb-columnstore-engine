@@ -31,7 +31,7 @@
 #include <mutex>
 #include <stdexcept>
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
@@ -576,7 +576,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         char errbuf[80];
         string errMsg;
 #ifdef __linux__
-        //#if STRERROR_R_CHAR_P
+        // #if STRERROR_R_CHAR_P
         const char* p;
 
         if ((p = strerror_r(errCode, errbuf, 80)) != 0)
@@ -1014,7 +1014,7 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
 
 }  // namespace primitiveprocessor
 
-//#define DCT_DEBUG 1
+// #define DCT_DEBUG 1
 #define SETUP_GUARD                      \
   {                                      \
     unsigned char* o = outputp.get();    \
@@ -1053,7 +1053,7 @@ using namespace primitiveprocessor;
 /** @brief The job type to process a dictionary scan (pDictionaryScan class on the UM)
  * TODO: Move this & the impl into different files
  */
-class DictScanJob : public threadpool::FairThreadPool::Functor
+class DictScanJob : public threadpool::PriorityThreadPool::Functor
 {
  public:
   DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock);
@@ -1254,7 +1254,7 @@ struct BPPHandler
     scoped.unlock();
   }
 
-  struct BPPHandlerFunctor : public FairThreadPool::Functor
+  struct BPPHandlerFunctor : public PriorityThreadPool::Functor
   {
     BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
     {
@@ -1720,7 +1720,7 @@ return 0;
   PrimitiveServer* fPrimitiveServerPtr;
 };
 
-class DictionaryOp : public FairThreadPool::Functor
+class DictionaryOp : public PriorityThreadPool::Functor
 {
  public:
   DictionaryOp(SBS cmd) : bs(cmd)
@@ -1955,7 +1955,7 @@ struct ReadThread
   }
 
   static void dispatchPrimitive(SBS sbs, boost::shared_ptr<BPPHandler>& fBPPHandler,
-                                boost::shared_ptr<threadpool::FairThreadPool>& procPoolPtr,
+                                boost::shared_ptr<threadpool::PriorityThreadPool>& procPoolPtr,
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
                                 const bool ptTrace)
   {
@@ -1978,7 +1978,7 @@ struct ReadThread
         const uint32_t weight = 1;
         const uint32_t priority = 0;
         uint32_t id = 0;
-        boost::shared_ptr<FairThreadPool::Functor> functor;
+        boost::shared_ptr<PriorityThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
         {
           functor.reset(new CreateEqualityFilter(sbs));
@@ -2010,7 +2010,7 @@ struct ReadThread
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
-        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
+        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
         procPoolPtr->addJob(job);
         break;
       }
@@ -2019,7 +2019,7 @@ struct ReadThread
       case BATCH_PRIMITIVE_RUN:
       {
         TokenByScanRequestHeader* hdr = nullptr;
-        boost::shared_ptr<FairThreadPool::Functor> functor;
+        boost::shared_ptr<PriorityThreadPool::Functor> functor;
         uint32_t id = 0;
         uint32_t weight = 0;
         uint32_t priority = 0;
@@ -2054,7 +2054,7 @@ struct ReadThread
           uniqueID = *((uint32_t*)&buf[pos + 10]);
           weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
         }
-        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         procPoolPtr->addJob(job);
 
         break;
@@ -2079,7 +2079,8 @@ struct ReadThread
   void operator()()
   {
     utils::setThreadName("PPReadThread");
-    boost::shared_ptr<threadpool::FairThreadPool> procPoolPtr = fPrimitiveServerPtr->getProcessorThreadPool();
+    boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
+        fPrimitiveServerPtr->getProcessorThreadPool();
     SBS bs;
     UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2310,8 +2311,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   fServerpool.setQueueSize(fServerQueueSize);
   fServerpool.setName("PrimitiveServer");
 
-  fProcessorPool.reset(new threadpool::FairThreadPool(fProcessorWeight, highPriorityThreads,
-                                                      medPriorityThreads, lowPriorityThreads, 0));
+  fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
+                                                          medPriorityThreads, lowPriorityThreads, 0));
 
   asyncCounter = 0;
 
