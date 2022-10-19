@@ -57,6 +57,10 @@ using namespace ordering;
 #include "limitedorderby.h"
 #include "mcs_decimal.h"
 
+#include "utils/json/json.hpp"
+using namespace nlohmann;
+
+
 namespace joblist
 {
 
@@ -478,8 +482,18 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        oss << "\"" << row.getStringField(*i).c_str() << "\"";
-        break;
+        std::string maybeJson = row.getStringField(*i);
+        try
+        {
+          [[maybe_unused]] json j = json::parse(maybeJson);
+          oss << maybeJson.c_str();
+          break;
+        }
+        catch (const json::parse_error& e)
+        {
+          oss << std::quoted(maybeJson.c_str());
+          break;
+        }
       }
 
       case CalpontSystemCatalog::DOUBLE:
@@ -504,25 +518,25 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
 
       case CalpontSystemCatalog::DATE:
       {
-        oss << "\"" << DataConvert::dateToString(row.getUintField(*i)) << "\"";
+        oss << std::quoted(DataConvert::dateToString(row.getUintField(*i)));
         break;
       }
 
       case CalpontSystemCatalog::DATETIME:
       {
-        oss << "\"" << DataConvert::datetimeToString(row.getUintField(*i)) << "\"";
+        oss << std::quoted(DataConvert::datetimeToString(row.getUintField(*i)));
         break;
       }
 
       case CalpontSystemCatalog::TIMESTAMP:
       {
-        oss << "\"" << DataConvert::timestampToString(row.getUintField(*i), fTimeZone) << "\"";
+        oss << std::quoted(DataConvert::timestampToString(row.getUintField(*i), fTimeZone));
         break;
       }
 
       case CalpontSystemCatalog::TIME:
       {
-        oss << "\"" << DataConvert::timeToString(row.getUintField(*i)) << "\"";
+        oss << std::quoted(DataConvert::timeToString(row.getUintField(*i)));
         break;
       }
 
@@ -873,15 +887,15 @@ void JsonArrayAggOrderBy::getResult(uint8_t* buff, const string&)
 
   // need to reverse the order
   stack<OrderByRow> rowStack;
-  if (fOrderByQueue.size() > 0)
+
+  while (fOrderByQueue.size() > 0)
+  {
+    rowStack.push(fOrderByQueue.top());
+    fOrderByQueue.pop();
+  }
+  if (rowStack.size() > 0)
   {
     oss << '[';
-    while (fOrderByQueue.size() > 0)
-    {
-      rowStack.push(fOrderByQueue.top());
-      fOrderByQueue.pop();
-    }
-
     while (rowStack.size() > 0)
     {
       if (addSep)
@@ -1023,7 +1037,7 @@ void JsonArrayAggNoOrder::getResult(uint8_t* buff, const string&)
 {
   ostringstream oss;
   bool addSep = false;
-  if (fDataQueue.size() > 0)
+  if (fRowGroup.getRowCount() > 0)
   {
     oss << '[';
     fDataQueue.push(fData);

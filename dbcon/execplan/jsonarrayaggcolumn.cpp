@@ -96,7 +96,7 @@ void JsonArrayAggColumn::serialize(messageqcpp::ByteStream& b) const
   for (rcit = fOrderCols.begin(); rcit != fOrderCols.end(); ++rcit)
     (*rcit)->serialize(b);
 
-  b << ',';
+  b << fSeparator;
 }
 
 void JsonArrayAggColumn::unserialize(messageqcpp::ByteStream& b)
@@ -116,6 +116,7 @@ void JsonArrayAggColumn::unserialize(messageqcpp::ByteStream& b)
     fOrderCols.push_back(srcp);
   }
 
+  b >> fSeparator;
 }
 
 bool JsonArrayAggColumn::operator==(const JsonArrayAggColumn& t) const
