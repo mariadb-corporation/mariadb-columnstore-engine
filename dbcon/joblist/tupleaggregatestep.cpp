@@ -5894,7 +5894,7 @@ void TupleAggregateStep::pruneAuxColumns()
 
     // bug4463, memmove for src, dest overlap
     memmove(row2.getData(), row1.getData(), row2.getSize());
-    for (uint32_t j = 0; j < row1.getColumnsCount(); j++)
+    for (uint32_t j = 0; j < row1.getColumnCount(); j++)
     {
       row2.setNullMark(j, row2.getNullMark(j));
     }
