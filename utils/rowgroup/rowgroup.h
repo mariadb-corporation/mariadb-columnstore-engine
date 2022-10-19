@@ -604,6 +604,16 @@ class Row
     userDataStore = u;
   }
 
+  bool getNullMark(uint32_t col) const
+  {
+    return data[getInternalSize() + col];
+  }
+
+  void setNullMark(uint32_t col, bool isNull) const
+  {
+    data[getInternalSize() + col] = isNull;
+  }
+
   const CHARSET_INFO* getCharset(uint32_t col) const;
 
  private:
@@ -632,16 +642,6 @@ class Row
   inline bool inStringTable(uint32_t col) const;
 
   UserDataStore* userDataStore;  // For UDAF
-
-  bool getNullMark(uint32_t col) const
-  {
-    return data[getInternalSize() + col];
-  }
-
-  void setNullMark(uint32_t col, bool isNull) const
-  {
-    data[getInternalSize() + col] = isNull;
-  }
 
   friend class RowGroup;
 };
