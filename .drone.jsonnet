@@ -330,6 +330,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                'cd /mdb/' + builddir,
                // Remove Debian build flags that could prevent ColumnStore from building
                "sed '/-DPLUGIN_COLUMNSTORE=NO/d' -i debian/rules",
+               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
                // Tweak debian packaging stuff
                "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
                "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
