@@ -18,7 +18,7 @@
 //  $Id: FlatOrderBy.cpp 9581 2013-05-31 13:46:14Z pleblanc $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <string>
 #include "calpontsystemcatalog.h"
@@ -173,7 +173,10 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::INT:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::INT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::FLOAT:
@@ -240,7 +243,7 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
   auto nullValue = sorting::getNullValue<StorageType>(ColType);
   RGDataOrRowIDType rgDataId = 0;
   permutation_.reserve(rgDatas_.size() * rowgroup::rgCommonSize);  // WIP hardcode
-  // keys.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
+  keys.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
   rg_.initRow(&r);
   for (auto& rgData : rgDatas_)
   {
@@ -381,9 +384,9 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
 
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-requires IsTrue<IsFirst>
-bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
-                                          joblist::OrderByKeysType columns)
+  requires IsTrue<IsFirst> bool
+FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
+                                     joblist::OrderByKeysType columns)
 {
   bool isFailure = false;
   // ASC = true, DESC = false
@@ -464,9 +467,9 @@ bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool so
 
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-requires IsFalse<IsFirst>
-bool FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
-                                          joblist::OrderByKeysType columns)
+  requires IsFalse<IsFirst> bool
+FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
+                                     joblist::OrderByKeysType columns)
 {
   // std::cout << " sortByColumnCF_  1 columns.size() " << columns.size() << std::endl;
 
@@ -615,10 +618,18 @@ void FlatOrderBy::processRow(const rowgroup::Row& row)
 {
 }
 
+// This method calculates the final permutation offset to start with
+// taking OFFSET and LIMIT into account.
 void FlatOrderBy::finalize()
 {
   // Signal getData() to return false if perm is empty. Impossible case though.
-  flatCurPermutationDiff_ = (permutation_.size() > 0) ? permutation_.size() : -1;
+  if (permutation_.size() == 0 || start_ > permutation_.size())
+  {
+    flatCurPermutationDiff_ = -1;
+    return;
+  }
+
+  flatCurPermutationDiff_ = std::min(count_, permutation_.size() - start_);
 }
 
 // returns false when finishes
@@ -626,11 +637,8 @@ bool FlatOrderBy::getData(rowgroup::RGData& data)
 {
   static constexpr IterDiffT rgMaxSize = rowgroup::rgCommonSize;
   auto rowsToReturn = std::min(rgMaxSize, flatCurPermutationDiff_);
-  // This reduces the global row counter by the number of rows returned by this getData() call.
-  flatCurPermutationDiff_ -= rowsToReturn;
   // This negation is to convert a number of rows into array idx.
-  auto i = rowsToReturn - 1;
-  if (i < 0)
+  if (rowsToReturn - 1 < 0)
   {
     return false;
   }
@@ -641,8 +649,9 @@ bool FlatOrderBy::getData(rowgroup::RGData& data)
   rgOut_.initRow(&outRow_);
   rgOut_.getRow(0, &outRow_);
   auto cols = std::min(inRow_.getColumnCount(), rgOut_.getColumnCount());
-
-  for (; i >= 0; --i)
+  auto i = flatCurPermutationDiff_ - 1;
+  auto stopAt = flatCurPermutationDiff_ - rowsToReturn;
+  for (; i >= stopAt; --i)
   {
     // find src row, copy into dst row
     // RGData::getRow but need to init an arg row first
@@ -655,6 +664,9 @@ bool FlatOrderBy::getData(rowgroup::RGData& data)
     // std::cout << "outRow i " << i << outRow_.toString() << std::endl;
   }
   rgOut_.setRowCount(rowsToReturn);
+  // This reduces the global row counter by the number of rows returned by this getData() call.
+  flatCurPermutationDiff_ -= rowsToReturn;
+
   // std::cout << rgOut_.toString() << std::endl;
   return true;
 }
