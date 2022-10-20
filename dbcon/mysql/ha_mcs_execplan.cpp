@@ -8622,7 +8622,7 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
 
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
 {
-  SELECT_LEX& select_lex = *handler->select;
+  SELECT_LEX& select_lex = *handler->select_lex;
 
   if (select_lex.where)
   {

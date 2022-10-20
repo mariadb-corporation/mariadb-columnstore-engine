@@ -45,7 +45,7 @@ group_by_handler* create_columnstore_group_by_handler(THD* thd, Query* query);
 
 derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* derived);
 
-select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* sel);
+select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* sel, SELECT_LEX_UNIT* sel_unit);
 
 /* Variables for example share methods */
 

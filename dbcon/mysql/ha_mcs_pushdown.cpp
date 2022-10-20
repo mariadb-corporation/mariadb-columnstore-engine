@@ -741,8 +741,16 @@ int ha_mcs_group_by_handler::end_scan()
  *    select_handler if possible
  *    NULL in other case
  ***********************************************************/
-select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
+select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex, SELECT_LEX_UNIT* sel_unit)
 {
+  // MDEV-25080 If sel_unit is not null, that means the server is attempting
+  // a partial pushdown of the SELECT_LEX_UNIT. In the 6.x version of MCS,
+  // we don't support full/partial pushdown of UNION into MCS.
+  if (sel_unit)
+  {
+    return nullptr;
+  }
+
   mcs_select_handler_mode_t select_handler_mode = get_select_handler_mode(thd);
 
   // Check the session variable value to enable/disable use of
@@ -984,14 +992,13 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
  *    thd - THD pointer.
  *    select_lex - sematic tree for the query.
  ***********************************************************/
-ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX* select_lex)
- : select_handler(thd, mcs_hton)
+ha_columnstore_select_handler::ha_columnstore_select_handler(THD* thd, SELECT_LEX* sel_lex)
+ : select_handler(thd, mcs_hton, sel_lex)
  , prepared(false)
  , scan_ended(false)
  , scan_initialized(false)
  , pushdown_init_rc(0)
 {
-  select = select_lex;
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &time_zone);
 }
@@ -1074,7 +1081,7 @@ bool ha_columnstore_select_handler::prepare()
 
   prepared = true;
 
-  if ((!table && !(table = create_tmp_table(thd, select))) || table->fill_item_list(&result_columns))
+  if ((!table && !(table = create_tmp_table(thd))) || table->fill_item_list(&result_columns))
   {
     pushdown_init_rc = 1;
     DBUG_RETURN(true);
