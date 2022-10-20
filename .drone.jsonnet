@@ -19,7 +19,7 @@ local any_branch = '**';
 local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
 local platforms_arm_custom = ['rockylinux:8'];
 
-local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
+local platforms_mtr = ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
@@ -276,7 +276,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
       // run regression test000 and test001 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t regression$${DRONE_BUILD_NUMBER} /usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',
-      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT:-10h} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
   },
   smokelog:: {
