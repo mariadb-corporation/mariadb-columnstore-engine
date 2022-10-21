@@ -3322,6 +3322,7 @@ void RowAggregationUM::fixConstantAggregate()
     {
       if (fFunctionCols[k]->fAggFunction == ROWAGG_CONSTANT)
       {
+	      idblog("j is " << j->safeString());
         if (j->isNull() || rowCnt == 0)
           doNullConstantAggregate(*j, k);
         else
