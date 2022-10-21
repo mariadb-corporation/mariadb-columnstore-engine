@@ -3340,6 +3340,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 {
   int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
   int colDataType = (fRowGroupOut->getColTypes())[colOut];
+  idblog("NULL CONSTANT AGG");
 
   switch (aggData.fOp)
   {
@@ -3443,6 +3444,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
     case ROWAGG_COUNT_COL_NAME:
     case ROWAGG_COUNT_DISTINCT_COL_NAME:
     {
+	    idblog("NULL COuNT (DISTINCT) COL NAME");
       fRow.setUintField(0, colOut);
     }
     break;
@@ -3860,12 +3862,14 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
     case ROWAGG_COUNT_COL_NAME:
     {
+	    idblog("COuNT COL NAME");
       fRow.setUintField(rowCnt, colOut);
     }
     break;
 
     case ROWAGG_COUNT_DISTINCT_COL_NAME:
     {
+	    idblog("COuNT DISTINCT COL NAME");
       fRow.setUintField(1, colOut);
     }
     break;
