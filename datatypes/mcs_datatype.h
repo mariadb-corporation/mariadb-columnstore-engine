@@ -490,7 +490,7 @@ inline bool isUnsignedInteger(const datatypes::SystemCatalog::ColDataType type)
  */
 inline bool isUnsigned(const datatypes::SystemCatalog::ColDataType type)
 {
-  if (isUnsignedInteger(type)) 
+  if (isUnsignedInteger(type))
     return true;
 
   switch (type)
@@ -518,14 +518,18 @@ inline bool isSignedInteger(const datatypes::SystemCatalog::ColDataType type)
   }
 }
 
-inline bool sameSignednessInteger(const datatypes::SystemCatalog::ColDataType type1, const datatypes::SystemCatalog::ColDataType type2)
+inline bool sameSignednessInteger(const datatypes::SystemCatalog::ColDataType type1,
+                                  const datatypes::SystemCatalog::ColDataType type2)
 {
-  return (isSignedInteger(type1) && isSignedInteger(type2)) || (isUnsignedInteger(type1) && isUnsignedInteger(type2));
+  return (isSignedInteger(type1) && isSignedInteger(type2)) ||
+         (isUnsignedInteger(type1) && isUnsignedInteger(type2));
 }
 
-inline bool differentSignednessInteger(const datatypes::SystemCatalog::ColDataType type1, const datatypes::SystemCatalog::ColDataType type2)
+inline bool differentSignednessInteger(const datatypes::SystemCatalog::ColDataType type1,
+                                       const datatypes::SystemCatalog::ColDataType type2)
 {
-  return (isSignedInteger(type1) && isUnsignedInteger(type2)) || (isUnsignedInteger(type1) && isSignedInteger(type2));
+  return (isSignedInteger(type1) && isUnsignedInteger(type2)) ||
+         (isUnsignedInteger(type1) && isSignedInteger(type2));
 }
 
 inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unionedType)
@@ -568,7 +572,7 @@ inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unione
       unionedType.precision = datatypes::INT128MAXPRECISION;
       unionedType.scale = 0;
       return;
-    } 
+    }
 
     default: idbassert(0); throw std::logic_error("datatypes::upcastSignedInteger: bad data type");
   }
@@ -589,40 +593,6 @@ namespace datatypes
 {
 static constexpr int128_t minInt128 = int128_t(0x8000000000000000LL) << 64;
 static constexpr int128_t maxInt128 = (int128_t(0x7FFFFFFFFFFFFFFFLL) << 64) + 0xFFFFFFFFFFFFFFFFLL;
-
-class ConstString
-{
-  const char* m_str;
-  size_t m_length;
-
- public:
-  ConstString(const char* str, size_t length) : m_str(str), m_length(length)
-  {
-  }
-  const char* str() const
-  {
-    return m_str;
-  }
-  const char* end() const
-  {
-    return m_str + m_length;
-  }
-  size_t length() const
-  {
-    return m_length;
-  }
-  void bin2hex(char* o)
-  {
-    static const char hexdig[] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                                  '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    const char* e = end();
-    for (const char* s = m_str; s < e; s++)
-    {
-      *o++ = hexdig[*s >> 4];
-      *o++ = hexdig[*s & 0xf];
-    }
-  }
-};
 
 enum class round_style_t : uint8_t
 {
