@@ -27,16 +27,18 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 #include <string>
 #include <stdexcept>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/thread/mutex.hpp>
 #include <cmath>
 #include <cfloat>
+#include "conststring.h"
 #ifdef __linux__
 #include <execinfo.h>
 #endif
@@ -66,7 +68,27 @@
 namespace rowgroup
 {
 constexpr const int16_t rgCommonSize = 8192;
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept CanUseIntegralTypes =
+    requires { requires std::is_same<FromType, utils::ConstString>::value == false; };
 
+template <datatypes::SystemCatalog::ColDataType ColType, typename ToType, typename FromType>
+concept IsVariadicType =
+    requires {
+      requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
+               ColType == datatypes::SystemCatalog::TEXT) &&
+                  std::is_same<ToType, utils::ConstString>::value == true &&
+                  std::is_same<FromType, utils::ConstString>::value == true;
+    };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename ToType, typename FromType>
+concept IsShortString =
+    requires {
+      requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
+               ColType == datatypes::SystemCatalog::TEXT) &&
+                  std::is_same<ToType, utils::ConstString>::value == true &&
+                  std::is_same<FromType, utils::ConstString>::value == false;
+    };
 /*
     The RowGroup family of classes encapsulate the data moved through the
     system.
@@ -1432,15 +1454,72 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setData(uint8_t* d);
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
+
   // add numerics only concept check
-  template <datatypes::SystemCatalog::ColDataType CT, typename T>
-  T getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires CanUseIntegralTypes<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data);
     size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
     // check the out of bounds invariant somehow
-    T* valuePtr = reinterpret_cast<T*>(&data[valueOffset]);  // the cast is questionable here
+    ToType* valuePtr = reinterpret_cast<ToType*>(&data[valueOffset]);  // the cast is questionable here
     return *valuePtr;
+  }
+  // Need one more template spec for short ConstStrings
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsVariadicType<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data && strings);
+    size_t offset2stringStoreOffset =
+        RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+
+    // check the out of bounds invariant somehow
+    return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
+
+    // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
+    // {
+    //   const char* src = (const char*)&data[offsets[colIndex]];
+    //   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+    // }
+
+    // inline utils::ConstString Row::getConstString(uint32_t colIndex) const
+    // {
+    //   return inStringTable(colIndex) ? strings->getConstString(*((uint64_t*)&data[offsets[colIndex]]))
+    //                                  : getShortConstString(colIndex);
+    // }
+    // inline bool Row::inStringTable(uint32_t col) const
+    // {
+    //   return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
+    // }
+  }
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsShortString<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data && strings);
+    size_t offset2stringStoreOffset =
+        RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+
+    // check the out of bounds invariant somehow
+    return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
+
+    // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
+    // {
+    //   const char* src = (const char*)&data[offsets[colIndex]];
+    //   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+    // }
+
+    // inline utils::ConstString Row::getConstString(uint32_t colIndex) const
+    // {
+    //   return inStringTable(colIndex) ? strings->getConstString(*((uint64_t*)&data[offsets[colIndex]]))
+    //                                  : getShortConstString(colIndex);
+    // }
+    // inline bool Row::inStringTable(uint32_t col) const
+    // {
+    //   return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
+    // }
   }
 
   uint32_t getStatus() const;
