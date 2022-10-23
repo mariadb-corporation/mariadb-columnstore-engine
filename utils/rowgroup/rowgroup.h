@@ -1477,13 +1477,11 @@ class RowGroup : public messageqcpp::Serializeable
 
     // check the out of bounds invariant somehow
     return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
-
     // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
     // {
     //   const char* src = (const char*)&data[offsets[colIndex]];
     //   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
     // }
-
     // inline utils::ConstString Row::getConstString(uint32_t colIndex) const
     // {
     //   return inStringTable(colIndex) ? strings->getConstString(*((uint64_t*)&data[offsets[colIndex]]))
@@ -1503,7 +1501,7 @@ class RowGroup : public messageqcpp::Serializeable
         RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
 
     // check the out of bounds invariant somehow
-    return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
+    return strings->getConstString(*(reinterpret_cast<char*>(&data[offset2stringStoreOffset])));
 
     // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
     // {
