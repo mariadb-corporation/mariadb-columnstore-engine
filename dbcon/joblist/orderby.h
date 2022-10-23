@@ -23,19 +23,26 @@
 
 #include <string>
 #include <vector>
+#include "conststring.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "jlf_common.h"
 
 namespace sorting
 {
-template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
+template <typename T, typename EncodedKeyType,
+          typename std::enable_if<sizeof(T) == sizeof(int128_t) &&
+                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  T>::type* = nullptr>
 T getNullValue(uint8_t type)
 {
   return datatypes::Decimal128Null;
 }
 
-template <typename T, typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
+template <typename T, typename EncodedKeyType,
+          typename std::enable_if<sizeof(T) == sizeof(int64_t) &&
+                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  T>::type* = nullptr>
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -59,7 +66,10 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
+template <typename T, typename EncodedKeyType,
+          typename std::enable_if<sizeof(T) == sizeof(int32_t) &&
+                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  T>::type* = nullptr>
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -84,7 +94,10 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename std::enable_if<sizeof(T) == sizeof(int16_t), T>::type* = nullptr>
+template <typename T, typename EncodedKeyType,
+          typename std::enable_if<sizeof(T) == sizeof(int16_t) &&
+                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  T>::type* = nullptr>
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -104,7 +117,10 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t), T>::type* = nullptr>
+template <typename T, typename EncodedKeyType,
+          typename std::enable_if<sizeof(T) == sizeof(int8_t) &&
+                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  T>::type* = nullptr>
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -123,6 +139,20 @@ T getNullValue(uint8_t type)
     default: return joblist::TINYINTNULL;
   }
 }
+
+template <typename StorageType, typename EncodedKeyType,
+          typename std::enable_if<std::is_same<EncodedKeyType, utils::ConstString>::value,
+                                  StorageType>::type* = nullptr>
+EncodedKeyType getNullValue(uint8_t type)
+{
+  const char* n = nullptr;
+  return utils::ConstString(n, 0);
+}
+
+template <typename EncodedKeyType>
+concept IsConstString = requires { requires std::is_same<EncodedKeyType, utils::ConstString>::value; };
+template <typename EncodedKeyType>
+concept NotConstString = requires { requires !std::is_same<EncodedKeyType, utils::ConstString>::value; };
 
 bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidth)
 {
@@ -189,13 +219,14 @@ class FlatOrderBy
                           joblist::OrderByKeysType columns);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
   void initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
-                                   std::vector<EncodedKeyType>& keys, std::vector<PermutationType>& nulls);
+                                   std::vector<EncodedKeyType>& keys, PermutationVec& permutation,
+                                   PermutationVec& nulls);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
   void loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst,
                              std::vector<EncodedKeyType>& keys, PermutationVec& nulls,
                              PermutationVec& permutation, PermutationVecIter begin, PermutationVecIter end);
   template <typename EncodedKeyType>
-  Ranges2SortQueue populateRanges(const IterDiffT beginOffset,
+  Ranges2SortQueue populateRanges(const uint32_t columnID, const IterDiffT beginOffset,
                                   typename std::vector<EncodedKeyType>::const_iterator begin,
                                   typename std::vector<EncodedKeyType>::const_iterator end);
 
@@ -207,6 +238,36 @@ class FlatOrderBy
   const std::string toString() const;
 
   void finalize();
+
+ private:
+  template <typename T>
+    requires sorting::IsConstString<T> bool
+  isNull(const T value, const T null) const
+  {
+    return value.isNull();
+  }
+
+  template <typename T>
+    requires sorting::NotConstString<T> bool
+  isNull(const T value, const T null) const
+  {
+    return value == null;
+  }
+
+  //  private:
+  //   template <typename T, typename F>
+  //     requires sorting::IsConstString<T> bool
+  //   isEq(const T x, const T y, F&& cmp) const
+  //   {
+  //     return cmp(x, y);
+  //   }
+
+  //   template <typename T, typename F>
+  //     requires sorting::NotConstString<T> bool
+  //   isEq(const T x, const T y, F&& cmp) const
+  //   {
+  //     return x == y;
+  //   }
 
  protected:
   uint64_t start_;
