@@ -147,59 +147,56 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     {
       break;
     }
-
-      // case execplan::CalpontSystemCatalog::VARCHAR:
-      // case execplan::CalpontSystemCatalog::CHAR:
-      // case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      // WIP !!!!!!!!!!! There are three variants typed cols,
+      // inline short strings, out-of-band long strings
+      // inline short strings are not supported yet
+      auto columnWidth = rg_.getColumnWidth(columnId);
+      if (sorting::isDictColumn(columnType, columnWidth))
+      {
+        using StorageType = utils::ConstString;
+        using EncodedKeyType = utils::ConstString;
+        // No difference b/w VARCHAR, CHAR and TEXT types yet
+        return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                       EncodedKeyType>(columnId, sortDirection, columns);
+      }
+      // else
       // {
-      //   // WIP !!!!!!!!!!! There are three variants typed cols,
-      //   // inline short strings, out-of-band long strings
-      //   // inline short strings are not supported yet
-      //   auto columnWidth = rg_.getColumnWidth(columnId);
-      //   if (sorting::isDictColumn(columnType, rg_.getColumnWidth(columnId)))
-      //   {
-      //     using StorageType = utils::ConstString;
-      //     using EncodedKeyType = utils::ConstString;
-      //     // No difference b/w VARCHAR, CHAR and TEXT types yet
-      //     // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-      //     //                                EncodedKeyType>(columnId, sortDirection, columns);
-      //   }
-      //   else
-      //   {
-      //     using EncodedKeyType = utils::ConstString;
+      //   using EncodedKeyType = utils::ConstString;
 
-      //     switch (columnWidth)
+      //   switch (columnWidth)
+      //   {
+      //     case 1:
       //     {
-      //       case 1:
-      //       {
-      //         // using StorageType =
-      //         //     datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
-      //         // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR,
-      //         StorageType,
-      //         //                                EncodedKeyType>(columnId, sortDirection, columns);
-      //         break;
-      //       }
-
-      //       case 2:
-      //       {
-      //         break;
-      //       };
-
-      //       case 4:
-      //       {
-      //         break;
-      //       };
-
-      //       case 8:
-      //       {
-      //         break;
-      //       };
-      //       default: idbassert(0);
+      //       // using StorageType =
+      //       //     datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
+      //       // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR,
+      //       StorageType,
+      //           //                                EncodedKeyType>(columnId, sortDirection, columns);
+      //           break;
       //     }
-      //   }
-      //   break;
-      // }
 
+      //     case 2:
+      //     {
+      //       break;
+      //     };
+
+      //     case 4:
+      //     {
+      //       break;
+      //     };
+
+      //     case 8:
+      //     {
+      //       break;
+      //     };
+      //     default: idbassert(0);
+      //   }
+      break;
+    }
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
       break;
@@ -282,14 +279,14 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
 
 template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
 void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
-                                              std::vector<EncodedKeyType>& keys,
-                                              std::vector<PermutationType>& nulls)
+                                              std::vector<EncodedKeyType>& keys, PermutationVec& permutation,
+                                              PermutationVec& nulls)
 {
   rowgroup::Row r;
   // Replace with a constexpr
-  auto nullValue = sorting::getNullValue<StorageType>(ColType);
+  auto nullValue = sorting::getNullValue<StorageType, EncodedKeyType>(ColType);
   RGDataOrRowIDType rgDataId = 0;
-  permutation_.reserve(rgDatas_.size() * rowgroup::rgCommonSize);  // WIP hardcode
+  permutation.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
   keys.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
   rg_.initRow(&r);
   for (auto& rgData : rgDatas_)
@@ -304,10 +301,10 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
     {
       EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, i);
       PermutationType permute = {rgDataId, i, 0};
-      if (value != nullValue)
+      if (!isNull(value, nullValue))
       {
         keys.push_back(value);
-        permutation_.push_back(permute);
+        permutation.push_back(permute);
       }
       else
       {
@@ -318,11 +315,11 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
   }
   if (nullsFirst)
   {
-    permutation_.insert(permutation_.begin(), nulls.begin(), nulls.end());
+    permutation.insert(permutation.begin(), nulls.begin(), nulls.end());
   }
   else
   {
-    permutation_.insert(permutation_.end(), nulls.begin(), nulls.end());
+    permutation.insert(permutation.end(), nulls.begin(), nulls.end());
   }
 
   // rg_.setData(&rgDatas_[0]);
@@ -337,7 +334,7 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
 {
   rowgroup::Row r;
   // Replace with a constexpr
-  auto nullValue = sorting::getNullValue<StorageType>(ColType);
+  auto nullValue = sorting::getNullValue<StorageType, EncodedKeyType>(ColType);
   // RGDataOrRowIDType rgDataId = 0;
   rg_.initRow(&r);  // Row iterator call seems unreasonably costly here
   // !!!!!!!!!! data set sizes don't match here.
@@ -358,7 +355,7 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
       // set rgdata
       rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
       EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, p->rowID);
-      if (value != nullValue)
+      if (!isNull(value, nullValue))
       {
         keys.push_back(value);
         permutation.push_back(*p);
@@ -391,7 +388,8 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
 
 template <typename EncodedKeyType>
 FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
-    const IterDiffT beginOffset, typename std::vector<EncodedKeyType>::const_iterator begin,
+    [[maybe_unused]] const uint32_t columnID, const IterDiffT beginOffset,
+    typename std::vector<EncodedKeyType>::const_iterator begin,
     typename std::vector<EncodedKeyType>::const_iterator end)
 {
   // Single column only sorting
@@ -403,19 +401,40 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
   FlatOrderBy::Ranges2SortQueue ranges;
   auto rangeItLeft = begin;
   auto rangeItRight = begin + 1;
-  for (; rangeItRight != end; ++rangeItRight)
+  if constexpr (sorting::IsConstString<EncodedKeyType>)
   {
-    if (*rangeItLeft == *rangeItRight)
-      continue;
-    // left it value doesn't match right it value
-    auto dist = std::distance(rangeItLeft, rangeItRight);
-    if (dist > 1)
+    datatypes::Charset cs(rg_.getCharset(columnID));
+    for (; rangeItRight != end; ++rangeItRight)
     {
-      ranges.push({beginOffset + std::distance(begin, rangeItLeft),
-                   beginOffset + std::distance(begin, rangeItRight)});
+      if (!cs.strnncollsp(*rangeItLeft, *rangeItRight))
+        continue;
+      // left it value doesn't match right it value
+      auto dist = std::distance(rangeItLeft, rangeItRight);
+      if (dist > 1)
+      {
+        ranges.push({beginOffset + std::distance(begin, rangeItLeft),
+                     beginOffset + std::distance(begin, rangeItRight)});
+      }
+      rangeItLeft = rangeItRight;
     }
-    rangeItLeft = rangeItRight;
   }
+  else
+  {
+    for (; rangeItRight != end; ++rangeItRight)
+    {
+      if (*rangeItLeft == *rangeItRight)
+        continue;
+      // left it value doesn't match right it value
+      auto dist = std::distance(rangeItLeft, rangeItRight);
+      if (dist > 1)
+      {
+        ranges.push({beginOffset + std::distance(begin, rangeItLeft),
+                     beginOffset + std::distance(begin, rangeItRight)});
+      }
+      rangeItLeft = rangeItRight;
+    }
+  }
+
   // rangeItRight == end here thus reducing it by one to stay in range
   auto dist = std::distance(rangeItLeft, rangeItRight);
   if (dist > 1)
@@ -455,17 +474,16 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
       throw IDBExcept(ERR_LIMIT_TOO_BIG);
     }
 
-    initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, nullsFirst, keys, nulls);
+    initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(columnID, nullsFirst, keys, permutation,
+                                                                      nulls);
 
     // This is the first column sorting and keys, nulls were already filled up previously.
-    permutation = std::move(permutation_);
+    // permutation = std::move(permutation_);
 
     auto permBegin = (nullsFirst) ? permutation.begin() + nulls.size() : permutation.begin();
     auto permEnd = (nullsFirst) ? permutation.end() : permutation.end() - nulls.size();
     assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
-    assert(permutation.size() == keys.size() + ((nullsFirst) ? 0 : nulls.size()));
-    // большой логический косяк - диапазон permutation_ потенциально содержит null-ы в середине, а с краю
-    // могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
+    // assert(permutation.size() == keys.size() + ((nullsFirst) ? 0 : nulls.size()));
     // sortDirection is true = ASC
 
     if constexpr (std::is_same<EncodedKeyType, utils::ConstString>::value)
@@ -473,12 +491,12 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
       datatypes::Charset cs(rg_.getCharset(columnID));
       if (sortDirection)
       {
-        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return -cs.strnncollsp(x, y); };
+        auto cmp = [&cs](EncodedKeyType x, EncodedKeyType y) { return -cs.strnncollsp(x, y) > 0; };
         sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
       }
       else
       {
-        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return cs.strnncollsp(x, y); };
+        auto cmp = [&cs](EncodedKeyType x, EncodedKeyType y) { return cs.strnncollsp(x, y) < 0; };
         sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
       }
     }
@@ -498,8 +516,8 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     FlatOrderBy::Ranges2SortQueue ranges4Sort;
     if (columns.size() > 1)
     {
-      ranges4Sort =
-          populateRanges<EncodedKeyType>((nullsFirst) ? nulls.size() : 0ULL, keys.begin(), keys.end());
+      ranges4Sort = populateRanges<EncodedKeyType>(columnID, (nullsFirst) ? nulls.size() : 0ULL, keys.begin(),
+                                                   keys.end());
 
       // Adding NULLs range into ranges
       if (nulls.size() > 1)
@@ -597,23 +615,41 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     auto permEnd = permutation.end();
     assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
     assert(permutation.size() == keys.size());
-    if (sortDirection)
+    if constexpr (std::is_same<EncodedKeyType, utils::ConstString>::value)
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
-      // sorting::pdqsort(keys.begin(), keys.end(), std::greater<EncodedKeyType>());
+      datatypes::Charset cs(rg_.getCharset(columnID));
+      if (sortDirection)
+      {
+        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return -cs.strnncollsp(x, y); };
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
+      }
+      else
+      {
+        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return cs.strnncollsp(x, y); };
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
+      }
     }
     else
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
-      // sorting::pdqsort(keys.begin(), keys.end(), std::less<EncodedKeyType>());
+      if (sortDirection)
+      {
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
+        // sorting::pdqsort(keys.begin(), keys.end(), std::greater<EncodedKeyType>());
+      }
+      else
+      {
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
+        // sorting::pdqsort(keys.begin(), keys.end(), std::less<EncodedKeyType>());
+      }
     }
+
     // Use && here
     if (columns.size() > 1)
     {
       // std::cout << "nulls size " << nulls.size() << std::endl;
       auto ranges = populateRanges<EncodedKeyType>(
-          (nullsFirst) ? sameValuesRangeBeginDist + nulls.size() : sameValuesRangeBeginDist, keys.begin(),
-          keys.end());
+          columnID, (nullsFirst) ? sameValuesRangeBeginDist + nulls.size() : sameValuesRangeBeginDist,
+          keys.begin(), keys.end());
       while (!ranges.empty())
       {
         auto range = ranges.front();
