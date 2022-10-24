@@ -4023,7 +4023,6 @@ void RowAggregationUM::setGroupConcatString()
         joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
         gcString = gccAg->getResult();
         fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
-        // gccAg->getResult(buff);
       }
     }
   }

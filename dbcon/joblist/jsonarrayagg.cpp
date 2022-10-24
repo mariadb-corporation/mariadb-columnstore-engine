@@ -1,5 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporation
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -63,15 +62,6 @@ using namespace nlohmann;
 
 namespace joblist
 {
-
-// GroupConcatInfo class implementation
-JsonArrayInfo::JsonArrayInfo()
-{
-}
-
-JsonArrayInfo::~JsonArrayInfo()
-{
-}
 
 void JsonArrayInfo::prepJsonArray(JobInfo& jobInfo)
 {
@@ -483,17 +473,16 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
       case CalpontSystemCatalog::TEXT:
       {
         std::string maybeJson = row.getStringField(*i);
-        try
-        {
-          [[maybe_unused]] json j = json::parse(maybeJson);
-          oss << maybeJson.c_str();
-          break;
-        }
-        catch (const json::parse_error& e)
+        [[maybe_unused]] const auto j = json::parse(maybeJson, nullptr, false);
+        if (j.is_discarded())
         {
           oss << std::quoted(maybeJson.c_str());
-          break;
         }
+        else
+        {
+          oss << maybeJson.c_str();
+        }
+        break;
       }
 
       case CalpontSystemCatalog::DOUBLE:
@@ -716,7 +705,7 @@ const string JsonArrayAggregator::toString() const
 }
 
 
-// GroupConcatOrderBy class implementation
+
 JsonArrayAggOrderBy::JsonArrayAggOrderBy()
 {
   fRule.fIdbCompare = this;
@@ -941,7 +930,6 @@ const string JsonArrayAggOrderBy::toString() const
 }
 
 
-// GroupConcatNoOrder class implementation
 JsonArrayAggNoOrder::JsonArrayAggNoOrder()
  : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
 {

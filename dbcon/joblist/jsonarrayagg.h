@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -37,28 +37,15 @@
 namespace joblist
 {
 // forward reference
-struct JobInfo;
 class JsonArrayAggregator;
 class ResourceManager;
 
 
-class JsonArrayInfo
+class JsonArrayInfo : public GroupConcatInfo
 {
  public:
-  JsonArrayInfo();
-  virtual ~JsonArrayInfo();
-
   void prepJsonArray(JobInfo&);
   void mapColumns(const rowgroup::RowGroup&);
-
-  std::set<uint32_t>& columns()
-  {
-    return fColumns;
-  }
-  std::vector<rowgroup::SP_GroupConcat>& groupConcat()
-  {
-    return fGroupConcat;
-  }
 
   const std::string toString() const;
 
@@ -66,8 +53,6 @@ class JsonArrayInfo
   uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
   boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 
-  std::set<uint32_t> fColumns;
-  std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
 };
 
 
@@ -81,23 +66,12 @@ class JsonArrayAggregatAgUM : public GroupConcatAgUM
   void initialize();
   void processRow(const rowgroup::Row&);
   EXPORT void merge(const rowgroup::Row&, int64_t);
-  /*boost::scoped_ptr<JsonArrayAggregator>& concator()
-  {
-    return fConcator;
-  }
-  */
+
   EXPORT void getResult(uint8_t*);
   EXPORT uint8_t* getResult();
 
  protected:
   void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
-
-/*
-  boost::scoped_ptr<JsonArrayAggregator> fConcator;
-  boost::scoped_array<uint8_t> fData;
-  rowgroup::Row fRow;
-  bool fNoOrder;
-*/
 };
 
 // JSON_ARRAYAGG base
