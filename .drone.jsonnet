@@ -19,7 +19,8 @@ local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.8',
-  'develop-6': '10.6-enterprise',
+  //'develop-6': '10.6-enterprise',
+  'develop-6': '10.11',
   'develop-5': '10.5',
   '**': '10.8',
 };
