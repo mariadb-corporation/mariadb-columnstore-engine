@@ -5113,17 +5113,24 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
             // @bug 3603. for cases like max(rand()). try to build function first.
             if (!rc)
+            {
               rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-
+            }
+#if 0
+            if (!rc)
+            {
+              // Might be some sort of arithmetic function like EQ_FUNC (not yet supported)
+              rc = buildArithmeticColumn(ifp, gwi, gwi.fatalParseError);
+            }
+#endif
+            if (!rc)
+            {
+              gwi.fatalParseError = true;
+            }
             parm.reset(rc);
             gwi.clauseType = clauseType;
-
-            if (gwi.fatalParseError)
-              break;
-
             break;
           }
-
           case Item::REF_ITEM:
           {
             ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
