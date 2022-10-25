@@ -5116,13 +5116,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             {
               rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
             }
-#if 0
-            if (!rc)
-            {
-              // Might be some sort of arithmetic function like EQ_FUNC (not yet supported)
-              rc = buildArithmeticColumn(ifp, gwi, gwi.fatalParseError);
-            }
-#endif
             if (!rc)
             {
               gwi.fatalParseError = true;
