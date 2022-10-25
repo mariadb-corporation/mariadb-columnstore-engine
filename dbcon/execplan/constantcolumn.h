@@ -120,6 +120,11 @@ if (strs) {
 free(strs);
 }
 #endif
+    if (isNull())
+    {
+      static NullString nullstr;
+      return nullstr;
+    }
     return fConstval;
   }
   /**
@@ -133,6 +138,7 @@ free(strs);
   }
   inline void constval(const std::string& constval)
   {
+    idbassert(fType != NULLDATA);
     fConstval.assign(constval);
     fResult.strVal.assign(constval);
   }
