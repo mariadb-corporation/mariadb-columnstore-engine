@@ -25,6 +25,8 @@
 #include "vendordmlstatement.h"
 #undef VENDORDMLSTATEMENT_DLLEXPORT
 
+#include "exceptclasses.h"
+
 using namespace std;
 
 namespace dmlpackage
@@ -76,6 +78,7 @@ VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, s
  , fLogging(true)
  , fLogending(true)
 {
+	idblog("CTOR for Mysql, statement is '" << dmlstatement << "'");
 }
 
 VendorDMLStatement::~VendorDMLStatement()
