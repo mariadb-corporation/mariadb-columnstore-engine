@@ -29,6 +29,7 @@ using namespace std;
 #define COMMANDDMLPKG_DLLEXPORT
 #include "commanddmlpackage.h"
 #undef COMMANDDMLPKG_DLLEXPORT
+#include "exceptclasses.h"
 namespace dmlpackage
 {
 CommandDMLPackage::CommandDMLPackage()
@@ -38,6 +39,7 @@ CommandDMLPackage::CommandDMLPackage()
 CommandDMLPackage::CommandDMLPackage(std::string dmlStatement, int sessionID)
  : CalpontDMLPackage("", "", dmlStatement, sessionID)
 {
+	idblog("command dml package, statement is '" << dmlStatement << "'");
 }
 
 CommandDMLPackage::~CommandDMLPackage()
