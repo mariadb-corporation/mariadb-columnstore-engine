@@ -89,6 +89,10 @@ class DMLColumn : public DMLObject
    */
   bool get_isnull() const
   {
+    if (fColValuesList.size() == 1)
+    {
+      return fColValuesList[0].isNull();
+    }
     return fisNULL;
   }
   /** @brief get the fIsFromCol data for the column
