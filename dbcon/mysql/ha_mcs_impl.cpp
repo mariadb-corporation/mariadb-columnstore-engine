@@ -3061,6 +3061,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     if (found != string::npos)
       insertStmt.erase(found);
 
+    idblog("statement: " << insertStmt);
     found = insertStmt.find("ignore");
 
     if (found != string::npos)
