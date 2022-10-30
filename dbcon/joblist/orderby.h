@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "conststring.h"
@@ -30,26 +31,36 @@
 
 namespace sorting
 {
-template <typename T, typename EncodedKeyType,
-          typename std::enable_if<sizeof(T) == sizeof(int128_t) &&
-                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  T>::type* = nullptr>
+template <typename T, typename EncodedKeyType>
+  requires(sizeof(T) == sizeof(int128_t) && !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+                                              std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
   return datatypes::Decimal128Null;
 }
 
-template <typename T, typename EncodedKeyType,
-          typename std::enable_if<sizeof(T) == sizeof(int64_t) &&
-                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  T>::type* = nullptr>
+template <typename T, typename EncodedKeyType>
+  requires std::is_same<T, double>::value
+uint64_t getNullValue(uint8_t type)
+{
+  return joblist::DOUBLENULL;
+}
+
+template <typename T, typename EncodedKeyType>
+  requires std::is_same<T, float>::value
+uint32_t getNullValue(uint8_t type)
+{
+  return joblist::FLOATNULL;
+}
+
+template <typename T, typename EncodedKeyType>
+  requires(sizeof(T) == sizeof(int64_t) && !std::is_same<T, double>::value &&
+           !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+             std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
   switch (type)
   {
-    case execplan::CalpontSystemCatalog::DOUBLE:
-    case execplan::CalpontSystemCatalog::UDOUBLE: return joblist::DOUBLENULL;
-
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::DATE:
@@ -66,17 +77,14 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename EncodedKeyType,
-          typename std::enable_if<sizeof(T) == sizeof(int32_t) &&
-                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  T>::type* = nullptr>
+template <typename T, typename EncodedKeyType>
+  requires(sizeof(T) == sizeof(int32_t) && !std::is_same<T, float>::value &&
+           !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+             std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
   switch (type)
   {
-    case execplan::CalpontSystemCatalog::FLOAT:
-    case execplan::CalpontSystemCatalog::UFLOAT: return joblist::FLOATNULL;
-
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::BLOB:
@@ -94,10 +102,9 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename EncodedKeyType,
-          typename std::enable_if<sizeof(T) == sizeof(int16_t) &&
-                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  T>::type* = nullptr>
+template <typename T, typename EncodedKeyType>
+  requires(sizeof(T) == sizeof(int16_t) && !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+                                             std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -117,10 +124,9 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename T, typename EncodedKeyType,
-          typename std::enable_if<sizeof(T) == sizeof(int8_t) &&
-                                      !std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  T>::type* = nullptr>
+template <typename T, typename EncodedKeyType>
+  requires(sizeof(T) == sizeof(int8_t) && !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+                                            std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
   switch (type)
@@ -140,19 +146,36 @@ T getNullValue(uint8_t type)
   }
 }
 
-template <typename StorageType, typename EncodedKeyType,
-          typename std::enable_if<std::is_same<EncodedKeyType, utils::ConstString>::value,
-                                  StorageType>::type* = nullptr>
+template <typename StorageType, typename EncodedKeyType>
+  requires((std::is_same<EncodedKeyType, utils::ConstString>::value ||
+            std::is_same<EncodedKeyType, utils::ShortConstString>::value) &&
+           !(std::is_same<StorageType, utils::ShortConstString>::value &&
+             std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 EncodedKeyType getNullValue(uint8_t type)
 {
   const char* n = nullptr;
   return utils::ConstString(n, 0);
 }
 
+// This stub is needed to allow templates to compile.
+template <typename StorageType, typename EncodedKeyType>
+  requires(std::is_same<StorageType, utils::ShortConstString>::value &&
+           std::is_same<EncodedKeyType, utils::ShortConstString>::value)
+EncodedKeyType getNullValue(uint8_t type)
+{
+  return {};
+}
+
 template <typename EncodedKeyType>
-concept IsConstString = requires { requires std::is_same<EncodedKeyType, utils::ConstString>::value; };
+concept IsConstString = requires {
+                          requires std::is_same<EncodedKeyType, utils::ConstString>::value ||
+                                       std::is_same<EncodedKeyType, utils::ShortConstString>::value;
+                        };
 template <typename EncodedKeyType>
-concept NotConstString = requires { requires !std::is_same<EncodedKeyType, utils::ConstString>::value; };
+concept NotConstString = requires {
+                           requires !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+                                      std::is_same<EncodedKeyType, utils::ShortConstString>::value);
+                         };
 
 bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidth)
 {
@@ -240,34 +263,42 @@ class FlatOrderBy
   void finalize();
 
  private:
-  template <typename T>
-    requires sorting::IsConstString<T> bool
-  isNull(const T value, const T null) const
+  template <typename EncodedKeyType, typename StorageType>
+    requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
+             sorting::IsConstString<EncodedKeyType>) bool
+  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
   {
     return value.isNull();
   }
 
-  template <typename T>
-    requires sorting::NotConstString<T> bool
-  isNull(const T value, const T null) const
+  template <typename EncodedKeyType, typename StorageType>
+    requires(std::is_integral<EncodedKeyType>::value && std::is_integral<StorageType>::value) bool
+  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
   {
     return value == null;
   }
 
-  //  private:
-  //   template <typename T, typename F>
-  //     requires sorting::IsConstString<T> bool
-  //   isEq(const T x, const T y, F&& cmp) const
-  //   {
-  //     return cmp(x, y);
-  //   }
+  template <typename EncodedKeyType, typename StorageType>
+    requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value) bool
+  isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull) const
+  {
+    return std::memcmp(&value, &null, sizeof(uint64_t)) == 0;
+  }
 
-  //   template <typename T, typename F>
-  //     requires sorting::NotConstString<T> bool
-  //   isEq(const T x, const T y, F&& cmp) const
-  //   {
-  //     return x == y;
-  //   }
+  template <typename EncodedKeyType, typename StorageType>
+    requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value) bool
+  isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull) const
+  {
+    return std::memcmp(&value, &null, sizeof(uint32_t)) == 0;
+  }
+
+  template <typename EncodedKeyType, typename StorageType>
+    requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value) bool
+  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
+  {
+    const StorageType v = *reinterpret_cast<const StorageType*>(value.str());
+    return v == storageNull;
+  }
 
  protected:
   uint64_t start_;
