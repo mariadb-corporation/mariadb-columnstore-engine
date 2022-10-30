@@ -1,0 +1,147 @@
+#
+# Test ORDER BY function
+# Author: Roman Nozdrin, roman.nozdrin@mariadb.com
+#
+# source ../include/have_columnstore.inc
+
+#disable_warnings
+DROP DATABASE IF EXISTS mcol3758;
+#enable_warnings
+
+CREATE DATABASE mcol3758;
+USE mcol3758;
+
+# Single-thread sorting
+SET columnstore_orderby_threads=1;
+
+--disable_warnings
+DROP TABLE IF EXISTS `sorting_numerics`;
+--enable_warnings
+
+# numerics
+
+CREATE TABLE `sorting_numerics`(
+`tint` TINYINT,
+`smint` SMALLINT,
+`iint` INT,
+`bint` BIGINT,
+`utint` TINYINT UNSIGNED,
+`usmint` SMALLINT UNSIGNED,
+`uiint` INT UNSIGNED,
+`ubint` BIGINT UNSIGNED,
+`fl` FLOAT,
+`db` DOUBLE,
+`dec` DECIMAL(18),
+`udec` DECIMAL(18) UNSIGNED
+) ENGINE=columnstore;
+
+INSERT INTO `sorting_numerics`
+(`tint`,`smint`,`iint`,`bint`,`utint`,`usmint`,`uiint`,`ubint`,`fl`,`db`,`dec`,`udec`)
+VALUES
+(-1,-129,-65385,-4294967297,1,129,65385,4294967297,1.0,1.0,-1,1),
+(1,129,65385,4294967297,1,129,65385,4294967297,-1.0,-1.0,1,1),
+(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(-42,-170,-65422,-4294967344,42,170,65422,4294967344,42.0,42.0,-42,42),
+(42,170,65422,4294967344,42,170,65422,4294967344,-42.0,-42.0,42,42),
+(-5,-133,-65389,-4294967301,5,133,65389,4294967301,-5.0,-5.0,-5,5),
+(5,133,65389,4294967301,5,133,65389,4294967301,5.0,5.0,5,5),
+(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
+SELECT `tint` FROM `sorting_numerics` ORDER BY tint DESC;
+SELECT `tint` FROM `sorting_numerics` ORDER BY tint ASC;
+SELECT `smint` FROM `sorting_numerics` ORDER BY smint DESC;
+SELECT `smint` FROM `sorting_numerics` ORDER BY smint ASC;
+SELECT `iint` FROM `sorting_numerics` ORDER BY iint DESC;
+SELECT `iint` FROM `sorting_numerics` ORDER BY iint ASC;
+SELECT `bint` FROM `sorting_numerics` ORDER BY bint DESC;
+SELECT `bint` FROM `sorting_numerics` ORDER BY bint ASC;
+SELECT `utint` FROM `sorting_numerics` ORDER BY utint DESC;
+SELECT `utint` FROM `sorting_numerics` ORDER BY utint ASC;
+SELECT `usmint` FROM `sorting_numerics` ORDER BY usmint DESC;
+SELECT `usmint` FROM `sorting_numerics` ORDER BY usmint ASC;
+SELECT `uiint` FROM `sorting_numerics` ORDER BY uiint DESC;
+SELECT `uiint` FROM `sorting_numerics` ORDER BY uiint ASC;
+SELECT `ubint` FROM `sorting_numerics` ORDER BY ubint DESC;
+SELECT `ubint` FROM `sorting_numerics` ORDER BY ubint ASC;
+SELECT `fl` FROM `sorting_numerics` ORDER BY fl DESC;
+SELECT `fl` FROM `sorting_numerics` ORDER BY fl ASC;
+SELECT `db` FROM `sorting_numerics` ORDER BY db DESC;
+SELECT `db` FROM `sorting_numerics` ORDER BY db ASC;
+# SELECT `dec` FROM (SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` DESC)s;
+# SELECT `dec` FROM (SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` ASC)s;
+# SELECT `udec` FROM (SELECT `udec` FROM `sorting_numerics` ORDER BY udec DESC)s;
+# SELECT `udec` FROM (SELECT `udec` FROM `sorting_numerics` ORDER BY udec ASC)s;
+
+# Check with NULLs first and last
+# string
+--disable_warnings
+DROP TABLE IF EXISTS `sorting_chars`;
+--enable_warnings
+
+CREATE TABLE `sorting_chars`(
+tcolumn TEXT,
+vcolumn VARCHAR(100),
+vc7 VARCHAR(7),
+ch7 CHAR(7)
+) ENGINE=columnstore DEFAULT CHARSET=latin1;
+
+INSERT INTO `sorting_chars`
+(`tcolumn`,`vcolumn`, `vc7`, `ch7`)
+VALUES
+('one','two','three', 'four'),
+(' one','two ','4th ree', ' four '),
+(' one','two',NULL, NULL),
+(NULL,NULL, 'bb b', ' aaa '),
+('two','one', NULL, NULL),
+(NULL,NULL, 'ccccc ', 'four'),
+('Two','One', 'Three', 'Four'),
+('One','Two', 'Four', 'Three'),
+(NULL,NULL, NULL, NULL);
+
+SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn DESC;
+# SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn ASC;
+# SELECT `vcolumn` FROM `sorting_chars` ORDER BY vcolumn DESC;
+# SELECT `vcolumn` FROM `sorting_chars` ORDER BY vcolumn ASC;
+
+# temporal
+--disable_warnings
+DROP TABLE IF EXISTS `sorting_temporal`;
+--enable_warnings
+
+CREATE TABLE `sorting_temporal`(
+`dcolumn` DATE,
+`tcolumn` TIME,
+`dtcolumn` DATETIME,
+`dtcolumn6` DATETIME(6)
+) ENGINE=columnstore;
+
+# TODO add negative time
+
+INSERT INTO `sorting_temporal`
+(`dcolumn`,`tcolumn`,`dtcolumn`,`dtcolumn6`)
+VALUES
+('2001-01-01','00:00:00','2001-01-01 00:00:00.000001','2001-01-01 00:00:00.000001'),
+('2001-01-01','00:00:00','2001-01-01 00:00:00.000001','2001-01-01 00:00:00.000002'),
+(NULL,NULL,NULL,NULL),
+('2042-02-24','23:23:42','2042-02-04 02:04:42.000001','2001-01-01 00:00:00.000001'),
+(NULL,NULL,NULL,NULL),
+('2005-05-21','05:05:42','2005-05-04 02:05:42.000001','2005-05-05 05:05:05.000005'),
+(NULL,NULL,NULL,NULL);
+
+# SELECT * FROM (SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` DESC)s;
+# SELECT * FROM (SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` ASC)s;
+# SELECT * FROM (SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` DESC)s;
+# SELECT * FROM (SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` ASC)s;
+# SELECT * FROM (SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` DESC)s;
+# SELECT * FROM (SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` ASC)s;
+# SELECT * FROM (SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` DESC)s;
+# SELECT * FROM (SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` ASC)s;
+
+
+DROP TABLE `sorting_numerics`;
+DROP TABLE `sorting_chars`;
+DROP TABLE `sorting_temporal`;
+
+
+# Clean UP
+DROP DATABASE mcol3758;

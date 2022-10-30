@@ -1,0 +1,283 @@
+DROP DATABASE IF EXISTS mcol3758;
+Warnings:
+Note	1008	Can't drop database 'mcol3758'; database doesn't exist
+CREATE DATABASE mcol3758;
+USE mcol3758;
+SET columnstore_orderby_threads=1;
+DROP TABLE IF EXISTS `sorting_numerics`;
+CREATE TABLE `sorting_numerics`(
+`tint` TINYINT,
+`smint` SMALLINT,
+`iint` INT,
+`bint` BIGINT,
+`utint` TINYINT UNSIGNED,
+`usmint` SMALLINT UNSIGNED,
+`uiint` INT UNSIGNED,
+`ubint` BIGINT UNSIGNED,
+`fl` FLOAT,
+`db` DOUBLE,
+`dec` DECIMAL(18),
+`udec` DECIMAL(18) UNSIGNED
+) ENGINE=columnstore;
+INSERT INTO `sorting_numerics`
+(`tint`,`smint`,`iint`,`bint`,`utint`,`usmint`,`uiint`,`ubint`,`fl`,`db`,`dec`,`udec`)
+VALUES
+(-1,-129,-65385,-4294967297,1,129,65385,4294967297,1.0,1.0,-1,1),
+(1,129,65385,4294967297,1,129,65385,4294967297,-1.0,-1.0,1,1),
+(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(-42,-170,-65422,-4294967344,42,170,65422,4294967344,42.0,42.0,-42,42),
+(42,170,65422,4294967344,42,170,65422,4294967344,-42.0,-42.0,42,42),
+(-5,-133,-65389,-4294967301,5,133,65389,4294967301,-5.0,-5.0,-5,5),
+(5,133,65389,4294967301,5,133,65389,4294967301,5.0,5.0,5,5),
+(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+SELECT `tint` FROM `sorting_numerics` ORDER BY tint DESC;
+tint
+42
+5
+1
+-1
+-5
+-42
+NULL
+NULL
+SELECT `tint` FROM `sorting_numerics` ORDER BY tint ASC;
+tint
+NULL
+NULL
+-42
+-5
+-1
+1
+5
+42
+SELECT `smint` FROM `sorting_numerics` ORDER BY smint DESC;
+smint
+170
+133
+129
+-129
+-133
+-170
+NULL
+NULL
+SELECT `smint` FROM `sorting_numerics` ORDER BY smint ASC;
+smint
+NULL
+NULL
+-170
+-133
+-129
+129
+133
+170
+SELECT `iint` FROM `sorting_numerics` ORDER BY iint DESC;
+iint
+65422
+65389
+65385
+-65385
+-65389
+-65422
+NULL
+NULL
+SELECT `iint` FROM `sorting_numerics` ORDER BY iint ASC;
+iint
+NULL
+NULL
+-65422
+-65389
+-65385
+65385
+65389
+65422
+SELECT `bint` FROM `sorting_numerics` ORDER BY bint DESC;
+bint
+4294967344
+4294967301
+4294967297
+-4294967297
+-4294967301
+-4294967344
+NULL
+NULL
+SELECT `bint` FROM `sorting_numerics` ORDER BY bint ASC;
+bint
+NULL
+NULL
+-4294967344
+-4294967301
+-4294967297
+4294967297
+4294967301
+4294967344
+SELECT `utint` FROM `sorting_numerics` ORDER BY utint DESC;
+utint
+42
+42
+5
+5
+1
+1
+NULL
+NULL
+SELECT `utint` FROM `sorting_numerics` ORDER BY utint ASC;
+utint
+NULL
+NULL
+1
+1
+5
+5
+42
+42
+SELECT `usmint` FROM `sorting_numerics` ORDER BY usmint DESC;
+usmint
+170
+170
+133
+133
+129
+129
+NULL
+NULL
+SELECT `usmint` FROM `sorting_numerics` ORDER BY usmint ASC;
+usmint
+NULL
+NULL
+129
+129
+133
+133
+170
+170
+SELECT `uiint` FROM `sorting_numerics` ORDER BY uiint DESC;
+uiint
+65422
+65422
+65389
+65389
+65385
+65385
+NULL
+NULL
+SELECT `uiint` FROM `sorting_numerics` ORDER BY uiint ASC;
+uiint
+NULL
+NULL
+65385
+65385
+65389
+65389
+65422
+65422
+SELECT `ubint` FROM `sorting_numerics` ORDER BY ubint DESC;
+ubint
+4294967344
+4294967344
+4294967301
+4294967301
+4294967297
+4294967297
+NULL
+NULL
+SELECT `ubint` FROM `sorting_numerics` ORDER BY ubint ASC;
+ubint
+NULL
+NULL
+4294967297
+4294967297
+4294967301
+4294967301
+4294967344
+4294967344
+SELECT `fl` FROM `sorting_numerics` ORDER BY fl DESC;
+fl
+42
+5
+1
+-1
+-5
+-42
+NULL
+NULL
+SELECT `fl` FROM `sorting_numerics` ORDER BY fl ASC;
+fl
+NULL
+NULL
+-42
+-5
+-1
+1
+5
+42
+SELECT `db` FROM `sorting_numerics` ORDER BY db DESC;
+db
+42
+5
+1
+-1
+-5
+-42
+NULL
+NULL
+SELECT `db` FROM `sorting_numerics` ORDER BY db ASC;
+db
+NULL
+NULL
+-42
+-5
+-1
+1
+5
+42
+DROP TABLE IF EXISTS `sorting_chars`;
+CREATE TABLE `sorting_chars`(
+tcolumn TEXT,
+vcolumn VARCHAR(100),
+vc7 VARCHAR(7),
+ch7 CHAR(7)
+) ENGINE=columnstore DEFAULT CHARSET=latin1;
+INSERT INTO `sorting_chars`
+(`tcolumn`,`vcolumn`, `vc7`, `ch7`)
+VALUES
+('one','two','three', 'four'),
+(' one','two ','4th ree', ' four '),
+(' one','two',NULL, NULL),
+(NULL,NULL, 'bb b', ' aaa '),
+('two','one', NULL, NULL),
+(NULL,NULL, 'ccccc ', 'four'),
+('Two','One', 'Three', 'Four'),
+('One','Two', 'Four', 'Three'),
+(NULL,NULL, NULL, NULL);
+SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn DESC;
+tcolumn
+two
+Two
+one
+One
+ one
+ one
+NULL
+NULL
+NULL
+DROP TABLE IF EXISTS `sorting_temporal`;
+CREATE TABLE `sorting_temporal`(
+`dcolumn` DATE,
+`tcolumn` TIME,
+`dtcolumn` DATETIME,
+`dtcolumn6` DATETIME(6)
+) ENGINE=columnstore;
+INSERT INTO `sorting_temporal`
+(`dcolumn`,`tcolumn`,`dtcolumn`,`dtcolumn6`)
+VALUES
+('2001-01-01','00:00:00','2001-01-01 00:00:00.000001','2001-01-01 00:00:00.000001'),
+('2001-01-01','00:00:00','2001-01-01 00:00:00.000001','2001-01-01 00:00:00.000002'),
+(NULL,NULL,NULL,NULL),
+('2042-02-24','23:23:42','2042-02-04 02:04:42.000001','2001-01-01 00:00:00.000001'),
+(NULL,NULL,NULL,NULL),
+('2005-05-21','05:05:42','2005-05-04 02:05:42.000001','2005-05-05 05:05:05.000005'),
+(NULL,NULL,NULL,NULL);
+DROP TABLE `sorting_numerics`;
+DROP TABLE `sorting_chars`;
+DROP TABLE `sorting_temporal`;
+DROP DATABASE mcol3758;

@@ -94,4 +94,8 @@ class ConstString
   }
 };
 
+class ShortConstString
+{
+};
+
 }  // namespace utils
