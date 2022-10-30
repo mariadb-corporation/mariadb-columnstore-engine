@@ -145,7 +145,10 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TINYINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
@@ -155,7 +158,9 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       // inline short strings, out-of-band long strings
       // inline short strings are not supported yet
       auto columnWidth = rg_.getColumnWidth(columnId);
-      if (sorting::isDictColumn(columnType, columnWidth))
+      bool forceInline = rg_.getForceInline()[columnId];
+      if (sorting::isDictColumn(columnType, columnWidth) && columnWidth >= rg_.getStringTableThreshold() &&
+          !forceInline)
       {
         using StorageType = utils::ConstString;
         using EncodedKeyType = utils::ConstString;
@@ -163,43 +168,64 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
         return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
                                        EncodedKeyType>(columnId, sortDirection, columns);
       }
-      // else
-      // {
-      //   using EncodedKeyType = utils::ConstString;
+      else if (sorting::isDictColumn(columnType, columnWidth) &&
+               (columnWidth < rg_.getStringTableThreshold() || forceInline))
+      {
+        using EncodedKeyType = utils::ConstString;
+        using StorageType = utils::ShortConstString;
+        // No difference b/w VARCHAR, CHAR and TEXT types yet
+        return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                       EncodedKeyType>(columnId, sortDirection, columns);
+      }
+      else if (!sorting::isDictColumn(columnType, columnWidth))
+      {
+        using EncodedKeyType = utils::ConstString;
 
-      //   switch (columnWidth)
-      //   {
-      //     case 1:
-      //     {
-      //       // using StorageType =
-      //       //     datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
-      //       // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR,
-      //       StorageType,
-      //           //                                EncodedKeyType>(columnId, sortDirection, columns);
-      //           break;
-      //     }
+        switch (columnWidth)
+        {
+          case 1:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
+            return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                           EncodedKeyType>(columnId, sortDirection, columns);
+          }
 
-      //     case 2:
-      //     {
-      //       break;
-      //     };
+          case 2:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
+            return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                           EncodedKeyType>(columnId, sortDirection, columns);
+          };
 
-      //     case 4:
-      //     {
-      //       break;
-      //     };
+          case 4:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+            return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                           EncodedKeyType>(columnId, sortDirection, columns);
+          };
 
-      //     case 8:
-      //     {
-      //       break;
-      //     };
-      //     default: idbassert(0);
-      //   }
+          case 8:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+            return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+                                           EncodedKeyType>(columnId, sortDirection, columns);
+          };
+          default: idbassert(0);
+        }
+      }
       break;
     }
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
-      break;
+      using StorageType =
+          datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::SMALLINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::DECIMAL:
@@ -211,7 +237,10 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DOUBLE>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DOUBLE, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::MEDINT:
@@ -226,7 +255,10 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UFLOAT:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::FLOAT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::FLOAT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::DATE:
@@ -253,23 +285,37 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
 
     case execplan::CalpontSystemCatalog::UTINYINT:
     {
-      break;
+      using StorageType =
+          datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UTINYINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UTINYINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
-      break;
+      using StorageType =
+          datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::USMALLINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::USMALLINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::UINT:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UBIGINT>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UBIGINT, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     default: break;
@@ -285,6 +331,8 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
   rowgroup::Row r;
   // Replace with a constexpr
   auto nullValue = sorting::getNullValue<StorageType, EncodedKeyType>(ColType);
+  // Used by getColumnValue to detect NULLs when a string is less than 8 bytes.
+  [[maybe_unused]] auto storageNull = sorting::getNullValue<StorageType, StorageType>(ColType);
   RGDataOrRowIDType rgDataId = 0;
   permutation.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
   keys.reserve(rgDatas_.size() * rowgroup::rgCommonSize);
@@ -301,7 +349,7 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
     {
       EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, i);
       PermutationType permute = {rgDataId, i, 0};
-      if (!isNull(value, nullValue))
+      if (!isNull<EncodedKeyType, StorageType>(value, nullValue, storageNull))
       {
         keys.push_back(value);
         permutation.push_back(permute);
@@ -335,55 +383,28 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
   rowgroup::Row r;
   // Replace with a constexpr
   auto nullValue = sorting::getNullValue<StorageType, EncodedKeyType>(ColType);
-  // RGDataOrRowIDType rgDataId = 0;
+  [[maybe_unused]] auto storageNull = sorting::getNullValue<StorageType, StorageType>(ColType);
   rg_.initRow(&r);  // Row iterator call seems unreasonably costly here
-  // !!!!!!!!!! data set sizes don't match here.
-  // Длина keys не равна длине диапазона permutation_ - надо как-то учесть или выбросить
-  // null-ы.
-  // auto permSrcBegin = (permutation.empty()) ? begin : permutation.begin() + nulls.size();
-  // auto permSrcEnd = (permutation.empty()) ? end : permutation.end();
-
   auto permSrcBegin = begin;
   auto permSrcEnd = end;
   keys.reserve(std::distance(permSrcBegin, permSrcEnd));
   permutation.reserve(std::distance(permSrcBegin, permSrcEnd));
-  // if (permutation.empty())
+  // Проверить актуальность итераторов
+  for (auto p = permSrcBegin; p != permSrcEnd; ++p)
   {
-    // Проверить актуальность итераторов
-    for (auto p = permSrcBegin; p != permSrcEnd; ++p)
+    // set rgdata
+    rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
+    EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, p->rowID);
+    if (!isNull<EncodedKeyType, StorageType>(value, nullValue, storageNull))
     {
-      // set rgdata
-      rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
-      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, p->rowID);
-      if (!isNull(value, nullValue))
-      {
-        keys.push_back(value);
-        permutation.push_back(*p);
-      }
-      else
-      {
-        nulls.push_back(*p);
-      }
+      keys.push_back(value);
+      permutation.push_back(*p);
+    }
+    else
+    {
+      nulls.push_back(*p);
     }
   }
-  // else
-  // {
-  //   // Проверить актуальность итераторов
-  //   for (auto p = permSrcBegin; p != permSrcEnd; ++p)
-  //   {
-  //     // set rgdata
-  //     rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
-  //     EncodedKeyType value = rg_.getColumnValue<ColType, StorageType>(columnID, p->rowID);
-  //     if (value != nullValue)
-  //     {
-  //       keys.push_back(value);
-  //     }
-  //     else
-  //     {
-  //       nulls.push_back(*p);
-  //     }
-  //   }
-  // }
 }
 
 template <typename EncodedKeyType>
@@ -453,14 +474,14 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
   requires IsTrue<IsFirst> bool
-FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
+FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool isAscDirection,
                                      joblist::OrderByKeysType columns)
 {
   bool isFailure = false;
   // ASC = true, DESC = false
   // MCS finally reads records from TAS in opposite to nullsFirst value,
   // if nullsFirst is true the NULLS will be in the end and vice versa.
-  const bool nullsFirst = !sortDirection;
+  const bool nullsFirst = !isAscDirection;
   auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * rgDatas_.size() *
                rowgroup::rgCommonSize;
   {
@@ -489,9 +510,9 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     if constexpr (std::is_same<EncodedKeyType, utils::ConstString>::value)
     {
       datatypes::Charset cs(rg_.getCharset(columnID));
-      if (sortDirection)
+      if (isAscDirection)
       {
-        auto cmp = [&cs](EncodedKeyType x, EncodedKeyType y) { return -cs.strnncollsp(x, y) > 0; };
+        auto cmp = [&cs](EncodedKeyType x, EncodedKeyType y) { return cs.strnncollsp(x, y) > 0; };
         sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
       }
       else
@@ -502,7 +523,7 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     }
     else
     {
-      if (sortDirection)
+      if (isAscDirection)
       {
         sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
       }
@@ -522,7 +543,7 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
       // Adding NULLs range into ranges
       if (nulls.size() > 1)
       {
-        if (sortDirection)
+        if (isAscDirection)
         {
           ranges4Sort.push({keys.size(), permutation.size()});
         }

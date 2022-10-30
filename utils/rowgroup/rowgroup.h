@@ -70,24 +70,34 @@ namespace rowgroup
 constexpr const int16_t rgCommonSize = 8192;
 template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
 concept CanUseIntegralTypes =
-    requires { requires std::is_same<FromType, utils::ConstString>::value == false; };
+    requires {
+      requires((std::is_integral<FromType>::value || std::is_floating_point<FromType>::value) &&
+               !(std::is_same<FromType, utils::ShortConstString>::value ||
+                 std::is_same<ToType, utils::ConstString>::value));
+    };
 
-template <datatypes::SystemCatalog::ColDataType ColType, typename ToType, typename FromType>
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsShortStringInIntegralTypes =
+    requires {
+      requires std::is_integral<FromType>::value && std::is_same<ToType, utils::ConstString>::value;
+    };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
 concept IsVariadicType =
     requires {
       requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
                ColType == datatypes::SystemCatalog::TEXT) &&
-                  std::is_same<ToType, utils::ConstString>::value == true &&
-                  std::is_same<FromType, utils::ConstString>::value == true;
+                  std::is_same<ToType, utils::ConstString>::value &&
+                  std::is_same<FromType, utils::ConstString>::value;
     };
 
-template <datatypes::SystemCatalog::ColDataType ColType, typename ToType, typename FromType>
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
 concept IsShortString =
     requires {
       requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
                ColType == datatypes::SystemCatalog::TEXT) &&
-                  std::is_same<ToType, utils::ConstString>::value == true &&
-                  std::is_same<FromType, utils::ConstString>::value == false;
+                  std::is_same<ToType, utils::ConstString>::value &&
+                  std::is_same<FromType, utils::ShortConstString>::value;
     };
 /*
     The RowGroup family of classes encapsulate the data moved through the
@@ -1472,9 +1482,12 @@ class RowGroup : public messageqcpp::Serializeable
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data && strings);
+    static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
         RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
-
+    bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    if (isNull)
+      return nullValue;
     // check the out of bounds invariant somehow
     return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
     // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
@@ -1497,9 +1510,12 @@ class RowGroup : public messageqcpp::Serializeable
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data && strings);
+    static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
         RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
-
+    bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    if (isNull)
+      return nullValue;
     // check the out of bounds invariant somehow
     return strings->getConstString(*(reinterpret_cast<char*>(&data[offset2stringStoreOffset])));
 
@@ -1518,6 +1534,16 @@ class RowGroup : public messageqcpp::Serializeable
     // {
     //   return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
     // }
+  }
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsShortStringInIntegralTypes<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    // check the out of bounds invariant somehow
+    const char* valuePtr = reinterpret_cast<const char*>(&data[valueOffset]);
+    return utils::ConstString(valuePtr, sizeof(FromType));
   }
 
   uint32_t getStatus() const;
