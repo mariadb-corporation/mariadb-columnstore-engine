@@ -74,6 +74,7 @@ class AggregateColumn : public ReturnedColumn
     BIT_OR,
     BIT_XOR,
     GROUP_CONCAT,
+    JSON_ARRAYAGG,
     UDAF,
     MULTI_PARM
   };

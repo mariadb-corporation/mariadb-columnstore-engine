@@ -35,6 +35,7 @@
 #include "mcs_basic_types.h"
 #include "resourcemanager.h"
 #include "groupconcat.h"
+#include "jsonarrayagg.h"
 
 #include "blocksize.h"
 #include "errorcodes.h"
@@ -656,7 +657,8 @@ void RowAggregation::initialize()
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
+    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
+        fun->fAggFunction == ROWAGG_JSON_ARRAY)
     {
       allow_gen = false;
       break;
@@ -732,7 +734,8 @@ void RowAggregation::aggReset()
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT)
+    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
+        fun->fAggFunction == ROWAGG_JSON_ARRAY)
     {
       allow_gen = false;
       break;
@@ -972,7 +975,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
     if (fFunctionCol->fAggFunction == ROWAGG_COUNT_ASTERISK ||
         fFunctionCol->fAggFunction == ROWAGG_COUNT_COL_NAME ||
         fFunctionCol->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME ||
-        fFunctionCol->fAggFunction == ROWAGG_COUNT_NO_OP ||
+        fFunctionCol->fAggFunction == ROWAGG_COUNT_NO_OP || fFunctionCol->fAggFunction == ROWAGG_JSON_ARRAY ||
         fFunctionCol->fAggFunction == ROWAGG_GROUP_CONCAT || fFunctionCol->fAggFunction == ROWAGG_STATS)
     {
       continue;
@@ -1668,6 +1671,7 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
       case ROWAGG_DUP_STATS:
       case ROWAGG_DUP_UDAF:
       case ROWAGG_CONSTANT:
+      case ROWAGG_JSON_ARRAY:
       case ROWAGG_GROUP_CONCAT: break;
 
       case ROWAGG_UDAF:
@@ -1730,6 +1734,7 @@ void RowAggregation::mergeEntries(const Row& rowIn)
       case ROWAGG_DUP_STATS:
       case ROWAGG_DUP_UDAF:
       case ROWAGG_CONSTANT:
+      case ROWAGG_JSON_ARRAY:
       case ROWAGG_GROUP_CONCAT: break;
 
       case ROWAGG_UDAF: doUDAF(rowIn, colOut, colOut, colOut + 1, i); break;
@@ -2480,6 +2485,14 @@ void RowAggregationUM::attachGroupConcatAg()
         fGroupConcatAg.push_back(gcc);
         *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
       }
+
+      if (fFunctionColGc[i]->fAggFunction == ROWAGG_JSON_ARRAY)
+      {
+        // save the object's address in the result row
+        SP_GroupConcatAg gcc(new joblist::JsonArrayAggregatAgUM(fGroupConcat[j++]));
+        fGroupConcatAg.push_back(gcc);
+        *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
+      }
     }
   }
 }
@@ -2543,6 +2556,12 @@ void RowAggregationUM::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1
         break;
       }
 
+      case ROWAGG_JSON_ARRAY:
+      {
+        doJsonAgg(rowIn, colIn, colOut);
+        break;
+      }
+
       case ROWAGG_COUNT_NO_OP:
       case ROWAGG_DUP_FUNCT:
       case ROWAGG_DUP_AVG:
@@ -2578,6 +2597,13 @@ void RowAggregationUM::doGroupConcat(const Row& rowIn, int64_t, int64_t o)
 {
   uint8_t* data = fRow.getData();
   joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
+  gccAg->processRow(rowIn);
+}
+
+void RowAggregationUM::doJsonAgg(const Row& rowIn, int64_t, int64_t o)
+{
+  uint8_t* data = fRow.getData();
+  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
   gccAg->processRow(rowIn);
 }
 
@@ -3989,6 +4015,15 @@ void RowAggregationUM::setGroupConcatString()
         fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
         // gccAg->getResult(buff);
       }
+
+      if (fFunctionCols[j]->fAggFunction == ROWAGG_JSON_ARRAY)
+      {
+        uint8_t* buff = data + fRow.getOffset(fFunctionCols[j]->fOutputColumnIndex);
+        uint8_t* gcString;
+        joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
+        gcString = gccAg->getResult();
+        fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
+      }
     }
   }
 }
@@ -4102,6 +4137,12 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcs
       case ROWAGG_GROUP_CONCAT:
       {
         doGroupConcat(rowIn, colIn, colOut);
+        break;
+      }
+
+      case ROWAGG_JSON_ARRAY:
+      {
+        doJsonAgg(rowIn, colIn, colOut);
         break;
       }
 
@@ -4320,6 +4361,13 @@ void RowAggregationUMP2::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 {
   uint8_t* data = fRow.getData();
   joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
+  gccAg->merge(rowIn, i);
+}
+
+void RowAggregationUMP2::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
+{
+  uint8_t* data = fRow.getData();
+  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
   gccAg->merge(rowIn, i);
 }
 
@@ -4572,6 +4620,12 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn, std::vector<mcsv1sdk:
         break;
       }
 
+      case ROWAGG_JSON_ARRAY:
+      {
+        doJsonAgg(rowIn, colIn, colOut);
+        break;
+      }
+
       case ROWAGG_COUNT_NO_OP:
       case ROWAGG_DUP_FUNCT:
       case ROWAGG_DUP_AVG:
@@ -4700,6 +4754,12 @@ void RowAggregationSubDistinct::doGroupConcat(const Row& rowIn, int64_t i, int64
   gccAg->merge(rowIn, i);
 }
 
+void RowAggregationSubDistinct::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
+{
+  uint8_t* data = fRow.getData();
+  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
+  gccAg->merge(rowIn, i);
+}
 //------------------------------------------------------------------------------
 // Constructor / destructor
 //------------------------------------------------------------------------------
