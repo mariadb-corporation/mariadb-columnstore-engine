@@ -27,6 +27,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include "joblisttypes.h"
 #ifndef _MSC_VER
 #include <tr1/unordered_set>
 #else

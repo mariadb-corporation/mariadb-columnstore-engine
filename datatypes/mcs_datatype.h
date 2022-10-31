@@ -694,6 +694,11 @@ struct ColDataTypeToIntegralType<SystemCatalog::DATETIME>
 {
 };
 template <>
+struct ColDataTypeToIntegralType<SystemCatalog::TIMESTAMP>
+ : _ColDataTypeToIntegralType<SystemCatalog::TIMESTAMP, uint64_t>
+{
+};
+template <>
 struct ColDataTypeToIntegralType<SystemCatalog::TIME>
  : _ColDataTypeToIntegralType<SystemCatalog::TIME, uint64_t>
 {
