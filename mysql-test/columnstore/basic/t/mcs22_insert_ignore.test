@@ -32,6 +32,16 @@ INSERT INTO t1 (c1) VALUES ('hello');
 INSERT IGNORE INTO t1 (c1) VALUES ('hello');
 SELECT * FROM t1;
 
+# Prove we do what InnoDB does.
+# The only difference is that our insert above produces a warning.
+CREATE TABLE t1i(
+c1 CHAR(5),
+c2 CHAR(10) NOT NULL
+);
+INSERT IGNORE INTO t1i (c1) VALUES ('hello');
+SELECT * FROM t1i;
+DROP TABLE t1i;
+
 #duplicate rows
 INSERT INTO t1 VALUES ('123', 'abc');
 INSERT INTO t1 VALUES ('123', 'abc');
