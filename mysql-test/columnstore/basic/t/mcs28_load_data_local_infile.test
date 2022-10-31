@@ -44,6 +44,7 @@ TRUNCATE TABLE t1;
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;
 # The empty line last comes from the end line field in the file
 SELECT * FROM t1;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 # Clean up

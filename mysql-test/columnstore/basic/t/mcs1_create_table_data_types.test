@@ -26,6 +26,7 @@ CREATE TABLE t1
  t1_BIGINT BIGINT,
  t1_BIGINT_UNSIGNED BIGINT UNSIGNED
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 # Test Decimal datatypes
@@ -38,6 +39,7 @@ CREATE TABLE t2
  t2_FLOAT FLOAT,
  t2_FLOAT_UNSIGNED FLOAT UNSIGNED
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
 # Test String datatypes
@@ -55,6 +57,7 @@ CREATE TABLE t3
  t3_MEDIUMTEXT MEDIUMTEXT,
  t3_LONGTEXT LONGTEXT
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t3;
 
 # Test Date and Time datatypes
@@ -68,6 +71,7 @@ CREATE TABLE t4
  t4_TIMESTAMP TIMESTAMP,
  t4_TIMESTAMP_5 TIMESTAMP(5)
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t4;
 
 # Test with mixed datatypes
@@ -83,6 +87,7 @@ CREATE TABLE t5
  t5_TIME TIME,
  t5_TIMESTAMP TIMESTAMP
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t5;
 
 # Clean UP
