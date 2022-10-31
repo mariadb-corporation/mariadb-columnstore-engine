@@ -33,11 +33,11 @@ INSERT IGNORE INTO t1 (c1) VALUES ('hello');
 SELECT * FROM t1;
 
 # Prove we do what InnoDB does.
-# The only difference is that our insert above produces a warning.
+# We even have the same warnings!
 CREATE TABLE t1i(
 c1 CHAR(5),
 c2 CHAR(10) NOT NULL
-);
+) ENGINE=InnoDB;
 INSERT IGNORE INTO t1i (c1) VALUES ('hello');
 SELECT * FROM t1i;
 DROP TABLE t1i;
