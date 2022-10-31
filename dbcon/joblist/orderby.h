@@ -53,6 +53,7 @@ uint32_t getNullValue(uint8_t type)
   return joblist::FLOATNULL;
 }
 
+// WIP Align all datatypes, e.g. TIME has its own NULL.
 template <typename T, typename EncodedKeyType>
   requires(sizeof(T) == sizeof(int64_t) && !std::is_same<T, double>::value &&
            !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
@@ -63,13 +64,13 @@ T getNullValue(uint8_t type)
   {
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::DATE:
-    case execplan::CalpontSystemCatalog::DATETIME:
-    case execplan::CalpontSystemCatalog::TIMESTAMP:
-    case execplan::CalpontSystemCatalog::TIME:
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::BLOB:
     case execplan::CalpontSystemCatalog::TEXT: return joblist::CHAR8NULL;
+    case execplan::CalpontSystemCatalog::TIME: return joblist::TIMENULL;
+    case execplan::CalpontSystemCatalog::TIMESTAMP: return joblist::TIMESTAMPNULL;
+    case execplan::CalpontSystemCatalog::DATETIME: return joblist::DATETIMENULL;
+    case execplan::CalpontSystemCatalog::DATE: return joblist::DATENULL;
 
     case execplan::CalpontSystemCatalog::UBIGINT: return joblist::UBIGINTNULL;
 

@@ -4,9 +4,9 @@
 #
 # source ../include/have_columnstore.inc
 
-#disable_warnings
+--disable_warnings
 DROP DATABASE IF EXISTS mcol3758;
-#enable_warnings
+--enable_warnings
 
 CREATE DATABASE mcol3758;
 USE mcol3758;
@@ -88,20 +88,28 @@ ch7 CHAR(7)
 INSERT INTO `sorting_chars`
 (`tcolumn`,`vcolumn`, `vc7`, `ch7`)
 VALUES
-('one','two','three', 'four'),
+('one','two','three', 'afour'),
 (' one','two ','4th ree', ' four '),
 (' one','two',NULL, NULL),
 (NULL,NULL, 'bb b', ' aaa '),
+(' one','two ','4th ree', 'five '),
 ('two','one', NULL, NULL),
+('ccccc','deac', 'ccccc ', 'haf'),
 (NULL,NULL, 'ccccc ', 'four'),
-('Two','One', 'Three', 'Four'),
-('One','Two', 'Four', 'Three'),
+('two','one', 'three', 'four'),
+('one','two', 'four', 'three'),
+(NULL,'one', 'bb b', 'zAz'),
 (NULL,NULL, NULL, NULL);
 
-SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn DESC;
-# SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn ASC;
-# SELECT `vcolumn` FROM `sorting_chars` ORDER BY vcolumn DESC;
-# SELECT `vcolumn` FROM `sorting_chars` ORDER BY vcolumn ASC;
+# This block is not ready yeat b/c it does not sort on NULLs
+SELECT `tcolumn` FROM `sorting_chars` WHERE `tcolumn` IS NOT NULL ORDER BY `tcolumn` DESC;
+SELECT `tcolumn` FROM `sorting_chars` WHERE `tcolumn` IS NOT NULL ORDER BY `tcolumn` ASC;
+SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` DESC;
+SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` ASC;
+SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` DESC;
+SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` ASC;
+SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` DESC;
+SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` ASC;
 
 # temporal
 --disable_warnings
@@ -128,15 +136,14 @@ VALUES
 ('2005-05-21','05:05:42','2005-05-04 02:05:42.000001','2005-05-05 05:05:05.000005'),
 (NULL,NULL,NULL,NULL);
 
-# SELECT * FROM (SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` DESC)s;
-# SELECT * FROM (SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` ASC)s;
-# SELECT * FROM (SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` DESC)s;
-# SELECT * FROM (SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` ASC)s;
-# SELECT * FROM (SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` DESC)s;
-# SELECT * FROM (SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` ASC)s;
-# SELECT * FROM (SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` DESC)s;
-# SELECT * FROM (SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` ASC)s;
-
+SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` DESC;
+SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` ASC;
+SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` DESC;
+SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` ASC;
+SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` DESC;
+SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` ASC;
+SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` DESC;
+SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` ASC;
 
 DROP TABLE `sorting_numerics`;
 DROP TABLE `sorting_chars`;

@@ -1485,9 +1485,9 @@ class RowGroup : public messageqcpp::Serializeable
     static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
         RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
-    bool isNull = strings->isNullValue(offset2stringStoreOffset);
-    if (isNull)
-      return nullValue;
+    // bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    // if (isNull)
+    //   return nullValue;
     // check the out of bounds invariant somehow
     return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
     // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
@@ -1509,16 +1509,16 @@ class RowGroup : public messageqcpp::Serializeable
     requires IsShortString<ColType, FromType, ToType>
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
-    assert(data && strings);
+    assert(data);
     static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
         RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
-    bool isNull = strings->isNullValue(offset2stringStoreOffset);
-    if (isNull)
-      return nullValue;
+    // bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    // if (isNull)
+    //   return nullValue;
     // check the out of bounds invariant somehow
-    return strings->getConstString(*(reinterpret_cast<char*>(&data[offset2stringStoreOffset])));
-
+    const char* src = reinterpret_cast<const char*>(&data[offset2stringStoreOffset]);
+    return ToType(src, strnlen(src, getColumnWidth(columnID)));
     // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
     // {
     //   const char* src = (const char*)&data[offsets[colIndex]];
@@ -1543,7 +1543,7 @@ class RowGroup : public messageqcpp::Serializeable
     size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
     // check the out of bounds invariant somehow
     const char* valuePtr = reinterpret_cast<const char*>(&data[valueOffset]);
-    return utils::ConstString(valuePtr, sizeof(FromType));
+    return ToType(valuePtr, sizeof(FromType));
   }
 
   uint32_t getStatus() const;
