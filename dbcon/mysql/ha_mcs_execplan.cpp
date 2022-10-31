@@ -2907,7 +2907,7 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
 
     case Item_sum::JSON_ARRAYAGG_FUNC:
     {
-      Item_func_group_concat* gc = (Item_func_group_concat*)isp;
+      Item_func_json_arrayagg* gc = (Item_func_json_arrayagg*)isp;
       ac->aggOp(AggregateColumn::JSON_ARRAYAGG);
       ac->distinct(gc->get_distinct());
       return rc;
@@ -4916,7 +4916,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     gwi.aggOnSelect = true;
 
   // Argument_count() is the # of formal parms to the agg fcn. Columnstore
-  // only supports 1 argument except UDAnF, COUNT(DISTINC) and GROUP_CONCAT
+  // only supports 1 argument except UDAnF, COUNT(DISTINC), GROUP_CONCAT and JSON_ARRAYAGG
   if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::COUNT_DISTINCT_FUNC &&
       isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC && isp->sum_func() != Item_sum::UDF_SUM_FUNC &&
       isp->sum_func() != Item_sum::JSON_ARRAYAGG_FUNC)
@@ -4964,7 +4964,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   try
   {
     // special parsing for group_concat
-    if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC || isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
+    if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
     {
       Item_func_group_concat* gc = (Item_func_group_concat*)isp;
       vector<SRCP> orderCols;
@@ -5032,14 +5032,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       }
 
       rowCol->columnVec(selCols);
-      if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
-      {
-        (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
-      }
-      else
-      {
-        (dynamic_cast<JsonArrayAggColumn*>(ac))->orderCols(orderCols);
-      }
+      (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
       parm.reset(rowCol);
       ac->aggParms().push_back(parm);
 
@@ -5047,14 +5040,86 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       {
         string separator;
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
-        if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+        (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+      }
+    }
+    else if (isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
+    {
+      Item_func_json_arrayagg* gc = (Item_func_json_arrayagg*)isp;
+      vector<SRCP> orderCols;
+      RowColumn* rowCol = new RowColumn();
+      vector<SRCP> selCols;
+
+      uint32_t select_ctn = gc->get_count_field();
+      ReturnedColumn* rc = NULL;
+
+      for (uint32_t i = 0; i < select_ctn; i++)
+      {
+        rc = buildReturnedColumn(sfitempp[i], gwi, gwi.fatalParseError);
+
+        if (!rc || gwi.fatalParseError)
         {
-          (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+          if (ac)
+            delete ac;
+
+          return NULL;
+        }
+
+        selCols.push_back(SRCP(rc));
+      }
+
+      ORDER **order_item, **end;
+
+      for (order_item = gc->get_order(), end = order_item + gc->get_order_field(); order_item < end;
+           order_item++)
+      {
+        Item* ord_col = *(*order_item)->item;
+
+        if (ord_col->type() == Item::CONST_ITEM && ord_col->cmp_type() == INT_RESULT)
+        {
+          Item_int* id = (Item_int*)ord_col;
+
+          if (id->val_int() > (int)selCols.size())
+          {
+            gwi.fatalParseError = true;
+
+            if (ac)
+              delete ac;
+
+            return NULL;
+          }
+
+          rc = selCols[id->val_int() - 1]->clone();
+          rc->orderPos(id->val_int() - 1);
         }
         else
         {
-          (dynamic_cast<JsonArrayAggColumn*>(ac))->separator(separator);
+          rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+
+          if (!rc || gwi.fatalParseError)
+          {
+            if (ac)
+              delete ac;
+
+            return NULL;
+          }
         }
+
+        // 10.2 TODO: direction is now a tri-state flag
+        rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
+        orderCols.push_back(SRCP(rc));
+      }
+
+      rowCol->columnVec(selCols);
+      (dynamic_cast<JsonArrayAggColumn*>(ac))->orderCols(orderCols);
+      parm.reset(rowCol);
+      ac->aggParms().push_back(parm);
+
+      if (gc->get_separator())
+      {
+        string separator;
+        separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
+        (dynamic_cast<JsonArrayAggColumn*>(ac))->separator(separator);
       }
     }
     else if (isSupportedAggregateWithOneConstArg(isp, sfitempp))

@@ -90,13 +90,13 @@ JSON_ARRAYAGG(b LIMIT 2)
 ["Hello","World","This","Will","Work","!","Hello","World","This","Will","Work","!"]
 SELECT JSON_ARRAYAGG(b LIMIT 1) FROM t1 GROUP BY b;
 JSON_ARRAYAGG(b LIMIT 1)
-["Hello","Hello"]
 NULL
-["Work","Work"]
-["This","This"]
-["World","World"]
 ["!","!"]
+["Hello","Hello"]
+["This","This"]
 ["Will","Will"]
+["Work","Work"]
+["World","World"]
 SELECT JSON_ARRAYAGG(b LIMIT 2) FROM t1 GROUP BY a;
 JSON_ARRAYAGG(b LIMIT 2)
 NULL
