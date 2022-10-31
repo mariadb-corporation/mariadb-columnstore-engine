@@ -24,7 +24,7 @@ SELECT a, CONV(a, 10, 2)  FROM t1;
 SELECT a, CONV(a, 10, 8)  FROM t1;
 SELECT a, CONV(a, 10, 16)  FROM t1;
 SELECT a, COS(a), b, COS(b) FROM t1;
-SELECT a, COT(a), b, COT(b) FROM t1 WHERE a != 0;
+SELECT a, COT(a), b, TRUNCATE(COT(b),16) FROM t1 WHERE a != 0;
 SELECT a, CRC32(a), b, CRC32(b) FROM t1;
 SELECT a, DEGREES(a), b, DEGREES(b) FROM t1;
 SELECT a, EXP(1), b, EXP(b) FROM t1;
@@ -41,7 +41,7 @@ SELECT a, RAND(a), b, RAND(b) FROM t1;
 SELECT a, ROUND(a), b, ROUND(b) FROM t1;
 SELECT a, SIGN(a), b, SIGN(b) FROM t1;
 SELECT a, SQRT(a), b, SQRT(b) FROM t1;
-SELECT a, TAN(a), b, TAN(b) FROM t1;
+SELECT a, TAN(a), b, TRUNCATE(TAN(b), 14) FROM t1;
 SELECT a, TRUNCATE(a, 1) FROM t1;
 SELECT b, TRUNCATE(b, 1), TRUNCATE(b, 4), TRUNCATE(b, -1), TRUNCATE(b, -2), TRUNCATE(b, -3) FROM t1;
 
