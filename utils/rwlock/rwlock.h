@@ -46,9 +46,9 @@
 
 namespace rwlock
 {
-const std::array<const std::string, 7> RWLockNames = {
+const std::array<const std::string, 7> RWLockNames = { {
     "all", "VSS", "ExtentMap", "FreeList", "VBBM", "CopyLocks", "ExtentMapIndex",
-};
+} };
 
 /// the layout of the shmseg
 struct State
