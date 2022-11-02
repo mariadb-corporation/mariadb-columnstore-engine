@@ -231,7 +231,26 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      break;
+      auto columnWidth = rg_.getColumnWidth(columnId);
+      if (columnWidth == datatypes::DECIMAL128WIDTH)
+      {
+        using StorageType = datatypes::TSInt128;
+        using EncodedKeyType = datatypes::TSInt128;
+        return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DECIMAL, StorageType,
+                                       EncodedKeyType>(columnId, sortDirection, columns);
+      }
+      else if (columnWidth == datatypes::DECIMAL64WIDTH)
+      {
+        using StorageType = datatypes::WidthToSIntegralType<datatypes::DECIMAL64WIDTH>::type;
+        using EncodedKeyType = StorageType;
+        return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DECIMAL, StorageType,
+                                       EncodedKeyType>(columnId, sortDirection, columns);
+      }
+      else
+      {
+        throw logging::NotImplementedExcept("sortByColumnCF(): U-/DECIMAL has an unexpected width" +
+                                            std::to_string(columnWidth));
+      }
     }
 
     case execplan::CalpontSystemCatalog::DOUBLE:
