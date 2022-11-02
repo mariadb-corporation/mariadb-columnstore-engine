@@ -756,7 +756,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
       {
         *toAck = 1;
 
-        for (uint32_t i = 0; i < pmCount; i++)
+        for (int i = pmCount - 1; i >= 0; --i)
         {
           if (!pmAcked[i])
             writeToClient(i, msg);
@@ -849,7 +849,7 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
 
   msg->advanceInputPtr(sizeof(ISMPacketHeader));
 
-  for (uint32_t i = 0; i < mqe->pmCount; i++)
+  for (int i = mqe->pmCount - 1; i >= 0; --i)
     writeToClient(i, msg);
 }
 
@@ -876,9 +876,7 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
       case DICT_DESTROY_EQUALITY_FILTER:
         /* XXXPAT: This relies on the assumption that the first pmCount "PMS*"
         entries in the config file point to unique PMs */
-        uint32_t i;
-
-        for (i = 0; i < pmCount; i++)
+        for (int i = pmCount - 1; i >= 0; --i)
           writeToClient(i, msg, senderID);
 
         return;
