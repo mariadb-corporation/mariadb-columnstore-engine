@@ -67,10 +67,10 @@ SELECT `fl` FROM `sorting_numerics` ORDER BY fl DESC;
 SELECT `fl` FROM `sorting_numerics` ORDER BY fl ASC;
 SELECT `db` FROM `sorting_numerics` ORDER BY db DESC;
 SELECT `db` FROM `sorting_numerics` ORDER BY db ASC;
-# SELECT `dec` FROM (SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` DESC)s;
-# SELECT `dec` FROM (SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` ASC)s;
-# SELECT `udec` FROM (SELECT `udec` FROM `sorting_numerics` ORDER BY udec DESC)s;
-# SELECT `udec` FROM (SELECT `udec` FROM `sorting_numerics` ORDER BY udec ASC)s;
+SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` DESC;
+SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` ASC;
+SELECT `udec` FROM `sorting_numerics` ORDER BY udec DESC;
+SELECT `udec` FROM `sorting_numerics` ORDER BY udec ASC;
 
 # Check with NULLs first and last
 # string

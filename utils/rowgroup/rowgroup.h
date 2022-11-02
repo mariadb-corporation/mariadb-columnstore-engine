@@ -77,6 +77,14 @@ concept CanUseIntegralTypes =
     };
 
 template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsTSInt128 = requires {
+                       requires((std::is_same<FromType, datatypes::TSInt128>::value &&
+                                 std::is_same<ToType, datatypes::TSInt128>::value) &&
+                                !(std::is_same<FromType, utils::ShortConstString>::value ||
+                                  std::is_same<ToType, utils::ConstString>::value));
+                     };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
 concept IsShortStringInIntegralTypes =
     requires {
       requires std::is_integral<FromType>::value && std::is_same<ToType, utils::ConstString>::value;
@@ -1465,7 +1473,6 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
-  // add numerics only concept check
   template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
     requires CanUseIntegralTypes<ColType, FromType, ToType>
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
@@ -1473,9 +1480,21 @@ class RowGroup : public messageqcpp::Serializeable
     assert(data);
     size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
     // check the out of bounds invariant somehow
-    ToType* valuePtr = reinterpret_cast<ToType*>(&data[valueOffset]);  // the cast is questionable here
+    const ToType* valuePtr = reinterpret_cast<ToType*>(&data[valueOffset]);  // the cast is questionable here
     return *valuePtr;
   }
+
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsTSInt128<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    // check the out of bounds invariant somehow
+    const int128_t* valuePtr = reinterpret_cast<int128_t*>(&data[valueOffset]);
+    return datatypes::TSInt128(valuePtr);
+  }
+
   // Need one more template spec for short ConstStrings
   template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
     requires IsVariadicType<ColType, FromType, ToType>

@@ -113,10 +113,12 @@ constexpr uint128_t operator"" _xxl()
 
 namespace datatypes
 {
-constexpr uint32_t MAXDECIMALWIDTH = 16U;
+constexpr uint32_t DECIMAL128WIDTH = 16U;
+constexpr uint32_t MAXDECIMALWIDTH = DECIMAL128WIDTH;
 constexpr uint8_t INT64MAXPRECISION = 18U;
 constexpr uint8_t INT128MAXPRECISION = 38U;
-constexpr uint32_t MAXLEGACYWIDTH = 8U;
+constexpr uint32_t DECIMAL64WIDTH = 8U;
+constexpr uint32_t MAXLEGACYWIDTH = DECIMAL64WIDTH;
 constexpr uint8_t MAXSCALEINC4AVG = 4U;
 
 const uint64_t mcs_pow_10[20] = {

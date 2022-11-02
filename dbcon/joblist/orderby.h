@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include "conststring.h"
+#include "mcs_int128.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "jlf_common.h"
@@ -32,11 +33,12 @@
 namespace sorting
 {
 template <typename T, typename EncodedKeyType>
-  requires(sizeof(T) == sizeof(int128_t) && !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
-                                              std::is_same<EncodedKeyType, utils::ShortConstString>::value))
+  requires(std::is_same<T, datatypes::TSInt128>::value &&
+           !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+             std::is_same<EncodedKeyType, utils::ShortConstString>::value))
 T getNullValue(uint8_t type)
 {
-  return datatypes::Decimal128Null;
+  return datatypes::TSInt128(datatypes::Decimal128Null);
 }
 
 template <typename T, typename EncodedKeyType>
@@ -273,7 +275,10 @@ class FlatOrderBy
   }
 
   template <typename EncodedKeyType, typename StorageType>
-    requires(std::is_integral<EncodedKeyType>::value && std::is_integral<StorageType>::value) bool
+    requires((std::is_integral<EncodedKeyType>::value ||
+              std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
+             (std::is_integral<StorageType>::value ||
+              std::is_same<StorageType, datatypes::TSInt128>::value)) bool
   isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
   {
     return value == null;
