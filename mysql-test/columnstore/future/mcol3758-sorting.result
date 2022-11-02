@@ -228,6 +228,46 @@ NULL
 1
 5
 42
+SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` DESC;
+dec
+42
+5
+1
+-1
+-5
+-42
+NULL
+NULL
+SELECT `dec` FROM `sorting_numerics` ORDER BY `dec` ASC;
+dec
+NULL
+NULL
+-42
+-5
+-1
+1
+5
+42
+SELECT `udec` FROM `sorting_numerics` ORDER BY udec DESC;
+udec
+42
+42
+5
+5
+1
+1
+NULL
+NULL
+SELECT `udec` FROM `sorting_numerics` ORDER BY udec ASC;
+udec
+NULL
+NULL
+1
+1
+5
+5
+42
+42
 DROP TABLE IF EXISTS `sorting_chars`;
 CREATE TABLE `sorting_chars`(
 tcolumn TEXT,
