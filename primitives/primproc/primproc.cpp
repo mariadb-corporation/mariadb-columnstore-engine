@@ -744,7 +744,7 @@ int main(int argc, char** argv)
     return 1;
   }
   Opt opt(argc, argv);
-
+  abort();
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
