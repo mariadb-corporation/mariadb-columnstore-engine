@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
- * Copyright (C) 2016-2020 MariaDB Corporation.
+ * Copyright (C) 2016-2022 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -749,7 +749,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     {
       uint64_t totalUnackedWork = 0;
 
-      for (uint32_t i = 0; i < pmCount; i++)
+      for (int i = pmCount - 1; i >= 0; --i)
         totalUnackedWork += mqe->unackedWork[i];
 
       if (totalUnackedWork == 0)
@@ -790,7 +790,7 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
   }
   else
   {
-    for (i = 0; i < pmCount; i++)
+    for (int i = pmCount - 1; i >= 0; --i)
     {
       uint32_t curVal = mqe->unackedWork[nextIndex];
       uint32_t unackedWork = (curVal > maxAck ? maxAck : curVal);
@@ -813,7 +813,7 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
 
     cerr << "DEC::nextPMToACK(): Couldn't find a PM to ACK! ";
 
-    for (i = 0; i < pmCount; i++)
+    for (int i = pmCount - 1; i >= 0; --i)
       cerr << mqe->unackedWork[i] << " ";
 
     cerr << " max: " << maxAck;
@@ -1051,6 +1051,9 @@ void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::
   inMemoryEM2PPExchCV_.notify_one();
 }
 
+// This routine has an unexpected side-effect on its argument's SBS, namely
+// SBS is cleared when it is sent to PP at the same host. This fact forces any
+// code uses ::writeToClient to send to a local node in the last turn.
 int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
                                          bool doInterleaving)
 {
