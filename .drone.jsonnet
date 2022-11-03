@@ -2,11 +2,11 @@ local events = ['pull_request', 'cron'];
 
 local platforms = {
   develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-6': ['centos:7', 'rockylinux:8', 'ubuntu:20.04'],
 };
 
 local servers = {
-  develop: ['10.9', '10.6-enterprise'],
+  develop: ['10.9', '10.6-enterprise', '10.11'],
   'develop-6': ['10.6-enterprise'],
 };
 
@@ -15,7 +15,6 @@ local platforms_arm = {
   'develop-6': ['rockylinux:8'],
 };
 
-local any_branch = '**';
 local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
 local platforms_arm_custom = ['rockylinux:8'];
 
@@ -517,9 +516,11 @@ local FinalPipeline(branch, event) = {
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
   depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.9']), platforms.develop) +
+              std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.11']), platforms.develop) +
               std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
 
               std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.9']), platforms_arm.develop) +
+              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.11']), platforms_arm.develop) +
               std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
 
               std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
@@ -555,10 +556,10 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
+  Pipeline('**', p, 'custom', 'amd64', '10.6-enterprise')
   for p in platforms_custom
 ] +
 [
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
+  Pipeline('**', p, 'custom', 'arm64', '10.6-enterprise')
   for p in platforms_arm_custom
 ]
