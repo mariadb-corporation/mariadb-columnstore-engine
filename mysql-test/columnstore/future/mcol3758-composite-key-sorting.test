@@ -1,0 +1,94 @@
+#
+# Test ORDER BY function
+# Author: Roman Nozdrin, roman.nozdrin@mariadb.com
+#
+# source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol3758;
+--enable_warnings
+
+CREATE DATABASE mcol3758;
+USE mcol3758;
+
+# Single-thread sorting
+SET columnstore_orderby_threads=1;
+
+--disable_warnings
+DROP TABLE IF EXISTS `sorting_numerics`;
+--enable_warnings
+
+# numerics
+
+CREATE TABLE `sorting_test`(
+`bint` BIGINT,
+`dbl` DOUBLE,
+`dec` DECIMAL(18),
+tcolumn TEXT,
+vcolumn VARCHAR(100),
+vc7 VARCHAR(7),
+ch7 CHAR(7),
+`tscolumn` TIMESTAMP
+) ENGINE=columnstore;
+
+INSERT INTO `sorting_test`
+-- (`bint`,`db`,`dec`,`udec`,tcolumn,vcolumn,vc7,ch7,dcolumn,tscolumn)
+(`bint`,`dbl`, tcolumn)
+VALUES
+(42, 42.0,'one'),
+(-9223372036854775806, -9223372036854775808.0,NULL),
+(9223372036854775807, 1.7976931348623157E+308,'two'),
+(42, 1.7976931348623157E+308,'42'),
+(NULL, 42.0,NULL),
+(-9223372036854775806, NULL,'one '),
+(42,42.0,'forty five'),
+( 42,-9223372036854775808.0,'causes damage'),
+( NULL,-1.7976931348623157E+308,'4th ree'),
+( -9223372036854775806,-9223372036854775808.0,'sorty five'),
+( NULL, 1.7976931348623157E+308,'cornnh'),
+( -9223372036854775806,NULL,'one'),
+( 0,-9223372036854775808.0,'two'),
+( -20,NULL,'pappad'),
+( -9223372036854775806,42.0,'two'),
+( 9223372036854775807,9223372036854775808.0,'4th ree'),
+( NULL,-9223372036854775808.0,'one');
+
+# This block is not ready yeat b/c it does not sort on NULLs
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 1 DESC,2 DESC;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 1 DESC,2;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 1,2 DESC;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 1,2;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 2 DESC,1 DESC;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 2 DESC,1;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 2,1 DESC;
+select bint,dbl from sorting_test where bint is not null and dbl is not null order by 2,1;
+
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 1 DESC,2 DESC;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 1 DESC,2;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 1,2 DESC;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 1,2;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 2 DESC,1 DESC;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 2 DESC,1;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 2,1 DESC;
+select bint,hex(tcolumn) from sorting_test where bint is not null and tcolumn is not null order by 2,1;
+
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 1 DESC,2 DESC;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 1 DESC,2;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 1,2 DESC;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 1,2;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 2 DESC,1 DESC;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 2 DESC,1;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 2,1 DESC;
+select dbl,hex(tcolumn) from sorting_test where dbl is not null and tcolumn is not null order by 2,1;
+
+#SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` DESC;
+#SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` ASC;
+#SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` DESC;
+#SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` ASC;
+#SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` DESC;
+#SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` ASC;
+
+DROP TABLE `sorting_test`;
+
+# Clean UP
+DROP DATABASE mcol3758;
