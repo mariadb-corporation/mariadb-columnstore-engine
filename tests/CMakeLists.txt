@@ -1,7 +1,7 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE})
 
-cmake_policy(SET CMP0054 NEW)
 if (WITH_UNITTESTS)
+    cmake_policy(SET CMP0054 NEW)
     enable_testing()
     include(GoogleTest)
     find_package(GTest REQUIRED)
