@@ -769,7 +769,6 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
 void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t maxAck, uint32_t* sockIndex,
                                         uint16_t* numToAck)
 {
-  uint32_t i;
   uint32_t& nextIndex = mqe->ackSocketIndex;
 
   /* Other threads can be touching mqe->unackedWork at the same time, but because of
