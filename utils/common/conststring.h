@@ -19,18 +19,21 @@
 
 #include <string>
 #include <string.h>
+#include <execinfo.h>
+#include "exceptclasses.h"
 
 namespace utils
 {
 class ConstString
 {
  protected:
-  const char* mStr;
+  const char* mStr;  // it can be NULL now.
   size_t mLength;
 
  public:
   ConstString(const char* str, size_t length) : mStr(str), mLength(length)
   {
+    idbassert(mStr || mLength == 0);  // nullptr mStr should have zero length.
   }
   explicit ConstString(const std::string& str) : mStr(str.data()), mLength(str.length())
   {
@@ -49,6 +52,7 @@ class ConstString
   }
   std::string toString() const
   {
+    idbassert(mStr);
     return std::string(mStr, mLength);
   }
   bool eq(char ch) const
@@ -72,6 +76,21 @@ class ConstString
     {
     }
     return *this;
+  }
+  void bin2hex(char* o)
+  {
+    static const char hexdig[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                  '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    const char* e = end();
+    for (const char* s = mStr; s < e; s++)
+    {
+      *o++ = hexdig[*s >> 4];
+      *o++ = hexdig[*s & 0xf];
+    }
+  }
+  bool isNull() const
+  {
+    return mStr == nullptr;
   }
 };
 

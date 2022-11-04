@@ -42,13 +42,14 @@
 // from blocksize.h
 const int32_t DATA_BLOCK_SIZE = BLOCK_SIZE;
 
-const int8_t COMPARE_NIL = 0x00;
+const int8_t COMPARE_NIL = 0x00;  // means c = NULL predicate
 const int8_t COMPARE_LT = 0x01;
 const int8_t COMPARE_EQ = 0x02;
 const int8_t COMPARE_LE = (COMPARE_LT | COMPARE_EQ);  // 0x03
 const int8_t COMPARE_GT = 0x04;
 const int8_t COMPARE_NE = (COMPARE_LT | COMPARE_GT);  // 0x05
 const int8_t COMPARE_GE = (COMPARE_GT | COMPARE_EQ);  // 0x06
+const int8_t COMPARE_NULLEQ = 0x07;                   // means c IS NULL(see column.cpp for details)
 const int8_t COMPARE_NOT = 0x08;
 const int8_t COMPARE_NLT = (COMPARE_LT | COMPARE_NOT);  // 0x09
 const int8_t COMPARE_NLE = (COMPARE_LE | COMPARE_NOT);  // 0x0b
@@ -884,4 +885,3 @@ struct LbidAtVer
 #endif
 
 #pragma pack(pop)
-

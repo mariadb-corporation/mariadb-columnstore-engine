@@ -92,7 +92,7 @@ class StoreFieldMariaDB : public StoreField
     {
       size_t ll = length * 2;
       boost::scoped_array<char> sca(new char[ll]);
-      ConstString(str, length).bin2hex(sca.get());
+      utils::ConstString(str, length).bin2hex(sca.get());
       return m_field->store_binary(sca.get(), ll);
     }
     return m_field->store_binary(str, length);
@@ -103,7 +103,7 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store(val, 0);
   }
 
-  int store_ulonglong(uint64_t val)override
+  int store_ulonglong(uint64_t val) override
   {
     return m_field->store(static_cast<int64_t>(val), 1);
   }
@@ -844,4 +844,3 @@ class WriteBatchFieldMariaDB : public WriteBatchField
 };
 
 }  // end of namespace datatypes
-
