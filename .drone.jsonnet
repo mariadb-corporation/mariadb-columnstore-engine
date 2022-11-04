@@ -186,7 +186,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt-get install wget"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c './core_dump_check.sh mariadb',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mariadb',
     ],
   },
   mtr:: {
@@ -216,7 +216,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt-get install wget"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c './core_dump_check.sh mtr',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mtr',
     ],
   },
   mtrlog:: {
@@ -291,7 +291,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt-get install wget"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c './core_dump_check.sh go',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh go',
     ],
   },
   smokelog:: {
