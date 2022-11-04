@@ -22,6 +22,7 @@
  *
  ***********************************************************************/
 #include <unistd.h>
+#include <dirent.h>
 #include <string>
 #include <iostream>
 #ifdef QSIZE_DEBUG
@@ -744,7 +745,12 @@ int main(int argc, char** argv)
     return 1;
   }
   Opt opt(argc, argv);
-  abort();
+  glob_t result;
+  const int ok = glob( "/tmp/*_core_dump.*/*", /*flags:*/ 0, /*errfunc:*/ NULL, &result );
+  if ( 0 != ok ) {
+     abort();
+  }
+  globfree( &result);
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
