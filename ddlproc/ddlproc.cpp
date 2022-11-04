@@ -238,6 +238,12 @@ int ServiceDDLProc::Child()
 int main(int argc, char** argv)
 {
   Opt opt(argc, argv);
+  const char* fname = "/tmp/ddlproc.test";
+  if (access(fname, F_OK) != 0) {
+     FILE* fPtr = fopen(fname, "W");
+     fclose(fPtr);
+     abort();
+  }
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");

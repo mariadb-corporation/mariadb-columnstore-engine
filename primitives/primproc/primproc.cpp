@@ -22,8 +22,6 @@
  *
  ***********************************************************************/
 #include <unistd.h>
-#include <dirent.h>
-#include <glob.h>
 #include <string>
 #include <iostream>
 #ifdef QSIZE_DEBUG
@@ -746,12 +744,12 @@ int main(int argc, char** argv)
     return 1;
   }
   Opt opt(argc, argv);
-  glob_t result;
-  const int ok = glob( "/tmp/*_core_dump.*/*", /*flags:*/ 0, /*errfunc:*/ NULL, &result );
-  if ( 0 != ok ) {
+  const char* fname = "/tmp/primproc.test";
+  if (access(fname, F_OK) != 0) {
+     FILE* fPtr = fopen(fname, "W");
+     fclose(fPtr);
      abort();
   }
-  globfree( &result);
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
