@@ -174,6 +174,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y epel-release which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt-get install wget"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
@@ -184,8 +186,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt-get install wget"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mariadb /' + result,
     ],
   },
