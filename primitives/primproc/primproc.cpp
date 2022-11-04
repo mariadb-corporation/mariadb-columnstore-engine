@@ -23,6 +23,7 @@
  ***********************************************************************/
 #include <unistd.h>
 #include <dirent.h>
+#include <glob.h>
 #include <string>
 #include <iostream>
 #ifdef QSIZE_DEBUG
