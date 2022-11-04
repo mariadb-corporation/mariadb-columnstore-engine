@@ -22,5 +22,5 @@ create table customer (
 --disable_warnings
 --eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE customer FIELDS TERMINATED BY '|'
 --enable_warnings
-SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c where e.object_id = c.object_id and column_name = 'c_custkey';
+SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c where e.object_id = c.object_id and table_schema = 'mcol4652' and column_name = 'c_custkey';
 DROP DATABASE mcol4652;

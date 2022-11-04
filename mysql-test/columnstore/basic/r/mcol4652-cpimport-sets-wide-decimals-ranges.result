@@ -12,7 +12,7 @@ c_mktsegment char (10),
 c_comment varchar (117)
 ) engine=columnstore;
 LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE customer FIELDS TERMINATED BY '|';
-SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c where e.object_id = c.object_id and column_name = 'c_custkey';
+SELECT e.min_value, e.max_value FROM information_schema.columnstore_extents e, information_schema.columnstore_columns c where e.object_id = c.object_id and table_schema = 'mcol4652' and column_name = 'c_custkey';
 min_value	max_value
 0	32767
 DROP DATABASE mcol4652;

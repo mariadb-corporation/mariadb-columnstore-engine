@@ -1021,7 +1021,6 @@ void GroupConcatNoOrder::getResult(uint8_t* buff, const string& sep)
 {
   ostringstream oss;
   bool addSep = false;
-
   fDataQueue.push(fData);
 
   while (fDataQueue.size() > 0)

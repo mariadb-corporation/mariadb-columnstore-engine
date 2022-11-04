@@ -55,7 +55,7 @@
 class PrimTest;
 
 // XXX: turn off dictionary range setting during scan.
-#define	XXX_PRIMITIVES_TOKEN_RANGES_XXX
+#define XXX_PRIMITIVES_TOKEN_RANGES_XXX
 
 namespace primitives
 {
@@ -472,6 +472,103 @@ class PrimitiveProcessor
   friend class ::PrimTest;
 };
 
+// Bit pattern representing NULL value for given column type/width
+// TBD Use TypeHandler
+template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
+T getNullValue(uint8_t type)
+{
+  return datatypes::Decimal128Null;
+}
+
+template <typename T, typename std::enable_if<sizeof(T) == sizeof(int64_t), T>::type* = nullptr>
+T getNullValue(uint8_t type)
+{
+  switch (type)
+  {
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE: return joblist::DOUBLENULL;
+
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::TEXT: return joblist::CHAR8NULL;
+
+    case execplan::CalpontSystemCatalog::UBIGINT: return joblist::UBIGINTNULL;
+
+    default: return joblist::BIGINTNULL;
+  }
+}
+
+template <typename T, typename std::enable_if<sizeof(T) == sizeof(int32_t), T>::type* = nullptr>
+T getNullValue(uint8_t type)
+{
+  switch (type)
+  {
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT: return joblist::FLOATNULL;
+
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::TEXT: return joblist::CHAR4NULL;
+
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME: return joblist::DATENULL;
+
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT: return joblist::UINTNULL;
+
+    default: return joblist::INTNULL;
+  }
+}
+
+template <typename T, typename std::enable_if<sizeof(T) == sizeof(int16_t), T>::type* = nullptr>
+T getNullValue(uint8_t type)
+{
+  switch (type)
+  {
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME: return joblist::CHAR2NULL;
+
+    case execplan::CalpontSystemCatalog::USMALLINT: return joblist::USMALLINTNULL;
+
+    default: return joblist::SMALLINTNULL;
+  }
+}
+
+template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t), T>::type* = nullptr>
+T getNullValue(uint8_t type)
+{
+  switch (type)
+  {
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME: return joblist::CHAR1NULL;
+
+    case execplan::CalpontSystemCatalog::UTINYINT: return joblist::UTINYINTNULL;
+
+    default: return joblist::TINYINTNULL;
+  }
+}
+
 //
 // COMPILE A COLUMN FILTER
 //
@@ -518,13 +615,32 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
     // Pointer to ColArgs structure representing argIndex'th element in the BLOB
     auto args = reinterpret_cast<const ColArgs*>(filterString + (argIndex * filterSize));
 
-    ret->prestored_cops[argIndex] = args->COP;
     ret->prestored_rfs[argIndex] = args->rf;
 
-    if (datatypes::isUnsigned((execplan::CalpontSystemCatalog::ColDataType)colType))
-      ret->storeFilterArg(argIndex, reinterpret_cast<const UT*>(args->val));
+    auto colDataType = (execplan::CalpontSystemCatalog::ColDataType)colType;
+    bool isNullEqCmp = false;
+    if (datatypes::isUnsigned(colDataType))
+    {
+      const auto nullValue = getNullValue<UT>(colDataType);
+      const UT* filterValue = reinterpret_cast<const UT*>(args->val);
+      isNullEqCmp =
+          (args->COP == COMPARE_EQ && memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0) ? true : false;
+      ret->storeFilterArg(argIndex, filterValue);
+    }
     else
-      ret->storeFilterArg(argIndex, reinterpret_cast<const T*>(args->val));
+    {
+      const auto nullValue = getNullValue<T>(colDataType);
+      const T* filterValue = reinterpret_cast<const T*>(args->val);
+      isNullEqCmp =
+          (args->COP == COMPARE_EQ && memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0) ? true : false;
+      ret->storeFilterArg(argIndex, filterValue);
+    }
+
+    // IS NULL filtering expression is translated into COMPARE_EQ + NULL magic in the filter.
+    // This if replaces an operation id once to avoid additional branching in the main loop
+    // of vectorizedFiltering_ in column.cpp.
+    // It would be cleaner to place in into EM though.
+    ret->prestored_cops[argIndex] = (isNullEqCmp) ? COMPARE_NULLEQ : args->COP;
   }
 
   /*  Decide which structure to use.  I think the only cases where we can use the set
@@ -575,4 +691,3 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 }
 
 }  // namespace primitives
-

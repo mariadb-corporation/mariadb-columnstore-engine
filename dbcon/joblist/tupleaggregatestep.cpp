@@ -174,6 +174,8 @@ inline RowAggFunctionType functionIdMap(int planFuncId)
 
     case AggregateColumn::GROUP_CONCAT: return ROWAGG_GROUP_CONCAT;
 
+    case AggregateColumn::JSON_ARRAYAGG: return ROWAGG_JSON_ARRAY;
+
     case AggregateColumn::CONSTANT: return ROWAGG_CONSTANT;
 
     case AggregateColumn::UDAF: return ROWAGG_UDAF;
@@ -1075,7 +1077,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
       continue;
     }
 
-    if (aggOp == ROWAGG_GROUP_CONCAT)
+    if (aggOp == ROWAGG_GROUP_CONCAT || aggOp == ROWAGG_JSON_ARRAY)
     {
       TupleInfo ti = getTupleInfo(key, jobInfo);
       uint32_t ptrSize = sizeof(GroupConcatAg*);
@@ -1696,7 +1698,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         continue;
 
       // skip if this is a group_concat
-      if (aggOp == ROWAGG_GROUP_CONCAT)
+      if (aggOp == ROWAGG_GROUP_CONCAT || aggOp == ROWAGG_JSON_ARRAY)
       {
         TupleInfo ti = getTupleInfo(aggKey, jobInfo);
         uint32_t width = sizeof(GroupConcatAg*);
@@ -2229,7 +2231,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
             csNumAggDist.push_back(csNumAgg[colAgg]);
             uint32_t width = widthAgg[colAgg];
 
-            if (aggOp == ROWAGG_GROUP_CONCAT)
+            if (aggOp == ROWAGG_GROUP_CONCAT || aggOp == ROWAGG_JSON_ARRAY)
             {
               TupleInfo ti = getTupleInfo(retKey, jobInfo);
 
@@ -2320,7 +2322,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
             }
 
 #if 0
-                        else if (aggOp == ROWAGG_GROUP_CONCAT)
+                        else if (aggOp == ROWAGG_GROUP_CONCAT || aggOp == ROWAGG_JSON_ARRAY)
                         {
                             TupleInfo ti = getTupleInfo(retKey, jobInfo);
                             oidsAggDist.push_back(ti.oid);
@@ -2840,7 +2842,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                     f->fAggFunction == ROWAGG_MIN || f->fAggFunction == ROWAGG_MAX ||
                     f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                     f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
-                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT))
+                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT || f->fAggFunction == ROWAGG_JSON_ARRAY))
           {
             funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                               f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
