@@ -811,6 +811,7 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
     }
 
     cerr << "DEC::nextPMToACK(): Couldn't find a PM to ACK! ";
+
     for (int i = pmCount - 1; i >= 0; --i)
       cerr << mqe->unackedWork[i] << " ";
 
