@@ -14,16 +14,18 @@ USE mcs118_db;
 CREATE TABLE t1 (a VARCHAR(10) CHARACTER SET latin1, b VARCHAR(10) CHARACTER SET utf8)ENGINE=Columnstore;
 SHOW CREATE TABLE t1;
 
---error ER_CONFLICTING_DECLARATIONS
+--disable_abort_on_error
+--replace_regex /2replacewithexacterror/ERROR HY000: Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET latin1'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET utf8, CHARACTER SET latin1;
---error ER_CONFLICTING_DECLARATIONS
+--replace_regex /2replacewithexacterror/ERROR HY000: Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET DEFAULT'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET utf8, CHARACTER SET DEFAULT;
---error ER_CONFLICTING_DECLARATIONS
+--replace_regex /2replacewithexacterror/ERROR HY000: Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET utf8mb3'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET latin1, CHARACTER SET utf8;
---error ER_CONFLICTING_DECLARATIONS
+--replace_regex /2replacewithexacterror/ERROR HY000: Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET DEFAULT'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET latin1, CHARACTER SET DEFAULT;
---error ER_CONFLICTING_DECLARATIONS
+--replace_regex /2replacewithexacterror/ERROR HY000: Conflicting declarations: 'CHARACTER SET latin5' and 'CHARACTER SET utf8mb3'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET DEFAULT, CHARACTER SET utf8;
+--enable_abort_on_error
 
 # Clean UP
 DROP DATABASE mcs118_db;
