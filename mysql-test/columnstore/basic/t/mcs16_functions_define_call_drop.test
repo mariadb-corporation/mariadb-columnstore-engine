@@ -28,7 +28,7 @@ SELECT f1();
 --error 1242
 SELECT f1(100);
 --disable_abort_on_error
---replace_regex /Cannot cast 'row' as 'int' in assignment of `f2(1)`/ERROR 21000: Operand should contain 1 column(s)/
+--replace_regex /ERROR HY000/ERROR 21000/ /Cannot cast 'row' as 'int' in assignment of `f2(1)`/Operand should contain 1 column(s)/
 SELECT f2(1);
 --enable_abort_on_error
 
@@ -70,7 +70,9 @@ BEGIN
   RETURN 'func2';
 END//
 DELIMITER ;//
+--replace_regex / COLLATE latin1_swedish_ci//
 SHOW CREATE FUNCTION func2;
+
 SELECT func2();
 
 DROP DATABASE mcs16_db;
