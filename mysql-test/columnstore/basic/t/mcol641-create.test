@@ -41,10 +41,10 @@ SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITI
 
 --disable_abort_on_error
 CREATE TABLE cs5(d1 DECIMAL(39)) ENGINE=columnstore;
---replace_regex /39 //
+--replace_regex /ERROR 42000: Too big scale specified for 'd1'. Maximum is 38/ERROR 42000: Too big scale 39 specified for 'd1'. Maximum is 38/
 CREATE TABLE cs5(d1 DECIMAL(38,39)) ENGINE=columnstore;
 ALTER TABLE cs1 ADD COLUMN d10 DECIMAL(40);
---replace_regex /40 //
+--replace_regex /ERROR 42000: Too big scale specified for 'd11'. Maximum is 38/ERROR 42000: Too big scale 40 specified for 'd11'. Maximum is 38/
 ALTER TABLE cs1 ADD COLUMN d11 DECIMAL(38,40);
 --enable_abort_on_error
 
