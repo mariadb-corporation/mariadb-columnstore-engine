@@ -24,10 +24,12 @@ SELECT CAST(t1_int AS DECIMAL(6,5)), CAST(t1_decimal AS DECIMAL(6,5)), CAST(t1_c
 
 --error ER_M_BIGGER_THAN_D
 SELECT CAST(t1_int AS DECIMAL(4,5)) FROM t1;
---error ER_TOO_BIG_PRECISION
+--disable_abort_on_error
+--replace_regex /ERROR 42000: Too big precision specified for 't1_int'. Maximum is 65/ERROR 42000: Too big precision 66 specified for 't1_int'. Maximum is 65/
 SELECT CAST(t1_int AS DECIMAL(66,6)) FROM t1;
---error ER_TOO_BIG_SCALE
+--replace_regex /ERROR 42000: Too big scale specified for 't1_int'. Maximum is 38/ERROR 42000: Too big scale 63 specified for 't1_int'. Maximum is 38/
 SELECT CAST(t1_int AS DECIMAL(64,63)) FROM t1;
+--enable_abort_on_error
 
 # Clean UP
 DROP DATABASE mcs69_db;
