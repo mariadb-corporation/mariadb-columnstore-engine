@@ -17,15 +17,15 @@ SHOW CREATE TABLE t1;
 
 --disable_warnings
 --disable_abort_on_error
---replace_regex /ERROR 42000/ERROR HY000/ /The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET latin1'/
+--replace_regex /42000/HY000/ /The storage engine for the table doesn't support The syntax or the data type\(s\) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET latin1'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET utf8, CHARACTER SET latin1;
---replace_regex /ERROR 42000/ERROR HY000/ /The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET DEFAULT'/
+--replace_regex /42000/HY000/ /The storage engine for the table doesn't support The syntax or the data type\(s\) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET utf8mb3' and 'CHARACTER SET DEFAULT'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET utf8, CHARACTER SET DEFAULT;
---replace_regex /ERROR 42000/ERROR HY000/ /The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET utf8mb3'/
+--replace_regex /42000/HY000/ /The storage engine for the table doesn't support The syntax or the data type\(s\) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET utf8mb3'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET latin1, CHARACTER SET utf8;
---replace_regex /ERROR 42000/ERROR HY000/ /The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET DEFAULT'/
+--replace_regex /42000/HY000/ /The storage engine for the table doesn't support The syntax or the data type\(s\) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin1' and 'CHARACTER SET DEFAULT'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET latin1, CHARACTER SET DEFAULT;
---replace_regex /ERROR 42000/ERROR HY000/ /The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin5' and 'CHARACTER SET utf8mb3'/
+--replace_regex /42000/HY000/ /The storage engine for the table doesn't support The syntax or the data type\(s\) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types./Conflicting declarations: 'CHARACTER SET latin5' and 'CHARACTER SET utf8mb3'/
 ALTER TABLE t1 CONVERT TO CHARACTER SET DEFAULT, CHARACTER SET utf8;
 --enable_abort_on_error
 --enable_warnings
