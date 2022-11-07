@@ -174,7 +174,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/home/%e_core_dump.%p"',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore',
@@ -312,11 +311,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sysctl kernel.core_pattern"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /tmp"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /home"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /usr/bin"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh mtr /' + result + '/"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /' + result + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sysctl kernel.core_pattern"',
       'docker stop smoke$${DRONE_BUILD_NUMBER} && docker rm smoke$${DRONE_BUILD_NUMBER} || echo "cleanup smoke failure"',
     ],
     when: {
