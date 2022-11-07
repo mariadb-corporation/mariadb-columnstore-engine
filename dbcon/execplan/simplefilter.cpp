@@ -542,7 +542,7 @@ void SimpleFilter::convertConstant()
     {
       if (lcc->isNull())
       {
-        lcc->constval("0000-00-00");
+//        lcc->constval("0000-00-00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -555,7 +555,7 @@ void SimpleFilter::convertConstant()
     {
       if (lcc->isNull())
       {
-        lcc->constval("0000-00-00 00:00:00");
+//        lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -568,7 +568,7 @@ void SimpleFilter::convertConstant()
     {
       if (lcc->isNull())
       {
-        lcc->constval("0000-00-00 00:00:00");
+//        lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -581,7 +581,7 @@ void SimpleFilter::convertConstant()
     {
       if (lcc->isNull())
       {
-        lcc->constval("00:00:00");
+//        lcc->constval("00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -602,7 +602,7 @@ void SimpleFilter::convertConstant()
     {
       if (rcc->isNull())
       {
-        rcc->constval("0000-00-00");
+//        rcc->constval("0000-00-00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -615,7 +615,7 @@ void SimpleFilter::convertConstant()
     {
       if (rcc->isNull())
       {
-        rcc->constval("0000-00-00 00:00:00");
+ //       rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -628,7 +628,7 @@ void SimpleFilter::convertConstant()
     {
       if (rcc->isNull())
       {
-        rcc->constval("0000-00-00 00:00:00");
+ //       rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
@@ -641,7 +641,7 @@ void SimpleFilter::convertConstant()
     {
       if (rcc->isNull())
       {
-        rcc->constval("00:00:00");
+ //       rcc->constval("00:00:00");
         result.intVal = 0;
         result.strVal.dropString();
       }
