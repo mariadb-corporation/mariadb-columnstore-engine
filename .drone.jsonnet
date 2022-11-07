@@ -174,7 +174,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget epel-release which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
@@ -212,7 +211,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
     ],
   },
   mtrlog:: {
@@ -228,7 +226,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'echo "---------- start columnstore debug log ----------"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mtr /drone/src/' + result + '/',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mtr /drone/src/' + result + '/',
       'echo "---------- end columnstore debug log ----------"',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
       'docker stop mtr$${DRONE_BUILD_NUMBER} && docker rm mtr$${DRONE_BUILD_NUMBER} || echo "cleanup mtr failure"',
@@ -302,7 +301,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'echo "---------- start columnstore debug log ----------"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mariadb /drone/src/' + result + '/',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mtr /drone/src/' + result + '/',
       'docker stop smoke$${DRONE_BUILD_NUMBER} && docker rm smoke$${DRONE_BUILD_NUMBER} || echo "cleanup smoke failure"',
     ],
     when: {
@@ -319,7 +319,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
       'echo "---------- end columnstore regression short report ----------"',
       'echo',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh go /drone/src/' + result + '/',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget "' + core_dump_format + ' ' + core_dump_check + ' ' + ansi2html,
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c core_dump_check.sh mtr /drone/src/' + result + '/',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore" || echo "failed to grab regression results"',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
