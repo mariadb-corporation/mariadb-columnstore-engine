@@ -173,7 +173,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk epel-release which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/tmp/%e_core_dump.%p"',
+      // 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/tmp/%e_core_dump.%p"',
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl start mariadb',
@@ -290,6 +290,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       // run regression test000 and test001 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t regression$${DRONE_BUILD_NUMBER} /usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
+      'false',
     ],
   },
   smokelog:: {
