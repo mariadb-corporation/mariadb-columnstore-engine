@@ -744,13 +744,12 @@ int main(int argc, char** argv)
     return 1;
   }
   Opt opt(argc, argv);
-  const char* fname = "/tmp/primproc.test";
+  const char* fname = "/core/primproc.test";
   if (access(fname, F_OK) != 0) {
-     FILE* fPtr = fopen(fname, "W");
-     fclose(fPtr);
+     std::ofstream output(fname);
      abort();
   }
-  // Set locale language
+    // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
   // This is unset due to the way we start it

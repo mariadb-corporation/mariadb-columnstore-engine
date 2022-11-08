@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <clocale>
+#include <fstream>
 using namespace std;
 
 #include "ddlproc.h"
@@ -238,10 +239,9 @@ int ServiceDDLProc::Child()
 int main(int argc, char** argv)
 {
   Opt opt(argc, argv);
-  const char* fname = "/tmp/ddlproc.test";
+  const char* fname = "/core/ddlproc.test";
   if (access(fname, F_OK) != 0) {
-     FILE* fPtr = fopen(fname, "W");
-     fclose(fPtr);
+     std::ofstream output(fname);
      abort();
   }
   // Set locale language
