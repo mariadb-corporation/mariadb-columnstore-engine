@@ -2425,7 +2425,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
         if ((aIt->partNum > aExtentInfo.fPartition) ||
             ((aIt->partNum == aExtentInfo.fPartition) && (aIt->segNum > aExtentInfo.fSegment)) ||
             ((aIt->partNum == aExtentInfo.fPartition) && (aIt->segNum == aExtentInfo.fSegment) &&
-             (aIt->segNum > aExtentInfo.fLocalHwm)))
+             (aIt->hwm > aExtentInfo.fLocalHwm)))
         {
           aExtentInfo.fPartition = aIt->partNum;
           aExtentInfo.fDbRoot = aIt->dbRoot;
