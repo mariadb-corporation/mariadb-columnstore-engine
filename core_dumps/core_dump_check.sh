@@ -10,11 +10,3 @@ for f in /core/*; do
                         ;;
         esac
 done
-
-for f in /core/*; do
-        case $f in
-                *_core_dump.*)
-                        exit 1
-                        ;;
-        esac
-done
