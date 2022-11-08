@@ -1036,6 +1036,9 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
 
 select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_unit)
 {
+  if (thd->lex->sql_command == SQLCOM_CREATE_VIEW)
+    return nullptr;
+
   return create_columnstore_select_handler_(thd, 0, sel_unit);
 }
 
