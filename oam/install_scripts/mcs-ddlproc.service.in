@@ -12,7 +12,6 @@ User=@DEFAULT_USER@
 Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
-LimitCORE=infinity
 
 ExecStart=@ENGINE_BINDIR@/DDLProc
 
