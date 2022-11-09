@@ -4406,6 +4406,18 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
   spdlOut->rowGroupDL(dlOut);
   JobStepAssociation jsaOut;
   jsaOut.outAdd(spdlOut);
+  // WIP add spec check for flat order by here
+  if (jobInfo.orderByColVec.size() > 0 && !tas->flatOrderBys_.empty())
+  {
+    for (size_t i = 1; i < jobInfo.orderByThreads; ++i)
+    {
+      AnyDataListSPtr spdlOut(new AnyDataList());
+      RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+      dlOut->OID(CNX_VTABLE_ID);
+      spdlOut->rowGroupDL(dlOut);
+      jsaOut.outAdd(spdlOut);
+    }
+  }
   jobInfo.annexStep->outputAssociation(jsaOut);
 
   querySteps.push_back(jobInfo.annexStep);

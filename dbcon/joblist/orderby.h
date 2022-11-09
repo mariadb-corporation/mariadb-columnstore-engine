@@ -265,6 +265,11 @@ class FlatOrderBy
 
   void finalize();
 
+  const PermutationVec& getPermutation() const
+  {
+    return permutation_;
+  }
+
  private:
   template <typename EncodedKeyType, typename StorageType>
     requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
@@ -314,7 +319,7 @@ class FlatOrderBy
   joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
   std::vector<rowgroup::RGData> rgDatas_;
-  std::vector<PermutationType> permutation_;
+  PermutationVec permutation_;
   std::unique_ptr<joblist::MemManager> mm_;
   IterDiffT flatCurPermutationDiff_ = 0;
   Ranges2SortQueue ranges2Sort_;
