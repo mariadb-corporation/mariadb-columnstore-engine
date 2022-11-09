@@ -1,3 +1,8 @@
+if (Boost_FOUND)
+  add_custom_target(external_boost)
+  return()
+endif()
+
 include(ExternalProject)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
