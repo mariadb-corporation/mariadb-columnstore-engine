@@ -123,13 +123,17 @@ END //
 CREATE OR REPLACE PROCEDURE load_from_s3 (in bucket varchar(256) CHARACTER SET utf8,
                                           in filename varchar(256) CHARACTER SET utf8,
                                           in dbname varchar(256) CHARACTER SET utf8,
-                                          in table_name varchar(256) CHARACTER SET utf8)
+                                          in table_name varchar(256) CHARACTER SET utf8,
+                                          in terminated_by varchar(256) CHARACTER SET utf8,
+                                          in enclosed_by varchar(1) CHARACTER SET utf8,
+                                          in escaped_by varchar(1) CHARACTER SET utf8
+                                          )
 LANGUAGE SQL
 NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
 BEGIN
-    select columnstore_dataload(bucket, filename, dbname, table_name);
+    select columnstore_dataload(bucket, filename, dbname, table_name, terminated_by, enclosed_by, escaped_by);
 END //
 
 

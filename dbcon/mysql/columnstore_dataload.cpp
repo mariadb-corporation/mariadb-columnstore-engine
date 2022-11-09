@@ -90,7 +90,8 @@ extern "C"
                                         std::string_view secret, std::string_view key,
                                         std::string_view region, std::string_view cmapi_host,
                                         ulong cmapi_port, std::string_view cmapi_version,
-                                        std::string_view cmapi_key)
+                                        std::string_view cmapi_key, std::string_view terminated_by,
+                                        std::string_view enclosed_by, std::string_view escaped_by)
 
   {
     CURLcode res;
@@ -105,6 +106,10 @@ extern "C"
     j["secret"] = secret;
     j["region"] = region;
     j["database"] = database;
+    j["terminated_by"] = terminated_by;
+    j["enclosed_by"] = enclosed_by;
+    j["escaped_by"] = escaped_by;
+
 
     std::string param = j.dump();
 
@@ -157,7 +162,13 @@ extern "C"
 
     const char* bucket = args->args[0];
     const char* filename = args->args[1];
+    const char* database = args->args[2];
     const char* table = args->args[3];
+
+    const char* terminated_by = args->args[4];
+    const char* enclosed_by = args->args[5];
+    const char* escaped_by = args->args[6];
+
 
     ulong cmapi_port = get_cmapi_port(_current_thd());
     const char* cmapi_host = get_cmapi_host(_current_thd());
@@ -169,18 +180,18 @@ extern "C"
     const char* secret = get_s3_secret(thd);
     const char* key = get_s3_key(thd);
     const char* region = get_s3_region(thd);
-    const char* database = args->args[2];
 
     return columnstore_dataload_impl(initData->curl, initData->result, length, bucket, table, filename,
                                      database, secret, key, region, cmapi_host, cmapi_port, cmapi_version,
-                                     ::strlen(cmapi_key) == 0 ? parseCMAPIkey().c_str() : cmapi_key);
+                                     ::strlen(cmapi_key) == 0 ? parseCMAPIkey().c_str() : cmapi_key,
+                                     terminated_by, enclosed_by, escaped_by);
   }
 
   my_bool columnstore_dataload_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 4)
+    if (args->arg_count != 7)
     {
-      strcpy(message, "columnstore_dataload needs 4 arguments: (bucket, file_name, db_name, table)");
+      strcpy(message, "columnstore_dataload needs 7 arguments: (bucket, file_name, db_name, table, terminated_by, enclosed_by, escaped_by)");
       return 1;
     }
 

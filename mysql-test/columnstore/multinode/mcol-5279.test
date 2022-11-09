@@ -1,0 +1,25 @@
+#
+# Test based on Jira MCOL-5279
+# Author: Roman Nozdrin roman.nozdrin@mariadb.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5279;
+--enable_warnings
+
+CREATE DATABASE mcol_5279;
+USE mcol_5279;
+
+# This test makes sense when run on a multi-node cluster.
+CREATE TABLE `dd`( `acct_sk` INT(11) UNSIGNED NOT NULL, `acct_id` VARCHAR(128) NOT NULL DEFAULT 'None', `db_source_sk` INT(11) UNSIGNED NOT NULL) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `ff` ( `db_source_sk` INT(11) UNSIGNED NOT NULL, `acct_id` VARCHAR(128) NOT NULL DEFAULT 'None', `acct_sk` INT(11) UNSIGNED NOT NULL DEFAULT 0 ) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO dd SELECT ROUND(RAND() * 10, 2), substring(MD5(RAND()),1,1), ROUND(RAND() * 100, 2) FROM seq_1_to_300000;
+INSERT INTO ff SELECT ROUND(RAND() * 10, 2), substring(MD5(RAND()),1,1), ROUND(RAND() * 100, 2) FROM seq_1_to_300000;
+
+# The purpose is to run the statement that doesn't hang.
+SELECT * FROM (SELECT ff.acct_id, COUNT(1) FROM ff JOIN dd  ON ff.acct_sk =dd.acct_sk AND ff.db_source_sk =dd.db_source_sk GROUP BY ff.acct_id LIMIT 10)s LIMIT 0;
+
+# Clean UP
+DROP DATABASE mcol_5279;

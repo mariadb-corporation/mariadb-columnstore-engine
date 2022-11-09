@@ -92,6 +92,8 @@ enum RowAggFunctionType
   // GROUP_CONCAT
   ROWAGG_GROUP_CONCAT,
 
+  ROWAGG_JSON_ARRAY,
+
   // DISTINCT: performed on UM only
   ROWAGG_COUNT_DISTINCT_COL_NAME,  // COUNT(distinct column_name) only counts non-null rows
   ROWAGG_DISTINCT_SUM,
@@ -763,6 +765,7 @@ class RowAggregationUM : public RowAggregation
 
   // @bug3362, group_concat
   virtual void doGroupConcat(const Row&, int64_t, int64_t);
+  virtual void doJsonAgg(const Row&, int64_t, int64_t);
   virtual void setGroupConcatString();
 
   bool fHasAvg;
@@ -826,6 +829,7 @@ class RowAggregationUMP2 : public RowAggregationUM
   void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false) override;
   void doStatistics(const Row&, int64_t, int64_t, int64_t) override;
   void doGroupConcat(const Row&, int64_t, int64_t) override;
+  void doJsonAgg(const Row&, int64_t, int64_t) override;
   void doBitOp(const Row&, int64_t, int64_t, int) override;
   void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx,
               std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
@@ -937,7 +941,7 @@ class RowAggregationSubDistinct : public RowAggregationUM
  protected:
   // virtual methods from RowAggregationUM
   void doGroupConcat(const Row&, int64_t, int64_t) override;
-
+  void doJsonAgg(const Row&, int64_t, int64_t) override;
   // for groupby columns and the aggregated distinct column
   Row fDistRow;
   boost::scoped_array<uint8_t> fDistRowData;
