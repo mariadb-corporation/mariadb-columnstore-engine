@@ -25,8 +25,8 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -511,8 +511,6 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   if (jobInfo.hasDistinct)
     tas->setDistinct();
 
-  //    }
-
   if (jobInfo.annexStep)
   {
     TupleDeliveryStep* ds = dynamic_cast<TupleDeliveryStep*>(deliverySteps[CNX_VTABLE_ID].get());
@@ -540,6 +538,19 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     spdlOut->rowGroupDL(dlOut);
     JobStepAssociation jsaOut;
     jsaOut.outAdd(spdlOut);
+
+    // WIP add spec check for falt order by here
+    if (jobInfo.orderByColVec.size() > 0 && !tas->flatOrderBys_.empty())
+    {
+      for (size_t i = 1; i < jobInfo.orderByThreads; ++i)
+      {
+        AnyDataListSPtr spdlOut(new AnyDataList());
+        RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+        dlOut->OID(CNX_VTABLE_ID);
+        spdlOut->rowGroupDL(dlOut);
+        jsaOut.outAdd(spdlOut);
+      }
+    }
     jobInfo.annexStep->outputAssociation(jsaOut);
 
     querySteps.push_back(jobInfo.annexStep);
