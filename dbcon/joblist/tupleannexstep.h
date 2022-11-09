@@ -38,6 +38,9 @@ class LimitedOrderBy;
 
 namespace joblist
 {
+
+using ValueRangesVector = std::vector<std::vector<std::pair<size_t, size_t>>>;
+using SortingGroup = std::vector<std::unique_ptr<FlatOrderBy>>;
 /** @brief class TupleAnnexStep
  *
  */
@@ -87,6 +90,11 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     {
       flatOrderBy_.reset(new FlatOrderBy());
     }
+    else if (jobInfo.orderByThreads == 2)
+    {
+      flatOrderBys_.emplace_back(new FlatOrderBy());
+      flatOrderBys_.emplace_back(new FlatOrderBy());
+    }
 
     if (jobInfo.orderByThreads > 1)
     {
@@ -128,13 +136,16 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void execute(uint32_t);
   void executeNoOrderBy();
   void executeWithOrderBy();
-  void executeWithOrderByFlatOrderBy();
+  void executeFlatOrderBy();
+  void executeFlatOrderBy(const uint32_t id);
   void executeParallelOrderBy(uint64_t id);
   void executeNoOrderByWithDistinct();
   void formatMiniStats();
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
+  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(SortingGroup& sortingGroup);
+  void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges);
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;
 
@@ -186,6 +197,9 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
 
   LimitedOrderBy* fOrderBy;
   std::unique_ptr<FlatOrderBy> flatOrderBy_;
+  public:
+  SortingGroup flatOrderBys_;
+  private:
   TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;
@@ -195,6 +209,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   std::vector<uint64_t> fRunnersList;
   uint16_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
+  std::mutex parallelOrderByMutex_;
 };
 
 template <class T>
