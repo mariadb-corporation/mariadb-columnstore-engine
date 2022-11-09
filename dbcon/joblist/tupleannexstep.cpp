@@ -18,7 +18,7 @@
 
 //  $Id: tupleannexstep.cpp 9661 2013-07-01 20:33:05Z pleblanc $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -254,7 +254,7 @@ void TupleAnnexStep::run()
     fOutputIterator = fOutputDL->getIterator();
   }
 
-  if (fParallelOp)
+  if (fParallelOp && flatOrderBys_.empty())
   {
     // Indexing begins with 1
     fRunnersList.resize(fMaxThreads);
@@ -276,6 +276,35 @@ void TupleAnnexStep::run()
     {
       fInputIteratorsList[id] = fInputDL->getIterator();
       fRunnersList[id - 1] = jobstepThreadPool.invoke([this, id]() { this->execute(id); });
+    }
+  }
+  else if (fParallelOp && !flatOrderBys_.empty())
+  {
+    // Indexing begins with 1
+    fRunnersList.resize(fMaxThreads);
+    fInputIteratorsList.resize(fMaxThreads);
+
+    // Activate stats collecting before CS spawns threads.
+    if (traceOn())
+      dlTimes.setFirstReadTime();
+
+    // *DRRTUY Make this block conditional
+    StepTeleStats sts;
+    sts.query_uuid = fQueryUuid;
+    sts.step_uuid = fStepUuid;
+    sts.msg_type = StepTeleStats::ST_START;
+    sts.total_units_of_work = 1;
+    postStepStartTele(sts);
+
+    for (uint32_t id = 0; id < fMaxThreads; id++)
+    {
+      fInputIteratorsList[id + 1] = fInputDL->getIterator();
+      fRunnersList[id] = jobstepThreadPool.invoke(
+          [this, id]()
+          {
+            if (id < flatOrderBys_.size() && flatOrderBys_[id].get())
+              this->executeFlatOrderBy(id);
+          });
     }
   }
   else
@@ -362,7 +391,7 @@ void TupleAnnexStep::execute()
   }
   else if (flatOrderBy_.get())
   {
-    executeWithOrderByFlatOrderBy();
+    executeFlatOrderBy();
   }
   else if (fDistinct)
   {
@@ -708,7 +737,7 @@ void TupleAnnexStep::executeWithOrderBy()
   fOutputDL->endOfInput();
 }
 
-void TupleAnnexStep::executeWithOrderByFlatOrderBy()
+void TupleAnnexStep::executeFlatOrderBy()
 {
   utils::setThreadName("TASwOrdFlat");
   RGData rgDataIn;
@@ -789,7 +818,7 @@ void TupleAnnexStep::executeWithOrderByFlatOrderBy()
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderBy()");
+                    "TupleAnnexStep::executeWithOrderByFlatOrderBy()");
   }
 
   while (more)
@@ -797,6 +826,102 @@ void TupleAnnexStep::executeWithOrderByFlatOrderBy()
 
   // Bug 3136, let mini stats to be formatted if traceOn.
   fOutputDL->endOfInput();
+}
+
+void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
+{
+  utils::setThreadName("TASwPOrdFlat");
+  RGData rgDataIn;
+  RGData rgDataOut;
+  bool more = false;
+
+  try
+  {
+    more = fInputDL->next(fInputIterator, &rgDataIn);
+
+    if (traceOn())
+      dlTimes.setFirstReadTime();
+
+    StepTeleStats sts;
+    sts.query_uuid = fQueryUuid;
+    sts.step_uuid = fStepUuid;
+    sts.msg_type = StepTeleStats::ST_START;
+    sts.total_units_of_work = 1;
+    postStepStartTele(sts);
+
+    while (more && !cancelled())
+    {
+      flatOrderBys_[id]->addBatch(rgDataIn);
+      more = fInputDL->next(fInputIterator, &rgDataIn);
+    }
+
+    if (flatOrderBys_[id]->sortCF())
+    {
+      // do something
+    }
+
+    flatOrderBy_->finalize();
+
+    // if (!cancelled())
+    // {
+    //   while (flatOrderBy_->getData(rgDataIn))
+    //   {
+    //     //  WIP It is too costly to init RowGroup to use see the number of records.
+    //     auto rows = fRowGroupOut.getRowCount();
+    //     if (rows > 0)
+    //     {
+    //       fRowsReturned += rows;
+    //       fOutputDL->insert(rgDataOut);
+    //     }
+    //   }
+    // }
+  }
+  catch (...)
+  {
+    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeFlatOrderBy()");
+  }
+
+  while (more)
+    more = fInputDL->next(fInputIterator, &rgDataIn);
+  // Count finished sorting threads under mutex and run final
+  // sort step when the last thread converges
+  parallelOrderByMutex_.lock();
+  ++fFinishedThreads;
+  if (fFinishedThreads == fMaxThreads)
+  {
+    auto valueRanges = calculateStats4FlatOrderBy2ndPhase(flatOrderBys_);
+    for (uint32_t i = 0; i < fMaxThreads; ++i)
+    {
+      fRunnersList.push_back(
+          jobstepThreadPool.invoke([this, i, valueRanges]() { this->finalizeFlatOrderBy(i, valueRanges); }));
+    }
+  }
+  parallelOrderByMutex_.unlock();
+}
+
+const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(SortingGroup& sortingGroup)
+{
+  ValueRangesVector ranges(fMaxThreads);
+
+  for (auto& sorting : sortingGroup)
+  {
+    const auto& perm = sorting->getPermutation();
+    const auto step = perm.size() / fMaxThreads;
+    size_t left = 0;
+    size_t right = step + 1;
+    for (auto& threadRanges : ranges)
+    {
+      threadRanges.push_back({left, right});
+      left = right;
+      right += step;
+    }
+  }
+  return ranges;
+}
+
+void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges)
+{
 }
 
 /*
