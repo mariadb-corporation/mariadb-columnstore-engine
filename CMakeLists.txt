@@ -32,7 +32,12 @@ INCLUDE(check_compiler_flag)
 INCLUDE(ExternalProject)
 INCLUDE(CheckCXXSourceCompiles)
 
-MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
+FIND_PACKAGE(Boost 1.71.0 COMPONENTS chrono date_time filesystem program_options regex system thread)
+
+IF (NOT Boost_FOUND OR Boost_VERSION VERSION_GREATER 1.76.99)
+  MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
+ENDIF()
+
 IF (have_CXX__std_c__20)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 ELSE()
