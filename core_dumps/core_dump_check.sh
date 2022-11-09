@@ -1,12 +1,14 @@
 #!/usr/bin/env sh
 
-EXEC_NAME=$1
+DIR_NAME=$1
 RESULT=$2
+SCRIPT_LOCATION=$(dirname "$0")
 
-for f in /core/*; do
+
+for f in /$DIR_NAME/*; do
         case $f in
                 *_core_dump.*)
-                        bash core_dump_format.sh $EXEC_NAME $f "$RESULT/$(basename $f.html)"
+                        bash $SCRIPT_LOCATION/core_dump_format.sh $(basename ${f%%_*}) $f "$RESULT/$(basename $f.html)"
                         ;;
         esac
 done
