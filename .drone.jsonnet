@@ -327,8 +327,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sysctl kernel.core_pattern"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /core"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh mariadb /' + result + '/"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "ls /' + result + '/"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh mariadb /core/"',
+      'docker cp smoke$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
+      'ls -l /drone/src/' + result,
       'docker stop smoke$${DRONE_BUILD_NUMBER} && docker rm smoke$${DRONE_BUILD_NUMBER} || echo "cleanup smoke failure"',
     ],
     when: {
