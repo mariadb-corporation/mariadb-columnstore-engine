@@ -19,7 +19,7 @@ add_executable(cpimport ${cpimport_SRCS})
 
 add_dependencies(cpimport loggingcpp)
 
-target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} batchloader threadpool marias3)
+target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} batchloader threadpool marias3)
 
 install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
