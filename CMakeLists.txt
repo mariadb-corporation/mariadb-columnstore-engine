@@ -239,11 +239,13 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBIN
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall")
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt libmysql_client ${ENGINE_DT_LIB})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
 SET (ENGINE_OAM_LIBS        oamcpp)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
-SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
-SET (ENGINE_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage writeengine writeengineclient idbdatafile cacheutils ${ENGINE_EXEC_LIBS})
+SET (PLUGIN_EXEC_LIBS       execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querytele thrift threadpool ${ENGINE_BRM_LIBS})
+SET (ENGINE_EXEC_LIBS       joblist querystats libmysql_client ${PLUGIN_EXEC_LIBS})
+SET (PLUGIN_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage writeengine writeengineclient idbdatafile cacheutils)
+SET (ENGINE_WRITE_LIBS      ${PLUGIN_WRITE_LIBS} ${ENGINE_EXEC_LIBS})
 
 SET (ENGINE_COMMON_LDFLAGS  "")
 
