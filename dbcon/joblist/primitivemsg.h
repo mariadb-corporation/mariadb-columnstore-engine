@@ -76,6 +76,9 @@ class StringComparator : public datatypes::Charset
     if (COP & COMPARE_LIKE)
       return like(COP & COMPARE_NOT, str1, str2);
 
+    if (COP == COMPARE_NULLEQ)
+      return str1.isNull() == str2.isNull(); // XXX: TODO: I do not know the logic here, so it is temporary solution.
+
     int cmp = strnncollsp(str1, str2);
 
     switch (COP)
