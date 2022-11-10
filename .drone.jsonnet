@@ -194,6 +194,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
+      'false',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Smoke"',
     ],
   },
