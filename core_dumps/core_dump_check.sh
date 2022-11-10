@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -x
+#set -x
 
 DIR_NAME=$1
 RESULT=$2

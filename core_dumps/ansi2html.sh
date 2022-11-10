@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+#set -x
 # Convert ANSI (terminal) colours and attributes to HTML
 
 # Licence: LGPLv2
