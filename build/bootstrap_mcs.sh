@@ -28,7 +28,7 @@ optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore 
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
-
+optparse.define short=D long=with-core-dumos desc="Produce core dumps" variable=WITH_COREDUMPS default=false value=true
 
 source $( optparse.build )
 
@@ -170,6 +170,13 @@ build()
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
         message "Buiding with unittests"
+    fi
+
+    if [[ $WITH_COREDUMPS = false ]] ; then
+        warn "Cores are not dumped"
+
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
     fi
 
     if [[ $RUN_BENCHMARKS = true ]] ; then
