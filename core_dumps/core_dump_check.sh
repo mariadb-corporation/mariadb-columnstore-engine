@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -x
+
 DIR_NAME=$1
 RESULT=$2
 STEP_NAME=$3

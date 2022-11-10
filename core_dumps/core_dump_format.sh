@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -x
+
 COREDUMP=$2
 BINARY=$1
 FILENAME=$3
