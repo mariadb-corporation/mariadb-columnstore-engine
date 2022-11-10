@@ -117,6 +117,22 @@ class ha_mcs : public handler
     return HA_MAX_REC_LENGTH;
   }
 
+#ifdef MARIADB_NEW_COST_MODEL
+  /** @brief
+    Called in test_quick_select to determine if indexes should be used.
+  */
+   virtual IO_AND_CPU_COST scan_time() override
+   {
+     IO_AND_CPU_COST cost;
+     cost.io= 0.0;
+     /*
+       For now, assume all cost is CPU cost.
+       The numbers are also very inadequate for the new cost model.
+     */
+     cost.cpu= (double)(stats.records + stats.deleted) / 20.0 + 10;
+     return cost;
+   }
+#else
   /** @brief
     Called in test_quick_select to determine if indexes should be used.
   */
@@ -124,6 +140,7 @@ class ha_mcs : public handler
   {
     return (double)(stats.records + stats.deleted) / 20.0 + 10;
   }
+#endif
 
   /** @brief
     Analyze table command.
