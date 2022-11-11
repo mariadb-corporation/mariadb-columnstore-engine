@@ -523,8 +523,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
-         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] + [pipeline.publish('mtrlog')] else []) +
-         (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] + [pipeline.publish('mtrlog')] else []) +
+         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
+         [pipeline.publish('mtrlog')] +
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
