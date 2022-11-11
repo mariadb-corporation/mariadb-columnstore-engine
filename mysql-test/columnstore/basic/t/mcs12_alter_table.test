@@ -49,7 +49,7 @@ INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
 ALTER TABLE t1 ADD t TIMESTAMP;
 ALTER TABLE t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
 INSERT INTO t1 VALUES (1, 'a', '2020-07-08', 11);
---replace_regex /( COLLATE=latin1_swedish_ci)//
+--replace_regex /( COLLATE=latin1_swedish_ci)// / `t` timestamp NULL DEFAULT NULL,/ `t` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),/
 SHOW CREATE TABLE t1;
 
 # Drop column
