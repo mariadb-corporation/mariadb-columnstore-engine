@@ -239,11 +239,6 @@ int ServiceDDLProc::Child()
 int main(int argc, char** argv)
 {
   Opt opt(argc, argv);
-  const char* fname = "/core/ddlproc.test";
-  if (access(fname, F_OK) != 0) {
-     std::ofstream output(fname);
-     abort();
-  }
   // Set locale language
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
