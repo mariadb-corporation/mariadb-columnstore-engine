@@ -1,0 +1,182 @@
+--source ../include/disable_before_10.9.inc
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_overlaps_db;
+
+--enable_warnings
+CREATE DATABASE json_overlaps_db;
+
+USE json_overlaps_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_OVERLAPS function.
+--echo # ----------------------------------------------------------------------
+--echo # Comparing scalar
+CREATE TABLE t1(l1 LONGTEXT, l2 LONGTEXT) ENGINE = COLUMNSTORE;
+
+INSERT INTO
+  t1
+VALUES
+  ('true', 'true'),
+  ('false', 'false'),
+  ('1', '1'),
+  ('"string1"', '"string1"'),
+  ('null', 'null'),
+  ('true', 'false'),
+  ('1', '"1"'),
+  ('1', '0'),
+  ('null', '0'),
+  ('"string1"', '"string2"'),
+  ('true', '["abc", 1, 2, true, false]'),
+  ('true', '["abc", 1, 2, [true]]'),
+  ('true', '{"A":true}');
+
+SELECT
+  l1,
+  l2,
+  JSON_OVERLAPS(l1, l2) AS is_overlaps
+FROM
+  t1;
+
+--echo # Testing non-scalar json data types
+--echo # Comparing object with object (non-nested)
+CREATE TABLE t2(l1 LONGTEXT, l2 LONGTEXT) ENGINE = COLUMNSTORE;
+
+INSERT INTO
+  t2
+VALUES
+  ('{"A":[1, 2, 3]}', '{}'),
+  ('{"A": 1}', '{"A": 1}'),
+  ('{"A": 1}', '{"B": 1}'),
+  (
+    '{"A": 1, "B": "string1"}',
+    '{"A": 2,"B": "string1"}'
+  ),
+  (
+    '{"A": 1,"B": "string1"}',
+    '{"A": 2,"B": "string2"}'
+  ),
+  (
+    '{"A": 1,"B": {"C":2}}',
+    '{"A": 2,"B": {"C":1}}'
+  ),
+  (
+    '{"A": 1,"B": {"C":2}}',
+    '{"A": 2,"B": {"C":2}}'
+  ),
+  (
+    '{"A": {"B": true}}',
+    '{"A": {"B": true,"C": false}}'
+  ),
+  (
+    '{"A":1, "B":{"D":4, "E":5}}',
+    '{"C":3, "B":{"E":5, "D":4}}'
+  ),
+  (
+    '{"A":1, "B":{"D":4, "E":[5, 6, 7]}}',
+    '{"C":3, "B":{"E":5, "D":4}}'
+  ),
+  (
+    '{"A":1, "B":{"D":4, "E":[5, 6, 7]}}',
+    '{"C":3, "B":{"E":[5, 6, 7], "D":4}}'
+  ),
+  (
+    '{"A":1, "B":{"D":4, "E":[5, 6, 7]}}',
+    '{"C":3, "B":{"E":[7, 6 ,5], "D":4}}'
+  ),
+  (
+    '{"A":1, "B":{"D":4, "E":[5, 6, 7]}}',
+    '{"C":3, "F":{"E":[5, 6, 7], "D":4}}'
+  ),
+  ('[1, 2, true, false, null]', '[3, 4, 1]'),
+  ('[1, 2, true, false, null]', '[3, 4, 5]'),
+  ('[1,2,3]', '[]'),
+  ('[1, 2, true, false, null]', '[3, 4, [1]]'),
+  (
+    '[1, 2, [true, false], null]',
+    '[[1], [true, false]]'
+  ),
+  ('[1, 2, 3, [4, 5, 6]]', '[7, 8, 9, [6, 5, 4]]'),
+  ('[1, 2, true, false, null]', '{"A": 1}'),
+  (
+    '[1, 2, true, false, null, {"A":2}]',
+    '{"A": 1}'
+  ),
+  ('[1, {"A": 2}, {"A": 1}]', '{"A": 1}'),
+  (
+    '[1, 2, true, false, {"A": 1, "B": 2}]',
+    '{"A": 1, "B": 2}'
+  ),
+  (
+    '[1, 2, true, false, {"A": 1, "B": 2}]',
+    '{"A": 1, "B": 3}'
+  ),
+  (
+    '[1, 2, true, false, [{"A": 1, "B": 2}]]',
+    '{"A": 1, "B": 2}'
+  ),
+  (
+    '[1, 2, true, false, [{"A": 1, "B": 2}]]',
+    '{"A": 1, "B": 3}'
+  ),
+  (
+    '[1, 2, true, false, [{"A": 1, "B": 2}]]',
+    '{"A": 1}'
+  ),
+  (
+    '[1, 2, true, false, {"A": 1, "B": {"C": 12}}]',
+    '{"A": 1, "B": {"C": 12}}'
+  ),
+  (
+    '[1, 2, true, false, [{"A": 1, "B": {"C": 12}}]]',
+    '{"A": 1, "B": {"C": 12}}'
+  ),
+  (
+    '[1, 2, true, false, [{"A": 1, "B": {"C": 12}}]]',
+    '{"A": 1, "B":{"C": 12}}'
+  ),
+  (
+    '[[1, 2, true, false, {"A": 1, "B": {"C": 12}}]]',
+    '{"A": 1, "B": {"C": 12}}'
+  ),
+  (
+    '{"A": 1, "B": 3}',
+    '[1, 2, true, false, {"A": 1, "B": 2}]'
+  ),
+  (
+    '{"A": 1, "B": 3}',
+    '[1, 2, true, false, {"A": 1, "B": 3}]'
+  ),
+  (
+    '{"A": 1, "B": 3}',
+    '[1, 2, true, false, {"A": 1, "B": 2}, {"A": 1, "B": 3}]'
+  ),
+  (
+    '{"A": 1, "B": [1, 2, 3]}',
+    '[1, 2, true, false, {"A": 1, "B": 2}, {"A": 1, "B": [1, 2, 3]}]'
+  ),
+  (
+    '{"A": 1, "B": [1, 2, {"C": 3, "D": 5}]}',
+    '[1, 2, true, false, {"A": 1, "B": 2}, {"A":1, "B":[1, 2, {"C": 3, "D": 5}]}]'
+  ),
+  (
+    '{"A": 1, "B": [1, 2, {"C": 3, "D": 5}]}',
+    '[1, 2, true, false, {"A": 1, "B": 2},{"A": 1, "B": [1, 2, {"C": 3, "D": 4}]}]'
+  ),
+  (
+    '{"A": 1, "B": 3}',
+    '[1, 2, true, false, [{"A": 1, "B": 2}, {"A": 1, "B": 3}]]'
+  );
+
+SELECT
+  l1,
+  l2,
+  JSON_OVERLAPS(l1, l2) AS is_overlaps
+FROM
+  t2;
+
+DROP TABLE t2;
+
+DROP TABLE t1;
+
+DROP DATABASE json_overlaps_db;

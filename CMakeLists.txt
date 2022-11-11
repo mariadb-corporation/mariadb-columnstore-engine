@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 PROJECT(Columnstore)
 
@@ -25,6 +25,10 @@ if(SERVER_BUILD_DIR)
     set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
 endif()
 
+SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
+INCLUDE(check_compiler_flag)
 INCLUDE(ExternalProject)
 INCLUDE(CheckCXXSourceCompiles)
 
@@ -32,8 +36,18 @@ MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
 IF (have_CXX__std_c__20)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 ELSE()
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
+  MY_CHECK_CXX_COMPILER_FLAG("-std=c++2a")
+  IF (have_CXX__std_c__2a)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
+  ELSE()
+    MESSAGE_ONCE(CS_NO_CXX20 "C++ Compiler does not understand -std=c++20")
+    return()
+  ENDIF()
 ENDIF()
+
+# There is an inconsistency b/w default char signedness at ARM and x86.
+# This flag explicitly sets char as signed.
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
 
 UNSET(CMAKE_CXX_STANDARD)
 SET(CMAKE_CXX_EXTENSIONS FALSE)
@@ -93,9 +107,6 @@ ELSE ()
         SET (ENGINE_SUPPORTDIR "/usr/local/share/columnstore")
     ENDIF ()
 ENDIF ()
-
-SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -161,21 +172,19 @@ IF (WITH_COLUMNSTORE_LZ4 STREQUAL "ON" OR WITH_COLUMNSTORE_LZ4 STREQUAL "AUTO")
     FIND_PACKAGE(LZ4)
     IF (NOT LZ4_FOUND)
         IF (WITH_COLUMNSTORE_LZ4 STREQUAL "AUTO")
-            MESSAGE_ONCE(STATUS "LZ4 not found, building without LZ4")
+            MESSAGE_ONCE(CS_LZ4 "LZ4 not found, building without LZ4")
         ELSE()
-            MESSAGE_ONCE(FATAL_ERROR "LZ4 not found.")
+            MESSAGE(FATAL_ERROR "LZ4 not found.")
         ENDIF()
     ELSE()
-        MESSAGE_ONCE(STATUS "Building with LZ4")
+        MESSAGE_ONCE(CS_LZ4 "Building with LZ4")
         SET(HAVE_LZ4 1 CACHE INTERNAL "")
     ENDIF()
 ELSE()
-    MESSAGE_ONCE(STATUS "Building without LZ4")
+  MESSAGE_ONCE(CS_LZ4 "Building without LZ4")
 ENDIF()
 
 IF (NOT INSTALL_LAYOUT)
-    INCLUDE(check_compiler_flag)
-
     MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
     MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
     MY_CHECK_AND_SET_COMPILER_FLAG("-msse4.2" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
@@ -272,7 +281,7 @@ ENDIF()
 IF (INSTALL_LAYOUT)
     SET (MARIADB_STRING_LIBS dbug strings mysys)
 ELSE()
-    SET (MARIADB_STRING_LIBS    -L${SERVER_BUILD_INCLUDE_DIR}/../strings/ libstrings.a -L${SERVER_BUILD_INCLUDE_DIR}/../mysys/ libmysys.a -L${SERVER_BUILD_INCLUDE_DIR}/../dbug/ libdbug.a)
+    SET (MARIADB_STRING_LIBS -L${SERVER_BUILD_INCLUDE_DIR}/../mysys/ libmysys.a -L${SERVER_BUILD_INCLUDE_DIR}/../strings/ libstrings.a -L${SERVER_BUILD_INCLUDE_DIR}/../dbug/ libdbug.a)
 ENDIF()
 
 #SET (ENGINE_UTILS_BOOSTIDB_INCLUDE    "{CMAKE_CURRENT_SOURCE_DIR}/utils/boost_idb")

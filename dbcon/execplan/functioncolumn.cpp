@@ -29,6 +29,7 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 using namespace boost;
 
+#include "functor_json.h"
 #include "bytestream.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
@@ -323,6 +324,46 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
   Func_decode* decode = dynamic_cast<Func_decode*>(fFunctor);
   if (decode)
     fFunctor = fDynamicFunctor = new Func_decode();
+
+  // Special treatment for json function contains the variable path. reset the variable path
+  if (dynamic_cast<Func_json_length*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_length();
+
+  if (dynamic_cast<Func_json_keys*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_keys();
+
+  if (dynamic_cast<Func_json_exists*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_exists();
+
+  if (dynamic_cast<Func_json_value*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_value();
+
+  if (dynamic_cast<Func_json_query*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_query();
+
+  if (dynamic_cast<Func_json_contains*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_contains();
+
+  if (dynamic_cast<Func_json_array_append*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_array_append();
+
+  if (dynamic_cast<Func_json_array_insert*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_array_insert();
+
+  if (auto f = dynamic_cast<Func_json_insert*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_insert(f->getMode());
+
+  if (dynamic_cast<Func_json_remove*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_remove();
+
+  if (dynamic_cast<Func_json_contains_path*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_contains_path();
+
+  if (dynamic_cast<Func_json_search*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_search();
+
+  if (dynamic_cast<Func_json_extract*>(fFunctor))
+    fFunctor = fDynamicFunctor = new Func_json_extract();
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const

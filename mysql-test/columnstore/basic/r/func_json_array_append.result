@@ -1,0 +1,94 @@
+DROP DATABASE IF EXISTS json_array_append_db;
+CREATE DATABASE json_array_append_db;
+USE json_array_append_db;
+# ----------------------------------------------------------------------
+# Test of JSON_ARRAY_APPEND function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(a TEXT, p TEXT, v TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO
+t1
+VALUES
+('[1,2,3]', '$[0]', 2),
+('[1,2,3]', '$[0]', 1.2),
+('[1,2,3]', '$[0]', 'key1'),
+('[1,2,3]', '$[0]', TRUE),
+('[1,2,3]', '$[0]', false),
+('[1,2,3]', '$[0]', NULL),
+(
+'{"a": "foo", "b": "bar", "c": "wibble" }',
+'$.b',
+4
+),
+(
+'{"a": "foo", "b": "bar", "c": "wibble" }',
+'$.c',
+'grape'
+    ),
+(
+'{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}',
+'$.b',
+4
+),
+(
+'{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}',
+'$.c',
+'grape'
+    );
+SELECT
+a AS arrary,
+p AS path,
+v AS value,
+JSON_ARRAY_APPEND(a, p, v) AS result
+FROM
+t1;
+arrary	path	value	result
+[1,2,3]	$[0]	2	[[1, "2"], 2, 3]
+[1,2,3]	$[0]	1.2	[[1, "1.2"], 2, 3]
+[1,2,3]	$[0]	key1	[[1, "key1"], 2, 3]
+[1,2,3]	$[0]	1	[[1, "1"], 2, 3]
+[1,2,3]	$[0]	0	[[1, "0"], 2, 3]
+[1,2,3]	$[0]	NULL	[[1, null], 2, 3]
+{"a": "foo", "b": "bar", "c": "wibble" }	$.b	4	{"a": "foo", "b": ["bar", "4"], "c": "wibble"}
+{"a": "foo", "b": "bar", "c": "wibble" }	$.c	grape	{"a": "foo", "b": "bar", "c": ["wibble", "grape"]}
+{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}	$.b	4	{"a": "foo", "b": [1, 2, 3, "4"], "c": ["apple", "pear"]}
+{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}	$.c	grape	{"a": "foo", "b": [1, 2, 3], "c": ["apple", "pear", "grape"]}
+# NULL args
+CREATE TABLE t2(a TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO
+t2
+VALUES
+('[1,2,3]');
+SELECT
+JSON_ARRAY_APPEND(a, NULL, JSON_COMPACT(1)),
+JSON_ARRAY_APPEND(a, '$', NULL)
+FROM
+t2;
+JSON_ARRAY_APPEND(a, NULL, JSON_COMPACT(1))	JSON_ARRAY_APPEND(a, '$', NULL)
+NULL	[1, 2, 3, null]
+TRUNCATE t2;
+INSERT INTO
+t2
+VALUES
+('$.b');
+SELECT
+JSON_ARRAY_APPEND(NULL, a, JSON_COMPACT(1)),
+JSON_ARRAY_APPEND('[1,2,3]', a, NULL)
+FROM
+t2;
+JSON_ARRAY_APPEND(NULL, a, JSON_COMPACT(1))	JSON_ARRAY_APPEND('[1,2,3]', a, NULL)
+NULL	NULL
+TRUNCATE t2;
+INSERT INTO
+t2
+VALUES
+('$**[0]');
+error ER_INVALID_JSON_PATH_WILDCARD
+SELECT
+JSON_ARRAY_APPEND(JSON_COMPACT('{"a": {"b": [3]}}'), a, 6)
+FROM
+t2;
+JSON_ARRAY_APPEND(JSON_COMPACT('{"a": {"b": [3]}}'), a, 6)
+NULL
+DROP TABLE t2;
+DROP TABLE t1;
+DROP DATABASE json_array_append_db;

@@ -5,7 +5,16 @@
 --echo # MCOL-4615 GROUP_CONCAT() precision loss for huge narrow decimal
 --echo #
 
+--disable_warnings
+DROP DATABASE IF EXISTS type_uint64_db;
+--enable_warnings
+
+CREATE DATABASE type_uint64_db; 
+USE type_uint64_db;
+
 CREATE TABLE t1 (a BIGINT UNSIGNED);
 INSERT INTO t1 VALUES (18446744073709551600);
 SELECT GROUP_CONCAT(a) FROM t1;
 DROP TABLE t1;
+DROP DATABASE type_uint64_db;
+

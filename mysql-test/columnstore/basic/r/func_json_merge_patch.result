@@ -1,0 +1,77 @@
+DROP DATABASE IF EXISTS json_merge_patch_db;
+Warnings:
+Note	1008	Can't drop database 'json_merge_patch_db'; database doesn't exist
+CREATE DATABASE json_merge_patch_db;
+USE json_merge_patch_db;
+CREATE TABLE t1(l1 TEXT, l2 TEXT) ENGINE = columnstore;
+INSERT INTO t1(l1, l2) VALUES
+('{"a":"b"}', '{"a":"c"}'),
+('{"a":"b"}', '{"b":"c"}'),
+('{"a":"b"}', '{"a":null}'),
+('{"a":"b", "b":"c"}', '{"a":null}'),
+('{"a":["b"]}', '{"a":"c"}'),
+('{"a":"c"}', '{"a":["b"]}'),
+('{"a": {"b":"c"}}', '{"a": {"b":"d", "c":null}}'),
+('{"a":[{"b":"c"}]}', '{"a": [1]}'),
+('["a","b"]', '["c","d"]'),
+('{"a":"b"}', '["c"]'),
+('{"a":"foo"}', 'null'),
+('{"a":"foo"}', '"bar"'),
+('{"e":null}', '{"a":1}'),
+('[1,2]', '{"a":"b", "c":null}'),
+('{}', '{"a":{"bb":{"ccc":null}}}'),
+(NULL, '{}'),
+('{}', NULL);
+SELECT l1, l2,
+JSON_MERGE_PATCH(l1, l2) AS `l1 + l2`
+FROM t1;
+l1	l2	l1 + l2
+{"a":"b"}	{"a":"c"}	{"a": "c"}
+{"a":"b"}	{"b":"c"}	{"a": "b", "b": "c"}
+{"a":"b"}	{"a":null}	{}
+{"a":"b", "b":"c"}	{"a":null}	{"b": "c"}
+{"a":["b"]}	{"a":"c"}	{"a": "c"}
+{"a":"c"}	{"a":["b"]}	{"a": ["b"]}
+{"a": {"b":"c"}}	{"a": {"b":"d", "c":null}}	{"a": {"b": "d"}}
+{"a":[{"b":"c"}]}	{"a": [1]}	{"a": [1]}
+["a","b"]	["c","d"]	["c", "d"]
+{"a":"b"}	["c"]	["c"]
+{"a":"foo"}	null	null
+{"a":"foo"}	"bar"	"bar"
+{"e":null}	{"a":1}	{"e": null, "a": 1}
+[1,2]	{"a":"b", "c":null}	{"a": "b"}
+{}	{"a":{"bb":{"ccc":null}}}	{"a": {"bb": {}}}
+NULL	{}	NULL
+{}	NULL	NULL
+DROP TABLE t1;
+CREATE TABLE t2(l1 TEXT, l2 TEXT, l3 TEXT) ENGINE = columnstore;
+INSERT INTO t2 VALUES
+('{"a":"b"}', NULL, '{"c":"d"}'),
+(NULL, '[1,2,3]', '[4,5,6]'),
+(NULL, 'a', 'b'),
+('{"a":"b"}', '[1,2,3]', '{"c":null,"d":"e"}');
+SELECT l1, l2, l3,
+JSON_MERGE_PATCH(l1, l2, l3) AS merged
+FROM t2;
+l1	l2	l3	merged
+{"a":"b"}	NULL	{"c":"d"}	NULL
+NULL	[1,2,3]	[4,5,6]	[4, 5, 6]
+NULL	a	b	NULL
+{"a":"b"}	[1,2,3]	{"c":null,"d":"e"}	{"d": "e"}
+DROP TABLE t2;
+CREATE TABLE t3(l1 TEXT, l2 TEXT) ENGINE = columnstore;
+SELECT JSON_MERGE_PATCH() FROM t3;
+ERROR 42000: Incorrect parameter count in the call to native function 'JSON_MERGE_PATCH'
+INSERT INTO t3(l1, l2) VALUES('{}', '{"a":"c"}');
+SELECT l1, JSON_MERGE_PATCH(l1) AS merged FROM t3;
+ERROR 42000: Incorrect parameter count in the call to native function 'JSON_MERGE_PATCH'
+INSERT INTO t3(l1, l2) VALUES
+('{', '[1,2,3]'),
+('{"a":"b"}', '[1,');
+SELECT l1, l2, JSON_MERGE_PATCH(l1, l2) AS merged FROM t3;
+l1	l2	merged
+{}	{"a":"c"}	{"a": "c"}
+{	[1,2,3]	NULL
+{"a":"b"}	[1,	NULL
+DROP TABLE t3;
+DROP DATABASE json_merge_patch_db;

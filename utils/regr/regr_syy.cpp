@@ -39,8 +39,8 @@ static Add_regr_syy_ToUDAFMap addToMap;
 struct regr_syy_data
 {
   uint64_t cnt;
-  long double sumy;
-  long double sumy2;  // sum of (y squared)
+  long double avgy;
+  long double cy;  // sum of (y squared)
 };
 
 mcsv1_UDAF::ReturnCode regr_syy::init(mcsv1Context* context, ColumnDatum* colTypes)
@@ -73,8 +73,8 @@ mcsv1_UDAF::ReturnCode regr_syy::reset(mcsv1Context* context)
 {
   struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
   data->cnt = 0;
-  data->sumy = 0.0;
-  data->sumy2 = 0.0;
+  data->avgy = 0.0;
+  data->cy = 0.0;
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -82,11 +82,15 @@ mcsv1_UDAF::ReturnCode regr_syy::nextValue(mcsv1Context* context, ColumnDatum* v
 {
   double valy = toDouble(valsIn[0]);
   struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
-
-  data->sumy += valy;
-  data->sumy2 += valy * valy;
-
+  long double avgyPrev = data->avgy;
+  long double cyPrev = data->cy;
   ++data->cnt;
+  uint64_t cnt = data->cnt;
+  long double dy = valy - avgyPrev;
+  avgyPrev += dy / cnt;
+  cyPrev += dy * (valy - avgyPrev);
+  data->avgy = avgyPrev;
+  data->cy = cyPrev;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -101,10 +105,33 @@ mcsv1_UDAF::ReturnCode regr_syy::subEvaluate(mcsv1Context* context, const UserDa
   struct regr_syy_data* outData = (struct regr_syy_data*)context->getUserData()->data;
   struct regr_syy_data* inData = (struct regr_syy_data*)userDataIn->data;
 
-  outData->sumy += inData->sumy;
-  outData->sumy2 += inData->sumy2;
-  outData->cnt += inData->cnt;
+  uint64_t outCnt = outData->cnt;
+  long double outAvgy = outData->avgy;
+  long double outCy = outData->cy;
 
+  uint64_t inCnt = inData->cnt;
+  long double inAvgy = inData->avgy;
+  long double inCy = inData->cy;
+
+  uint64_t resCnt = inCnt + outCnt;
+  if (resCnt == 0)
+  {
+    outData->avgy = 0;
+    outData->cy = 0;
+    outData->cnt = 0;
+  }
+  else
+  {
+    long double deltay = outAvgy - inAvgy;
+
+    long double resAvgy = inAvgy + deltay * outCnt / resCnt;
+
+    long double resCy = outCy + inCy + deltay * deltay * inCnt * outCnt / resCnt;
+
+    outData->avgy = resAvgy;
+    outData->cy = resCy;
+    outData->cnt = resCnt;
+  }
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -114,7 +141,7 @@ mcsv1_UDAF::ReturnCode regr_syy::evaluate(mcsv1Context* context, static_any::any
   long double N = data->cnt;
   if (N > 0)
   {
-    long double var_popy = (data->sumy2 - (data->sumy * data->sumy / N));
+    long double var_popy = data->cy;
     if (var_popy < 0)  // might be -0
       var_popy = 0;
     valOut = static_cast<double>(var_popy);
@@ -127,10 +154,22 @@ mcsv1_UDAF::ReturnCode regr_syy::dropValue(mcsv1Context* context, ColumnDatum* v
   double valy = toDouble(valsDropped[0]);
   struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
 
-  data->sumy -= valy;
-  data->sumy2 -= valy * valy;
-
+  long double avgyPrev = data->avgy;
+  long double cyPrev = data->cy;
   --data->cnt;
-
+  uint64_t cnt = data->cnt;
+  if (cnt == 0)
+  {
+    data->avgy = 0;
+    data->cy = 0;
+  }
+  else
+  {
+    long double dy = valy - avgyPrev;
+    avgyPrev -= dy / cnt;
+    cyPrev -= dy * (valy - avgyPrev);
+    data->avgy = avgyPrev;
+    data->cy = cyPrev;
+  }
   return mcsv1_UDAF::SUCCESS;
 }

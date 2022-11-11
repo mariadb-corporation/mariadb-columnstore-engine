@@ -81,6 +81,7 @@ using namespace cal_impl_if;
 #include "selectfilter.h"
 #include "existsfilter.h"
 #include "groupconcatcolumn.h"
+#include "jsonarrayaggcolumn.h"
 #include "outerjoinonfilter.h"
 #include "intervalcolumn.h"
 #include "udafcolumn.h"
@@ -2904,6 +2905,14 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
       return rc;
     }
 
+    case Item_sum::JSON_ARRAYAGG_FUNC:
+    {
+      Item_func_json_arrayagg* gc = (Item_func_json_arrayagg*)isp;
+      ac->aggOp(AggregateColumn::JSON_ARRAYAGG);
+      ac->distinct(gc->get_distinct());
+      return rc;
+    }
+
     case Item_sum::SUM_BIT_FUNC:
     {
       string funcName = isp->func_name();
@@ -3550,6 +3559,35 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
   return rc;
 }
 
+// parse the boolean fields to string "true" or "false"
+ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& nonSupport)
+{
+  ConstantColumn* cc = NULL;
+
+  if (gwi.thd)
+  {
+    {
+      if (!item->fixed())
+      {
+        item->fix_fields(gwi.thd, (Item**)&item);
+      }
+    }
+  }
+  int64_t val = static_cast<int64_t>(item->val_int());
+  cc = new ConstantColumnSInt(colType_MysqlToIDB(item), val ? "true" : "false", val);
+
+  if (cc)
+    cc->timeZone(gwi.timeZone);
+
+  if (cc && item->name.length)
+    cc->alias(item->name.str);
+
+  if (cc)
+    cc->charsetNumber(item->collation.collation->number);
+
+  return cc;
+}
+
 ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
   if (get_fe_conn_info_ptr() == NULL)
@@ -4013,7 +4051,24 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           return NULL;
         }
 
-        ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+        ReturnedColumn* rc = NULL;
+
+
+        // Special treatment for json functions
+        // All boolean arguments will be parsed as boolean string true(false)
+        // E.g. the result of `SELECT JSON_ARRAY(true, false)` should be [true, false] instead of [1, 0]
+        bool mayHasBoolArg = ((funcName == "json_insert" || funcName == "json_replace" ||
+                              funcName == "json_set" || funcName == "json_array_append" ||
+                              funcName == "json_array_insert") && i != 0 && i % 2 == 0) ||
+                             (funcName == "json_array") ||
+                             (funcName == "json_object" && i % 2 == 1);
+        bool isBoolType =
+            (ifp->arguments()[i]->const_item() && ifp->arguments()[i]->type_handler()->is_bool_type());
+
+        if (mayHasBoolArg && isBoolType)
+          rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
+        else
+          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
         if (!rc && ifp->arguments()[i]->type() == Item::REF_ITEM)
@@ -4861,9 +4916,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     gwi.aggOnSelect = true;
 
   // Argument_count() is the # of formal parms to the agg fcn. Columnstore
-  // only supports 1 argument except UDAnF, COUNT(DISTINC) and GROUP_CONCAT
+  // only supports 1 argument except UDAnF, COUNT(DISTINC), GROUP_CONCAT and JSON_ARRAYAGG
   if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::COUNT_DISTINCT_FUNC &&
-      isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC && isp->sum_func() != Item_sum::UDF_SUM_FUNC)
+      isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC && isp->sum_func() != Item_sum::UDF_SUM_FUNC &&
+      isp->sum_func() != Item_sum::JSON_ARRAYAGG_FUNC)
   {
     gwi.fatalParseError = true;
     gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_MUL_ARG_AGG);
@@ -4875,6 +4931,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
   {
     ac = new GroupConcatColumn(gwi.sessionid);
+  }
+  else if (isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
+  {
+    ac = new JsonArrayAggColumn(gwi.sessionid);
   }
   else if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
   {
@@ -4983,6 +5043,85 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
       }
     }
+    else if (isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
+    {
+      Item_func_json_arrayagg* gc = (Item_func_json_arrayagg*)isp;
+      vector<SRCP> orderCols;
+      RowColumn* rowCol = new RowColumn();
+      vector<SRCP> selCols;
+
+      uint32_t select_ctn = gc->get_count_field();
+      ReturnedColumn* rc = NULL;
+
+      for (uint32_t i = 0; i < select_ctn; i++)
+      {
+        rc = buildReturnedColumn(sfitempp[i], gwi, gwi.fatalParseError);
+
+        if (!rc || gwi.fatalParseError)
+        {
+          if (ac)
+            delete ac;
+
+          return NULL;
+        }
+
+        selCols.push_back(SRCP(rc));
+      }
+
+      ORDER **order_item, **end;
+
+      for (order_item = gc->get_order(), end = order_item + gc->get_order_field(); order_item < end;
+           order_item++)
+      {
+        Item* ord_col = *(*order_item)->item;
+
+        if (ord_col->type() == Item::CONST_ITEM && ord_col->cmp_type() == INT_RESULT)
+        {
+          Item_int* id = (Item_int*)ord_col;
+
+          if (id->val_int() > (int)selCols.size())
+          {
+            gwi.fatalParseError = true;
+
+            if (ac)
+              delete ac;
+
+            return NULL;
+          }
+
+          rc = selCols[id->val_int() - 1]->clone();
+          rc->orderPos(id->val_int() - 1);
+        }
+        else
+        {
+          rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+
+          if (!rc || gwi.fatalParseError)
+          {
+            if (ac)
+              delete ac;
+
+            return NULL;
+          }
+        }
+
+        // 10.2 TODO: direction is now a tri-state flag
+        rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
+        orderCols.push_back(SRCP(rc));
+      }
+
+      rowCol->columnVec(selCols);
+      (dynamic_cast<JsonArrayAggColumn*>(ac))->orderCols(orderCols);
+      parm.reset(rowCol);
+      ac->aggParms().push_back(parm);
+
+      if (gc->get_separator())
+      {
+        string separator;
+        separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
+        (dynamic_cast<JsonArrayAggColumn*>(ac))->separator(separator);
+      }
+    }
     else if (isSupportedAggregateWithOneConstArg(isp, sfitempp))
     {
       processAggregateColumnConstArg(gwi, parm, ac, sfitempp[0], constArgParam);
@@ -5067,17 +5206,17 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
             // @bug 3603. for cases like max(rand()). try to build function first.
             if (!rc)
+            {
               rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-
+            }
+            if (!rc)
+            {
+              gwi.fatalParseError = true;
+            }
             parm.reset(rc);
             gwi.clauseType = clauseType;
-
-            if (gwi.fatalParseError)
-              break;
-
             break;
           }
-
           case Item::REF_ITEM:
           {
             ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
@@ -5198,7 +5337,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         ct.precision = -16;  // borrowed to indicate skip null value check on connector
         ac->resultType(ct);
       }
-      else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+      else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC ||
+               isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
       {
         // Item_func_group_concat* gc = (Item_func_group_concat*)isp;
         CalpontSystemCatalog::ColType ct;

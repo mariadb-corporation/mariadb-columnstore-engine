@@ -41,6 +41,7 @@ USE mcs19_db;
 --error ER_DBACCESS_DENIED_ERROR
 CREATE DATABASE mcs19_db1;
 CREATE TABLE t1(col INT) ENGINE=InnoDB;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 INSERT INTO t1 VALUES(1);
 SELECT * FROM t1;
@@ -56,12 +57,14 @@ SELECT USER();
 SHOW GRANTS FOR 'user1'@'localhost';
 --error ER_DBACCESS_DENIED_ERROR
 USE mcs19_db;
---error ER_TABLEACCESS_DENIED_ERROR
+--disable_abort_on_error
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 INSERT INTO mcs19_db.t1 VALUES(2);
---error ER_TABLEACCESS_DENIED_ERROR
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 SELECT * FROM mcs19_db.t1;
---error ER_TABLEACCESS_DENIED_ERROR
+--replace_regex /(`mcs19_db`.`t1`)/'t1'/
 CREATE TABLE mcs19_db.t1;
+--enable_abort_on_error
 
 # Clean up
 connection default;

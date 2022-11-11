@@ -10,6 +10,13 @@
 
 --echo # Garbage at various places of the grammar
 
+--disable_warnings
+DROP DATABASE IF EXISTS type_decimal_db;
+--enable_warnings
+
+CREATE DATABASE type_decimal_db; 
+USE type_decimal_db;
+
 CREATE TABLE t1 (a VARCHAR(128));
 
 INSERT INTO t1 VALUES
@@ -412,3 +419,5 @@ INSERT INTO t1 VALUES
 SELECT CONCAT(a), CAST(a AS CHAR) FROM t1 ORDER BY a;
 SELECT GROUP_CONCAT(a ORDER BY a) FROM t1;
 DROP TABLE t1;
+DROP DATABASE type_decimal_db;
+

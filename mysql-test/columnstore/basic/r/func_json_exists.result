@@ -1,0 +1,32 @@
+DROP DATABASE IF EXISTS json_exists_db;
+CREATE DATABASE json_exists_db;
+USE json_exists_db;
+# ----------------------------------------------------------------------
+# Test of JSON_EXISTS function.
+# ----------------------------------------------------------------------
+# Test case 0
+CREATE TABLE t1(j TEXT, p TEXT) ENGINE = columnstore;
+SET
+@json = '{"key1":"xxxx", "key2":[1, 2, 3]}';
+INSERT INTO
+t1
+VALUES
+(@json, '$.key1'),
+(@json, '$.key1[0]'),
+(@json, '$.key2'),
+(@json, '$.key2[1]'),
+(@json, '$.key2[10]');
+SELECT
+j,
+p,
+JSON_EXISTS(j, p) AS result
+FROM
+t1;
+j	p	result
+{"key1":"xxxx", "key2":[1, 2, 3]}	$.key1	1
+{"key1":"xxxx", "key2":[1, 2, 3]}	$.key1[0]	1
+{"key1":"xxxx", "key2":[1, 2, 3]}	$.key2	1
+{"key1":"xxxx", "key2":[1, 2, 3]}	$.key2[1]	1
+{"key1":"xxxx", "key2":[1, 2, 3]}	$.key2[10]	0
+DROP TABLE t1;
+DROP DATABASE json_exists_db;

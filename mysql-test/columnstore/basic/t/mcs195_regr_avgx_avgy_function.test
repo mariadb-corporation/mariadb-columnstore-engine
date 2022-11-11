@@ -25,9 +25,11 @@ INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bb
 
 SELECT REGR_AVGX(y, x) FROM t1;
 SELECT z, REGR_AVGX(y, x) FROM t1 GROUP BY z ORDER BY z;
+SELECT z, REGR_AVGX(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
 
 SELECT REGR_AVGY(y, x) FROM t1;
 SELECT z, REGR_AVGY(y, x) FROM t1 GROUP BY z ORDER BY z;
+SELECT z, REGR_AVGY(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
 
 --disable_query_log
 if (!$func_exists)

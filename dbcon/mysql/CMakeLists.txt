@@ -53,7 +53,7 @@ else ()
     SET_TARGET_PROPERTIES(ha_columnstore PROPERTIES PREFIX "")
 
     add_dependencies(ha_columnstore loggingcpp)
-    add_dependencies(ha_columnstore ${S3API_DEPS})
+    add_dependencies(ha_columnstore marias3)
     add_definitions(-DMYSQL_DYNAMIC_PLUGIN -DPLUGIN_COLUMNSTORE_VERSION="${PACKAGE_VERSION}")
 
     target_link_libraries(ha_columnstore ${S3API_DEPS} ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a threadpool)

@@ -1,0 +1,56 @@
+DROP DATABASE IF EXISTS json_insert_de;
+CREATE DATABASE json_insert_de;
+USE json_insert_de;
+# ----------------------------------------------------------------------
+# Test of JSON_INSERT|REPLACE|SET function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(j TEXT, p TEXT, v TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO
+t1
+VALUES
+(
+'{"a":1, "b":{"c":1}, "d":[1, 2]}',
+'$.b.k1',
+'word'
+    ),
+('{"a":1, "b":{"c":1}, "d":[1, 2]}', '$.d[3]', 3),
+('{"a":1, "b":{"c":1}, "d":[1, 2]}', '$.a[2]', 2),
+(
+'{"a":1, "b":{"c":1}, "d":[1, 2]}',
+'$.b.c',
+'word'
+    ),
+('1', '$[0]', 4),
+('[]', '$[0][0]', 100),
+('1', '$[0][0]', 100),
+(
+'{ "a": 1, "b": [2, 3]}',
+'$.a',
+10
+),
+(
+'{ "a": 1, "b": [2, 3]}',
+'$.b',
+'[true, false]'
+    );
+SELECT
+j AS json,
+p AS path,
+v AS value,
+JSON_INSERT(j, p, v) AS json_insert,
+JSON_REPLACE(j, p, v) AS json_replace,
+JSON_SET(j, p, v) AS json_set
+FROM
+t1;
+json	path	value	json_insert	json_replace	json_set
+{"a":1, "b":{"c":1}, "d":[1, 2]}	$.b.k1	word	{"a": 1, "b": {"c": 1, "k1": "word"}, "d": [1, 2]}	{"a": 1, "b": {"c": 1}, "d": [1, 2]}	{"a": 1, "b": {"c": 1, "k1": "word"}, "d": [1, 2]}
+{"a":1, "b":{"c":1}, "d":[1, 2]}	$.d[3]	3	{"a": 1, "b": {"c": 1}, "d": [1, 2, "3"]}	{"a": 1, "b": {"c": 1}, "d": [1, 2]}	{"a": 1, "b": {"c": 1}, "d": [1, 2, "3"]}
+{"a":1, "b":{"c":1}, "d":[1, 2]}	$.a[2]	2	{"a": [1, "2"], "b": {"c": 1}, "d": [1, 2]}	{"a": 1, "b": {"c": 1}, "d": [1, 2]}	{"a": [1, "2"], "b": {"c": 1}, "d": [1, 2]}
+{"a":1, "b":{"c":1}, "d":[1, 2]}	$.b.c	word	{"a": 1, "b": {"c": 1}, "d": [1, 2]}	{"a": 1, "b": {"c": "word"}, "d": [1, 2]}	{"a": 1, "b": {"c": "word"}, "d": [1, 2]}
+1	$[0]	4	1	NULL	NULL
+[]	$[0][0]	100	[]	[]	[]
+1	$[0][0]	100	1	NULL	NULL
+{ "a": 1, "b": [2, 3]}	$.a	10	{"a": 1, "b": [2, 3]}	{"a": "10", "b": [2, 3]}	{"a": "10", "b": [2, 3]}
+{ "a": 1, "b": [2, 3]}	$.b	[true, false]	{"a": 1, "b": [2, 3]}	{"a": 1, "b": "[true, false]"}	{"a": 1, "b": "[true, false]"}
+DROP TABLE t1;
+DROP DATABASE json_insert_de;

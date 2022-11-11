@@ -1,0 +1,29 @@
+USE autopilot;
+TRUNCATE TABLE jsontest;
+SET @json = '[1, 2, [3, 4]]';
+SELECT @json;
+@json
+[1, 2, [3, 4]]
+INSERT INTO jsontest VALUES (1, @json, @json);
+SELECT JSON_ARRAY_INSERT(@json, '$[0]', 5);
+JSON_ARRAY_INSERT(@json, '$[0]', 5)
+[5, 1, 2, [3, 4]]
+SELECT JSON_ARRAY_INSERT(@json, '$[1]', 6);
+JSON_ARRAY_INSERT(@json, '$[1]', 6)
+[1, 6, 2, [3, 4]]
+SELECT JSON_ARRAY_INSERT(@json, '$[1]', 6, '$[2]', 7);
+JSON_ARRAY_INSERT(@json, '$[1]', 6, '$[2]', 7)
+[1, 6, 7, 2, [3, 4]]
+SELECT * FROM jsontest;
+cInt	cVarchar	cText
+1	[1, 2, [3, 4]]	[1, 2, [3, 4]]
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[0]', 5), cText, JSON_ARRAY_INSERT(cText, '$[0]', 5) from jsontest;
+cVarchar	JSON_ARRAY_INSERT(cVarchar, '$[0]', 5)	cText	JSON_ARRAY_INSERT(cText, '$[0]', 5)
+[1, 2, [3, 4]]	[5, 1, 2, [3, 4]]	[1, 2, [3, 4]]	[5, 1, 2, [3, 4]]
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6) from jsontest;
+cVarchar	JSON_ARRAY_INSERT(cVarchar, '$[1]', 6)	cText	JSON_ARRAY_INSERT(cText, '$[1]', 6)
+[1, 2, [3, 4]]	[1, 6, 2, [3, 4]]	[1, 2, [3, 4]]	[1, 6, 2, [3, 4]]
+SELECT cVarchar, JSON_ARRAY_INSERT(cVarchar, '$[1]', 6, '$[2]', 7), cText, JSON_ARRAY_INSERT(cText, '$[1]', 6, '$[2]', 7) from jsontest;
+cVarchar	JSON_ARRAY_INSERT(cVarchar, '$[1]', 6, '$[2]', 7)	cText	JSON_ARRAY_INSERT(cText, '$[1]', 6, '$[2]', 7)
+[1, 2, [3, 4]]	[1, 6, 7, 2, [3, 4]]	[1, 2, [3, 4]]	[1, 6, 7, 2, [3, 4]]
+TRUNCATE TABLE jsontest;

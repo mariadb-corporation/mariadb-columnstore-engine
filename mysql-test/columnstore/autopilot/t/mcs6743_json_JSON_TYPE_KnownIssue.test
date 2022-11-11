@@ -16,7 +16,6 @@ INSERT INTO jsontest VALUES (1, @json, @json);
 SELECT JSON_TYPE(@json);
 #
 SELECT * FROM jsontest;
---error 1178
 SELECT cVarchar, JSON_TYPE(cVarchar), cText, JSON_TYPE(cText) from jsontest;
 #
 TRUNCATE TABLE jsontest;

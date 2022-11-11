@@ -1,0 +1,28 @@
+# -------------------------------------------------------------- #
+# Test case migrated from Autopilot json test suite
+#
+# Author: Daniel Lee, daniel.lee@mariadb.com
+# -------------------------------------------------------------- #
+#
+--source ../include/have_columnstore.inc
+#
+USE autopilot;
+#
+TRUNCATE TABLE jsontest;
+SET @json1 = '[1, 2, {"a": 3}]';
+SET @json2 = '{"a": 1, "b": {"c": 30}}';
+SELECT @json1;
+SELECT @json2;
+INSERT INTO jsontest VALUES (1, @json1, @json1);
+INSERT INTO jsontest VALUES (2, @json2, @json2);
+#
+SELECT JSON_LENGTH(@json1);
+SELECT JSON_LENGTH(@json2);
+SELECT JSON_LENGTH(@json2, '$.b');
+#
+SELECT * FROM jsontest;
+SELECT cVarchar, JSON_LENGTH(cVarchar), cText, JSON_LENGTH(cText) from jsontest;
+SELECT cVarchar, JSON_LENGTH(cVarchar, '$.b'), cText, JSON_LENGTH(cText, '$.b') from jsontest;
+#
+TRUNCATE TABLE jsontest;
+#

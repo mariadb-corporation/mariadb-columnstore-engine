@@ -1,0 +1,71 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_contains_path_db;
+
+--enable_warnings
+CREATE DATABASE json_contains_path_db;
+
+USE json_contains_path_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_CONTAINS_PATH function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(j TEXT, r TEXT, p TEXT) ENGINE = COLUMNSTORE;
+
+INSERT INTO
+    t1
+VALUES
+    ('{"key1":1, "key2":[2,3]}', "oNE", "$.key2[1]"),
+    ('{"key1":1, "key2":[2,3]}', "oNE", "$.key2[10]"),
+    ('{"key1":1, "key2":[2,3]}', "oNE", "$.ma"),
+    ('{"key1":1, "key2":[2,3]}', "one", "$.key1"),
+    ('{ "a": true }', NULL, '$.a'),
+    ('{ "a": true }', 'all', NULL),
+    ('{"a":{"b":"c"}}', 'one', '$.a.*');
+
+SELECT
+    j AS json,
+    r AS return_flag,
+    p AS path,
+    JSON_CONTAINS_PATH(j, r, p) AS result
+FROM
+    t1;
+
+CREATE TABLE t2(j TEXT, r TEXT, p1 TEXT, p2 TEXT) ENGINE = COLUMNSTORE;
+
+INSERT INTO
+    t2
+VALUES
+    (
+        '{"key1":1, "key2":[2,3]}',
+        "one",
+        "$.key1",
+        "$.ma"
+    ),
+    (
+        '{"key1":1, "key2":[2,3]}',
+        "aLl",
+        "$.key1",
+        "$.ma"
+    ),
+    (
+        '{"key1":1, "key2":[2,3]}',
+        "aLl",
+        "$.key1",
+        "$.key2"
+    );
+
+SELECT
+    j AS json,
+    r AS return_flag,
+    p1 AS path,
+    p2 AS path,
+    JSON_CONTAINS_PATH(j, r, p1, p2) AS result
+FROM
+    t2;
+
+DROP TABLE t2;
+
+DROP TABLE t1;
+
+DROP DATABASE json_contains_path_db;

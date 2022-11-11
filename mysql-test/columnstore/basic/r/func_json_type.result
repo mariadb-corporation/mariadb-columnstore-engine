@@ -1,0 +1,49 @@
+DROP DATABASE IF EXISTS json_type_db;
+CREATE DATABASE json_type_db;
+USE json_type_db;
+# ----------------------------------------------------------------------
+# Test of JSON_TYPE function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = COLUMNSTORE;
+# Error ER_INVALID_JSON_TEXT_IN_PARAM
+INSERT INTO
+t1
+VALUES
+('abc');
+SELECT
+JSON_TYPE(l)
+FROM
+t1;
+JSON_TYPE(l)
+NULL
+# String literal - valid JSON
+TRUNCATE t1;
+INSERT INTO
+t1
+VALUES
+('{"a": 2}'),
+('[1,2]'),
+('"scalar string"'),
+('true'),
+('false'),
+('null'),
+('1'),
+('-0'),
+('-0.0');
+SELECT
+l AS json,
+JSON_TYPE(l) AS TYPE
+FROM
+t1;
+json	TYPE
+{"a": 2}	OBJECT
+[1,2]	ARRAY
+"scalar string"	STRING
+true	BOOLEAN
+false	BOOLEAN
+null	NULL
+1	INTEGER
+-0	INTEGER
+-0.0	DOUBLE
+DROP TABLE t1;
+DROP DATABASE json_type_db;

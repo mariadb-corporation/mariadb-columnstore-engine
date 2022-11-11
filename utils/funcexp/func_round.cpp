@@ -196,6 +196,13 @@ double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
     return x;
   }
 
+  if (execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType)
+  {
+    return getIntVal(row, parm, isNull, op_ct);
+  }
+
   if (isUnsigned(op_ct.colDataType))
   {
     return getUintVal(row, parm, isNull, op_ct);
@@ -261,6 +268,13 @@ long double Func_round::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
     }
 
     return x;
+  }
+
+  if (execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType)
+  {
+    return getIntVal(row, parm, isNull, op_ct);
   }
 
   if (isUnsigned(op_ct.colDataType))
@@ -484,7 +498,9 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
         else
           x = ceil(x - 0.5);
 
-        decimal.value = (int64_t)x;
+        decimal.value = x <= static_cast<double>(INT64_MIN)   ? INT64_MIN
+                        : x >= static_cast<double>(INT64_MAX) ? INT64_MAX
+                                                              : int64_t(x);
         decimal.scale = s;
       }
     }

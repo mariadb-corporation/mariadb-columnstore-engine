@@ -25,6 +25,7 @@ INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bb
 
 SELECT COVAR_POP(y, x) FROM t1;
 SELECT z, COVAR_POP(y, x) FROM t1 GROUP BY z ORDER BY z;
+SELECT z, COVAR_POP(y, x) OVER (PARTITION BY z ORDER BY z) FROM t1;
 
 --disable_query_log
 if (!$func_exists)

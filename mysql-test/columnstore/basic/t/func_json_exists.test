@@ -1,0 +1,37 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_exists_db;
+
+--enable_warnings
+CREATE DATABASE json_exists_db;
+
+USE json_exists_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_EXISTS function.
+--echo # ----------------------------------------------------------------------
+--echo # Test case 0
+CREATE TABLE t1(j TEXT, p TEXT) ENGINE = columnstore;
+
+SET
+      @json = '{"key1":"xxxx", "key2":[1, 2, 3]}';
+
+INSERT INTO
+      t1
+VALUES
+      (@json, '$.key1'),
+      (@json, '$.key1[0]'),
+      (@json, '$.key2'),
+      (@json, '$.key2[1]'),
+      (@json, '$.key2[10]');
+
+SELECT
+      j,
+      p,
+      JSON_EXISTS(j, p) AS result
+FROM
+      t1;
+
+DROP TABLE t1;
+
+DROP DATABASE json_exists_db;

@@ -367,6 +367,14 @@ fi
 
 systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+
+    # mask mariadb-columnstore service to prevent starting services and dbbuilder
+    # after reinstallation on multinode configurations
+    num_workers=$(grep NumWorkers /etc/columnstore/Columnstore.xml | tr -dc '0-9')
+    if [[ $num_workers > 1 ]]; then
+        systemctl mask mariadb-columnstore
+    fi
+
     mkdir -p @ENGINE_DATADIR@/storagemanager
     chown -R mysql:mysql @ENGINE_DATADIR@/storagemanager
     IFLAG=@ENGINE_DATADIR@/storagemanager/storagemanager-lock

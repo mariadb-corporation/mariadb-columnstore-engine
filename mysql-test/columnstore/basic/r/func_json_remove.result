@@ -1,0 +1,49 @@
+DROP DATABASE IF EXISTS json_remove_db;
+CREATE DATABASE json_remove_db;
+USE json_remove_db;
+# ----------------------------------------------------------------------
+# Test of JSON_REMOVE function.
+# ----------------------------------------------------------------------
+CREATE TABLE t1(j TEXT, p TEXT) ENGINE = columnstore;
+INSERT INTO
+t1
+VALUES
+('["a", ["b", "c"], "d"]', '$[0]'),
+('["a", ["b", "c"], "d"]', '$[1]'),
+('["a", ["b", "c"], "d"]', '$[1][0]'),
+('["a", ["b", "c"], "d"]', '$[0]');
+SELECT
+j AS json,
+p AS path,
+JSON_REMOVE(j, p) AS result
+FROM
+t1;
+json	path	result
+["a", ["b", "c"], "d"]	$[0]	[["b", "c"], "d"]
+["a", ["b", "c"], "d"]	$[1]	["a", "d"]
+["a", ["b", "c"], "d"]	$[1][0]	["a", ["c"], "d"]
+["a", ["b", "c"], "d"]	$[0]	[["b", "c"], "d"]
+CREATE TABLE t2(j TEXT, p TEXT) ENGINE = columnstore;
+INSERT INTO
+t2
+VALUES
+('{"a": 1, "b": [2, 3]}', '$.a'),
+('{"a": 1, "b": [2, 3]}', '$.a[0]'),
+('{"a": 1, "b": [2, 3]}', '$.b'),
+('{"a": 1, "b": [2, 3]}', '$.b[0]'),
+('{"a": 1, "b": [2, 3]}', '$.b[1]');
+SELECT
+j AS json,
+p AS path,
+JSON_REMOVE(j, p) AS result
+FROM
+t2;
+json	path	result
+{"a": 1, "b": [2, 3]}	$.a	{"b": [2, 3]}
+{"a": 1, "b": [2, 3]}	$.a[0]	{"a": 1, "b": [2, 3]}
+{"a": 1, "b": [2, 3]}	$.b	{"a": 1}
+{"a": 1, "b": [2, 3]}	$.b[0]	{"a": 1, "b": [3]}
+{"a": 1, "b": [2, 3]}	$.b[1]	{"a": 1, "b": [2]}
+DROP TABLE t2;
+DROP TABLE t1;
+DROP DATABASE json_remove_db;

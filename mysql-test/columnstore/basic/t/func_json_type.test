@@ -1,0 +1,51 @@
+--source ../include/disable_before_10.9.inc
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS json_type_db;
+
+--enable_warnings
+CREATE DATABASE json_type_db;
+
+USE json_type_db;
+
+--echo # ----------------------------------------------------------------------
+--echo # Test of JSON_TYPE function.
+--echo # ----------------------------------------------------------------------
+CREATE TABLE t1(l LONGTEXT) ENGINE = COLUMNSTORE;
+
+--echo # Error ER_INVALID_JSON_TEXT_IN_PARAM
+INSERT INTO
+    t1
+VALUES
+    ('abc');
+
+SELECT
+    JSON_TYPE(l)
+FROM
+    t1;
+
+--echo # String literal - valid JSON
+TRUNCATE t1;
+
+INSERT INTO
+    t1
+VALUES
+    ('{"a": 2}'),
+    ('[1,2]'),
+    ('"scalar string"'),
+    ('true'),
+    ('false'),
+    ('null'),
+    ('1'),
+    ('-0'),
+    ('-0.0');
+
+SELECT
+    l AS json,
+    JSON_TYPE(l) AS TYPE
+FROM
+    t1;
+
+DROP TABLE t1;
+
+DROP DATABASE json_type_db;
