@@ -14,7 +14,7 @@
 #
 --exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
 --exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port 3306
 
 #
 # Create corresponding in the server
