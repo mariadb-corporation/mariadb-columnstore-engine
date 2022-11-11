@@ -1,0 +1,154 @@
+--echo #
+--echo # MDEV-25080: Allow pushdown of queries involving UNIONs
+--echo # in outer select to foreign engines
+--echo #
+--echo # Uncomment the actual SELECTs and add ORDER BY clause
+--echo # after MCOL-5222 is fixed
+--echo #
+
+--source ../include/have_columnstore.inc
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port 3306
+
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mdev25080;
+--enable_warnings
+
+CREATE DATABASE mdev25080;
+
+USE mdev25080;
+
+CREATE TABLE t1 (a varchar(30)) ENGINE=ColumnStore;
+CREATE TABLE t2 (a varchar(30)) ENGINE=ColumnStore;
+CREATE TABLE t3 (a varchar(30)) ENGINE=MyISAM;
+CREATE TABLE t4 (a varchar(30)) ENGINE=MyISAM;
+
+INSERT INTO t1 VALUES ('abc'), ('bcd'), ('cde');
+INSERT INTO t2 VALUES ('bcd'), ('cde'), ('def'), ('efg');
+
+INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
+INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
+
+--echo # Pushdown of the whole UNION
+#SELECT * FROM t1 UNION SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+
+#SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+
+--echo # UNION with a foreign engine
+#SELECT * FROM t1 UNION SELECT * FROM t3;
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
+
+--echo # More than two SELECTs in a UNIT:
+#SELECT * FROM t1 UNION
+#  SELECT * FROM t2 UNION ALL
+#  SELECT * FROM t1;
+
+EXPLAIN SELECT * FROM t1 UNION
+  SELECT * FROM t2 UNION ALL
+  SELECT * FROM t1;
+
+#(SELECT * FROM t1 UNION
+#  SELECT * FROM t2) UNION ALL
+#  SELECT * FROM t1;
+
+EXPLAIN (SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  SELECT * FROM t1;
+
+#SELECT * FROM t1 UNION
+#  SELECT * FROM t2 UNION ALL
+#  SELECT * FROM t3 UNION
+#  SELECT * FROM t4;
+
+EXPLAIN SELECT * FROM t1 UNION
+  SELECT * FROM t2 UNION ALL
+  SELECT * FROM t3 UNION
+  SELECT * FROM t4;
+
+#(SELECT * FROM t1 UNION
+#  SELECT * FROM t2) UNION ALL
+#  (SELECT * FROM t3 UNION
+#  SELECT * FROM t4);
+
+EXPLAIN (SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t3 UNION
+  SELECT * FROM t4);
+
+#SELECT count(*) FROM t1 UNION
+#  SELECT count(*) FROM t2 UNION ALL
+#  SELECT count(*)+20 FROM t2 UNION
+#  SELECT count(*)+5 FROM t1;
+
+EXPLAIN
+  SELECT count(*) FROM t1 UNION
+  SELECT count(*) FROM t2 UNION ALL
+  SELECT count(*)+20 FROM t2 UNION
+  SELECT count(*)+5 FROM t1;
+
+--echo # UNION inside a derived table: the whole derived table must be pushed
+SELECT a FROM
+  (SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
+
+EXPLAIN
+  SELECT a FROM
+    (SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
+
+SELECT a FROM
+  (SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
+
+EXPLAIN
+  SELECT a FROM
+    (SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
+
+--echo # Prepared statements
+#PREPARE stmt FROM "SELECT * FROM t1 UNION
+#  SELECT * FROM t2";
+
+#EXECUTE stmt;
+#EXECUTE stmt;
+#EXECUTE stmt;
+
+PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
+  SELECT * FROM t2";
+
+EXECUTE stmt;
+EXECUTE stmt;
+
+#PREPARE stmt FROM "(SELECT * FROM t1 UNION
+#  SELECT * FROM t2) UNION ALL
+#  (SELECT * FROM t1 UNION
+#  SELECT * FROM t2)";
+
+#EXECUTE stmt;
+#EXECUTE stmt;
+#EXECUTE stmt;
+
+PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t1 UNION
+  SELECT * FROM t2)";
+
+EXECUTE stmt;
+EXECUTE stmt;
+
+DROP USER 'cejuser'@'localhost';
+DROP TABLE t1, t2, t3, t4;
+DROP DATABASE mdev25080;
