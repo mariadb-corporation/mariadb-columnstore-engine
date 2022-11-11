@@ -10,7 +10,7 @@ SCRIPT_LOCATION=$(dirname "$0")
 invoke_format ()
 {
     file=$1
-    bash "$SCRIPT_LOCATION"/core_dump_format.sh dummy "$file" "$RESULT/$(basename "$file".html)" "$STEP_NAME"
+    bash "$SCRIPT_LOCATION"/core_dump_format.sh "$(basename "${file%%_*}")" "$file" "$RESULT/$(basename "$file".html)" "$STEP_NAME"
 }
 
 
