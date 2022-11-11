@@ -21,6 +21,7 @@ INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
 INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
 # Pushdown of the whole UNION
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
@@ -30,10 +31,22 @@ NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+# UNION with a foreign engine
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 # More than two SELECTs in a UNIT:
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t1;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXPLAIN (SELECT * FROM t1 UNION
@@ -41,25 +54,49 @@ SELECT * FROM t2) UNION ALL
 SELECT * FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+EXPLAIN (SELECT * FROM t1 UNION
+SELECT * FROM t2) UNION ALL
+SELECT * FROM t1;
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t3 UNION
 SELECT * FROM t4;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 EXPLAIN (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
 (SELECT * FROM t3 UNION
 SELECT * FROM t4);
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 EXPLAIN
 SELECT count(*) FROM t1 UNION
 SELECT count(*) FROM t2 UNION ALL
 SELECT count(*)+20 FROM t2 UNION
 SELECT count(*)+5 FROM t1;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 # UNION inside a derived table: the whole derived table must be pushed
 SELECT a FROM
 (SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
@@ -74,8 +111,13 @@ efg
 EXPLAIN
 SELECT a FROM
 (SELECT a FROM t1 UNION ALL SELECT a FROM t2) q ORDER BY a;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+1       PUSHED SELECT   NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 SELECT a FROM
 (SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
 a
@@ -88,22 +130,36 @@ t3_myisam3
 EXPLAIN
 SELECT a FROM
 (SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+1       PUSHED SELECT   NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 # Prepared statements
 PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
   SELECT * FROM t2";
 EXECUTE stmt;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXECUTE stmt;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+EXECUTE stmt;
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
 PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   (SELECT * FROM t1 UNION
   SELECT * FROM t2)";
 EXECUTE stmt;
+<<<<<<< HEAD
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXECUTE stmt;
@@ -112,3 +168,14 @@ NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 DROP USER 'cejuser'@'localhost';
 DROP TABLE t1, t2, t3, t4;
 DROP DATABASE mdev25080;
+=======
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+EXECUTE stmt;
+id      select_type     table   type    possible_keys   key     key_len ref     rows    Extra
+NULL    PUSHED UNION    NULL    NULL    NULL    NULL    NULL    NULL    NULL    NULL
+DROP USER 'cejuser'@'localhost';
+DROP TABLE t1, t2, t3, t4;
+DROP DATABASE mdev25080;
+
+>>>>>>> e4c0a6dcd (Update mdev-25080.test)
