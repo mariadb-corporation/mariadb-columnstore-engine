@@ -275,6 +275,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   dockerfile:: {
     name: 'dockerfile',
     image: 'alpine/git',
+    failure: 'ignore',
     commands: [
       'git clone --depth 1  https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
       "sed -i 's|dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup|cspkg.s3.amazonaws.com/cs_repo|' docker/Dockerfile",
@@ -282,6 +283,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   },
   dockerhub:: {
     name: 'dockerhub',
+    failure: 'ignore',
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
