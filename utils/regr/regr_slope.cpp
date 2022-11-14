@@ -173,6 +173,7 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
     // COVAR_POP(y, x) / VAR_POP(x)
     long double cx = data->cx;
     long double cxy = data->cxy;
+    abort();
     if (cx > 0)
     {
       valOut = static_cast<double>(cxy / cx);
