@@ -467,9 +467,18 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
-    case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
-    case CalpontSystemCatalog::VARBINARY:
+      if (fResultType.colWidth <= 7)
+      {
+        //fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
+	const char *intAsChar = (const char*) (&fResult.origIntVal);
+        fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
+      }
+
+      break;
+
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARBINARY: // XXX: TODO: we don't have varbinary support now, but it may be handled just like varchar.
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 8)
