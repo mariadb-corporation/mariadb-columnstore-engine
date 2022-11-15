@@ -57,6 +57,7 @@ set(joblist_LIB_SRCS
 ########### next target ###############
 
 add_library(joblist_server STATIC ${joblist_LIB_SRCS})
+add_dependencies(joblist_server loggingcpp)
 
 ########### next target ###############
 
