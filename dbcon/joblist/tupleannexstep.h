@@ -40,7 +40,7 @@ namespace joblist
 {
 
 using ValueRangesVector = std::vector<std::vector<std::pair<size_t, size_t>>>;
-using SortingGroup = std::vector<std::unique_ptr<FlatOrderBy>>;
+using SortingThreads = std::vector<std::unique_ptr<FlatOrderBy>>;
 /** @brief class TupleAnnexStep
  *
  */
@@ -82,7 +82,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   }
   void addOrderBy(const JobInfo& jobInfo)
   {
-    if (fLimitStart + fLimitCount <= ReasonableLimit || jobInfo.orderByThreads > 1)
+    // WIP Check the right condition
+    if (fLimitStart + fLimitCount <= ReasonableLimit || jobInfo.orderByThreads > 2)
     {
       fOrderBy = new LimitedOrderBy();
     }
@@ -94,6 +95,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     {
       flatOrderBys_.emplace_back(new FlatOrderBy());
       flatOrderBys_.emplace_back(new FlatOrderBy());
+      secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+      secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
     }
 
     if (jobInfo.orderByThreads > 1)
@@ -144,7 +147,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(SortingGroup& sortingGroup);
+  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(SortingThreads& sortingGroup);
   void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges);
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;
@@ -197,9 +200,12 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
 
   LimitedOrderBy* fOrderBy;
   std::unique_ptr<FlatOrderBy> flatOrderBy_;
-  public:
-  SortingGroup flatOrderBys_;
-  private:
+
+ public:
+  SortingThreads flatOrderBys_;
+  SortingThreads secondPhaseflatOrderBys_;
+
+ private:
   TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;
@@ -207,9 +213,10 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
 
   std::vector<LimitedOrderBy*> fOrderByList;
   std::vector<uint64_t> fRunnersList;
-  uint16_t fFinishedThreads;
+  size_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
   std::mutex parallelOrderByMutex_;
+  size_t secondPhaseFlatThreadId{0};
 };
 
 template <class T>

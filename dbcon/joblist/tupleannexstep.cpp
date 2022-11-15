@@ -196,6 +196,18 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
       // WIP no distinct yet
       flatOrderBy_->initialize(rgIn, jobInfo);
     }
+    else if (!flatOrderBys_.empty())
+    {
+      // WIP no distinct yet
+      for (auto& thread : flatOrderBys_)
+      {
+        thread->initialize(rgIn, jobInfo);
+      }
+      for (auto& thread : secondPhaseflatOrderBys_)
+      {
+        thread->initialize(rgIn, jobInfo);
+      }
+    }
   }
 
   if (fConstant == NULL)
@@ -298,13 +310,13 @@ void TupleAnnexStep::run()
 
     for (uint32_t id = 0; id < fMaxThreads; id++)
     {
-      fInputIteratorsList[id + 1] = fInputDL->getIterator();
-      fRunnersList[id] = jobstepThreadPool.invoke(
+      fInputIteratorsList.push_back(fInputDL->getIterator());
+      fRunnersList.push_back(jobstepThreadPool.invoke(
           [this, id]()
           {
             if (id < flatOrderBys_.size() && flatOrderBys_[id].get())
               this->executeFlatOrderBy(id);
-          });
+          }));
     }
   }
   else
@@ -334,6 +346,7 @@ void TupleAnnexStep::join()
   }
 }
 
+// WIP use std::function in init to assign this maybe
 uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
 {
   RGData rgDataOut;
@@ -343,21 +356,54 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
   try
   {
     bs.restart();
-
-    more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
-    if (more && !cancelled())
+    if (flatOrderBys_.empty())
     {
-      fRowGroupDeliver.setData(&rgDataOut);
-      fRowGroupDeliver.serializeRGData(bs);
-      rowCount = fRowGroupDeliver.getRowCount();
+      more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
+      if (more && !cancelled())
+      {
+        fRowGroupDeliver.setData(&rgDataOut);
+        fRowGroupDeliver.serializeRGData(bs);
+        rowCount = fRowGroupDeliver.getRowCount();
+      }
+      else
+      {
+        while (more)
+          more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
+        fEndOfResult = true;
+      }
     }
-    else
+    else  // flat order by
     {
-      while (more)
-        more = fOutputDL->next(fOutputIterator, &rgDataOut);
+      // WIP might be a costly call
+      auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
+      auto outputIterator = outputDL->getIterator();
+      if (!outputDL)
+      {
+        throw logic_error("Output is not a RowGroup data list.");
+      }
+      more = outputDL->next(outputIterator, &rgDataOut);
 
-      fEndOfResult = true;
+      if (more && !cancelled())
+      {
+        fRowGroupDeliver.setData(&rgDataOut);
+        fRowGroupDeliver.serializeRGData(bs);
+        rowCount = fRowGroupDeliver.getRowCount();
+      }
+      else
+      {
+        while (more)
+          more = outputDL->next(outputIterator, &rgDataOut);
+
+        fEndOfResult = true;
+      }
+      // Bump the id if the current id thread' DL is drained
+      secondPhaseFlatThreadId =
+          (!more && !fEndOfResult) ? secondPhaseFlatThreadId + 1 : secondPhaseFlatThreadId;
+      // set the flag if all DLs are drained
+      fEndOfResult =
+          (!more && secondPhaseFlatThreadId == secondPhaseflatOrderBys_.size()) ? true : fEndOfResult;
     }
   }
   catch (...)
@@ -366,7 +412,7 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
                     "TupleAnnexStep::nextBand()");
     while (more)
       more = fOutputDL->next(fOutputIterator, &rgDataOut);
-
+    // WIP drain all DLs that are left
     fEndOfResult = true;
   }
 
@@ -766,7 +812,7 @@ void TupleAnnexStep::executeFlatOrderBy()
 
     if (flatOrderBy_->sortCF())
     {
-      // do something
+      // WIP print something
     }
 
     flatOrderBy_->finalize();
@@ -834,10 +880,10 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
-
+  assert(flatOrderBys_.size() > id && flatOrderBys_[id].get());
   try
   {
-    more = fInputDL->next(fInputIterator, &rgDataIn);
+    more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
 
     if (traceOn())
       dlTimes.setFirstReadTime();
@@ -860,21 +906,7 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
       // do something
     }
 
-    flatOrderBy_->finalize();
-
-    // if (!cancelled())
-    // {
-    //   while (flatOrderBy_->getData(rgDataIn))
-    //   {
-    //     //  WIP It is too costly to init RowGroup to use see the number of records.
-    //     auto rows = fRowGroupOut.getRowCount();
-    //     if (rows > 0)
-    //     {
-    //       fRowsReturned += rows;
-    //       fOutputDL->insert(rgDataOut);
-    //     }
-    //   }
-    // }
+    flatOrderBys_[id]->finalize();
   }
   catch (...)
   {
@@ -900,11 +932,12 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   parallelOrderByMutex_.unlock();
 }
 
-const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(SortingGroup& sortingGroup)
+const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(SortingThreads& sortingThreads)
 {
+  utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
 
-  for (auto& sorting : sortingGroup)
+  for (auto& sorting : sortingThreads)
   {
     const auto& perm = sorting->getPermutation();
     const auto step = perm.size() / fMaxThreads;
@@ -922,6 +955,77 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(Sorti
 
 void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges)
 {
+  // render a new permutation using argument ranges and a full range.
+  // free 1st phase permutations_ when they are read.
+  // Then start a new sorting.
+  assert(id < secondPhaseflatOrderBys_.size());
+  assert(id < flatOrderBys_.size());
+  assert(id < ranges.size());
+  assert(ranges.size() == flatOrderBys_.size() && ranges.size() == secondPhaseflatOrderBys_.size());
+  utils::setThreadName("TASwPOrdFlat2nd");
+  RGData rgDataIn;
+  RGData rgDataOut;
+  FlatOrderBy::PermutationVec perm;
+  // WIP estimate perm size and reserve enough space
+  auto firstPhaseSortingThread = flatOrderBys_.begin();
+  auto range = ranges[id].begin();
+  for (; firstPhaseSortingThread != flatOrderBys_.end() && range != ranges[id].end();
+       ++firstPhaseSortingThread, ++range)
+  {
+    auto [rangeLeft, rangeRight] = *range;
+    auto srcPermBegin = (*firstPhaseSortingThread)->getPermutation().begin() + rangeLeft;
+    auto srcPermEnd = (*firstPhaseSortingThread)->getPermutation().begin() + rangeRight;
+    perm.insert(perm.end(), srcPermBegin, srcPermEnd);
+  }
+  // WIP clean up first phase perm vector when the last range is read from it
+  FlatOrderBy::Ranges2SortQueue ranges2Sort;
+  // means ranges2Sort is a pair of int64 and ::size() is uint64
+  assert(perm.size() < std::numeric_limits<size_t>::max());
+  ranges2Sort.push({0, perm.size()});
+  constexpr bool producePermutation = false;
+  auto outputDL = fOutputJobStepAssociation.outAt(id)->rowGroupDL();
+  // This call produces a stream of sorted data in RGData format in id-th output DL.
+  // This call presumes there is an equal number of threads at the first and the second phases .
+  // WIP use a unique_ptr ref here and get it as an argument ?
+  try
+  {
+    if (!cancelled())
+    {
+      if (secondPhaseflatOrderBys_[id]->sortByColumnCF<producePermutation>(
+              flatOrderBys_[id]->getSortingColumns(), std::move(perm), std::move(ranges2Sort)))
+      {
+        // print something
+      }
+    }
+    secondPhaseflatOrderBys_[id]->finalize();
+
+    // WIP
+    rowgroup::RowGroup rowGroupOut{fRowGroupOut};
+    while (secondPhaseflatOrderBys_[id]->getData(rgDataIn))
+    {
+      rgDataOut = rgDataIn;
+      // WIP This is very cost inefficent to just calc rows
+      // WIP replace fRowGroupOut
+      rowGroupOut.setData(&rgDataOut);
+
+      //  WIP It is too costly to init RowGroup to use see the number of records.
+      // WIP replace fRowGroupOut
+      auto rows = rowGroupOut.getRowCount();
+      if (rows > 0)
+      {
+        // WIP Replace fRowsReturned with atomic counter
+        // fRowsReturned += rows;
+        outputDL->insert(rgDataOut);
+      }
+    }
+  }
+  catch (...)
+  {
+    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeWithOrderByFlatOrderBy()");
+  }
+
+  outputDL->endOfInput();
 }
 
 /*
