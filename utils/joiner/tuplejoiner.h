@@ -460,7 +460,7 @@ class TupleJoiner
   }
   // Disk-based join support
   void clearData();
-  boost::shared_ptr<TupleJoiner> copyForDiskJoin();
+  std::shared_ptr<TupleJoiner> copyForDiskJoin();
   bool isFinished()
   {
     return finished;

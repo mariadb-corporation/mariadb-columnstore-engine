@@ -55,7 +55,7 @@ class DiskJoinStep : public JobStep
   boost::shared_ptr<funcexp::FuncExpWrapper> fe;
   bool typeless;
   JoinType joinType;
-  boost::shared_ptr<joiner::TupleJoiner> joiner;  // the same instance THJS uses
+  std::shared_ptr<joiner::TupleJoiner> joiner;  // the same instance THJS uses
 
   /* main thread, started by JobStep::run() */
   void mainRunner();
@@ -106,7 +106,7 @@ class DiskJoinStep : public JobStep
   /* Builder structs */
   struct BuilderOutput
   {
-    boost::shared_ptr<joiner::TupleJoiner> tupleJoiner;
+    std::shared_ptr<joiner::TupleJoiner> tupleJoiner;
     std::vector<rowgroup::RGData> smallData;
     uint64_t partitionID;
     joiner::JoinPartition* jp;
