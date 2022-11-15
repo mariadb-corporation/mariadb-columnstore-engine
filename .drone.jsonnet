@@ -233,6 +233,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'false',
       if (platform != 'ubuntu:22.04') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Mtr"',
     ],
   },
