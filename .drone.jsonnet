@@ -194,7 +194,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
-      if (platform != 'ubuntu:22.04') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Smoke"',
     ],
   },
   mtr:: {
@@ -232,9 +231,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
-      'false',
-      if (platform != 'ubuntu:22.04') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Mtr"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --testcase-timeout=10 --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
   mtrlog:: {
@@ -251,6 +248,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
+      if (platform != 'ubuntu:22.04') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Mtr"',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
       'docker stop mtr$${DRONE_BUILD_NUMBER} && docker rm mtr$${DRONE_BUILD_NUMBER} || echo "cleanup mtr failure"',
@@ -319,7 +317,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       // run regression test000 and test001 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t regression$${DRONE_BUILD_NUMBER} /usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
-      if (platform != 'ubuntu:22.04') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Regression"',
     ],
   },
   smokelog:: {
@@ -335,6 +332,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'echo "---------- start columnstore debug log ----------"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
+      if (platform != 'ubuntu:22.04') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Smoke"',
       'docker cp smoke$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
       'ls -l /drone/src/' + result,
       'docker stop smoke$${DRONE_BUILD_NUMBER} && docker rm smoke$${DRONE_BUILD_NUMBER} || echo "cleanup smoke failure"',
@@ -356,6 +354,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore" || echo "failed to grab regression results"',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz /drone/src/' + result + '/ || echo "missing testErrorLogs.tgz"',
+      if (platform != 'ubuntu:22.04') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Regression"',
       'docker cp regression$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
       'ls -l /drone/src/' + result,
       'docker stop regression$${DRONE_BUILD_NUMBER} && docker rm regression$${DRONE_BUILD_NUMBER} || echo "cleanup regression failure"',
