@@ -40,7 +40,7 @@ namespace joblist
 {
 
 using ValueRangesVector = std::vector<std::vector<std::pair<size_t, size_t>>>;
-using SortingThreads = std::vector<std::unique_ptr<FlatOrderBy>>;
+
 /** @brief class TupleAnnexStep
  *
  */
@@ -93,8 +93,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     }
     else if (jobInfo.orderByThreads == 2)
     {
-      flatOrderBys_.emplace_back(new FlatOrderBy());
-      flatOrderBys_.emplace_back(new FlatOrderBy());
+      firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+      firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
       secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
       secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
     }
@@ -147,8 +147,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(SortingThreads& sortingGroup);
-  void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges);
+  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(const SortingThreads& sortingGroup);
+  void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges, const SortingThreads& firstPhaseThreads);
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;
 
@@ -202,7 +202,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   std::unique_ptr<FlatOrderBy> flatOrderBy_;
 
  public:
-  SortingThreads flatOrderBys_;
+  SortingThreads firstPhaseflatOrderBys_;
   SortingThreads secondPhaseflatOrderBys_;
 
  private:

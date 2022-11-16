@@ -540,7 +540,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     jsaOut.outAdd(spdlOut);
 
     // WIP add spec check for falt order by here
-    if (jobInfo.orderByColVec.size() > 0 && !tas->flatOrderBys_.empty())
+    if (jobInfo.orderByColVec.size() > 0 && !tas->firstPhaseflatOrderBys_.empty())
     {
       for (size_t i = 1; i < jobInfo.orderByThreads; ++i)
       {

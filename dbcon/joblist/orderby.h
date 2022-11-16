@@ -206,14 +206,18 @@ concept IsTrue = requires { requires TrueCheck == true; };
 template <bool FalseCheck>
 concept IsFalse = requires { requires FalseCheck == false; };
 
+class FlatOrderBy;
+using SortingThreads = std::vector<std::unique_ptr<FlatOrderBy>>;
+
 // There is an important invariant that the code of this class must hold,
 // namely rg_ must be init-ed only once.
 class FlatOrderBy
 {
  public:
+  // Bit lengths for rowID and threadID are flexible
   struct PermutationType
   {
-    uint64_t rgdataID : 32 {}, rowID : 24 {}, flags : 8 {};
+    uint64_t rgdataID : 32 {}, rowID : 24 {}, threadID : 8 {};
   };
   using PermutationVecIter = std::vector<PermutationType>::iterator;
   using IterDiffT = std::iterator_traits<PermutationVecIter>::difference_type;
@@ -230,31 +234,32 @@ class FlatOrderBy
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
-  bool sortCF();
+  bool sortCF(const uint32_t id);
   template <bool IsFirst>
-  bool sortByColumnCF(joblist::OrderByKeysType columns, PermutationVec&& permutation,
-                      Ranges2SortQueue&& ranges2Sort);
+  bool sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                      Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
 
-  bool getData(rowgroup::RGData& data);
+  bool getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
 
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
     requires IsFalse<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection, joblist::OrderByKeysType columns,
-                          PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort);
+  exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
+                          joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                          Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
     requires IsTrue<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection, joblist::OrderByKeysType columns,
-                          PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort);
+  exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
+                          joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                          Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
+  void initialPermutationKeysNulls(const uint32_t id, const uint32_t columnID, const bool nullsFirst,
                                    std::vector<EncodedKeyType>& keys, PermutationVec& permutation,
                                    PermutationVec& nulls);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-  void loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst,
-                             std::vector<EncodedKeyType>& keys, PermutationVec& nulls,
-                             PermutationVec& permutation, PermutationVecIter begin, PermutationVecIter end);
+  auto loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst, PermutationVecIter begin,
+                             PermutationVecIter end, const SortingThreads& prevPhaseThreads);
   template <typename EncodedKeyType>
   Ranges2SortQueue populateRanges(const uint32_t columnID, const IterDiffT beginOffset,
                                   typename std::vector<EncodedKeyType>::const_iterator begin,
@@ -272,6 +277,10 @@ class FlatOrderBy
   const PermutationVec& getPermutation() const
   {
     return permutation_;
+  }
+  rowgroup::RDGataVector& getRGDatas()
+  {
+    return rgDatas_;
   }
   joblist::OrderByKeysType getSortingColumns() const
   {
@@ -326,7 +335,7 @@ class FlatOrderBy
   static const uint64_t maxUncommited_;
   joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
-  std::vector<rowgroup::RGData> rgDatas_;
+  rowgroup::RDGataVector rgDatas_;
   PermutationVec permutation_;
   std::unique_ptr<joblist::MemManager> mm_;
   IterDiffT flatCurPermutationDiff_ = 0;
