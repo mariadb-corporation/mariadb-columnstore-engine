@@ -196,10 +196,10 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
       // WIP no distinct yet
       flatOrderBy_->initialize(rgIn, jobInfo);
     }
-    else if (!flatOrderBys_.empty())
+    else if (!firstPhaseflatOrderBys_.empty())
     {
       // WIP no distinct yet
-      for (auto& thread : flatOrderBys_)
+      for (auto& thread : firstPhaseflatOrderBys_)
       {
         thread->initialize(rgIn, jobInfo);
       }
@@ -266,7 +266,7 @@ void TupleAnnexStep::run()
     fOutputIterator = fOutputDL->getIterator();
   }
 
-  if (fParallelOp && flatOrderBys_.empty())
+  if (fParallelOp && firstPhaseflatOrderBys_.empty())
   {
     // Indexing begins with 1
     fRunnersList.resize(fMaxThreads);
@@ -290,11 +290,11 @@ void TupleAnnexStep::run()
       fRunnersList[id - 1] = jobstepThreadPool.invoke([this, id]() { this->execute(id); });
     }
   }
-  else if (fParallelOp && !flatOrderBys_.empty())
+  else if (fParallelOp && !firstPhaseflatOrderBys_.empty())
   {
     // Indexing begins with 1
-    fRunnersList.resize(fMaxThreads);
-    fInputIteratorsList.resize(fMaxThreads);
+    fRunnersList.reserve(fMaxThreads);
+    fInputIteratorsList.reserve(fMaxThreads);
 
     // Activate stats collecting before CS spawns threads.
     if (traceOn())
@@ -314,8 +314,12 @@ void TupleAnnexStep::run()
       fRunnersList.push_back(jobstepThreadPool.invoke(
           [this, id]()
           {
-            if (id < flatOrderBys_.size() && flatOrderBys_[id].get())
+            if (id < firstPhaseflatOrderBys_.size() && firstPhaseflatOrderBys_[id].get())
               this->executeFlatOrderBy(id);
+            else
+            {
+              // WIP print something
+            }
           }));
     }
   }
@@ -356,7 +360,7 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
   try
   {
     bs.restart();
-    if (flatOrderBys_.empty())
+    if (firstPhaseflatOrderBys_.empty())
     {
       more = fOutputDL->next(fOutputIterator, &rgDataOut);
 
@@ -789,6 +793,7 @@ void TupleAnnexStep::executeFlatOrderBy()
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
+  const uint32_t threadID = 0;
 
   try
   {
@@ -810,16 +815,15 @@ void TupleAnnexStep::executeFlatOrderBy()
       more = fInputDL->next(fInputIterator, &rgDataIn);
     }
 
-    if (flatOrderBy_->sortCF())
+    if (flatOrderBy_->sortCF(threadID))
     {
       // WIP print something
     }
 
     flatOrderBy_->finalize();
-
     if (!cancelled())
     {
-      while (flatOrderBy_->getData(rgDataIn))
+      while (flatOrderBy_->getData(rgDataIn, firstPhaseflatOrderBys_))
       {
         // if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
         {
@@ -880,7 +884,7 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
-  assert(flatOrderBys_.size() > id && flatOrderBys_[id].get());
+  assert(firstPhaseflatOrderBys_.size() > id && firstPhaseflatOrderBys_[id].get());
   try
   {
     more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
@@ -897,16 +901,16 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
 
     while (more && !cancelled())
     {
-      flatOrderBys_[id]->addBatch(rgDataIn);
+      firstPhaseflatOrderBys_[id]->addBatch(rgDataIn);
       more = fInputDL->next(fInputIterator, &rgDataIn);
     }
 
-    if (flatOrderBys_[id]->sortCF())
+    if (firstPhaseflatOrderBys_[id]->sortCF(id))
     {
       // do something
     }
 
-    flatOrderBys_[id]->finalize();
+    firstPhaseflatOrderBys_[id]->finalize();
   }
   catch (...)
   {
@@ -922,17 +926,22 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   ++fFinishedThreads;
   if (fFinishedThreads == fMaxThreads)
   {
-    auto valueRanges = calculateStats4FlatOrderBy2ndPhase(flatOrderBys_);
+    // WIP Replace this vector with vector of RGDatas?
+    // This ref lives as long as TAS this lives.
+    const SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
+    auto valueRanges = calculateStats4FlatOrderBy2ndPhase(firstPhaseThreads);
     for (uint32_t i = 0; i < fMaxThreads; ++i)
     {
       fRunnersList.push_back(
-          jobstepThreadPool.invoke([this, i, valueRanges]() { this->finalizeFlatOrderBy(i, valueRanges); }));
+          jobstepThreadPool.invoke([this, i, valueRanges, &firstPhaseThreads]()
+                                   { this->finalizeFlatOrderBy(i, valueRanges, firstPhaseThreads); }));
     }
   }
   parallelOrderByMutex_.unlock();
 }
 
-const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(SortingThreads& sortingThreads)
+const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
+    const SortingThreads& sortingThreads)
 {
   utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
@@ -953,23 +962,24 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(Sorti
   return ranges;
 }
 
-void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges)
+void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges,
+                                         const SortingThreads& firstPhaseThreads)
 {
   // render a new permutation using argument ranges and a full range.
   // free 1st phase permutations_ when they are read.
   // Then start a new sorting.
   assert(id < secondPhaseflatOrderBys_.size());
-  assert(id < flatOrderBys_.size());
+  assert(id < firstPhaseflatOrderBys_.size());
   assert(id < ranges.size());
-  assert(ranges.size() == flatOrderBys_.size() && ranges.size() == secondPhaseflatOrderBys_.size());
+  assert(ranges.size() == firstPhaseflatOrderBys_.size() && ranges.size() == secondPhaseflatOrderBys_.size());
   utils::setThreadName("TASwPOrdFlat2nd");
   RGData rgDataIn;
   RGData rgDataOut;
   FlatOrderBy::PermutationVec perm;
   // WIP estimate perm size and reserve enough space
-  auto firstPhaseSortingThread = flatOrderBys_.begin();
+  auto firstPhaseSortingThread = firstPhaseflatOrderBys_.begin();
   auto range = ranges[id].begin();
-  for (; firstPhaseSortingThread != flatOrderBys_.end() && range != ranges[id].end();
+  for (; firstPhaseSortingThread != firstPhaseflatOrderBys_.end() && range != ranges[id].end();
        ++firstPhaseSortingThread, ++range)
   {
     auto [rangeLeft, rangeRight] = *range;
@@ -992,7 +1002,8 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVec
     if (!cancelled())
     {
       if (secondPhaseflatOrderBys_[id]->sortByColumnCF<producePermutation>(
-              flatOrderBys_[id]->getSortingColumns(), std::move(perm), std::move(ranges2Sort)))
+              id, secondPhaseflatOrderBys_[id]->getSortingColumns(), std::move(perm), std::move(ranges2Sort),
+              firstPhaseThreads))
       {
         // print something
       }
@@ -1001,7 +1012,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVec
 
     // WIP
     rowgroup::RowGroup rowGroupOut{fRowGroupOut};
-    while (secondPhaseflatOrderBys_[id]->getData(rgDataIn))
+    while (secondPhaseflatOrderBys_[id]->getData(rgDataIn, firstPhaseflatOrderBys_))
     {
       rgDataOut = rgDataIn;
       // WIP This is very cost inefficent to just calc rows
