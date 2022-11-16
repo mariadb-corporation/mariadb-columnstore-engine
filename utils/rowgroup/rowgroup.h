@@ -355,7 +355,7 @@ class RGData
 
   friend class RowGroup;
 };
-
+using RDGataVector = std::vector<RGData>;
 class Row
 {
  public:
