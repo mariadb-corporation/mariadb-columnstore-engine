@@ -371,7 +371,7 @@ class RGData
   friend class RowGroup;
   friend class RowGroupStorage;
 };
-
+using RDGataVector = std::vector<RGData>;
 class Row
 {
  public:
