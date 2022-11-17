@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-#set -x
+set -x
 
 COREDUMP=$2
 BINARY=$1
