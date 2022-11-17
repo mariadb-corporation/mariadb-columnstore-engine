@@ -789,7 +789,6 @@ class RowGroupStorage
   void putKeyRow(uint64_t idx, Row& row)
   {
     uint64_t rgid = idx / fMaxRows;
-    uint64_t rid = idx % fMaxRows;
 
     while (rgid >= fRGDatas.size())
     {
@@ -819,7 +818,7 @@ class RowGroupStorage
 
     fLRU->add(rgid);
 
-    assert(rid == fRowGroupOut->getRowCount());
+    assert(idx % fMaxRows == fRowGroupOut->getRowCount());
     fRowGroupOut->getRow(fRowGroupOut->getRowCount(), &row);
     fRowGroupOut->incRowCount();
   }
