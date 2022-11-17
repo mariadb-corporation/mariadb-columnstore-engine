@@ -63,6 +63,7 @@ set(joblist_LIB_SRCS
     ${ENGINE_SRC_DIR}/tools/passwd/secrets.cpp)
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
+add_dependencies(joblist_server loggingcpp)
 target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
 add_dependencies(joblist loggingcpp)
 
