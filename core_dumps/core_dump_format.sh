@@ -12,7 +12,7 @@ STEP_NAME=$5
 save_ansi_to_html ()
 {
 	echo "<b> $1 </b>" >> "${FILENAME}";
-	script -q -c "${2}" | ansi2html --scheme=solarized >> "${FILENAME}"
+	cat "$DUMPNAME" | ansi2html --scheme=solarized >> "${FILENAME}"
 }
 
 invoke_gdb_command ()
@@ -21,10 +21,11 @@ invoke_gdb_command ()
 }
 
 
-gdb -q ${BINARY} --core ${COREDUMP} -ex bt -ex quit > "$DUMPNAME"
-
+gdb -q "${BINARY}" --core ${COREDUMP} -ex 'bt' -ex quit >> "$DUMPNAME"
+gdb -q "${BINARY}" --core ${COREDUMP} -ex 'info args' -ex quit >> "$DUMPNAME"
+gdb -q "${BINARY}" --core ${COREDUMP} -ex 'info locals' -ex quit >> "$DUMPNAME"
 
 echo "<b> Step: ${STEP_NAME}<br> Binary name: ${BINARY}<br> </b>" >> "${FILENAME}";
-save_ansi_to_html "Backtrace" "$(invoke_gdb_command 'bt')"
-save_ansi_to_html "Arguments" "$(invoke_gdb_command 'info args')"
-save_ansi_to_html "Locals" "$(invoke_gdb_command 'info locals')"
+save_ansi_to_html "Backtrace"
+save_ansi_to_html "Arguments"
+save_ansi_to_html "Locals"
