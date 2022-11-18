@@ -1,0 +1,18 @@
+<root>
+        <DesiredNodes>
+            <Node>node1</Node>
+            <Node>node2</Node>
+            <Node>node3</Node>
+            <Node>node4</Node>
+        </DesiredNodes>
+        <ActiveNodes>
+            <Node>node1</Node>
+            <Node>node2</Node>
+            <Node>node3</Node>
+        </ActiveNodes>
+        <InactiveNodes>
+            <Node>node4</Node>
+        </InactiveNodes>
+        <PrimaryNode>node2</PrimaryNode>
+        <ConfigRevision>1</ConfigRevision>
+</root>

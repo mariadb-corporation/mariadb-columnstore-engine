@@ -1,0 +1,13 @@
+[Unit]
+Description=mcs-workernode
+After=mcs-loadbrm.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/workernode DBRM_Worker1 fg
+Restart=on-failure
+ExecStop=/usr/bin/env bash -c "kill -15 $MAINPID"
+ExecStopPost=-/usr/bin/mcs-savebrm.py
+ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
+TimeoutStopSec=120
+EnvironmentFile=-/etc/columnstore/systemd.env

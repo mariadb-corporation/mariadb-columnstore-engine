@@ -1,0 +1,587 @@
+<Columnstore Version="V1.0.1">
+<!--
+        WARNING: Do not make changes to this file unless directed to do so by
+    MariaDB service engineers. Incorrect settings can render your system
+    unusable and will require a service call to correct.
+-->
+    <Manager>MaxScale IP</Manager>
+    <Sequence>42</Sequence>
+    <ExeMgr1>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8601</Port>
+        <Module>um1</Module>
+    </ExeMgr1>
+    <JobProc>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8602</Port>
+    </JobProc>
+    <ProcMgr>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8603</Port>
+    </ProcMgr>
+    <ProcMgr_Alarm>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8606</Port>
+    </ProcMgr_Alarm>
+    <ProcStatusControl>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8604</Port>
+    </ProcStatusControl>
+    <ProcStatusControlStandby>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8605</Port>
+    </ProcStatusControlStandby>
+    <!-- Disabled
+            <ProcHeartbeatControl>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8605</Port>
+    </ProcHeartbeatControl>
+    -->
+    <!-- ProcessMonitor Port: 8800 - 8820 is reserved to support External Modules-->
+    <localhost_ProcessMonitor>
+        <IPAddr>127.0.0.1</IPAddr>
+        <Port>8800</Port>
+    </localhost_ProcessMonitor>
+    <dm1_ProcessMonitor>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8800</Port>
+    </dm1_ProcessMonitor>
+    <um1_ProcessMonitor>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8800</Port>
+    </um1_ProcessMonitor>
+    <pm1_ProcessMonitor>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8800</Port>
+    </pm1_ProcessMonitor>
+    <dm1_ServerMonitor>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8622</Port>
+    </dm1_ServerMonitor>
+    <um1_ServerMonitor>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8622</Port>
+    </um1_ServerMonitor>
+    <pm1_ServerMonitor>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8622</Port>
+    </pm1_ServerMonitor>
+    <pm1_WriteEngineServer>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8630</Port>
+    </pm1_WriteEngineServer>
+    <DDLProc>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8612</Port>
+    </DDLProc>
+    <DMLProc>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8614</Port>
+    </DMLProc>
+    <BatchInsert>
+        <RowsPerBatch>10000</RowsPerBatch>
+    </BatchInsert>
+    <PrimitiveServers>
+        <Count>4</Count>
+        <ConnectionsPerPrimProc>2</ConnectionsPerPrimProc>
+        <ProcessorThreshold>128</ProcessorThreshold>
+        <ProcessorQueueSize>10K</ProcessorQueueSize> <!-- minimum of extent size 8192 -->
+        <DebugLevel>0</DebugLevel>
+        <ColScanBufferSizeBlocks>512</ColScanBufferSizeBlocks>
+        <ColScanReadAheadBlocks>512</ColScanReadAheadBlocks> <!-- s/b factor of extent size 8192 -->
+        <!-- <BPPCount>16</BPPCount> --> <!-- Default num cores * 2.  A cap on the number of simultaneous primitives per jobstep -->
+        <PrefetchThreshold>1</PrefetchThreshold>
+        <PTTrace>0</PTTrace>
+        <RotatingDestination>y</RotatingDestination> <!-- Iterate thru UM ports; set to 'n' if UM/PM on same server -->
+        <!-- <HighPriorityPercentage>60</HighPriorityPercentage> -->
+        <!-- <MediumPriorityPercentage>30</MediumPriorityPercentage> -->
+        <!-- <LowPriorityPercentage>10</LowPriorityPercentage> -->
+        <DirectIO>y</DirectIO>
+        <HighPriorityPercentage/>
+        <MediumPriorityPercentage/>
+        <LowPriorityPercentage/>
+    </PrimitiveServers>
+    <PMS1>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS1>
+    <PMS2>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS2>
+    <PMS3>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS3>
+    <PMS4>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS4>
+    <PMS5>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS5>
+    <PMS6>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS6>
+    <PMS7>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS7>
+    <PMS8>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS8>
+    <PMS9>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS9>
+    <PMS10>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS10>
+    <PMS11>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS11>
+    <PMS12>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS12>
+    <PMS13>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS13>
+    <PMS14>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS14>
+    <PMS15>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS15>
+    <PMS16>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS16>
+    <PMS17>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS17>
+    <PMS18>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS18>
+    <PMS19>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS19>
+    <PMS20>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS20>
+    <PMS21>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS21>
+    <PMS22>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS22>
+    <PMS23>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS23>
+    <PMS24>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS24>
+    <PMS25>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS25>
+    <PMS26>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS26>
+    <PMS27>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS27>
+    <PMS28>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS28>
+    <PMS29>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8620</Port>
+    </PMS29>
+    <PMS30>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8620</Port>
+    </PMS30>
+    <PMS31>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8620</Port>
+    </PMS31>
+    <PMS32>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8620</Port>
+    </PMS32>
+    <SystemConfig>
+        <SystemLang>en_US.utf8</SystemLang>
+        <SystemName>columnstore-1</SystemName>
+        <ParentOAMModuleName>pm1</ParentOAMModuleName>
+        <PrimaryUMModuleName>um1</PrimaryUMModuleName>
+        <!-- Warning: Do not change this value once database is built -->
+        <DBRootCount>4</DBRootCount>
+        <DBRoot1>/usr/local/mariadb/columnstore/data1</DBRoot1>
+        <DBRMRoot>$INSTALLDIR/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
+        <TableLockSaveFile>$INSTALLDIR/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
+        <DBRMTimeOut>20</DBRMTimeOut> <!-- in seconds -->
+        <DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
+        <WaitPeriod>10</WaitPeriod> <!-- in seconds -->
+        <CalpontHome>$INSTALLDIR</CalpontHome>
+        <MemoryCheckPercent>95</MemoryCheckPercent> <!-- Max real memory to limit growth of buffers to -->
+        <DataFileLog>OFF</DataFileLog>
+        <!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
+                    <hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
+        -->
+        <hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+        <!-- Be careful modifying SystemTempFileDir!  On start, ExeMgr deletes
+			the entire subdirectories "joins" & "aggregates" and recreates it to make sure no
+			files are left behind. -->
+        <SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
+        <DBRoot2>/usr/local/mariadb/columnstore/data2</DBRoot2>
+        <DBRoot3>/usr/local/mariadb/columnstore/data3</DBRoot3>
+        <DBRoot4>/usr/local/mariadb/columnstore/data4</DBRoot4>
+    </SystemConfig>
+    <SystemModuleConfig>
+        <ModuleType1>dm</ModuleType1>
+        <ModuleDesc1>Director Module</ModuleDesc1>
+        <ModuleCount1>0</ModuleCount1>
+        <ModuleIPAddr1-1-1>0.0.0.0</ModuleIPAddr1-1-1>
+        <ModuleHostName1-1-1>unassigned</ModuleHostName1-1-1>
+        <ModuleDisableState1-1>ENABLED</ModuleDisableState1-1>
+        <ModuleCPUCriticalThreshold1>0</ModuleCPUCriticalThreshold1>
+        <ModuleCPUMajorThreshold1>0</ModuleCPUMajorThreshold1>
+        <ModuleCPUMinorThreshold1>0</ModuleCPUMinorThreshold1>
+        <ModuleCPUMinorClearThreshold1>0</ModuleCPUMinorClearThreshold1>
+        <ModuleDiskCriticalThreshold1>90</ModuleDiskCriticalThreshold1>
+        <ModuleDiskMajorThreshold1>80</ModuleDiskMajorThreshold1>
+        <ModuleDiskMinorThreshold1>70</ModuleDiskMinorThreshold1>
+        <ModuleMemCriticalThreshold1>90</ModuleMemCriticalThreshold1>
+        <ModuleMemMajorThreshold1>0</ModuleMemMajorThreshold1>
+        <ModuleMemMinorThreshold1>0</ModuleMemMinorThreshold1>
+        <ModuleSwapCriticalThreshold1>90</ModuleSwapCriticalThreshold1>
+        <ModuleSwapMajorThreshold1>80</ModuleSwapMajorThreshold1>
+        <ModuleSwapMinorThreshold1>70</ModuleSwapMinorThreshold1>
+        <ModuleDiskMonitorFileSystem1-1>/</ModuleDiskMonitorFileSystem1-1>
+        <ModuleDBRootCount1-1>unassigned</ModuleDBRootCount1-1>
+        <ModuleDBRootID1-1-1>unassigned</ModuleDBRootID1-1-1>
+        <ModuleType2>um</ModuleType2>
+        <ModuleDesc2>User Module</ModuleDesc2>
+        <ModuleCount2>2</ModuleCount2>
+        <ModuleIPAddr1-1-2>192.168.0.101</ModuleIPAddr1-1-2>
+        <ModuleHostName1-1-2>nvm002314</ModuleHostName1-1-2>
+        <ModuleDisableState1-2>ENABLED</ModuleDisableState1-2>
+        <ModuleCPUCriticalThreshold2>0</ModuleCPUCriticalThreshold2>
+        <ModuleCPUMajorThreshold2>0</ModuleCPUMajorThreshold2>
+        <ModuleCPUMinorThreshold2>0</ModuleCPUMinorThreshold2>
+        <ModuleCPUMinorClearThreshold2>0</ModuleCPUMinorClearThreshold2>
+        <ModuleDiskCriticalThreshold2>90</ModuleDiskCriticalThreshold2>
+        <ModuleDiskMajorThreshold2>80</ModuleDiskMajorThreshold2>
+        <ModuleDiskMinorThreshold2>70</ModuleDiskMinorThreshold2>
+        <ModuleMemCriticalThreshold2>90</ModuleMemCriticalThreshold2>
+        <ModuleMemMajorThreshold2>0</ModuleMemMajorThreshold2>
+        <ModuleMemMinorThreshold2>0</ModuleMemMinorThreshold2>
+        <ModuleSwapCriticalThreshold2>90</ModuleSwapCriticalThreshold2>
+        <ModuleSwapMajorThreshold2>80</ModuleSwapMajorThreshold2>
+        <ModuleSwapMinorThreshold2>70</ModuleSwapMinorThreshold2>
+        <ModuleDiskMonitorFileSystem1-2>/</ModuleDiskMonitorFileSystem1-2>
+        <ModuleDBRootCount1-2>unassigned</ModuleDBRootCount1-2>
+        <ModuleDBRootID1-1-2>unassigned</ModuleDBRootID1-1-2>
+        <ModuleType3>pm</ModuleType3>
+        <ModuleDesc3>Performance Module</ModuleDesc3>
+        <ModuleCount3>4</ModuleCount3>
+        <ModuleIPAddr1-1-3>192.168.0.102</ModuleIPAddr1-1-3>
+        <ModuleHostName1-1-3>nvm002315</ModuleHostName1-1-3>
+        <ModuleDisableState1-3>ENABLED</ModuleDisableState1-3>
+        <ModuleCPUCriticalThreshold3>0</ModuleCPUCriticalThreshold3>
+        <ModuleCPUMajorThreshold3>0</ModuleCPUMajorThreshold3>
+        <ModuleCPUMinorThreshold3>0</ModuleCPUMinorThreshold3>
+        <ModuleCPUMinorClearThreshold3>0</ModuleCPUMinorClearThreshold3>
+        <ModuleDiskCriticalThreshold3>90</ModuleDiskCriticalThreshold3>
+        <ModuleDiskMajorThreshold3>80</ModuleDiskMajorThreshold3>
+        <ModuleDiskMinorThreshold3>70</ModuleDiskMinorThreshold3>
+        <ModuleMemCriticalThreshold3>90</ModuleMemCriticalThreshold3>
+        <ModuleMemMajorThreshold3>0</ModuleMemMajorThreshold3>
+        <ModuleMemMinorThreshold3>0</ModuleMemMinorThreshold3>
+        <ModuleSwapCriticalThreshold3>90</ModuleSwapCriticalThreshold3>
+        <ModuleSwapMajorThreshold3>80</ModuleSwapMajorThreshold3>
+        <ModuleSwapMinorThreshold3>70</ModuleSwapMinorThreshold3>
+        <ModuleDiskMonitorFileSystem1-3>/</ModuleDiskMonitorFileSystem1-3>
+        <ModuleDBRootCount1-3>1</ModuleDBRootCount1-3>
+        <ModuleDBRootID1-1-3>1</ModuleDBRootID1-1-3>
+        <ModuleDisableState2-2>ENABLED</ModuleDisableState2-2>
+        <ModuleHostName2-1-2>192.168.0.104</ModuleHostName2-1-2>
+        <ModuleIPAddr2-1-2>192.168.0.104</ModuleIPAddr2-1-2>
+        <ModuleDBRootCount2-3>1</ModuleDBRootCount2-3>
+        <ModuleDBRootID2-1-3>2</ModuleDBRootID2-1-3>
+        <ModuleDBRootCount3-3>1</ModuleDBRootCount3-3>
+        <ModuleDBRootID3-1-3>3</ModuleDBRootID3-1-3>
+        <ModuleDBRootCount4-3>1</ModuleDBRootCount4-3>
+        <ModuleDBRootID4-1-3>4</ModuleDBRootID4-1-3>
+        <ModuleDisableState2-3>ENABLED</ModuleDisableState2-3>
+        <ModuleHostName2-1-3>nvm002316</ModuleHostName2-1-3>
+        <ModuleIPAddr2-1-3>192.168.0.103</ModuleIPAddr2-1-3>
+        <ModuleDisableState3-3>ENABLED</ModuleDisableState3-3>
+        <ModuleHostName3-1-3>nvm002980</ModuleHostName3-1-3>
+        <ModuleIPAddr3-1-3>192.168.0.105</ModuleIPAddr3-1-3>
+        <ModuleDisableState4-3>ENABLED</ModuleDisableState4-3>
+        <ModuleHostName4-1-3>nvm002981</ModuleHostName4-1-3>
+        <ModuleIPAddr4-1-3>192.168.0.106</ModuleIPAddr4-1-3>
+        <ModuleHostName1-2-2>unassigned</ModuleHostName1-2-2>
+        <ModuleIPAddr1-2-2>0.0.0.0</ModuleIPAddr1-2-2>
+        <ModuleHostName2-2-2>unassigned</ModuleHostName2-2-2>
+        <ModuleIPAddr2-2-2>0.0.0.0</ModuleIPAddr2-2-2>
+        <ModuleHostName1-2-3>unassigned</ModuleHostName1-2-3>
+        <ModuleIPAddr1-2-3>0.0.0.0</ModuleIPAddr1-2-3>
+        <ModuleHostName2-2-3>unassigned</ModuleHostName2-2-3>
+        <ModuleIPAddr2-2-3>0.0.0.0</ModuleIPAddr2-2-3>
+        <ModuleHostName3-2-3>unassigned</ModuleHostName3-2-3>
+        <ModuleIPAddr3-2-3>0.0.0.0</ModuleIPAddr3-2-3>
+        <ModuleHostName4-2-3>unassigned</ModuleHostName4-2-3>
+        <ModuleIPAddr4-2-3>0.0.0.0</ModuleIPAddr4-2-3>
+    </SystemModuleConfig>
+    <SystemExtDeviceConfig>
+        <Count>0</Count>
+        <Name1>unassigned</Name1>
+        <IPAddr1>0.0.0.0</IPAddr1>
+        <DisableState1>ENABLED</DisableState1>
+    </SystemExtDeviceConfig>
+    <SessionManager>
+        <MaxConcurrentTransactions>1000</MaxConcurrentTransactions>
+        <TxnIDFile>$INSTALLDIR/data1/systemFiles/dbrm/SMTxnID</TxnIDFile>
+    </SessionManager>
+    <VersionBuffer>
+        <!-- VersionBufferFileSize must be a multiple of 8192.
+                    One version buffer file will be put on each DB root. -->
+        <VersionBufferFileSize>1GB</VersionBufferFileSize>
+    </VersionBuffer>
+    <OIDManager>
+        <!-- Do not change this file after database built    -->
+        <OIDBitmapFile>$INSTALLDIR/data1/systemFiles/dbrm/oidbitmap</OIDBitmapFile>
+        <!-- Do not change this value after database built   -->
+        <FirstOID>3000</FirstOID>
+    </OIDManager>
+    <WriteEngine>
+        <BulkRoot>$INSTALLDIR/data/bulk</BulkRoot>
+        <BulkRollbackDir>$INSTALLDIR/data1/systemFiles/bulkRollback</BulkRollbackDir>
+        <MaxFileSystemDiskUsagePct>98</MaxFileSystemDiskUsagePct>
+        <CompressedPaddingBlocks>1</CompressedPaddingBlocks> <!-- Number of blocks used to pad compressed chunks -->
+        <FastDelete>n</FastDelete>
+    </WriteEngine>
+    <DBRM_Controller>
+        <NumWorkers>6</NumWorkers>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8616</Port>
+    </DBRM_Controller>
+    <!-- Worker Port: 8700 - 8720 is reserved to support External Modules-->
+    <DBRM_Worker1>
+        <IPAddr>192.168.0.102</IPAddr>
+        <Port>8700</Port>
+        <Module>pm1</Module>
+    </DBRM_Worker1>
+    <DBRM_Worker2>
+        <IPAddr>192.168.0.101</IPAddr>
+        <Port>8700</Port>
+        <Module>um1</Module>
+    </DBRM_Worker2>
+    <DBRM_Worker3>
+        <IPAddr>192.168.0.104</IPAddr>
+        <Port>8700</Port>
+        <Module>um2</Module>
+    </DBRM_Worker3>
+    <DBRM_Worker4>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8700</Port>
+        <Module>pm2</Module>
+    </DBRM_Worker4>
+    <DBRM_Worker5>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8700</Port>
+        <Module>pm3</Module>
+    </DBRM_Worker5>
+    <DBRM_Worker6>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8700</Port>
+        <Module>pm4</Module>
+    </DBRM_Worker6>
+    <DBRM_Worker7>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8700</Port>
+        <Module>unassigned</Module>
+    </DBRM_Worker7>
+    <DBRM_Worker8>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8700</Port>
+        <Module>unassigned</Module>
+    </DBRM_Worker8>
+    <DBRM_Worker9>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8700</Port>
+        <Module>unassigned</Module>
+    </DBRM_Worker9>
+    <DBRM_Worker10>
+        <IPAddr>0.0.0.0</IPAddr>
+        <Port>8700</Port>
+        <Module>unassigned</Module>
+    </DBRM_Worker10>
+    <DBBC>
+        <!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
+        <!-- Alternatively, this can be specified in absolute terms using
+                          the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
+        <!-- <NumBlocksPct>70</NumBlocksPct> -->
+        <!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
+        <NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
+        <IOMTracing>0</IOMTracing>
+        <BRPTracing>0</BRPTracing>
+        <ReportFrequency>65536</ReportFrequency>
+        <MaxOpenFiles>2K</MaxOpenFiles>
+        <DecreaseOpenFilesCount>200</DecreaseOpenFilesCount>
+        <FDCacheTrace>0</FDCacheTrace>
+        <NumBlocksPct>65</NumBlocksPct>
+    </DBBC>
+    <Installation>
+        <ServerTypeInstall>1</ServerTypeInstall>
+        <PMwithUM>n</PMwithUM>
+        <MySQLRep>y</MySQLRep>
+        <DBRootStorageType>external</DBRootStorageType>
+        <UMStorageType>internal</UMStorageType>
+        <DistributedInstall>y</DistributedInstall>
+        <ProfileFile>/etc/profile.d/columnstoreAlias.sh</ProfileFile>
+        <DataRedundancyNetworkType/>
+    </Installation>
+    <ExtentMap>
+        <!--
+                    WARNING: these can only be changed on an empty system. Once any object has been allocated
+        it cannot be changed!. Extent size is 8M rows.
+        -->
+        <FilesPerColumnPartition>8</FilesPerColumnPartition> <!-- should be multiple of DBRootCount -->
+        <BRM_UID>0x0</BRM_UID>
+    </ExtentMap>
+    <HashJoin>
+        <MaxBuckets>128</MaxBuckets>
+        <MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
+        <PmMaxMemorySmallSide>64M</PmMaxMemorySmallSide><!-- divide by 48 to getapproximate row count -->
+        <TotalUmMemory>25%</TotalUmMemory>
+        <CPUniqueLimit>100</CPUniqueLimit>
+        <AllowDiskBasedJoin>N</AllowDiskBasedJoin>
+        <TempFileCompression>Y</TempFileCompression>
+        <TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
+    </HashJoin>
+    <JobList>
+        <FlushInterval>16K</FlushInterval>
+        <FifoSize>32</FifoSize>
+        <RequestSize>1</RequestSize>  <!-- Number of extents per request, should be
+              less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
+        <!--  ProcessorThreadsPerScan is the number of jobs issued to process
+                          each extent.  The default is 16.  MaxOutstandingRequests is the size of
+              the window of work in terms of extents.  A value of 20 means there
+              is 20 extents worth of work for the PMs to process at any given time.
+              ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
+              as many threads are available across all PMs.  -->
+        <!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
+        <MaxOutstandingRequests>40</MaxOutstandingRequests>
+        <ThreadPoolSize>100</ThreadPoolSize>
+    </JobList>
+    <RowAggregation>
+               <!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is 4 or number of cores when less than 4 -->
+        <!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
+        <!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
+        <AllowDiskBasedAggregation>N</AllowDiskBasedAggregation>
+    </RowAggregation>
+    <CrossEngineSupport>
+        <Host>127.0.0.1</Host>
+        <Port>3306</Port>
+        <User>root</User>
+        <Password/>
+        <TLSCA/>
+        <TLSClientCert/>
+        <TLSClientKey/>
+    </CrossEngineSupport>
+    <QueryStats>
+        <Enabled>Y</Enabled>
+    </QueryStats>
+    <UserPriority>
+        <Enabled>N</Enabled>
+    </UserPriority>
+    <NetworkCompression>
+        <Enabled>Y</Enabled>
+        <NetworkCompressionType>Snappy</NetworkCompressionType> <!-- LZ4, Snappy -->
+    </NetworkCompression>
+    <QueryTele>
+        <Host>127.0.0.1</Host>
+        <Port>0</Port>
+    </QueryTele>
+    <um2_ProcessMonitor>
+        <IPAddr>192.168.0.104</IPAddr>
+        <Port>8800</Port>
+    </um2_ProcessMonitor>
+    <um2_ServerMonitor>
+        <IPAddr>192.168.0.104</IPAddr>
+        <Port>8622</Port>
+    </um2_ServerMonitor>
+    <ExeMgr2>
+        <IPAddr>192.168.0.104</IPAddr>
+        <Port>8601</Port>
+        <Module>um2</Module>
+    </ExeMgr2>
+    <pm2_ProcessMonitor>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8800</Port>
+    </pm2_ProcessMonitor>
+    <pm2_ServerMonitor>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8622</Port>
+    </pm2_ServerMonitor>
+    <pm2_WriteEngineServer>
+        <IPAddr>192.168.0.103</IPAddr>
+        <Port>8630</Port>
+    </pm2_WriteEngineServer>
+    <pm3_ProcessMonitor>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8800</Port>
+    </pm3_ProcessMonitor>
+    <pm3_ServerMonitor>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8622</Port>
+    </pm3_ServerMonitor>
+    <pm3_WriteEngineServer>
+        <IPAddr>192.168.0.105</IPAddr>
+        <Port>8630</Port>
+    </pm3_WriteEngineServer>
+    <pm4_ProcessMonitor>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8800</Port>
+    </pm4_ProcessMonitor>
+    <pm4_ServerMonitor>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8622</Port>
+    </pm4_ServerMonitor>
+    <pm4_WriteEngineServer>
+        <IPAddr>192.168.0.106</IPAddr>
+        <Port>8630</Port>
+    </pm4_WriteEngineServer>
+    <DataRedundancyConfig>
+        <DBRoot1PMs/>
+        <DBRoot2PMs/>
+        <DBRoot3PMs/>
+        <DBRoot4PMs/>
+    </DataRedundancyConfig>
+    <ProcHeartbeatControl>
+        <IPAddr>192.168.0.102</IPAddr>
+    </ProcHeartbeatControl>
+</Columnstore>
