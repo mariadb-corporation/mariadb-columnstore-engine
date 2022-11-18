@@ -11,7 +11,7 @@ STEP_NAME=$4
 save_ansi_to_html ()
 {
 	echo "<b> $1 </b>" >> "${FILENAME}";
-	script -q -c "${2}" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --palette=solarized >> "${FILENAME}"
+	script -q -c "${2}" | ansi2html --scheme=solarized >> "${FILENAME}"
 }
 
 invoke_gdb_command ()
