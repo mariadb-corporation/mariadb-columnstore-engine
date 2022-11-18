@@ -11,9 +11,7 @@ parse_dump_name ()
 {
     name=$1
     name="$(basename "${name%%_*}")"
-    delim="/"
-    name="${name//!/$delim}"
-    echo $name
+    echo '$name' | tr ! /
 }
 
 
