@@ -3946,7 +3946,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         nonSupport = true;
         gwi.fatalParseError = true;
         Message::Args args;
-        string info = funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
+        string info =
+            funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
         args.add(info);
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
         return NULL;
@@ -5917,7 +5918,10 @@ void gp_walk(const Item* item, void* arg)
 
         // bug 3137. If filter constant like 1=0, put it to ptWorkStack
         // MariaDB bug 750. Breaks if compare is an argument to a function.
-        //				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty() ? 0
+        //				if ((int32_t)gwip->rcWorkStack.size() <=
+        //(gwip->rcBookMarkStack.empty()
+        //?
+        // 0
         //: gwip->rcBookMarkStack.top())
         //				&& isPredicateFunction(ifp, gwip))
         if (isPredicateFunction(ifp, gwip))
@@ -6189,12 +6193,13 @@ void gp_walk(const Item* item, void* arg)
           if (operand)
           {
             gwip->rcWorkStack.push(operand);
-            if (i == 0 && gwip->scsp == NULL) // first item is the WHEN LHS
+            if (i == 0 && gwip->scsp == NULL)  // first item is the WHEN LHS
             {
               SimpleColumn* sc = dynamic_cast<SimpleColumn*>(operand);
               if (sc)
               {
-                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is rarely executed so the cost is acceptable.
+                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is
+                                                // rarely executed so the cost is acceptable.
               }
             }
           }
@@ -7160,7 +7165,8 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
             (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
         csep->limitNum(select->val_int());
         // MCOL-894 Activate parallel ORDER BY
-        csep->orderByThreads(get_orderby_threads(gwi.thd));
+        csep->orderByThreads(2);
+        std::cout << "1 setting threads to 2" << std::endl;
       }
     }
   }
@@ -8540,6 +8546,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         csep->specHandlerProcessed(true);
       }
     }
+    csep->orderByThreads(get_orderby_threads(gwi.thd));
 
     // We don't currently support limit with correlated subquery
     if ((rc = processLimitAndOffset(select_lex, gwi, csep, unionSel, isUnion, isSelectHandlerTop)))
@@ -9082,14 +9089,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   {
     // MCOL-1052 The condition could be useless.
     // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-    //#if MYSQL_VERSION_ID < 50172
+    // #if MYSQL_VERSION_ID < 50172
     //@bug 3039. fix fields for constants
     if (!icp->fixed())
     {
       icp->fix_fields(gwi.thd, (Item**)&icp);
     }
 
-    //#endif
+    // #endif
     gwi.fatalParseError = false;
 #ifdef DEBUG_WALK_COND
     cerr << "------------------ WHERE -----------------------" << endl;

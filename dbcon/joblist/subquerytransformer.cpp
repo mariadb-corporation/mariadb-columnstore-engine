@@ -19,7 +19,7 @@
 //  $Id: subquerytransformer.cpp 6406 2010-03-26 19:18:37Z xlou $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -170,14 +170,27 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   sqs->alias(fVtable.alias());
   sqs->subJoblist(fSubJobList);
   sqs->setOutputRowGroup(fSubJobList->getOutputRowGroup());
+
   AnyDataListSPtr spdl(new AnyDataList());
   RowGroupDL* dl = new RowGroupDL(1, fSubJobInfo->fifoSize);
   spdl->rowGroupDL(dl);
   dl->OID(fVtable.tableOid());
   JobStepAssociation jsa;
   jsa.outAdd(spdl);
-  (querySteps.back())->outputAssociation(jsa);
-  sqs->outputAssociation(jsa);
+  // WIP this block preserves an association from a subquery if there is par flat ORDER BY
+  auto assoc = (querySteps.back())->outputAssociation();
+  if (assoc.outSize() > 1)
+  {
+    sqs->outputAssociation(assoc);
+  }
+  else
+  {
+    (querySteps.back())->outputAssociation(jsa);
+    sqs->outputAssociation(assoc);
+  }
+
+  // sqs->outputAssociation(jsa);
+
   fSubQueryStep.reset(sqs);
 
   // Update the v-table columns and rowgroup

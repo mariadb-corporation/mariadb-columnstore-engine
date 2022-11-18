@@ -647,6 +647,7 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
     // Check if copy ellision works here.
     // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
   }
+  // std::cout << " exchangeSortByColumnCF_ perm size " << permutation.size() << std::endl;
   if (columns.size() > 1)
   {
     // !!! FREE RAM
@@ -868,7 +869,10 @@ bool FlatOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPhas
     // std::cout << "getData i " << i << " row " << permutation_[i].rowID << std::endl;
     // find src row, copy into dst row
     // RGData::getRow but need to init an arg row first
-    assert(static_cast<size_t>(i) < permutation_.size() && permutation_[i].rgdataID < rgDatas_.size());
+    assert(static_cast<size_t>(i) < permutation_.size());
+    assert((prevPhaseThreads.empty() && permutation_[i].rgdataID < rgDatas_.size()) ||
+           (!prevPhaseThreads.empty() &&
+            permutation_[i].rgdataID < prevPhaseThreads[permutation_[i].threadID]->getRGDatas().size()));
     auto p = permutation_[i];
     // Get RowPointer
     if (prevPhaseThreads.empty())
