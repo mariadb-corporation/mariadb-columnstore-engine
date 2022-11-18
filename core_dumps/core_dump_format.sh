@@ -5,8 +5,9 @@ set -x
 COREDUMP=$2
 BINARY=$1
 FILENAME=$3
-SCRIPT_LOCATION=$(dirname "$0")
-STEP_NAME=$4
+#SCRIPT_LOCATION=$(dirname "$0")
+DUMPNAME=$4
+STEP_NAME=$5
 
 save_ansi_to_html ()
 {
@@ -18,6 +19,10 @@ invoke_gdb_command ()
 {
 	echo "gdb -q ${BINARY} --core ${COREDUMP} -ex '$1' -ex quit"
 }
+
+
+gdb -q ${BINARY} --core ${COREDUMP} -ex bt -ex quit > "$DUMPNAME"
+
 
 echo "<b> Step: ${STEP_NAME}<br> Binary name: ${BINARY}<br> </b>" >> "${FILENAME}";
 save_ansi_to_html "Backtrace" "$(invoke_gdb_command 'bt')"
