@@ -308,7 +308,7 @@ void TupleAnnexStep::run()
     sts.total_units_of_work = 1;
     postStepStartTele(sts);
 
-    for (uint32_t id = 0; id < fMaxThreads; id++)
+    for (uint32_t id = 0; id < fMaxThreads; ++id)
     {
       fInputIteratorsList.push_back(fInputDL->getIterator());
       fRunnersList.push_back(jobstepThreadPool.invoke(
@@ -381,15 +381,19 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
     else  // flat order by
     {
       // WIP might be a costly call
+      // std::cout << " nextBand secondPhaseFlatThreadId " << secondPhaseFlatThreadId << std::endl;
       auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-      auto outputIterator = outputDL->getIterator();
+      // auto outputIterator = outputDL->getIterator();
       if (!outputDL)
       {
-        throw logic_error("Output is not a RowGroup data list.");
+        throw logic_error("Output is not a RowGroup data list 1.");
       }
-      more = outputDL->next(outputIterator, &rgDataOut);
+      // WIP Let's presume for a moment there is one iterator for each outputDL
+      more = outputDL->next(0, &rgDataOut);
 
-      if (more && !cancelled())
+      // WIP
+      // if (more && !cancelled())
+      if (more)
       {
         fRowGroupDeliver.setData(&rgDataOut);
         fRowGroupDeliver.serializeRGData(bs);
@@ -397,17 +401,37 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
       }
       else
       {
-        while (more)
-          more = outputDL->next(outputIterator, &rgDataOut);
+        if (cancelled())
+        {
+          while (more)
+            more = outputDL->next(0, &rgDataOut);
+          fEndOfResult = true;
+        }
+        else  // !more
+        {
+          while (!more && secondPhaseFlatThreadId < secondPhaseflatOrderBys_.size() - 1)
+          {
+            ++secondPhaseFlatThreadId;
+            auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
+            if (!outputDL)
+            {
+              throw logic_error("Output is not a RowGroup data list 2.");
+            }
+            more = outputDL->next(0, &rgDataOut);
+            if (more)
+            {
+              fRowGroupDeliver.setData(&rgDataOut);
+              fRowGroupDeliver.serializeRGData(bs);
+              rowCount = fRowGroupDeliver.getRowCount();
+            }
+          }
+        }
+        // Bump the id if the current id thread' DL is drained
 
-        fEndOfResult = true;
+        // set the flag if all DLs are drained
+        fEndOfResult =
+            (!more && secondPhaseFlatThreadId == secondPhaseflatOrderBys_.size()) ? true : fEndOfResult;
       }
-      // Bump the id if the current id thread' DL is drained
-      secondPhaseFlatThreadId =
-          (!more && !fEndOfResult) ? secondPhaseFlatThreadId + 1 : secondPhaseFlatThreadId;
-      // set the flag if all DLs are drained
-      fEndOfResult =
-          (!more && secondPhaseFlatThreadId == secondPhaseflatOrderBys_.size()) ? true : fEndOfResult;
     }
   }
   catch (...)
@@ -884,10 +908,16 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
+  size_t dlOffset = 0;
   assert(firstPhaseflatOrderBys_.size() > id && firstPhaseflatOrderBys_[id].get());
   try
   {
     more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
+    // if (more)
+    // {
+    //   ++dlOffset;
+    // }
+    // std::cout << "flatOB id " << id << "   " << fInputIteratorsList[id] << " more " << more << std::endl;
 
     if (traceOn())
       dlTimes.setFirstReadTime();
@@ -901,8 +931,15 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
 
     while (more && !cancelled())
     {
-      firstPhaseflatOrderBys_[id]->addBatch(rgDataIn);
-      more = fInputDL->next(fInputIterator, &rgDataIn);
+      if (dlOffset % fMaxThreads == id)
+      {
+        firstPhaseflatOrderBys_[id]->addBatch(rgDataIn);
+      }
+      more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
+      if (more)
+      {
+        ++dlOffset;
+      }
     }
 
     if (firstPhaseflatOrderBys_[id]->sortCF(id))
@@ -929,6 +966,11 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
     // WIP Replace this vector with vector of RGDatas?
     // This ref lives as long as TAS this lives.
     const SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
+    // for (auto& thread : firstPhaseThreads)
+    // {
+    //   std::cout << "executeFlatOrderBy firstPhaseThreads perm size " << (*thread).getPermutation().size()
+    //             << std::endl;
+    // }
     auto valueRanges = calculateStats4FlatOrderBy2ndPhase(firstPhaseThreads);
     for (uint32_t i = 0; i < fMaxThreads; ++i)
     {
@@ -946,6 +988,7 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
   utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
 
+  // This algo is completely incorrect
   for (auto& sorting : sortingThreads)
   {
     const auto& perm = sorting->getPermutation();
@@ -955,6 +998,7 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
     for (auto& threadRanges : ranges)
     {
       threadRanges.push_back({left, right});
+      // std::cout << "stats calc left " << left << " right " << right << std::endl;
       left = right;
       right += step;
     }
@@ -985,6 +1029,11 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVec
     auto [rangeLeft, rangeRight] = *range;
     auto srcPermBegin = (*firstPhaseSortingThread)->getPermutation().begin() + rangeLeft;
     auto srcPermEnd = (*firstPhaseSortingThread)->getPermutation().begin() + rangeRight;
+    // WIP hides issues
+    if (srcPermBegin == srcPermEnd)
+    {
+      continue;
+    }
     perm.insert(perm.end(), srcPermBegin, srcPermEnd);
   }
   // WIP clean up first phase perm vector when the last range is read from it
