@@ -30,11 +30,3 @@ for f in /"$DIR_NAME"/*; do
         esac
 done
 
-for f in /"$DIR_NAME"/*; do
-        case "$f" in
-                *_core_dump.*)
-                        echo "$(basename "${f%%_*}")" "aborted (core dumped)"
-                        exit 1
-                        ;;
-        esac
-done
