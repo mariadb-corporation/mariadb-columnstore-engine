@@ -1,0 +1,1 @@
+PYTHONPATH="${CMAPI_DIR}:${CMAPI_DIR}/deps" ${CMAPI_DIR}/python/bin/python3 -m mcs_cluster_tool $@
