@@ -11,7 +11,7 @@ parse_dump_name ()
 {
     name=$1
     name="$(basename "${name%%_*}")"
-    echo '$name' | tr ! /
+    echo "$name" | tr ! /
 }
 
 
