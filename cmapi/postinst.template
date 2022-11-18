@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# only for postinstall in CentOS
+if [ -f ${CMAPI_CONF_FILEPATH}.rpmsave ]; then
+    echo "warning: found previously saved configuration file ${CMAPI_CONF_FILEPATH}.rpmsave"
+    mv ${CMAPI_CONF_FILEPATH} ${CMAPI_CONF_FILEPATH}.rpmnew
+    echo "warning: newly installed configuration file ${CMAPI_CONF_FILEPATH} saved as ${CMAPI_CONF_FILEPATH}.rpmnew"
+    mv ${CMAPI_CONF_FILEPATH}.rpmsave ${CMAPI_CONF_FILEPATH}
+    echo "warning: previously saved configuration file ${CMAPI_CONF_FILEPATH}.rpmsave applied as current config file ${CMAPI_CONF_FILEPATH}"
+fi
+
+systemctl enable ${SYSTEMD_UNIT_NAME}
+
+systemctl start ${SYSTEMD_UNIT_NAME}
+
+systemctl mask ${SYSTEMD_ENGINE_UNIT_NAME}
