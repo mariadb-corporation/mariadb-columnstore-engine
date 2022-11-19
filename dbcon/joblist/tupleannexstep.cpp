@@ -1041,7 +1041,6 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVec
   // means ranges2Sort is a pair of int64 and ::size() is uint64
   assert(perm.size() < std::numeric_limits<size_t>::max());
   ranges2Sort.push({0, perm.size()});
-  constexpr bool producePermutation = false;
   auto outputDL = fOutputJobStepAssociation.outAt(id)->rowGroupDL();
   // This call produces a stream of sorted data in RGData format in id-th output DL.
   // This call presumes there is an equal number of threads at the first and the second phases .
@@ -1050,7 +1049,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t id, const ValueRangesVec
   {
     if (!cancelled())
     {
-      if (secondPhaseflatOrderBys_[id]->sortByColumnCF<producePermutation>(
+      if (secondPhaseflatOrderBys_[id]->sortByColumnCFNoPerm(
               id, secondPhaseflatOrderBys_[id]->getSortingColumns(), std::move(perm), std::move(ranges2Sort),
               firstPhaseThreads))
       {

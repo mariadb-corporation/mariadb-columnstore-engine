@@ -1,9 +1,7 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
 
-if (WITH_UNITTESTS)
-    cmake_policy(SET CMP0054 NEW)
-
 if(WITH_UNITTESTS)
+    cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     ExternalProject_Add(googletest
         GIT_REPOSITORY https://github.com/google/googletest
