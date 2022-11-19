@@ -238,6 +238,8 @@ class FlatOrderBy
   template <bool IsFirst>
   bool sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns, PermutationVec&& permutation,
                       Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
+  bool sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                      Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
 
   bool getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
 
