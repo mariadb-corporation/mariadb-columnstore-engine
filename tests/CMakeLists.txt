@@ -3,10 +3,8 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-U_FORTIFY_SOURCE" DEBUG RELWITHDEBINFO)
 MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fsanitize-address-use-after-scope -fPIC")
 
 
-if (WITH_UNITTESTS)
-    cmake_policy(SET CMP0054 NEW)
-
 if(WITH_UNITTESTS)
+    cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     ExternalProject_Add(googletest
         GIT_REPOSITORY https://github.com/google/googletest
