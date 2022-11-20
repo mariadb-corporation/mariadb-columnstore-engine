@@ -5,14 +5,14 @@ set -x
 COREDUMP=$2
 BINARY=$1
 FILENAME=$3
-#SCRIPT_LOCATION=$(dirname "$0")
+SCRIPT_LOCATION=$(dirname "$0")
 DUMPNAME=$4
 STEP_NAME=$5
 
 save_ansi_to_html ()
 {
 	echo "<b> $1 </b>" >> "${FILENAME}";
-	cat "$DUMPNAME" | ansi2html --scheme=solarized >> "${FILENAME}"
+	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --palette=solarized >> "${FILENAME}"
 }
 
 invoke_gdb_command ()
