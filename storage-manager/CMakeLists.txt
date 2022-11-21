@@ -107,28 +107,24 @@ add_executable(smcat src/smcat.cpp)
 target_link_libraries(smcat storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
-    ${MARIADB_CLIENT_LIBS}
 )
 
 add_executable(smput src/smput.cpp)
 target_link_libraries(smput storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
-    ${MARIADB_CLIENT_LIBS}
 )
 
 add_executable(smls src/smls.cpp)
 target_link_libraries(smls storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
-    ${MARIADB_CLIENT_LIBS}
 )
 
 add_executable(smrm src/smrm.cpp)
 target_link_libraries(smrm storagemanager cloudio
     ${ENGINE_LDFLAGS}
     ${ENGINE_EXEC_LIBS}
-    ${MARIADB_CLIENT_LIBS}
 )
 
 install(TARGETS storagemanager
