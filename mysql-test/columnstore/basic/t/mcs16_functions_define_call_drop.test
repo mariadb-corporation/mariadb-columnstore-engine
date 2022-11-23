@@ -27,8 +27,10 @@ SELECT f1(11);
 SELECT f1();
 --error 1242
 SELECT f1(100);
---error 1241
+--disable_abort_on_error
+--replace_regex /HY000/21000/ /Cannot cast 'row' as 'int' in assignment of `f2\(1\)`/Operand should contain 1 column(s)/
 SELECT f2(1);
+--enable_abort_on_error
 
 # function drop
 DROP FUNCTION f1;
@@ -68,7 +70,9 @@ BEGIN
   RETURN 'func2';
 END//
 DELIMITER ;//
+--replace_regex / COLLATE latin1_swedish_ci//
 SHOW CREATE FUNCTION func2;
+
 SELECT func2();
 
 DROP DATABASE mcs16_db;

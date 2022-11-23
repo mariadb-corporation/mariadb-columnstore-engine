@@ -37,14 +37,16 @@ ALTER TABLE cs3 MODIFY d1 DECIMAL(38) SIGNED;
 SELECT TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,DATA_TYPE,COLUMN_LENGTH,COLUMN_POSITION,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.columnstore_columns WHERE table_schema = 'test_mcol641_create' ORDER BY table_name,column_name ASC;
 
 # This must return an error
---error 1815
+
+
+--disable_abort_on_error
 CREATE TABLE cs5(d1 DECIMAL(39)) ENGINE=columnstore;
---error 1425
+--replace_regex /Too big scale specified for 'd1'. Maximum is 38/Too big scale 39 specified for 'd1'. Maximum is 38/
 CREATE TABLE cs5(d1 DECIMAL(38,39)) ENGINE=columnstore;
---error 1815
 ALTER TABLE cs1 ADD COLUMN d10 DECIMAL(40);
---error 1425
+--replace_regex /Too big scale specified for 'd11'. Maximum is 38/Too big scale 40 specified for 'd11'. Maximum is 38/
 ALTER TABLE cs1 ADD COLUMN d11 DECIMAL(38,40);
+--enable_abort_on_error
 
 DROP TABLE cs1;
 DROP TABLE cs2;

@@ -21,16 +21,20 @@ ALTER TABLE t1 ENGINE=INNODB;
 INSERT INTO t1 VALUES (3, 'c'),(4, 'd');
 ALTER TABLE mcs12_db1.t1 ENGINE=Columnstore;
 INSERT INTO mcs12_db1.t1 VALUES (3, 'c'),(4, 'd');
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE mcs12_db1.t1;
 SELECT * FROM mcs12_db1.t1;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 SELECT * FROM t1;
 
 # Rename
 ALTER TABLE t1 RENAME t2;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 SELECT * FROM t2;
 ALTER TABLE t2 RENAME TO mcs12_db1.t1;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 SELECT * FROM t1;
 # Cross db rename errors in CS but not in innodb. Need to check.
@@ -45,16 +49,19 @@ INSERT INTO t1 VALUES (1, 'a'),(2, 'b');
 ALTER TABLE t1 ADD t TIMESTAMP;
 ALTER TABLE t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
 INSERT INTO t1 VALUES (1, 'a', '2020-07-08', 11);
+--replace_regex /( COLLATE=latin1_swedish_ci)// /  `t` timestamp NULL DEFAULT NULL,/  `t` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),/
 SHOW CREATE TABLE t1;
 
 # Drop column
 ALTER TABLE t1 DROP COLUMN t;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 SELECT * FROM t1;
 
 # Modify column
 ALTER TABLE t1 CHANGE i new_i INTEGER;
 INSERT INTO t1 VALUES (2, 'b', 22);
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 SELECT * FROM t1;
 
@@ -65,6 +72,7 @@ CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
 connect (addconroot1, localhost, root,,);
 connect (addconroot2, localhost, root,,);
 connection addconroot1;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE mcs12_db1.t1;
 ALTER TABLE mcs12_db1.t1 ADD COLUMN c CHAR(10);
 INSERT INTO mcs12_db1.t1 VALUES (1, 'a'),(2, 'b');
@@ -79,6 +87,7 @@ ALTER TABLE mcs12_db1.t1 ADD COLUMN i2 INT COMMENT 'Add one more column.';
 INSERT INTO mcs12_db1.t1 VALUES (5, 'e', 55);
 
 connection default;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE mcs12_db1.t1;
 SELECT * FROM mcs12_db1.t1;
 disconnect addconroot1;
