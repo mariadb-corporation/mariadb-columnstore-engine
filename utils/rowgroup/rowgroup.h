@@ -2146,8 +2146,6 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
 
 inline bool StringStore::isNullValue(uint64_t off) const
 {
-  uint32_t length;
-
   if (off == std::numeric_limits<uint64_t>::max())
     return true;
   return false;
@@ -2166,6 +2164,8 @@ inline bool StringStore::isNullValue(uint64_t off) const
   idbassert(mem.size() > chunk); // this is correct. we have a separate values
 //  if (mem.size() <= chunk)
 //    return true;
+
+  uint32_t length;
 
   mc = (MemChunk*)mem[chunk].get();
   memcpy(&length, &mc->data[offset], 4);
