@@ -311,7 +311,7 @@ if __name__ == '__main__':
 
     if s3_enabled:
         # start SM using systemd
-        if use_systemd is True:
+        if use_systemd:
             cmd = 'systemctl start mcs-storagemanager'
             try:
                 subprocess.check_call(cmd, shell=True)
@@ -398,7 +398,6 @@ if __name__ == '__main__':
                                 'Cmapi is not running on primary node. '
                                 'Skip loading metafiles.'
                             )
-
             except Exception as exc:
                 logging.error(
                     'Failed to detect primary or load BRM data from',
