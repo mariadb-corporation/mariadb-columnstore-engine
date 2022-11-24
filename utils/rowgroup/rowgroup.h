@@ -2150,6 +2150,9 @@ inline bool StringStore::isNullValue(uint64_t off) const
 
   if (off == std::numeric_limits<uint64_t>::max())
     return true;
+  return false;
+
+#if 0
 
   // commented out before deleting because we should
 //  // Long strings won't be NULL
@@ -2178,6 +2181,7 @@ inline bool StringStore::isNullValue(uint64_t off) const
 //    return true;
 
   return false;
+#endif
 }
 
 inline uint32_t StringStore::getStringLength(uint64_t off) const
