@@ -1598,7 +1598,7 @@ struct BPPHandler
   {
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
-
+#if 0
     try
     {
       bs.advance(sizeof(ISMPacketHeader));
@@ -1612,6 +1612,19 @@ struct BPPHandler
       bs.rewind();
       return -1;
     }
+#else
+    if (bs.length() < sizeof(ISMPacketHeader) + sizeof(sessionID) + sizeof(stepID) + sizeof(uniqueID))
+    {
+      // MCOL-857 We don't appear to have the full packet yet!
+      return -1;
+    }
+
+    // throw here will be actual error, not a phony one.
+    bs.advance(sizeof(ISMPacketHeader));
+    bs >> sessionID;
+    bs >> stepID;
+    bs >> uniqueID;
+#endif
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
     boost::mutex::scoped_lock scoped(bppLock);
