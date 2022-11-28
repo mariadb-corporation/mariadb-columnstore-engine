@@ -6,7 +6,7 @@ local platforms = {
 };
 
 local servers = {
-  develop: ['10.9', '10.6-enterprise'],
+  develop: ['10.6-enterprise'],
   'develop-6': ['10.6-enterprise'],
 };
 
@@ -27,7 +27,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
                    '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES ' +
                    '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
-                   '-DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
+                   '-DPLUGIN_CONNECT=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=YES -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
 
@@ -107,7 +107,7 @@ local testPreparation(platform) =
   platform_map[platform];
 
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.9') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -573,17 +573,10 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.9']), platforms.develop) +
-              std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-
-              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.9']), platforms_arm.develop) +
+  depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
               std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
-
               std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
-
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']) +
-
-              ['develop-6 ubuntu:22.04 ' + event + ' amd64 10.9'],
+              std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6'])
 };
 
 
@@ -592,10 +585,6 @@ local FinalPipeline(branch, event) = {
   for b in std.objectFields(platforms)
   for p in platforms[b]
   for s in servers[b]
-  for e in events
-] +
-[
-  Pipeline('develop-6', 'ubuntu:22.04', e, 'amd64', '10.9')
   for e in events
 ] +
 [
