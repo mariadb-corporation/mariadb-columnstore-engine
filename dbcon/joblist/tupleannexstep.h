@@ -150,6 +150,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(const SortingThreads& sortingGroup);
   void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges,
                            const SortingThreads& firstPhaseThreads);
+  void joinOutputDLs();
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;
 

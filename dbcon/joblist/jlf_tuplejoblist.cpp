@@ -542,7 +542,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     // WIP add spec check for falt order by here
     if (jobInfo.orderByColVec.size() > 0 && !tas->firstPhaseflatOrderBys_.empty())
     {
-      for (size_t i = 1; i < jobInfo.orderByThreads; ++i)
+      for (size_t i = 1; i <= jobInfo.orderByThreads; ++i)
       {
         AnyDataListSPtr spdlOut(new AnyDataList());
         RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
