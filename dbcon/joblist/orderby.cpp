@@ -105,6 +105,7 @@ bool FlatOrderBy::addBatch(rowgroup::RGData& rgData)
   bool isFailure = false;
   rg_.setData(&rgData);
   auto rowCount = rg_.getRowCount();
+  // std::cout << "addBatch " << rowCount << std::endl;
   auto bytes = rg_.getSizeWithStrings(rowCount);
   if (!mm_->acquire(bytes))
   {
@@ -597,15 +598,21 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
       cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
       throw IDBExcept(ERR_LIMIT_TOO_BIG);
     }
+    auto start = std::chrono::steady_clock::now();
 
     initialPermutationKeysNulls<ColType, StorageType, EncodedKeyType>(id, columnID, nullsFirst, keys,
                                                                       permutation, nulls);
+
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "keys " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() << "s\n";
 
     auto permBegin = (nullsFirst) ? permutation.begin() + nulls.size() : permutation.begin();
     auto permEnd = (nullsFirst) ? permutation.end() : permutation.end() - nulls.size();
     assert(std::distance(keys.begin(), keys.end()) == std::distance(permBegin, permEnd));
     // assert(permutation.size() == keys.size() + ((nullsFirst) ? 0 : nulls.size()));
     // sortDirection is true = ASC
+    start = std::chrono::steady_clock::now();
 
     if constexpr (std::is_same<EncodedKeyType, utils::ConstString>::value)
     {
@@ -632,6 +639,9 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
         sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
       }
     }
+    end = std::chrono::steady_clock::now();
+    elapsed_seconds = end - start;
+    std::cout << "sort " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() << "s\n";
 
     // Use && here
     if (columns.size() > 1)
@@ -668,6 +678,7 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
   else
   {
     permutation_ = std::move(permutation);
+    // WIP In a single thread ranges2Sort is empty.
     ranges2Sort_ = std::move(ranges2Sort);
   }
   return isFailure;
@@ -887,12 +898,10 @@ bool FlatOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPhas
     if (prevPhaseThreads.empty())
     {
       rgDatas_[p.rgdataID].getRow(p.rowID, &inRow_);
-      // rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
     }
     else
     {
       prevPhaseThreads[p.threadID]->getRGDatas()[p.rgdataID].getRow(p.rowID, &inRow_);
-      // rg_.setData(&(prevPhaseThreads[p->threadID]->getRGDatas()[p->rgdataID]));
     }
 
     // std::cout << "inRow i " << i << inRow_.toString() << std::endl;
