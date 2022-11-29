@@ -79,7 +79,8 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
     case CalpontSystemCatalog::TIME:
     {
       const auto& arg = parm[0]->data()->getStrVal(row, isNull);
-      scoped_array<char> hexPtr(new char[strlen(arg.str()) * 2 + 1]);
+      //scoped_array<char> hexPtr(new char[strlen(arg.str()) * 2 + 1]);
+      scoped_array<char> hexPtr(new char[arg.length() * 2 + 1]); // XXX: code now the same as for BLOB.
       octet2hex(hexPtr.get(), arg.str(), arg.length());
       return string(hexPtr.get(), arg.length() * 2);
 //      return string(hexPtr.get(), strlen(arg.str()) * 2);
