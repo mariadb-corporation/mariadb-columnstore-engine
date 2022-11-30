@@ -280,7 +280,7 @@ class FlatOrderBy
   {
     return permutation_;
   }
-  rowgroup::RDGataVector& getRGDatas()
+  rowgroup::RGDataVector& getRGDatas()
   {
     return rgDatas_;
   }
@@ -349,7 +349,7 @@ class FlatOrderBy
   static const uint64_t maxUncommited_;
   joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
-  rowgroup::RDGataVector rgDatas_;
+  rowgroup::RGDataVector rgDatas_;
   PermutationVec permutation_;
   std::unique_ptr<joblist::MemManager> mm_;
   IterDiffT flatCurPermutationDiff_ = 0;
