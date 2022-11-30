@@ -945,8 +945,46 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   parallelOrderByMutex_.unlock();
 }
 
+bool lowBoundComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                  const FlatOrderBy::PermutationType leftPerm, const int64_t target)
+{
+  rg.setData(&(rgDatas[leftPerm.rgdataID]));
+  int64_t leftValue =
+      rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, leftPerm.rowID);
+  return leftValue < target;
+}
+
+size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg,
+                                const uint32_t columnId, const FlatOrderBy::PermutationVec& perm,
+                                const int64_t target)
+{
+  using ForwardIt = FlatOrderBy::PermutationVec::const_iterator;
+  ForwardIt it;
+  ForwardIt first = perm.begin();
+  ForwardIt last = perm.end();
+  std::iterator_traits<ForwardIt>::difference_type count, step;
+  count = std::distance(first, last);
+
+  while (count > 0)
+  {
+    it = first;
+    step = count / 2;
+    std::advance(it, step);
+
+    if (lowBoundComp(rgDatas, rg, columnId, *it, target))  // less
+    {
+      first = ++it;
+      count -= step + 1;
+    }
+    else
+      count = step;
+  }
+
+  return std::distance(perm.begin(), first);
+}
+
 const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
-    const SortingThreads& sortingThreads)
+    const SortingThreads& sortingThreads) const
 {
   utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
@@ -963,7 +1001,6 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
     size_t right = step;
     size_t i = lowerBoundValues.size() - 1;
     for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i)
-    // for (size_t i = 0; i < ranges.size(); ++i)
     {
       if (it->empty())
       {
@@ -972,36 +1009,18 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
         lowerBoundValues[i] =
             rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
       }
-      // if (isAscDirection)
-      // {
-      //   auto& rgDatas = sorting->getRGDatas();
-      //   auto leftLocal = std::distance(
-      //       perm.begin(),
-      //       std::lower_bound(
-      //           perm.begin(), perm.end(), lowerBoundValues[i],
-      //           [&rg, rgDatas](FlatOrderBy::PermutationType x, FlatOrderBy::PermutationType y)
-      //           {
-      //             rg.setData(&(rgDatas[x.rgdataID]));
-      //             int64_t leftValue =
-      //                 rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0,
-      //                 x.rowID);
-      //             rg.setData(&(rgDatas[y.rgdataID]));
-      //             int64_t rightValue =
-      //                 rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0,
-      //                 y.rowID);
-      //             ;
-      //             return leftValue < rightValue;
-      //           }));
-      //   std::cout << " leftLocal " << leftLocal << std::endl;
-      //   it->push_back({left, right});
-      // }
-      // else
-      // {
-      //   auto rightLocal =
-      //       std::distance(perm.begin(), std::lower_bound(perm.begin(), perm.end(), lowerBoundValues[i]));
-      //   std::cout << " rightLocal " << rightLocal << std::endl;
-      //   it->push_back({left, right});
-      // }
+      auto& rgDatas = sorting->getRGDatas();
+      int64_t rightOrLeftLocal = binSearchWithPermutation(rgDatas, rg, columnId, perm, lowerBoundValues[i]);
+      if (isAscDirection)
+      {
+        std::cout << " leftLocal " << rightOrLeftLocal << std::endl;
+        // it->push_back({left, right});
+      }
+      else
+      {
+        std::cout << " rightLocal " << rightOrLeftLocal << std::endl;
+        // it->push_back({left, right});
+      }
       it->push_back({left, right});
 
       std::cout << "stats calc left " << left << " right " << right << std::endl;
