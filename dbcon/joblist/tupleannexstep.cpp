@@ -950,33 +950,67 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
 {
   utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
-  vector<int64_t> valuesOnTheRight(ranges.size());
+  vector<int64_t> lowerBoundValues(ranges.size());
   // This algo is completely incorrect
   for (auto& sorting : sortingThreads)
   {
+    // WIP
+    auto rg = sorting->getRG();
+    const auto [columnId, isAscDirection] = sorting->getSortingColumnsRef().front();
     const auto& perm = sorting->getPermutation();
     const auto step = perm.size() / fMaxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
-    // some rightValue;
-    size_t i = valuesOnTheRight.size() - 1;
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, ++i)
+    size_t i = lowerBoundValues.size() - 1;
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i)
     // for (size_t i = 0; i < ranges.size(); ++i)
     {
       if (it->empty())
       {
-        valuesOnTheRight[i] = i;
+        auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
+        rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+        lowerBoundValues[i] =
+            rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
       }
+      // if (isAscDirection)
+      // {
+      //   auto& rgDatas = sorting->getRGDatas();
+      //   auto leftLocal = std::distance(
+      //       perm.begin(),
+      //       std::lower_bound(
+      //           perm.begin(), perm.end(), lowerBoundValues[i],
+      //           [&rg, rgDatas](FlatOrderBy::PermutationType x, FlatOrderBy::PermutationType y)
+      //           {
+      //             rg.setData(&(rgDatas[x.rgdataID]));
+      //             int64_t leftValue =
+      //                 rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0,
+      //                 x.rowID);
+      //             rg.setData(&(rgDatas[y.rgdataID]));
+      //             int64_t rightValue =
+      //                 rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0,
+      //                 y.rowID);
+      //             ;
+      //             return leftValue < rightValue;
+      //           }));
+      //   std::cout << " leftLocal " << leftLocal << std::endl;
+      //   it->push_back({left, right});
+      // }
+      // else
+      // {
+      //   auto rightLocal =
+      //       std::distance(perm.begin(), std::lower_bound(perm.begin(), perm.end(), lowerBoundValues[i]));
+      //   std::cout << " rightLocal " << rightLocal << std::endl;
+      //   it->push_back({left, right});
+      // }
       it->push_back({left, right});
+
       std::cout << "stats calc left " << left << " right " << right << std::endl;
       left = right + ((perm.empty()) ? 0 : 1);
-      right = (right + step > perm.size()) ? perm.size() : right + step;
+      right = std::min(right + step, perm.size());
     }
   }
-  // for (auto& range : ranges)
-  // {
-  //   std::reverse(range.begin(), range.end());
-  // }
+  std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout, ","));
+  std::cout << endl;
   return ranges;
 }
 
@@ -988,18 +1022,18 @@ void TupleAnnexStep::joinOutputDLs()
   std::string threadName("TAS2ndDLM");
   utils::setThreadName(threadName.c_str());
 
-  // size_t secondPhaseFlatThreadId = 1;
+  size_t secondPhaseFlatThreadId = 1;
   try
   {
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
     // WIP might be a costly call
-    // for (; !cancelled() && secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size() + 1;
-    //      ++secondPhaseFlatThreadId)
+    for (; !cancelled() && secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
+         ++secondPhaseFlatThreadId)
     {
       // std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
       bool more = true;
-      auto outputDL = fOutputJobStepAssociation.outAt(1)->rowGroupDL();
+      auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
       // std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
 
       // auto outputIterator = outputDL->getIterator();
@@ -1028,52 +1062,12 @@ void TupleAnnexStep::joinOutputDLs()
           fRowGroupOut.setRowCount(0);
         }
       }
-      // std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
-      // << std::endl;
+      std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
+                << std::endl;
     }
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "join serialize " + std::to_string(0) + " elapsed time: " << elapsed_seconds.count()
-              << std::endl;
-    start = std::chrono::steady_clock::now();
-
-    {
-      // std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
-      bool more = true;
-      auto outputDL = fOutputJobStepAssociation.outAt(2)->rowGroupDL();
-      // std::cout << "Join id " << 2 << " " << std::hex << (uint64_t)outputDL << std::endl;
-
-      // auto outputIterator = outputDL->getIterator();
-
-      if (!outputDL)
-      {
-        throw logic_error("Output is not a RowGroup data list 1.");
-      }
-      while (more)
-      {
-        // WIP output iter is hardcoded
-        more = outputDL->next(0, &rgDataOut);
-
-        // if rgData is empty?
-        // Doesn't need to set rgData b/c rowCount offset is 0
-        fRowGroupOut.setData(&rgDataOut);
-        auto rowCount = fRowGroupOut.getRowCount();
-        // std::cout << "join " << 1 << " rowCount " << rowCount << std::endl;
-        if (rowCount > 0)
-        {
-          // std::cout << "Join added to output id " << 2 << std::endl;
-          fRowsReturned += rowCount;
-          fOutputDL->insert(rgDataOut);
-
-          rgDataOut.reinit(fRowGroupIn, 0);
-          fRowGroupOut.setData(&rgDataOut);
-          fRowGroupOut.setRowCount(0);
-        }
-      }
-    }
-    end = std::chrono::steady_clock::now();
-    elapsed_seconds = end - start;
-    std::cout << "join serialize " + std::to_string(1) + " elapsed time: " << elapsed_seconds.count()
               << std::endl;
   }
   catch (...)
