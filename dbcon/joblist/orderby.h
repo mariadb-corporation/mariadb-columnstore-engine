@@ -239,7 +239,7 @@ class FlatOrderBy
   bool sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns, PermutationVec&& permutation,
                       Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
   bool sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysType columns, PermutationVec&& permutation,
-                      Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
+                            Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
 
   bool getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
 
@@ -284,7 +284,19 @@ class FlatOrderBy
   {
     return rgDatas_;
   }
+  rowgroup::RowGroup getRG()
+  {
+    return rg_;
+  }
+  rowgroup::RowGroup& getRGRef()
+  {
+    return rg_;
+  }
   joblist::OrderByKeysType getSortingColumns() const
+  {
+    return jobListorderByRGColumnIDs_;
+  }
+  const joblist::OrderByKeysType& getSortingColumnsRef() const
   {
     return jobListorderByRGColumnIDs_;
   }

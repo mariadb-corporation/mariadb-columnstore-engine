@@ -83,7 +83,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void addOrderBy(const JobInfo& jobInfo)
   {
     // WIP Check the right condition
-    if (fLimitStart + fLimitCount <= ReasonableLimit || jobInfo.orderByThreads > 2)
+    if (fLimitStart + fLimitCount <= ReasonableLimit)
     {
       fOrderBy = new LimitedOrderBy();
     }
@@ -91,12 +91,13 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     {
       flatOrderBy_.reset(new FlatOrderBy());
     }
-    else if (jobInfo.orderByThreads == 2)
+    else
     {
-      firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
-      firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
-      secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
-      secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+      for (size_t i = 0; i < jobInfo.orderByThreads; ++i)
+      {
+        firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+        secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+      }
     }
 
     if (jobInfo.orderByThreads > 1)
