@@ -172,36 +172,43 @@ uint64_t Func_truncate::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 double Func_truncate::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                    CalpontSystemCatalog::ColType& op_ct)
 {
-  if (execplan::CalpontSystemCatalog::DOUBLE == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType)
+  switch (op_ct.colDataType)
   {
-    int64_t d = 0;
-    double p = 1;
-    decimalPlaceDouble(parm, d, p, row, isNull);
-
-    if (isNull)
-      return 0.0;
-
-    double x = parm[0]->data()->getDoubleVal(row, isNull);
-
-    if (!isNull)
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
     {
-      x *= p;
+      int64_t d = 0;
+      double p = 1;
+      decimalPlaceDouble(parm, d, p, row, isNull);
 
-      if (x > 0)
-        x = floor(x);
-      else
-        x = ceil(x);
+      if (isNull)
+        return 0.0;
 
-      if (p != 0.0)
-        x /= p;
-      else
-        x = 0.0;
+      double x = parm[0]->data()->getDoubleVal(row, isNull);
+
+      if (!isNull)
+      {
+        x *= p;
+
+        if (x > 0)
+          x = floor(x);
+        else
+          x = ceil(x);
+
+        if (p != 0.0)
+          x /= p;
+        else
+          x = 0.0;
+      }
+
+      return x;
     }
-
-    return x;
+    default:
+      break;
   }
-
   IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
 
   if (isNull)
@@ -436,13 +443,22 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
         break;
 
       double x = parm[0]->data()->getDoubleVal(row, isNull);
-
       if (!isNull)
       {
         x *= p;
-        decimal.value = x <= static_cast<double>(INT64_MIN)   ? INT64_MIN
-                        : x >= static_cast<double>(INT64_MAX) ? INT64_MAX
-                                                              : int64_t(x);
+        if (x >= static_cast<double>(INT64_MIN) && x <= static_cast<double>(INT64_MAX))
+        {
+          decimal.value = x;
+        }
+        else
+        {
+          isNull = true;
+          Message::Args args;
+          args.add("truncate");
+          args.add(x);
+          unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+          throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+        }
         decimal.scale = s;
       }
     }
