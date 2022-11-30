@@ -148,7 +148,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(const SortingThreads& sortingGroup);
+  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(const SortingThreads& sortingGroup) const;
   void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges,
                            const SortingThreads& firstPhaseThreads);
   void joinOutputDLs();
