@@ -13,7 +13,7 @@ Table	Create Table
 z k	CREATE TABLE `z k` (
   `a b` int(11) DEFAULT NULL,
   `c300_500_18 REF NOx` text DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
 drop table tpch1.`z k`;
 show create table `z k`;
 ERROR 42S02: Table 'tpch1.z k' doesn't exist
