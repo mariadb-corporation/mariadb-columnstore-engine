@@ -36,14 +36,14 @@ DROP TABLE t1;
 CREATE TABLE t1 (a INT, b CHAR(10)) ENGINE=Columnstore;
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' IGNORE 1 LINES;
-SELECT * FROM t1;
+SELECT * FROM t1 ORDER BY a, b;
 TRUNCATE TABLE t1;
 
 --let $datafile=$MTR_SUITE_DIR/../std_data/loaddata4.dat
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;
 # The empty line last comes from the end line field in the file
-SELECT * FROM t1;
+SELECT * FROM t1 ORDER BY a, b;
 --replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
