@@ -25,7 +25,10 @@ ALTER TABLE t1 ENGINE='#!~@$%^&*()_+-,.*`~';
 SHOW CREATE TABLE t1;
 
 # Rename
+--disable_warnings
 DROP TABLE IF EXISTS nonexisting;
+--enable_warnings
+
 --error 1146
 ALTER TABLE nonexisting RENAME t2;
 
