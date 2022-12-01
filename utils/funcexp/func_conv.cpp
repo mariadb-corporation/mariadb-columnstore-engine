@@ -286,7 +286,7 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 idblog("CONV (" << res.safeString() << ", " << from_base << ", " << to_base << ")");
 
   if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
-      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2)
+      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || res.length() < 1)
   {
     isNull = true;
     return "";
