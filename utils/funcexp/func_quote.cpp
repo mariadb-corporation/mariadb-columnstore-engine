@@ -41,7 +41,6 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   if (isNull)
   {
-    isNull = false;
     return "";
   }
 
