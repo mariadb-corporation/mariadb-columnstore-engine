@@ -89,7 +89,7 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-typedef tr1::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >
+typedef tr1::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer>>
     DistinctMap_t;
 };  // namespace
 
@@ -951,7 +951,8 @@ bool lowBoundComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
   int64_t leftValue =
       rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, leftPerm.rowID);
-  return leftValue < target;
+  std::cout << "lowBoundComp leftValue " << leftValue << " target " << target << std::endl;
+  return leftValue > target;
 }
 
 size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg,
@@ -988,7 +989,30 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
 {
   utils::setThreadName("TASOrdStats");
   ValueRangesVector ranges(fMaxThreads);
+  ValueRangesVector testRanges(fMaxThreads);
   vector<int64_t> lowerBoundValues(ranges.size());
+  {
+    auto& sorting = sortingThreads.front();
+    auto rg = sorting->getRG();
+    const auto [columnId, isAscDirection] = sorting->getSortingColumnsRef().front();
+    const auto& perm = sorting->getPermutation();
+    const auto step = perm.size() / fMaxThreads + ((perm.empty()) ? 0 : 1);
+    size_t left = 0;
+    size_t right = step;
+    size_t i = 0;
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, ++i)
+    {
+      auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
+      rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+      lowerBoundValues[i] =
+          rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
+      left = right + ((perm.empty()) ? 0 : 1);
+      right = std::min(right + step, perm.size());
+    }
+  }
+  std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout, ","));
+  std::cout << endl;
+
   // This algo is completely incorrect
   for (auto& sorting : sortingThreads)
   {
@@ -1000,27 +1024,67 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
     size_t left = 0;
     size_t right = step;
     size_t i = lowerBoundValues.size() - 1;
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i)
+    // size_t i = 0;
+    auto ita = testRanges.rbegin();
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
     {
-      if (it->empty())
+      // if (it->empty())
+      // {
+      //   auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
+      //   rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+      //   lowerBoundValues[i] =
+      //       rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
+      // }
+      // auto& rgDatas = ; 2146983181,1447029377,754248540,,
+      int64_t leftLowerBoundValue;
+      int64_t rightLowerBoundValue;
+      switch (i)
       {
-        auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
-        rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-        lowerBoundValues[i] =
-            rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
+        case 2:
+        {
+          auto left1 = 0;
+          rightLowerBoundValue = lowerBoundValues[1];
+          auto right1 =
+              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
+          std::cout << " case 2 left " << left1 << " right " << right1 << std::endl;
+          ita->push_back({left1, right1});
+          break;
+        }
+        case 1:
+        {
+          leftLowerBoundValue = lowerBoundValues[1];
+          rightLowerBoundValue = lowerBoundValues[2];
+          // left can be taken from the prev iteration
+          auto left1 =
+              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
+          auto right1 =
+              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
+          std::cout << " case 1 left " << left1 << " right " << right1 << std::endl;
+          ita->push_back({left1, right1});
+          break;
+        }
+        case 0:
+        {
+          leftLowerBoundValue = lowerBoundValues[2];
+          auto left1 =
+              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
+          auto right1 = perm.size();
+          std::cout << " case 0 left " << left1 << " right " << right1 << std::endl;
+          ita->push_back({left1, right1});
+          break;
+        }
       }
-      auto& rgDatas = sorting->getRGDatas();
-      int64_t rightOrLeftLocal = binSearchWithPermutation(rgDatas, rg, columnId, perm, lowerBoundValues[i]);
-      if (isAscDirection)
-      {
-        std::cout << " leftLocal " << rightOrLeftLocal << std::endl;
-        // it->push_back({left, right});
-      }
-      else
-      {
-        std::cout << " rightLocal " << rightOrLeftLocal << std::endl;
-        // it->push_back({left, right});
-      }
+
+      // if (isAscDirection)
+      // {
+      //   std::cout << " leftLocal " << rightOrLeftLocal << std::endl;
+      //   // it->push_back({left, right});
+      // }
+      // else
+      // {
+      //   std::cout << " rightLocal " << rightOrLeftLocal << std::endl;
+      //   // it->push_back({left, right});
+      // }
       it->push_back({left, right});
 
       std::cout << "stats calc left " << left << " right " << right << std::endl;
@@ -1028,9 +1092,27 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
       right = std::min(right + step, perm.size());
     }
   }
-  std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout, ","));
+  std::cout << "ranges " << std::endl;
+  for (auto& el : ranges)
+  {
+    for (auto& p : el)
+    {
+      std::cout << "{" << p.first << "," << p.second << "} ";
+    }
+  }
   std::cout << endl;
-  return ranges;
+
+  std::cout << "testRanges " << std::endl;
+  for (auto& el : testRanges)
+  {
+    for (auto& p : el)
+    {
+      std::cout << "{" << p.first << "," << p.second << "} ";
+    }
+  }
+  std::cout << endl;
+
+  return testRanges;
 }
 
 // WIP use std::function in init to assign this maybe
