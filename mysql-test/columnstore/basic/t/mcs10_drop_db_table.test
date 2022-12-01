@@ -33,6 +33,11 @@ USE mcs10_db1;
 DROP TABLE IF EXISTS t_innodb, t_columnstore;
 DROP TABLE IF EXISTS t_innodb;
 DROP TABLE IF EXISTS t_columnstore;
+
+
+select * from t_innodb;
+
+
 --error 1051
 DROP TABLE t_innodb;
 --error 1051
