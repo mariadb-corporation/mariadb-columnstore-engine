@@ -13,14 +13,10 @@ COUNT(*)
 1
 TRUNCATE mcs14_db1.t1;
 DROP TABLE IF EXISTS non_existing_table;
-Warnings:
-Note	1051	Unknown table 'mcs14_db1.non_existing_table'
 TRUNCATE non_existing_table;
 ERROR 42S02: Table 'mcs14_db1.non_existing_table' doesn't exist
 DROP TABLE t1;
 DROP TABLE IF EXISTS t2;
-Warnings:
-Note	1051	Unknown table 'mcs14_db1.t2'
 CREATE TABLE t1 (id INT) ENGINE=INNODB;
 CREATE TABLE t2 (id INT) ENGINE=Columnstore;
 TRUNCATE t1, t2;
@@ -59,8 +55,6 @@ HANDLER t1 OPEN;
 TRUNCATE t1;
 DROP TABLE t1;
 DROP TABLE IF EXISTS t1;
-Warnings:
-Note	1051	Unknown table 'mcs14_db1.t1'
 CREATE TABLE t1 (id INT) ENGINE=Columnstore;
 INSERT INTO t1 (id) VALUES (1), (2), (3), (4), (5);
 CREATE TABLE t2 LIKE t1;
