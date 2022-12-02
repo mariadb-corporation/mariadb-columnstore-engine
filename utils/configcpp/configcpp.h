@@ -248,6 +248,11 @@ class Config
   time_t fMtime;
   mutable boost::recursive_mutex fLock;
   XMLParser fParser;
+
+  /** @brief Re-read the config file if it was updated
+   *
+   */
+  void checkAndReloadConfig();
 };
 
 }  // namespace config
