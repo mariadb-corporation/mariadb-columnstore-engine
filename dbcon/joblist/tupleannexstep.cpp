@@ -984,6 +984,46 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
   return std::distance(perm.begin(), first);
 }
 
+ValueRange calcLeftAndRight(const ValueRangesVector& ranges,
+                            const ValueRangesVector::const_reverse_iterator& it,
+                            const vector<int64_t>& lowerBoundValues, rowgroup::RGDataVector& rgDatas,
+                            const FlatOrderBy::PermutationVec& perm, rowgroup::RowGroup& rg,
+                            const uint32_t columnId)
+{
+  assert(lowerBoundValues.size() >= 2);
+  size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
+  if (rangeVectorDist > 0 && rangeVectorDist < ranges.size() - 1)  // Nth
+  {
+    assert(lowerBoundValues.size() >= rangeVectorDist + 1);
+    int64_t leftLowerBoundValue = lowerBoundValues[rangeVectorDist];
+    int64_t rightLowerBoundValue = lowerBoundValues[rangeVectorDist + 1];
+    // left can be taken from the prev iteration
+    auto left1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, leftLowerBoundValue);
+    auto right1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, rightLowerBoundValue);
+    std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
+              << std::endl;
+    return {left1, right1};
+  }
+  if (!rangeVectorDist)  // first
+  {
+    size_t left1 = 0;
+    auto rightLowerBoundValue = lowerBoundValues[1];
+    auto right1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, rightLowerBoundValue);
+    std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
+    return {left1, right1};
+  }
+  if (rangeVectorDist == ranges.size() - 1)  // last
+  {
+    auto leftLowerBoundValue = lowerBoundValues.back();
+    auto left1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, leftLowerBoundValue);
+    auto right1 = perm.size();
+    std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
+    return {left1, right1};
+  }
+  idbassert(rangeVectorDist && false);
+  return {};
+}
+
 const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
     const SortingThreads& sortingThreads) const
 {
@@ -1028,52 +1068,45 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
     auto ita = testRanges.rbegin();
     for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
     {
-      // if (it->empty())
+      ita->push_back(
+          calcLeftAndRight(testRanges, ita, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
+
+      // switch (i)
       // {
-      //   auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
-      //   rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-      //   lowerBoundValues[i] =
-      //       rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
+      //   case 2: // 1st
+      //   {
+      //     auto left1 = 0;
+      //     rightLowerBoundValue = lowerBoundValues[1];
+      //     auto right1 =
+      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
+      //     std::cout << " case 2 left " << left1 << " right " << right1 << std::endl;
+      //     ita->push_back({left1, right1});
+      //     break;
+      //   }
+      //   case 1: // Nth
+      //   {
+      //     leftLowerBoundValue = lowerBoundValues[1];
+      //     rightLowerBoundValue = lowerBoundValues[2];
+      //     // left can be taken from the prev iteration
+      //     auto left1 =
+      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
+      //     auto right1 =
+      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
+      //     std::cout << " case 1 left " << left1 << " right " << right1 << std::endl;
+      //     ita->push_back({left1, right1});
+      //     break;
+      //   }
+      //   case 0: // last
+      //   {
+      //     leftLowerBoundValue = lowerBoundValues[2];
+      //     auto left1 =
+      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
+      //     auto right1 = perm.size();
+      //     std::cout << " case 0 left " << left1 << " right " << right1 << std::endl;
+      //     ita->push_back({left1, right1});
+      //     break;
+      //   }
       // }
-      // auto& rgDatas = ; 2146983181,1447029377,754248540,,
-      int64_t leftLowerBoundValue;
-      int64_t rightLowerBoundValue;
-      switch (i)
-      {
-        case 2:
-        {
-          auto left1 = 0;
-          rightLowerBoundValue = lowerBoundValues[1];
-          auto right1 =
-              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
-          std::cout << " case 2 left " << left1 << " right " << right1 << std::endl;
-          ita->push_back({left1, right1});
-          break;
-        }
-        case 1:
-        {
-          leftLowerBoundValue = lowerBoundValues[1];
-          rightLowerBoundValue = lowerBoundValues[2];
-          // left can be taken from the prev iteration
-          auto left1 =
-              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
-          auto right1 =
-              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
-          std::cout << " case 1 left " << left1 << " right " << right1 << std::endl;
-          ita->push_back({left1, right1});
-          break;
-        }
-        case 0:
-        {
-          leftLowerBoundValue = lowerBoundValues[2];
-          auto left1 =
-              binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
-          auto right1 = perm.size();
-          std::cout << " case 0 left " << left1 << " right " << right1 << std::endl;
-          ita->push_back({left1, right1});
-          break;
-        }
-      }
 
       // if (isAscDirection)
       // {

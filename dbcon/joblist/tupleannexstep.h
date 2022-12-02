@@ -38,8 +38,8 @@ class LimitedOrderBy;
 
 namespace joblist
 {
-
-using ValueRangesVector = std::vector<std::vector<std::pair<size_t, size_t>>>;
+using ValueRange = std::pair<size_t, size_t>;
+using ValueRangesVector = std::vector<std::vector<ValueRange>>;
 
 /** @brief class TupleAnnexStep
  *
