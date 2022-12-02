@@ -5,7 +5,7 @@ set(datatypes_LIB_SRCS
     mcs_decimal.cpp)
 
 add_library(datatypes SHARED ${datatypes_LIB_SRCS})
-add_dependencies(datatypes external_boost)
+add_dependencies(datatypes loggingcpp external_boost)
 
 install(TARGETS datatypes DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

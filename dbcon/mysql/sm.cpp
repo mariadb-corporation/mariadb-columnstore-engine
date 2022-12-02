@@ -506,5 +506,4 @@ void cpsm_conhdl_t::write(ByteStream bs)
 #endif
 }
 
-}  // namespace sm
-
+}
