@@ -622,10 +622,8 @@ bool load_encryption_keys()
     {
       if (!ret.key.empty())
       {
-        // CSPasswdLogging::get()->log(LOG_INFO,"Using encrypted passwords. Encryption key read from '%s'.",
-        // path.c_str());
-        this_unit.key = move(ret.key);
-        this_unit.iv = move(ret.iv);
+        this_unit.key = ret.key;
+        this_unit.iv = ret.iv;
       }
       return ret.ok;
     }
