@@ -29,7 +29,7 @@ typedef int pthread_t;
 #endif
 #include <iomanip>
 #include <map>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <csignal>
 #include <fstream>
@@ -178,7 +178,7 @@ typedef map<uint32_t, TraceFileInfo> TraceFileMap_t;
 
 TraceFileMap_t traceFileMap;
 // map mutex
-boost::mutex traceFileMapMutex;
+std::mutex traceFileMapMutex;
 
 class StatMon
 {
@@ -197,7 +197,7 @@ class StatMon
   void operator()() const
   {
     // struct timespec ts = { 60 * 1, 0 };
-    boost::mutex::scoped_lock lk(traceFileMapMutex);
+    std::unique_lock lk(traceFileMapMutex);
     TraceFileMap_t::iterator iter;
     TraceFileMap_t::iterator end;
 
@@ -256,7 +256,7 @@ void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
   if (session == 0)
     return;
 
-  boost::mutex::scoped_lock lk(traceFileMapMutex);
+  std::lock_guard lk(traceFileMapMutex);
   TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
   if (iter == traceFileMap.end())
@@ -274,7 +274,7 @@ void Stats::markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t
   if (session == 0)
     return;
 
-  boost::mutex::scoped_lock lk(traceFileMapMutex);
+  std::lock_guard lk(traceFileMapMutex);
   TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
   if (iter == traceFileMap.end())
