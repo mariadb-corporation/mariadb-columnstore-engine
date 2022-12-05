@@ -29,6 +29,7 @@ namespace funcexp
 CalpontSystemCatalog::ColType Func_space::operationType(FunctionParm& fp,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
+  resultType.colWidth = 32;
   return resultType;
 }
 
