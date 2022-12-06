@@ -763,7 +763,6 @@ void TupleAnnexStep::executeFlatOrderBy()
   bool more = false;
   const uint32_t threadID = 0;
   auto start = std::chrono::steady_clock::now();
-  std::cout << "it works!!" << std::endl;
   try
   {
     more = fInputDL->next(fInputIterator, &rgDataIn);
@@ -847,7 +846,7 @@ void TupleAnnexStep::executeFlatOrderBy()
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderByFlatOrderBy()");
+                    "TupleAnnexStep::executeFlatOrderBy()");
   }
   auto end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
@@ -945,19 +944,48 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   parallelOrderByMutex_.unlock();
 }
 
-bool lowBoundComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
-                  const FlatOrderBy::PermutationType leftPerm, const int64_t target)
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
+  requires(!std::is_same<EncodedKeyType, utils::ConstString>::value) bool
+directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                   const FlatOrderBy::PermutationType leftPerm, const EncodedKeyType target,
+                   const datatypes::Charset& cs)
 {
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
-  int64_t leftValue =
-      rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, leftPerm.rowID);
-  std::cout << "lowBoundComp leftValue " << leftValue << " target " << target << std::endl;
-  return leftValue > target;
+  EncodedKeyType leftValue =
+      rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, leftPerm.rowID);
+  // std::cout << "lowBoundComp isAscDirection " << isAscDirection << " leftValue " << leftValue << " target "
+  //           << target << std::endl;
+  if constexpr (isAscDirection)
+    return leftValue > target;
+  else
+    return leftValue < target;
 }
 
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
+// requires rowgroup::IsAnyKindOfStrings<ColType, StorageType, EncodedKeyType> bool
+  requires std::is_same<EncodedKeyType, utils::ConstString>::value bool
+directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                   const FlatOrderBy::PermutationType leftPerm, const EncodedKeyType target,
+                   const datatypes::Charset& cs)
+{
+  rg.setData(&(rgDatas[leftPerm.rgdataID]));
+  EncodedKeyType leftValue =
+      rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, leftPerm.rowID);
+  // std::cout << "lowBoundComp isAscDirection " << isAscDirection << " leftValue " << leftValue << " target "
+  // << target << std::endl;
+  if constexpr (isAscDirection)
+    return cs.strnncollsp(leftValue, target) > 0;  // leftValue > target;
+  else
+    return cs.strnncollsp(leftValue, target) < 0;  // leftValue < target;
+}
+
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
 size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg,
                                 const uint32_t columnId, const FlatOrderBy::PermutationVec& perm,
-                                const int64_t target)
+                                const EncodedKeyType target)
 {
   using ForwardIt = FlatOrderBy::PermutationVec::const_iterator;
   ForwardIt it;
@@ -965,6 +993,7 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
   ForwardIt last = perm.end();
   std::iterator_traits<ForwardIt>::difference_type count, step;
   count = std::distance(first, last);
+  datatypes::Charset cs(rg.getCharset(columnId));
 
   while (count > 0)
   {
@@ -972,7 +1001,8 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
     step = count / 2;
     std::advance(it, step);
 
-    if (lowBoundComp(rgDatas, rg, columnId, *it, target))  // less
+    if (directionAwareComp<isAscDirection, ColType, StorageType, EncodedKeyType>(rgDatas, rg, columnId, *it,
+                                                                                 target, cs))
     {
       first = ++it;
       count -= step + 1;
@@ -984,22 +1014,24 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
   return std::distance(perm.begin(), first);
 }
 
-ValueRange calcLeftAndRight(const ValueRangesVector& ranges,
-                            const ValueRangesVector::const_reverse_iterator& it,
-                            const vector<int64_t>& lowerBoundValues, rowgroup::RGDataVector& rgDatas,
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
+ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t rangeVectorDist,
+                            const vector<EncodedKeyType>& lowerBoundValues, rowgroup::RGDataVector& rgDatas,
                             const FlatOrderBy::PermutationVec& perm, rowgroup::RowGroup& rg,
                             const uint32_t columnId)
 {
   assert(lowerBoundValues.size() >= 2);
-  size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
-  if (rangeVectorDist > 0 && rangeVectorDist < ranges.size() - 1)  // Nth
+  if (rangeVectorDist > 0 && rangeVectorDist < maxRangeSize)  // Nth
   {
     assert(lowerBoundValues.size() >= rangeVectorDist + 1);
-    int64_t leftLowerBoundValue = lowerBoundValues[rangeVectorDist];
-    int64_t rightLowerBoundValue = lowerBoundValues[rangeVectorDist + 1];
+    auto leftLowerBoundValue = lowerBoundValues[rangeVectorDist];
+    auto rightLowerBoundValue = lowerBoundValues[rangeVectorDist + 1];
     // left can be taken from the prev iteration
-    auto left1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, leftLowerBoundValue);
-    auto right1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, rightLowerBoundValue);
+    auto left1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
+        rgDatas, rg, columnId, perm, leftLowerBoundValue);
+    auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
+        rgDatas, rg, columnId, perm, rightLowerBoundValue);
     std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
               << std::endl;
     return {left1, right1};
@@ -1008,14 +1040,16 @@ ValueRange calcLeftAndRight(const ValueRangesVector& ranges,
   {
     size_t left1 = 0;
     auto rightLowerBoundValue = lowerBoundValues[1];
-    auto right1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, rightLowerBoundValue);
+    auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
+        rgDatas, rg, columnId, perm, rightLowerBoundValue);
     std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
-  if (rangeVectorDist == ranges.size() - 1)  // last
+  if (rangeVectorDist == maxRangeSize)  // last
   {
     auto leftLowerBoundValue = lowerBoundValues.back();
-    auto left1 = binSearchWithPermutation(rgDatas, rg, columnId, perm, leftLowerBoundValue);
+    auto left1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
+        rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = perm.size();
     std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
@@ -1024,102 +1058,296 @@ ValueRange calcLeftAndRight(const ValueRangesVector& ranges,
   return {};
 }
 
-const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
-    const SortingThreads& sortingThreads) const
+template <bool isAscDirection>
+const ValueRangesVector calculateStatsColumnTypeDisp(const SortingThreads& sortingThreads,
+                                                     const size_t maxThreads, const uint32_t columnId)
 {
-  utils::setThreadName("TASOrdStats");
-  ValueRangesVector ranges(fMaxThreads);
-  ValueRangesVector testRanges(fMaxThreads);
-  vector<int64_t> lowerBoundValues(ranges.size());
+  auto& sorting = sortingThreads.front();
+  auto& rg = sorting->getRGRef();
+  auto colType = rg.getColType(columnId);
+  switch (colType)
   {
-    auto& sorting = sortingThreads.front();
-    auto rg = sorting->getRG();
-    const auto [columnId, isAscDirection] = sorting->getSortingColumnsRef().front();
+    case execplan::CalpontSystemCatalog::TINYINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::TINYINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      // WIP !!!!!!!!!!! There are three variants typed cols,
+      // inline short strings, out-of-band long strings
+      // inline short strings are not supported yet
+      auto columnWidth = rg.getColumnWidth(columnId);
+      bool forceInline = rg.getForceInline()[columnId];
+      if (sorting::isDictColumn(colType, columnWidth) && columnWidth >= rg.getStringTableThreshold() &&
+          !forceInline)
+      {
+        // WIP
+        constexpr auto colType = execplan::CalpontSystemCatalog::VARCHAR;
+        using StorageType = utils::ConstString;
+        using EncodedKeyType = utils::ConstString;
+        // No difference b/w VARCHAR, CHAR and TEXT types yet
+        return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                    maxThreads, columnId);
+      }
+      else if (sorting::isDictColumn(colType, columnWidth) &&
+               (columnWidth < rg.getStringTableThreshold() || forceInline))
+      {
+        constexpr auto colType = execplan::CalpontSystemCatalog::VARCHAR;
+        using EncodedKeyType = utils::ConstString;
+        using StorageType = utils::ShortConstString;
+        // No difference b/w VARCHAR, CHAR and TEXT types yet
+        return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                    maxThreads, columnId);
+      }
+      else if (!sorting::isDictColumn(colType, columnWidth))
+      {
+        using EncodedKeyType = utils::ConstString;
+
+        switch (columnWidth)
+        {
+          case 1:
+          {
+            constexpr auto colType = execplan::CalpontSystemCatalog::TINYINT;
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
+            return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                        maxThreads, columnId);
+          }
+
+          case 2:
+          {
+            constexpr auto colType = execplan::CalpontSystemCatalog::SMALLINT;
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
+            return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                        maxThreads, columnId);
+          };
+
+          case 4:
+          {
+            constexpr auto colType = execplan::CalpontSystemCatalog::INT;
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+            return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                        maxThreads, columnId);
+          };
+
+          case 8:
+          {
+            constexpr auto colType = execplan::CalpontSystemCatalog::BIGINT;
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+            return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                        maxThreads, columnId);
+          };
+          default: idbassert(0);
+        }
+      }
+      break;
+    }
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::SMALLINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      auto columnWidth = rg.getColumnWidth(columnId);
+      constexpr auto colType = execplan::CalpontSystemCatalog::DECIMAL;
+
+      if (columnWidth == datatypes::DECIMAL128WIDTH)
+      {
+        using StorageType = datatypes::TSInt128;
+        using EncodedKeyType = datatypes::TSInt128;
+        return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                    maxThreads, columnId);
+      }
+      else if (columnWidth == datatypes::DECIMAL64WIDTH)
+      {
+        using StorageType = datatypes::WidthToSIntegralType<datatypes::DECIMAL64WIDTH>::type;
+        using EncodedKeyType = StorageType;
+        return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                    maxThreads, columnId);
+      }
+      else
+      {
+        throw logging::NotImplementedExcept(
+            "calculateStatsColumnTypeDisp(): U-/DECIMAL has an unexpected width" +
+            std::to_string(columnWidth));
+      }
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::DOUBLE;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::INT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::INT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::FLOAT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::DATE;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+    case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::BIGINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::DATETIME;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::TIME;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::TIMESTAMP;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::UTINYINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::USMALLINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::UINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    {
+      constexpr auto colType = execplan::CalpontSystemCatalog::UBIGINT;
+      using StorageType = datatypes::ColDataTypeToIntegralType<colType>::type;
+      using EncodedKeyType = StorageType;
+      return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
+                                                                                  maxThreads, columnId);
+    }
+
+    default: break;
+  }
+  idbassert(colType && false);
+  return {};
+}
+
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
+const ValueRangesVector calculateStats(const SortingThreads& sortingThreads, rowgroup::RowGroup& rg,
+                                       const size_t maxThreads, const uint32_t columnId)
+{
+  ValueRangesVector ranges(maxThreads);
+  ValueRangesVector testRanges(maxThreads);
+  vector<EncodedKeyType> lowerBoundValues;
+  auto& sorting = sortingThreads.front();
+  {
     const auto& perm = sorting->getPermutation();
-    const auto step = perm.size() / fMaxThreads + ((perm.empty()) ? 0 : 1);
+    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
-    size_t i = 0;
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, ++i)
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it)
     {
-      auto p = (isAscDirection) ? perm[left] : perm[std::min(right, perm.size() - 1)];
+      auto p = perm[left];
       rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-      lowerBoundValues[i] =
-          rg.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(columnId, p.rowID);
+      lowerBoundValues.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
       left = right + ((perm.empty()) ? 0 : 1);
       right = std::min(right + step, perm.size());
     }
   }
-  std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout, ","));
-  std::cout << endl;
 
-  // This algo is completely incorrect
+  // std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout,
+  // ","));
+  std::cout << endl;
+  size_t maxVectorDistance = ranges.size() - 1;
+  // WIP skip the first sorting processed in the beginning
   for (auto& sorting : sortingThreads)
   {
     // WIP
     auto rg = sorting->getRG();
-    const auto [columnId, isAscDirection] = sorting->getSortingColumnsRef().front();
     const auto& perm = sorting->getPermutation();
-    const auto step = perm.size() / fMaxThreads + ((perm.empty()) ? 0 : 1);
+    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
     size_t i = lowerBoundValues.size() - 1;
-    // size_t i = 0;
     auto ita = testRanges.rbegin();
     for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
     {
-      ita->push_back(
-          calcLeftAndRight(testRanges, ita, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
-
-      // switch (i)
-      // {
-      //   case 2: // 1st
-      //   {
-      //     auto left1 = 0;
-      //     rightLowerBoundValue = lowerBoundValues[1];
-      //     auto right1 =
-      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
-      //     std::cout << " case 2 left " << left1 << " right " << right1 << std::endl;
-      //     ita->push_back({left1, right1});
-      //     break;
-      //   }
-      //   case 1: // Nth
-      //   {
-      //     leftLowerBoundValue = lowerBoundValues[1];
-      //     rightLowerBoundValue = lowerBoundValues[2];
-      //     // left can be taken from the prev iteration
-      //     auto left1 =
-      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
-      //     auto right1 =
-      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, rightLowerBoundValue);
-      //     std::cout << " case 1 left " << left1 << " right " << right1 << std::endl;
-      //     ita->push_back({left1, right1});
-      //     break;
-      //   }
-      //   case 0: // last
-      //   {
-      //     leftLowerBoundValue = lowerBoundValues[2];
-      //     auto left1 =
-      //         binSearchWithPermutation(sorting->getRGDatas(), rg, columnId, perm, leftLowerBoundValue);
-      //     auto right1 = perm.size();
-      //     std::cout << " case 0 left " << left1 << " right " << right1 << std::endl;
-      //     ita->push_back({left1, right1});
-      //     break;
-      //   }
-      // }
-
-      // if (isAscDirection)
-      // {
-      //   std::cout << " leftLocal " << rightOrLeftLocal << std::endl;
-      //   // it->push_back({left, right});
-      // }
-      // else
-      // {
-      //   std::cout << " rightLocal " << rightOrLeftLocal << std::endl;
-      //   // it->push_back({left, right});
-      // }
-      it->push_back({left, right});
-
+      size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
+      assert(ranges.size() >= 1);
+      it->push_back(calcLeftAndRight<isAscDirection, ColType, StorageType, EncodedKeyType>(
+          maxVectorDistance, rangeVectorDist, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
+      ita->push_back({left, right});
       std::cout << "stats calc left " << left << " right " << right << std::endl;
       left = right + ((perm.empty()) ? 0 : 1);
       right = std::min(right + step, perm.size());
@@ -1145,7 +1373,19 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
   }
   std::cout << endl;
 
-  return testRanges;
+  return ranges;
+}
+
+const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
+    const SortingThreads& sortingThreads) const
+{
+  utils::setThreadName("TASOrdStats");
+  auto& sorting = sortingThreads.front();
+  const auto [columnId, isAscDirection] = sorting->getSortingColumnsRef().front();
+
+  if (isAscDirection)
+    return calculateStatsColumnTypeDisp<true>(sortingThreads, fMaxThreads, columnId);
+  return calculateStatsColumnTypeDisp<false>(sortingThreads, fMaxThreads, columnId);
 }
 
 // WIP use std::function in init to assign this maybe
