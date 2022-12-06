@@ -927,9 +927,6 @@ const string FlatOrderBy::toString() const
   }
   oss << " offset-" << start_ << " count-" << count_;
 
-  // if (fDistinct)
-  //   oss << " distinct";
-
   oss << endl;
 
   return oss.str();
