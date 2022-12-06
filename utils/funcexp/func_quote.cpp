@@ -41,7 +41,8 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   if (isNull)
   {
-    return "";
+    isNull = true;
+    return "NULL";
   }
 
   size_t strSize = strlen(str.c_str());
