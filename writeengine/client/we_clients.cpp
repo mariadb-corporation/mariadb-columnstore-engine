@@ -497,7 +497,6 @@ void WEClients::write_to_all(const messageqcpp::ByteStream& msg)
   }
 
   ClientList::iterator itor = fPmConnections.begin();
-
   while (itor != fPmConnections.end())
   {
     if (itor->second != NULL)
