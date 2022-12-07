@@ -210,6 +210,7 @@ struct JobInfo
    , stringScanThreshold(1)
    , wfqLimitStart(0)
    , wfqLimitCount(-1)
+   , timeZone(0)
   {
   }
   ResourceManager* rm;
