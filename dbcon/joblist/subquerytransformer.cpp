@@ -109,6 +109,8 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   fSubJobInfo->stringTableThreshold = fOutJobInfo->stringTableThreshold;
   fSubJobInfo->localQuery = fOutJobInfo->localQuery;
   fSubJobInfo->uuid = fOutJobInfo->uuid;
+  fSubJobInfo->timeZone = fOutJobInfo->timeZone;
+
   fOutJobInfo->jobListPtr->addSubqueryJobList(fSubJobList);
 
   fSubJobInfo->smallSideLimit = fOutJobInfo->smallSideLimit;
