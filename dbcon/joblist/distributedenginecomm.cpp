@@ -221,7 +221,7 @@ DistributedEngineComm::~DistributedEngineComm()
   fInstance = 0;
 }
 
-void DistributedEngineComm::Setup()
+int32_t DistributedEngineComm::Setup()
 {
   // This is here to ensure that this function does not get invoked multiple times simultaneously.
   boost::mutex::scoped_lock setupLock(fSetupMutex);
@@ -309,10 +309,9 @@ void DistributedEngineComm::Setup()
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
                  LOG_TYPE_ERROR);
       if (newPmCount == 0)
-      {
         writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
-        break;
-      }
+
+      return 1;
     }
     catch (...)
     {
@@ -322,10 +321,8 @@ void DistributedEngineComm::Setup()
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);
       if (newPmCount == 0)
-      {
         writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
-        break;
-      }
+      return 1;
     }
   }
 
@@ -362,6 +359,7 @@ void DistributedEngineComm::Setup()
 
   newLocks.clear();
   newClients.clear();
+  return 0;
 }
 
 int DistributedEngineComm::Close()
@@ -428,8 +426,8 @@ Error:
     decltype(pmCount) originalPMCount = pmCount;
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    Setup();
-    if (originalPMCount != pmCount)
+    auto rc = Setup();
+    if (rc || originalPMCount != pmCount)
     {
       ostringstream os;
       os << "DEC: lost connection to " << client->addr2String();
@@ -852,7 +850,7 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
     writeToClient(i, msg);
 }
 
-void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
+int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg->buf();
   uint32_t dest;
@@ -876,9 +874,13 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
         /* XXXPAT: This relies on the assumption that the first pmCount "PMS*"
         entries in the config file point to unique PMs */
         for (int i = pmCount - 1; i >= 0; --i)
-          writeToClient(i, msg, senderID);
+        {
+          auto rc = writeToClient(i, msg, senderID);
+          if (rc)
+            return rc;
+        }
 
-        return;
+        return 0;
 
       case BATCH_PRIMITIVE_RUN:
       case DICT_TOKEN_BY_SCAN_COMPARE:
@@ -886,8 +888,7 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
         // and decides the final connection index because it already grabs the
         // caller's queue information
         dest = ism->Interleave;
-        writeToClient(dest, msg, senderID, true);
-        break;
+        return writeToClient(dest, msg, senderID, true);
 
       default: idbassert_s(0, "Unknown message type");
     }
@@ -897,9 +898,10 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
     writeToLog(__FILE__, __LINE__, "No PrimProcs are running", LOG_TYPE_DEBUG);
     throw IDBExcept(ERR_NO_PRIMPROC);
   }
+  return 0;
 }
 
-void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
+int32_t DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg.buf();
   PrimitiveHeader* pm = (PrimitiveHeader*)(ism + 1);
@@ -923,6 +925,7 @@ void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connect
   lk.unlock();
 
   newClients[connection]->write(msg, NULL, senderStats);
+  return 0;
 }
 
 void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueClient> cl, uint32_t connIndex)
@@ -1090,16 +1093,14 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     lk.unlock();
   }
 
+  ClientList::value_type client = fPmConnections[connectionId];
   try
   {
-    ClientList::value_type client = fPmConnections[connectionId];
-
     if (!client->isAvailable())
       return 0;
 
     boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
     client->write(bs, NULL, senderStats);
-    return 0;
   }
   catch (...)
   {
@@ -1118,7 +1119,30 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       map_tok->second->queue.push(sbs);
     }
 
+    int tries = 0;
+    // Try to setup connection with PS, it could be a situation that PS is starting.
+    // MCOL-5263.
+    while (tries < 10 && Setup())
+    {
+      ++tries;
+      std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+
     lk.unlock();
+
+    if (tries == 10)
+    {
+      ostringstream os;
+      os << "DEC: lost connection to " << client->addr2String();
+      writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_ERROR);
+      if (!fIsExeMgr)
+        abort();
+      else
+        throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
+    }
+
+    // Connection was established.
+    return 1;
     /*
                     // reconfig the connection array
                     ClientList tempConns;
@@ -1150,8 +1174,8 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     alarmItem.append(" PrimProc");
     alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
     */
-    throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
   }
+  return 0;
 }
 
 uint32_t DistributedEngineComm::size(uint32_t key)
