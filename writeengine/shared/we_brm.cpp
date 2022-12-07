@@ -43,6 +43,7 @@ using namespace boost;
 #include "we_dctnrycompress.h"
 #include "we_simplesyslog.h"
 #include "we_config.h"
+#include "exceptclasses.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 using namespace idbdatafile;
@@ -1134,234 +1135,243 @@ int BRMWrapper::rollBackBlocks(const VER_t transID, int sessionId)
 
   std::vector<BRM::FileInfo> files;
 
-  for (i = 0; i < lbidList.size(); i++)
+  try
   {
-    verID = (VER_t)transID;
-    // timer.start("vssLookup");
-    // get version id
-
-    verID = blockRsltnMgrPtr->getHighestVerInVB(lbidList[i], transID);
-
-    if (verID < 0)
+    for (i = 0; i < lbidList.size(); i++)
     {
-      std::ostringstream oss;
-      BRM::errString(verID, errorMsg);
-      oss << "vssLookup error encountered while looking up lbid " << lbidList[i] << " and error code is "
-          << verID << " with message " << errorMsg;
-      throw std::runtime_error(oss.str());
-    }
+      verID = (VER_t)transID;
+      // timer.start("vssLookup");
+      // get version id
 
-    // timer.stop("vssLookup");
-    // copy buffer back
-    // look for the block in extentmap
-    // timer.start("lookupLocalEX");
-    rc = blockRsltnMgrPtr->lookupLocal(lbidList[i], /*transID*/ verID, false, weOid, weDbRoot, wePartitionNum,
-                                       weSegmentNum, weFbo);
+      verID = blockRsltnMgrPtr->getHighestVerInVB(lbidList[i], transID);
 
-    if (rc != 0)
-    {
-      std::ostringstream oss;
-      BRM::errString(rc, errorMsg);
-      oss << "lookupLocal from extent map error encountered while looking up lbid:verID " << lbidList[i]
-          << ":" << (uint32_t)verID << " and error code is " << rc << " with message " << errorMsg;
-      throw std::runtime_error(oss.str());
-    }
+      if (verID < 0)
+      {
+        std::ostringstream oss;
+        BRM::errString(verID, errorMsg);
+        oss << "vssLookup error encountered while looking up lbid " << lbidList[i] << " and error code is "
+            << verID << " with message " << errorMsg;
+        throw std::runtime_error(oss.str());
+      }
 
-    // Check whether this lbid is on this PM.
-    dbrootPmMapItor = dbrootPmMap.find(weDbRoot);
+      // timer.stop("vssLookup");
+      // copy buffer back
+      // look for the block in extentmap
+      // timer.start("lookupLocalEX");
+      rc = blockRsltnMgrPtr->lookupLocal(lbidList[i], /*transID*/ verID, false, weOid, weDbRoot,
+                                         wePartitionNum, weSegmentNum, weFbo);
 
-    if (dbrootPmMapItor == dbrootPmMap.end())
-      continue;
+      if (rc != 0)
+      {
+        std::ostringstream oss;
+        BRM::errString(rc, errorMsg);
+        oss << "lookupLocal from extent map error encountered while looking up lbid:verID " << lbidList[i]
+            << ":" << (uint32_t)verID << " and error code is " << rc << " with message " << errorMsg;
+        throw std::runtime_error(oss.str());
+      }
 
-    // timer.stop("lookupLocalEX");
-    Column column;
-    execplan::CalpontSystemCatalog::ColType colType = systemCatalogPtr->colType(weOid);
-    columnOids[weOid] = weOid;
+      // Check whether this lbid is on this PM.
+      dbrootPmMapItor = dbrootPmMap.find(weDbRoot);
 
-    // This must be a dict oid
-    if (colType.columnOID == 0)
-    {
-      colType = systemCatalogPtr->colTypeDct(weOid);
+      if (dbrootPmMapItor == dbrootPmMap.end())
+        continue;
 
-      idbassert(colType.columnOID != 0);
-      idbassert(colType.ddn.dictOID == weOid);
-    }
+      // timer.stop("lookupLocalEX");
+      Column column;
+      execplan::CalpontSystemCatalog::ColType colType = systemCatalogPtr->colType(weOid);
 
-    CalpontSystemCatalog::ColDataType colDataType = colType.colDataType;
-    ColType weColType;
-    Convertor::convertColType(colDataType, colType.colWidth, weColType);
-    column.colWidth = Convertor::getCorrectRowWidth(colDataType, colType.colWidth);
-    column.colType = weColType;
-    column.colDataType = colDataType;
-    column.dataFile.fid = weOid;
-    column.dataFile.fDbRoot = weDbRoot;
-    column.dataFile.fPartition = wePartitionNum;
-    column.dataFile.fSegment = weSegmentNum;
-    column.compressionType = colType.compressionType;
+      columnOids[weOid] = weOid;
 
-    BRM::FileInfo aFile;
-    aFile.oid = weOid;
-    aFile.partitionNum = wePartitionNum;
-    aFile.dbRoot = weDbRoot;
-    aFile.segmentNum = weSegmentNum;
-    aFile.compType = colType.compressionType;
-    files.push_back(aFile);
+      // This must be a dict oid
+      if (colType.columnOID == 0)
+      {
+        colType = systemCatalogPtr->colTypeDct(weOid);
 
-    if (colType.compressionType == 0)
-      fileOp.chunkManager(NULL);
-    else
-      fileOp.chunkManager(&chunkManager);
+        idbassert(colType.columnOID != 0);
+        idbassert(colType.ddn.dictOID == weOid);
+      }
 
-    if (isDebug(DEBUG_3))
+      CalpontSystemCatalog::ColDataType colDataType = colType.colDataType;
+      ColType weColType;
+      Convertor::convertColType(colDataType, colType.colWidth, weColType);
+      column.colWidth = Convertor::getCorrectRowWidth(colDataType, colType.colWidth);
+      column.colType = weColType;
+      column.colDataType = colDataType;
+      column.dataFile.fid = weOid;
+      column.dataFile.fDbRoot = weDbRoot;
+      column.dataFile.fPartition = wePartitionNum;
+      column.dataFile.fSegment = weSegmentNum;
+      column.compressionType = colType.compressionType;
+
+      BRM::FileInfo aFile;
+      aFile.oid = weOid;
+      aFile.partitionNum = wePartitionNum;
+      aFile.dbRoot = weDbRoot;
+      aFile.segmentNum = weSegmentNum;
+      aFile.compType = colType.compressionType;
+      files.push_back(aFile);
+
+      if (colType.compressionType == 0)
+        fileOp.chunkManager(NULL);
+      else
+        fileOp.chunkManager(&chunkManager);
+
+      if (isDebug(DEBUG_3))
 #ifndef __LP64__
-      printf("\n\tuncommitted lbid - lbidList[i]=%lld weOid =%d weFbo=%d verID=%d, weDbRoot=%d", lbidList[i],
-             weOid, weFbo, verID, weDbRoot);
+        printf("\n\tuncommitted lbid - lbidList[i]=%lld weOid =%d weFbo=%d verID=%d, weDbRoot=%d",
+               lbidList[i], weOid, weFbo, verID, weDbRoot);
 
 #else
-      printf("\n\tuncommitted lbid - lbidList[i]=%ld weOid =%d weFbo=%d verID=%d, weDbRoot=%d", lbidList[i],
-             weOid, weFbo, verID, weDbRoot);
+        printf("\n\tuncommitted lbid - lbidList[i]=%ld weOid =%d weFbo=%d verID=%d, weDbRoot=%d", lbidList[i],
+               weOid, weFbo, verID, weDbRoot);
 #endif
-    // look for the block in the version buffer
-    // timer.start("lookupLocalVB");
-    rc = blockRsltnMgrPtr->lookupLocal(lbidList[i], verID, true, vbOid, vbDbRoot, vbPartitionNum,
-                                       vbSegmentNum, vbFbo);
+      // look for the block in the version buffer
+      // timer.start("lookupLocalVB");
+      rc = blockRsltnMgrPtr->lookupLocal(lbidList[i], verID, true, vbOid, vbDbRoot, vbPartitionNum,
+                                         vbSegmentNum, vbFbo);
 
-    if (rc != 0)
-    {
-      std::ostringstream oss;
-      BRM::errString(rc, errorMsg);
-      oss << "lookupLocal from version buffer error encountered while looking up lbid:verID " << lbidList[i]
-          << ":" << (uint32_t)verID << " and error code is " << rc << " with message " << errorMsg;
-      throw std::runtime_error(oss.str());
-    }
+      if (rc != 0)
+      {
+        std::ostringstream oss;
+        BRM::errString(rc, errorMsg);
+        oss << "lookupLocal from version buffer error encountered while looking up lbid:verID " << lbidList[i]
+            << ":" << (uint32_t)verID << " and error code is " << rc << " with message " << errorMsg;
+        throw std::runtime_error(oss.str());
+      }
 
-    if (pSourceFile == 0)  //@Bug 2314. Optimize the version buffer open times.
-    {
-      currentVbOid = vbOid;
-      sourceFileInfo.oid = currentVbOid;
-      sourceFileInfo.fPartition = 0;
-      sourceFileInfo.fSegment = 0;
-      sourceFileInfo.fDbRoot = weDbRoot;
-      errno = 0;
-      pSourceFile = openFile(sourceFileInfo, "r+b");
+      if (pSourceFile == 0)  //@Bug 2314. Optimize the version buffer open times.
+      {
+        currentVbOid = vbOid;
+        sourceFileInfo.oid = currentVbOid;
+        sourceFileInfo.fPartition = 0;
+        sourceFileInfo.fSegment = 0;
+        sourceFileInfo.fDbRoot = weDbRoot;
+        errno = 0;
+        pSourceFile = openFile(sourceFileInfo, "r+b");
 
-      if (pSourceFile == NULL)
+        if (pSourceFile == NULL)
+        {
+          std::ostringstream oss;
+          Convertor::mapErrnoToString(errno, errorMsg);
+          oss << "Error encountered while opening version buffer file oid:dbroot = " << currentVbOid << ":"
+              << weDbRoot << " and error message:" << errorMsg;
+          throw std::runtime_error(oss.str());
+        }
+      }
+
+      // timer.stop("lookupLocalVB");
+      if (isDebug(DEBUG_3))
+#ifndef __LP64__
+        printf("\n\tuncommitted lbid - lbidList[i]=%lld vbOid =%d vbFbo=%d\n", lbidList[i], vbOid, vbFbo);
+
+#else
+        printf("\n\tuncommitted lbid - lbidList[i]=%ld vbOid =%d vbFbo=%d\n", lbidList[i], vbOid, vbFbo);
+#endif
+
+      //@Bug 2293 Version buffer file information cannot be obtained from lookupLocal
+      if (vbOid != currentVbOid)
+      {
+        currentVbOid = vbOid;
+        // cout << "VB file changed to " << vbOid << endl;
+        delete pSourceFile;
+        sourceFileInfo.oid = currentVbOid;
+        sourceFileInfo.fPartition = 0;
+        sourceFileInfo.fSegment = 0;
+        sourceFileInfo.fDbRoot = weDbRoot;
+        errno = 0;
+        pSourceFile = openFile(sourceFileInfo, "r+b");
+
+        if (pSourceFile == NULL)
+        {
+          std::ostringstream oss;
+          Convertor::mapErrnoToString(errno, errorMsg);
+          oss << "Error encountered while opening version buffer file oid:dbroot = " << currentVbOid << ":"
+              << weDbRoot << " and error message:" << errorMsg;
+          throw std::runtime_error(oss.str());
+        }
+      }
+
+      targetFileInfo.oid = weOid;
+      targetFileInfo.fPartition = wePartitionNum;
+      targetFileInfo.fSegment = weSegmentNum;
+      targetFileInfo.fDbRoot = weDbRoot;
+      //      printf("\n\tsource file info - oid =%d fPartition=%d fSegment=%d, fDbRoot=%d",
+      //      sourceFileInfo.oid, sourceFileInfo.fPartition, sourceFileInfo.fSegment, sourceFileInfo.fDbRoot);
+      //      printf("\n\ttarget file info - oid =%d fPartition=%d fSegment=%d, fDbRoot=%d", weOid,
+      //      wePartitionNum, weSegmentNum, weDbRoot);
+      // Check whether the file is on this pm.
+
+      if (column.compressionType != 0)
+      {
+        pTargetFile = fileOp.getFilePtr(column, false);  // @bug 5572 HDFS tmp file
+      }
+      else if (fileOpenList.find(targetFileInfo) != fileOpenList.end())
+      {
+        pTargetFile = fileOpenList[targetFileInfo];
+      }
+      else
+      {
+        pTargetFile = openFile(targetFileInfo, "r+b");
+
+        if (pTargetFile != NULL)
+          fileOpenList[targetFileInfo] = pTargetFile;
+      }
+
+      if (pTargetFile == NULL)
       {
         std::ostringstream oss;
         Convertor::mapErrnoToString(errno, errorMsg);
-        oss << "Error encountered while opening version buffer file oid:dbroot = " << currentVbOid << ":"
-            << weDbRoot << " and error message:" << errorMsg;
-        throw std::runtime_error(oss.str());
+        oss << "Error encountered while opening source file oid:dbroot:partition:segment = " << weOid << ":"
+            << weDbRoot << ":" << wePartitionNum << ":" << weSegmentNum << " and error message:" << errorMsg;
+        errorMsg = oss.str();
+        goto cleanup;
       }
-    }
 
-    // timer.stop("lookupLocalVB");
-    if (isDebug(DEBUG_3))
-#ifndef __LP64__
-      printf("\n\tuncommitted lbid - lbidList[i]=%lld vbOid =%d vbFbo=%d\n", lbidList[i], vbOid, vbFbo);
+      // timer.start("copyVBBlock");
+      std::vector<BRM::LBIDRange> lbidRangeList;
+      BRM::LBIDRange range;
+      range.start = lbidList[i];
+      range.size = 1;
+      lbidRangeList.push_back(range);
+      rc = blockRsltnMgrPtr->dmlLockLBIDRanges(lbidRangeList, transID);
 
-#else
-      printf("\n\tuncommitted lbid - lbidList[i]=%ld vbOid =%d vbFbo=%d\n", lbidList[i], vbOid, vbFbo);
-#endif
+      if (rc != 0)
+      {
+        BRM::errString(rc, errorMsg);
+        goto cleanup;
+      }
 
-    //@Bug 2293 Version buffer file information cannot be obtained from lookupLocal
-    if (vbOid != currentVbOid)
-    {
-      currentVbOid = vbOid;
-      // cout << "VB file changed to " << vbOid << endl;
-      delete pSourceFile;
-      sourceFileInfo.oid = currentVbOid;
-      sourceFileInfo.fPartition = 0;
-      sourceFileInfo.fSegment = 0;
-      sourceFileInfo.fDbRoot = weDbRoot;
-      errno = 0;
-      pSourceFile = openFile(sourceFileInfo, "r+b");
+      rc = copyVBBlock(pSourceFile, pTargetFile, vbFbo, weFbo, &fileOp, column);
 
-      if (pSourceFile == NULL)
+      // cout << "WES rolled block " << lbidList[i] << endl;
+      if (rc != 0)
       {
         std::ostringstream oss;
-        Convertor::mapErrnoToString(errno, errorMsg);
-        oss << "Error encountered while opening version buffer file oid:dbroot = " << currentVbOid << ":"
-            << weDbRoot << " and error message:" << errorMsg;
-        throw std::runtime_error(oss.str());
+        oss << "Error encountered while copying lbid " << lbidList[i]
+            << " to source file oid:dbroot:partition:segment = " << weOid << ":" << weDbRoot << ":"
+            << wePartitionNum << ":" << weSegmentNum;
+        errorMsg = oss.str();
+        goto cleanup;
       }
+
+      pTargetFile->flush();
+      rc = blockRsltnMgrPtr->dmlReleaseLBIDRanges(lbidRangeList);
+
+      if (rc != 0)
+      {
+        BRM::errString(rc, errorMsg);
+        goto cleanup;
+      }
+
+      // timer.stop("copyVBBlock");
+      if (rc != NO_ERROR)
+        goto cleanup;
     }
-
-    targetFileInfo.oid = weOid;
-    targetFileInfo.fPartition = wePartitionNum;
-    targetFileInfo.fSegment = weSegmentNum;
-    targetFileInfo.fDbRoot = weDbRoot;
-    //      printf("\n\tsource file info - oid =%d fPartition=%d fSegment=%d, fDbRoot=%d", sourceFileInfo.oid,
-    //      sourceFileInfo.fPartition, sourceFileInfo.fSegment, sourceFileInfo.fDbRoot); printf("\n\ttarget
-    //      file info - oid =%d fPartition=%d fSegment=%d, fDbRoot=%d", weOid, wePartitionNum, weSegmentNum,
-    //      weDbRoot);
-    // Check whether the file is on this pm.
-
-    if (column.compressionType != 0)
-    {
-      pTargetFile = fileOp.getFilePtr(column, false);  // @bug 5572 HDFS tmp file
-    }
-    else if (fileOpenList.find(targetFileInfo) != fileOpenList.end())
-    {
-      pTargetFile = fileOpenList[targetFileInfo];
-    }
-    else
-    {
-      pTargetFile = openFile(targetFileInfo, "r+b");
-
-      if (pTargetFile != NULL)
-        fileOpenList[targetFileInfo] = pTargetFile;
-    }
-
-    if (pTargetFile == NULL)
-    {
-      std::ostringstream oss;
-      Convertor::mapErrnoToString(errno, errorMsg);
-      oss << "Error encountered while opening source file oid:dbroot:partition:segment = " << weOid << ":"
-          << weDbRoot << ":" << wePartitionNum << ":" << weSegmentNum << " and error message:" << errorMsg;
-      errorMsg = oss.str();
-      goto cleanup;
-    }
-
-    // timer.start("copyVBBlock");
-    std::vector<BRM::LBIDRange> lbidRangeList;
-    BRM::LBIDRange range;
-    range.start = lbidList[i];
-    range.size = 1;
-    lbidRangeList.push_back(range);
-    rc = blockRsltnMgrPtr->dmlLockLBIDRanges(lbidRangeList, transID);
-
-    if (rc != 0)
-    {
-      BRM::errString(rc, errorMsg);
-      goto cleanup;
-    }
-
-    rc = copyVBBlock(pSourceFile, pTargetFile, vbFbo, weFbo, &fileOp, column);
-
-    // cout << "WES rolled block " << lbidList[i] << endl;
-    if (rc != 0)
-    {
-      std::ostringstream oss;
-      oss << "Error encountered while copying lbid " << lbidList[i]
-          << " to source file oid:dbroot:partition:segment = " << weOid << ":" << weDbRoot << ":"
-          << wePartitionNum << ":" << weSegmentNum;
-      errorMsg = oss.str();
-      goto cleanup;
-    }
-
-    pTargetFile->flush();
-    rc = blockRsltnMgrPtr->dmlReleaseLBIDRanges(lbidRangeList);
-
-    if (rc != 0)
-    {
-      BRM::errString(rc, errorMsg);
-      goto cleanup;
-    }
-
-    // timer.stop("copyVBBlock");
-    if (rc != NO_ERROR)
-      goto cleanup;
+  }
+  // MCOL-5263.
+  catch (logging::IDBExcept&)
+  {
+    return ERR_BRM_NETWORK;
   }
 
   // timer.start("vbRollback");

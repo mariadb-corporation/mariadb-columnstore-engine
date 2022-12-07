@@ -146,7 +146,7 @@ class DistributedEngineComm
    * Writes a primitive message to a primitive server. Msg needs to conatin an ISMPacketHeader. The
    * LBID is extracted from the ISMPacketHeader and used to determine the actual P/M to send to.
    */
-  EXPORT void write(uint32_t key, const messageqcpp::SBS& msg);
+  EXPORT int32_t write(uint32_t key, const messageqcpp::SBS& msg);
 
   // EXPORT void throttledWrite(const messageqcpp::ByteStream& msg);
 
@@ -188,7 +188,7 @@ class DistributedEngineComm
    */
   EXPORT uint32_t size(uint32_t key);
 
-  EXPORT void Setup();
+  EXPORT int32_t Setup();
 
   EXPORT void addDECEventListener(DECEventListener*);
   EXPORT void removeDECEventListener(DECEventListener*);

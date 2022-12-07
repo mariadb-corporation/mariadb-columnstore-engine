@@ -37,6 +37,8 @@
 #include "we_ddlcommandclient.h"
 #include "oamcache.h"
 #include "liboamcpp.h"
+#include "resourcemanager.h"
+
 using namespace std;
 using namespace WriteEngine;
 using namespace dmlpackage;
@@ -370,7 +372,7 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
           int weRc = 0;
 
           // version rollback, Bulkrollback
-          weRc = rollBackTransaction(uniqueId, txnid, fSessionID, errorMsg);
+          weRc = tryToRollBackTransaction(uniqueId, txnid, fSessionID, errorMsg);
 
           if (weRc == 0)
           {
@@ -413,7 +415,7 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
         {
           std::string errorMsg("");
           logging::logCommand(cpackage.get_SessionID(), txnid.id, "ROLLBACK;");
-          int weRc = rollBackTransaction(uniqueId, txnid, fSessionID, errorMsg);
+          int weRc = tryToRollBackTransaction(uniqueId, txnid, fSessionID, errorMsg);
 
           if (weRc != 0)
           {

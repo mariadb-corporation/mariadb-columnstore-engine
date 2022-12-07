@@ -266,6 +266,27 @@ int DMLPackageProcessor::commitTransaction(uint64_t uniqueId, BRM::TxnID txnID)
   return rc;
 }
 
+// Tries to rollback transaction, if network error tries one more time
+// MCOL-5263.
+int32_t DMLPackageProcessor::tryToRollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
+                                                      string& errorMsg)
+{
+  auto weRc = rollBackTransaction(uniqueId, txnID, sessionID, errorMsg);
+  if (weRc)
+  {
+    weRc = rollBackTransaction(uniqueId, txnID, sessionID, errorMsg);
+    if (weRc == 0)
+    {
+      // Setup connection in WE with PS.
+      joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+      joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+      weRc = fEc->Setup();
+    }
+  }
+
+  return weRc;
+}
+
 int DMLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
                                              std::string& errorMsg)
 {
