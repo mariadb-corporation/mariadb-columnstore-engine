@@ -379,8 +379,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     failure: 'ignore',
     image: 'alpine/git',
     commands: [
-      'git clone --depth 1  https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
-      "sed -i 's|dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup|cspkg.s3.amazonaws.com/cs_repo|' docker/Dockerfile",
+      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
+      'touch docker/.secrets',
     ],
   },
   dockerhub:: {
@@ -390,12 +390,17 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
+      MCS_REPO: 'columnstore',
+      DEV: 'true',
+      MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      CMAPI_REPO: 'cmapi',
+      CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/cmapi/develop/latest/' + arch + '/',
     },
     settings: {
       repo: 'mariadb/enterprise-columnstore-dev',
       context: 'docker',
       dockerfile: 'docker/Dockerfile',
-      build_args_from_env: ['VERSION'],
+      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV'],
       tags: container_tags,
       username: {
         from_secret: 'dockerhub_user',
