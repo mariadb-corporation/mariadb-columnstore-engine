@@ -26,6 +26,7 @@ CREATE TABLE t1
  t1_BIGINT BIGINT,
  t1_BIGINT_UNSIGNED BIGINT UNSIGNED
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 # Test Decimal datatypes
@@ -38,22 +39,25 @@ CREATE TABLE t2
  t2_FLOAT FLOAT,
  t2_FLOAT_UNSIGNED FLOAT UNSIGNED
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
 # Test String datatypes
-# #Bug: MCOL-4412, Create Table with longblob/longtext column Internal error: Lost connection to DDLProc
 CREATE TABLE t3
 (
  t3_BLOB BLOB,
  t3_TINYBLOB TINYBLOB,
  t3_MEDIUMBLOB MEDIUMBLOB,
+ t3_LONGBLOB LONGBLOB,
  t3_CHAR_100 CHAR(100),
  t3_VARCHAR_10 VARCHAR(10),
  t3_VARCHAR_500 VARCHAR(500),
  t3_TEXT TEXT,
  t3_TINYTEXT TINYTEXT,
- t3_MEDIUMTEXT MEDIUMTEXT
+ t3_MEDIUMTEXT MEDIUMTEXT,
+ t3_LONGTEXT LONGTEXT
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t3;
 
 # Test Date and Time datatypes
@@ -67,6 +71,7 @@ CREATE TABLE t4
  t4_TIMESTAMP TIMESTAMP,
  t4_TIMESTAMP_5 TIMESTAMP(5)
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)// /`t4_TIMESTAMP` timestamp NULL DEFAULT NULL,/`t4_TIMESTAMP` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),/ /`t4_TIMESTAMP_5` timestamp\(5\) NULL DEFAULT NULL/`t4_TIMESTAMP_5` timestamp(5) NOT NULL DEFAULT '0000-00-00 00:00:00.00000'/
 SHOW CREATE TABLE t4;
 
 # Test with mixed datatypes
@@ -82,6 +87,7 @@ CREATE TABLE t5
  t5_TIME TIME,
  t5_TIMESTAMP TIMESTAMP
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)// /`t5_TIMESTAMP` timestamp NULL DEFAULT NULL/`t5_TIMESTAMP` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()/
 SHOW CREATE TABLE t5;
 
 # Clean UP
