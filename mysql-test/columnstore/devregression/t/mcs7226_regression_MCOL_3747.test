@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists cs1;
+--enable_warnings
+
 create table cs1(key_ bigint) engine=columnstore;
 insert into cs1 values (42),(43),(45),(666),(777),(333);
  
@@ -16,6 +19,8 @@ select key_, count(*) from cs1 where key_ in (select * from (select key_ from cs
  
 select * from (select key_, count(*) from cs1 where key_ in (select * from (select key_ from cs1 group by key_ order by key_ limit 2) a1) group by key_) a2 order by 1;
 
+--disable_warnings
 drop table cs1;
+--enable_warnings
 #
 

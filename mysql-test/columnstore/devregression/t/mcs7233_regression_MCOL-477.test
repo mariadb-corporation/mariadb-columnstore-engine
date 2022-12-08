@@ -8,13 +8,19 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists test.mcol477;
+--enable_warnings
+
 create table test.mcol477 (a int, b int) engine=columnstore comment='autoincrement=a,9';
 insert into test.mcol477 set b=1;
 select * from test.mcol477;
 alter table test.mcol477 comment='autoincrement=25';
 insert into test.mcol477 set b=2;
 select * from test.mcol477;
+
+--disable_warnings
 drop table test.mcol477;
+--enable_warnings
 #
 

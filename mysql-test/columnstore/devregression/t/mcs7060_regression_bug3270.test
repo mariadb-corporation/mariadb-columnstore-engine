@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3270;
+--enable_warnings
+
 create table bug3270 (c1 decimal(12, 6), c2 float) engine=columnstore;
 insert into bug3270 
 values	(5.240620, 5.24062e+06), (7.240620, 7.24062e+06), (9.940620, 9.94062e+06), (5.240620, 5.24062), (5.240720, 5.240720), 
@@ -23,6 +26,8 @@ select truncate(c1, 0), truncate(c1, 1), truncate(c1, 2) from bug3270 order by 1
 select truncate(c2, 0), truncate(c2, 1), truncate(c2, 2) from bug3270 order by 1,2,3;
 
 select truncate(c2 ,2), count(*) from bug3270 group by 1 order by 1, 2;
+--disable_warnings
 drop table if exists bug3270;
+--enable_warnings
 #
 

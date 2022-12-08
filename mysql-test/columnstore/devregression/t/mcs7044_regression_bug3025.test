@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3025;
+--enable_warnings
 
 create table bug3025(value integer(5)) engine=Columnstore;
 insert into bug3025 values (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
@@ -37,7 +39,8 @@ order by 1, 2;
 
 select IF(value<=1000,'<=1000', '>1000') a, isnull(IF(value<=1000,'<=1000', '>1000')) b from bug3025 group by 1,2 order by 2,1;
 
-
+--disable_warnings
 drop table if exists bug3025;
+--enable_warnings
 #
 

@@ -14,10 +14,12 @@ USE tpch1;
    Note: Adding this because code that directly involved this bug was modified
    Other regression involved is working_tpch1_compareLogOnly/misc/bug5764.sql*/
 
+--disable_warnings
 drop table if exists t3813_1;
 drop table if exists t3813_2;
 drop table if exists t3813_3;
 drop table if exists t3813_4;
+--enable_warnings
 
 create table t3813_1
 (id int
@@ -64,10 +66,11 @@ select * from view_test;
 /*Notes*/
 /*If I remove either the 1st or the 3rd LEFT JOINs from the VIEW definition, the SELECT * from VIEW will work. (I cannot remove the 2nd LEFT JOIN since the 3rd is based on that one)*/
 /*Replacing COLUMNSTORE engine to INNODB the view the SELECT * from VIEW will work, but if one of the tables is COLUMNSTORE the error will thrown*/
+--disable_warnings
 drop table if exists t3813_1;
 drop table if exists t3813_2;
 drop table if exists t3813_3;
 drop table if exists t3813_4;
-
+--enable_warnings
 #
 

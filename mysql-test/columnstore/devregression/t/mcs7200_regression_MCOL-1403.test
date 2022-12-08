@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mcol1403a;
 drop table if exists mcol1403b;
+--enable_warnings
 
 create table mcol1403a (a int, b varchar(4)) engine=columnstore;
 create table mcol1403b (a int, b char(20), c varchar(20)) engine=columnstore;
@@ -26,7 +28,9 @@ select * from mcol1403b where lower(c) like 'majestic12 ';
 select concat(b, '#') from mcol1403b where b like '% ';
 select concat(c, '#') from mcol1403b where c like '% ';
 
+--disable_warnings
 drop table mcol1403a;
 drop table mcol1403b;
+--enable_warnings
 #
 

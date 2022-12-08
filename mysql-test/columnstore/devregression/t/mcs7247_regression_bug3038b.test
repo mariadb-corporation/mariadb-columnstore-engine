@@ -11,8 +11,10 @@ USE tpch1;
 /* Test case from Radek at CognitiveMatch - customer who bought based on us adding the multi-value in clause feature. */
 
 /* First test using IDB tables. */
+--disable_warnings
 drop table if exists agg_fact_pageview;
 drop table if exists dim_date;
+--enable_warnings
 create table AGG_FACT_PAGEVIEW
 (
         server_day_date         date ,
@@ -517,7 +519,9 @@ order by
   `DIM_DATE`.`day_of_month_number` ASC, ISNULL(`AGG_FACT_PAGEVIEW`.`organisation_name`), `AGG_FACT_PAGEVIEW`.`organisation_name` ASC;
 
 
+--disable_warnings
 drop table if exists agg_fact_pageview;
 drop table if exists dim_date;
+--enable_warnings
 #
 

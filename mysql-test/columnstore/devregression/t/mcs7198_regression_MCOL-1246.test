@@ -9,9 +9,12 @@
 USE tpch1;
 #
 #-- Support SQL-92 matching for spaces
+--disable_warnings
 drop table if exists mcol1246a;
 drop table if exists mcol1246b;
 drop table if exists mcol1246c;
+--enable_warnings
+
 #-- varchar(7) for extent elimination check
 create table mcol1246a (a int, b varchar(7)) engine=columnstore;
 create table mcol1246b (a int, b varchar(20)) engine=columnstore;
@@ -37,8 +40,10 @@ select * from mcol1246a where b LIKE 'ABC';
 select * from mcol1246b where b LIKE 'ABC';
 select * from mcol1246c where b LIKE 'ABC';
 
+--disable_warnings
 drop table mcol1246a;
 drop table mcol1246b;
 drop table mcol1246c;
+--enable_warnings
 #
 

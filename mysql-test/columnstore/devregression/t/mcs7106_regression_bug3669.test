@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists stringtest;
+--enable_warnings
+
 create table stringtest (c1 char(10), c2 varchar(10), c3 varchar(6))engine=columnstore;
 insert into stringtest values ('abc','cde','abc'), ('cde','abc','cde');
 select * from stringtest where c1='abc' or c2='abc';
@@ -17,6 +20,9 @@ select * from stringtest where c2='abc  ';
 select * from stringtest where c1='abc ' or c2='abc  ';
 select * from stringtest where c1 = 'abc' or c3='cde  ';
 select concat('abc ', c2), concat('cde ', c3) from stringtest;
+
+--disable_warnings
 drop table stringtest;
+--enable_warnings
 #
 

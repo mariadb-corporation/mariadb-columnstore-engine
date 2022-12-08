@@ -8,10 +8,16 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists test.mcol163;
+--enable_warnings
+
 create table test.mcol163 (a int, b double, c double precision) engine=columnstore;
 insert into test.mcol163 values (1,1.1,1.1);
 select * from test.mcol163;
+
+--disable_warnings
 drop table test.mcol163;
+--enable_warnings
 #
 

@@ -9,6 +9,7 @@
 USE tpch1;
 #
 --disable_warnings
+--disable_warnings
 DROP TABLE IF EXISTS `pv_facts`;
 --enable_warnings
 #
@@ -348,5 +349,6 @@ count(*) over (partition by visit_id ) as pvs,
 from pv_facts
 where visit_id='U1mQdAoBCjUAAHbgZcsAAABS') a;
 #
+--disable_warnings
 DROP TABLE `pv_facts`;
 #

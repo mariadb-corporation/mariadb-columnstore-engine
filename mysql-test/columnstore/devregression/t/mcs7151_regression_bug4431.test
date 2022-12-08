@@ -8,21 +8,26 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug4431_1;
 drop table if exists bug4431_2;
 drop table if exists bug4431_3;
+--enable_warnings
 
 create table bug4431_1 (date int, col2 date) engine=columnstore;
 create table bug4431_2 (`date` int, col2 date) engine=columnstore;
 create table bug4431_3 (col2 date) engine=columnstore;
 alter table bug4431_3 add column date int;
-alter table bug4431_3 drop column date;
+alter table bug4431_3 --disable_warnings
+drop column date;
 
 insert into bug4431_1 values (1, '2012-06-06'),(2, '2012-06-06'),(3, '2012-06-06'),(4, '2012-06-06');
 select * from bug4431_1;
 
+--disable_warnings
 drop table bug4431_1;
 drop table bug4431_2;
 drop table bug4431_3;
+--enable_warnings
 #
 

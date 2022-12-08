@@ -8,10 +8,16 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mcol3395;
+--enable_warnings
+
 create table mcol3395 (c1 char(10), c2 varchar(10), c3 varchar(6))engine=columnstore;
 insert into mcol3395 values ('abc','cde','abc'), ('cde','abc','cde');
 select * from mcol3395 where c2='abc';
+
+--disable_warnings
 drop table mcol3395;
+--enable_warnings
 #
 

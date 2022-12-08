@@ -7,10 +7,12 @@ DROP DATABASE IF EXISTS mcol641_delete_db;
 CREATE DATABASE mcol641_delete_db;
 USE mcol641_delete_db;
 
+--disable_warnings
 DROP PROCEDURE IF EXISTS signedinsertproc;
 DROP PROCEDURE IF EXISTS signeddeleteproc;
 DROP PROCEDURE IF EXISTS unsignedinsertproc;
 DROP PROCEDURE IF EXISTS unsigneddeleteproc;
+--enable_warnings
 
 DELIMITER //;
 
@@ -99,12 +101,14 @@ CREATE PROCEDURE unsigneddeleteproc ()
 
 DELIMITER ;//
 
+--disable_warnings
 DROP TABLE IF EXISTS cs1;
 DROP TABLE IF EXISTS cs2;
 DROP TABLE IF EXISTS cs3;
 DROP TABLE IF EXISTS cs4;
 DROP TABLE IF EXISTS cs5;
 DROP TABLE IF EXISTS cs6;
+--enable_warnings
 
 CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(19)) ENGINE=columnstore;
 CREATE TABLE cs2 (d1 DECIMAL(38,10), d2 DECIMAL(19,10)) ENGINE=columnstore;
@@ -324,8 +328,10 @@ SELECT "unsignedtest10", d1, d2 FROM cs6;
 # Deletes with functions and expressions in the WHERE clause
 
 # Clean UP
+--disable_warnings
 DROP PROCEDURE IF EXISTS signedinsertproc;
 DROP PROCEDURE IF EXISTS signeddeleteproc;
 DROP PROCEDURE IF EXISTS unsignedinsertproc;
 DROP PROCEDURE IF EXISTS unsigneddeleteproc;
 DROP DATABASE mcol641_delete_db;
+--enable_warnings

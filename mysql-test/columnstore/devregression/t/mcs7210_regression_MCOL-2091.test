@@ -15,5 +15,8 @@ drop table if exists t1;
 create table t1 (c1 int, c2 int, c3 int, c4 int)engine=columnstore;
 insert into t1 values (1,2,3,4),(1,2,3,4),(1,2,3,4),(1,2,3,4);
 select  c1,count(distinct c2) as c2,count(distinct c3) as c3, avg_mode(c4) as c4 from t1 group by c1;
+
+--disable_warnings
 drop table if exists t1;
+--enable_warnings
 #

@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists t;
+--enable_warnings
+
 create table t(a int, b varchar(10), c decimal(7,2)) engine=columnstore;
 insert into t(a,b,c) values (1,'x',10),(2,'x',11), (3, 'x', 12), (1,'y',12),(2,'y',11), (3, 'y', 10);
  
@@ -56,6 +59,8 @@ from t
 group by bu
 order by 3;
 
+--disable_warnings
 drop table if exists t;
+--enable_warnings
 #
 

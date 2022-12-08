@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists trow;
+--enable_warnings
+
 create table trow(col1 int, col2 int) engine=columnstore;
 insert into trow values(1,2),(3,4);
 select * from trow;
@@ -21,5 +24,9 @@ select * from trow;
 delete from trow;
 delete from trow where col2=20;
 select * from trow;
-drop table trow;#
+
+--disable_warnings
+drop table trow;
+--enable_warnings
+#
 

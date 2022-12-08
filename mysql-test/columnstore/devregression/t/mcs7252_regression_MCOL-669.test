@@ -9,8 +9,10 @@
 USE tpch1;
 #
 
+--disable_warnings
 drop table if exists MCOL_669_a;
 drop table if exists MCOL_669_B;
+--enable_warnings
 
 CREATE TABLE MCOL_669_a (a int, b text) engine=columnstore;
 CREATE TABLE MCOL_669_b (a int, b text) engine=columnstore;
@@ -28,7 +30,8 @@ INSERT INTO MCOL_669_b SELECT * FROM MCOL_669_a;
 SELECT a, length(b) FROM MCOL_669_a;
 SELECT a, length(b) FROM MCOL_669_b;
 #
+--disable_warnings
 DROP TABLE MCOL_669_a;
 DROP TABLE MCOL_669_b;
-
+--enable_warnings
 #

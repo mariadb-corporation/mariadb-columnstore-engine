@@ -18,5 +18,7 @@ insert into bug4391 (c2) values (1);
 insert into bug4391 (c2) values (2),(3);
 select * from bug4391;
 #
+--disable_warnings
 drop table if exists bug4391;
+--enable_warnings
 #

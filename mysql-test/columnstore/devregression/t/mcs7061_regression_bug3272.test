@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3272;
+--enable_warnings
+
 create table bug3272 (c1 float, c2 char(12)) engine=columnstore;
 
 insert into bug3272 values (5.24062, '5.24062'), (7.24062, '7.24062'), (9.94062, '9.94062');
@@ -21,6 +24,8 @@ select cast(c1 as decimal(0,0)) floattype, cast(c2 as decimal(0,0)) chartype fro
 select cast(c1 as signed) floattype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
 select cast(cast(c1 as decimal(4,2)) as signed) decimaltype, cast(c2 as signed) chartype from bug3272 order by 1, 2;
 
+--disable_warnings
 drop table if exists bug3272;
+--enable_warnings
 #
 

@@ -8,12 +8,13 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bigsumplus;
 drop table if exists areas;
 drop table if exists geo_tag_values;
 drop table if exists geo_tags;
 drop view if exists tag_values_geo_country;
-
+--enable_warnings
 
 create table if not exists
 `bigsumplus` (
@@ -119,12 +120,12 @@ select g.name,g.country,g.served from (select b.area as name,gc.value as country
 bigsumplus b join tag_values_geo_country gc on b.geo_country=gc.id join areas a on b.area=a.id where 
 cdate='2012-05-15' group by b.area,gc.value) g where g.served <= 3;
 
-
+--disable_warnings
 drop table bigsumplus;
 drop table areas;
 drop table geo_tag_values;
 drop table geo_tags;
 drop view tag_values_geo_country;
-
+--enable_warnings
 #
 

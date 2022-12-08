@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists dim_date;
+--enable_warnings
+
 create table dim_date ( companycode integer, FinancialQuarterID integer,
 FinancialQuarter integer, FinancialYear integer ) engine=columnstore;
 insert into dim_date values (1,1,2,1);
@@ -19,7 +22,9 @@ select count(*)     from dim_date x_varDate      where      FinancialQuarterID B
 x_varDate.FinancialQuarter <=               3       THEN          ((x_varDate.FinancialYear  - 1) * 10)          +
 (1 + x_varDate.FinancialQuarter)       ELSE          (x_varDate.FinancialYear * 10)          +
 (x_varDate.FinancialQuarter - 3)         END       AND x_varDate.FinancialQuarterID;
-drop table dim_date;
 
+--disable_warnings
+drop table dim_date;
+--enable_warnings
 #
 

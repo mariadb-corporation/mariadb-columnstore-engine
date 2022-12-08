@@ -8,10 +8,12 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists fct_summary_transactional_snapshot;
 drop table if exists dim_c_bridge_duration;
 drop table if exists fct_macro_payment_details;
 drop table if exists dim_c_calendar;
+--enable_warnings
 
 CREATE TABLE `fct_macro_payment_details` (
   `TRANSACTION_DW_ID` bigint(20) DEFAULT NULL,
@@ -196,11 +198,11 @@ ON b.PeriodDesc = d.PeriodDesc ;
 )b
 ON b.PeriodDesc= d.PeriodDesc;
 
+--disable_warnings
 drop table fct_summary_transactional_snapshot;
 drop table dim_c_bridge_duration;
 drop table fct_macro_payment_details;
 drop table dim_c_calendar;
-
-
+--enable_warnings
 #
 

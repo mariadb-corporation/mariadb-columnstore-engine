@@ -10,8 +10,12 @@ USE tpch1;
 #
 #-- Run an insert...select without cpimport followed by update to trigger
 #-- bad cache results due to dictionary version stuck at 0
+
+--disable_warnings
 CREATE TABLE IF NOT EXISTS mcol1662 (a int, b varchar(200)) engine=columnstore;
 CREATE TABLE IF NOT EXISTS mcol1662_source (a int, b varchar(200));
+--enable_warnings
+
 INSERT INTO mcol1662_source VALUES (1, 'hello');
 
 SET columnstore_use_import_for_batchinsert=0;
@@ -23,7 +27,10 @@ UPDATE mcol1662 SET a = 1, b = 'Hello' WHERE a = 1 and b = 'hello';
 SELECT * FROM mcol1662;
 
 SET columnstore_use_import_for_batchinsert=1;
+
+--disable_warnings
 DROP TABLE mcol1662_source;
 DROP TABLE mcol1662;
+--enable_warnings
 #
 

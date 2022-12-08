@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS cs1;
 DROP TABLE IF EXISTS cs2;
+--enable_warnings
 
 CREATE TABLE `cs1` (
   `t` varchar(2) DEFAULT NULL,
@@ -24,7 +26,9 @@ insert into cs1 values (NULL, 2);
 
 select * from cs1 inner join cs2 on (cs1.t = case cs2.t when NULL then 'MO' else cs2.t end);
 
+--disable_warnings
 DROP TABLE IF EXISTS cs1;
 DROP TABLE IF EXISTS cs2;
+--enable_warnings
 #
 

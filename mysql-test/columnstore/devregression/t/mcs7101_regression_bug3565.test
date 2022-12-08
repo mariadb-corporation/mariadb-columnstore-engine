@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3565;
+--enable_warnings
 
 #-- Create a table with a tinyint.
 create table bug3565(c1 tinyint)engine=columnstore;
@@ -22,6 +24,8 @@ select count(c1) from bug3565;
 select count(c2) from bug3565;
 select count(c3) from bug3565;
 
+--disable_warnings
 drop table if exists bug3565;
+--enable_warnings
 #
 

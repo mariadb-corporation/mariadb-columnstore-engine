@@ -20,7 +20,10 @@ begin
 end $$
 
 # Simple SP with 1 arg
+--disable_warnings
 drop procedure if exists sp_simple_variable;
+--enable_warnings
+
 Create Procedure sp_simple_variable(in arg_key int)
 begin
         select * from v_temp where p_partkey <= arg_key;
@@ -29,7 +32,10 @@ DELIMITER ;$$
 
 call sp_simple_select;
 call sp_simple_variable(2);
+--disable_warnings
 drop procedure sp_simple_select;
 drop procedure sp_simple_variable;
 drop view v_temp;
+--enable_warnings
+#
 

@@ -8,12 +8,14 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP VIEW IF EXISTS vv2;
 DROP VIEW IF EXISTS vv1;
 DROP TABLE IF EXISTS vt1;
 DROP TABLE IF EXISTS vt2;
 DROP TABLE IF EXISTS vt3;
 DROP TABLE IF EXISTS vt4;
+--enable_warnings
 
 CREATE TABLE `vt1` (
   `num_sample_id` int(11) DEFAULT NULL,
@@ -60,12 +62,13 @@ select `a`.`id` AS `cid`,`a`.`sampid` AS `csample`,`a`.`code` AS `ncode`,`b`.`sa
 #-- Should return no result. Should not error.
 SELECT * from vv2;
 
+--disable_warnings
 DROP VIEW IF EXISTS vv2;
 DROP VIEW IF EXISTS vv1;
 DROP TABLE IF EXISTS vt1;
 DROP TABLE IF EXISTS vt2;
 DROP TABLE IF EXISTS vt3;
 DROP TABLE IF EXISTS vt4;
-
+--enable_warnings
 #
 

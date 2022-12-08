@@ -8,12 +8,18 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists looooooooooooooooooooooooooooooooooooooooong_tb_name;
+--enable_warnings
+
 create table looooooooooooooooooooooooooooooooooooooooong_tb_name (looooooooooooooooooooooooooooooooooooooooong_col_name int)engine=columnstore;
 insert into looooooooooooooooooooooooooooooooooooooooong_tb_name values (10);
 select looooooooooooooooooooooooooooooooooooooooong_col_name from looooooooooooooooooooooooooooooooooooooooong_tb_name 
 order by isnull(looooooooooooooooooooooooooooooooooooooooong_col_name);
 select concat('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', looooooooooooooooooooooooooooooooooooooooong_col_name) from looooooooooooooooooooooooooooooooooooooooong_tb_name;
+
+--disable_warnings
 drop table looooooooooooooooooooooooooooooooooooooooong_tb_name;
+--enable_warnings
 #
 

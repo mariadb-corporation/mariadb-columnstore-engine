@@ -8,12 +8,18 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists t1;
+--enable_warnings
+
 create table t1(f1 varchar(5)) engine=columnstore;
 insert into t1(f1) select if(max(f1) is null, '2000',max(f1)+1) from t1;
 select * from t1 order by 1;
 insert into t1(f1) select if(max(f1) is null, '2000',max(f1)+1) from t1;
 select * from t1 order by 1;
+
+--disable_warnings
 drop table t1;
+--enable_warnings
 #
 

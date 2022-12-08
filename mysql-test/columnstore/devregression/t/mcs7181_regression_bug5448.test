@@ -8,6 +8,7 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug5448;
 
 create table bug5448 (mst_date datetime) engine=columnstore; 
@@ -17,6 +18,7 @@ insert into bug5448 values ('2012-03-01');
 
 select mst_date, date_add(date(mst_date), interval - 30 day) from bug5448;
 
+--disable_warnings
 drop table if exists bug5448;
 
 #

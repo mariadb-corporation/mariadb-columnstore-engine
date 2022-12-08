@@ -29,6 +29,8 @@ INSERT INTO MCOL_673_b SELECT * FROM MCOL_673_a;
 SELECT a, length(b) FROM MCOL_673_a;
 SELECT a, length(b) FROM MCOL_673_b;
 #
+--disable_warnings
 drop table if exists MCOL_673_a;
 drop table if exists MCOL_673_b;
+--enable_warnings
 #

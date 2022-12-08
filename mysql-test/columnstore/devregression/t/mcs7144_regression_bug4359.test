@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug4359;
+--enable_warnings
 
 CREATE TABLE bug4359 (
   sdate datetime DEFAULT NULL,
@@ -21,7 +23,8 @@ insert into bug4359 values ('2009-01-05 13:30:00','2009-01-05 14:00:00');
 select timediff(edate,sdate) from bug4359;
 select time_to_sec(timediff(edate,sdate)) from bug4359;
 
+--disable_warnings
 drop table bug4359;
-
+--enable_warnings
 #
 
