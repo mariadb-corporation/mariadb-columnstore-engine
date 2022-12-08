@@ -2051,6 +2051,10 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     {
       out->setLongDoubleField(in.getLongDoubleField(i), i);
     }
+    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DOUBLE))
+    {
+      out->setDoubleField(in.getDoubleField(i), i);
+    }
     else if (UNLIKELY(datatypes::isWideDecimalType(in.getColType(i), in.getColumnWidth(i))))
     {
       in.copyBinaryField(*out, i, i);
