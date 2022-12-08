@@ -174,5 +174,6 @@ drop procedure if exists partsuppColumnsTouched;
 drop procedure if exists regionColumnsTouched;
 drop procedure if exists nationColumnsTouched;
 drop procedure if exists eliminatedBlocksGE;
+--enable_warnings
 #
 

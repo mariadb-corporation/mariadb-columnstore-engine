@@ -11,9 +11,7 @@ USE tpch1;
 
 # Simple SP without args
 DELIMITER $$;
---disable_warnings
 drop procedure if exists sp_simple_select;
---enable_warnings
 
 Create Procedure sp_simple_select( )
 begin
@@ -21,9 +19,7 @@ begin
 end $$
 
 # Simple SP with 1 arg
---disable_warnings
 drop procedure if exists sp_simple_variable;
---enable_warnings
 
 Create Procedure sp_simple_variable(in arg_key int)
 begin
@@ -31,9 +27,7 @@ begin
 end $$
 
 # Simple SP with multiple args
---disable_warnings
 drop procedure if exists sp_simple_variables;
---enable_warnings
 
 Create Procedure sp_simple_variables(in arg_key int, in arg_string varchar(25))
 begin
@@ -41,9 +35,7 @@ begin
 end $$
 
 # Simple SP with cross table select query
---disable_warnings
 drop procedure if exists sp_complex_variable;
---enable_warnings
 
 Create Procedure sp_complex_variable(in arg_key int, in arg_date date)
 begin
@@ -52,9 +44,7 @@ begin
 end $$
 
 # Complex SP. All following SPs will fail vtable mode
---disable_warnings
 drop procedure if exists sp_unstructured_loop;
---enable_warnings
 
 Create Procedure sp_unstructured_loop(in arg_key int)
 begin
@@ -82,9 +72,7 @@ begin
 end$$
 
 
---disable_warnings
 drop procedure if exists sp_repeat_loop;
---enable_warnings
 
 Create Procedure sp_repeat_loop(in arg_key int, in arg_key2 int)
 begin
@@ -114,9 +102,7 @@ begin
     CLOSE cur1;
 end$$
 
---disable_warnings
 drop procedure if exists sp_while_loop;
---enable_warnings
 
 Create Procedure sp_while_loop(in arg_key int, in arg_key2 int)
 begin
@@ -146,9 +132,7 @@ begin
 end$$
 
 # SP with DDL
---disable_warnings
 drop procedure if exists proc1;
---enable_warnings
 
 create procedure proc1()
 begin
