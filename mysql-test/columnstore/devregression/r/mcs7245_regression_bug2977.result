@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists `shipamounts`;
-Warnings:
-Note	1051	Unknown table 'tpch1.shipamounts'
 drop table if exists `ship1`;
-Warnings:
-Note	1051	Unknown table 'tpch1.ship1'
 drop table if exists `ship2`;
-Warnings:
-Note	1051	Unknown table 'tpch1.ship2'
 CREATE TABLE `shipamounts` (
 `OrderNum` varchar(50) DEFAULT NULL,
 `OrderLine` int(11) DEFAULT NULL,

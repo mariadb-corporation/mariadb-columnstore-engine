@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists tbl1;
-Warnings:
-Note	1051	Unknown table 'tpch1.tbl1'
 drop table if exists tbl2;
-Warnings:
-Note	1051	Unknown table 'tpch1.tbl2'
 create table tbl1 (c1 char(1), c2 char(255))engine=columnstore;
 create table tbl2 (c1 char(1), c2 char(255))engine=columnstore;
 insert into tbl1 values (1, 1), (2, 2), (3, 3), (4, 4), (null, null);

@@ -2,17 +2,9 @@ DROP DATABASE IF EXISTS mcol641_delete_db;
 CREATE DATABASE mcol641_delete_db;
 USE mcol641_delete_db;
 DROP PROCEDURE IF EXISTS signedinsertproc;
-Warnings:
-Note	1305	PROCEDURE mcol641_delete_db.signedinsertproc does not exist
 DROP PROCEDURE IF EXISTS signeddeleteproc;
-Warnings:
-Note	1305	PROCEDURE mcol641_delete_db.signeddeleteproc does not exist
 DROP PROCEDURE IF EXISTS unsignedinsertproc;
-Warnings:
-Note	1305	PROCEDURE mcol641_delete_db.unsignedinsertproc does not exist
 DROP PROCEDURE IF EXISTS unsigneddeleteproc;
-Warnings:
-Note	1305	PROCEDURE mcol641_delete_db.unsigneddeleteproc does not exist
 CREATE PROCEDURE signedinsertproc ()
 BEGIN
 INSERT INTO cs1 VALUES (125, 125);
@@ -89,23 +81,11 @@ DELETE FROM cs5;
 DELETE FROM cs6;
 END//
 DROP TABLE IF EXISTS cs1;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs1'
 DROP TABLE IF EXISTS cs2;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs2'
 DROP TABLE IF EXISTS cs3;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs3'
 DROP TABLE IF EXISTS cs4;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs4'
 DROP TABLE IF EXISTS cs5;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs5'
 DROP TABLE IF EXISTS cs6;
-Warnings:
-Note	1051	Unknown table 'mcol641_delete_db.cs6'
 CREATE TABLE cs1 (d1 DECIMAL(38), d2 DECIMAL(19)) ENGINE=columnstore;
 CREATE TABLE cs2 (d1 DECIMAL(38,10), d2 DECIMAL(19,10)) ENGINE=columnstore;
 CREATE TABLE cs3 (d1 DECIMAL(38,38), d2 DECIMAL(19,19)) ENGINE=columnstore;

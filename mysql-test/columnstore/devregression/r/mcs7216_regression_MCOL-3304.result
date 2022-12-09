@@ -1,7 +1,5 @@
 USE tpch1;
 DROP TABLE IF EXISTS `MCOL3304`;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol3304'
 CREATE TABLE `MCOL3304` (
 `c` decimal(5,2) DEFAULT NULL
 ) ENGINE=columnstore;

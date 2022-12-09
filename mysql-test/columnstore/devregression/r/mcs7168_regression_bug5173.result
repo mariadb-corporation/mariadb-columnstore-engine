@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists qadefaulttest;
-Warnings:
-Note	1051	Unknown table 'tpch1.qadefaulttest'
 create table qadefaulttest (cidx int) engine=columnstore;
 ALTER TABLE qadefaulttest ADD column MYDOUBLE2 DOUBLE not null DEFAULT -88.88;
 insert into qadefaulttest values (1, -88.88);

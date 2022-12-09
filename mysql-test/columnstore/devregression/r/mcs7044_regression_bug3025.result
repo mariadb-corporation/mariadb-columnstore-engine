@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3025;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3025'
 create table bug3025(value integer(5)) engine=Columnstore;
 insert into bug3025 values (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
 select value, IF(value<=1000,'<=1000', '>1000') 

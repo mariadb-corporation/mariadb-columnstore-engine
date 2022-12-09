@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists mcol829a;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol829a'
 drop table if exists mcol829b;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol829b'
 drop procedure if exists mcol829;
-Warnings:
-Note	1305	PROCEDURE tpch1.mcol829 does not exist
 create table mcol829a (a int, b int) engine=columnstore;
 create table mcol829b (a int, b int) engine=columnstore;
 insert into mcol829a values (1,1),(2,2),(3,3);

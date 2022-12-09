@@ -8,9 +8,9 @@
 #
 USE tpch1;
 #
-/* Test case from Radek at CognitiveMatch - customer who bought based on us adding the multi-value in clause feature. */
+#/* Test case from Radek at CognitiveMatch - customer who bought based on us adding the multi-value in clause feature. */
 
-/* Second test using myisam tables. */
+#/* Second test using myisam tables. */
 --disable_warnings
 drop table if exists agg_fact_pageview;
 drop table if exists dim_date;

@@ -1,8 +1,6 @@
 USE tpch1;
 create database if not exists bug3007;
 drop table if exists bug3007.bug;
-Warnings:
-Note	1051	Unknown table 'bug3007.bug'
 create table bug3007.bug(c1 int)engine=columnstore;
 insert into bug3007.bug values (1), (2);
 select * from bug3007.bug;

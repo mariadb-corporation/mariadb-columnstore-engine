@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3274;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3274'
 create table bug3274(d2 decimal(4,2), f float);
 insert into bug3274 values (43.34, 43.345), (13.54, 13.545);
 select d2, count(*) from bug3274 group by 1 order by 1;

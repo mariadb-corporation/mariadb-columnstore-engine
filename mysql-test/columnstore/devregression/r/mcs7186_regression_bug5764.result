@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists mk_calendar;
-Warnings:
-Note	1051	Unknown table 'tpch1.mk_calendar'
 CREATE TABLE if not exists `mk_calendar` (
 `nengetsu_yyyymmdd` date DEFAULT NULL,
 `shukei_dd` varchar(6) DEFAULT NULL,
@@ -14,8 +12,6 @@ insert into mk_calendar values
 ('2009-04-01', 1, 200904),
 ('2009-04-02', 2, 200904);
 drop table if exists mk_kishu_gaibu;
-Warnings:
-Note	1051	Unknown table 'tpch1.mk_kishu_gaibu'
 CREATE TABLE if not exists `mk_kishu_gaibu` (
 `Jyohokei_Denwa_Shurui` varchar(100) DEFAULT NULL,
 `Shuryoku_Hanbai_Kishu_Key` varchar(100) DEFAULT NULL
@@ -29,8 +25,6 @@ insert into mk_kishu_gaibu values
 ('A1', '508G'),                                           
 ('GT', 'HD60');
 drop table if exists mk_kishubetsu_report2;
-Warnings:
-Note	1051	Unknown table 'tpch1.mk_kishubetsu_report2'
 CREATE TABLE if not exists `mk_kishubetsu_report2` (
 `KEYNO` int(10) DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8;
@@ -46,8 +40,6 @@ insert into mk_kishubetsu_report2 values
 (1000009),
 (6000001);
 drop table if exists mk_organization;
-Warnings:
-Note	1051	Unknown table 'tpch1.mk_organization'
 CREATE TABLE if not exists `mk_organization` (
 `Tokatsuten_Code` varchar(30) DEFAULT NULL,
 `Kyoten_Code` varchar(30) DEFAULT NULL
@@ -64,8 +56,6 @@ insert into mk_organization values
 ('EK21', '017'),  
 ('NESM', '021');
 drop table if exists mk_shuryoku_hanbai_kishu;
-Warnings:
-Note	1051	Unknown table 'tpch1.mk_shuryoku_hanbai_kishu'
 CREATE TABLE if not exists `mk_shuryoku_hanbai_kishu` (
 `catalog_nengetsu` varchar(6) DEFAULT NULL,
 `kata_shiki` varchar(20) DEFAULT NULL
@@ -79,8 +69,6 @@ insert into mk_shuryoku_hanbai_kishu values
 (200905, 'S002'),
 (200905, 'BUGS');
 drop table if exists ts_kishubetsu_hibetsu_pfmtst;
-Warnings:
-Note	1051	Unknown table 'tpch1.ts_kishubetsu_hibetsu_pfmtst'
 CREATE TABLE if not exists `ts_kishubetsu_hibetsu_pfmtst` (
 `keijyo_yyyymm` int(6) DEFAULT NULL,
 `keijyo_dd` varchar(6) DEFAULT '@',
@@ -99,8 +87,6 @@ insert into ts_kishubetsu_hibetsu_pfmtst values
 (200904, 3, 'K554', 'M18', 'GT', 1000004),
 (200904, 4, 'K554', '021', 'ZZ', 3333333);
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu_base;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_kyotenbetsu_kishubetsu_hibetsu_base'
 CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu_base`
 AS
 (
@@ -128,8 +114,6 @@ AND (`trn`.`kyoten_code` = `mst_org`.`Kyoten_Code`)
 )
 );
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_kyotenbetsu_kishubetsu_hibetsu'
 CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu`
 AS
 (
