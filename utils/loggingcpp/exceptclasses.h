@@ -283,7 +283,7 @@ class ProtocolError : public std::logic_error
     }                                                                                      \
   } while (0)
 
-#if 01
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
