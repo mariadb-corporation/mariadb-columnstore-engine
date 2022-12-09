@@ -1,10 +1,6 @@
 USE tpch1;
 DROP TABLE IF EXISTS bug3398_1;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3398_1'
 DROP TABLE IF EXISTS bug3398_2;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3398_2'
 CREATE TABLE bug3398_1 (lid int, name char(10)) engine=columnstore;
 INSERT INTO bug3398_1 (lid, name) VALUES (1, 'YES'), (2, 'NO');
 CREATE TABLE bug3398_2 (  id int, gid int, lid int, dt date) engine=columnstore;

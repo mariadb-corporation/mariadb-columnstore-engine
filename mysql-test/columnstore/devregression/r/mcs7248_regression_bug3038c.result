@@ -1,12 +1,6 @@
 USE tpch1;
-/* Test case from Radek at CognitiveMatch - customer who bought based on us adding the multi-value in clause feature. */
-/* Second test using myisam tables. */
 drop table if exists agg_fact_pageview;
-Warnings:
-Note	1051	Unknown table 'tpch1.agg_fact_pageview'
 drop table if exists dim_date;
-Warnings:
-Note	1051	Unknown table 'tpch1.dim_date'
 create table AGG_FACT_PAGEVIEW
 (
 server_day_date         date ,

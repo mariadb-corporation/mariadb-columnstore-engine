@@ -131,8 +131,10 @@ select  distinct(i_product_name)
  order by i_product_name
  limit 100;
 #
+--disable_warnings
 drop table if exists cs_item;
 drop table if exists ar_item;
 drop table if exists in_item;
 drop table if exists item;
+--enable_warnings
 #

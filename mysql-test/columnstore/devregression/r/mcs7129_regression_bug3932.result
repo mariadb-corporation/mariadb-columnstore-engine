@@ -1,16 +1,8 @@
 USE tpch1;
 drop table if exists qa_nation;
-Warnings:
-Note	1051	Unknown table 'tpch1.qa_nation'
 drop table if exists qa_customer;
-Warnings:
-Note	1051	Unknown table 'tpch1.qa_customer'
 drop table if exists qa_region;
-Warnings:
-Note	1051	Unknown table 'tpch1.qa_region'
 drop table if exists qa_orders;
-Warnings:
-Note	1051	Unknown table 'tpch1.qa_orders'
 create table qa_nation (n_id int, n_name char(20), regionid int) engine=columnstore;
 create table qa_customer (c_id int, c_custname char(20), nationid int) engine=columnstore;
 create table qa_region (r_id int, r_name char(20)) engine=columnstore;

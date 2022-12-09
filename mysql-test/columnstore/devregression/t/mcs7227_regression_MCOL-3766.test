@@ -11,10 +11,13 @@ USE tpch1;
 --disable_warnings
 DROP TABLE IF EXISTS `MCOL-3766`;
 --enable_warnings
+
 CREATE TABLE `MCOL-3766`(a int) engine=columnstore;
 EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
 EXPLAIN SELECT a FROM `MCOL-3766` GROUP BY a HAVING 1 != 1 AND a > 1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS `MCOL-3766`;
+--enable_warnings
 #
 

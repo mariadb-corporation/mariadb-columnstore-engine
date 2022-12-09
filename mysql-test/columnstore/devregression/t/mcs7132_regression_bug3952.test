@@ -8,10 +8,16 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3952;
+--enable_warnings
+
 create table bug3952 (id int, name varchar(25));
 insert into bug3952 values (1,'aaa'),(2,'bbb');
 select * from bug3952 n1, (select * from bug3952)n2 where n1.id=n2.id;
+
+--disable_warnings
 drop table bug3952;
+--enable_warnings
 #
 

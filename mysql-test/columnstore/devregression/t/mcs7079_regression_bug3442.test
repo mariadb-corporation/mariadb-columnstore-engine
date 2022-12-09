@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists optest;
+--enable_warnings
+
 create table optest (id int, c1 date, c2 decimal(4,2), c3 date) engine=columnstore;
 insert into optest values (0, '2011-01-27', null, '1999-08-25'), (1, null, null, null), (2, '2001-01-05', 2.34, null), (3, null, null, '2001-05-03');
 select * from optest where (year(c1) = 2011 or c2 = 2.34) or month(c3) = 1;
@@ -27,7 +30,9 @@ select * from optest where (null or year(ifnull(c1, c3)) > 2000 and isnull(c2)) 
 select * from optest where ((null or year(ifnull(c1, c3)) > 2000) and isnull(c2)) or ( (c3 is not null or null) and null);
 select * from optest where (null or c2+1 between 0 and 4 or isnull(c2)) and ( c3 is not null or null);
 
+--disable_warnings
 drop table if exists bug3442b;
+--enable_warnings
 
 create table bug3442b (
 idx int,
@@ -89,8 +94,10 @@ bi2 < 4;
 select 'q10', idx from bug3442b where hour(dtm1)=9 or i1 = 2 or i2 = 5 or f2 is null or f1 > 6 or year(dtm2)= 2012 or 
 vc1 = 9 or bi2 = 4;
 
+--disable_warnings
 drop table bug3442b;
 drop table optest;
+--enable_warnings
 
 select count(*) from nation where n_nationkey < 3 OR NULL;
 

@@ -11,13 +11,19 @@ USE tpch1;
 select date('2010-02-01') into @xxx;
 select @xxx;
 
+--disable_warnings
 drop table if exists bug3021;
+--enable_warnings
+
 create table bug3021(c1 date)engine=columnstore;
 insert into bug3021 values ('2001-01-01');
 update bug3021 set c1=@xxx;
 select * from bug3021;
 update bug3021 set c1=date('2010-11-14');
 select * from bug3021;
+
+--disable_warnings
 drop table bug3021;
+--enable_warnings
 #
 

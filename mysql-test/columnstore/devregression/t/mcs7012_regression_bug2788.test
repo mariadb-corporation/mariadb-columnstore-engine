@@ -8,8 +8,11 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists foo;
+--enable_warnings
 create table foo (col1 int(11) null default null) engine=columnstore;
+--disable_warnings
 drop table foo;
+--enable_warnings
 #
-

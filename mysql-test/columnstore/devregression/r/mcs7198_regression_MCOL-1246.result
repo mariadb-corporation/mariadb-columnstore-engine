@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists mcol1246a;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol1246a'
 drop table if exists mcol1246b;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol1246b'
 drop table if exists mcol1246c;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol1246c'
 create table mcol1246a (a int, b varchar(7)) engine=columnstore;
 create table mcol1246b (a int, b varchar(20)) engine=columnstore;
 create table mcol1246c (a int, b text) engine=columnstore;

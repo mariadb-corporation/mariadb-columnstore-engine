@@ -10,6 +10,7 @@
 USE tpch1;
 
 
+--disable_warnings
 drop view if exists v_nation;
 drop view if exists v_region;
 drop view if exists v_customer;
@@ -18,7 +19,7 @@ drop view if exists v_supplier;
 drop view if exists v_partsupp;
 drop view if exists v_part;
 drop view if exists v_lineitem;
-
+--enable_warnings
 
 create view v_nation as select * from nation where n_nationkey > 10 union all select * from nation where n_nationkey <= 10;
 create view v_region as select * from region where r_regionkey > 3 union all select * from region where r_regionkey <= 3;
@@ -30,6 +31,7 @@ create view v_part as select * from part union all select * from part where p_pa
 create view v_lineitem as select * from lineitem union all select * from lineitem where l_orderkey=0;
 
 
+--disable_warnings
 drop procedure if exists ordersColumnsTouched;
 drop procedure if exists lineitemColumnsTouched;
 drop procedure if exists customerColumnsTouched;
@@ -39,6 +41,7 @@ drop procedure if exists partsuppColumnsTouched;
 drop procedure if exists regionColumnsTouched;
 drop procedure if exists nationColumnsTouched;
 drop procedure if exists eliminatedBlocksGE;
+--enable_warnings
 
 delimiter //;
 create procedure ordersColumnsTouched (in trace varchar(10000)) BEGIN
@@ -152,6 +155,7 @@ select count(*) as nation_count from nation;
 select count(*) as v_nation_count from v_nation;
 
 # Clean up
+--disable_warnings
 drop view if exists v_nation;
 drop view if exists v_region;
 drop view if exists v_customer;
@@ -160,7 +164,7 @@ drop view if exists v_supplier;
 drop view if exists v_partsupp;
 drop view if exists v_part;
 drop view if exists v_lineitem;
-
+#
 drop procedure if exists ordersColumnsTouched;
 drop procedure if exists lineitemColumnsTouched;
 drop procedure if exists customerColumnsTouched;
@@ -170,4 +174,6 @@ drop procedure if exists partsuppColumnsTouched;
 drop procedure if exists regionColumnsTouched;
 drop procedure if exists nationColumnsTouched;
 drop procedure if exists eliminatedBlocksGE;
+--enable_warnings
+#
 

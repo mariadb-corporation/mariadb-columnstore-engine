@@ -8,9 +8,11 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug5289a;
 drop table if exists bug5289b;
 drop view if exists bug5289b_v;
+--enable_warnings
 
 create table bug5289a(
 a decimal(10,0),
@@ -32,8 +34,10 @@ select 'q1', count(*) from bug5289a a,bug5289_v b where a.a = b.a;
 select 'q2', count(*) from bug5289a a left join bug5289_v b on (a.a = b.a);
 select 'q3', count(*) from bug5289a a, bug5289b b where a.a = cast(b.a as decimal(10,0));
 
+--disable_warnings
 drop table if exists bug5289a;
 drop table if exists bug5289b;
 drop view if exists bug5289b_v;
+--enable_warnings
 #
 

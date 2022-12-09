@@ -99,6 +99,10 @@ insert into t3 values
 
 select * from (select a,b from t1 union select a,b from t2 union select a,b from t3) tu order by a,b;
 
+--disable_warnings
 drop table t1;
 drop table t2;
 drop table t3;
+--enable_warnings
+#
+

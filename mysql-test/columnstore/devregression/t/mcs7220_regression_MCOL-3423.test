@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS tc;
+--enable_warnings
+
 CREATE TABLE `tc` (
   `id` int(11) NOT NULL,
   `cid` int(11) DEFAULT NULL,
@@ -35,7 +38,8 @@ select cust, week_d, mpp_sum,
                sum(c) over (partition by cid, week(d)) as mpp_sum  
          from tc where year(d) = '2018') as inside where cust = 0 and week_d = 0;
 
+--disable_warnings
 DROP TABLE IF EXISTS tc;
-
+--enable_warnings
 #
 

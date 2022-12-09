@@ -1,7 +1,5 @@
 USE tpch1;
 DROP TABLE IF EXISTS query_class_metrics_float;
-Warnings:
-Note	1051	Unknown table 'tpch1.query_class_metrics_float'
 CREATE TABLE `query_class_metrics_float` (
 `agent_id` bigint(20) DEFAULT NULL,
 `start_ts` datetime DEFAULT NULL,

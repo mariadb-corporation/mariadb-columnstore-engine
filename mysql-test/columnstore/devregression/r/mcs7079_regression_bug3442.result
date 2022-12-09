@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists optest;
-Warnings:
-Note	1051	Unknown table 'tpch1.optest'
 create table optest (id int, c1 date, c2 decimal(4,2), c3 date) engine=columnstore;
 insert into optest values (0, '2011-01-27', null, '1999-08-25'), (1, null, null, null), (2, '2001-01-05', 2.34, null), (3, null, null, '2001-05-03');
 select * from optest where (year(c1) = 2011 or c2 = 2.34) or month(c3) = 1;
@@ -70,8 +68,6 @@ id	c1	c2	c3
 0	2011-01-27	NULL	1999-08-25
 3	NULL	NULL	2001-05-03
 drop table if exists bug3442b;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3442b'
 create table bug3442b (
 idx int,
 i1 int,

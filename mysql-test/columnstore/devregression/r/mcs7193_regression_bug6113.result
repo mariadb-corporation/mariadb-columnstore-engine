@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists t;
-Warnings:
-Note	1051	Unknown table 'tpch1.t'
 create table t(a bigint, b varchar(10)) engine=columnstore;
 insert into t values (1, 'hi');
 insert into t values (1, 'hello');
@@ -14,8 +12,6 @@ a	b	rnum
 2	bye	1
 2	good night	2
 drop view if exists v;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v'
 create view v as select * from t;
 select v.*, row_number() over (partition by a order by b) as rnum from v;
 a	b	rnum

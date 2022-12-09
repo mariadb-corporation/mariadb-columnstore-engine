@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 create table if not exists bug5096 (id int, c1 int)engine=columnstore;
+--enable_warnings
+
 insert into bug5096 values (1,1),(2,2),(3,3),(4,4);
 set autocommit=0;
 update bug5096 set id = 10 limit 2;
@@ -27,7 +30,9 @@ select * from bug5096 limit 10;
 rollback;
 delete from bug5096 limit 2;
 select * from bug5096;
-drop table bug5096;
 
+--disable_warnings
+drop table bug5096;
+--enable_warnings
 #
 

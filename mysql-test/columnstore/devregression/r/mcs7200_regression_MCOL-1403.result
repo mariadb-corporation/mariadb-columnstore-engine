@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists mcol1403a;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol1403a'
 drop table if exists mcol1403b;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol1403b'
 create table mcol1403a (a int, b varchar(4)) engine=columnstore;
 create table mcol1403b (a int, b char(20), c varchar(20)) engine=columnstore;
 insert into mcol1403a values (1, 'ABC ');

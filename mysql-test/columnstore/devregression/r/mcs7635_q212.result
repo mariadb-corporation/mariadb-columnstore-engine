@@ -1,13 +1,9 @@
 USE tpch1;
 drop database if exists test023_cs3;
-Warnings:
-Note	1008	Can't drop database 'test023_cs3'; database doesn't exist
 create database test023_cs3;
 use test023_cs3;
 SET SESSION sql_mode = 'ANSI_QUOTES';
 drop table if exists "test023_cs3"."cs3";
-Warnings:
-Note	1051	Unknown table 'test023_cs3.cs3'
 create table "test023_cs3"."cs3"(i int, t text) engine=columnstore;
 insert into "test023_cs3"."cs3" values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
 select * from "test023_cs3"."cs3";

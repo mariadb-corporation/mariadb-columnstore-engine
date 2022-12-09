@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists `football_teams`;
-Warnings:
-Note	1051	Unknown table 'tpch1.football_teams'
 CREATE TABLE `football_teams` (
 `num` int(11) DEFAULT NULL,
 `name` varchar(32) DEFAULT NULL,

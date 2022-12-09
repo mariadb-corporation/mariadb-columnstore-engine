@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3783;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3783'
 set max_length_for_sort_data = 8192;
 create table bug3783 (id int, name varchar(1000))engine=columnstore;
 insert into bug3783 values (1,'yionfsdayfeiwajg'),(2,'gretsuyhejkstj jkete');

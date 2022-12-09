@@ -1,15 +1,9 @@
 USE tpch1;
 drop table if exists bug6134;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug6134'
 create table bug6134 (a integer) engine=Columnstore;
 drop table if exists bug6134u;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug6134u'
 create table bug6134u (b integer, c varchar(20)) engine=Columnstore;
 drop view if exists bug6134vv;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.bug6134vv'
 create or replace view bug6134vv as select distinct * from bug6134 t
 inner join bug6134u u on t.a = u.b;
 insert into bug6134 values (1);

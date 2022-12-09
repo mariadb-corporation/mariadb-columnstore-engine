@@ -92,5 +92,7 @@ select 12, count(o_orderpriority) from orders2;
 
 select count(distinct o_orderkey) from orders2;
 #
+--disable_warnings
 drop table if exists orders2;
+--enable_warnings
 

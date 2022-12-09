@@ -10,12 +10,14 @@
 
 USE tpch1;
 
+--disable_warnings
 drop procedure if exists sp_simple_select;
 drop procedure if exists sp_simple_variable;
 drop procedure if exists sp_simple_variables;
 drop procedure if exists sp_complex_variable;
 drop procedure if exists proc1;
 DROP TABLE IF EXISTS t1;
+--enable_warnings
 
 DELIMITER $$;
 Create Procedure sp_simple_select( )
@@ -62,11 +64,13 @@ call proc1();
 # Should get 'Duplicate column name' error this time
 --error 1060
 call proc1();
-drop table t1;
 
+--disable_warnings
+drop table t1;
 drop procedure sp_simple_select;
 drop procedure sp_simple_variable;
 drop procedure sp_simple_variables;
 drop procedure sp_complex_variable;
 drop procedure proc1;
-
+--enable_warnings
+#

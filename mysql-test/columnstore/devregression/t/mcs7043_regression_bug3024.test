@@ -12,12 +12,17 @@ select * from nation where n_nationkey=@value;
 set @value=5;
 select * from nation where n_nationkey=@value;
 
+--disable_warnings
 create table if not exists bug3024 (c1 int) engine=columnstore;
+--enable_warnings
 insert into bug3024 values (1), (2);
 update bug3024 set c1=3 where c1=@value;
 set @value=2;
 update bug3024 set c1=3 where c1=@value;
 select * from bug3024;
+
+--disable_warnings
 drop table if exists bug3024;
+--enable_warnings
 #
 

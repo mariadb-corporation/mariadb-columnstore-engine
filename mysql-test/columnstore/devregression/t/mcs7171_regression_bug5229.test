@@ -8,13 +8,17 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists uriage_inf;
+--enable_warnings
 
 create table uriage_inf(eigyo_shimei varchar(20),uriage numeric) engine=columnstore default charset=utf8;
 
 insert into uriage_inf values('SMITH',1000); insert into uriage_inf values('ALLEN',2000); insert into uriage_inf values('JONES',3000); insert into uriage_inf values('SMITH',4000); insert into uriage_inf values('BLAKE',5000);
 
+--disable_warnings
 drop table if exists uriage_my;
+--enable_warnings
 
 create table uriage_my (eigyo_shimei varchar(20),uriage numeric) engine=myisam default charset=utf8;
 
@@ -61,6 +65,8 @@ GROUP BY
 ORDER BY
  T1.`eigyo_shimei`;
 
+--disable_warnings
 drop table uriage_inf;
+--enable_warnings
 #
 

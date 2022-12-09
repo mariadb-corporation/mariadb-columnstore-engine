@@ -1,7 +1,5 @@
 USE tpch1;
 DROP TABLE IF EXISTS bug5712;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug5712'
 CREATE TABLE bug5712 (`time_tk` INT(11) UNSIGNED NOT NULL) ENGINE=Columnstore DEFAULT CHARSET=latin1;
 INSERT INTO bug5712 VALUES 
 (2013113023),

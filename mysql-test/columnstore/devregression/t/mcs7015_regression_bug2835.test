@@ -8,11 +8,13 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug2835;
+--enable_warnings
 create table bug2835 (c1 int, c2 varchar(6), c3 varchar(20), c4 datetime)engine=columnstore;
 insert into bug2835 values (1, 'one', 'one', '2010-01-01'), (2, 'two', 'two', '2010-02-02'), (null, null, null, null);
 select c1, c2, c3, ifnull(c1,"z"), ifnull(c2,''), ifnull(c3,''), ifnull(c4,'') from bug2835;
+--disable_warnings
 drop table bug2835;
-
+--enable_warnings
 #
-

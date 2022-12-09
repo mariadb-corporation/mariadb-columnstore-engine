@@ -1,16 +1,8 @@
 USE tpch1;
 drop table if exists fct_summary_transactional_snapshot;
-Warnings:
-Note	1051	Unknown table 'tpch1.fct_summary_transactional_snapshot'
 drop table if exists dim_c_bridge_duration;
-Warnings:
-Note	1051	Unknown table 'tpch1.dim_c_bridge_duration'
 drop table if exists fct_macro_payment_details;
-Warnings:
-Note	1051	Unknown table 'tpch1.fct_macro_payment_details'
 drop table if exists dim_c_calendar;
-Warnings:
-Note	1051	Unknown table 'tpch1.dim_c_calendar'
 CREATE TABLE `fct_macro_payment_details` (
 `TRANSACTION_DW_ID` bigint(20) DEFAULT NULL,
 `TRANSACTION_ID` varchar(255) DEFAULT NULL,

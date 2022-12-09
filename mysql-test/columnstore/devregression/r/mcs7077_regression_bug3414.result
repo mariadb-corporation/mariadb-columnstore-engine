@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists qa_cast;
-Warnings:
-Note	1051	Unknown table 'tpch1.qa_cast'
 create table qa_cast ( s1 varchar(20), qaint1 int, qadouble double) engine=columnstore;
 insert into qa_cast values ('123456789',123456789, 1234);
 insert into qa_cast values ('123.45',123456789, 123.45);

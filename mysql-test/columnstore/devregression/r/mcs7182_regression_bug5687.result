@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug5687;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug5687'
 create table bug5687(col1 datetime DEFAULT NULL) engine=columnstore;
 insert into bug5687 (col1) values ("2012-01-24 11:00:01");
 insert into bug5687 (col1) values ("1812-02-24 11:10:01");

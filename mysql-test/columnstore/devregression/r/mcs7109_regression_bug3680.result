@@ -1,19 +1,9 @@
 USE tpch1;
 drop table if exists pts_agg_url_report;
-Warnings:
-Note	1051	Unknown table 'tpch1.pts_agg_url_report'
 drop table if exists pts_dim_publisher;
-Warnings:
-Note	1051	Unknown table 'tpch1.pts_dim_publisher'
 drop table if exists pts_dim_subsite;
-Warnings:
-Note	1051	Unknown table 'tpch1.pts_dim_subsite'
 drop table if exists pts_meta_ad;
-Warnings:
-Note	1051	Unknown table 'tpch1.pts_meta_ad'
 drop table if exists pts_meta_campaign;
-Warnings:
-Note	1051	Unknown table 'tpch1.pts_meta_campaign'
 CREATE TABLE `pts_agg_url_report` (
 `agg_date` date DEFAULT NULL,
 `client_id` varchar(32) DEFAULT NULL,
@@ -56,7 +46,7 @@ CREATE TABLE `pts_meta_ad` (
 `dimension` varchar(7) DEFAULT NULL,
 `dimensionName` varchar(250) DEFAULT NULL
 ) engine=columnstore;
-cREATE TABLE `pts_meta_campaign` (
+CREATE TABLE `pts_meta_campaign` (
 `clientId` varchar(32) DEFAULT NULL,
 `externalClientId` int(11) DEFAULT NULL,
 `id` varchar(32) DEFAULT NULL,
@@ -91,14 +81,8 @@ drop table pts_dim_subsite;
 drop table pts_meta_ad;
 drop table pts_meta_campaign;
 drop table if exists marketing_conversions;
-Warnings:
-Note	1051	Unknown table 'tpch1.marketing_conversions'
 drop table if exists marketing_events;
-Warnings:
-Note	1051	Unknown table 'tpch1.marketing_events'
 drop table if exists marketing_leads;
-Warnings:
-Note	1051	Unknown table 'tpch1.marketing_leads'
 CREATE TABLE `marketing_conversions` (
 `pkMarketingConversionID` int(10) DEFAULT NULL,
 `CreatedOn` datetime DEFAULT NULL,

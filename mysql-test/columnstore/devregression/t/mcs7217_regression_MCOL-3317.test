@@ -8,12 +8,18 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS `mcol-498`;
+--enable_warnings
+
 CREATE TABLE `mcol-498` (i BIGINT) ENGINE=columnstore;
 INSERT INTO `mcol-498` VALUES (42),(6);
 DELETE FROM `mcol-498` WHERE i = 42;
 INSERT INTO `mcol-498` VALUES (42);
 SELECT i FROM `mcol-498`;
+
+--disable_warnings
 DROP TABLE `mcol-498`;
+--enable_warnings
 #
 

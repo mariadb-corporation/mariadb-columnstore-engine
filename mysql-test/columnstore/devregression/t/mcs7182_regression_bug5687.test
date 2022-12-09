@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug5687;
+--enable_warnings
 
 create table bug5687(col1 datetime DEFAULT NULL) engine=columnstore;
 insert into bug5687 (col1) values ("2012-01-24 11:00:01");
@@ -22,6 +24,8 @@ insert into bug5687 (col1) values ("2052-08-24 11:00:31");
 insert into bug5687 (col1) values ("3002-09-24 11:00:41");
 select TIMESTAMPADD(SECOND, 25284748647, col1) from bug5687;
 
+--disable_warnings
 drop table if exists bug5687;
+--enable_warnings
 #
 

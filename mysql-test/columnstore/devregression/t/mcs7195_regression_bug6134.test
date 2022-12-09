@@ -8,10 +8,13 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug6134;
 create table bug6134 (a integer) engine=Columnstore;
+--disable_warnings
 drop table if exists bug6134u;
 create table bug6134u (b integer, c varchar(20)) engine=Columnstore;
+--disable_warnings
 drop view if exists bug6134vv;
 create or replace view bug6134vv as select distinct * from bug6134 t
 inner join bug6134u u on t.a = u.b;
@@ -27,8 +30,11 @@ insert into bug6134u values (2, 1);
 insert into bug6134u values (2, 2);
  
 select * from bug6134vv order by 1, 2, 3;
+--disable_warnings
 drop table bug6134;
+--disable_warnings
 drop table bug6134u;
+--disable_warnings
 drop view bug6134vv;
 select count(*) from (select distinct n_regionkey, n_nationkey from nation)a order by 1;
 select count(*) from (select * from region union select distinct r_regionkey, r_regionkey, r_regionkey from region)a order by 1;

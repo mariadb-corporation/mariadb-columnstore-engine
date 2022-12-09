@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE if exists bug5099;
+--enable_warnings
+
 CREATE TABLE `bug5099` (`col1` datetime DEFAULT NULL, `col2` datetime DEFAULT NULL ) ENGINE=Columnstore;
 insert into bug5099 (col1, col2) values ('2012-09-24 11:00:01', '2012-09-24 11:00:00');
 insert into bug5099 (col1, col2) values ('2012-09-24 11:01:00', '2012-09-24 11:02:00');
@@ -21,7 +24,8 @@ insert into bug5099 (col1, col2) values ('2012-01-24 12:00:00', '2012-01-29 11:0
 insert into bug5099 (col1, col2) values ('2012-09-29 12:00:00', '2012-01-24 11:00:00');
 select col1,col2,timediff(col1, col2),time_to_sec(timediff(col1, col2) ) from bug5099;
 
+--disable_warnings
 drop table if exists bug5099;
-
+--enable_warnings
 #
 

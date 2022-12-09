@@ -1,7 +1,5 @@
 USE tpch1;
 DROP TABLE IF EXISTS tc;
-Warnings:
-Note	1051	Unknown table 'tpch1.tc'
 CREATE TABLE `tc` (
 `id` int(11) NOT NULL,
 `cid` int(11) DEFAULT NULL,
