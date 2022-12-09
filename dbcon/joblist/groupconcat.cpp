@@ -351,11 +351,6 @@ void GroupConcatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
   fConcator->merge(gccAg->concator().get());
 }
 
-void GroupConcatAgUM::getResult(uint8_t* buff)
-{
-  fConcator->getResultImpl(fGroupConcat->fSeparator);
-}
-
 uint8_t* GroupConcatAgUM::getResult()
 {
   return fConcator->getResult(fGroupConcat->fSeparator);

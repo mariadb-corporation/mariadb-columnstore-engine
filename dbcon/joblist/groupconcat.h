@@ -88,7 +88,6 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
     return fConcator;
   }
 
-  EXPORT void getResult(uint8_t*);
   EXPORT uint8_t* getResult();
 
  protected:
@@ -144,6 +143,7 @@ class GroupConcatNoOrder : public GroupConcator
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
+  void getResult(const std::string& sep);
 
   const std::string toString() const;
 
@@ -175,6 +175,7 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
+  void getResult(const std::string& sep);
 
   const std::string toString() const;
 
