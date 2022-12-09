@@ -899,8 +899,12 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     fOrderByQueue.pop();
   }
 
+<<<<<<< HEAD
   size_t prevResultSize = 0;
   size_t rowsProcessed = 0;
+=======
+  bool isNull = true;;
+>>>>>>> 2eac515a6... Fix logic
   while (rowStack.size() > 0)
   {
     if (addSep)
@@ -911,6 +915,7 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     const OrderByRow& topRow = rowStack.top();
     fRow0.setData(topRow.fData);
     outputRow(oss, fRow0);
+    isNull = false;
     rowStack.pop();
     if (rowsProcessed >= fRowsPerRG)
     {
@@ -926,11 +931,18 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     }
   }
 
+<<<<<<< HEAD
   return swapStreamWithStringAndReturnBuf(oss);
 }
 
 uint8_t* GroupConcator::swapStreamWithStringAndReturnBuf(ostringstream& oss)
 {
+=======
+  if (isNull) {
+    fOutputString.reset();
+    return nullptr;
+  }
+>>>>>>> 2eac515a6... Fix logic
   int64_t resultSize = oss.str().size();
   oss << '\0' << '\0';
   outputBuf_.reset(new std::string(std::move(*oss.rdbuf()).str()));
@@ -1081,6 +1093,7 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
   fDataQueue.push(fData);
   size_t prevResultSize = 0;
 
+  bool isNull = true;
   while (fDataQueue.size() > 0)
   {
     fRowGroup.setData(&fDataQueue.front());
@@ -1094,6 +1107,7 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
         addSep = true;
 
       outputRow(oss, fRow);
+      isNull = false;
       fRow.nextRow();
     }
     size_t sizeDiff = oss.str().size() - prevResultSize;
