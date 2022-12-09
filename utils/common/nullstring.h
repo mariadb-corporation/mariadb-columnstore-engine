@@ -29,6 +29,9 @@ class NullString
       mStrPtr.reset(new std::string((const char*)str, length));
     }
   }
+  // XXX: this constructor is used to construct NullString from char*. Please be
+  //      aware of that - std::string(nullptr) throws exception and you should check
+  //      for nullptr.
   explicit NullString(const std::string& str) : mStrPtr(new std::string(str))
   {
   }

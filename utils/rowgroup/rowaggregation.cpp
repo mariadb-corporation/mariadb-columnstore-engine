@@ -4063,7 +4063,7 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)buff);
         gcString = gccAg->getResult();
-	utils::NullString str((char*)gcString);
+	utils::NullString str((char*)gcString, gcString ? strlen(gcString) : 0);
         fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
         // gccAg->getResult(buff);
       }
