@@ -15,10 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-//  $Id: FlatOrderBy.h 9414 2013-04-22 22:18:30Z xlou $
-
-/** @file */
-
 #pragma once
 
 #include <cstdint>
@@ -29,6 +25,12 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "jlf_common.h"
+
+namespace joblist
+{
+// forward reference
+struct JobInfo;
+}  // namespace joblist
 
 namespace sorting
 {
@@ -193,44 +195,45 @@ bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidt
   }
 }
 
-}  // namespace sorting
-
-namespace joblist
-{
-// forward reference
-struct JobInfo;
-
+// Rename these two WIP
+using ValueRange = std::pair<size_t, size_t>;
+using ValueRangesVector = std::vector<std::vector<ValueRange>>;
 template <bool TrueCheck>
 concept IsTrue = requires { requires TrueCheck == true; };
 
 template <bool FalseCheck>
 concept IsFalse = requires { requires FalseCheck == false; };
 
-class FlatOrderBy;
-using SortingThreads = std::vector<std::unique_ptr<FlatOrderBy>>;
+class PDQOrderBy;
+using SortingThreads = std::vector<std::unique_ptr<PDQOrderBy>>;
+struct PermutationType
+{
+  uint64_t rgdataID : 32 {}, rowID : 24 {}, threadID : 8 {};
+  bool operator==(const PermutationType r) const
+  {
+    return rgdataID == r.rgdataID && rowID == r.rowID && threadID == r.threadID;
+  }
+};
+using PermutationVec = std::vector<PermutationType>;
+using PermutationVecIter = PermutationVec::iterator;
 
 // There is an important invariant that the code of this class must hold,
 // namely rg_ must be init-ed only once.
-class FlatOrderBy
+class PDQOrderBy
 {
  public:
   // Bit lengths for rowID and threadID are flexible
-  struct PermutationType
-  {
-    uint64_t rgdataID : 32 {}, rowID : 24 {}, threadID : 8 {};
-  };
-  using PermutationVecIter = std::vector<PermutationType>::iterator;
+
   using IterDiffT = std::iterator_traits<PermutationVecIter>::difference_type;
-  using PermutationVec = std::vector<PermutationType>;
   using Ranges2SortQueue = std::queue<std::pair<IterDiffT, IterDiffT>>;
 
  private:
   using RGDataOrRowIDType = uint32_t;
 
  public:
-  FlatOrderBy();
-  ~FlatOrderBy();
-  void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,
+  PDQOrderBy();
+  ~PDQOrderBy();
+  void initialize(const rowgroup::RowGroup&, const joblist::JobInfo&, bool invertRules = false,
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&);
   bool addBatch(rowgroup::RGData& rgData);
@@ -345,8 +348,6 @@ class FlatOrderBy
  protected:
   uint64_t start_;
   uint64_t count_;
-  uint64_t uncommitedMemory_;
-  static const uint64_t maxUncommited_;
   joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
   rowgroup::RGDataVector rgDatas_;
@@ -363,4 +364,4 @@ class FlatOrderBy
   rowgroup::Row outRow_;
 };
 
-}  // namespace joblist
+}  // namespace sorting
