@@ -317,7 +317,7 @@ void TupleAnnexStep::run()
           [this, id]()
           {
             if (id < firstPhaseflatOrderBys_.size() && firstPhaseflatOrderBys_[id].get())
-              this->executeFlatOrderBy(id);
+              this->executePDQOrderBy(id);
             else
             {
               // WIP print something
@@ -409,7 +409,7 @@ void TupleAnnexStep::execute()
   }
   else if (flatOrderBy_.get())
   {
-    executeFlatOrderBy();
+    executePDQOrderBy();
   }
   else if (fDistinct)
   {
@@ -755,7 +755,7 @@ void TupleAnnexStep::executeWithOrderBy()
   fOutputDL->endOfInput();
 }
 
-void TupleAnnexStep::executeFlatOrderBy()
+void TupleAnnexStep::executePDQOrderBy()
 {
   utils::setThreadName("TASwOrdFlat");
   RGData rgDataIn;
@@ -846,7 +846,7 @@ void TupleAnnexStep::executeFlatOrderBy()
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeFlatOrderBy()");
+                    "TupleAnnexStep::executePDQOrderBy()");
   }
   auto end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
@@ -859,7 +859,7 @@ void TupleAnnexStep::executeFlatOrderBy()
   fOutputDL->endOfInput();
 }
 
-void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
+void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
 {
   utils::setThreadName("TASwPOrdFlat");
   RGData rgDataIn;
@@ -912,7 +912,7 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeFlatOrderBy()");
+                    "TupleAnnexStep::executePDQOrderBy()");
   }
 
   while (more)
@@ -925,18 +925,19 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
   {
     // WIP Replace this vector with vector of RGDatas?
     // This ref lives as long as TAS this lives.
-    const SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
+    const sorting::SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
     // for (auto& thread : firstPhaseThreads)
     // {
-    //   std::cout << "executeFlatOrderBy firstPhaseThreads perm size " << (*thread).getPermutation().size()
+    //   std::cout << "executePDQOrderBy firstPhaseThreads perm size " << (*thread).getPermutation().size()
     //             << std::endl;
     // }
-    auto valueRanges = calculateStats4FlatOrderBy2ndPhase(firstPhaseThreads);
+    // WIP Make this a constant
+    auto valueRanges = calculateStats4PDQOrderBy2ndPhase(firstPhaseThreads);
     for (uint32_t i = 1; i <= fMaxThreads; ++i)
     {
       fRunnersList.push_back(
           jobstepThreadPool.invoke([this, i, valueRanges, &firstPhaseThreads]()
-                                   { this->finalizeFlatOrderBy(i, valueRanges, firstPhaseThreads); }));
+                                   { this->finalizePDQOrderBy(i, valueRanges, firstPhaseThreads); }));
     }
     // Put from thread outputDLs into a common outputDL
     fRunnersList.push_back(jobstepThreadPool.invoke([this]() { this->joinOutputDLs(); }));
@@ -946,10 +947,10 @@ void TupleAnnexStep::executeFlatOrderBy(const uint32_t id)
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-  requires(!std::is_same<EncodedKeyType, utils::ConstString>::value) bool
-directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
-                   const FlatOrderBy::PermutationType leftPerm, const EncodedKeyType target,
-                   const datatypes::Charset& cs)
+  requires(!UsesCollationCmp<EncodedKeyType>) bool
+directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                  const sorting::PermutationType leftPerm, const EncodedKeyType target,
+                  const datatypes::Charset& cs)
 {
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
   EncodedKeyType leftValue =
@@ -964,11 +965,10 @@ directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, cons
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-// requires rowgroup::IsAnyKindOfStrings<ColType, StorageType, EncodedKeyType> bool
   requires std::is_same<EncodedKeyType, utils::ConstString>::value bool
-directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
-                   const FlatOrderBy::PermutationType leftPerm, const EncodedKeyType target,
-                   const datatypes::Charset& cs)
+directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                  const sorting::PermutationType leftPerm, const EncodedKeyType target,
+                  const datatypes::Charset& cs)
 {
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
   EncodedKeyType leftValue =
@@ -984,10 +984,10 @@ directionAwareComp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, cons
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
 size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg,
-                                const uint32_t columnId, const FlatOrderBy::PermutationVec& perm,
+                                const uint32_t columnId, const sorting::PermutationVec& perm,
                                 const EncodedKeyType target)
 {
-  using ForwardIt = FlatOrderBy::PermutationVec::const_iterator;
+  using ForwardIt = sorting::PermutationVec::const_iterator;
   ForwardIt it;
   ForwardIt first = perm.begin();
   ForwardIt last = perm.end();
@@ -1001,8 +1001,8 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
     step = count / 2;
     std::advance(it, step);
 
-    if (directionAwareComp<isAscDirection, ColType, StorageType, EncodedKeyType>(rgDatas, rg, columnId, *it,
-                                                                                 target, cs))
+    if (directionAwareCmp<isAscDirection, ColType, StorageType, EncodedKeyType>(rgDatas, rg, columnId, *it,
+                                                                                target, cs))
     {
       first = ++it;
       count -= step + 1;
@@ -1016,10 +1016,10 @@ size_t binSearchWithPermutation(rowgroup::RGDataVector& rgDatas, rowgroup::RowGr
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t rangeVectorDist,
-                            const vector<EncodedKeyType>& lowerBoundValues, rowgroup::RGDataVector& rgDatas,
-                            const FlatOrderBy::PermutationVec& perm, rowgroup::RowGroup& rg,
-                            const uint32_t columnId)
+sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t rangeVectorDist,
+                                     const vector<EncodedKeyType>& lowerBoundValues,
+                                     rowgroup::RGDataVector& rgDatas, const sorting::PermutationVec& perm,
+                                     rowgroup::RowGroup& rg, const uint32_t columnId)
 {
   assert(lowerBoundValues.size() >= 2);
   if (rangeVectorDist > 0 && rangeVectorDist < maxRangeSize)  // Nth
@@ -1058,9 +1058,85 @@ ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t rangeVectorD
   return {};
 }
 
+template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
+          typename EncodedKeyType>
+const sorting::ValueRangesVector calculateStats(const sorting::SortingThreads& sortingThreads,
+                                                rowgroup::RowGroup& rg, const size_t maxThreads,
+                                                const uint32_t columnId)
+{
+  sorting::ValueRangesVector ranges(maxThreads);
+  sorting::ValueRangesVector testRanges(maxThreads);
+  vector<EncodedKeyType> lowerBoundValues;
+  auto& sorting = sortingThreads.front();
+  {
+    const auto& perm = sorting->getPermutation();
+    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
+    size_t left = 0;
+    size_t right = step;
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it)
+    {
+      auto p = perm[left];
+      rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+      lowerBoundValues.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
+      left = right + ((perm.empty()) ? 0 : 1);
+      right = std::min(right + step, perm.size());
+    }
+  }
+
+  // std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout,
+  // ","));
+  std::cout << endl;
+  size_t maxVectorDistance = ranges.size() - 1;
+  // WIP skip the first sorting processed in the beginning
+  for (auto& sorting : sortingThreads)
+  {
+    // WIP
+    auto rg = sorting->getRG();
+    const auto& perm = sorting->getPermutation();
+    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
+    size_t left = 0;
+    size_t right = step;
+    size_t i = lowerBoundValues.size() - 1;
+    auto ita = testRanges.rbegin();
+    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
+    {
+      size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
+      assert(ranges.size() >= 1);
+      it->push_back(calcLeftAndRight<isAscDirection, ColType, StorageType, EncodedKeyType>(
+          maxVectorDistance, rangeVectorDist, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
+      ita->push_back({left, right});
+      std::cout << "stats calc left " << left << " right " << right << std::endl;
+      left = right + ((perm.empty()) ? 0 : 1);
+      right = std::min(right + step, perm.size());
+    }
+  }
+  std::cout << "ranges " << std::endl;
+  for (auto& el : ranges)
+  {
+    for (auto& p : el)
+    {
+      std::cout << "{" << p.first << "," << p.second << "} ";
+    }
+  }
+  std::cout << endl;
+
+  std::cout << "testRanges " << std::endl;
+  for (auto& el : testRanges)
+  {
+    for (auto& p : el)
+    {
+      std::cout << "{" << p.first << "," << p.second << "} ";
+    }
+  }
+  std::cout << endl;
+
+  return ranges;
+}
+
 template <bool isAscDirection>
-const ValueRangesVector calculateStatsColumnTypeDisp(const SortingThreads& sortingThreads,
-                                                     const size_t maxThreads, const uint32_t columnId)
+const sorting::ValueRangesVector calculateStatsColumnTypeDisp(const sorting::SortingThreads& sortingThreads,
+                                                              const size_t maxThreads,
+                                                              const uint32_t columnId)
 {
   auto& sorting = sortingThreads.front();
   auto& rg = sorting->getRGRef();
@@ -1302,82 +1378,8 @@ const ValueRangesVector calculateStatsColumnTypeDisp(const SortingThreads& sorti
   return {};
 }
 
-template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
-          typename EncodedKeyType>
-const ValueRangesVector calculateStats(const SortingThreads& sortingThreads, rowgroup::RowGroup& rg,
-                                       const size_t maxThreads, const uint32_t columnId)
-{
-  ValueRangesVector ranges(maxThreads);
-  ValueRangesVector testRanges(maxThreads);
-  vector<EncodedKeyType> lowerBoundValues;
-  auto& sorting = sortingThreads.front();
-  {
-    const auto& perm = sorting->getPermutation();
-    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
-    size_t left = 0;
-    size_t right = step;
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it)
-    {
-      auto p = perm[left];
-      rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-      lowerBoundValues.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
-      left = right + ((perm.empty()) ? 0 : 1);
-      right = std::min(right + step, perm.size());
-    }
-  }
-
-  // std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout,
-  // ","));
-  std::cout << endl;
-  size_t maxVectorDistance = ranges.size() - 1;
-  // WIP skip the first sorting processed in the beginning
-  for (auto& sorting : sortingThreads)
-  {
-    // WIP
-    auto rg = sorting->getRG();
-    const auto& perm = sorting->getPermutation();
-    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
-    size_t left = 0;
-    size_t right = step;
-    size_t i = lowerBoundValues.size() - 1;
-    auto ita = testRanges.rbegin();
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
-    {
-      size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
-      assert(ranges.size() >= 1);
-      it->push_back(calcLeftAndRight<isAscDirection, ColType, StorageType, EncodedKeyType>(
-          maxVectorDistance, rangeVectorDist, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
-      ita->push_back({left, right});
-      std::cout << "stats calc left " << left << " right " << right << std::endl;
-      left = right + ((perm.empty()) ? 0 : 1);
-      right = std::min(right + step, perm.size());
-    }
-  }
-  std::cout << "ranges " << std::endl;
-  for (auto& el : ranges)
-  {
-    for (auto& p : el)
-    {
-      std::cout << "{" << p.first << "," << p.second << "} ";
-    }
-  }
-  std::cout << endl;
-
-  std::cout << "testRanges " << std::endl;
-  for (auto& el : testRanges)
-  {
-    for (auto& p : el)
-    {
-      std::cout << "{" << p.first << "," << p.second << "} ";
-    }
-  }
-  std::cout << endl;
-
-  return ranges;
-}
-
-const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
-    const SortingThreads& sortingThreads) const
+const sorting::ValueRangesVector TupleAnnexStep::calculateStats4PDQOrderBy2ndPhase(
+    const sorting::SortingThreads& sortingThreads) const
 {
   utils::setThreadName("TASOrdStats");
   auto& sorting = sortingThreads.front();
@@ -1389,13 +1391,15 @@ const ValueRangesVector TupleAnnexStep::calculateStats4FlatOrderBy2ndPhase(
 }
 
 // WIP use std::function in init to assign this maybe
+// WIP No LIMIT, OFFSET
 void TupleAnnexStep::joinOutputDLs()
 {
-  RGData rgDataOut;
-  // bool more = true;
+  // WIP
   std::string threadName("TAS2ndDLM");
   utils::setThreadName(threadName.c_str());
+  RGData rgDataOut;
 
+  // This is set to one b/c 0th outputDL is TAS main outputDL.
   size_t secondPhaseFlatThreadId = 1;
   try
   {
@@ -1477,8 +1481,13 @@ void TupleAnnexStep::joinOutputDLs()
   fOutputDL->endOfInput();
 }
 
-void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t idA, const ValueRangesVector ranges,
-                                         const SortingThreads& firstPhaseThreads)
+void finalizeHeapOrderBy(const uint32_t idA, const sorting::ValueRangesVector ranges,
+                         const sorting::SortingThreads& firstPhaseThreads)
+{
+}
+
+void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::ValueRangesVector ranges,
+                                        const sorting::SortingThreads& firstPhaseThreads)
 {
   // render a new permutation using argument ranges and a full range.
   // free 1st phase permutations_ when they are read.
@@ -1495,7 +1504,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t idA, const ValueRangesVe
   // std::cout << "enter " << threadName << std::endl;
   RGData rgDataIn;
   RGData rgDataOut;
-  FlatOrderBy::PermutationVec perm;
+  sorting::PermutationVec perm;
   // WIP estimate perm size and reserve enough space
   auto firstPhaseSortingThread = firstPhaseflatOrderBys_.begin();
   auto range = ranges[id].begin();
@@ -1514,7 +1523,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t idA, const ValueRangesVe
   }
   std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
   // WIP clean up first phase perm vector when the last range is read from it
-  FlatOrderBy::Ranges2SortQueue ranges2Sort;
+  sorting::PDQOrderBy::Ranges2SortQueue ranges2Sort;
   // means ranges2Sort is a pair of int64 and ::size() is uint64
   assert(perm.size() < std::numeric_limits<size_t>::max());
   ranges2Sort.push({0, perm.size()});
@@ -1543,6 +1552,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t idA, const ValueRangesVe
 
     // WIP
     rowgroup::RowGroup rowGroupOut{fRowGroupOut};
+    // WIP getData can return a number of rows
     while (secondPhaseflatOrderBys_[id]->getData(rgDataOut, firstPhaseflatOrderBys_))
     {
       // rgDataOut = rgDataIn;
@@ -1565,7 +1575,7 @@ void TupleAnnexStep::finalizeFlatOrderBy(const uint32_t idA, const ValueRangesVe
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderByFlatOrderBy()");
+                    "TupleAnnexStep::executeWithOrderByPDQOrderBy()");
   }
   auto end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
