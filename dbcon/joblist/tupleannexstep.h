@@ -28,7 +28,7 @@
 #include "jlf_common.h"
 #include "jobstep.h"
 #include "limitedorderby.h"
-#include "orderby.h"
+#include "pdqorderby.h"
 
 namespace joblist
 {
@@ -38,8 +38,6 @@ class LimitedOrderBy;
 
 namespace joblist
 {
-using ValueRange = std::pair<size_t, size_t>;
-using ValueRangesVector = std::vector<std::vector<ValueRange>>;
 
 /** @brief class TupleAnnexStep
  *
@@ -89,14 +87,14 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     }
     else if (jobInfo.orderByThreads == 1)
     {
-      flatOrderBy_.reset(new FlatOrderBy());
+      flatOrderBy_.reset(new sorting::PDQOrderBy());
     }
     else
     {
       for (size_t i = 0; i < jobInfo.orderByThreads; ++i)
       {
-        firstPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
-        secondPhaseflatOrderBys_.emplace_back(new FlatOrderBy());
+        firstPhaseflatOrderBys_.emplace_back(new sorting::PDQOrderBy());
+        secondPhaseflatOrderBys_.emplace_back(new sorting::PDQOrderBy());
       }
     }
 
@@ -140,17 +138,20 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void execute(uint32_t);
   void executeNoOrderBy();
   void executeWithOrderBy();
-  void executeFlatOrderBy();
-  void executeFlatOrderBy(const uint32_t id);
+  void executePDQOrderBy();
+  void executePDQOrderBy(const uint32_t id);
   void executeParallelOrderBy(uint64_t id);
   void executeNoOrderByWithDistinct();
   void formatMiniStats();
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const ValueRangesVector calculateStats4FlatOrderBy2ndPhase(const SortingThreads& sortingGroup) const;
-  void finalizeFlatOrderBy(const uint32_t id, const ValueRangesVector ranges,
-                           const SortingThreads& firstPhaseThreads);
+  const sorting::ValueRangesVector calculateStats4PDQOrderBy2ndPhase(
+      const sorting::SortingThreads& sortingGroup) const;
+  void finalizePDQOrderBy(const uint32_t id, const sorting::ValueRangesVector ranges,
+                          const sorting::SortingThreads& firstPhaseThreads);
+  void finalizeHeapOrderBy(const uint32_t id, const sorting::ValueRangesVector ranges,
+                          const sorting::SortingThreads& firstPhaseThreads);
   void joinOutputDLs();
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;
@@ -202,11 +203,11 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   bool fParallelOp;
 
   LimitedOrderBy* fOrderBy;
-  std::unique_ptr<FlatOrderBy> flatOrderBy_;
+  std::unique_ptr<sorting::PDQOrderBy> flatOrderBy_;
 
  public:
-  SortingThreads firstPhaseflatOrderBys_;
-  SortingThreads secondPhaseflatOrderBys_;
+  sorting::SortingThreads firstPhaseflatOrderBys_;
+  sorting::SortingThreads secondPhaseflatOrderBys_;
 
  private:
   TupleConstantStep* fConstant;

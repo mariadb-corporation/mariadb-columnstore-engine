@@ -107,6 +107,8 @@ concept IsShortString =
                   std::is_same<ToType, utils::ConstString>::value &&
                   std::is_same<FromType, utils::ShortConstString>::value;
     };
+template <typename T>
+concept UsesCollationCmp = requires { requires(std::is_same<T, utils::ConstString>::value); };
 /*
     The RowGroup family of classes encapsulate the data moved through the
     system.

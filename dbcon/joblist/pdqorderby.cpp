@@ -15,17 +15,12 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-//  $Id: FlatOrderBy.cpp 9581 2013-05-31 13:46:14Z pleblanc $
-
 #include <iostream>
 // #define NDEBUG
 #include <cassert>
 #include <string>
 #include "calpontsystemcatalog.h"
 using namespace std;
-
-#include <boost/shared_array.hpp>
-using namespace boost;
 
 #include "errorids.h"
 #include "exceptclasses.h"
@@ -35,29 +30,24 @@ using namespace logging;
 using namespace rowgroup;
 
 #include "jlf_common.h"
-#include "orderby.h"
+#include "pdqorderby.h"
 #include "utils/common/modified_pdqsort.h"
 
-using namespace ordering;
-
-namespace joblist
+namespace sorting
 {
-// const uint64_t FlatOrderBy::fMaxUncommited = 102400;  // 100KiB - make it configurable?
-
-// FlatOrderBy class implementation
-FlatOrderBy::FlatOrderBy() : start_(0), count_(-1)
+// PDQOrderBy class implementation
+PDQOrderBy::PDQOrderBy() : start_(0), count_(-1)
 {
   // fRule.fIdbCompare = this;
 }
 
-FlatOrderBy::~FlatOrderBy()
+PDQOrderBy::~PDQOrderBy()
 {
 }
 
-void FlatOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool invertRules,
-                             bool isMultiThreaded)
+void PDQOrderBy::initialize(const RowGroup& rg, const joblist::JobInfo& jobInfo, bool invertRules,
+                            bool isMultiThreaded)
 {
-  //   fRm = jobInfo.rm;
   // Watch out and re-check the defaults !!!
   mm_.reset(new joblist::RMMemManager(jobInfo.rm, jobInfo.umMemLimit));
 
@@ -94,13 +84,12 @@ void FlatOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool in
 
 // This must return a proper number of key columns and
 // not just a column count.
-uint64_t FlatOrderBy::getKeyLength() const
+uint64_t PDQOrderBy::getKeyLength() const
 {
   return rg_.getColumnCount();
-  //   return fRow0.getColumnCount();
 }
 
-bool FlatOrderBy::addBatch(rowgroup::RGData& rgData)
+bool PDQOrderBy::addBatch(rowgroup::RGData& rgData)
 {
   bool isFailure = false;
   rg_.setData(&rgData);
@@ -119,7 +108,7 @@ bool FlatOrderBy::addBatch(rowgroup::RGData& rgData)
   return isFailure;
 }
 
-bool FlatOrderBy::sortCF(const uint32_t id)
+bool PDQOrderBy::sortCF(const uint32_t id)
 {
   bool isFailure = false;
   constexpr const bool isFirst = true;
@@ -137,9 +126,9 @@ bool FlatOrderBy::sortCF(const uint32_t id)
   return isFailure;
 }
 
-bool FlatOrderBy::sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysType columns,
-                                       PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,
-                                       const SortingThreads& prevPhaseThreads)
+bool PDQOrderBy::sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysType columns,
+                                      PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,
+                                      const SortingThreads& prevPhaseThreads)
 {
   auto perm = permutation;
   auto ranges = ranges2Sort;
@@ -147,9 +136,9 @@ bool FlatOrderBy::sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysTy
 }
 
 template <bool IsFirst>
-bool FlatOrderBy::sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns,
-                                 PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,
-                                 const SortingThreads& prevPhaseThreads)
+bool PDQOrderBy::sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns,
+                                PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,
+                                const SortingThreads& prevPhaseThreads)
 {
   const bool isFailure = false;
   // std::cout << "sortByColumnCF columns size " << columns.size() << std::endl;
@@ -419,9 +408,9 @@ bool FlatOrderBy::sortByColumnCF(const uint32_t id, joblist::OrderByKeysType col
 }
 
 template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-void FlatOrderBy::initialPermutationKeysNulls(const uint32_t id, const uint32_t columnID,
-                                              const bool nullsFirst, std::vector<EncodedKeyType>& keys,
-                                              PermutationVec& permutation, PermutationVec& nulls)
+void PDQOrderBy::initialPermutationKeysNulls(const uint32_t id, const uint32_t columnID,
+                                             const bool nullsFirst, std::vector<EncodedKeyType>& keys,
+                                             PermutationVec& permutation, PermutationVec& nulls)
 {
   rowgroup::Row r;
   // Replace with a constexpr
@@ -469,9 +458,9 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t id, const uint32_t 
 }
 
 template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
-auto FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst,
-                                        PermutationVecIter begin, PermutationVecIter end,
-                                        const SortingThreads& prevPhaseThreads)
+auto PDQOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool nullsFirst,
+                                       PermutationVecIter begin, PermutationVecIter end,
+                                       const SortingThreads& prevPhaseThreads)
 {
   std::vector<EncodedKeyType> keys;
   PermutationVec nulls;
@@ -512,7 +501,7 @@ auto FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
 }
 
 template <typename EncodedKeyType>
-FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
+PDQOrderBy::Ranges2SortQueue PDQOrderBy::populateRanges(
     [[maybe_unused]] const uint32_t columnID, const IterDiffT beginOffset,
     typename std::vector<EncodedKeyType>::const_iterator begin,
     typename std::vector<EncodedKeyType>::const_iterator end)
@@ -523,7 +512,7 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
   if (std::distance(begin, end) <= 1)
     return {};
 
-  FlatOrderBy::Ranges2SortQueue ranges;
+  PDQOrderBy::Ranges2SortQueue ranges;
   auto rangeItLeft = begin;
   auto rangeItRight = begin + 1;
   if constexpr (sorting::IsConstString<EncodedKeyType>)
@@ -576,17 +565,16 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
   requires IsTrue<IsFirst> bool
-FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID, const bool isAscDirection,
-                                     joblist::OrderByKeysType columns, PermutationVec&& permutationA,
-                                     Ranges2SortQueue&& ranges2SortA, const SortingThreads& prevPhaseThreads)
+PDQOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID, const bool isAscDirection,
+                                    joblist::OrderByKeysType columns, PermutationVec&& permutationA,
+                                    Ranges2SortQueue&& ranges2SortA, const SortingThreads& prevPhaseThreads)
 {
   bool isFailure = false;
   // ASC = true, DESC = false
   // MCS finally reads records from TAS in opposite to nullsFirst value,
   // if nullsFirst is true the NULLS will be in the end and vice versa.
   const bool nullsFirst = !isAscDirection;
-  auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * rgDatas_.size() *
-               rowgroup::rgCommonSize;
+  auto bytes = (sizeof(EncodedKeyType) + sizeof(PermutationType)) * rgDatas_.size() * rowgroup::rgCommonSize;
   Ranges2SortQueue ranges2Sort;
   PermutationVec permutation;
   {
@@ -687,9 +675,9 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
   requires IsFalse<IsFirst> bool
-FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID, const bool sortDirection,
-                                     joblist::OrderByKeysType columns, PermutationVec&& permutationA,
-                                     Ranges2SortQueue&& ranges2SortA, const SortingThreads& prevPhaseThreads)
+PDQOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID, const bool sortDirection,
+                                    joblist::OrderByKeysType columns, PermutationVec&& permutationA,
+                                    Ranges2SortQueue&& ranges2SortA, const SortingThreads& prevPhaseThreads)
 {
   // std::cout << " sortByColumnCF_  1 columns.size() " << columns.size() << std::endl;
 
@@ -718,16 +706,13 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
     const auto sameValuesRangeEnd = permutation.begin() + sameValuesRangeEndDist;
     const auto permCurRangeBeginEndDist = sameValuesRangeEndDist - sameValuesRangeBeginDist;
     ranges2Sort.pop();
-    auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * permCurRangeBeginEndDist;
+    auto bytes = (sizeof(EncodedKeyType) + sizeof(PermutationType)) * permCurRangeBeginEndDist;
     if (!mm_->acquire(bytes))
     {
       cerr << IDBErrorInfo::instance()->errorMsg(ERR_LIMIT_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
       throw IDBExcept(ERR_LIMIT_TOO_BIG);
     }
 
-    // std::vector<EncodedKeyType> keys;
-    // PermutationVec nulls;
-    // PermutationVec permutation;
     auto [keys, nulls, permutation] = loopIterKeysNullsPerm<ColType, StorageType, EncodedKeyType>(
         columnID, isAscDirection, sameValuesRangeBegin, sameValuesRangeEnd, prevPhaseThreads);
 
@@ -843,13 +828,13 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnID,
   return isFailure;
 }
 
-void FlatOrderBy::processRow(const rowgroup::Row& row)
+void PDQOrderBy::processRow(const rowgroup::Row& row)
 {
 }
 
 // This method calculates the final permutation offset to start with
 // taking OFFSET and LIMIT into account.
-void FlatOrderBy::finalize()
+void PDQOrderBy::finalize()
 {
   // Signal getData() to return false if perm is empty. Impossible case though.
   if (permutation_.size() == 0 || start_ > permutation_.size())
@@ -863,7 +848,7 @@ void FlatOrderBy::finalize()
 
 // returns false when finishes
 // WIP try the forward direction looping over permutation_.
-bool FlatOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads)
+bool PDQOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads)
 {
   static constexpr IterDiffT rgMaxSize = rowgroup::rgCommonSize;
   auto rowsToReturn = std::min(rgMaxSize, flatCurPermutationDiff_);
@@ -917,10 +902,10 @@ bool FlatOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPhas
   return true;
 }
 
-const string FlatOrderBy::toString() const
+const string PDQOrderBy::toString() const
 {
   ostringstream oss;
-  oss << "FlatOrderBy   cols: ";
+  oss << "PDQOrderBy   cols: ";
   for (auto [rgColumnID, sortDirection] : jobListorderByRGColumnIDs_)
   {
     oss << "(" << rgColumnID << "," << ((sortDirection) ? "Asc" : "Desc)");
@@ -932,4 +917,4 @@ const string FlatOrderBy::toString() const
   return oss.str();
 }
 
-}  // namespace joblist
+}  // namespace sorting
