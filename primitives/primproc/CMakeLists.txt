@@ -29,6 +29,11 @@ set(PrimProc_SRCS
 add_executable(PrimProc ${PrimProc_SRCS})
 
 add_dependencies(PrimProc loggingcpp)
+
+if (WITH_CUSTOM_JEMALLOC)
+   target_link_libraries(PrimProc custom_jemalloc_lib)
+endif()
+
 target_include_directories(PrimProc PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
 

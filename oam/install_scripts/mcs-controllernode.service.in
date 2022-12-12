@@ -13,7 +13,7 @@ Group=@DEFAULT_GROUP@
 LimitNOFILE=65536
 LimitNPROC=65536
 LimitCORE=@CORE_DUMPS@
-
+Environment="@CONTROLLERNODE_ALLOC_CONFIG@"
 ExecStart=@ENGINE_BINDIR@/controllernode
 ExecStop=@ENGINE_BINDIR@/mcs-stop-controllernode.sh $MAINPID
 

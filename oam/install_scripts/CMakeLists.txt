@@ -8,6 +8,23 @@ if (WITH_COREDUMPS)
 endif (WITH_COREDUMPS)
 
 
+# For work with instrumented jemalloc
+if (NOT WITH_CUSTOM_JEMALLOC)
+  SET(LD_PRELOAD_STRING "LD_PRELOAD=$(ldconfig -p | grep -m1 libjemalloc | awk '{print $1}')")
+endif()
+
+if (WITH_CUSTOM_JEMALLOC)
+  SET(HEAPPROF_DIR /var/run/columnstore/heapprof)
+  SET(HEAP_PROF_CREATE_DIR "mkdir -p ${HEAPPROF_DIR}; chmod 777 ${HEAPPROF_DIR}")
+  SET(ALLOC_CONFIG MALLOC_CONF=prof:true,prof_leak:true,lg_prof_sample:19,prof_final:true,stats_print:true,abort:false,abort_conf:false)
+  SET(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/PrimProc_heap_profile)
+  SET(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/DMLProc_heap_profile)
+  SET(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/DDLProc_heap_profile)
+  SET(WRITEENGINE_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/WriteEngineServer_heap_profile)
+  SET(CONTROLLERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/controllernode_heap_profile)
+  SET(WORKERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/workernode_heap_profile)
+  SET(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},prof_prefix:${HEAPPROF_DIR}/StorageManager_heap_profile)
+endif()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install" @ONLY)
