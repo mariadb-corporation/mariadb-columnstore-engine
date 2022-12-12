@@ -66,8 +66,8 @@ add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR}
-  ${CMAKE_BINARY_DIR}/libmariadb/include
-  ${CMAKE_SOURCE_DIR}/libmariadb/include)
+  ${LIBMARIADB_BININC_DIR}
+  ${LIBMARIADB_SRCINC_DIR})
 add_dependencies(joblist loggingcpp)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

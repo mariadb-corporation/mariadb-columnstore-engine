@@ -250,6 +250,14 @@ SET (ENGINE_EXEC_LIBS       joblist querystats libmysql_client ${PLUGIN_EXEC_LIB
 SET (PLUGIN_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage writeengine writeengineclient idbdatafile cacheutils)
 SET (ENGINE_WRITE_LIBS      ${PLUGIN_WRITE_LIBS} ${ENGINE_EXEC_LIBS})
 
+IF (NOT INSTALL_LAYOUT)
+    SET (LIBMARIADB_BININC_DIR ${SERVER_BUILD_DIR}/libmariadb/include)
+    SET (LIBMARIADB_SRCINC_DIR ${SERVER_SOURCE_ROOT_DIR}/libmariadb/include)
+ELSE()
+    SET (LIBMARIADB_BININC_DIR ${CMAKE_BINARY_DIR}/libmariadb/include)
+    SET (LIBMARIADB_SRCINC_DIR ${CMAKE_SOURCE_DIR}/libmariadb/include)
+ENDIF()
+
 SET (ENGINE_COMMON_LDFLAGS  "")
 
 IF (SERVER_BUILD_INCLUDE_DIR)
