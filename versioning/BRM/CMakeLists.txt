@@ -44,6 +44,10 @@ set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/cra
 
 add_executable(controllernode ${controllernode_SRCS})
 
+if (WITH_CUSTOM_JEMALLOC)
+   target_link_libraries(controllernode custom_jemalloc_lib)
+endif()
+
 target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} )
 
 install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
@@ -56,6 +60,10 @@ set(workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
 add_executable(workernode ${workernode_SRCS})
 
 target_link_libraries(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+
+if (WITH_CUSTOM_JEMALLOC)
+   target_link_libraries(workernode custom_jemalloc_lib)
+endif()
 
 install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
