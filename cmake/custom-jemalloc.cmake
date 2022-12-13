@@ -21,7 +21,7 @@ if (WITH_CUSTOM_JEMALLOC)
     ExternalProject_Add(custom_jemalloc
         URL https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2
         URL_HASH SHA256=2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa
-        CONFIGURE_COMMAND ./configure --with-jemalloc-prefix="" --disable-shared --enable-prof --enable-static --prefix=${INSTALL_LOCATION}
+        CONFIGURE_COMMAND ./configure --with-jemalloc-prefix="" --enable-shared --enable-prof --enable-static --prefix=${INSTALL_LOCATION}
 
         UPDATE_COMMAND ""
         BUILD_COMMAND make
