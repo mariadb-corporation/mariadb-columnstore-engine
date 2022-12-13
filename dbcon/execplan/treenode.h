@@ -665,17 +665,25 @@ inline int64_t TreeNode::getIntVal()
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::CHAR:
+    {
+      if (fResultType.colWidth <= 8)
+      {
+        return fResult.intVal;
+      }
+      datatypes::DataCondition cnverr;
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
+      return cnv.toSInt<int64_t>(cnverr);
+    }
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
     {
+      if (fResultType.colWidth <= 7)
+        return fResult.intVal;
+
       datatypes::DataCondition cnverr;
       literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
-      if (datatypes::DataCondition::Code(cnverr) != 0)
-      {
-        cerr << "error in int conversion from '" << fResult.strVal << "'";
-      }
       return cnv.toSInt<int64_t>(cnverr);
     }
 
