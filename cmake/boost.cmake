@@ -19,7 +19,7 @@ SET(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 LINK_DIRECTORIES("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
-set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
+set(_b2args link=static cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
 
 SET(byproducts)
 FOREACH(name chrono filesystem program_options regex system thread)

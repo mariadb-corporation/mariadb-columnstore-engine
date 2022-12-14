@@ -32,7 +32,7 @@ INCLUDE(check_compiler_flag)
 INCLUDE(ExternalProject)
 INCLUDE(CheckCXXSourceCompiles)
 
-FIND_PACKAGE(Boost 1.71.0 COMPONENTS chrono filesystem program_options regex system thread)
+FIND_PACKAGE(Boost 1.81.0 COMPONENTS chrono filesystem program_options regex system thread)
 
 IF (NOT Boost_FOUND OR Boost_VERSION VERSION_GREATER 1.76.99)
   MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
