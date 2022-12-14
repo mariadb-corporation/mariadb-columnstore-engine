@@ -38,13 +38,11 @@ class HeapOrderBy
   static constexpr PermutationType impossiblePermute = {0xFFFFFFFF, 0xFFFFFF, 0xFF};
 
  public:
-  // HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::JobInfo& jobInfo,
-  //             const sorting::SortingThreads& prevPhaseSorting, const uint32_t threadNum,
-  //             const sorting::ValueRangesVector& ranges, const joblist::OrderByKeysType& sortingKeyCols);
-  HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::JobInfo& jobInfo, const uint32_t threadId,
+  HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, const size_t limitCount,
+              joblist::RMMemManager* mm, const uint32_t threadId,
               const sorting::SortingThreads& prevPhaseSorting, const uint32_t threadNum,
               const sorting::ValueRangesVector& ranges, const joblist::OrderByKeysType& sortingKeyCols);
-  ~HeapOrderBy();
+  ~HeapOrderBy() = default;
   size_t getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
   template <typename T>
   size_t idxOfMin(std::vector<HeapUnit>& heap, const size_t left, const size_t right);
@@ -63,7 +61,7 @@ class HeapOrderBy
   size_t recordsLeftInRanges_;
   joblist::OrderByKeysType jobListorderByRGColumnIDs_;
   rowgroup::RowGroup rg_;
-  std::unique_ptr<joblist::MemManager> mm_;
+  std::unique_ptr<joblist::RMMemManager> mm_;
   Heap heap_;
   HeapPermutations ranges_;
   // Scratch desk
