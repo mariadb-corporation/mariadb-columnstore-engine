@@ -1,7 +1,9 @@
 
-include_directories(${ENGINE_COMMON_INCLUDES})
+include_directories( ${ENGINE_COMMON_INCLUDES} )
 
-# ########## next target ###############
+
+########### next target ###############
+
 set(writeengine_LIB_SRCS
     writeengine.cpp
     we_colop.cpp
@@ -39,6 +41,6 @@ add_library(writeengine SHARED ${writeengine_LIB_SRCS})
 
 add_dependencies(writeengine loggingcpp)
 
-target_link_libraries(writeengine ${NETSNMP_LIBRARIES} boost_date_time)
+target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
 
 install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
