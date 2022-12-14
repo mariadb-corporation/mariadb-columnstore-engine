@@ -146,12 +146,13 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const sorting::ValueRangesVector calculateStats4PDQOrderBy2ndPhase(
+  const sorting::ValueRangesMatrix calculateStats4PDQOrderBy2ndPhase(
       const sorting::SortingThreads& sortingGroup) const;
-  void finalizePDQOrderBy(const uint32_t id, const sorting::ValueRangesVector ranges,
+  // WIP replace Mattrix with vector
+  void finalizePDQOrderBy(const uint32_t id, const sorting::ValueRangesMatrix ranges,
                           const sorting::SortingThreads& firstPhaseThreads);
   void finalizeHeapOrderBy(const uint32_t id, const sorting::ValueRangesVector ranges,
-                          const sorting::SortingThreads& firstPhaseThreads);
+                           const sorting::SortingThreads& firstPhaseThreads);
   void joinOutputDLs();
 
   static constexpr const uint64_t ReasonableLimit = 10000ULL;

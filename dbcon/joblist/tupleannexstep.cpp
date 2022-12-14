@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include <chrono>
+#include "heaporderby.h"
 #ifdef _MSC_VER
 #include <unordered_set>
 #else
@@ -870,11 +871,6 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
   try
   {
     more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
-    // if (more)
-    // {
-    //   ++dlOffset;
-    // }
-    // std::cout << "flatOB id " << id << "   " << fInputIteratorsList[id] << " more " << more << std::endl;
 
     if (traceOn())
       dlTimes.setFirstReadTime();
@@ -932,14 +928,18 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
     //             << std::endl;
     // }
     // WIP Make this a constant
-    auto valueRanges = calculateStats4PDQOrderBy2ndPhase(firstPhaseThreads);
-    for (uint32_t i = 1; i <= fMaxThreads; ++i)
+    auto perThreadRangesMatrix = calculateStats4PDQOrderBy2ndPhase(firstPhaseThreads);
+    assert(perThreadRangesMatrix.size() == fMaxThreads);
+    fRunnersList.push_back(jobstepThreadPool.invoke(
+        [this, perThreadRangesMatrix, &firstPhaseThreads]()
+        { this->finalizeHeapOrderBy(1, perThreadRangesMatrix[0], firstPhaseThreads); }));
+    for (uint32_t i = 2; i <= fMaxThreads; ++i)
     {
-      fRunnersList.push_back(
-          jobstepThreadPool.invoke([this, i, valueRanges, &firstPhaseThreads]()
-                                   { this->finalizePDQOrderBy(i, valueRanges, firstPhaseThreads); }));
+      fRunnersList.push_back(jobstepThreadPool.invoke(
+          [this, i, perThreadRangesMatrix, &firstPhaseThreads]()
+          { this->finalizePDQOrderBy(i, perThreadRangesMatrix, firstPhaseThreads); }));
     }
-    // Put from thread outputDLs into a common outputDL
+    // Merge finalizer threads' rgDatas from separate outputDLs into a common outputDL
     fRunnersList.push_back(jobstepThreadPool.invoke([this]() { this->joinOutputDLs(); }));
   }
   parallelOrderByMutex_.unlock();
@@ -1060,12 +1060,12 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-const sorting::ValueRangesVector calculateStats(const sorting::SortingThreads& sortingThreads,
+const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& sortingThreads,
                                                 rowgroup::RowGroup& rg, const size_t maxThreads,
                                                 const uint32_t columnId)
 {
-  sorting::ValueRangesVector ranges(maxThreads);
-  sorting::ValueRangesVector testRanges(maxThreads);
+  sorting::ValueRangesMatrix ranges(maxThreads);
+  sorting::ValueRangesMatrix testRanges(maxThreads);
   vector<EncodedKeyType> lowerBoundValues;
   auto& sorting = sortingThreads.front();
   {
@@ -1134,7 +1134,7 @@ const sorting::ValueRangesVector calculateStats(const sorting::SortingThreads& s
 }
 
 template <bool isAscDirection>
-const sorting::ValueRangesVector calculateStatsColumnTypeDisp(const sorting::SortingThreads& sortingThreads,
+const sorting::ValueRangesMatrix calculateStatsColumnTypeDisp(const sorting::SortingThreads& sortingThreads,
                                                               const size_t maxThreads,
                                                               const uint32_t columnId)
 {
@@ -1378,7 +1378,7 @@ const sorting::ValueRangesVector calculateStatsColumnTypeDisp(const sorting::Sor
   return {};
 }
 
-const sorting::ValueRangesVector TupleAnnexStep::calculateStats4PDQOrderBy2ndPhase(
+const sorting::ValueRangesMatrix TupleAnnexStep::calculateStats4PDQOrderBy2ndPhase(
     const sorting::SortingThreads& sortingThreads) const
 {
   utils::setThreadName("TASOrdStats");
@@ -1481,12 +1481,56 @@ void TupleAnnexStep::joinOutputDLs()
   fOutputDL->endOfInput();
 }
 
-void finalizeHeapOrderBy(const uint32_t idA, const sorting::ValueRangesVector ranges,
-                         const sorting::SortingThreads& firstPhaseThreads)
+void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::ValueRangesVector ranges,
+                                         const sorting::SortingThreads& firstPhaseThreads)
 {
+  // render a new permutation using argument ranges and a full range.
+  // free 1st phase permutations_ when they are read.
+  // Then start a new sorting.
+  const uint32_t id = idA - 1;
+  assert(id == 0);
+  std::string threadName("TAS2ndPh1stT");
+  threadName += std::to_string(id);
+  utils::setThreadName(threadName.c_str());
+  std::cout << "enter " << threadName << std::endl;
+  RGData rgDataOut;
+  auto& rg = firstPhaseThreads.front()->getRGRef();
+  auto sortingKeyColumns = firstPhaseThreads.front()->getSortingColumns();
+  auto* mm = firstPhaseThreads.front()->getMM()->typedClone();
+  sorting::HeapOrderBy sorting(rg, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads, fMaxThreads, ranges,
+                               sortingKeyColumns);
+
+  std::cout << " first HeapMerge id " << id << std::endl;
+  auto outputDL = fOutputJobStepAssociation.outAt(idA)->rowGroupDL();
+  auto start = std::chrono::steady_clock::now();
+  try
+  {
+    std::cout << "try 1 id " << id << std::endl;
+
+    if (!cancelled())
+    {
+    }
+    std::cout << "try 2 id " << id << std::endl;
+    size_t rows = 0;
+    while ((rows = sorting.getData(rgDataOut, firstPhaseThreads)) && !cancelled())
+    {
+      outputDL->insert(rgDataOut);
+      // std::cout << "Insert rgdata with " << rows << " rows " << std::endl;
+    }
+  }
+  catch (...)
+  {
+    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::finalizeHeapOrderBy()");
+  }
+  auto end = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "Heap finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count()
+            << std::endl;
+  outputDL->endOfInput();
 }
 
-void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::ValueRangesVector ranges,
+void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::ValueRangesMatrix ranges,
                                         const sorting::SortingThreads& firstPhaseThreads)
 {
   // render a new permutation using argument ranges and a full range.
@@ -1502,10 +1546,10 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
   // utils::setThreadName("TASwPOrdFlat2nd");
   utils::setThreadName(threadName.c_str());
   // std::cout << "enter " << threadName << std::endl;
-  RGData rgDataIn;
   RGData rgDataOut;
   sorting::PermutationVec perm;
   // WIP estimate perm size and reserve enough space
+  // WIP use firstPhaseThreads here and future.
   auto firstPhaseSortingThread = firstPhaseflatOrderBys_.begin();
   auto range = ranges[id].begin();
   for (; firstPhaseSortingThread != firstPhaseflatOrderBys_.end() && range != ranges[id].end();
@@ -1544,15 +1588,17 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
               id, secondPhaseflatOrderBys_[id]->getSortingColumns(), std::move(perm), std::move(ranges2Sort),
               firstPhaseThreads))
       {
-        // print something
+        // WIP print something, clean the dls and exit
       }
     }
+    // WIP there must be an early return if the prev command returns an error
     secondPhaseflatOrderBys_[id]->finalize();
     // std::cout << "try 2 id " << id << std::endl;
 
     // WIP
     rowgroup::RowGroup rowGroupOut{fRowGroupOut};
     // WIP getData can return a number of rows
+    // WIP use firstPhaseThreads here
     while (secondPhaseflatOrderBys_[id]->getData(rgDataOut, firstPhaseflatOrderBys_))
     {
       // rgDataOut = rgDataIn;
@@ -1569,6 +1615,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
         // fRowsReturned += rows;
         outputDL->insert(rgDataOut);
       }
+      // WIP clean rgDataOut up.
     }
     // std::cout << "in try after while " << std::to_string(id) << std::endl;
   }

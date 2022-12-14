@@ -197,7 +197,8 @@ bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidt
 
 // Rename these two WIP
 using ValueRange = std::pair<size_t, size_t>;
-using ValueRangesVector = std::vector<std::vector<ValueRange>>;
+using ValueRangesVector = std::vector<ValueRange>;
+using ValueRangesMatrix = std::vector<ValueRangesVector>;
 template <bool TrueCheck>
 concept IsTrue = requires { requires TrueCheck == true; };
 
@@ -212,6 +213,10 @@ struct PermutationType
   bool operator==(const PermutationType r) const
   {
     return rgdataID == r.rgdataID && rowID == r.rowID && threadID == r.threadID;
+  }
+  bool operator!=(const PermutationType r) const
+  {
+    return !operator==(r);
   }
 };
 using PermutationVec = std::vector<PermutationType>;
@@ -303,6 +308,10 @@ class PDQOrderBy
   {
     return jobListorderByRGColumnIDs_;
   }
+  joblist::RMMemManager* getMM() const
+  {
+    return mm_.get();
+  }
 
  private:
   template <typename EncodedKeyType, typename StorageType>
@@ -352,7 +361,7 @@ class PDQOrderBy
   rowgroup::RowGroup rg_;
   rowgroup::RGDataVector rgDatas_;
   PermutationVec permutation_;
-  std::unique_ptr<joblist::MemManager> mm_;
+  std::unique_ptr<joblist::RMMemManager> mm_;
   IterDiffT flatCurPermutationDiff_ = 0;
   Ranges2SortQueue ranges2Sort_;
   // Scratch desk

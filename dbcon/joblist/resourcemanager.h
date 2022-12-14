@@ -668,6 +668,11 @@ class RMMemManager : public MemManager
     return new RMMemManager(fRm, fSessLimit, fWait, fStrict);
   }
 
+  RMMemManager* typedClone() const
+  {
+    return new RMMemManager(fRm, fSessLimit, fWait, fStrict);
+  }
+
   joblist::ResourceManager* getResourceManaged() override
   {
     return fRm;
