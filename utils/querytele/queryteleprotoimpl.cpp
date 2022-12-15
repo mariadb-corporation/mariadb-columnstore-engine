@@ -22,7 +22,6 @@ using namespace std;
 
 #define BOOST_DISABLE_ASSERTS
 #include <boost/thread.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "thrift/transport/TSocket.h"
 #include "thrift/transport/TBufferTransports.h"
@@ -59,9 +58,9 @@ TsTeleQueue<querytele::ImportTele> itQueue;
 volatile bool isInited = false;
 boost::mutex initMux;
 
-boost::shared_ptr<att::TSocket> fSocket;
-boost::shared_ptr<att::TBufferedTransport> fTransport;
-boost::shared_ptr<atp::TBinaryProtocol> fProtocol;
+std::shared_ptr<att::TSocket> fSocket;
+std::shared_ptr<att::TBufferedTransport> fTransport;
+std::shared_ptr<atp::TBinaryProtocol> fProtocol;
 
 querytele::StepTele gLastStep;
 

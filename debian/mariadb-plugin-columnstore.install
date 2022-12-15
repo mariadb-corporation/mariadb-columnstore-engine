@@ -79,7 +79,6 @@ usr/lib/*/librowgroup.so
 usr/lib/*/librwlock.so
 usr/lib/*/libstoragemanager.so
 usr/lib/*/libthreadpool.so
-usr/lib/*/libthrift.so
 usr/lib/*/libudfsdk.so
 usr/lib/*/libwindowfunction.so
 usr/lib/*/libwriteengine.so

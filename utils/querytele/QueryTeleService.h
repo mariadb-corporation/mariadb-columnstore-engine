@@ -9,6 +9,7 @@
 #include <thrift/TDispatchProcessor.h>
 #include "querytele_types.h"
 
+
 namespace querytele
 {
 class QueryTeleServiceIf
@@ -38,7 +39,7 @@ class QueryTeleServiceIfFactory
 class QueryTeleServiceIfSingletonFactory : virtual public QueryTeleServiceIfFactory
 {
  public:
-  QueryTeleServiceIfSingletonFactory(const boost::shared_ptr<QueryTeleServiceIf>& iface) : iface_(iface)
+  QueryTeleServiceIfSingletonFactory(const std::shared_ptr<QueryTeleServiceIf>& iface) : iface_(iface)
   {
   }
   virtual ~QueryTeleServiceIfSingletonFactory()
@@ -54,7 +55,7 @@ class QueryTeleServiceIfSingletonFactory : virtual public QueryTeleServiceIfFact
   }
 
  protected:
-  boost::shared_ptr<QueryTeleServiceIf> iface_;
+  std::shared_ptr<QueryTeleServiceIf> iface_;
 };
 
 class QueryTeleServiceNull : virtual public QueryTeleServiceIf
@@ -362,24 +363,24 @@ class QueryTeleService_postImport_presult
 class QueryTeleServiceClient : virtual public QueryTeleServiceIf
 {
  public:
-  QueryTeleServiceClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot)
+  QueryTeleServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot)
    : piprot_(prot), poprot_(prot)
   {
     iprot_ = prot.get();
     oprot_ = prot.get();
   }
-  QueryTeleServiceClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot,
-                         boost::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot)
+  QueryTeleServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot,
+                         std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot)
    : piprot_(iprot), poprot_(oprot)
   {
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
-  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol()
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol()
   {
     return piprot_;
   }
-  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol()
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol()
   {
     return poprot_;
   }
@@ -394,8 +395,8 @@ class QueryTeleServiceClient : virtual public QueryTeleServiceIf
   void recv_postImport();
 
  protected:
-  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
@@ -403,7 +404,7 @@ class QueryTeleServiceClient : virtual public QueryTeleServiceIf
 class QueryTeleServiceProcessor : public ::apache::thrift::TDispatchProcessor
 {
  protected:
-  boost::shared_ptr<QueryTeleServiceIf> iface_;
+  std::shared_ptr<QueryTeleServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot,
                             ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname,
                             int32_t seqid, void* callContext);
@@ -421,7 +422,7 @@ class QueryTeleServiceProcessor : public ::apache::thrift::TDispatchProcessor
                           ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
 
  public:
-  QueryTeleServiceProcessor(boost::shared_ptr<QueryTeleServiceIf> iface) : iface_(iface)
+  QueryTeleServiceProcessor(std::shared_ptr<QueryTeleServiceIf> iface) : iface_(iface)
   {
     processMap_["postQuery"] = &QueryTeleServiceProcessor::process_postQuery;
     processMap_["postStep"] = &QueryTeleServiceProcessor::process_postStep;
@@ -436,22 +437,22 @@ class QueryTeleServiceProcessor : public ::apache::thrift::TDispatchProcessor
 class QueryTeleServiceProcessorFactory : public ::apache::thrift::TProcessorFactory
 {
  public:
-  QueryTeleServiceProcessorFactory(const ::boost::shared_ptr<QueryTeleServiceIfFactory>& handlerFactory)
+  QueryTeleServiceProcessorFactory(const ::std::shared_ptr<QueryTeleServiceIfFactory>& handlerFactory)
    : handlerFactory_(handlerFactory)
   {
   }
 
-  ::boost::shared_ptr< ::apache::thrift::TProcessor> getProcessor(
+  ::std::shared_ptr< ::apache::thrift::TProcessor> getProcessor(
       const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::boost::shared_ptr<QueryTeleServiceIfFactory> handlerFactory_;
+  ::std::shared_ptr<QueryTeleServiceIfFactory> handlerFactory_;
 };
 
 class QueryTeleServiceMultiface : virtual public QueryTeleServiceIf
 {
  public:
-  QueryTeleServiceMultiface(std::vector<boost::shared_ptr<QueryTeleServiceIf> >& ifaces) : ifaces_(ifaces)
+  QueryTeleServiceMultiface(std::vector<std::shared_ptr<QueryTeleServiceIf> >& ifaces) : ifaces_(ifaces)
   {
   }
   virtual ~QueryTeleServiceMultiface()
@@ -459,11 +460,11 @@ class QueryTeleServiceMultiface : virtual public QueryTeleServiceIf
   }
 
  protected:
-  std::vector<boost::shared_ptr<QueryTeleServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<QueryTeleServiceIf> > ifaces_;
   QueryTeleServiceMultiface()
   {
   }
-  void add(boost::shared_ptr<QueryTeleServiceIf> iface)
+  void add(std::shared_ptr<QueryTeleServiceIf> iface)
   {
     ifaces_.push_back(iface);
   }
