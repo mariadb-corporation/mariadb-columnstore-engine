@@ -848,7 +848,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   ByteStream bs;
   uint32_t status;
 
-  // ResourceManager* rm = ResourceManager::instance(true);
+  [[maybe_unused]] ResourceManager* rm = ResourceManager::instance(true);
   DistributedEngineComm* fEc = nullptr;// = DistributedEngineComm::instance(rm);
   PrimitiveServerThreadPools dummyPrimitiveServerThreadPools;
 
@@ -5929,7 +5929,7 @@ void CalpontSystemCatalog::buildSysColinfomap()
   aCol.precision = 10;
   aCol.compressionType = 0;
 
-  ResourceManager* rm = nullptr;// = ResourceManager::instance();
+  ResourceManager* rm = ResourceManager::instance();
 
   if (rm->useHdfs())
     aCol.compressionType = 2;

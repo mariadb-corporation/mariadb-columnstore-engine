@@ -26,6 +26,6 @@ set(windowfunction_LIB_SRCS
 
 add_library(windowfunction STATIC ${windowfunction_LIB_SRCS})
 
-add_dependencies(windowfunction loggingcpp)
+add_dependencies(windowfunction loggingcpp managers)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

@@ -50,6 +50,6 @@ add_library(execplan STATIC ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 
-target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB} brm funcexp oamcpp dataconvert querytele udfsdk)
+target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB} brm funcexp oamcpp dataconvert querytele udfsdk managers)
 
 install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
