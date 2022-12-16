@@ -11,7 +11,7 @@ set(compress_LIB_SRCS
 
 add_definitions(-DNDEBUG)
 
-add_library(compress SHARED ${compress_LIB_SRCS})
+add_library(compress STATIC ${compress_LIB_SRCS})
 add_dependencies(compress loggingcpp external_boost)
 
 target_link_libraries(compress ${SNAPPY_LIBRARIES})
