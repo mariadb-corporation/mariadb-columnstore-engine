@@ -37,10 +37,10 @@ set(writeengine_LIB_SRCS
 
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
-add_library(writeengine SHARED ${writeengine_LIB_SRCS})
+add_library(writeengine STATIC ${writeengine_LIB_SRCS})
 
 add_dependencies(writeengine loggingcpp)
 
-target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
+target_link_libraries(writeengine ${NETSNMP_LIBRARIES} idbdatafile)
 
 install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

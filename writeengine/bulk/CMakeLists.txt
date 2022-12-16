@@ -30,7 +30,7 @@ add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
-target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
+target_link_libraries(we_bulk ${NETSNMP_LIBRARIES} writeengineclient marias3)
 
 REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 

@@ -9,7 +9,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 set(querystats_LIB_SRCS querystats.cpp)
 
-add_library(querystats SHARED ${querystats_LIB_SRCS})
+add_library(querystats STATIC ${querystats_LIB_SRCS})
 
 add_dependencies(querystats loggingcpp)
 

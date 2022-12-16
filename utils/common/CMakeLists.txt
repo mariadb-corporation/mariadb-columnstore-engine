@@ -14,7 +14,7 @@ set(common_LIB_SRCS
     statistics.cpp
     string_prefixes.cpp)
 
-add_library(common SHARED ${common_LIB_SRCS})
+add_library(common STATIC ${common_LIB_SRCS})
 
 target_link_libraries(common boost_filesystem)
 
