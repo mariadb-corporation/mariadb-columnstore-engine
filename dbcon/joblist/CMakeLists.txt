@@ -36,6 +36,7 @@ set(joblist_LIB_SRCS
     pdictionaryscan.cpp
     pseudocc-jl.cpp
     rowestimator.cpp
+    rowaggregation.cpp
     rtscommand-jl.cpp
     subquerystep.cpp
     subquerytransformer.cpp
