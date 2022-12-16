@@ -57,7 +57,7 @@ class MonitorProcMem
     fMemTotal = memTotal();
   }
 
-  virtual ~MonitorProcMem(){};
+  virtual ~MonitorProcMem() = default;
 
   /** @brief Thread entry point
    *

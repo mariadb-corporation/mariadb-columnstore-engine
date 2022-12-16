@@ -2489,9 +2489,9 @@ void RowAggregationUM::attachGroupConcatAg()
       if (fFunctionColGc[i]->fAggFunction == ROWAGG_JSON_ARRAY)
       {
         // save the object's address in the result row
-        SP_GroupConcatAg gcc(new joblist::JsonArrayAggregatAgUM(fGroupConcat[j++]));
-        fGroupConcatAg.push_back(gcc);
-        *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
+        // SP_GroupConcatAg gcc(new joblist::JsonArrayAggregatAgUM(fGroupConcat[j++]));
+        // fGroupConcatAg.push_back(gcc);
+        // *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
       }
     }
   }
@@ -4018,11 +4018,11 @@ void RowAggregationUM::setGroupConcatString()
 
       if (fFunctionCols[j]->fAggFunction == ROWAGG_JSON_ARRAY)
       {
-        uint8_t* buff = data + fRow.getOffset(fFunctionCols[j]->fOutputColumnIndex);
-        uint8_t* gcString;
-        joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
-        gcString = gccAg->getResult();
-        fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
+        // uint8_t* buff = data + fRow.getOffset(fFunctionCols[j]->fOutputColumnIndex);
+        // uint8_t* gcString;
+        // joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
+        // gcString = gccAg->getResult();
+        // fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
       }
     }
   }
@@ -4366,9 +4366,9 @@ void RowAggregationUMP2::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 
 void RowAggregationUMP2::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
-  gccAg->merge(rowIn, i);
+  // uint8_t* data = fRow.getData();
+  // joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
+  // gccAg->merge(rowIn, i);
 }
 
 //------------------------------------------------------------------------------
@@ -4752,13 +4752,14 @@ void RowAggregationSubDistinct::doGroupConcat(const Row& rowIn, int64_t i, int64
   uint8_t* data = fRow.getData();
   joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
   gccAg->merge(rowIn, i);
+
 }
 
 void RowAggregationSubDistinct::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
-  gccAg->merge(rowIn, i);
+  // uint8_t* data = fRow.getData();
+  // joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
+  // gccAg->merge(rowIn, i);
 }
 //------------------------------------------------------------------------------
 // Constructor / destructor

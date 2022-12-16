@@ -62,7 +62,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
 
 
-add_library(storagemanager SHARED ${storagemanager_SRCS})
+add_library(storagemanager STATIC ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3 external_boost)
 
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)

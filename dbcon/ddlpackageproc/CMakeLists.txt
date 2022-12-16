@@ -12,11 +12,11 @@ set(ddlpackageproc_LIB_SRCS
     restorepartitionprocessor.cpp
     droppartitionprocessor.cpp)
 
-add_library(ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
+add_library(ddlpackageproc STATIC ${ddlpackageproc_LIB_SRCS})
 
 add_dependencies(ddlpackageproc loggingcpp)
 
-target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
+target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES} writeengine writeengineclient ddlpackage execplan)
 
 install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

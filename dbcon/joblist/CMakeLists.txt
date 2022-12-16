@@ -57,18 +57,16 @@ set(joblist_LIB_SRCS
 
 ########### next target ###############
 
-add_library(joblist_server STATIC ${joblist_LIB_SRCS})
-add_dependencies(joblist_server loggingcpp)
-
-########### next target ###############
-
 add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
 
-add_library(joblist SHARED ${joblist_LIB_SRCS})
+add_library(joblist STATIC ${joblist_LIB_SRCS})
+
 target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR}
   ${LIBMARIADB_BININC_DIR}
   ${LIBMARIADB_SRCINC_DIR})
 add_dependencies(joblist loggingcpp)
+
+target_link_libraries(joblist joiner threadpool libmysql_client querystats compress loggingcpp querytele rowgroup funcexp windowfunction)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

@@ -31,8 +31,9 @@ set(brm_LIB_SRCS
     vss.cpp
     ../../datatypes/mcs_datatype.cpp)
 
-add_library(brm SHARED ${brm_LIB_SRCS})
+add_library(brm STATIC ${brm_LIB_SRCS})
 
+target_link_libraries(brm rwlock idbdatafile messageqcpp cacheutils)
 add_dependencies(brm loggingcpp)
 
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

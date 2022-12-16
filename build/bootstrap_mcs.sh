@@ -228,7 +228,7 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
+    ${CMAKE_BIN_NAME} --graphviz=deps.dot . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS
     make -j $CPUS install
 
     if [ $? -ne 0 ]; then

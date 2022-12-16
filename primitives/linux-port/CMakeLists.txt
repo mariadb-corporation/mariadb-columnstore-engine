@@ -10,6 +10,6 @@ add_library(processor STATIC ${processor_STAT_SRCS})
 
 add_dependencies(processor loggingcpp)
 
-target_link_libraries(processor ${NETSNMP_LIBRARIES})
+target_link_libraries(processor ${NETSNMP_LIBRARIES} loggingcpp)
 
 INSTALL (TARGETS processor DESTINATION ${ENGINE_LIBDIR})

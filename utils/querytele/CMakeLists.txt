@@ -12,7 +12,7 @@ set(querytele_LIB_SRCS
     QueryTeleService.cpp
     queryteleprotoimpl.cpp)
 
-add_library(querytele SHARED ${querytele_LIB_SRCS})
+add_library(querytele STATIC ${querytele_LIB_SRCS})
 add_dependencies(querytele external_boost external_thrift)
 
 target_include_directories(querytele PRIVATE ${THRIFT_INCLUDE_DIRS})

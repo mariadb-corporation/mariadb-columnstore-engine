@@ -46,10 +46,10 @@ set(execplan_LIB_SRCS
     windowfunctioncolumn.cpp
     udafcolumn.cpp)
 
-add_library(execplan SHARED ${execplan_LIB_SRCS})
+add_library(execplan STATIC ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 
-target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB})
+target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB} brm funcexp oamcpp dataconvert querytele udfsdk)
 
 install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

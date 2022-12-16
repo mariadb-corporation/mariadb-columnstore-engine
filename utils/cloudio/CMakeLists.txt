@@ -2,12 +2,12 @@ include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/storage-manager/
 
 set(cloudio_LIB_SRCS SMComm.cpp SMDataFile.cpp SMFileFactory.cpp SMFileSystem.cpp SocketPool.cpp cloud_plugin.cpp ../../datatypes/mcs_datatype.cpp)
 
-add_library(cloudio SHARED ${cloudio_LIB_SRCS})
+add_library(cloudio STATIC ${cloudio_LIB_SRCS})
 
 # IDBDataFile currently depends on cloudio, which is backward.
 # Once cloudio has been turned into a proper plugin for idbdatafile,
 # we should be able to reverse the dependency like so:
-target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp)
+target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp configcpp)
 
 install(TARGETS cloudio DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

@@ -6,11 +6,11 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
-add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
+add_library(oamcpp STATIC ${oamcpp_LIB_SRCS})
 
 add_dependencies(oamcpp loggingcpp)
 
-target_link_libraries(oamcpp )
+target_link_libraries(oamcpp idbboot)
 
 target_compile_options(oamcpp PRIVATE -Wno-unused-result)
 
