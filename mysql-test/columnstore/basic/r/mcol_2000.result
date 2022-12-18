@@ -290,16 +290,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -312,8 +312,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	varchar	1	3
@@ -379,16 +379,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -401,8 +401,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	varchar	1	3
@@ -468,16 +468,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -489,8 +489,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:10');
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 ?	2020-10-25 01:02:07	1234567890	2020-10-25 01:02:08	abc	2020-10-25 01:02:09	cde	2020-10-25 01:02:10
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
@@ -646,16 +646,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -668,8 +668,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	char	1	3
@@ -735,16 +735,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -757,8 +757,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	char	1	3
@@ -824,16 +824,16 @@ a	b	c	d	e	f	g	h
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'abc', '2020-10-25 01:02:06',
 'cde', '2020-10-25 01:02:07');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:08');
 ERROR 22001: Data too long for column 'c' at row 1
 insert ignore into cs3 values ('12', '2020-10-25 01:02:06',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:07', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'abc', '2020-10-25 01:02:08',
 'cde', '2020-10-25 01:02:09');
 Warnings:
@@ -845,8 +845,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 'cde', '2020-10-25 01:02:10');
 select * from cs3;
 a	b	c	d	e	f	g	h
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
-1	2020-10-25 01:02:06	¹²³???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
+1	2020-10-25 01:02:06	���???????	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 ?	2020-10-25 01:02:07	1234567890	2020-10-25 01:02:08	abc	2020-10-25 01:02:09	cde	2020-10-25 01:02:10
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
@@ -1032,13 +1032,13 @@ a	b	c	d	e	f	g	h	i	j	k	l
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'cde', '2020-10-25 01:02:07',
 'def', '2020-10-25 01:02:08',
 'efg', '2020-10-25 01:02:09',
 'fgh', '2020-10-25 01:02:10');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'cde', '2020-10-25 01:02:08',
 'def', '2020-10-25 01:02:09',
 'efg', '2020-10-25 01:02:10',
@@ -1052,8 +1052,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h	i	j	k	l
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
-1	2020-10-25 01:02:05	¹²³???????¹	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
+1	2020-10-25 01:02:05	���???????�	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	tinytext	255	255
@@ -1139,13 +1139,13 @@ a	b	c	d	e	f	g	h	i	j	k	l
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'cde', '2020-10-25 01:02:07',
 'def', '2020-10-25 01:02:08',
 'efg', '2020-10-25 01:02:09',
 'fgh', '2020-10-25 01:02:10');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'cde', '2020-10-25 01:02:08',
 'def', '2020-10-25 01:02:09',
 'efg', '2020-10-25 01:02:10',
@@ -1159,8 +1159,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 ERROR 22007: Incorrect string value: '\xF0\x9F\x98\x8E' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h	i	j	k	l
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
-1	2020-10-25 01:02:05	¹²³???????¹	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
+1	2020-10-25 01:02:05	���???????�	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
 a	tinytext	255	255
@@ -1246,13 +1246,13 @@ a	b	c	d	e	f	g	h	i	j	k	l
 NULL	2020-10-25 01:02:03	NULL	2020-10-25 01:02:04	NULL	2020-10-25 01:02:05	NULL	2020-10-25 01:02:06	NULL	2020-10-25 01:02:07	NULL	2020-10-25 01:02:08
 create table cs3 like cs1;
 insert into cs3 values ('1', '2020-10-25 01:02:04',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0, '2020-10-25 01:02:05', -- ¹²³⁴⁵⁶⁷⁸⁹⁰
 'cde', '2020-10-25 01:02:07',
 'def', '2020-10-25 01:02:08',
 'efg', '2020-10-25 01:02:09',
 'fgh', '2020-10-25 01:02:10');
 insert into cs3 values ('1', '2020-10-25 01:02:05',
-_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- Â¹Â²Â³â´âµâ¶â·â¸â¹â°Â¹
+_utf8mb4 0xc2b9c2b2c2b3e281b4e281b5e281b6e281b7e281b8e281b9e281b0c2b9, '2020-10-25 01:02:06', -- ¹²³⁴⁵⁶⁷⁸⁹⁰¹
 'cde', '2020-10-25 01:02:08',
 'def', '2020-10-25 01:02:09',
 'efg', '2020-10-25 01:02:10',
@@ -1265,8 +1265,8 @@ insert into cs3 values (_utf8mb4 0xF09F988E, '2020-10-25 01:02:07',
 'fgh', '2020-10-25 01:02:13');
 select * from cs3;
 a	b	c	d	e	f	g	h	i	j	k	l
-1	2020-10-25 01:02:04	¹²³???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
-1	2020-10-25 01:02:05	¹²³???????¹	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
+1	2020-10-25 01:02:04	���???????	2020-10-25 01:02:05	cde	2020-10-25 01:02:07	def	2020-10-25 01:02:08	efg	2020-10-25 01:02:09	fgh	2020-10-25 01:02:10
+1	2020-10-25 01:02:05	���???????�	2020-10-25 01:02:06	cde	2020-10-25 01:02:08	def	2020-10-25 01:02:09	efg	2020-10-25 01:02:10	fgh	2020-10-25 01:02:11
 ?	2020-10-25 01:02:07	1234567890	2020-10-25 01:02:08	cde	2020-10-25 01:02:10	def	2020-10-25 01:02:11	efg	2020-10-25 01:02:12	fgh	2020-10-25 01:02:13
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
