@@ -295,6 +295,25 @@ string escapeBackTick(const char* str)
   return ret;
 }
 
+Item* directRefItemOrNull(Item* item)
+{
+  if ((reinterpret_cast<Item_ref*>(item))->ref_type() == Item_ref::DIRECT_REF)
+    return item->real_item();
+  return nullptr;
+}
+
+Item* directRefItemOrNullLoop(const Item* item)
+{
+  Item* refItem = const_cast<Item*>(item);
+  while (refItem->type() == Item::REF_ITEM)
+  {
+    refItem = (((reinterpret_cast<Item_ref*>(refItem))->ref_type() == Item_ref::DIRECT_REF))
+                  ? refItem->real_item()
+                  : *((reinterpret_cast<Item_ref*>(refItem))->ref);
+  }
+  return refItem;
+}
+
 void clearStacks(gp_walk_info& gwi)
 {
   while (!gwi.rcWorkStack.empty())
@@ -385,7 +404,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
 {
   bool found = false;
   // If ITEM_REF::ref is NULL
-  if (sort_item == NULL)
+  if (sort_item == nullptr)
   {
     return found;
   }
@@ -396,8 +415,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
   found = group_item->eq(sort_item, false);
   if (!found && sort_item->type() == Item::REF_ITEM)
   {
-    Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(sort_item);
-    found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
+    found = sortItemIsInGroupRec(directRefItemOrNullLoop(sort_item), group_item);
   }
   else if (!found && sort_item->type() == Item::FIELD_ITEM)
   {
@@ -415,9 +433,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     }
     else if (ifp_sort_arg->type() == Item::REF_ITEM)
     {
-      // dereference the Item
-      Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(ifp_sort_arg);
-      found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
+      found = sortItemIsInGroupRec(directRefItemOrNullLoop(ifp_sort_arg), group_item);
     }
   }
 
@@ -443,8 +459,7 @@ void check_sum_func_item(const Item* item, void* arg)
 
   if (item->type() == Item::REF_ITEM)
   {
-    const Item_ref* ref_item = reinterpret_cast<const Item_ref*>(item);
-    Item* ref_item_item = (Item*)*ref_item->ref;
+    Item* ref_item_item = directRefItemOrNullLoop(const_cast<Item*>(item));
     if (ref_item_item->type() == Item::SUM_FUNC_ITEM)
     {
       *found = true;
@@ -3452,6 +3467,10 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     case Item::REF_ITEM:
     {
       Item_ref* ref = (Item_ref*)item;
+      if (ref->ref_type() == Item_ref::DIRECT_REF)
+      {
+        return buildReturnedColumn(item->real_item(), gwi, nonSupport);
+      }
 
       switch ((*(ref->ref))->type())
       {
@@ -3942,15 +3961,14 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         nonSupport = true;
         gwi.fatalParseError = true;
         Message::Args args;
-        string info = funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
+        string info =
+            funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
         args.add(info);
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
         return NULL;
       }
-
-      if (!selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
-                               (ifp->arguments()[0]->type() == Item::REF_ITEM &&
-                                (*(((Item_ref*)ifp->arguments()[0])->ref))->type() == Item::FIELD_ITEM)))
+      Item* ifpArg0 = directRefItemOrNullLoop(ifp->arguments()[0]);
+      if (!selectBetweenIn && ifpArg0->type() == Item::FIELD_ITEM)
       {
         bool fe = false;
 
@@ -3996,8 +4014,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     SPTP sptp;
     ClauseType clauseType = gwi.clauseType;
 
-    if (gwi.clauseType == SELECT ||
-        /*gwi.clauseType == HAVING || */ gwi.clauseType == GROUP_BY)  // select clause
+    if (gwi.clauseType == SELECT || gwi.clauseType == GROUP_BY)  // select clause
     {
       for (uint32_t i = 0; i < ifp->argument_count(); i++)
       {
@@ -4053,15 +4070,14 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
         ReturnedColumn* rc = NULL;
 
-
         // Special treatment for json functions
         // All boolean arguments will be parsed as boolean string true(false)
         // E.g. the result of `SELECT JSON_ARRAY(true, false)` should be [true, false] instead of [1, 0]
-        bool mayHasBoolArg = ((funcName == "json_insert" || funcName == "json_replace" ||
-                              funcName == "json_set" || funcName == "json_array_append" ||
-                              funcName == "json_array_insert") && i != 0 && i % 2 == 0) ||
-                             (funcName == "json_array") ||
-                             (funcName == "json_object" && i % 2 == 1);
+        bool mayHasBoolArg =
+            ((funcName == "json_insert" || funcName == "json_replace" || funcName == "json_set" ||
+              funcName == "json_array_append" || funcName == "json_array_insert") &&
+             i != 0 && i % 2 == 0) ||
+            (funcName == "json_array") || (funcName == "json_object" && i % 2 == 1);
         bool isBoolType =
             (ifp->arguments()[i]->const_item() && ifp->arguments()[i]->type_handler()->is_bool_type());
 
@@ -5914,7 +5930,10 @@ void gp_walk(const Item* item, void* arg)
 
         // bug 3137. If filter constant like 1=0, put it to ptWorkStack
         // MariaDB bug 750. Breaks if compare is an argument to a function.
-        //				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty() ? 0
+        //				if ((int32_t)gwip->rcWorkStack.size() <=
+        //(gwip->rcBookMarkStack.empty()
+        //?
+        // 0
         //: gwip->rcBookMarkStack.top())
         //				&& isPredicateFunction(ifp, gwip))
         if (isPredicateFunction(ifp, gwip))
@@ -6108,7 +6127,8 @@ void gp_walk(const Item* item, void* arg)
 
     case Item::REF_ITEM:
     {
-      Item* col = *(((Item_ref*)item)->ref);
+      Item* col = directRefItemOrNullLoop(item);
+
       ReturnedColumn* rc = NULL;
       // ref item is not pre-walked. force clause type to SELECT
       ClauseType clauseType = gwip->clauseType;
@@ -6175,23 +6195,19 @@ void gp_walk(const Item* item, void* arg)
         {
           ReturnedColumn* operand = NULL;
 
-          if (ifp->arguments()[i]->type() == Item::REF_ITEM)
-          {
-            Item* op = *(((Item_ref*)ifp->arguments()[i])->ref);
-            operand = buildReturnedColumn(op, *gwip, gwip->fatalParseError);
-          }
-          else
-            operand = buildReturnedColumn(ifp->arguments()[i], *gwip, gwip->fatalParseError);
+          operand =
+              buildReturnedColumn(directRefItemOrNullLoop(ifp->arguments()[i]), *gwip, gwip->fatalParseError);
 
           if (operand)
           {
             gwip->rcWorkStack.push(operand);
-            if (i == 0 && gwip->scsp == NULL) // first item is the WHEN LHS
+            if (i == 0 && gwip->scsp == NULL)  // first item is the WHEN LHS
             {
               SimpleColumn* sc = dynamic_cast<SimpleColumn*>(operand);
               if (sc)
               {
-                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is rarely executed so the cost is acceptable.
+                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is
+                                                // rarely executed so the cost is acceptable.
               }
             }
           }
@@ -6408,9 +6424,15 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::REF_ITEM:
     {
+      Item* thisBlockItem = directRefItemOrNull(item);
+      if (thisBlockItem)
+      {
+        parse_item(thisBlockItem, field_vec, hasNonSupportItem, parseInfo, gwi);
+        break;
+      }
       while (true)
       {
-        Item_ref* ref = (Item_ref*)item;
+        Item_ref* ref = reinterpret_cast<Item_ref*>(item);
 
         if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
         {
@@ -7441,11 +7463,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     // @bug 5916. Need to keep checking until getting concret item in case
     // of nested view.
-    while (item->type() == Item::REF_ITEM)
-    {
-      Item_ref* ref = (Item_ref*)item;
-      item = (*(ref->ref));
-    }
+    item = directRefItemOrNullLoop(item);
 
     Item::Type itype = item->type();
 
@@ -8052,11 +8070,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     for (; groupcol; groupcol = groupcol->next)
     {
-      Item* groupItem = *(groupcol->item);
-
       // @bug5993. Could be nested ref.
-      while (groupItem->type() == Item::REF_ITEM)
-        groupItem = (*((Item_ref*)groupItem)->ref);
+      Item* groupItem = directRefItemOrNullLoop(*(groupcol->item));
 
       if (groupItem->type() == Item::FUNC_ITEM)
       {
@@ -8380,10 +8395,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           // infomation is available in item_ptr.
           if (!rc || gwi.fatalParseError)
           {
-            Item* item_ptr = ordercol->item_ptr;
-
-            while (item_ptr->type() == Item::REF_ITEM)
-              item_ptr = *(((Item_ref*)item_ptr)->ref);
+            Item* item_ptr = directRefItemOrNullLoop(ordercol->item_ptr);
 
             rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
           }
@@ -9074,14 +9086,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   {
     // MCOL-1052 The condition could be useless.
     // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-    //#if MYSQL_VERSION_ID < 50172
+    // #if MYSQL_VERSION_ID < 50172
     //@bug 3039. fix fields for constants
     if (!icp->fixed())
     {
       icp->fix_fields(gwi.thd, (Item**)&icp);
     }
 
-    //#endif
+    // #endif
     gwi.fatalParseError = false;
 #ifdef DEBUG_WALK_COND
     cerr << "------------------ WHERE -----------------------" << endl;
@@ -9265,11 +9277,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     // @bug 5916. Need to keep checking until getting concret item in case
     // of nested view.
-    while (item->type() == Item::REF_ITEM)
-    {
-      Item_ref* ref = (Item_ref*)item;
-      item = (*(ref->ref));
-    }
+    item = directRefItemOrNullLoop(item);
 
     Item::Type itype = item->type();
 
@@ -9835,11 +9843,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     for (; groupcol; groupcol = groupcol->next)
     {
-      Item* groupItem = *(groupcol->item);
-
       // @bug5993. Could be nested ref.
-      while (groupItem->type() == Item::REF_ITEM)
-        groupItem = (*((Item_ref*)groupItem)->ref);
+      Item* groupItem = directRefItemOrNullLoop(*(groupcol->item));
 
       if (groupItem->type() == Item::FUNC_ITEM)
       {
@@ -10200,12 +10205,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         if (!rc || gwi.fatalParseError)
         {
           gwi.fatalParseError = false;
-          Item* item_ptr = ordercol->item_ptr;
-
-          while (item_ptr->type() == Item::REF_ITEM)
-            item_ptr = *(((Item_ref*)item_ptr)->ref);
-
-          rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
+          rc = buildReturnedColumn(directRefItemOrNullLoop(ordercol->item_ptr), gwi, gwi.fatalParseError);
         }
 
         // This ORDER BY item must be an agg function -
