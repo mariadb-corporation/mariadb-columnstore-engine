@@ -275,34 +275,6 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
 
   fGwip.subselectList.push_back(csep);
 
-  // error out non-support case for now: comparison out of semi join tables.
-  // only check for simplecolumn
-  if (!gwi.correlatedTbNameVec.empty())
-  {
-    for (uint32_t i = 0; i < cols.size(); i++)
-    {
-      SimpleColumn* sc = dynamic_cast<SimpleColumn*>(cols[i].get());
-
-      if (sc)
-      {
-        CalpontSystemCatalog::TableAliasName tan =
-            make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias());
-        uint32_t j = 0;
-
-        for (; j < gwi.correlatedTbNameVec.size(); j++)
-          if (tan == gwi.correlatedTbNameVec[j])
-            break;
-
-        if (j == gwi.correlatedTbNameVec.size())
-        {
-          fGwip.fatalParseError = true;
-          fGwip.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SCALAR);
-          return NULL;
-        }
-      }
-    }
-  }
-
   // remove outer query tables
   CalpontSelectExecutionPlan::TableList tblist;
 
