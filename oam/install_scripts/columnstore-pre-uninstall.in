@@ -146,7 +146,7 @@ rm -rf /tmp/columnstore_tmp_files > /dev/null 2>&1
 
 #tell user to run post configure script
 echo " "
-echo "Mariab Columnstore uninstall completed"
+echo "MariaDB Columnstore uninstall completed"
 
 exit 0
 
