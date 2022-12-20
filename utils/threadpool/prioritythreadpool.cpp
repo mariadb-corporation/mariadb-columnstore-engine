@@ -34,7 +34,7 @@ using namespace logging;
 #include "prioritythreadpool.h"
 using namespace boost;
 
-#include "dbcon/joblist/primitivemsg.h"
+#include "dbcon/execution/joblist/primitivemsg.h"
 
 namespace threadpool
 {

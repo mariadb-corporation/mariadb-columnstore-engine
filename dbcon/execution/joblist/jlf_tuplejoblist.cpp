@@ -38,6 +38,7 @@ using namespace std;
 using namespace boost;
 
 #include "calpontsystemcatalog.h"
+
 #include "logicoperator.h"
 using namespace execplan;
 

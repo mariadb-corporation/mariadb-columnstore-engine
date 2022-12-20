@@ -19,8 +19,6 @@
 
 #include <cstdlib>
 #include <string>
-#include <sstream>
-#include <iomanip>
 using namespace std;
 
 #ifdef WANT_EM_BRM_UID
@@ -58,14 +56,6 @@ ShmKeys::ShmKeys()
   NICSTATUS_SYSVKEY = 0xf9000000 | BRM_UID;
   DBROOTSTATUS_SYSVKEY = 0xf8000000 | BRM_UID;
   DECOMSVRMUTEX_SYSVKEY = 0xf7000000 | BRM_UID;
-}
-
-string ShmKeys::keyToName(unsigned key)
-{
-  ostringstream oss;
-  oss << "MCS-shm-";
-  oss << setw(8) << setfill('0') << hex << key;
-  return oss.str();
 }
 
 }  // namespace BRM

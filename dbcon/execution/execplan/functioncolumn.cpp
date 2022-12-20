@@ -28,6 +28,8 @@ using namespace std;
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 using namespace boost;
+typedef char my_bool;
+#include "mysql_time.h"
 
 #include "functor_json.h"
 #include "bytestream.h"
@@ -45,6 +47,10 @@ using namespace boost;
 #include "functor_export.h"
 #include "functor_str.h"
 using namespace funcexp;
+
+// #undef MYSQL_SERVICE_THD_TIMEZONE_INCLUDED
+// #include "mysql/service_thd_timezone.h"
+// #define MYSQL_SERVICE_THD_TIMEZONE_INCLUDED
 
 #ifdef _MSC_VER
 #define strcasecmp stricmp

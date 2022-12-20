@@ -21,6 +21,8 @@
 
 #include <stdint.h>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 #if defined(_MSC_VER) && defined(xxxSHMKEYS_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -66,7 +68,13 @@ struct ShmKeys
   uint32_t DBROOTSTATUS_SYSVKEY;
   uint32_t DECOMSVRMUTEX_SYSVKEY;
 
-  EXPORT static std::string keyToName(unsigned key);
+  static inline std::string keyToName(unsigned key)
+  {
+    std::ostringstream oss;
+    oss << "MCS-shm-";
+    oss << std::setw(8) << std::setfill('0') << std::hex << key;
+    return oss.str();
+  }
 
  private:
   // defaults okay

@@ -7,7 +7,7 @@ add_library(cloudio STATIC ${cloudio_LIB_SRCS})
 # IDBDataFile currently depends on cloudio, which is backward.
 # Once cloudio has been turned into a proper plugin for idbdatafile,
 # we should be able to reverse the dependency like so:
-target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp configcpp)
+target_link_libraries(cloudio idbdatafile messageqcpp loggingcpp configcpp boost_system boost_filesystem boost_thread)
 
 install(TARGETS cloudio DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

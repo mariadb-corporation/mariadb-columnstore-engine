@@ -10,7 +10,7 @@ add_library(writeengineclient STATIC ${writeengineclient_LIB_SRCS})
 
 add_dependencies(writeengineclient loggingcpp)
 
-target_link_libraries(writeengineclient ${NETSNMP_LIBRARIES} joblist)
+target_link_libraries(writeengineclient ${NETSNMP_LIBRARIES} execution)
 
 install(TARGETS writeengineclient DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

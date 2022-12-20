@@ -9,7 +9,7 @@ add_library(configcpp STATIC ${configcpp_LIB_SRCS})
 
 add_dependencies(configcpp loggingcpp)
 
-target_link_libraries(configcpp messageqcpp)
+target_link_libraries(configcpp messageqcpp boost_filesystem)
 
 target_compile_definitions(configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 

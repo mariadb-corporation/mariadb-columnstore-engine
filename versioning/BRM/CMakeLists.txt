@@ -33,7 +33,7 @@ set(brm_LIB_SRCS
 
 add_library(brm STATIC ${brm_LIB_SRCS})
 
-target_link_libraries(brm rwlock idbdatafile messageqcpp cacheutils)
+target_link_libraries(brm rwlock idbdatafile messageqcpp cacheutils execution boost_thread)
 add_dependencies(brm loggingcpp)
 
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
