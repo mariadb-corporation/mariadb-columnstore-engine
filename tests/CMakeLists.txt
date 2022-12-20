@@ -69,6 +69,12 @@ if (WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
+    add_executable(patterns_test patterns_test.cpp)
+    add_dependencies(patterns_test googletest mpark_patterns)
+    target_include_directories(patterns_test PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
+    target_link_libraries(patterns_test ${GTEST_LIBRARIES})
+    gtest_add_tests(TARGET patterns_test TEST_PREFIX mpark_patterns:)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
