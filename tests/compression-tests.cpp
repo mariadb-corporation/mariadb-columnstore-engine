@@ -70,7 +70,7 @@ TEST_F(CompressionTest, LZ4CanCompress)
   std::unique_ptr<char[]> uncompressedData(new char[originalSize]);
   rc = compressor->uncompress(compressedData.get(), compressedSize, uncompressedData.get(), &originalSize);
   ASSERT_EQ(rc, 0);
-  std::string result(uncompressedData.get());
+  std::string result(uncompressedData.get(), originalSize);
   EXPECT_EQ(originalData, result);
 }
 
