@@ -848,11 +848,11 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   ByteStream bs;
   uint32_t status;
 
-  [[maybe_unused]] ResourceManager* rm = ResourceManager::instance(true);
-  DistributedEngineComm* fEc = nullptr;// = DistributedEngineComm::instance(rm);
+  ResourceManager* rm = ResourceManager::instance(true);
+  DistributedEngineComm* fEc = DistributedEngineComm::instance(rm);
   PrimitiveServerThreadPools dummyPrimitiveServerThreadPools;
 
-  SJLP jl;// = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
+  SJLP jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
   //@bug 2221. Work around to prevent DMLProc crash.
   int retryNum = 0;
 
@@ -866,7 +866,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 #else
     sleep(1);
 #endif
-    //jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
+    jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
     retryNum++;
   }
 
@@ -882,9 +882,9 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
         "Error occured when calling system catalog (2). Make sure all processes are running.");
   }
 
-  TupleJobList* tjlp = nullptr; //dynamic_cast<TupleJobList*>(jl.get());
+  TupleJobList* tjlp = dynamic_cast<TupleJobList*>(jl.get());
   idbassert(tjlp);
-  RowGroup rowGroup; // = tjlp->getOutputRowGroup();
+  RowGroup rowGroup = tjlp->getOutputRowGroup();
   RGData rgData;
 
   while (true)
