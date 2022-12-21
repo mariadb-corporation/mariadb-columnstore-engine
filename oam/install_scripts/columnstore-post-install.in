@@ -406,5 +406,7 @@ if [ $stop_mysqld -eq 1 ];then
     fi
 fi
 
+@HEAP_PROF_CREATE_DIR@
+
 sleep 2
 exit 0

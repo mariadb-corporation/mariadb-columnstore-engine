@@ -60,8 +60,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf.in" "${CMAKE_CURR
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
-
-
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3 external_boost)
 
@@ -70,6 +68,11 @@ target_link_libraries(storagemanager boost_chrono boost_system boost_thread boos
 
 add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
+
+if (WITH_CUSTOM_JEMALLOC)
+    target_link_libraries(StorageManager custom_jemalloc_lib)
+endif()
+
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 20)
 
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

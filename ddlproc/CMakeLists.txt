@@ -12,5 +12,9 @@ add_dependencies(DDLProc loggingcpp)
 
 target_link_libraries(DDLProc ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool)
 
+if (WITH_CUSTOM_JEMALLOC)
+   target_link_libraries(DDLProc custom_jemalloc_lib)
+endif()
+
 install(TARGETS DDLProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 

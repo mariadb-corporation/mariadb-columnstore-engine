@@ -20,6 +20,10 @@ set(WriteEngineServer_SRCS
 
 add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
+if (WITH_CUSTOM_JEMALLOC)
+   target_link_libraries(WriteEngineServer custom_jemalloc_lib)
+endif()
+
 add_dependencies(WriteEngineServer loggingcpp)
 
 target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)

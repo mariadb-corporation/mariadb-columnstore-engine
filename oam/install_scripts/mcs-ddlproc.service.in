@@ -14,6 +14,7 @@ LimitNOFILE=65536
 LimitNPROC=65536
 LimitCORE=@CORE_DUMPS@
 
+Environment="@DDLPROC_ALLOC_CONFIG@"
 ExecStart=@ENGINE_BINDIR@/DDLProc
 
 Restart=on-failure
