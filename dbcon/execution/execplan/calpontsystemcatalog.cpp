@@ -182,7 +182,6 @@ namespace execplan
 {
 typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
 
-boost::shared_ptr<SessionManager> fSessionManager;
 CalpontSystemCatalog::NJLSysDataList::~NJLSysDataList()
 {
   NJLSysDataVector::iterator it;
@@ -745,7 +744,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
   BRM::TxnID txnID;
   int oldTxnID;
-  txnID = fSessionManager->getTxnID(fSessionID);
+  txnID = sessionManager()->getTxnID(fSessionID);
 
   if (!txnID.valid)
   {
@@ -754,7 +753,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
   }
 
   BRM::QueryContext verID, oldVerID;
-  verID = fSessionManager->verID();
+  verID = sessionManager()->verID();
   oldTxnID = csep.txnID();
   csep.txnID(txnID.id);
   oldVerID = csep.verID();
@@ -1935,13 +1934,18 @@ void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
   */
 }
 
+boost::shared_ptr<SessionManager>& CalpontSystemCatalog::sessionManager()
+{
+  static auto l_sessionManager = boost::make_shared<SessionManager>();
+  return l_sessionManager;
+}
+
 CalpontSystemCatalog::CalpontSystemCatalog() : fExeMgr(new ClientRotator(0, "ExeMgr")), fSessionID(0)
 {
   // Set fIdentity based on the module on which we are running.
   fIdentity = EC;
 
-  if (fSessionManager.get() == 0)
-    fSessionManager.reset(new SessionManager());
+  sessionManager();
 
   try
   {
@@ -1987,7 +1991,7 @@ CalpontSystemCatalog::CalpontSystemCatalog() : fExeMgr(new ClientRotator(0, "Exe
   buildSysOIDmap();
   buildSysTablemap();
   buildSysDctmap();
-  fSyscatSCN = fSessionManager->sysCatVerID().currentScn;
+  fSyscatSCN = sessionManager()->sysCatVerID().currentScn;
 }
 
 CalpontSystemCatalog::~CalpontSystemCatalog()
@@ -5902,7 +5906,7 @@ void CalpontSystemCatalog::flushCache()
   buildSysDctmap();
   lk4.unlock();
 
-  fSyscatSCN = fSessionManager->sysCatVerID().currentScn;
+  fSyscatSCN = sessionManager()->sysCatVerID().currentScn;
   // cout << "Cache flushed and current sysCatVerID is " << newScn << endl;
 }
 
@@ -6295,12 +6299,12 @@ void CalpontSystemCatalog::buildSysDctmap()
 
 void CalpontSystemCatalog::checkSysCatVer()
 {
-  SCN newScn = fSessionManager->sysCatVerID().currentScn;
+  SCN newScn = sessionManager()->sysCatVerID().currentScn;
 
   if (newScn < 0)
   {
-    fSessionManager.reset(new SessionManager());
-    newScn = fSessionManager->sysCatVerID().currentScn;
+    sessionManager().reset(new SessionManager());
+    newScn = sessionManager()->sysCatVerID().currentScn;
   }
 
   boost::mutex::scoped_lock sysCatLk(fSyscatSCNLock);

@@ -837,6 +837,8 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   /** Convert a MySQL thread id to an InfiniDB session id */
   static uint32_t idb_tid2sid(const uint32_t tid);
 
+  boost::shared_ptr<SessionManager>& sessionManager();
+
   friend class ::ExecPlanTest;
 
   /** Destructor */
