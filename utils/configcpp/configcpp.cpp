@@ -66,16 +66,11 @@ namespace fs = boost::filesystem;
 
 #include "bytestream.h"
 
-namespace
-{
-static const std::string configDefaultFileName("Columnstore.xml");
-const fs::path defaultConfigFilePath(configDefaultFileName);
-}  // namespace
 
 namespace config
 {
 Config* globConfigInstancePtr = nullptr;
-Config::configMap_t Config::fInstanceMap;
+
 boost::mutex Config::fInstanceMapMutex;
 // duplicate to that in the Config class
 boost::mutex Config::fXmlLock;
@@ -100,6 +95,8 @@ void Config::checkAndReloadConfig()
 
 Config* Config::makeConfig(const string& cf)
 {
+  static constexpr const char* const  configDefaultFileName = "Columnstore.xml";
+
   if (cf.empty() || cf == configDefaultFileName)
   {
     if (!globHasConfig.load(std::memory_order_relaxed))
@@ -128,16 +125,17 @@ Config* Config::makeConfig(const string& cf)
 
   boost::mutex::scoped_lock lk(fInstanceMapMutex);
 
-  if (fInstanceMap.find(cf) == fInstanceMap.end())
+  if (configMap().find(cf) == configMap().end())
   {
-    fInstanceMap[cf] = new Config(cf);
+    auto* config =  new Config(cf);
+    configMap()[cf] = config;
   }
   else
   {
-    fInstanceMap[cf]->checkAndReloadConfig();
+    configMap()[cf]->checkAndReloadConfig();
   }
 
-  return fInstanceMap[cf];
+  return configMap()[cf];
 }
 
 Config* Config::makeConfig(const char* cf)
@@ -349,30 +347,7 @@ void Config::writeConfig(const string& configFile) const
   if (fDoc == 0)
     throw runtime_error("Config::writeConfig: no XML document!");
 
-#ifdef _MSC_VER
-  fs::path configFilePth(configFile);
-  fs::path outFilePth(configFilePth);
-  outFilePth.replace_extension("temp");
-
-  if ((fi = fopen(outFilePth.string().c_str(), "wt")) == NULL)
-    throw runtime_error("Config::writeConfig: error opening config file for write " + outFilePth.string());
-
-  int rc = -1;
-  rc = xmlDocDump(fi, fDoc);
-
-  if (rc < 0)
-  {
-    throw runtime_error("Config::writeConfig: error writing config file " + outFilePth.string());
-  }
-
-  fclose(fi);
-
-  if (fs::exists(configFilePth))
-    fs::remove(configFilePth);
-
-  fs::rename(outFilePth, configFilePth);
-#else
-
+  const fs::path defaultConfigFilePath("Columnstore.xml");
   const fs::path defaultConfigFilePathTemp("Columnstore.xml.temp");
   const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
   const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
@@ -460,7 +435,6 @@ void Config::writeConfig(const string& configFile) const
     fclose(fi);
   }
 
-#endif
   return;
 }
 
@@ -561,13 +535,13 @@ void Config::deleteInstanceMap()
 {
   boost::mutex::scoped_lock lk(fInstanceMapMutex);
 
-  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
+  for (auto iter = configMap().begin(); iter != configMap().end(); ++iter)
   {
     Config* instance = iter->second;
     delete instance;
   }
 
-  fInstanceMap.clear();
+  configMap().clear();
 
   if (globConfigInstancePtr)
   {

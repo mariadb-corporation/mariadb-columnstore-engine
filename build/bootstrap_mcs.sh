@@ -161,6 +161,7 @@ build()
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
+		     -DWITH_ASAN=NO
                      -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
 
 

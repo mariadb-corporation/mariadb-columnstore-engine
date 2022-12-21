@@ -110,19 +110,6 @@ const int MAX_NIC = 4;
 const std::string UnassignedIpAddr = "0.0.0.0";
 const std::string UnassignedName = "unassigned";
 
-/** @brief Calpont System Configuration file sections
- */
-const std::string configSections[] = {"SystemConfig",
-                                      "SystemModuleConfig",
-                                      "SystemModuleConfig",
-                                      "SessionManager",
-                                      "VersionBuffer",
-                                      "OIDManager",
-                                      "PrimitiveServers",
-                                      "Installation",
-                                      "ExtentMap",
-                                      ""};
-
 // const uint32_t NOTIFICATIONKEY = 0x49444231;
 
 /** @brief Server Type Installs
@@ -408,6 +395,25 @@ class Oam
    *
    **/
   EXPORT bool changeMyCnf(std::string paramater, std::string value);
+
+/** @brief Calpont System Configuration file sections
+ */
+
+ const std::vector<std::string>& configSections() {
+  static std::vector<std::string> l_configSections = {"SystemConfig",
+                                      "SystemModuleConfig",
+                                      "SystemModuleConfig",
+                                      "SessionManager",
+                                      "VersionBuffer",
+                                      "OIDManager",
+                                      "PrimitiveServers",
+                                      "Installation",
+                                      "ExtentMap",
+                                      ""};
+  return l_configSections;
+ }
+
+
 
  private:
   /** @brief validate Process name

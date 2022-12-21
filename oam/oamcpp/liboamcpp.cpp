@@ -482,11 +482,11 @@ void Oam::getSystemConfig(const std::string& name, std::string& value)
 
   for (int i = 0;; i++)
   {
-    if (configSections[i] == "")
+    if (configSections()[i] == "")
       // end of section list
       break;
 
-    value = sysConfig->getConfig(configSections[i], name);
+    value = sysConfig->getConfig(configSections()[i], name);
 
     if (!(value.empty()))
     {

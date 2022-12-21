@@ -225,7 +225,15 @@ class Config
   void closeConfig(void);
 
  private:
-  typedef std::map<std::string, Config*> configMap_t;
+
+
+
+  typedef std::unordered_map<std::string, Config*> configMap_t;
+  static configMap_t& configMap()
+  {
+    static configMap_t instanceMap;
+    return instanceMap;
+  }
 
   /*
    */
@@ -238,7 +246,6 @@ class Config
    */
   Config(const std::string& configFile);
 
-  static configMap_t fInstanceMap;
   static boost::mutex fInstanceMapMutex;
   static boost::mutex fXmlLock;
   static boost::mutex fWriteXmlLock;

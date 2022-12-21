@@ -10,7 +10,7 @@ add_library(oamcpp STATIC ${oamcpp_LIB_SRCS})
 
 add_dependencies(oamcpp loggingcpp)
 
-target_link_libraries(oamcpp idbboot)
+target_link_libraries(oamcpp idbboot configcpp)
 
 target_compile_options(oamcpp PRIVATE -Wno-unused-result)
 
