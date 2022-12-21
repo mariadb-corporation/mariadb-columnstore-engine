@@ -118,7 +118,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local branchp = if (branch == '**') then '' else branch,
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
-  local container_tags = if (event == 'cron') then [branch, branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
+  local container_tags = if (event == 'cron') then [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', branch] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
   local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
@@ -385,7 +385,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     //failure: 'ignore',
     image: 'alpine/git',
     commands: [
-      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
+      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
       'touch docker/.secrets',
     ],
   },
@@ -416,7 +416,38 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
   },
-
+  multi_node_compose:: {
+    name: 'multi_node_compose',
+    //depends_on: ['dockerhub', 'mtr', 'regression'],
+    depends_on: ['dockerhub'],
+    failure: 'ignore',
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      DOCKER_LOGIN: {
+        from_secret: 'dockerhub_user',
+      },
+      DOCKER_PASSWORD: {
+        from_secret: 'dockerhub_password',
+      },
+      MCS_IMAGE_NAME: 'mariadb/enterprise-columnstore-dev:' + container_tags[0],
+    },
+    commands: [
+      'echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin',
+      'cd docker',
+      'cp .env_example .env',
+      'sed -i "/^MCS_IMAGE_NAME=/s/=.*/=${MCS_IMAGE_NAME}/" .env',
+      'sed -i "/^MAXSCALE=/s/=.*/=false/" .env',
+      'docker-compose up -d',
+      'docker exec mcs1 provision',
+      'docker cp ../mysql-test/columnstore mcs1:' + mtr_path + '/suite/',
+      'docker exec -t mcs1 chown mysql:mysql -R ' + mtr_path,
+      'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
+      // delay for manual debugging on live instance
+      'sleep $${COMPOSE_DELAY_SECONDS:-1s}',
+      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+    ],
+  },
 
   kind: 'pipeline',
   type: 'docker',
@@ -542,7 +573,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          ] +
          [pipeline.publish()] +
          (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
-         (if (event != 'custom') && (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
@@ -552,6 +582,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.regression] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
+         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
          (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
