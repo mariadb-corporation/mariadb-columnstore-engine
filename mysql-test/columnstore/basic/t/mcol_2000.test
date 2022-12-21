@@ -9,6 +9,8 @@
 drop database if exists test_mcol2000;
 -- enable_warnings
 
+SET @@SQL_MODE = CONCAT(@@SQL_MODE, ',STRICT_TRANS_TABLES');
+
 #let $saved_cs = `SELECT @@character_set_client`;
 #SET CHARSET utf8;
 
@@ -61,9 +63,13 @@ alter table copy1 engine=columnstore;
 create table copy2 like copy1;
 create table copy3 engine=columnstore as select * from orig;
 
+--replace_regex /(COLLATE utf8mb3_general_ci )// /(COLLATE utf8mb4_general_ci )// /( COLLATE=koi8r_general_ci)//
 show create table orig;
+--replace_regex /(COLLATE utf8mb3_general_ci )// /(COLLATE utf8mb4_general_ci )// /( COLLATE=koi8r_general_ci)//
 show create table copy1;
+--replace_regex /(COLLATE utf8mb3_general_ci )// /(COLLATE utf8mb4_general_ci )// /( COLLATE=koi8r_general_ci)//
 show create table copy2;
+--replace_regex /(COLLATE utf8mb3_general_ci )// /(COLLATE utf8mb4_general_ci )// /( COLLATE=koi8r_general_ci)// /( COLLATE=latin1_swedish_ci)//
 show create table copy3;
 
 drop table orig;
