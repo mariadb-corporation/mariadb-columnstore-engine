@@ -1,3 +1,4 @@
+echo "Start pre install script."
 
 if [ -z $(cat /proc/cpuinfo | grep -E 'sse4_2|neon|asimd' | head -c1) ]; then
     echo "error: this machine CPU lacks of support for Intel SSE4.2 or ARM Advanced SIMD instructions.

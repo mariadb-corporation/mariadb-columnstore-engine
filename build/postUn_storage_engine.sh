@@ -1,3 +1,5 @@
+echo "Start post uninstall script."
+
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
        echo 0
@@ -28,4 +30,3 @@ if [ $rpmmode = erase ]; then
 fi
 
 exit 0
-

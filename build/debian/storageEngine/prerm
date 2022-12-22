@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
+echo "Start pre uninstall script."
+
 columnstore-pre-uninstall
 
 exit 0
-

@@ -3,6 +3,7 @@
 # $Id: post-install 3705 2013-08-07 19:47:20Z dhill $
 #
 # Post-install steps for columnstore install
+set -x
 
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then

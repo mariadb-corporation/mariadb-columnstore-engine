@@ -3,6 +3,7 @@
 # $Id: post-uninstall 421 2007-04-05 15:46:55Z dhill $
 #
 # pre-uninstall steps for columnstore install
+set -x
 
 running_systemd() {
     if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
@@ -149,4 +150,3 @@ echo " "
 echo "Mariab Columnstore uninstall completed"
 
 exit 0
-

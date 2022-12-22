@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+echo "Start post install script."
+
 rpmmode=install
 
 columnstore-post-install --rpmmode=$rpmmode

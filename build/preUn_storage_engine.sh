@@ -1,3 +1,4 @@
+echo "Start pre uninstall script."
 
 rpmmode=upgrade
 if  [ "$1" -eq "$1" 2> /dev/null ]; then
@@ -13,4 +14,3 @@ if [ $rpmmode = erase ]; then
 fi
 
 exit 0
-
