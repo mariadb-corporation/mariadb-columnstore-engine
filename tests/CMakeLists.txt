@@ -33,7 +33,7 @@ if (WITH_UNITTESTS)
 
     add_executable(rewritretest rewritetest.cpp)
     add_dependencies(rewritretest googletest)
-    target_link_libraries(rewritretest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES})
+    target_link_libraries(rewritretest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
     gtest_add_tests(TARGET rewritretest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
