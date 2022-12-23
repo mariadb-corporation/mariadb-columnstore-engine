@@ -3463,6 +3463,10 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
           break;
 
         default:
+          if (ref->ref_type() == Item_ref::DIRECT_REF)
+          {
+            return buildReturnedColumn(ref->real_item(), gwi, nonSupport);
+          }
           gwi.fatalParseError = true;
           gwi.parseErrorText = "Unknown REF item";
           break;
@@ -6249,9 +6253,15 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::REF_ITEM:
     {
+      Item_ref* ref = (Item_ref*)item;
+      if (ref->ref_type() == Item_ref::DIRECT_REF)
+      {
+        parse_item(ref->real_item(), field_vec, hasNonSupportItem, parseInfo, gwi);
+        break;
+      }
       while (true)
       {
-        Item_ref* ref = (Item_ref*)item;
+        ref = (Item_ref*)item;
 
         if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
         {
@@ -7665,7 +7675,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         break;
       }
 
-      default: 
+      default:
       {
         break;
       }
