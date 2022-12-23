@@ -23,6 +23,9 @@ using namespace std;
 #include "objectreader.h"
 #include <parsetree.h>
 
+#include "query19_init.h"
+#include "query19_fixed.h"
+
 unsigned char __tree_hex_dump[] = {
     0x24, 0x01, 0x01, 0x1e, 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x22, 0x20, 0x01, 0x00, 0x00, 0x00, 0x3e, 0x09, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -55,16 +58,36 @@ unsigned char __tree_hex_dump[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x20, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+
 TEST(Stub, Check)
 {
-  messageqcpp::ByteStream b;
-  for (size_t i = 0; i < sizeof(__tree_hex_dump); i++) {
-    b << __tree_hex_dump[i];
+  messageqcpp::ByteStream b1;
+  for (size_t i = 0; i < sizeof(__tree_hex_dump); i++)
+  {
+    b1 << __tree_hex_dump[i];
   }
-  std::unique_ptr<execplan::ParseTree> tree;
-  tree.reset(execplan::ObjectReader::createParseTree(b));
-  tree->drawTree("/tmp/tree.dot");
-  cout << tree->toString();
-  EXPECT_TRUE(1 == 1);
+  std::unique_ptr<execplan::ParseTree> tree1;
+  tree1.reset(execplan::ObjectReader::createParseTree(b1));
+  tree1->drawTree("/tmp/treetest.dot");
+  //cout << tree1->toString();
 
+  messageqcpp::ByteStream b2;
+  for (size_t i = 0; i < sizeof(__query19_tree_init); i++)
+  {
+    b2 << __query19_tree_init[i];
+  }
+  std::unique_ptr<execplan::ParseTree> tree2;
+  tree2.reset(execplan::ObjectReader::createParseTree(b2));
+  tree2->drawTree("/tmp/treeq19-init.dot");
+
+  messageqcpp::ByteStream b3;
+  for (size_t i = 0; i < sizeof(__query19_tree_fixed); i++)
+  {
+    b3 << __query19_tree_fixed[i];
+  }
+  std::unique_ptr<execplan::ParseTree> tree3;
+  tree3.reset(execplan::ObjectReader::createParseTree(b3));
+  tree3->drawTree("/tmp/treeq19-fixed.dot");
+
+  EXPECT_TRUE(1 == 1);
 }
