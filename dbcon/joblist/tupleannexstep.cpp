@@ -1497,8 +1497,8 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   auto& rg = firstPhaseThreads.front()->getRGRef();
   auto sortingKeyColumns = firstPhaseThreads.front()->getSortingColumns();
   auto* mm = firstPhaseThreads.front()->getMM()->typedClone();
-  sorting::HeapOrderBy sorting(rg, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads, fMaxThreads, ranges,
-                               sortingKeyColumns);
+  sorting::HeapOrderBy sorting(rg, sortingKeyColumns, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads,
+                               fMaxThreads, ranges);
 
   std::cout << " first HeapMerge id " << id << std::endl;
   auto outputDL = fOutputJobStepAssociation.outAt(idA)->rowGroupDL();
