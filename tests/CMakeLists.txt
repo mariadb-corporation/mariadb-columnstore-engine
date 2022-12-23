@@ -87,6 +87,11 @@ if(WITH_UNITTESTS)
     columnstore_link(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
 
+    add_executable(heaporderby heaporderby-tests.cpp)
+    add_dependencies(heaporderby googletest)
+    target_link_libraries(heaporderby ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET heaporderby TEST_PREFIX columnstore:)
+
     add_executable(modified_pdqsort modified_pdqsort.cpp)
     add_dependencies(modified_pdqsort googletest)
     target_link_libraries(modified_pdqsort ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
@@ -132,6 +137,10 @@ if(WITH_UNITTESTS)
         add_executable(bytestream bytestream.cpp)
         columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
         add_test(NAME columnstore:bytestream COMMAND bytestream)
+
+        add_executable(pqorderby_test pqorderby-test.cpp)
+        columnstore_link(pqorderby_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:pqorderby_test COMMAND pqorderby_test)
 
         # standalone EM routines test
         add_executable(brm_em_standalone brm-em-standalone.cpp)

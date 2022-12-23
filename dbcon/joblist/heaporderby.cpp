@@ -16,14 +16,44 @@
    MA 02110-1301, USA. */
 
 #include "heaporderby.h"
+#include "conststring.h"
+#include "pdqorderby.h"
+#include "vlarray.h"
 
 namespace sorting
 {
-HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, const size_t limitCount,
-                         joblist::RMMemManager* mm, const uint32_t threadId,
-                         const sorting::SortingThreads& prevPhaseSorting, const uint32_t threadNum,
-                         const sorting::ValueRangesVector& ranges,
-                         const joblist::OrderByKeysType& sortingKeyCols)
+KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
+                 const sorting::PermutationType p)
+//  : key_(utils::VLArray<uint8_t, 16>(9))
+{
+  key_ = new uint8_t(rg.getOffsets().back() - 2 + colsAndDirection.size());
+  uint8_t* pos = key_;
+  const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
+  for (auto [colId, isAsc] : colsAndDirection)
+  {
+    uint32_t colWidth = rg.getColumnWidth(colId);
+    const uint8_t* valueBuf = rg.getColumnValueBuf(colId, p.rowID);
+    // std::cout << "KeyType width " << colWidth << " " << *((int64_t*)valueBuf) << " "
+    //           << *((int64_t*)nullValuePtr) << std::endl;
+    if (memcmp(nullValuePtr, valueBuf, colWidth))
+    {
+      *pos++ = 1;
+      std::memcpy(pos, valueBuf, colWidth);
+      pos += colWidth;
+    }
+    else
+    {
+      *pos++ = 0;
+    }
+  }
+
+  values_ = {};
+}
+
+HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKeysType& sortingKeyCols,
+                         const size_t limitStart, const size_t limitCount, joblist::RMMemManager* mm,
+                         const uint32_t threadId, const sorting::SortingThreads& prevPhaseSorting,
+                         const uint32_t threadNum, const sorting::ValueRangesVector& ranges)
  : start_(limitStart)
  , count_(limitCount)
  , recordsLeftInRanges_(0)
@@ -70,7 +100,7 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, 
   // heap_ = std::vector<HeapUnit>(heapSize, {KeyType(), {0, 0, 0}});
   for (size_t i = 0; i < heapSize; ++i)
   {
-    heap_.push_back({KeyType(), {0, 0, i % half}});
+    heap_.push_back({KeyType(rg_), {0, 0, i % half}});
   }
 
   size_t prevHeapIdx = heap_.size();
@@ -83,7 +113,8 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, 
       for (; bestChildIdx < half; prevBestChildIdx = bestChildIdx)
       {
         // get min of left and right.
-        bestChildIdx = idxOfMin<KeyType>(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1);
+        bestChildIdx =
+            idxOfMin<KeyType>(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1, sortingKeyCols);
         assert(bestChildIdx >= heapIdx && bestChildIdx <= (prevBestChildIdx << 1) + 1 &&
                bestChildIdx < heap_.size());
         // swap the best and the current
@@ -93,10 +124,11 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, 
       auto threadId = heap_[bestChildIdx].second.threadID;
       auto p = ranges_[threadId].back();
       rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
-      // WIP
-      KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
+      auto key = KeyType(rg_, sortingKeyCols, p);
+      // // WIP
+      // KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
       // WIP the simplified key inversion is ~
-      heap_[bestChildIdx] = {v, p};
+      heap_[bestChildIdx] = {key, p};
       ranges_[threadId].pop_back();
     }
   }
@@ -104,9 +136,12 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, 
 }
 
 template <typename T>
-size_t HeapOrderBy::idxOfMin(Heap& heap, const size_t left, const size_t right)
+size_t HeapOrderBy::idxOfMin(Heap& heap, const size_t left, const size_t right,
+                             const joblist::OrderByKeysType& colsAndDirection)
 {
-  if (heap[right].second == impossiblePermute || heap[left].first < heap[right].first)
+  // if (heap[right].second == impossiblePermute || heap[left].first < heap[right].first)
+  if (heap[right].second == impossiblePermute ||
+      heap[left].first.less(heap[right].first, rg_, colsAndDirection))
     return left;
   return right;
 }
@@ -122,7 +157,7 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
        heapIdx = bestChildIdx)
   {
     // get min of left and right.
-    bestChildIdx = idxOfMin<KeyType>(heap, heapIdx << 1, (heapIdx << 1) + 1);
+    bestChildIdx = idxOfMin<KeyType>(heap, heapIdx << 1, (heapIdx << 1) + 1, jobListorderByRGColumnIDs_);
     heap[heapIdx] = heap[bestChildIdx];
   }
 
@@ -141,9 +176,9 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   {
     rg_.setData(&(prevPhaseSortingThread[p.threadID]->getRGDatas()[p.rgdataID]));
     // WIP column id
-    KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
+    // KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
     // WIP the simplified key inversion is ~
-    heap_[bestChildIdx] = {v, p};
+    heap_[bestChildIdx] = {KeyType(rg_, jobListorderByRGColumnIDs_, p), p};
   }
 
   return topPermute;
