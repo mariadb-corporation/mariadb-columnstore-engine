@@ -100,9 +100,39 @@ namespace details
       return result;
   }
 
-  execplan::ParseTree* removeFromTree(execplan::ParseTree* tree, const CommonContainer& common)
+  // TODO: investigate when AND has two comon nodes !!!!
+  void removeFromAnd(execplan::ParseTree* father, execplan::ParseTree* andNode, const CommonContainer& common, bool rightChild)
   {
-      return tree;
+    if (!andNode || andNode->data()->data() != "and")
+      return;
+
+    if (common.contains(andNode->left()->data()))
+    {
+      if (rightChild)
+        father->right(andNode->right());
+      else
+        father->left(andNode->right());
+    }
+    else if (common.contains(andNode->right()->data()))
+    {
+      if (rightChild)
+        father->right(andNode->left());
+      else
+        father->left(andNode->left());
+    }
+  }
+
+  void removeFromTree(execplan::ParseTree* tree, const CommonContainer& common)
+  {
+      if (tree == nullptr) {
+      return;
+    }
+
+    removeFromAnd(tree, tree->left(), common, false);
+    removeFromAnd(tree, tree->right(), common, true);
+
+    removeFromTree(tree->left(), common);
+    removeFromTree(tree->right(), common);
   }
 } // namespace details
 
