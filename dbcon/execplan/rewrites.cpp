@@ -145,6 +145,8 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   printContainer(std::cerr, common, "\n", [](auto treenode){ return treenode->data();}, "Common Leaf Conjunctions:");
 
   details::removeFromTree(tree, common);
+  // HACK WORKAROUND FOR case of two common nodes
+  details::removeFromTree(tree, common);
   return details::appendToRoot(tree, common);
 }
 
