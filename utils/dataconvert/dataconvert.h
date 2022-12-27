@@ -971,7 +971,7 @@ struct Time
   signed is_neg : 1;
 
   // NULL column value = 0xFFFFFFFFFFFFFFFE
-  Time() : msecond(-2), second(-1), minute(-1), hour(-1), day(-1), is_neg(0b1)
+  Time() : msecond(-2), second(-1), minute(-1), hour(-1), day(-1), is_neg(-1)
   {
   }
 
@@ -990,7 +990,7 @@ struct Time
    : msecond(msec), second(sec), minute(min), hour(h), day(d), is_neg(neg)
   {
     if (h < 0)
-      is_neg = 0b1;
+      is_neg = -1;
   }
 
   int64_t convertToMySQLint() const;
@@ -1003,7 +1003,7 @@ inline void Time::reset()
   second = -1;
   minute = -1;
   hour = -1;
-  is_neg = 0b1;
+  is_neg = -1;
   day = -1;
 }
 

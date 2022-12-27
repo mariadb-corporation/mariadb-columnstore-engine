@@ -1131,7 +1131,7 @@ bool mysql_str_to_time(const string& input, Time& output, long decimals)
       output.minute = 59;
       output.second = 59;
       output.msecond = exp10(decimals) - 1;
-      output.is_neg = 1;
+      output.is_neg = -1;
     }
     // If neither of the above match then we return a 0 time
     else

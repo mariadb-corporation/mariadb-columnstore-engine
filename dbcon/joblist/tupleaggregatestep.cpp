@@ -2051,7 +2051,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
     // if so, replace the "-1" to actual position in returned vec.
     AGG_MAP aggDupFuncMap;
     projColsUDAFIdx = 0;
-    int64_t multiParms = 0;
 
     // copy over the groupby vector
     // update the outputColumnIndex if returned
@@ -2096,7 +2095,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         }
 
         // Skip on final agg.: Extra parms for an aggregate have no work there.
-        ++multiParms;
         continue;
       }
       else
@@ -4324,7 +4322,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
     // Keep a count of the parms after the first for any aggregate.
     // These will be skipped and the count needs to be subtracted
     // from where the aux column will be.
-    int64_t multiParms = 0;
     projColsUDAFIdx = 0;
     // check if the count column for AVG is also a returned column,
     // if so, replace the "-1" to actual position in returned vec.
@@ -4372,7 +4369,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           aggDupFuncMap.erase(it);
         }
         // Skip further UM porocessing of the multi-parm: Extra parms for an aggregate have no work on the UM
-        ++multiParms;
         continue;
       }
       else

@@ -10,7 +10,7 @@ FLEX_TARGET(ddl_scan ddl.l ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp COMPILE_FLAG
 ADD_FLEX_BISON_DEPENDENCY(ddl_scan ddl_gram)
 
 set_source_files_properties(ddl-scan.cpp PROPERTIES COMPILE_FLAGS "-Wno-register -Wno-deprecated-register -Wno-sign-compare -DYY_NO_INPUT")
-
+set_source_files_properties(ddl-gram.cpp PROPERTIES COMPILE_FLAGS "-Wno-unused-but-set-variable")
 ########### next target ###############
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}) # to pick up flex/bison output

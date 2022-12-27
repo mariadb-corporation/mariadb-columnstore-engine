@@ -906,12 +906,10 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     List_iterator_fast<Item> value_it(thd->lex->value_list);
     updateCP->queryType(CalpontSelectExecutionPlan::UPDATE);
     ci->stats.fQueryType = updateCP->queryType();
-    uint32_t cnt = 0;
     tr1::unordered_set<string> timeStampColumnNames;
 
     while ((item = (Item_field*)field_it++))
     {
-      cnt++;
 
       string tmpTableName = bestTableName(item);
 

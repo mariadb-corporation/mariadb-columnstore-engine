@@ -388,7 +388,6 @@ void* thr_popper(ioManager* arg)
   utils::setThreadName("thr_popper");
   ioManager* iom = arg;
   FileBufferMgr* fbm;
-  int totalRqst = 0;
   fileRequest* fr = 0;
   BRM::LBID_t lbid = 0;
   BRM::OID_t oid = 0;
@@ -748,7 +747,6 @@ void* thr_popper(ioManager* arg)
 
     longSeekOffset = (uint64_t)offset * (uint64_t)fileBlockSize;
     lldiv_t cmpOffFact = lldiv(longSeekOffset, (4LL * 1024LL * 1024LL));
-    totalRqst++;
 
     uint32_t readCount = 0;
     uint32_t bytesRead = 0;
