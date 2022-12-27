@@ -17,7 +17,8 @@
 
 #include <gtest/gtest.h>
 
-using namespace std;
+
+#include <algorithm>
 
 #include "bytestream.h"
 #include "objectreader.h"
@@ -59,6 +60,60 @@ unsigned char __tree_hex_dump[] = {
     0x00, 0x20, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 
+
+auto nodeComparator= [](const execplan::TreeNode* left, const execplan::TreeNode*right) {
+    return left->data() < right->data();
+};
+using Comparator = decltype(nodeComparator);
+using CommonContainer = std::set<execplan::TreeNode*, Comparator>;
+
+
+//Walk the tree and find out common conjuctions
+void dummmyCommonConjunction(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0) {
+  if (root == nullptr) {
+    accumulator.clear();
+    return;
+  }
+  auto sep = std::string (level * 4, '-');
+  std::cerr << sep << ": " <<  root->data()->data() << std::endl;
+
+  if (root->left() == nullptr && root->left() == nullptr)
+  {
+    accumulator.insert(root->data());
+    return;
+  }
+
+  if (root->data()->data() == "or") {
+    CommonContainer leftAcc;
+    CommonContainer rightAcc;
+    dummmyCommonConjunction(root->left(), leftAcc, ++level);
+    dummmyCommonConjunction(root->right(), rightAcc, ++level);
+    CommonContainer intersection;
+    std::set_intersection(leftAcc.begin(), leftAcc.end(),
+                   rightAcc.begin(), rightAcc.end(),
+                   std::inserter(intersection, intersection.begin()), nodeComparator);
+
+    accumulator = intersection;
+    return;
+  }
+
+  if (root->data()->data() == "and")
+  {
+    dummmyCommonConjunction(root->left(), accumulator, ++level);
+    dummmyCommonConjunction(root->right(), accumulator, ++level);
+    return;
+  }
+
+  if (root->left() == nullptr)
+  {
+    dummmyCommonConjunction(root->right(), accumulator, ++level);
+    return;
+  }
+
+  dummmyCommonConjunction(root->left(), accumulator, ++level);
+  return;
+}
+
 TEST(Stub, Check)
 {
   messageqcpp::ByteStream b1;
@@ -79,6 +134,12 @@ TEST(Stub, Check)
   std::unique_ptr<execplan::ParseTree> tree2;
   tree2.reset(execplan::ObjectReader::createParseTree(b2));
   tree2->drawTree("/tmp/treeq19-init.dot");
+  CommonContainer common;
+  dummmyCommonConjunction(tree2.get(), common);
+  for (const auto & c: common)
+  {
+    std::cerr << "Common condition " << c->data() << std::endl;
+  }
 
   messageqcpp::ByteStream b3;
   for (size_t i = 0; i < sizeof(__query19_tree_fixed); i++)
