@@ -34,6 +34,7 @@ set(execplan_LIB_SRCS
     pseudocolumn.cpp
     range.cpp
     returnedcolumn.cpp
+    rewrites.cpp
     rowcolumn.cpp
     selectfilter.cpp
     sessionmanager.cpp
