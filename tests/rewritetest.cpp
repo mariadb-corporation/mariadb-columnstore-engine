@@ -39,19 +39,19 @@ TEST(Stub, Check)
   stream.load(__query19_tree_init, sizeof(__query19_tree_init));
 
   // query from https://jira.mariadb.org/browse/MCOL-4530
-  TreePtr tcph_query_19_tree;
-  tcph_query_19_tree.reset(execplan::ObjectReader::createParseTree(stream));
-  tcph_query_19_tree->drawTree("/tmp/treeq19-init.dot");
+  TreePtr tpch_query_19_tree;
+  tpch_query_19_tree.reset(execplan::ObjectReader::createParseTree(stream));
+  tpch_query_19_tree->drawTree("/tmp/treeq19-init.dot");
 
   // dummyRewrittenQuery
-  auto tpch_query_19_rewritten = extractCommonLeafConjunctionsToRoot(tcph_query_19_tree.get());;
+  auto tpch_query_19_rewritten = extractCommonLeafConjunctionsToRoot(tpch_query_19_tree.get());;
   tpch_query_19_rewritten->drawTree("/tmp/treeq19-rewritten.dot");
 
   // manualy rewritten query
   stream.load(__query19_tree_fixed, sizeof(__query19_tree_fixed));
-  TreePtr tcph_rewritten_query_19_tree;
-  tcph_rewritten_query_19_tree.reset(execplan::ObjectReader::createParseTree(stream));
-  tcph_rewritten_query_19_tree->drawTree("/tmp/treeq19-fixed.dot");
+  TreePtr tpch_rewritten_query_19_tree;
+  tpch_rewritten_query_19_tree.reset(execplan::ObjectReader::createParseTree(stream));
+  tpch_rewritten_query_19_tree->drawTree("/tmp/treeq19-fixed.dot");
 
-  EXPECT_TRUE(1 == 1);
+  EXPECT_EQ(tpch_query_19_rewritten->toString(), tpch_rewritten_query_19_tree->toString() );
 }
