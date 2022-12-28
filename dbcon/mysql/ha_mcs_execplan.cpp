@@ -3471,6 +3471,10 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
           break;
 
         default:
+          if (ref->ref_type() == Item_ref::DIRECT_REF)
+          {
+            return buildReturnedColumn(ref->real_item(), gwi, nonSupport);
+          }
           gwi.fatalParseError = true;
           gwi.parseErrorText = "Unknown REF item";
           break;
@@ -4053,15 +4057,14 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
         ReturnedColumn* rc = NULL;
 
-
         // Special treatment for json functions
         // All boolean arguments will be parsed as boolean string true(false)
         // E.g. the result of `SELECT JSON_ARRAY(true, false)` should be [true, false] instead of [1, 0]
-        bool mayHasBoolArg = ((funcName == "json_insert" || funcName == "json_replace" ||
-                              funcName == "json_set" || funcName == "json_array_append" ||
-                              funcName == "json_array_insert") && i != 0 && i % 2 == 0) ||
-                             (funcName == "json_array") ||
-                             (funcName == "json_object" && i % 2 == 1);
+        bool mayHasBoolArg =
+            ((funcName == "json_insert" || funcName == "json_replace" || funcName == "json_set" ||
+              funcName == "json_array_append" || funcName == "json_array_insert") &&
+             i != 0 && i % 2 == 0) ||
+            (funcName == "json_array") || (funcName == "json_object" && i % 2 == 1);
         bool isBoolType =
             (ifp->arguments()[i]->const_item() && ifp->arguments()[i]->type_handler()->is_bool_type());
 
@@ -6408,10 +6411,15 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::REF_ITEM:
     {
+      Item_ref* ref = (Item_ref*)item;
+      if (ref->ref_type() == Item_ref::DIRECT_REF)
+      {
+        parse_item(ref->real_item(), field_vec, hasNonSupportItem, parseInfo, gwi);
+        break;
+      }
       while (true)
       {
-        Item_ref* ref = (Item_ref*)item;
-
+        ref = (Item_ref*)item;
         if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
         {
           parseInfo |= AGG_BIT;
