@@ -306,6 +306,23 @@ class ProtocolError : public std::logic_error
 #define idblog(x) do { } while (0)
 #define idblog_stat(x) /* nothing */
 #endif
+#define idblog2(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": log string \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
 
 #define idbassert_s(x, s)                                                                                \
   do                                                                                                     \
