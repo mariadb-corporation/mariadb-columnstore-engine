@@ -1,4 +1,3 @@
-
 /* Copyright (C) 2022 MariaDB Corporation
  This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
  Public License as published by the Free Software Foundation; version 2 of the License. This program is
@@ -13,26 +12,10 @@
 #include "rewrites.h"
 #include "bytestream.h"
 #include "objectreader.h"
-
-#include "unit1.h"
-#include "unit10.h"
-#include "unit11.h"
-#include "unit12.h"
-#include "unit13.h"
-#include "unit14.h"
-#include "unit15.h"
-#include "unit16.h"
-#include "unit2.h"
-#include "unit3.h"
-#include "unit4.h"
-#include "unit5.h"
-#include "unit6.h"
-#include "unit7.h"
-#include "unit8.h"
-#include "unit9.h"
-
+#include "unitqueries.h"
 
 using TreePtr = std::unique_ptr<execplan::ParseTree>;
+
 
 bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
 {
@@ -49,7 +32,7 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
           (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
 }
 
-TEST(Simple, Check)
+TEST(Simple, Q1_test)
 {
   messageqcpp::ByteStream stream;
 
@@ -76,7 +59,15 @@ TEST(Simple, Check)
 
   auto query_1_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_1_tree.get());
   query_1_tree_rewritten->drawTree("/tmp/treeq1-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_1_tree.get(), query_1_tree_rewritten));
+}
+
+TEST(Simple, Q10_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select * from t1
@@ -100,7 +91,15 @@ TEST(Simple, Check)
 
   auto query_10_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_10_tree.get());
   query_10_tree_rewritten->drawTree("/tmp/treeq10-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_10_tree.get(), query_10_tree_rewritten));
+}
+
+TEST(Simple, Q11_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -125,7 +124,15 @@ TEST(Simple, Check)
 
   auto query_11_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_11_tree.get());
   query_11_tree_rewritten->drawTree("/tmp/treeq11-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_11_tree.get(), query_11_tree_rewritten));
+}
+
+TEST(Simple, Q12_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -150,7 +157,15 @@ TEST(Simple, Check)
 
   auto query_12_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_12_tree.get());
   query_12_tree_rewritten->drawTree("/tmp/treeq12-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_12_tree.get(), query_12_tree_rewritten));
+}
+
+TEST(Simple, Q13_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -175,7 +190,15 @@ TEST(Simple, Check)
 
   auto query_13_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_13_tree.get());
   query_13_tree_rewritten->drawTree("/tmp/treeq13-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_13_tree.get(), query_13_tree_rewritten));
+}
+
+TEST(Simple, Q14_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -205,7 +228,15 @@ TEST(Simple, Check)
 
   auto query_14_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_14_tree.get());
   query_14_tree_rewritten->drawTree("/tmp/treeq14-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_14_tree.get(), query_14_tree_rewritten));
+}
+
+TEST(Simple, Q15_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -242,7 +273,15 @@ TEST(Simple, Check)
 
   auto query_15_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_15_tree.get());
   query_15_tree_rewritten->drawTree("/tmp/treeq15-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_15_tree.get(), query_15_tree_rewritten));
+}
+
+TEST(Simple, Q16_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select *
@@ -277,7 +316,15 @@ TEST(Simple, Check)
 
   auto query_16_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_16_tree.get());
   query_16_tree_rewritten->drawTree("/tmp/treeq16-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_16_tree.get(), query_16_tree_rewritten));
+}
+
+TEST(Simple, Q2_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname
@@ -295,7 +342,15 @@ TEST(Simple, Check)
 
   auto query_2_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_2_tree.get());
   query_2_tree_rewritten->drawTree("/tmp/treeq2-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_2_tree.get(), query_2_tree_rewritten));
+}
+
+TEST(Simple, Q3_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname
@@ -316,7 +371,15 @@ TEST(Simple, Check)
 
   auto query_3_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_3_tree.get());
   query_3_tree_rewritten->drawTree("/tmp/treeq3-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_3_tree.get(), query_3_tree_rewritten));
+}
+
+TEST(Simple, Q4_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname
@@ -335,7 +398,15 @@ TEST(Simple, Check)
 
   auto query_4_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_4_tree.get());
   query_4_tree_rewritten->drawTree("/tmp/treeq4-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_4_tree.get(), query_4_tree_rewritten));
+}
+
+TEST(Simple, Q5_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname from t1,t2
@@ -359,7 +430,15 @@ TEST(Simple, Check)
 
   auto query_5_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_5_tree.get());
   query_5_tree_rewritten->drawTree("/tmp/treeq5-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_5_tree.get(), query_5_tree_rewritten));
+}
+
+TEST(Simple, Q6_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname from t1,t2
@@ -383,7 +462,15 @@ TEST(Simple, Check)
 
   auto query_6_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_6_tree.get());
   query_6_tree_rewritten->drawTree("/tmp/treeq6-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_6_tree.get(), query_6_tree_rewritten));
+}
+
+TEST(Simple, Q7_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname
@@ -407,7 +494,15 @@ TEST(Simple, Check)
 
   auto query_7_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_7_tree.get());
   query_7_tree_rewritten->drawTree("/tmp/treeq7-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_7_tree.get(), query_7_tree_rewritten));
+}
+
+TEST(Simple, Q8_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname
@@ -430,7 +525,15 @@ TEST(Simple, Check)
 
   auto query_8_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_8_tree.get());
   query_8_tree_rewritten->drawTree("/tmp/treeq8-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_8_tree.get(), query_8_tree_rewritten));
+}
+
+TEST(Simple, Q9_test)
+
+{
+  messageqcpp::ByteStream stream;
+
   /*
 
   select t1.posname, t2.posname
@@ -456,5 +559,6 @@ TEST(Simple, Check)
 
   auto query_9_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_9_tree.get());
   query_9_tree_rewritten->drawTree("/tmp/treeq9-rewritten.dot");
+
   EXPECT_TRUE(treeEqual(query_9_tree.get(), query_9_tree_rewritten));
 }
