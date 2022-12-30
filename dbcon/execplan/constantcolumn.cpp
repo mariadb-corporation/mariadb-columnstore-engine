@@ -39,7 +39,7 @@ namespace execplan
 /**
  *  Constructors/Destructors
  */
-ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
+ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(NULLDATA)
 {
 //idblog("default ConstantColumn constructor");
 }
