@@ -288,6 +288,10 @@ class PDQOrderBy
   {
     return permutation_;
   }
+  PermutationVec& getMutPermutation()
+  {
+    return permutation_;
+  }
   rowgroup::RGDataVector& getRGDatas()
   {
     return rgDatas_;
@@ -308,7 +312,7 @@ class PDQOrderBy
   {
     return jobListorderByRGColumnIDs_;
   }
-  joblist::RMMemManager* getMM() const
+  joblist::MemManager* getMM() const
   {
     return mm_.get();
   }
@@ -361,7 +365,7 @@ class PDQOrderBy
   rowgroup::RowGroup rg_;
   rowgroup::RGDataVector rgDatas_;
   PermutationVec permutation_;
-  std::unique_ptr<joblist::RMMemManager> mm_;
+  std::unique_ptr<joblist::MemManager> mm_;
   IterDiffT flatCurPermutationDiff_ = 0;
   Ranges2SortQueue ranges2Sort_;
   // Scratch desk

@@ -68,6 +68,8 @@
 namespace rowgroup
 {
 constexpr const int16_t rgCommonSize = 8192;
+using OffsetType = uint32_t;
+using OffsetsType = std::vector<OffsetType>;
 template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
 concept CanUseIntegralTypes =
     requires {
@@ -415,7 +417,7 @@ class Row
   inline uint32_t getSize() const;  // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
-  inline uint32_t getOffset(uint32_t colIndex) const;
+  inline OffsetType getOffset(uint32_t colIndex) const;
   inline uint32_t getScale(uint32_t colIndex) const;
   inline uint32_t getPrecision(uint32_t colIndex) const;
   inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
@@ -511,9 +513,9 @@ class Row
   for the other types as well as the getters.
   */
   template <int len>
-  void setUintField_offset(uint64_t val, uint32_t offset);
+  void setUintField_offset(uint64_t val, OffsetType offset);
   template <typename T>
-  void setIntField_offset(const T val, const uint32_t offset);
+  void setIntField_offset(const T val, const OffsetType offset);
   inline void nextRow(uint32_t size);
   inline void prevRow(uint32_t size, uint64_t number);
 
@@ -1475,6 +1477,14 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
+  const uint8_t* getColumnValueBuf(const uint32_t columnID, const uint32_t rowID) const
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    // check the out of bounds invariant somehow
+    return &data[valueOffset];
+  }
+
   template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
     requires CanUseIntegralTypes<ColType, FromType, ToType>
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
@@ -1594,7 +1604,7 @@ class RowGroup : public messageqcpp::Serializeable
 
   uint32_t getColumnWidth(uint32_t col) const;
   uint32_t getColumnCount() const;
-  inline const std::vector<uint32_t>& getOffsets() const;
+  inline const OffsetsType& getOffsets() const;
   inline const std::vector<uint32_t>& getOIDs() const;
   inline const std::vector<uint32_t>& getKeys() const;
   inline const std::vector<uint32_t>& getColWidths() const;
