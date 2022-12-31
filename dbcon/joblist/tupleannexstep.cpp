@@ -1496,7 +1496,7 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   RGData rgDataOut;
   auto& rg = firstPhaseThreads.front()->getRGRef();
   auto sortingKeyColumns = firstPhaseThreads.front()->getSortingColumns();
-  auto* mm = firstPhaseThreads.front()->getMM()->typedClone();
+  auto* mm = firstPhaseThreads.front()->getMM()->clone();
   sorting::HeapOrderBy sorting(rg, sortingKeyColumns, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads,
                                fMaxThreads, ranges);
 
