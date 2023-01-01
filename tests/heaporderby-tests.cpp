@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "conststring.h"
 #include "dbcon/joblist/heaporderby.h"
 #include "jlf_common.h"
 #include "pdqorderby.h"
@@ -38,31 +39,45 @@ using namespace sorting;
 
 using RGFieldsType = std::vector<uint32_t>;
 
+rowgroup::RowGroup setupRG(const std::vector<execplan::CalpontSystemCatalog::ColDataType>& cts,
+                           const RGFieldsType& widths, const RGFieldsType& charsets)
+{
+  std::vector<execplan::CalpontSystemCatalog::ColDataType> types = cts;
+  RGFieldsType offsets{2};
+  for (auto w : widths)
+  {
+    offsets.push_back(offsets.back() + w);
+  }
+  RGFieldsType roids(widths.size());
+  std::iota(roids.begin(), roids.end(), 3000);
+  RGFieldsType tkeys(widths.size());
+  std::fill(tkeys.begin(), tkeys.end(), 1);
+  RGFieldsType cscale(widths.size());
+  std::fill(cscale.begin(), cscale.end(), 0);
+  RGFieldsType precision(widths.size());
+  std::fill(precision.begin(), precision.end(), 20);
+  RGFieldsType charSetNumVec{8};
+  return rowgroup::RowGroup(roids.size(),   // column count
+                            offsets,        // oldOffset
+                            roids,          // column oids
+                            tkeys,          // keys
+                            types,          // types
+                            charSetNumVec,  // charset numbers
+                            cscale,         // scale
+                            precision,      // precision
+                            20,             // sTableThreshold
+                            false           // useStringTable
+  );
+}
+
 // integral type, col type, NULL value, socket numbers
-class KeyTypeTest : public testing::Test
+class KeyTypeTestInt64 : public testing::Test
 {
  public:
   void SetUp() override
   {
     keysCols_ = {{0, false}};
-    RGFieldsType offsets{2, 10};
-    RGFieldsType roids{3000};
-    RGFieldsType tkeys{1};
-    RGFieldsType cscale{0};
-    RGFieldsType precision{20};
-    RGFieldsType charSetNumVec{8};
-    std::vector<execplan::CalpontSystemCatalog::ColDataType> types{execplan::CalpontSystemCatalog::BIGINT};
-    rg_ = rowgroup::RowGroup(roids.size(),   // column count
-                             offsets,        // oldOffset
-                             roids,          // column oids
-                             tkeys,          // keys
-                             types,          // types
-                             charSetNumVec,  // charset numbers
-                             cscale,         // scale
-                             precision,      // precision
-                             20,             // sTableThreshold
-                             false           // useStringTable
-    );
+    rg_ = setupRG({execplan::CalpontSystemCatalog::BIGINT}, {8}, {8});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
     rowgroup::Row r;
@@ -107,7 +122,7 @@ class KeyTypeTest : public testing::Test
   rowgroup::RGData rgData_;
 };
 
-TEST_F(KeyTypeTest, KeyTypeCtor)
+TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64)
 {
   size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
@@ -136,7 +151,7 @@ TEST_F(KeyTypeTest, KeyTypeCtor)
       {
         *v = i;
       }
-      *v &= 0x7FFFFFFFFFFFFFFF;
+      *v ^= 0x8000000000000000;
       *v = htonll(*v);
       ASSERT_FALSE(key.key() == nullptr);
       ASSERT_EQ(memcmp(expected, key.key(), 9), 0);
@@ -149,7 +164,7 @@ TEST_F(KeyTypeTest, KeyTypeCtor)
   }
 }
 
-TEST_F(KeyTypeTest, KeyTypeLess)
+TEST_F(KeyTypeTestInt64, KeyTypeLessInt64)
 {
   size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;
   uint8_t* key1Buf = new uint8_t[bufUnitSize];
@@ -200,6 +215,75 @@ TEST_F(KeyTypeTest, KeyTypeLess)
 // wide decimal
 // ConstString: < 8 byte, 8 < len < StringThreshold, len < StringThreshold
 // Mixed
+
+class KeyTypeTestVarchar : public testing::Test
+{
+ public:
+  void SetUp() override
+  {
+    keysCols_ = {{0, false}};
+    uint32_t stringMaxSize = 16;
+    rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {8});
+    rgData_ = rowgroup::RGData(rg_);
+    rg_.setData(&rgData_);
+    rowgroup::Row r;
+    rg_.initRow(&r);
+    // uint32_t rowSize = r.getSize();
+    rg_.getRow(0, &r);
+    buf_.reset(new uint8_t[stringMaxSize * 4]);
+    static constexpr const char str1[]{0x00, 0x41, 0x00, 0x09};  // 'a\t'
+    utils::ConstString cs1(str1, 4);
+    static constexpr const char str2[]{0x00, 0x41, 0x00, 0x20};  // 'a '
+    utils::ConstString cs2(str2, 4);
+    static constexpr const char str3[]{0x00, 0x41};  // 'a'
+    utils::ConstString cs3(str3, 4);
+    static constexpr const char str4[]{0x00, 0x41, 0x00, 0x5A};  // 'az'
+    utils::ConstString cs4(str4, 4);
+    r.setStringField(cs1, 0);
+    r.setStringField(cs2, 0);
+    r.setStringField(cs3, 0);
+    r.setStringField(cs4, 0);
+    rg_.setRowCount(4);
+    // if (i == 42)
+    // {
+    //   r.setIntField<8>(joblist::BIGINTNULL, 0);
+    //   r.nextRow(rowSize);
+    // }
+    // else if (i == 8191)
+    // {
+    //   r.setIntField<8>(-3891607892, 0);
+    //   r.nextRow(rowSize);
+    // }
+    // else if (i == 8190)
+    // {
+    //   r.setIntField<8>(-3004747259, 0);
+    //   r.nextRow(rowSize);
+    // }
+    // else
+    // {
+    //   if (i > 4000)
+    //   {
+    //     r.setIntField<8>(-i, 0);
+    //     r.nextRow(rowSize);
+    //   }
+    //   else
+    //   {
+    //     r.setIntField<8>(i, 0);
+    //     r.nextRow(rowSize);
+    //   }
+    // }
+  }
+
+  joblist::OrderByKeysType keysCols_;
+  rowgroup::RowGroup rg_;
+  rowgroup::RGData rgData_;
+  std::unique_ptr<uint8_t> buf_;
+};
+
+TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarchar)
+{
+  std::cout << "rg_ " << rg_.toString() << std::endl;
+}
 
 class HeapOrderByTest : public testing::Test
 {
@@ -277,10 +361,106 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
   }
   HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
                 heapSize, ranges);
-  [[maybe_unused]] auto& keys = h.heap();
-  for (auto k : keys)
+  // [[maybe_unused]] auto& keys = h.heap();
+  // for (auto k : keys)
+  // {
+  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID << "}"
+  //             << std::endl;
+  // }
+  PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
+                          PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
+                          PermutationType{0, 9, 2}, PermutationType{0, 8, 3}};
+  for (auto r = right.begin(); auto k : h.heap())
   {
-    std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID << "}"
-              << std::endl;
+    ASSERT_EQ(k.second, *r++);
   }
+}
+TEST_F(HeapOrderByTest, HeapOrderByCtorOddSourceThreadsNumber)
+{
+}
+
+TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
+{
+  size_t heapSize = 4;
+  rowgroup::Row r;
+  sorting::SortingThreads prevPhasThreads;
+  joblist::OrderByKeysType keysAndDirections = {{0, false}};
+  joblist::MemManager* mm = new joblist::MemManager;  //(&rm, sl, false, false);
+  // no NULLs yet
+  // отсортировать
+  std::vector<std::vector<int64_t>> data{{3660195432, 3377000516, 3369182711, 2874400139, 2517866456,
+                                          -517915385, -1950920917, -2522630870, -3733817126, -3891607892},
+                                         {3396035276, 2989829828, 2938792700, 2907046279, 2508452465,
+                                          873216056, 220139688, -1886091209, -2996493537, -3004747259},
+                                         {3340465022, 2029570516, 1999115580, 630267809, 149731580,
+                                          -816942484, -1665500714, -2753689374, -3087922913, -3250034565},
+                                         {4144560611, 1759584866, 1642547418, 517102532, 344540230,
+                                          -525087651, -976832186, -1379630329, -2362115756, -3558545988}};
+  sorting::ValueRangesVector ranges(heapSize, {0, data.front().size()});
+  for (size_t i = 0; i < heapSize; ++i)
+  {
+    rgDatas_.emplace_back(rowgroup::RGData(rg_));
+    auto& rgData = rgDatas_.back();
+    auto& rg = rg_;
+    rg.setData(&rgData);
+    rg.initRow(&r);
+    rg.getRow(0, &r);
+    uint32_t rowSize = r.getSize();
+    sorting::PermutationVec perm(data[i].size());
+    size_t it = 0;
+    std::generate(perm.begin(), perm.end(), [i, it]() mutable { return PermutationType{0, it++, i}; });
+    std::for_each(data[i].begin(), data[i].end(),
+                  [&, rg, r, rowSize, perm](const int64_t x) mutable
+                  {
+                    r.setIntField<8>(x, 0);
+                    r.nextRow(rowSize);
+                  });
+    rg.setRowCount(data[i].size());
+    // std::cout << " i " << i << " " << rg.toString() << std::endl;
+    prevPhasThreads.emplace_back(new PDQOrderBy());
+    // добавить permutations вида {0,1,2...}
+    prevPhasThreads.back()->getRGDatas().push_back(rgData);
+    prevPhasThreads.back()->getMutPermutation().swap(perm);
+  }
+  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
+                heapSize, ranges);
+  [[maybe_unused]] auto& keys = h.heap();
+  PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
+                          PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
+                          PermutationType{0, 9, 2}, PermutationType{0, 8, 3}};
+  for (auto r = right.begin(); auto k : keys)
+  {
+    ASSERT_EQ(k.second, *r++);
+  }
+  // for (auto k : h.heap())
+  // {
+  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID << "}"
+  //             << std::endl;
+  // }
+  PermutationType p;
+  std::vector<int64_t> values;
+  while ((p = h.getTopPermuteFromHeap(h.heapMut(), prevPhasThreads)) !=
+         sorting::HeapOrderBy::ImpossiblePermute)
+  {
+    ASSERT_EQ(0UL, p.rgdataID);
+    rg_.setData(&rgDatas_[p.threadID]);
+    int64_t v = rg_.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0, p.rowID);
+
+    // std::cout << "p {" << p.rgdataID << "," << p.rowID << "," << p.threadID << "}"
+    //           << " v " << v << std::endl;
+    // for (auto k : h.heap())
+    // {
+    //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID <<
+    //   "}"
+    //             << std::endl;
+    // }
+
+    if (!values.empty())
+    {
+      int64_t b = values.back();
+      ASSERT_GE(v, b);
+    }
+    values.push_back(v);
+  }
+  ASSERT_TRUE(is_sorted(values.begin(), values.end()));
 }

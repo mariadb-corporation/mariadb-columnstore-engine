@@ -68,9 +68,9 @@ class HeapOrderBy
   using RGDataOrRowIDType = uint32_t;
   using HeapUnit = std::pair<KeyType, PermutationType>;
   using Heap = std::vector<HeapUnit>;
-  static constexpr PermutationType impossiblePermute = {0xFFFFFFFF, 0xFFFFFF, 0xFF};
 
  public:
+  static constexpr PermutationType ImpossiblePermute = {0xFFFFFFFF, 0xFFFFFF, 0xFF};
   HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKeysType& sortingKeyCols,
               const size_t limitStart, const size_t limitCount, joblist::MemManager* mm,
               const uint32_t threadId, const sorting::SortingThreads& prevPhaseSorting,
@@ -80,10 +80,8 @@ class HeapOrderBy
     mm_->release((heap_.size() + 1) * keyBytesSize_);
   };
   size_t getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
-  template <typename T>
   size_t idxOfMin(std::vector<HeapUnit>& heap, const size_t left, const size_t right,
                   const joblist::OrderByKeysType& colsAndDirection);
-  template <typename T>
   PermutationType getTopPermuteFromHeap(std::vector<HeapUnit>& heap, const SortingThreads& prevPhaseThreads);
   uint64_t getLimitCount() const
   {
@@ -92,6 +90,10 @@ class HeapOrderBy
   const std::string toString() const;
   //   void finalize();
   const Heap& heap() const
+  {
+    return heap_;
+  }
+  Heap& heapMut()
   {
     return heap_;
   }

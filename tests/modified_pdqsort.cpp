@@ -118,25 +118,3 @@ TYPED_TEST(PDQSortingTypedTest, PDQSortingSignedTest_RandomSet)
     ASSERT_EQ(original_data[perm[i]], sorted_data[i]);
   }
 }
-
-// TEST_F(PDQSortingTextTest, PDQSortingSignedTest)
-// {
-//   using T = char*;
-//   // std::vector<T> data = {-1, -1, std::numeric_limits<T>::max(), 3, 3, std::numeric_limits<T>::min()};
-//   // sorting::pdqsort(data.begin(), data.end());
-//   // ASSERT_THAT(data, ElementsAre(std::numeric_limits<T>::min(), -1, -1, 3, 3,
-//   // std::numeric_limits<T>::max())); std::vector<T> data2 = {-22, -1, std::numeric_limits<T>::max(), 4, 3,
-//   // std::numeric_limits<T>::min()}; std::vector<uint64_t> perm2 = {0, 1, 2, 3, 4, 5};
-//   // sorting::mod_pdqsort(data2.begin(), data2.end(), perm2.begin(), perm2.end(), std::less<T>());
-//   // ASSERT_THAT(data2,
-//   //             ElementsAre(std::numeric_limits<T>::min(), -22, -1, 3, 4, std::numeric_limits<T>::max()));
-//   // ASSERT_THAT(perm2, ElementsAre(5, 0, 1, 4, 3, 2));
-// }
-
-// auto const str1 = l->row1().getConstString(fSpec.fIndex);
-//     auto const str2 = l->row2().getConstString(fSpec.fIndex);
-
-//     if (!cs)
-//       cs = l->rowGroup()->getCharset(fSpec.fIndex);
-
-//     ret = fSpec.fAsc * cs->strnncollsp(str1.str(), str1.length(), str2.str(), str2.length());
