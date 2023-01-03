@@ -619,7 +619,6 @@ namespace exemgr
           {
             if (gDebug > 1 || (gDebug && !csep.isInternal()))
               std::cout << "### Got a close(2) for session id " << csep.sessionID() << std::endl;
-
             break;
           }
 
