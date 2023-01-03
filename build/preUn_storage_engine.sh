@@ -11,7 +11,7 @@ else
 fi
 
 if [ $rpmmode = erase ]; then
-	columnstore-pre-uninstall > columnstore-pre-uninstall.log
+	columnstore-pre-uninstall  1> /tmp/columnstore-pre-uninstall.log 2>&1
 fi
 
 exit 0

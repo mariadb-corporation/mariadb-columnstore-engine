@@ -9,6 +9,6 @@ fi
 
 if [ "$1" == "2" ]; then
     /bin/cp -f /etc/columnstore/storagemanager.cnf /etc/columnstore/storagemanager.cnf.rpmsave > /dev/null 2>&1
-    columnstore-pre-uninstall > columnstore-pre-uninstall.log
+    columnstore-pre-uninstall 1> /tmp/columnstore-pre-uninstall.log 2>&1
 fi
 exit 0
