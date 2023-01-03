@@ -1,4 +1,5 @@
-echo "Start post uninstall script."
+echo "Start mariadb-columnstore-engine/build/postUn_storage_engine.sh"
+set -x
 
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then

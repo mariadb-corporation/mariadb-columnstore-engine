@@ -1,4 +1,5 @@
-echo "Start pre uninstall script."
+echo "Start mariadb-columnstore-engine/build/preUn_storage_engine.sh"
+set -x
 
 rpmmode=upgrade
 if  [ "$1" -eq "$1" 2> /dev/null ]; then
@@ -10,7 +11,7 @@ else
 fi
 
 if [ $rpmmode = erase ]; then
-	columnstore-pre-uninstall
+	columnstore-pre-uninstall > columnstore-pre-uninstall.log
 fi
 
 exit 0
