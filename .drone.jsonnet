@@ -231,9 +231,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
-      // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
+      // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
+      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
+      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
@@ -319,8 +320,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/character-set-server/d" ' + config_path_prefix + 'server.cnf',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "/collation-server/d" ' + config_path_prefix + 'server.cnf',
       // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 5G"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 2G"',
+      //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 5G"',
+      //'docker exec -t regressin$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 2G"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=regression$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
