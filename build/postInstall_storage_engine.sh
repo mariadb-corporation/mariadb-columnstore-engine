@@ -9,3 +9,4 @@ fi
 
 mkdir -p /var/lib/columnstore/local
 columnstore-post-install --rpmmode=$rpmmode 1> /tmp/columnstore-post-install.log 2>&1
+cp /tmp/columnstore-post-install.log  /var/log/mariadb/columnstore/.
