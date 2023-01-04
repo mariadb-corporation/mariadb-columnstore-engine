@@ -1527,6 +1527,12 @@ const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
   return charsets[col];
 }
 
+// This method is for testing.
+void RowGroup::setCharset(uint32_t col, const CHARSET_INFO* cs)
+{
+  charsets[col] = cs;
+}
+
 void RowGroup::setDBRoot(uint32_t dbroot)
 {
   *((uint32_t*)&data[dbRootOffset]) = dbroot;
