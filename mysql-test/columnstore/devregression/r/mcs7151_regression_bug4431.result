@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists bug4431_1;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug4431_1'
 drop table if exists bug4431_2;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug4431_2'
 drop table if exists bug4431_3;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug4431_3'
 create table bug4431_1 (date int, col2 date) engine=columnstore;
 create table bug4431_2 (`date` int, col2 date) engine=columnstore;
 create table bug4431_3 (col2 date) engine=columnstore;

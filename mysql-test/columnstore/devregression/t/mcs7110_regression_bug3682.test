@@ -66,4 +66,7 @@ insert into bug3682 values
 ('2011-01-29 23:46:13');
 select date(c1), count(*) from bug3682 group by 1 order by 1;
 #
+--disable_warnings
 drop table if exists bug3682;
+--enable_warnings
+#

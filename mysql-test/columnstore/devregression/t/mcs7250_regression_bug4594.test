@@ -14,13 +14,18 @@ select calshowpartitions('tpch1','dtypes','c2') into @x;
 # log regardless of the DBRoot.
 select substr(@x, length(@x)-6, 10);
 
+--disable_warnings
 drop table if exists bug4594;
+--enable_warnings
+
 create table if not exists bug4594(c1 char(5))engine=columnstore;
 insert into bug4594 values ('abc'), ('def');
 select * from bug4594;
 select calshowpartitionsbyvalue('bug4594', 'c1', 'aa', 'zz') into @y;
 select substr(@y, length(@y)-6, 10);
-drop table bug4594;
 
+--disable_warnings
+drop table bug4594;
+--enable_warnings
 #
 

@@ -8,10 +8,12 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3998a;
 drop table if exists bug3998b;
 drop table if exists bug3998c;
 drop table if exists bug3998d;
+--enable_warnings
 
 create table bug3998a (c1 int, c2 int) engine=columnstore;
 insert into bug3998a values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
@@ -38,10 +40,12 @@ select * from bug3998b;
 update bug3998c right join bug3998d on bug3998c.c1 = bug3998d.c1 set bug3998c.c1=9;
 select * from bug3998c;
 
+--disable_warnings
 drop table if exists bug3998a;
 drop table if exists bug3998b;
 drop table if exists bug3998c;
 drop table if exists bug3998d;
+--enable_warnings
 
 create table bug3998a (c1 int, c2 int) engine=columnstore;
 insert into bug3998a values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
@@ -68,9 +72,11 @@ select * from bug3998b;
 delete c from bug3998c c right join bug3998d d on c.c1 = d.c1;
 select * from bug3998c;
 
+--disable_warnings
 drop table if exists bug3998a;
 drop table if exists bug3998b;
 drop table if exists bug3998c;
 drop table if exists bug3998d;
+--enable_warnings
 #
 

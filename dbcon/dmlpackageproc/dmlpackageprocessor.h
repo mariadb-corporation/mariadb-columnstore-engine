@@ -249,6 +249,9 @@ class DMLPackageProcessor
   EXPORT int rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
                                  std::string& errorMsg);
 
+  EXPORT int32_t tryToRollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
+                                          std::string& errorMsg);
+
   EXPORT int rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
                                             const uint32_t tableOid, std::string& errorMsg);
   /**

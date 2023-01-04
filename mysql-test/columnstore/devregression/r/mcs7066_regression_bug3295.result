@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists visit;
-Warnings:
-Note	1051	Unknown table 'tpch1.visit'
 drop table if exists client;
-Warnings:
-Note	1051	Unknown table 'tpch1.client'
 create table visit (id_client integer,nb_event integer,update_date datetime, visit_date datetime) engine=columnstore;
 create table client (id_client integer,id_event integer,event_date datetime) engine=columnstore;
 insert into visit values (1,0,NULL,"2010-09-08");

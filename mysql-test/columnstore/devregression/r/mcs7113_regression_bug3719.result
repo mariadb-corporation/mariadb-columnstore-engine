@@ -2,11 +2,7 @@ USE tpch1;
 create database if not exists geo;
 use geo;
 drop table if exists `geo_tag_values`;
-Warnings:
-Note	1051	Unknown table 'geo.geo_tag_values'
 drop table if exists `geo_tags`;
-Warnings:
-Note	1051	Unknown table 'geo.geo_tags'
 CREATE TABLE `geo_tag_values` (
 `id` int(11) DEFAULT NULL,
 `value` varchar(255) DEFAULT NULL,
@@ -23,29 +19,13 @@ CREATE TABLE `geo_tags` (
 create database if not exists pbkt;
 use pbkt;
 drop table if exists `areas`;
-Warnings:
-Note	1051	Unknown table 'pbkt.areas'
 drop table if exists `bigsumplus`;
-Warnings:
-Note	1051	Unknown table 'pbkt.bigsumplus'
 drop table if exists `dim_date`;
-Warnings:
-Note	1051	Unknown table 'pbkt.dim_date'
 drop table if exists `sizes`;
-Warnings:
-Note	1051	Unknown table 'pbkt.sizes'
 drop table if exists `tag_values`;
-Warnings:
-Note	1051	Unknown table 'pbkt.tag_values'
 drop view if exists `tag_values_geo_country`;
-Warnings:
-Note	4092	Unknown VIEW: 'pbkt.tag_values_geo_country'
 drop view if exists `tag_values_geo_region`;
-Warnings:
-Note	4092	Unknown VIEW: 'pbkt.tag_values_geo_region'
 drop view if exists `tag_values_ptype`;
-Warnings:
-Note	4092	Unknown VIEW: 'pbkt.tag_values_ptype'
 CREATE TABLE `areas` (
 `id` int(11) DEFAULT NULL,
 `name` varchar(255) DEFAULT NULL,

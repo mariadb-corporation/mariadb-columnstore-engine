@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS query_class_metrics_float;
+--enable_warnings
 #
 CREATE TABLE `query_class_metrics_float` (
 `agent_id` bigint(20) DEFAULT NULL,
@@ -31,4 +33,7 @@ INSERT INTO query_class_metrics_float VALUES (1, '2013-06-18 23:45:00', 1563, 0.
 #--Check for Window Function working with FLOAT
 SELECT start_ts, Query_time_sum,round(avg(Query_time_sum) OVER(order by start_ts), 8) prev_sum from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
 #
+--disable_warnings
 DROP TABLE query_class_metrics_float;
+--enable_warnings
+#

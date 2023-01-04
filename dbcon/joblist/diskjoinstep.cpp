@@ -360,7 +360,7 @@ void DiskJoinStep::joinFcn()
   Row l_joinFERow, l_outputRow, baseRow;
   vector<vector<Row::Pointer> > joinMatches;
   boost::shared_array<Row> smallRowTemplates(new Row[1]);
-  vector<boost::shared_ptr<TupleJoiner> > joiners;
+  vector<std::shared_ptr<TupleJoiner>> joiners;
   boost::shared_array<boost::shared_array<int> > colMappings, fergMappings;
   boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMem;
   boost::scoped_array<uint8_t> joinFEMem;

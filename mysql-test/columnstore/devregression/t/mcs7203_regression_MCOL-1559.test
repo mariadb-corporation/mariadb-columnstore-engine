@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mcol1559;
+--enable_warnings
+
 create table mcol1559 (c7nospace char(7), c7space char(7), c20nospace char(20), c20space char(20), vcnospace varchar(20), vcspace varchar(20)) engine=columnstore;
 
 insert into mcol1559 values ("ABC", "ABC ", "ABC12345678910", "ABC12345678910 ", "ABC", "ABC ");
@@ -38,7 +41,8 @@ select * from mcol1559 where c7nospace LIKE "ABC ";
 select * from mcol1559 where c20nospace LIKE "ABC12345678910 ";
 select * from mcol1559 where vcnospace LIKE "ABC ";
 
+--disable_warnings
 drop table if exists mcol1559;
-
+--enable_warnings
 #
 

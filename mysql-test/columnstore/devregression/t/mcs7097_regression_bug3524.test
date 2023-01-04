@@ -8,8 +8,11 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists a1;
 drop table if exists a2;
+--enable_warnings
+
 create table a1 (c1 int, c2 int)engine=columnstore;
 create table a2 (c1 int, c2 int)engine=columnstore;
 insert into a1 values (1, 1),(2,2),(3,null),(null,3),(null,null);
@@ -28,10 +31,10 @@ select * from a1 where c1 not in (select c2 from a2 where a1.c2>a2.c2);
 select * from a1 where c1 not in (select 1 from a2 where a1.c1=a2.c1);
 select count(*) from a1 where c1 not in (select c2 from a2 where a1.c2=a2.c2);
 select count(*) from a1 where not exists (select c2 from a2 where a1.c2=a2.c2 and a1.c1=a2.c1);
+
+--disable_warnings
 drop table a1;
 drop table a2;
-
-
-
+--enable_warnings
 #
 

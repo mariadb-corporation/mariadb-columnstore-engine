@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3488;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3488'
 create table bug3488 (c1 bigint, c2 decimal(18,2), c3 float, c4 double, c5 char(120), c6 varchar(120)) engine=columnstore;
 insert into bug3488 values
 (1, 1.1, 1.1, 1.1, '1.1', '1.1'),

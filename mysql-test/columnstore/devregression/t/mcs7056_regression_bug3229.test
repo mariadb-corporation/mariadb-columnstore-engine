@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists testnulldate;
+--enable_warnings
+
 create table testnulldate (id int, time_stamp datetime) engine=columnstore;
  
 insert into testnulldate values (1, '2010-11-08 17:46:44');
@@ -44,7 +47,8 @@ select
   case when `time_stamp` is null then 'N/A' end as `Test1`
 from testnulldate;
  
+--disable_warnings
 drop table if exists testnulldate;
-
+--enable_warnings
 #
 

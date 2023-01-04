@@ -1,16 +1,8 @@
 USE tpch1;
 drop view if exists vwBug;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vwbug'
 drop view if exists vwBug2;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vwbug2'
 drop view if exists vwBug3;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vwbug3'
 drop view if exists vwBug4;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vwbug4'
 create view vwBug as 
 select sub1.c1 s1c1, sub1.c2 s1c2, sub2.c1 s2c1, sub2.c2 s2c2, sub3.c1 s3c1, sub3.c2 s3c2
 from sub1 

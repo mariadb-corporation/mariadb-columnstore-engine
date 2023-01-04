@@ -8,10 +8,12 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop view if exists vwBug;
 drop view if exists vwBug2;
 drop view if exists vwBug3;
 drop view if exists vwBug4;
+--enable_warnings
 
 create view vwBug as 
 select sub1.c1 s1c1, sub1.c2 s1c2, sub2.c1 s2c1, sub2.c2 s2c2, sub3.c1 s3c1, sub3.c2 s3c2
@@ -38,10 +40,11 @@ select 'q9', vwBug.s1c1, vwBug2.s1c1 from vwBug right join vwBug2 on (vwBug.s1c1
 create view vwBug4 as (select * from vwBug3 where s1c1 in (select s1c2 from vwBug2 where s1c1 in (select s1c1 from vwBug)));
 select 'q10', vwBug4.s1c1, vwBug4.s1c2, count(*) from vwBug4 group by 1, 2, 3 order by 1, 2, 3;
 
-
+--disable_warnings
 drop view vwBug;
 drop view vwBug2;
 drop view vwBug3;
 drop view vwBug4;
+--enable_warnings
 #
 

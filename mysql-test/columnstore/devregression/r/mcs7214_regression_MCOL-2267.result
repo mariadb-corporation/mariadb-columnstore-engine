@@ -1,10 +1,6 @@
 USE tpch1;
 DROP TABLE IF EXISTS `MCOL-2267a`;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol-2267a'
 DROP TABLE IF EXISTS `MCOL-2267b`;
-Warnings:
-Note	1051	Unknown table 'tpch1.mcol-2267b'
 CREATE TABLE `MCOL-2267a` (
 `thing1` varchar(32) DEFAULT NULL,
 `my_id` varchar(8) DEFAULT NULL,

@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists region1;
+--enable_warnings
+
 create table  region1
    (
     r_regionkey int,
@@ -23,7 +26,9 @@ start transaction;
 insert into region1 select * from tpch1.region;
 commit;
 select * from region1;
-drop table region1;
 
+--disable_warnings
+drop table region1;
+--enable_warnings
 #
 

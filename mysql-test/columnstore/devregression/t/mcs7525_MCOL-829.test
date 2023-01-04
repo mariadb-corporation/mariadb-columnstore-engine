@@ -10,9 +10,12 @@
 USE tpch1;
 
 # Support INSERT...SELECT in stored procedures
+--disable_warnings
 drop table if exists mcol829a;
 drop table if exists mcol829b;
 drop procedure if exists mcol829;
+--enable_warnings
+
 create table mcol829a (a int, b int) engine=columnstore;
 create table mcol829b (a int, b int) engine=columnstore;
 insert into mcol829a values (1,1),(2,2),(3,3);
@@ -22,8 +25,10 @@ delimiter ;//
 call mcol829();
 select * from mcol829b;
 
+--disable_warnings
 drop procedure mcol829;
 drop table mcol829a;
 drop table mcol829b;
-
+--enable_warnings
+#
 

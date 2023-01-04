@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists a1;
-Warnings:
-Note	1051	Unknown table 'tpch1.a1'
 drop table if exists a2;
-Warnings:
-Note	1051	Unknown table 'tpch1.a2'
 create table a1 (c1 int, c2 int)engine=columnstore;
 create table a2 (c1 int, c2 int)engine=columnstore;
 insert into a1 values (1, 1),(2,2),(3,null),(null,3),(null,null);

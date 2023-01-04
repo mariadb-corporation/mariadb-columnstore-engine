@@ -817,7 +817,6 @@ uint8_t WE_DMLCommandProc::rollbackBlocks(ByteStream& bs, std::string& err)
 {
   int rc = 0;
   uint32_t sessionID, tmp32;
-  ;
   int txnID;
   bs >> sessionID;
   bs >> tmp32;

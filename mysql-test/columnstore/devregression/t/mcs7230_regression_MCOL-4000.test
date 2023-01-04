@@ -117,5 +117,7 @@ INSERT INTO mcol4000(l_comment) VALUES ('mcol4000');
 LOAD DATA LOCAL INFILE '/tmp/mcol4000.txt' INTO TABLE mcol4000 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
 SELECT COUNT(*) FROM mcol4000; #-- should return 7000004
 #
+--disable_warnings
 DROP TABLE mcol4000;
+--enable_warnings
 #

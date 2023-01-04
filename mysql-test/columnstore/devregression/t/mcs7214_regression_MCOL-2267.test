@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS `MCOL-2267a`;
 DROP TABLE IF EXISTS `MCOL-2267b`;
+--enable_warnings
 
 CREATE TABLE `MCOL-2267a` (
 `thing1` varchar(32) DEFAULT NULL,
@@ -69,7 +71,9 @@ from cte3
 left join cte4 on cte3.c1=cte4.c1 
 group by sum3,gc1,matched;
 
+--disable_warnings
 DROP TABLE IF EXISTS `MCOL-2267a`;
 DROP TABLE IF EXISTS `MCOL-2267b`;
+--enable_warnings
 #
 

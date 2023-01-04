@@ -32,5 +32,7 @@ select 'q5', birthdate, age, id, col8 from bug3657 where col8=6;
 select calflushcache();
 select 'q6', birthdate, age, id, col8 from bug3657 where col8=2;
 #
+--disable_warnings
 drop table if exists bug3657;
+--enable_warnings
 #

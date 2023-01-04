@@ -980,7 +980,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             // doesn't really make sense.
             if (op != AggregateColumn::SUM && op != AggregateColumn::DISTINCT_SUM &&
                 op != AggregateColumn::AVG && op != AggregateColumn::DISTINCT_AVG &&
-                op != AggregateColumn::BIT_AND && op != AggregateColumn::BIT_OR && 
+                op != AggregateColumn::BIT_AND && op != AggregateColumn::BIT_OR &&
                 op != AggregateColumn::BIT_XOR)
             {
               updateAggregateColType(aggc, srcp, op, jobInfo);
@@ -1323,11 +1323,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 }
 
 template <typename T>
-class Uniqer : public unary_function<typename T::value_type, void>
+class Uniqer
 {
  private:
   typedef typename T::mapped_type Mt_;
-  class Pred : public unary_function<const Mt_, bool>
+  class Pred
   {
    public:
     Pred(const Mt_& retCol) : fRetCol(retCol)

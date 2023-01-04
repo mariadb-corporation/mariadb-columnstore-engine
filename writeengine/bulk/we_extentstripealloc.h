@@ -101,7 +101,7 @@ class AllocExtEntry
  *  the corresponding column OID as the key.
  */
 //------------------------------------------------------------------------------
-struct AllocExtHasher : public std::unary_function<OID, std::size_t>
+struct AllocExtHasher
 {
   std::size_t operator()(OID val) const
   {

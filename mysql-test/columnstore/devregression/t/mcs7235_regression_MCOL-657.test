@@ -8,10 +8,16 @@
 #
 USE tpch1;
 #
+--disable_warnings
 create table if not exists MCOL657 (a int, b int) engine=columnstore;
+--enable_warnings
+
 insert into MCOL657 values (1,1), (2,2), (3,4), (NULL, NULL), (NULL, 2), (3, NULL);
 select * from MCOL657 where a = b OR (a IS NULL AND b IS NULL);
 select * from MCOL657 where a<=>b;
+
+--disable_warnings
 drop table MCOL657;
+--enable_warnings
 #
 

@@ -159,7 +159,7 @@ struct EngineCommRunner
 };
 
 template <typename T>
-struct QueueShutdown : public unary_function<T&, void>
+struct QueueShutdown
 {
   void operator()(T& x)
   {
@@ -221,7 +221,7 @@ DistributedEngineComm::~DistributedEngineComm()
   fInstance = 0;
 }
 
-void DistributedEngineComm::Setup()
+int32_t DistributedEngineComm::Setup()
 {
   // This is here to ensure that this function does not get invoked multiple times simultaneously.
   boost::mutex::scoped_lock setupLock(fSetupMutex);
@@ -283,7 +283,7 @@ void DistributedEngineComm::Setup()
     {
       cl->atTheSameHost(true);
     }
-    boost::shared_ptr<boost::mutex> nl(new boost::mutex());
+    std::shared_ptr<std::mutex> nl(new std::mutex());
 
     try
     {
@@ -309,10 +309,9 @@ void DistributedEngineComm::Setup()
                  "Could not connect to PMS" + std::to_string(connectionId) + ": " + ex.what(),
                  LOG_TYPE_ERROR);
       if (newPmCount == 0)
-      {
         writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
-        break;
-      }
+
+      return 1;
     }
     catch (...)
     {
@@ -322,10 +321,8 @@ void DistributedEngineComm::Setup()
       writeToLog(__FILE__, __LINE__, "Could not connect to PMS" + std::to_string(connectionId),
                  LOG_TYPE_ERROR);
       if (newPmCount == 0)
-      {
         writeToLog(__FILE__, __LINE__, "No more PMs to try to connect to", LOG_TYPE_ERROR);
-        break;
-      }
+      return 1;
     }
   }
 
@@ -362,6 +359,7 @@ void DistributedEngineComm::Setup()
 
   newLocks.clear();
   newClients.clear();
+  return 0;
 }
 
 int DistributedEngineComm::Close()
@@ -411,7 +409,7 @@ void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client,
 Error:
   // @bug 488 - error condition! push 0 length bs to messagequeuemap and
   // eventually let jobstep error out.
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok;
   sbs.reset(new ByteStream(0));
 
@@ -428,8 +426,8 @@ Error:
     decltype(pmCount) originalPMCount = pmCount;
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    Setup();
-    if (originalPMCount != pmCount)
+    auto rc = Setup();
+    if (rc || originalPMCount != pmCount)
     {
       ostringstream os;
       os << "DEC: lost connection to " << client->addr2String();
@@ -480,7 +478,7 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
   mqe->sendACKs = sendACKs;
   mqe->throttled = false;
 
-  boost::mutex::scoped_lock lk(fMlock);
+  std::lock_guard lk(fMlock);
   b = fSessionMessages.insert(pair<uint32_t, boost::shared_ptr<MQE> >(key, mqe)).second;
 
   if (!b)
@@ -493,7 +491,7 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 
 void DistributedEngineComm::removeQueue(uint32_t key)
 {
-  boost::mutex::scoped_lock lk(fMlock);
+  std::lock_guard lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -506,7 +504,7 @@ void DistributedEngineComm::removeQueue(uint32_t key)
 
 void DistributedEngineComm::shutdownQueue(uint32_t key)
 {
-  boost::mutex::scoped_lock lk(fMlock);
+  std::lock_guard lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -521,7 +519,7 @@ void DistributedEngineComm::read(uint32_t key, SBS& bs)
   boost::shared_ptr<MQE> mqe;
 
   // Find the StepMsgQueueList for this session
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -540,7 +538,7 @@ void DistributedEngineComm::read(uint32_t key, SBS& bs)
 
   if (bs && mqe->sendACKs)
   {
-    boost::mutex::scoped_lock lk(ackLock);
+    std::unique_lock lk(ackLock);
 
     if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
       setFlowControl(false, key, mqe);
@@ -560,7 +558,7 @@ const ByteStream DistributedEngineComm::read(uint32_t key)
   boost::shared_ptr<MQE> mqe;
 
   // Find the StepMsgQueueList for this session
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -578,7 +576,7 @@ const ByteStream DistributedEngineComm::read(uint32_t key)
 
   if (sbs && mqe->sendACKs)
   {
-    boost::mutex::scoped_lock lk(ackLock);
+    std::unique_lock lk(ackLock);
 
     if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
       setFlowControl(false, key, mqe);
@@ -598,7 +596,7 @@ void DistributedEngineComm::read_all(uint32_t key, vector<SBS>& v)
 {
   boost::shared_ptr<MQE> mqe;
 
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -615,7 +613,7 @@ void DistributedEngineComm::read_all(uint32_t key, vector<SBS>& v)
 
   if (mqe->sendACKs)
   {
-    boost::mutex::scoped_lock lk(ackLock);
+    std::unique_lock lk(ackLock);
     sendAcks(key, v, mqe, 0);
   }
 }
@@ -624,7 +622,7 @@ void DistributedEngineComm::read_some(uint32_t key, uint32_t divisor, vector<SBS
 {
   boost::shared_ptr<MQE> mqe;
 
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -645,7 +643,7 @@ void DistributedEngineComm::read_some(uint32_t key, uint32_t divisor, vector<SBS
 
   if (mqe->sendACKs)
   {
-    boost::mutex::scoped_lock lk(ackLock);
+    std::unique_lock lk(ackLock);
 
     if (mqe->throttled && !mqe->hasBigMsgs && queueSize.size <= disableThreshold)
       setFlowControl(false, key, mqe);
@@ -727,7 +725,14 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     toAck = &ism->Size;
 
     msg->advanceInputPtr(sizeof(ISMPacketHeader));
-
+    // There must be only one local connection here.
+    uint32_t localConnectionId = std::numeric_limits<uint32_t>::max();
+    for (uint32_t i = 0; i < pmCount; ++i)
+    {
+      if (fPmConnections[i]->atTheSameHost() && fIsExeMgr)
+        localConnectionId = i;
+    }
+    bool sendToLocal = false;
     while (l_msgCount > 0)
     {
       /* could have to send up to pmCount ACKs */
@@ -738,8 +743,18 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
       nextPMToACK(mqe, l_msgCount, &sockIndex, toAck);
       idbassert(*toAck <= l_msgCount);
       l_msgCount -= *toAck;
+      if (sockIndex == localConnectionId)
+      {
+        sendToLocal = true;
+        continue;
+      }
       pmAcked[sockIndex] = true;
       writeToClient(sockIndex, msg);
+    }
+    if (sendToLocal && localConnectionId < fPmConnections.size())
+    {
+      pmAcked[localConnectionId] = true;
+      writeToClient(localConnectionId, msg);
     }
 
     // @bug4436, when no more unacked work, send an ack to all PMs that haven't been acked.
@@ -749,17 +764,27 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     {
       uint64_t totalUnackedWork = 0;
 
-      for (int i = pmCount - 1; i >= 0; --i)
+      for (uint32_t i = 0; i < pmCount; ++i)
         totalUnackedWork += mqe->unackedWork[i];
 
       if (totalUnackedWork == 0)
       {
         *toAck = 1;
 
-        for (int i = pmCount - 1; i >= 0; --i)
+        for (uint32_t i = 0; i < pmCount; ++i)
         {
           if (!pmAcked[i])
+          {
+            if (i == localConnectionId)
+            {
+              continue;
+            }
             writeToClient(i, msg);
+          }
+        }
+        if (!pmAcked[localConnectionId])
+        {
+          writeToClient(localConnectionId, msg);
         }
       }
     }
@@ -847,12 +872,22 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
 #endif
 
   msg->advanceInputPtr(sizeof(ISMPacketHeader));
+  uint32_t localConnectionId = std::numeric_limits<uint32_t>::max();
 
-  for (int i = mqe->pmCount - 1; i >= 0; --i)
+  for (uint32_t i = 0; i < mqe->pmCount; ++i)
+  {
+    if (fPmConnections[i]->atTheSameHost() && fIsExeMgr)
+    {
+      localConnectionId = i;
+      continue;
+    }
     writeToClient(i, msg);
+  }
+  if (localConnectionId < fPmConnections.size())
+    writeToClient(localConnectionId, msg);
 }
 
-void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
+int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg->buf();
   uint32_t dest;
@@ -875,19 +910,36 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
       case DICT_DESTROY_EQUALITY_FILTER:
         /* XXXPAT: This relies on the assumption that the first pmCount "PMS*"
         entries in the config file point to unique PMs */
-        for (int i = pmCount - 1; i >= 0; --i)
-          writeToClient(i, msg, senderID);
+        {
+          uint32_t localConnectionId = std::numeric_limits<uint32_t>::max();
+          int32_t rc = 0;
 
-        return;
+          for (uint32_t i = 0; i < pmCount; ++i)
+          {
+            if (fPmConnections[i]->atTheSameHost() && fIsExeMgr)
+            {
+              localConnectionId = i;
+              continue;
+            }
+
+            rc =writeToClient(i, msg, senderID);
+            if (rc)
+              return rc;
+          }
+          if (localConnectionId < fPmConnections.size())
+            rc = writeToClient(localConnectionId, msg);
+          return rc;
+        }
 
       case BATCH_PRIMITIVE_RUN:
       case DICT_TOKEN_BY_SCAN_COMPARE:
+      {
         // for efficiency, writeToClient() grabs the interleaving factor for the caller,
         // and decides the final connection index because it already grabs the
         // caller's queue information
         dest = ism->Interleave;
-        writeToClient(dest, msg, senderID, true);
-        break;
+        return writeToClient(dest, msg, senderID, true);
+      }
 
       default: idbassert_s(0, "Unknown message type");
     }
@@ -897,6 +949,7 @@ void DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
     writeToLog(__FILE__, __LINE__, "No PrimProcs are running", LOG_TYPE_DEBUG);
     throw IDBExcept(ERR_NO_PRIMPROC);
   }
+  return 0;
 }
 
 void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
@@ -905,13 +958,12 @@ void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connect
   PrimitiveHeader* pm = (PrimitiveHeader*)(ism + 1);
   uint32_t senderID = pm->UniqueID;
 
-  boost::mutex::scoped_lock lk(fMlock, boost::defer_lock_t());
   MessageQueueMap::iterator it;
   // This keeps mqe's stats from being freed until end of function
   boost::shared_ptr<MQE> mqe;
   Stats* senderStats = NULL;
 
-  lk.lock();
+  std::unique_lock lk(fMlock);
   it = fSessionMessages.find(senderID);
 
   if (it != fSessionMessages.end())
@@ -938,7 +990,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs)
   uint32_t uniqueId = p->UniqueID;
   boost::shared_ptr<MQE> mqe;
 
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
 
   // The message for a session that doesn't exist.
@@ -971,7 +1023,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
   PrimitiveHeader* p = (PrimitiveHeader*)(hdr + 1);
   uint32_t uniqueId = p->UniqueID;
   boost::shared_ptr<MQE> mqe;
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
 
   if (map_tok == fSessionMessages.end())
@@ -994,7 +1046,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
 
   if (mqe->sendACKs)
   {
-    boost::mutex::scoped_lock lk(ackLock);
+    std::lock_guard lk(ackLock);
     uint64_t msgSize = sbs->lengthWithHdrOverhead();
 
     if (!mqe->throttled && msgSize > (targetRecvQueueSize / 2))
@@ -1056,7 +1108,6 @@ void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::
 int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
                                          bool doInterleaving)
 {
-  boost::mutex::scoped_lock lk(fMlock, boost::defer_lock_t());
   MessageQueueMap::iterator it;
   // Keep mqe's stats from being freed early
   boost::shared_ptr<MQE> mqe;
@@ -1076,7 +1127,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
 
   if (senderUniqueID != numeric_limits<uint32_t>::max())
   {
-    lk.lock();
+    std::lock_guard lk(fMlock);
     it = fSessionMessages.find(senderUniqueID);
 
     if (it != fSessionMessages.end())
@@ -1086,27 +1137,23 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       size_t pmIndex = aPMIndex % mqe->pmCount;
       connectionId = it->second->getNextConnectionId(pmIndex, fPmConnections.size(), fDECConnectionsPerQuery);
     }
-
-    lk.unlock();
   }
 
+  ClientList::value_type client = fPmConnections[connectionId];
   try
   {
-    ClientList::value_type client = fPmConnections[connectionId];
-
     if (!client->isAvailable())
       return 0;
 
-    boost::mutex::scoped_lock lk(*(fWlock[connectionId]));
+    std::lock_guard lk(*(fWlock[connectionId]));
     client->write(bs, NULL, senderStats);
-    return 0;
   }
   catch (...)
   {
     // @bug 488. error out under such condition instead of re-trying other connection,
     // by pushing 0 size bytestream to messagequeue and throw exception
     SBS sbs;
-    lk.lock();
+    std::unique_lock lk(fMlock);
     // std::cout << "WARNING: DEC WRITE BROKEN PIPE. PMS index = " << index << std::endl;
     MessageQueueMap::iterator map_tok;
     sbs.reset(new ByteStream(0));
@@ -1118,7 +1165,30 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       map_tok->second->queue.push(sbs);
     }
 
+    int tries = 0;
+    // Try to setup connection with PS, it could be a situation that PS is starting.
+    // MCOL-5263.
+    while (tries < 10 && Setup())
+    {
+      ++tries;
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+
     lk.unlock();
+
+    if (tries == 10)
+    {
+      ostringstream os;
+      os << "DEC: lost connection to " << client->addr2String();
+      writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_ERROR);
+      if (!fIsExeMgr)
+        abort();
+      else
+        throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
+    }
+
+    // Connection was established.
+    return 1;
     /*
                     // reconfig the connection array
                     ClientList tempConns;
@@ -1150,13 +1220,13 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     alarmItem.append(" PrimProc");
     alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
     */
-    throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
   }
+  return 0;
 }
 
 uint32_t DistributedEngineComm::size(uint32_t key)
 {
-  boost::mutex::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -1189,7 +1259,7 @@ void DistributedEngineComm::removeDECEventListener(DECEventListener* l)
 
 Stats DistributedEngineComm::getNetworkStats(uint32_t uniqueID)
 {
-  boost::mutex::scoped_lock lk(fMlock);
+  std::lock_guard lk(fMlock);
   MessageQueueMap::iterator it;
   Stats empty;
 

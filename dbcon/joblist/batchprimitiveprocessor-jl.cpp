@@ -1362,7 +1362,7 @@ void BatchPrimitiveProcessorJL::destroyBPP(ByteStream& bs) const
   bs << uniqueID;
 }
 
-void BatchPrimitiveProcessorJL::useJoiners(const vector<boost::shared_ptr<joiner::TupleJoiner> >& j)
+void BatchPrimitiveProcessorJL::useJoiners(const vector<std::shared_ptr<joiner::TupleJoiner> >& j)
 {
   pos = 0;
   joinerNum = 0;

@@ -33,8 +33,9 @@ homemcc, COUNT(*) AS gtot, count(distinct imei) as ugtot FROM `sessions`  WHERE
 appname='WP Exchange Activation Tracking OBA QA' AND DATE(stime)>='2012-05-28'
 GROUP BY devname, homemcc, appversion, applang;
 
+--disable_warnings
 drop table `sessions`;
 drop table myfil;
-
+--enable_warnings
 #
 

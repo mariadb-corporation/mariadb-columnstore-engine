@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists cat;
-Warnings:
-Note	1051	Unknown table 'tpch1.cat'
 drop table if exists dog;
-Warnings:
-Note	1051	Unknown table 'tpch1.dog'
 create table cat(id int, f float, d double)engine=columnstore;
 create table dog(id int, f float, d double)engine=columnstore;
 insert into cat values

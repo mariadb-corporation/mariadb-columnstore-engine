@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <clocale>
+#include <fstream>
 using namespace std;
 
 #include "ddlproc.h"

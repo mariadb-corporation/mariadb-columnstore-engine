@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS `MCOL3304`;
+--enable_warnings
+
 CREATE TABLE `MCOL3304` (
 `c` decimal(5,2) DEFAULT NULL
 ) ENGINE=columnstore;
@@ -24,7 +27,8 @@ select csum,sum(csum) over(), sum(csum) over w1, sum(csum) over w2 from
 (select sum(c) as csum from`MCOL3304`) t 
 WINDOW `w1` as (),`w2` as (rows between unbounded preceding and current row);
 
+--disable_warnings
 DROP TABLE IF EXISTS `MCOL3304`;
-
+--enable_warnings
 #
 

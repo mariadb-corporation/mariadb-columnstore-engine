@@ -149,7 +149,7 @@ struct WEClientRunner
 };
 
 template <typename T>
-struct QueueShutdown : public unary_function<T&, void>
+struct QueueShutdown
 {
   void operator()(T& x)
   {
@@ -497,7 +497,6 @@ void WEClients::write_to_all(const messageqcpp::ByteStream& msg)
   }
 
   ClientList::iterator itor = fPmConnections.begin();
-
   while (itor != fPmConnections.end())
   {
     if (itor->second != NULL)

@@ -9,6 +9,7 @@
 USE tpch1;
 #
 
+--disable_warnings
 DROP TABLE IF EXISTS query_class_metrics_float;
 
 #
@@ -39,5 +40,6 @@ SELECT start_ts, Query_time_sum,FIRST_VALUE(Query_time_sum) OVER(order by start_
 SELECT start_ts, Query_time_sum,LAST_VALUE(Query_time_sum) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
 SELECT start_ts, Query_time_sum,NTH_VALUE(Query_time_sum, 3) OVER(order by start_ts) prev_sum  from query_class_metrics_float where agent_id=1 and query_class=1563 limit 50;
 #
+--disable_warnings
 DROP TABLE query_class_metrics_float;
 

@@ -42,6 +42,8 @@ select col1*4.00040040003599959959996 from bug2437;
 
 select (count(*)/72143371)*100,(6001215/72143371)*100,(count(*)*100)/72143371,(6001215*100)/72143371 from lineitem;
 #
+--disable_warnings
 drop table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
 drop table bug2437;
+--enable_warnings
 #

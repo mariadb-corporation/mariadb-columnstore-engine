@@ -5,9 +5,11 @@ Since MCS is not meant to be built independently outside outside of MariaDB serv
 Install git with your distro package manager
 
 You can now clone from github with
+
 	git clone git@github.com:MariaDB/server.git
 
 or if you are not a github user,
+
 	git clone https://github.com/MariaDB/server.git
 
 MariaDB server contains many git submodules that need to be checked out with,

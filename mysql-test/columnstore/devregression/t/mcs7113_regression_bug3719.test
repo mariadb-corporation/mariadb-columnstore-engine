@@ -8,11 +8,15 @@
 #
 USE tpch1;
 #
+--disable_warnings
 create database if not exists geo;
+--enable_warnings
 use geo;
 
+--disable_warnings
 drop table if exists `geo_tag_values`;
 drop table if exists `geo_tags`;
+--enable_warnings
 
 CREATE TABLE `geo_tag_values` (
   `id` int(11) DEFAULT NULL,
@@ -29,8 +33,12 @@ CREATE TABLE `geo_tags` (
   `lock_version` int(11) DEFAULT NULL
 ) engine=columnstore;
 
+--disable_warnings
 create database if not exists pbkt;
+--enable_warnings
+
 use pbkt;
+--disable_warnings
 drop table if exists `areas`;
 drop table if exists `bigsumplus`;
 drop table if exists `dim_date`;
@@ -39,6 +47,7 @@ drop table if exists `tag_values`;
 drop view if exists `tag_values_geo_country`;
 drop view if exists `tag_values_geo_region`;
 drop view if exists `tag_values_ptype`;
+--enable_warnings
 
 CREATE TABLE `areas` (
   `id` int(11) DEFAULT NULL,
@@ -279,9 +288,13 @@ select `tag_values_ptype`.value from (select * from tag_values_ptype) t1, tag_va
 where tag_values_ptype.id = t1.id;
 
 use geo;
+--disable_warnings
 drop table `geo_tag_values`;
 drop table `geo_tags`;
+--enable_warnings
+
 use pbkt;
+--disable_warnings
 drop table `areas`;
 drop table `bigsumplus`;
 drop table `dim_date`;
@@ -292,7 +305,6 @@ drop view `tag_values_geo_region`;
 drop view `tag_values_ptype`;
 drop database geo;
 drop database pbkt;
-
-
+--enable_warnings
 #
 

@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists cat;
 drop table if exists dog;
+--enable_warnings
 
 create table cat(id int, f float, d double)engine=columnstore;
 create table dog(id int, f float, d double)engine=columnstore;
@@ -37,7 +39,9 @@ select 'q4', cat.* from cat;
 
 select 'q5', cat.id, dog.id from cat join dog on cat.f = dog.f and cat.d = dog.d;
 
+--disable_warnings
 drop table cat;
 drop table dog; 
+--enable_warnings
 #
 

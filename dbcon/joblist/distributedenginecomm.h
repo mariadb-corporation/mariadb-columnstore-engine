@@ -32,16 +32,17 @@
 
 #pragma once
 
-#include <ifaddrs.h>
-#include <condition_variable>
-#include <iostream>
-#include <vector>
-#include <queue>
-#include <string>
-#include <map>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
+#include <condition_variable>
+#include <ifaddrs.h>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <string>
+#include <queue>
+#include <vector>
 
 #include "bytestream.h"
 #include "primitivemsg.h"
@@ -145,7 +146,7 @@ class DistributedEngineComm
    * Writes a primitive message to a primitive server. Msg needs to conatin an ISMPacketHeader. The
    * LBID is extracted from the ISMPacketHeader and used to determine the actual P/M to send to.
    */
-  EXPORT void write(uint32_t key, const messageqcpp::SBS& msg);
+  EXPORT int32_t write(uint32_t key, const messageqcpp::SBS& msg);
 
   // EXPORT void throttledWrite(const messageqcpp::ByteStream& msg);
 
@@ -187,7 +188,7 @@ class DistributedEngineComm
    */
   EXPORT uint32_t size(uint32_t key);
 
-  EXPORT void Setup();
+  EXPORT int32_t Setup();
 
   EXPORT void addDECEventListener(DECEventListener*);
   EXPORT void removeDECEventListener(DECEventListener*);
@@ -224,7 +225,7 @@ class DistributedEngineComm
 
  private:
   typedef std::vector<boost::thread*> ReaderList;
-  typedef std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient> > ClientList;
+  typedef std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient>> ClientList;
 
   // A queue of ByteStreams coming in from PrimProc heading for a JobStep
   typedef ThreadSafeQueue<messageqcpp::SBS> StepMsgQueue;
@@ -258,7 +259,7 @@ class DistributedEngineComm
   };
 
   // The mapping of session ids to StepMsgQueueLists
-  typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
+  typedef std::map<unsigned, boost::shared_ptr<MQE>> MessageQueueMap;
 
   explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
@@ -283,8 +284,8 @@ class DistributedEngineComm
   ReaderList fPmReader;       // all the reader threads for the pm servers
   MessageQueueMap
       fSessionMessages;  // place to put messages from the pm server to be returned by the Read method
-  boost::mutex fMlock;   // sessionMessages mutex
-  std::vector<boost::shared_ptr<boost::mutex> > fWlock;  // PrimProc socket write mutexes
+  std::mutex fMlock;     // sessionMessages mutex
+  std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
   bool fBusy;
   volatile uint32_t pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
@@ -295,7 +296,7 @@ class DistributedEngineComm
   boost::mutex eventListenerLock;
 
   ClientList newClients;
-  std::vector<boost::shared_ptr<boost::mutex> > newLocks;
+  std::vector<std::shared_ptr<std::mutex>> newLocks;
 
   bool fIsExeMgr;
 

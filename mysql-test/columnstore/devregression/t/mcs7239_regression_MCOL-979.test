@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mcol979;
+--enable_warnings
+
 create table mcol979 (a int, b double, c CHAR(1), d CHAR(2), e CHAR(3), f CHAR(4), g CHAR(8),
                       h CHAR(16), m VARCHAR(32)) engine=columnstore;
 
@@ -77,6 +80,8 @@ select lag(b) over (order by g) from mcol979;
 select lag(b) over (order by h) from mcol979;
 select lag(b) over (order by m) from mcol979;
 
+--disable_warnings
 drop table if exists mcol979;
+--enable_warnings
 #
 

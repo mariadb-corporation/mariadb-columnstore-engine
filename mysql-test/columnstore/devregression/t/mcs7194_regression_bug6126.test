@@ -9,8 +9,11 @@
 USE tpch1;
 #
 --disable_warnings
+--disable_warnings
 DROP TABLE IF EXISTS `fact_radius_sessions`;
+--disable_warnings
 DROP TABLE IF EXISTS `dim_traffic_class`;
+--disable_warnings
 DROP TABLE IF EXISTS `dim_age_band_marketing_list`;
 --enable_warnings
 
@@ -93,8 +96,11 @@ GROUP BY
     s.venue_visit_id,
     s.registered_at_venue;
 #
+--disable_warnings
 DROP TABLE `fact_radius_sessions`;
+--disable_warnings
 DROP TABLE `dim_traffic_class`;
+--disable_warnings
 DROP TABLE `dim_age_band_marketing_list`;
 #
 

@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists user_prop_by_game;
-Warnings:
-Note	1051	Unknown table 'tpch1.user_prop_by_game'
 drop table if exists visit;
-Warnings:
-Note	1051	Unknown table 'tpch1.visit'
 create table user_prop_by_game(cl_id int, last_visit_date date)engine=columnstore;
 create table visit(cl_id int, visit_date date)engine=columnstore;
 insert into user_prop_by_game values (1, now()), (2, now());

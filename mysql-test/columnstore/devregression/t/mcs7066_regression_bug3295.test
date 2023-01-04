@@ -8,8 +8,11 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists visit;
 drop table if exists client;
+--enable_warnings
+
 create table visit (id_client integer,nb_event integer,update_date datetime, visit_date datetime) engine=columnstore;
 create table client (id_client integer,id_event integer,event_date datetime) engine=columnstore;
 
@@ -80,7 +83,9 @@ WHERE
 V.visit_date ="2010-09-08"
 AND V.id_client = Res.id_client order by 1, 2, 3;
 
+--disable_warnings
 drop table if exists visit;
 drop table if exists client;
+--enable_warnings
 #
 

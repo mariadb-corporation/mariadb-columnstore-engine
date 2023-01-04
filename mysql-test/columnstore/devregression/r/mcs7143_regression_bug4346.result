@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists dim_day;
-Warnings:
-Note	1051	Unknown table 'tpch1.dim_day'
 CREATE TABLE `dim_day` (
 `dayId` SMALLINT(5) DEFAULT NULL,
 `displayDate` DATE DEFAULT NULL

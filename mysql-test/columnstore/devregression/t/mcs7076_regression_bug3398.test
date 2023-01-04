@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS bug3398_1;
 DROP TABLE IF EXISTS bug3398_2;
+--enable_warnings
 
 CREATE TABLE bug3398_1 (lid int, name char(10)) engine=columnstore;
 INSERT INTO bug3398_1 (lid, name) VALUES (1, 'YES'), (2, 'NO');
@@ -23,7 +25,9 @@ SELECT DISTINCT tt.gid AS lgid, (SELECT bug3398_1.name FROM bug3398_1, bug3398_2
 
 SELECT DISTINCT bug3398_2.gid AS lgid, (SELECT bug3398_1.name FROM bug3398_1, bug3398_2 WHERE bug3398_1.lid  = bug3398_2.lid AND bug3398_2.gid = lgid and bug3398_1.name > 'NO' ORDER BY bug3398_2.dt) as clid FROM bug3398_2 ORDER BY 1;
 
+--disable_warnings
 DROP TABLE bug3398_1;
 DROP TABLE bug3398_2;
+--enable_warnings
 #
 

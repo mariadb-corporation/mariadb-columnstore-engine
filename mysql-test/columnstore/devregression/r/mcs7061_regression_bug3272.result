@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3272;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3272'
 create table bug3272 (c1 float, c2 char(12)) engine=columnstore;
 insert into bug3272 values (5.24062, '5.24062'), (7.24062, '7.24062'), (9.94062, '9.94062');
 insert into bug3272 values (-5.24062, '-5.24062'), (-7.24062, '-7.24062'), (-9.94062, '-9.94062');

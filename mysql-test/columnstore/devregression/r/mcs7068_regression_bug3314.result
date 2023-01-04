@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists paa;
-Warnings:
-Note	1051	Unknown table 'tpch1.paa'
 drop table if exists dates;
-Warnings:
-Note	1051	Unknown table 'tpch1.dates'
 drop table if exists t;
-Warnings:
-Note	1051	Unknown table 'tpch1.t'
 create table paa (
 p_id int,
 a_id int,

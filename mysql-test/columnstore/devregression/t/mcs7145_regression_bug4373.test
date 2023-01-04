@@ -8,9 +8,15 @@
 #
 USE tpch1;
 #
+--enable_warnings
 create table if not exists mkr (c1 int, select_b int) engine=columnstore;
+--enable_warnings
+
 insert into mkr (c1, select_b) (select n_nationkey, n_regionkey from nation);
 select * from mkr;
+
+--disable_warnings
 drop table mkr;
+--enable_warnings
 #
 

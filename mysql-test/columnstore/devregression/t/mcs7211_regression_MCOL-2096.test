@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists t;
+--enable_warnings
+
 create table t(a int, b int) engine=columnstore;
 insert into t(a,b) values(1,4),(2,3),(3,2),(4,1);
 
@@ -107,8 +110,8 @@ from (
 ) t0
 where a not in (1, 2);
 
-
-
+--disable_warnings
 drop table if exists t;
+--enable_warnings
 #
 

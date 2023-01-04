@@ -8,6 +8,7 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug5932;
 
 create table bug5932(c1 int)engine=columnstore;
@@ -25,6 +26,7 @@ select * from bug5932 where c1=2;
 
 select distinct c1 from bug5932 order by 1;
 
+--disable_warnings
 drop table if exists bug5932;
 #
 

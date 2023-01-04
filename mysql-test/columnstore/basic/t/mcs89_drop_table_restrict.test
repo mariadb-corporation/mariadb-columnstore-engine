@@ -27,4 +27,8 @@ DROP TABLE t1;
 DROP TABLE t1 RESTRICT;
 
 # Clean up
+--disable_warnings
 DROP DATABASE IF EXISTS mcs89_db;
+--enable_warnings
+#
+

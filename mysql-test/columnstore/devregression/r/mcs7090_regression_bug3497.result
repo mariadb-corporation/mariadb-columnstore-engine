@@ -1,10 +1,6 @@
 USE tpch1;
 drop table if exists bug3497a;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3497a'
 drop table if exists bug3497b;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3497b'
 CREATE TABLE bug3497a (col1 int, col2 varchar(10)) engine=columnstore;
 INSERT INTO bug3497a VALUES(1,'trudy');
 INSERT INTO bug3497a VALUES(2,'peter');

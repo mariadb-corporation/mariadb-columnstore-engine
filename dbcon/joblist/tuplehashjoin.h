@@ -442,13 +442,13 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   struct JoinerSorter
   {
-    inline bool operator()(const boost::shared_ptr<joiner::TupleJoiner>& j1,
-                           const boost::shared_ptr<joiner::TupleJoiner>& j2) const
+    inline bool operator()(const std::shared_ptr<joiner::TupleJoiner>& j1,
+                           const std::shared_ptr<joiner::TupleJoiner>& j2) const
     {
       return *j1 < *j2;
     }
   };
-  std::vector<boost::shared_ptr<joiner::TupleJoiner> > joiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner> > joiners;
   boost::scoped_array<std::vector<rowgroup::RGData> > rgData;
   TupleBPS* largeBPS;
   rowgroup::RowGroup largeRG, outputRG;
@@ -551,7 +551,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
                  rowgroup::Row& joinedRow, rowgroup::Row& baseRow,
                  std::vector<std::vector<rowgroup::Row::Pointer> >& joinMatches,
                  boost::shared_array<rowgroup::Row>& smallRowTemplates, RowGroupDL* outputDL,
-                 std::vector<boost::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
+                 std::vector<std::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
                  boost::shared_array<boost::shared_array<int> >* rgMappings = NULL,
                  boost::shared_array<boost::shared_array<int> >* feMappings = NULL,
                  boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem = NULL);
@@ -631,8 +631,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   bool ownsOutputDL;
 
   void segregateJoiners();
-  std::vector<boost::shared_ptr<joiner::TupleJoiner> > tbpsJoiners;
-  std::vector<boost::shared_ptr<joiner::TupleJoiner> > djsJoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner> > tbpsJoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner> > djsJoiners;
   std::vector<int> djsJoinerMap;
   boost::scoped_array<ssize_t> memUsedByEachJoin;
   boost::mutex djsLock;

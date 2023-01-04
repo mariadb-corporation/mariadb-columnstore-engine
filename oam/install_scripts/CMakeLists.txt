@@ -1,5 +1,13 @@
 SET (DEFAULT_USER "mysql")
 SET (DEFAULT_GROUP "mysql")
+SET(CORE_DUMPS "0")
+OPTION(WITH_COREDUMPS "dump cores" OFF)
+
+if (WITH_COREDUMPS)
+  SET(CORE_DUMPS "infinity")
+endif (WITH_COREDUMPS)
+
+
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstore-post-install" @ONLY)

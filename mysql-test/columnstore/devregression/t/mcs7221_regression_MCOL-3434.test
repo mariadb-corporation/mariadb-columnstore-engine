@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS MCOL3434CS;
 DROP TABLE IF EXISTS MCOL3434INNO;
+--enable_warnings
 
 CREATE TABLE `MCOL3434INNO` (`id` int(11) NOT NULL AUTO_INCREMENT, 
                              `cid` int(11) DEFAULT NULL, 
@@ -104,8 +106,9 @@ select distinct cid, week(d) as week,
                 max(week(d)) over (partition by year(d)) as w_max 
     from MCOL3434CS where year(d) = '2018' order by id;
 
+--disable_warnings
 DROP TABLE IF EXISTS MCOL3434CS;
 DROP TABLE IF EXISTS MCOL3434INNO;
-
+--enable_warnings
 #
 

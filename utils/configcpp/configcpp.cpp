@@ -83,6 +83,21 @@ boost::mutex Config::fXmlLock;
 boost::mutex Config::fWriteXmlLock;
 std::atomic_bool globHasConfig;
 
+void Config::checkAndReloadConfig()
+{
+  struct stat statbuf;
+
+  if (stat(fConfigFile.c_str(), &statbuf) == 0)
+  {
+    if (statbuf.st_mtime != fMtime)
+    {
+      closeConfig();
+      fMtime = statbuf.st_mtime;
+      parseDoc();
+    }
+  }
+}
+
 Config* Config::makeConfig(const string& cf)
 {
   if (cf.empty() || cf == configDefaultFileName)
@@ -93,22 +108,35 @@ Config* Config::makeConfig(const string& cf)
       // this scope.
       boost::mutex::scoped_lock lk(fInstanceMapMutex);
       if (globConfigInstancePtr)
+      {
+        globConfigInstancePtr->checkAndReloadConfig();
         return globConfigInstancePtr;
+      }
 
       // Make this configurable at least at compile-time.
       std::string configFilePath =
           std::string(MCSSYSCONFDIR) + std::string("/columnstore/") + configDefaultFileName;
       globConfigInstancePtr = new Config(configFilePath);
       globHasConfig.store(true, std::memory_order_relaxed);
+      return globConfigInstancePtr;
     }
+
+    boost::mutex::scoped_lock lk(fInstanceMapMutex);
+    globConfigInstancePtr->checkAndReloadConfig();
     return globConfigInstancePtr;
   }
 
   boost::mutex::scoped_lock lk(fInstanceMapMutex);
+
   if (fInstanceMap.find(cf) == fInstanceMap.end())
   {
     fInstanceMap[cf] = new Config(cf);
   }
+  else
+  {
+    fInstanceMap[cf]->checkAndReloadConfig();
+  }
+
   return fInstanceMap[cf];
 }
 
@@ -256,12 +284,7 @@ const string Config::getFromActualConfig(const string& section, const string& na
       boost::recursive_mutex::scoped_lock lk(fLock);
       // To protect the potential race that happens right after
       // the config was changed.
-      if (!stat(fConfigFile.c_str(), &statbuf) && statbuf.st_mtime != fMtime)
-      {
-        closeConfig();
-        fMtime = statbuf.st_mtime;
-        parseDoc();
-      }
+      checkAndReloadConfig();
     }
   }
 
@@ -312,17 +335,7 @@ void Config::delConfig(const string& section, const string& name)
     throw runtime_error("Config::delConfig: no XML document!");
   }
 
-  struct stat statbuf;
-
-  if (stat(fConfigFile.c_str(), &statbuf) == 0)
-  {
-    if (statbuf.st_mtime != fMtime)
-    {
-      closeConfig();
-      fMtime = statbuf.st_mtime;
-      parseDoc();
-    }
-  }
+  checkAndReloadConfig();
 
   fParser.delConfig(fDoc, section, name);
   return;
@@ -627,17 +640,7 @@ const vector<string> Config::enumConfig()
     throw runtime_error("Config::getConfig: no XML document!");
   }
 
-  struct stat statbuf;
-
-  if (stat(fConfigFile.c_str(), &statbuf) == 0)
-  {
-    if (statbuf.st_mtime != fMtime)
-    {
-      closeConfig();
-      fMtime = statbuf.st_mtime;
-      parseDoc();
-    }
-  }
+  checkAndReloadConfig();
 
   return fParser.enumConfig(fDoc);
 }
@@ -652,17 +655,7 @@ const vector<string> Config::enumSection(const string& section)
     throw runtime_error("Config::getConfig: no XML document!");
   }
 
-  struct stat statbuf;
-
-  if (stat(fConfigFile.c_str(), &statbuf) == 0)
-  {
-    if (statbuf.st_mtime != fMtime)
-    {
-      closeConfig();
-      fMtime = statbuf.st_mtime;
-      parseDoc();
-    }
-  }
+  checkAndReloadConfig();
 
   return fParser.enumSection(fDoc, section);
 }

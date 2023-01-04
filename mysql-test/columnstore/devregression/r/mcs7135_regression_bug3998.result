@@ -1,16 +1,8 @@
 USE tpch1;
 drop table if exists bug3998a;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3998a'
 drop table if exists bug3998b;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3998b'
 drop table if exists bug3998c;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3998c'
 drop table if exists bug3998d;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3998d'
 create table bug3998a (c1 int, c2 int) engine=columnstore;
 insert into bug3998a values (0,0), (1,1), (2,1), (3, 1), (null,1), (null, null);
 select * from bug3998a;

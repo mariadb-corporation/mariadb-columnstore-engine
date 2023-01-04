@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug2873;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug2873'
 create table bug2873(id int, logtime int, filename varchar(20))engine=columnstore;
 insert into bug2873 values 
 (1, unix_timestamp('2010-05-23 10:00:10'), 'Cam1.jpg'),

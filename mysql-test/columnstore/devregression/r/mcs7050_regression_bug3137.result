@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3137;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3137'
 CREATE TABLE `bug3137` (
 `id` INTEGER DEFAULT NULL,
 `value` INTEGER DEFAULT NULL
