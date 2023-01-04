@@ -1677,6 +1677,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setStringStore(boost::shared_ptr<StringStore>);
 
   const CHARSET_INFO* getCharset(uint32_t col);
+  // This method is for testing.
+  void setCharset(uint32_t col, const CHARSET_INFO* cs);
 
  private:
   uint32_t columnCount;

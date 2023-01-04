@@ -15,8 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "heaporderby.h"
 #include <netinet/in.h>
+
+#include "heaporderby.h"
 #include "conststring.h"
 #include "pdqorderby.h"
 #include "vlarray.h"
@@ -28,29 +29,64 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
 {
   key_ = buf;
   uint8_t* pos = key_;
-  const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
   for (auto [colId, isAsc] : colsAndDirection)
   {
     uint32_t colWidth = rg.getColumnWidth(colId);
-    const uint8_t* valueBuf = rg.getColumnValueBuf(colId, p.rowID);
-    // std::cout << "KeyType width " << std::dec << colWidth << " " << *((int64_t*)valueBuf) << " "
-    //           << *((int64_t*)nullValuePtr) << std::endl;
-    // std::cout << "KeyType pos 1 " << std::hex << (uint64_t)pos << std::endl;
-    if (memcmp(nullValuePtr, valueBuf, colWidth))
+    auto columnType = rg.getColType(colId);
+    switch (columnType)
     {
-      *pos++ = 1;
-      std::memcpy(pos, valueBuf, colWidth);
-      // std::cout << "KeyType val 2 " << std::dec << *((int64_t*)pos) << " " << std::hex << *((int64_t*)pos)
-      //           << std::endl;
-      // std::cout << "KeyType pos 2 " << std::hex << (uint64_t)pos << std::endl;
-      int64_t* valPtr = reinterpret_cast<int64_t*>(pos);
-      *valPtr ^= 0x8000000000000000;
-      *valPtr = htonll(*valPtr);
-      pos += colWidth;
-    }
-    else
-    {
-      *pos++ = 0;
+      case execplan::CalpontSystemCatalog::BIGINT:
+      {
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+        // using EncodedKeyType = StorageType;
+        const uint8_t* valueBuf = rg.getColumnValueBuf(colId, p.rowID);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
+        // std::cout << "KeyType width " << std::dec << colWidth << " " << *((int64_t*)valueBuf) << " "
+        //           << *((int64_t*)nullValuePtr) << std::endl;
+        // std::cout << "KeyType pos 1 " << std::hex << (uint64_t)pos << std::endl;
+        if (memcmp(nullValuePtr, valueBuf, colWidth))
+        {
+          *pos++ = 1;
+          std::memcpy(pos, valueBuf, colWidth);
+          // std::cout << "KeyType val 2 " << std::dec << *((int64_t*)pos) << " " << std::hex <<
+          // *((int64_t*)pos)
+          //           << std::endl;
+          // std::cout << "KeyType pos 2 " << std::hex << (uint64_t)pos << std::endl;
+          StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+          *valPtr ^= 0x8000000000000000;
+          *valPtr = htonll(*valPtr);
+          pos += colWidth;
+        }
+        else
+        {
+          *pos++ = 0;
+        }
+        break;
+      }
+      case execplan::CalpontSystemCatalog::VARCHAR:
+      case execplan::CalpontSystemCatalog::CHAR:
+      case execplan::CalpontSystemCatalog::TEXT:
+      {
+        using StorageType = utils::ShortConstString;
+        using EncodedKeyType = utils::ConstString;
+        // auto nullValue =
+        //     sorting::getNullValue<StorageType, EncodedKeyType>(execplan::CalpontSystemCatalog::VARCHAR);
+        const auto value =
+            rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(colId,
+                                                                                                    p.rowID);
+        *pos++ = 1;
+        auto cs = datatypes::Charset(rg.getCharset(colId));
+        uint flags = (rg.getCharset(colId)->state & MY_CS_NOPAD) ? 0 : cs.getDefaultFlags();
+        std::memset(pos, 0, 16);
+        // std::cout << "KeyType ctor flags " << flags << std::endl;
+        // flags = cs.getDefaultFlags();
+        // WIP Hardcode
+        [[maybe_unused]] size_t nActualWeights = cs.strnxfrm(
+            pos, 16, value.length(), reinterpret_cast<const uchar*>(value.str()), value.length(), flags);
+        break;
+      }
+      default: break;
     }
   }
 
@@ -74,7 +110,7 @@ bool KeyType::less(const KeyType& r, const rowgroup::RowGroup& rg,
     if (i < colsNumber)
     {
       auto [colIdx, isAsc] = colsAndDirection[i];
-      if (widths[colIdx] <= 8)
+      if (widths[colIdx] <= 16)
       {
         r_offset += widths[colIdx] + 1;
         continue;
@@ -87,7 +123,8 @@ bool KeyType::less(const KeyType& r, const rowgroup::RowGroup& rg,
     //      (unsizedCmpResult = CHARSET::cmp(unsizedKeys[i - 1], unsizedKeys[i])) == 0*/)
     cmpResult = memcmp(key_ + l_offset, r.key_ + l_offset, r_offset - l_offset);
     // std::cout << "result " << std::dec << cmpResult << " left " << *((int64_t*)(key_ + 1)) << " left "
-    //           << std::hex << *((int64_t*)(key_ + 1)) << " right " << std::dec << *((int64_t*)(r.key_ + 1))
+    //           << std::hex << *((int64_t*)(key_ + 1)) << " right " << std::dec << *((int64_t*)(r.key_ +
+    //           1))
     //           << std::hex << " right " << *((int64_t*)(r.key_ + 1)) << std::endl;
     l_offset = r_offset;
   }
@@ -197,6 +234,7 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   auto buf = heap_[1].first.key();
   size_t bestChildIdx = 1;
   size_t heapIdx = 1;
+  // WIP remove IP comparison
   for (; heapIdx < half && heap[bestChildIdx].second != ImpossiblePermute; heapIdx = bestChildIdx)
   {
     // get min of left and right.
