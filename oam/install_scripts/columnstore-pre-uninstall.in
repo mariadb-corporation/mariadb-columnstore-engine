@@ -4,6 +4,7 @@
 #
 # pre-uninstall steps for columnstore install
 set -x
+echo " starting mariadb-columnstore-engine/oam/install_scripts/columnstore-pre-uninstall.in  "
 
 running_systemd() {
     if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
@@ -13,6 +14,7 @@ running_systemd() {
     fi
 }
 
+set -x 
 if [[ -f /etc/mysql/debian.cnf ]]; then
   MDB="/usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf"
 else
