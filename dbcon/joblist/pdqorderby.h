@@ -317,7 +317,6 @@ class PDQOrderBy
     return mm_.get();
   }
 
- private:
   template <typename EncodedKeyType, typename StorageType>
     requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
              sorting::IsConstString<EncodedKeyType>) bool
