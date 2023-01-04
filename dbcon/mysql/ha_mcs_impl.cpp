@@ -1989,6 +1989,7 @@ bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
 
 }  // namespace
 
+// Called only for ANALYZE TABLE
 int ha_mcs_impl_analyze(THD* thd, TABLE* table)
 {
   uint32_t sessionID = execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id);
@@ -2683,6 +2684,26 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  }
+
+  if (thd->lex->analyze_stmt && ci->cal_conn_hndl && ci->cal_conn_hndl->exeMgr)
+  {
+    // The ANALYZE statement leaves ExeMgr hanging. This clears it up.
+    ci->cal_conn_hndl->exeMgr->read(); // Ignore the returned buffer
+    ByteStream msg;
+    ByteStream::quadbyte qb = 1; // Tell PrimProc front session to eat all the rows
+    msg << qb;
+    ci->cal_conn_hndl->exeMgr->write(msg);
+    // This is the command to start sending return values. because we previously sent the swallow 
+    // rows command, there won't be anything useful coming back, but it needs this to flush internal queues.
+    qb = 5; // Read the result data. 
+    msg.reset();
+    msg << qb;
+    ci->cal_conn_hndl->exeMgr->write(msg);
+    qb = 0; // End the query
+    msg.reset();
+    msg << qb;
+    ci->cal_conn_hndl->exeMgr->write(msg);
   }
 
   if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
@@ -4813,7 +4834,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
  * Execute the query and saves derived table query.
  * There is an extra handler argument so I ended up with a
  * new init function. The code is a copy of
- * ha_mcs_impl_rnd_init() mostly.
+ * impl_rnd_init() mostly.
  * PARAMETERS:
  * mcs_handler_info* pnt to an envelope struct
  * TABLE* table - dest table to put the results into
