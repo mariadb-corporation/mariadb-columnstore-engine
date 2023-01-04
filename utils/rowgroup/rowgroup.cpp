@@ -26,7 +26,7 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
-//#define NDEBUG
+// #define NDEBUG
 #include <sstream>
 #include <iterator>
 using namespace std;
@@ -1596,6 +1596,12 @@ const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
   return charsets[col];
 }
 
+// This method is for testing.
+void RowGroup::setCharset(uint32_t col, const CHARSET_INFO* cs)
+{
+  charsets[col] = cs;
+}
+
 void RowGroup::setDBRoot(uint32_t dbroot)
 {
   *((uint32_t*)&data[dbRootOffset]) = dbroot;
@@ -1751,4 +1757,3 @@ RowGroup RowGroup::truncate(uint32_t cols)
 }
 
 }  // namespace rowgroup
-

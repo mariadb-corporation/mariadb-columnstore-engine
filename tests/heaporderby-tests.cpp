@@ -32,6 +32,7 @@
 #include "pdqorderby.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
+#include "m_ctype.h"
 
 using namespace std;
 using namespace testing;
@@ -56,17 +57,16 @@ rowgroup::RowGroup setupRG(const std::vector<execplan::CalpontSystemCatalog::Col
   std::fill(cscale.begin(), cscale.end(), 0);
   RGFieldsType precision(widths.size());
   std::fill(precision.begin(), precision.end(), 20);
-  RGFieldsType charSetNumVec{8};
-  return rowgroup::RowGroup(roids.size(),   // column count
-                            offsets,        // oldOffset
-                            roids,          // column oids
-                            tkeys,          // keys
-                            types,          // types
-                            charSetNumVec,  // charset numbers
-                            cscale,         // scale
-                            precision,      // precision
-                            20,             // sTableThreshold
-                            false           // useStringTable
+  return rowgroup::RowGroup(roids.size(),  // column count
+                            offsets,       // oldOffset
+                            roids,         // column oids
+                            tkeys,         // keys
+                            types,         // types
+                            charsets,      // charset numbers
+                            cscale,        // scale
+                            precision,     // precision
+                            20,            // sTableThreshold
+                            false          // useStringTable
   );
 }
 
@@ -151,6 +151,7 @@ TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64)
       {
         *v = i;
       }
+      // TBD add DSC encoding swaping the bits
       *v ^= 0x8000000000000000;
       *v = htonll(*v);
       ASSERT_FALSE(key.key() == nullptr);
@@ -223,66 +224,143 @@ class KeyTypeTestVarchar : public testing::Test
   {
     keysCols_ = {{0, false}};
     uint32_t stringMaxSize = 16;
-    rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {8});
+    rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {33});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
     rowgroup::Row r;
     rg_.initRow(&r);
-    // uint32_t rowSize = r.getSize();
+    uint32_t rowSize = r.getSize();
     rg_.getRow(0, &r);
-    buf_.reset(new uint8_t[stringMaxSize * 4]);
-    static constexpr const char str1[]{0x00, 0x41, 0x00, 0x09};  // 'a\t'
-    utils::ConstString cs1(str1, 4);
-    static constexpr const char str2[]{0x00, 0x41, 0x00, 0x20};  // 'a '
-    utils::ConstString cs2(str2, 4);
-    static constexpr const char str3[]{0x00, 0x41};  // 'a'
-    utils::ConstString cs3(str3, 4);
-    static constexpr const char str4[]{0x00, 0x41, 0x00, 0x5A};  // 'az'
-    utils::ConstString cs4(str4, 4);
+    static constexpr const char str1[]{'a', '\t'};  // 'a\t'
+    utils::ConstString cs1(str1, 2);
+    strings_.push_back(cs1);
+    static constexpr const char str2[]{'a'};  // 'a'
+    utils::ConstString cs2(str2, 1);
+    strings_.push_back(cs2);
+    static constexpr const char str3[]{'a', ' '};  // 'a '
+    utils::ConstString cs3(str3, 2);
+    strings_.push_back(cs3);
+    static constexpr const char str4[]{'a', 'z', 'b', 'c', 'd', '\t', 'q', 'q', 'q'};  // 'az'
+    utils::ConstString cs4(str4, sizeof(str4));
+    strings_.push_back(cs4);
     r.setStringField(cs1, 0);
+    r.nextRow(rowSize);
     r.setStringField(cs2, 0);
+    r.nextRow(rowSize);
     r.setStringField(cs3, 0);
+    r.nextRow(rowSize);
     r.setStringField(cs4, 0);
     rg_.setRowCount(4);
-    // if (i == 42)
-    // {
-    //   r.setIntField<8>(joblist::BIGINTNULL, 0);
-    //   r.nextRow(rowSize);
-    // }
-    // else if (i == 8191)
-    // {
-    //   r.setIntField<8>(-3891607892, 0);
-    //   r.nextRow(rowSize);
-    // }
-    // else if (i == 8190)
-    // {
-    //   r.setIntField<8>(-3004747259, 0);
-    //   r.nextRow(rowSize);
-    // }
-    // else
-    // {
-    //   if (i > 4000)
-    //   {
-    //     r.setIntField<8>(-i, 0);
-    //     r.nextRow(rowSize);
-    //   }
-    //   else
-    //   {
-    //     r.setIntField<8>(i, 0);
-    //     r.nextRow(rowSize);
-    //   }
-    // }
   }
 
   joblist::OrderByKeysType keysCols_;
   rowgroup::RowGroup rg_;
   rowgroup::RGData rgData_;
-  std::unique_ptr<uint8_t> buf_;
+  std::vector<utils::ConstString> strings_;
 };
 
-TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarchar)
+TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarcharPad)
 {
-  std::cout << "rg_ " << rg_.toString() << std::endl;
+  // utf8_general_ci = 33, 'a' == 'a '
+  size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;  // NULL byte
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
+  rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
+  for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
+  {
+    std::cout << "s " << s.str() << std::endl;
+    uint8_t* pos = expected;
+    uint nweights = s.length();
+    auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    *pos++ = 1;
+    datatypes::Charset cs(&my_charset_utf8mb3_general_ci);
+    cs.strnxfrm(pos, bufUnitSize - 1, nweights, reinterpret_cast<const uchar*>(s.str()), s.length(),
+                cs.getDefaultFlags());
+    // TBD add DSC encoding swaping the bits
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+    ++i;
+  }
+}
+
+TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarcharNoPad)
+{
+  // utf8_general_ci = 1057, 'a' != 'a '
+  size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;  // NULL byte
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
+  rg_.setCharset(0, &my_charset_utf8mb3_general_nopad_ci);
+  for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
+  {
+    std::cout << "s " << s.str() << std::endl;
+    auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    uint8_t* pos = expected;
+    uint nweights = s.length();
+    *pos++ = 1;
+    memset(pos, 0, bufUnitSize - 1);
+    datatypes::Charset cs(&my_charset_utf8mb3_general_nopad_ci);
+    cs.strnxfrm(pos, bufUnitSize - 1, nweights, reinterpret_cast<const uchar*>(s.str()), s.length(), 0);
+    // TBD add DSC encoding swaping the bits
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+    ++i;
+  }
+}
+
+TEST_F(KeyTypeTestVarchar, KeyTypeLessVarcharPad)
+{
+  rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
+  size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;
+  // 1 and 2 are reserved for NULL comparison
+
+  uint8_t* key3Buf = new uint8_t[bufUnitSize];
+  uint8_t* key4Buf = new uint8_t[bufUnitSize];
+  auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
+  auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
+  ASSERT_TRUE(key3.less(key4, rg_, keysCols_));
+  ASSERT_FALSE(key4.less(key3, rg_, keysCols_));
+
+  uint8_t* key5Buf = new uint8_t[bufUnitSize];
+  auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
+  ASSERT_FALSE(key4.less(key5, rg_, keysCols_));
+  ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+
+  uint8_t* key6Buf = new uint8_t[bufUnitSize];
+  auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
+  ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
+  ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
+  ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
+}
+
+TEST_F(KeyTypeTestVarchar, KeyTypeLessVarcharNoPad)
+{
+  rg_.setCharset(0, &my_charset_utf8mb3_general_nopad_ci);
+  size_t bufUnitSize = rg_.getOffsets().back() - 2 + 1;
+  // 1 and 2 are reserved for NULL comparison
+
+  uint8_t* key3Buf = new uint8_t[bufUnitSize];
+  uint8_t* key4Buf = new uint8_t[bufUnitSize];
+  auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
+  auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
+  ASSERT_FALSE(key3.less(key4, rg_, keysCols_));
+  ASSERT_TRUE(key4.less(key3, rg_, keysCols_));
+
+  uint8_t* key5Buf = new uint8_t[bufUnitSize];
+  auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
+  ASSERT_TRUE(key4.less(key5, rg_, keysCols_));
+  ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+
+  uint8_t* key6Buf = new uint8_t[bufUnitSize];
+  auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
+  ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
+  ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
+  ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
+  ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
 }
 
 class HeapOrderByTest : public testing::Test
@@ -364,7 +442,8 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
   // [[maybe_unused]] auto& keys = h.heap();
   // for (auto k : keys)
   // {
-  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID << "}"
+  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID <<
+  //   "}"
   //             << std::endl;
   // }
   PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
@@ -434,7 +513,8 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
   }
   // for (auto k : h.heap())
   // {
-  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID << "}"
+  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID <<
+  //   "}"
   //             << std::endl;
   // }
   PermutationType p;
