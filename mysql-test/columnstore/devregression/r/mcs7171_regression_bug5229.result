@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists uriage_inf;
-Warnings:
-Note	1051	Unknown table 'tpch1.uriage_inf'
 create table uriage_inf(eigyo_shimei varchar(20),uriage numeric) engine=columnstore default charset=utf8;
 insert into uriage_inf values('SMITH',1000);
 insert into uriage_inf values('ALLEN',2000);
@@ -9,8 +7,6 @@ insert into uriage_inf values('JONES',3000);
 insert into uriage_inf values('SMITH',4000);
 insert into uriage_inf values('BLAKE',5000);
 drop table if exists uriage_my;
-Warnings:
-Note	1051	Unknown table 'tpch1.uriage_my'
 create table uriage_my (eigyo_shimei varchar(20),uriage numeric) engine=myisam default charset=utf8;
 insert into uriage_my values('SMITH',1000);
 insert into uriage_my values('ALLEN',2000);

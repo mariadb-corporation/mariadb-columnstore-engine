@@ -214,7 +214,7 @@ void TupleHashJoinStep::join()
 // the threads inserting into Joiner.
 void TupleHashJoinStep::trackMem(uint index)
 {
-  boost::shared_ptr<TupleJoiner> joiner = joiners[index];
+  auto joiner = joiners[index];
   ssize_t memBefore = 0, memAfter = 0;
   bool gotMem;
 
@@ -268,7 +268,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   utils::setThreadName("HJSStartSmall");
   string extendedInfo;
   JoinType jt;
-  boost::shared_ptr<TupleJoiner> joiner;
+  std::shared_ptr<TupleJoiner> joiner;
 
   jt = joinTypes[index];
   extendedInfo += toString();
@@ -391,7 +391,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
   RowGroupDL* smallDL;
   uint32_t smallIt;
   RowGroup smallRG;
-  boost::shared_ptr<TupleJoiner> joiner = joiners[index];
+  auto joiner = joiners[index];
 
   smallDL = smallDLs[index];
   smallIt = smallIts[index];
@@ -1708,7 +1708,7 @@ void TupleHashJoinStep::joinOneRG(
     Row& joinFERow, Row& joinedRow, Row& baseRow, vector<vector<Row::Pointer> >& joinMatches,
     shared_array<Row>& smallRowTemplates, RowGroupDL* outputDL,
     // disk-join support vars.  This param list is insane; refactor attempt would be nice at some point.
-    vector<boost::shared_ptr<joiner::TupleJoiner> >* tjoiners,
+    vector<std::shared_ptr<joiner::TupleJoiner> >* tjoiners,
     boost::shared_array<boost::shared_array<int> >* rgMappings,
     boost::shared_array<boost::shared_array<int> >* feMappings,
     boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem)

@@ -209,7 +209,7 @@ class BatchPrimitiveProcessorJL
   void setJoinedRowGroup(const rowgroup::RowGroup& rg);
 
   /* Tuple hashjoin */
-  void useJoiners(const std::vector<boost::shared_ptr<joiner::TupleJoiner> >&);
+  void useJoiners(const std::vector<std::shared_ptr<joiner::TupleJoiner> >&);
   bool nextTupleJoinerMsg(messageqcpp::ByteStream&);
   // 	void setSmallSideKeyColumn(uint32_t col);
 
@@ -348,7 +348,7 @@ class BatchPrimitiveProcessorJL
   rowgroup::RowGroup aggregateRGPM;
 
   /* UM portion of the PM join alg */
-  std::vector<boost::shared_ptr<joiner::TupleJoiner> > tJoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner> > tJoiners;
   std::vector<rowgroup::RowGroup> smallSideRGs;
   rowgroup::RowGroup largeSideRG;
   std::vector<std::vector<uint32_t> > smallSideKeys;

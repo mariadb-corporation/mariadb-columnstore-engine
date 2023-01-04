@@ -211,27 +211,7 @@ if __name__ == '__main__':
         'ObjectStorage', 'service', fallback='LocalStorage'
     )
 
-    is_primary = False
-
-    # For multi-node with local storage or default installations
-    multi_with_local_storage = (
-        storage.lower() != 's3' and master_addr != LOCALHOST
-    )
-    if multi_with_local_storage or master_addr == LOCALHOST:
-        # This might be not a primary in a multi-node cluster but we are safe
-        # to save BRM locally
-        is_primary = True
-        if multi_with_local_storage:
-            logging.info(
-                'Detected a multi-node installation with a local-storage.'
-            )
-        else:
-            logging.info('Detected a single-node installation.')
-    else:
-        has_requests = False
-        is_primary = is_node_primary(config_root)
-
-    if is_primary is True:
+    if is_node_primary(config_root):
         try:
             retcode = subprocess.check_call(SAVEBRM, shell=True)
         except subprocess.CalledProcessError as exc:

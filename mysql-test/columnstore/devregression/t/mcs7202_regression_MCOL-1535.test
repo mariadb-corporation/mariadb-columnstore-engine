@@ -27,6 +27,8 @@ collation('AAA'),
 (case nm when 'AAA' then 1 else 0 end) as nmchk2
 from t2;
 
+--disable_warnings
 drop table t2;
+--enable_warnings
 #
 

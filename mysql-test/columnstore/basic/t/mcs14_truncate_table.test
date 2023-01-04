@@ -87,4 +87,7 @@ SELECT count(*) FROM t2;
 disconnect addconroot1;
 disconnect addconroot2;
 
+--disable_warnings
 DROP DATABASE mcs14_db1;
+--enable_warnings
+#

@@ -4,8 +4,6 @@ select substr(@x, length(@x)-6, 10);
 substr(@x, length(@x)-6, 10)
 Enabled
 drop table if exists bug4594;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug4594'
 create table if not exists bug4594(c1 char(5))engine=columnstore;
 insert into bug4594 values ('abc'), ('def');
 select * from bug4594;

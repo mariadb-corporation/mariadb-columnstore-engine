@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mcol2225i;
 drop table if exists mcol2225c;
+--enable_warnings
 # -------------------------------------------------------------- #
 # Enable cross engine join
 # Configure user and password in Columnstore.xml file
@@ -28,7 +30,9 @@ FLUSH PRIVILEGES;
 create table mcol2225i (`a 2` int, `b 2` int);
 create table mcol2225c (a int) engine=columnstore;
 select * from mcol2225i join mcol2225c where mcol2225i.`a 2` = mcol2225c.a and mcol2225i.`b 2` = 5;
+--disable_warnings
 drop table mcol2225i;
 drop table mcol2225c;
+--enable_warnings
 #
 DROP USER 'cejuser'@'localhost';

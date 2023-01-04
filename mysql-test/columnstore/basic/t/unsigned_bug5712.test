@@ -7,7 +7,9 @@ DROP DATABASE IF EXISTS unsigned_bug5712_db;
 CREATE DATABASE unsigned_bug5712_db;
 USE unsigned_bug5712_db;
 
+--disable_warnings
 DROP TABLE IF EXISTS bug5712;
+--enable_warnings
 CREATE TABLE bug5712 (`time_tk` INT(11) UNSIGNED NOT NULL) ENGINE=Columnstore DEFAULT CHARSET=latin1;
 
 INSERT INTO bug5712 VALUES 
@@ -25,4 +27,6 @@ SELECT RIGHT(time_tk,6) AS time_tk_right FROM bug5712;
 DROP TABLE IF EXISTS bug5712;
 
 # Clean UP
+--disable_warnings
 DROP DATABASE unsigned_bug5712_db;
+--enable_warnings

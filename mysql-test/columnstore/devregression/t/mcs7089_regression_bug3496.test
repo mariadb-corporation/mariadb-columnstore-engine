@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3496;
+--enable_warnings
+
 create table `bug3496` (`c1` int(11) default null,`c2` char(6) default null, `c3` char(11) default null) engine=columnstore;
 insert into bug3496 values
 (1, 'abc', 'abc'),
@@ -115,7 +118,8 @@ select c1, c3 from bug3496 where c3 like '%_%';
 select c1, c3 from bug3496 where c3 like 'a_%';
 select c1, c3 from bug3496 where c3 like 'a(b)|(c)%';
 
+--disable_warnings
 drop table bug3496;
-
+--enable_warnings
 #
 

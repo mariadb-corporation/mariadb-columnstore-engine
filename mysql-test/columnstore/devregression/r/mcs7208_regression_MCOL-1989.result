@@ -1,22 +1,10 @@
 USE tpch1;
 DROP VIEW IF EXISTS vv2;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vv2'
 DROP VIEW IF EXISTS vv1;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.vv1'
 DROP TABLE IF EXISTS vt1;
-Warnings:
-Note	1051	Unknown table 'tpch1.vt1'
 DROP TABLE IF EXISTS vt2;
-Warnings:
-Note	1051	Unknown table 'tpch1.vt2'
 DROP TABLE IF EXISTS vt3;
-Warnings:
-Note	1051	Unknown table 'tpch1.vt3'
 DROP TABLE IF EXISTS vt4;
-Warnings:
-Note	1051	Unknown table 'tpch1.vt4'
 CREATE TABLE `vt1` (
 `num_sample_id` int(11) DEFAULT NULL,
 `sample_id` varchar(32) DEFAULT NULL,

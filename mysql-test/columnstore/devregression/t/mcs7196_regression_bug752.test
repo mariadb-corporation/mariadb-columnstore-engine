@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE if exists `source`;
+--disable_warnings
 DROP TABLE if exists `dest`;
 
 CREATE TABLE `source` (
@@ -60,7 +62,9 @@ INSERT INTO source VALUES(
 INSERT INTO dest SELECT * FROM source;
 select * from dest;
 
+--disable_warnings
 drop table source;
+--disable_warnings
 drop table dest;
 
 #

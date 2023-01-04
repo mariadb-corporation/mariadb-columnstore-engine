@@ -51,5 +51,7 @@ select date_stamp, sum(adjusted_imp)
 #
 select count(*) from bug4543 where dart_ad_id >= 1;
 #
+--disable_warnings
 drop table if exists bug4543;
+--enable_warnings
 #

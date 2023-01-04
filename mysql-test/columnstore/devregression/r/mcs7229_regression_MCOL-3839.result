@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists test_wf_count_with_constants;
-Warnings:
-Note	1051	Unknown table 'tpch1.test_wf_count_with_constants'
 create table test_wf_count_with_constants (t1 int) engine=columnstore;
 insert into test_wf_count_with_constants values (1);
 select count(null) over () from test_wf_count_with_constants;

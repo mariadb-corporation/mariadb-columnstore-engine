@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists month;
+--enable_warnings
+
 create table month(id int, month varchar(20), season varchar(6))engine=columnstore;
 insert into month values (1, 'Jan', 'Winter');
 SELECT  *,
@@ -28,6 +31,9 @@ AND (@_season := season) IS NOT NULL;
 
 SELECT  * FROM    ( SELECT  m.* FROM   
  ( SELECT  @_season is NULL a) vars, month m where a=m.id ORDER BY season, id ) mo;
+
+--disable_warnings
 drop table month;
+--enable_warnings
 #
 

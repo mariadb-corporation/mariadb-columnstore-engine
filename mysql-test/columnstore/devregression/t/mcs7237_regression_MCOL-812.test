@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 DROP TABLE IF EXISTS test.mcol812a;
 DROP TABLE IF EXISTS test.mcol812b;
+--enable_warnings
 # -------------------------------------------------------------- #
 # Enable cross engine join
 # Configure user and password in Columnstore.xml file
@@ -40,7 +42,9 @@ insert into test.mcol812b values (1);
 select * from test.mcol812b join test.mcol812a on test.mcol812b.a = test.mcol812a.a where test.mcol812a.b='\'';
 select * from test.mcol812b join test.mcol812a on test.mcol812b.a = test.mcol812a.a where test.mcol812a.b='\\';
 
+--disable_warnings
 DROP TABLE test.mcol812a;
 DROP TABLE test.mcol812b;
+--enable_warnings
 #
 DROP USER 'cejuser'@'localhost';

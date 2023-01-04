@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug4359;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug4359'
 CREATE TABLE bug4359 (
 sdate datetime DEFAULT NULL,
 edate datetime DEFAULT NULL

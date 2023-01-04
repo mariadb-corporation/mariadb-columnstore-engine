@@ -8,14 +8,19 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3274;
+--enable_warnings
+
 create table bug3274(d2 decimal(4,2), f float);
 insert into bug3274 values (43.34, 43.345), (13.54, 13.545);
 select d2, count(*) from bug3274 group by 1 order by 1;
 select f, count(*) from bug3274 group by 1 order by 1;
 select * from (select d2, count(*) from bug3274 group by 1 order by 1) a;
 select * from (select f, count(*) from bug3274 group by 1 order by 1) a;
-drop table if exists bug3274;
 
+--disable_warnings
+drop table if exists bug3274;
+--enable_warnings
 #
 

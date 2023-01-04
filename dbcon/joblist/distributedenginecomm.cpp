@@ -159,7 +159,7 @@ struct EngineCommRunner
 };
 
 template <typename T>
-struct QueueShutdown : public unary_function<T&, void>
+struct QueueShutdown
 {
   void operator()(T& x)
   {

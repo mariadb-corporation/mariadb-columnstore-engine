@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3792;
+--enable_warnings
 
 create table bug3792 (c1 int, c2 datetime) engine=columnstore;
 insert into bug3792 values (1, '9999-12-31 23:59:59');
@@ -23,6 +25,8 @@ select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 1;
 select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 2;
 select c1, c2, subtime(c2, '2:0:0') x from bug3792 where c1 = 3;
 
+--disable_warnings
 drop table bug3792;
+--enable_warnings
 #
 

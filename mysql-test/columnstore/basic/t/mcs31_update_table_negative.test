@@ -40,4 +40,7 @@ SELECT * FROm t1 ORDER BY a;
 SELECT * FROm t2 ORDER BY a;
 
 # Clean up
+--disable_warnings
 DROP DATABASE IF EXISTS mcs31_db1;
+--enable_warnings
+#

@@ -161,7 +161,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
                                        rowgroup::RowGroup& fe2Output,
                                        std::vector<rowgroup::RowGroup>& joinerMatchesRGs,
                                        rowgroup::RowGroup& joinFERG,
-                                       std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners,
+                                       std::vector<std::shared_ptr<joiner::TupleJoiner>>& tjoiners,
                                        uint32_t smallSideCount, bool doJoin)
  : tbps(pTupleBPS)
  , local_primRG(primRowGroup)
@@ -2915,14 +2915,14 @@ uint64_t TupleBPS::getFBO(uint64_t lbid)
   throw logic_error("TupleBPS: didn't find the FBO?");
 }
 
-void TupleBPS::useJoiner(boost::shared_ptr<joiner::TupleJoiner> tj)
+void TupleBPS::useJoiner(std::shared_ptr<joiner::TupleJoiner> tj)
 {
-  vector<boost::shared_ptr<joiner::TupleJoiner>> v;
+  vector<std::shared_ptr<joiner::TupleJoiner>> v;
   v.push_back(tj);
   useJoiners(v);
 }
 
-void TupleBPS::useJoiners(const vector<boost::shared_ptr<joiner::TupleJoiner>>& joiners)
+void TupleBPS::useJoiners(const vector<std::shared_ptr<joiner::TupleJoiner>>& joiners)
 {
   uint32_t i;
 

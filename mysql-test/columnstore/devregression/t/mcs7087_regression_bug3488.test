@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3488;
+--enable_warnings
+
 create table bug3488 (c1 bigint, c2 decimal(18,2), c3 float, c4 double, c5 char(120), c6 varchar(120)) engine=columnstore;
 insert into bug3488 values
 (1, 1.1, 1.1, 1.1, '1.1', '1.1'),
@@ -36,7 +39,8 @@ select c4, format(c4, -2), format(c4, 0), format(c4, 2) from (select * from bug3
 select c5, format(c5, -2), format(c5, 0), format(c5, 2) from (select * from bug3488) sub;
 select c6, format(c6, -2), format(c6, 0), format(c6, 2) from (select * from bug3488) sub;
 
+--disable_warnings
 drop table bug3488;
-
+--enable_warnings
 #
 

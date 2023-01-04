@@ -1819,9 +1819,9 @@ void TupleJoiner::clearData()
   finished = false;
 }
 
-boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
+std::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
 {
-  boost::shared_ptr<TupleJoiner> ret(new TupleJoiner());
+  std::shared_ptr<TupleJoiner> ret(new TupleJoiner());
 
   ret->smallRG = smallRG;
   ret->largeRG = largeRG;

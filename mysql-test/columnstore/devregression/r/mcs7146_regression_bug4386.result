@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists dim_date;
-Warnings:
-Note	1051	Unknown table 'tpch1.dim_date'
 create table dim_date ( companycode integer, FinancialQuarterID integer,
 FinancialQuarter integer, FinancialYear integer ) engine=columnstore;
 insert into dim_date values (1,1,2,1);

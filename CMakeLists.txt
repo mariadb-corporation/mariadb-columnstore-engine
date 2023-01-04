@@ -193,6 +193,7 @@ IF (NOT INSTALL_LAYOUT)
     MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
     MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
     MY_CHECK_AND_SET_COMPILER_FLAG("-msse4.2" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
+    MY_CHECK_AND_SET_COMPILER_FLAG("-DBOOST_BIND_GLOBAL_PLACEHOLDERS" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
 
     # enable security hardening features, like most distributions do
     # in our benchmarks that costs about ~1% of performance, depending on the load
@@ -234,7 +235,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
 endif()
+
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall")
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
@@ -354,6 +357,13 @@ ADD_SUBDIRECTORY(dbcon/mysql)
 IF(NOT TARGET columnstore)
   RETURN()
 ENDIF()
+
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+ExternalProject_Add(mpark_patterns
+    GIT_REPOSITORY https://github.com/mpark/patterns
+    GIT_TAG v0.3.0
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+)
 
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)

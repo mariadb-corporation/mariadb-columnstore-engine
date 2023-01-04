@@ -19,7 +19,7 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
 RENAME TABLE nation to nation1;
 drop table if exists nation;
 create table nation (
@@ -35,7 +35,7 @@ nation	CREATE TABLE `nation` (
   `n_name` char(25) DEFAULT NULL,
   `n_regionkey` int(11) DEFAULT NULL,
   `n_comment` varchar(152) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
 select count(*) from nation where n_regionkey = 2;
 count(*)

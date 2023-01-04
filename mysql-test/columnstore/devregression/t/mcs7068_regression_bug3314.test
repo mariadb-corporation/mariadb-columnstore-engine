@@ -8,9 +8,11 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists paa;
 drop table if exists dates;
 drop table if exists t;
+--enable_warnings
 
 create table paa (
     p_id int,
@@ -61,8 +63,10 @@ left outer join (select t.date_id, t.p_id, a_id,
        and p.date_id = tx.date_id)
 order by 1, 2, 3;
 
+--disable_warnings
 drop table if exists paa;
 drop table if exists dates;
 drop table if exists t;
+--enable_warnings
 #
 

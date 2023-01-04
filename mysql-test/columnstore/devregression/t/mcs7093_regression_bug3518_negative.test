@@ -102,6 +102,8 @@ select b.cidx from qa_dict_join_1 a, qa_dict_join_2 b where   a.CBIGINT = b.CBIG
 select a.cidx, b.cidx from qa_dict_join_1 a, qa_dict_join_2 b where   a.CBIGINT = b.CBIGINT order by abs(a.cidx), abs(b.cidx);
 select abs(a.cidx), b.cidx from qa_dict_join_1 a, qa_dict_join_2 b where   a.CBIGINT = b.CBIGINT order by a.cidx, b.cidx;
 #
+--disable_warnings
 drop table if exists qa_dict_join_1;
 drop table if exists qa_dict_join_2;
+--enable_warnings
 #

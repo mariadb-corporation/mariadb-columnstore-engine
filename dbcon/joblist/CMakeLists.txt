@@ -1,5 +1,4 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
-
 set(joblist_LIB_SRCS
     anydatalist.cpp
     batchprimitiveprocessor-jl.cpp

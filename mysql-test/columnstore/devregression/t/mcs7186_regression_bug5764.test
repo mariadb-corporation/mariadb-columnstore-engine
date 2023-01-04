@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists mk_calendar;
+--enable_warnings
+
  CREATE TABLE if not exists `mk_calendar` (
   `nengetsu_yyyymmdd` date DEFAULT NULL,
   `shukei_dd` varchar(6) DEFAULT NULL,
@@ -23,7 +26,10 @@ insert into mk_calendar values
 ('2009-04-01', 1, 200904),
 ('2009-04-02', 2, 200904);
 
+--disable_warnings
 drop table if exists mk_kishu_gaibu;
+--enable_warnings
+
 CREATE TABLE if not exists `mk_kishu_gaibu` (
   `Jyohokei_Denwa_Shurui` varchar(100) DEFAULT NULL,
   `Shuryoku_Hanbai_Kishu_Key` varchar(100) DEFAULT NULL
@@ -39,7 +45,10 @@ insert into mk_kishu_gaibu values
 ('A1', '508G'),                                           
 ('GT', 'HD60');                                           
 
+--disable_warnings
 drop table if exists mk_kishubetsu_report2;
+--enable_warnings
+
  CREATE TABLE if not exists `mk_kishubetsu_report2` (
   `KEYNO` int(10) DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8;
@@ -56,7 +65,10 @@ insert into mk_kishubetsu_report2 values
 (1000009),
 (6000001);
 
+--disable_warnings
 drop table if exists mk_organization;
+--enable_warnings
+
  CREATE TABLE if not exists `mk_organization` (
   `Tokatsuten_Code` varchar(30) DEFAULT NULL,
   `Kyoten_Code` varchar(30) DEFAULT NULL
@@ -74,7 +86,10 @@ insert into mk_organization values
 ('EK21', '017'),  
 ('NESM', '021');
 
+--disable_warnings
 drop table if exists mk_shuryoku_hanbai_kishu;
+--enable_warnings
+
  CREATE TABLE if not exists `mk_shuryoku_hanbai_kishu` (
   `catalog_nengetsu` varchar(6) DEFAULT NULL,
   `kata_shiki` varchar(20) DEFAULT NULL
@@ -89,7 +104,10 @@ insert into mk_shuryoku_hanbai_kishu values
 (200905, 'S002'),
 (200905, 'BUGS');
 
+--disable_warnings
 drop table if exists ts_kishubetsu_hibetsu_pfmtst;
+--enable_warnings
+
 CREATE TABLE if not exists `ts_kishubetsu_hibetsu_pfmtst` (
   `keijyo_yyyymm` int(6) DEFAULT NULL,
   `keijyo_dd` varchar(6) DEFAULT '@',
@@ -109,7 +127,10 @@ insert into ts_kishubetsu_hibetsu_pfmtst values
 (200904, 3, 'K554', 'M18', 'GT', 1000004),
 (200904, 4, 'K554', '021', 'ZZ', 3333333);
 
+--disable_warnings
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu_base;
+--enable_warnings
+
 CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu_base`
 AS
 (
@@ -137,7 +158,10 @@ AS
 			)
 		);
 
+--disable_warnings
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu;
+--enable_warnings
+
 CREATE VIEW `v_kyotenbetsu_kishubetsu_hibetsu`
 AS
 (
@@ -153,10 +177,6 @@ AS
 			)
 		);
 
-
-
-
-
 select count(*) count1
 from
 (
@@ -170,6 +190,7 @@ from (
 
 select count(*) count2 from v_kyotenbetsu_kishubetsu_hibetsu;
 
+--disable_warnings
 drop table if exists mk_calendar;
 drop table if exists mk_kishu_gaibu;
 drop table if exists mk_kishubetsu_report2;
@@ -178,6 +199,6 @@ drop table if exists mk_shuryoku_hanbai_kishu;
 drop table if exists ts_kishubetsu_hibetsu_pfmtst;
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu_base;
 drop view if exists v_kyotenbetsu_kishubetsu_hibetsu;
-
+--enable_warnings
 #
 

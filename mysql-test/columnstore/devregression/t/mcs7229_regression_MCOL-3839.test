@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists test_wf_count_with_constants;
+--enable_warnings
 
 create table test_wf_count_with_constants (t1 int) engine=columnstore;
 insert into test_wf_count_with_constants values (1);
@@ -41,7 +43,8 @@ select count(5) over(order by t1 rows between current row and unbounded followin
 select count(*) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
 select count(null) over(order by t1 rows between current row and unbounded following)  from test_wf_count_with_constants;
 
+--disable_warnings
 drop table test_wf_count_with_constants;
-
+--enable_warnings
 #
 

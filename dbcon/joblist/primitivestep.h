@@ -1101,8 +1101,8 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   {
     return uniqueID;
   }
-  void useJoiner(boost::shared_ptr<joiner::TupleJoiner>);
-  void useJoiners(const std::vector<boost::shared_ptr<joiner::TupleJoiner>>&);
+  void useJoiner(std::shared_ptr<joiner::TupleJoiner>);
+  void useJoiners(const std::vector<std::shared_ptr<joiner::TupleJoiner>>&);
   bool wasStepRun() const
   {
     return fRunExecuted;
@@ -1298,7 +1298,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   void serializeJoiner();
   void serializeJoiner(uint32_t connectionNumber);
 
-  std::vector<boost::shared_ptr<joiner::TupleJoiner>> tjoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner>> tjoiners;
   bool doJoin, hasPMJoin, hasUMJoin;
   std::vector<rowgroup::RowGroup> joinerMatchesRGs;  // parses the small-side matches from joiner
 
@@ -1361,7 +1361,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     JoinLocalData(TupleBPS* pTupleBPS, rowgroup::RowGroup& primRowGroup, rowgroup::RowGroup& outputRowGroup,
                   boost::shared_ptr<funcexp::FuncExpWrapper>& fe2, rowgroup::RowGroup& fe2Output,
                   std::vector<rowgroup::RowGroup>& joinerMatchesRGs, rowgroup::RowGroup& joinFERG,
-                  std::vector<boost::shared_ptr<joiner::TupleJoiner>>& tjoiners, uint32_t smallSideCount,
+                  std::vector<std::shared_ptr<joiner::TupleJoiner>>& tjoiners, uint32_t smallSideCount,
                   bool doJoin);
 
     friend class TupleBPS;
@@ -1385,7 +1385,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     rowgroup::RowGroup fe2Output;
     std::vector<rowgroup::RowGroup> joinerMatchesRGs;
     rowgroup::RowGroup joinFERG;
-    std::vector<boost::shared_ptr<joiner::TupleJoiner>> tjoiners;
+    std::vector<std::shared_ptr<joiner::TupleJoiner>> tjoiners;
 
     uint32_t smallSideCount;
     bool doJoin;

@@ -8,7 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists qadefaulttest;
+--enable_warnings
+
 create table qadefaulttest (cidx int) engine=columnstore;
 ALTER TABLE qadefaulttest ADD column MYDOUBLE2 DOUBLE not null DEFAULT -88.88;
 insert into qadefaulttest values (1, -88.88);
@@ -17,5 +20,8 @@ ALTER TABLE qadefaulttest ADD column MYFLOAT3 FLOAT not null DEFAULT -88.88;
 select * from qadefaulttest;
 ALTER TABLE qadefaulttest ADD column MYDECIMAL2 DECIMAL(4,2) not null DEFAULT -88.88;
 select * from qadefaulttest;
-drop table qadefaulttest;#
 
+--disable_warnings
+drop table qadefaulttest;#
+--enable_warnings
+#

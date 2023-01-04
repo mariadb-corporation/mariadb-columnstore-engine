@@ -1,22 +1,10 @@
 USE tpch1;
 drop procedure if exists sp_simple_select;
-Warnings:
-Note	1305	PROCEDURE tpch1.sp_simple_select does not exist
 drop procedure if exists sp_simple_variable;
-Warnings:
-Note	1305	PROCEDURE tpch1.sp_simple_variable does not exist
 drop procedure if exists sp_simple_variables;
-Warnings:
-Note	1305	PROCEDURE tpch1.sp_simple_variables does not exist
 drop procedure if exists sp_complex_variable;
-Warnings:
-Note	1305	PROCEDURE tpch1.sp_complex_variable does not exist
 drop procedure if exists proc1;
-Warnings:
-Note	1305	PROCEDURE tpch1.proc1 does not exist
 DROP TABLE IF EXISTS t1;
-Warnings:
-Note	1051	Unknown table 'tpch1.t1'
 Create Procedure sp_simple_select( )
 begin
 select * from part where p_partkey < 5;

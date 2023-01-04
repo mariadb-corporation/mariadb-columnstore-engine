@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists user_prop_by_game;
 drop table if exists visit;
+--enable_warnings
 
 create table user_prop_by_game(cl_id int, last_visit_date date)engine=columnstore;
 create table visit(cl_id int, visit_date date)engine=columnstore;
@@ -24,7 +26,9 @@ UPBG.cl_id = sub.cl_id;
 
 select * from user_prop_by_game;
 
+--disable_warnings
 drop table if exists user_prop_by_game;
 drop table if exists visit;
+--enable_warnings
 #
 

@@ -8,7 +8,9 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists `football_teams`;
+--enable_warnings
 
 CREATE TABLE `football_teams` (
 `num` int(11) DEFAULT NULL,
@@ -23,6 +25,8 @@ insert into football_teams VALUES (4,'Minnesota',53);
 
 select * from (select  num from football_teams order by num limit 3 offset 2) a;
 
+--disable_warnings
 drop table football_teams;
+--enable_warnings
 #
 

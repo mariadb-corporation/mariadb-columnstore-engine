@@ -1,7 +1,5 @@
 USE ssb1;
 drop table if exists datetest;
-Warnings:
-Note	1051	Unknown table 'ssb1.datetest'
 create table if not exists datetest (rowid int, c1 varchar(20), c2 bigint) engine=columnstore;
 insert into datetest values (1, "1990-10-20", 19901121), (2, "1997-01-01 10:00:05", 19970201000000), (3, "0705", 0805), (4, "20120230", 20120230),(5, "20110229", 20110229),(6, "9905", 9905),(7, "20011010888888", 20031010888888),(8, "20011011124455", 20011010122233);
 select 'q1', rowid, c1, c2, cast(c1 as date), cast(c2 as date) from datetest where c2 <> 0805 order by rowid;
@@ -171,7 +169,6 @@ q17	5	20110229	20110229	838:59:59.999999	00:00:00
 q17	6	9905	9905	NULL	NULL
 q17	7	20011010888888	20031010888888	NULL	NULL
 q17	8	20011011124455	20011010122233	12:44:55.000000	12:22:33
-drop table if exists datetest;
 select 'q18', year(lo_orderdate), month(lo_orderdate), count(*) from ssb1.lineorder group by 1, 2, 3 order by 1, 2, 3;
 q18	year(lo_orderdate)	month(lo_orderdate)	count(*)
 q18	1992	1	77440
@@ -254,3 +251,4 @@ q18	1998	5	77725
 q18	1998	6	74584
 q18	1998	7	77744
 q18	1998	8	4783
+drop table if exists datetest;

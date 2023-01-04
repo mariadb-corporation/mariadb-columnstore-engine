@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists t;
-Warnings:
-Note	1051	Unknown table 'tpch1.t'
 create table t(a int, b varchar(10), c decimal(7,2)) engine=columnstore;
 insert into t(a,b,c) values (1,'x',10),(2,'x',11), (3, 'x', 12), (1,'y',12),(2,'y',11), (3, 'y', 10);
 select a as bu, 

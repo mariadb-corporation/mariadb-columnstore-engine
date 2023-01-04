@@ -1,28 +1,12 @@
 USE tpch1;
 drop view if exists v_nation;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_nation'
 drop view if exists v_region;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_region'
 drop view if exists v_customer;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_customer'
 drop view if exists v_orders;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_orders'
 drop view if exists v_supplier;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_supplier'
 drop view if exists v_partsupp;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_partsupp'
 drop view if exists v_part;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_part'
 drop view if exists v_lineitem;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.v_lineitem'
 create view v_nation as select * from nation where n_nationkey > 10 union all select * from nation where n_nationkey <= 10;
 create view v_region as select * from region where r_regionkey > 3 union all select * from region where r_regionkey <= 3;
 create view v_customer as select * from customer union all select * from customer where c_custkey=0;
@@ -32,32 +16,14 @@ create view v_partsupp as select * from partsupp union all select * from partsup
 create view v_part as select * from part union all select * from part where p_partkey=0;
 create view v_lineitem as select * from lineitem union all select * from lineitem where l_orderkey=0;
 drop procedure if exists ordersColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.ordersColumnsTouched does not exist
 drop procedure if exists lineitemColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.lineitemColumnsTouched does not exist
 drop procedure if exists customerColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.customerColumnsTouched does not exist
 drop procedure if exists supplierColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.supplierColumnsTouched does not exist
 drop procedure if exists partColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.partColumnsTouched does not exist
 drop procedure if exists partsuppColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.partsuppColumnsTouched does not exist
 drop procedure if exists regionColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.regionColumnsTouched does not exist
 drop procedure if exists nationColumnsTouched;
-Warnings:
-Note	1305	PROCEDURE tpch1.nationColumnsTouched does not exist
 drop procedure if exists eliminatedBlocksGE;
-Warnings:
-Note	1305	PROCEDURE tpch1.eliminatedBlocksGE does not exist
 create procedure ordersColumnsTouched (in trace varchar(10000)) BEGIN
 select locate('o_orderkey', trace) > 0 as o_orderkey_accessed;
 select locate('o_custkey', trace) > 0 as o_custkey_accessed;

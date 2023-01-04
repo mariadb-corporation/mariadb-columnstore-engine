@@ -21,7 +21,9 @@ update dairy_collection_animal a, (select collection_id from dairy_collection_vi
 select * from dairy_collection_animal;
 select * from dairy_collection_view;
 
+--disable_warnings
 drop table dairy_collection_animal;
 drop view dairy_collection_view;
+--enable_warnings
 #
 

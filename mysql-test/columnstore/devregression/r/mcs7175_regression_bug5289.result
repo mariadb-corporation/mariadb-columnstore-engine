@@ -1,13 +1,7 @@
 USE tpch1;
 drop table if exists bug5289a;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug5289a'
 drop table if exists bug5289b;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug5289b'
 drop view if exists bug5289b_v;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.bug5289b_v'
 create table bug5289a(
 a decimal(10,0),
 b varchar(30)) 
@@ -32,5 +26,3 @@ q3	2
 drop table if exists bug5289a;
 drop table if exists bug5289b;
 drop view if exists bug5289b_v;
-Warnings:
-Note	4092	Unknown VIEW: 'tpch1.bug5289b_v'

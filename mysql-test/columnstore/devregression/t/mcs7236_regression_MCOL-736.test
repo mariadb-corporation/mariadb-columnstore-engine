@@ -10,7 +10,10 @@ USE tpch1;
 #
 #-- SELECT was triggering implicit commit
 
+--disable_warnings
 DROP TABLE IF EXISTS MCOL_736;
+--enable_warnings
+
 CREATE TABLE `MCOL_736` (
 	`code` varchar(255) NOT NULL
 ) ENGINE=InnoDB;
@@ -22,6 +25,8 @@ ROLLBACK;
 
 #-- Result should be BR and not UK
 SELECT * FROM MCOL_736;
+--disable_warnings
 DROP TABLE MCOL_736;
+--enable_warnings
 #
 

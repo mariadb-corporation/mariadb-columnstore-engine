@@ -8,8 +8,10 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists product;
 drop table if exists product_tag;
+--enable_warnings
 
 create table product_tag (product_id bigint)engine=columnstore;
 
@@ -34,8 +36,10 @@ set brand=p.product_id, price=555, modified_dtm='2011-12-15 15:15:30',
 short_description=concat(short_description,modified_by);
 
 select * from product;
+
+--disable_warnings
 drop table product;
 drop table product_tag;
-
+--enable_warnings
 #
 

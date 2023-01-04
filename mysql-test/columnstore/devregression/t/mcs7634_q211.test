@@ -26,4 +26,7 @@ drop table `test023_cs3`.`cs3`;
 --error 1146
 show create table `test023_cs3`.`cs3`;
 use tpch1;
+
+--disable_warnings
 drop database if exists test023_cs3;
+--enable_warnings

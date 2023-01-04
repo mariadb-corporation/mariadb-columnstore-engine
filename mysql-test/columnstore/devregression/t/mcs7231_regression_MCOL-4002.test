@@ -163,5 +163,7 @@ INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
 LOAD DATA LOCAL INFILE '/tmp/mcol4002.txt' INTO TABLE mcol4002 FIELDS TERMINATED BY ',' ENCLOSED BY '"';
 SELECT COUNT(*) FROM mcol4002; #-- should return 606
 #
+--disable_warnings
 DROP TABLE mcol4002;
+--enable_warnings
 #

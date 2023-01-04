@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists bug3496;
-Warnings:
-Note	1051	Unknown table 'tpch1.bug3496'
 create table `bug3496` (`c1` int(11) default null,`c2` char(6) default null, `c3` char(11) default null) engine=columnstore;
 insert into bug3496 values
 (1, 'abc', 'abc'),

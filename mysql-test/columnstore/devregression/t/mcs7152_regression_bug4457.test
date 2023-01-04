@@ -137,8 +137,10 @@ SET C.pef_ind_trc_CEN06_date_partid = D.pepf_int_date_trc_partid_date,
 C.pef_id_fonctionnel_tournee = D.pepf_id_fonctionnel_tournee
 WHERE C.pef_env_id_env= D.pef_env_id_env;
 
+--disable_warnings
 drop table poc_enveloppe_fact;
 drop table poc_enveloppe_partid_fact;
 drop table poc_tmp_calc_indic;
+--enable_warnings
 #
 

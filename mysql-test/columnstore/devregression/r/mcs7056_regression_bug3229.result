@@ -1,7 +1,5 @@
 USE tpch1;
 drop table if exists testnulldate;
-Warnings:
-Note	1051	Unknown table 'tpch1.testnulldate'
 create table testnulldate (id int, time_stamp datetime) engine=columnstore;
 insert into testnulldate values (1, '2010-11-08 17:46:44');
 insert into testnulldate values (2, null);

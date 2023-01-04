@@ -8,9 +8,15 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists bug3203;
+--enable_warnings
+
 create table bug3203 (c1 varchar(20))engine=columnstore;
 select * from bug3203 where c1 = 'x';
+
+--disable_warnings
 drop table if exists bug3203;
+--enable_warnings
 #
 

@@ -8,11 +8,13 @@
 #
 USE tpch1;
 #
+--disable_warnings
 drop table if exists pts_agg_url_report;
 drop table if exists pts_dim_publisher;
 drop table if exists pts_dim_subsite;
 drop table if exists pts_meta_ad;
 drop table if exists pts_meta_campaign;
+--enable_warnings
 
 CREATE TABLE `pts_agg_url_report` (
   `agg_date` date DEFAULT NULL,
@@ -60,7 +62,7 @@ CREATE TABLE `pts_meta_ad` (
   `dimensionName` varchar(250) DEFAULT NULL
 ) engine=columnstore;
 
-cREATE TABLE `pts_meta_campaign` (
+CREATE TABLE `pts_meta_campaign` (
   `clientId` varchar(32) DEFAULT NULL,
   `externalClientId` int(11) DEFAULT NULL,
   `id` varchar(32) DEFAULT NULL,
@@ -90,6 +92,7 @@ pts_meta_campaign pmc on pmc.id = s.cid
   where cid is not null order by agg_date,pmc.displayname,publisher,pds.subsite,pma.dimensionname
 ;
 
+--disable_warnings
 drop table pts_agg_url_report;
 drop table pts_dim_publisher;
 drop table pts_dim_subsite;
@@ -99,6 +102,7 @@ drop table pts_meta_campaign;
 drop table if exists marketing_conversions;
 drop table if exists marketing_events;
 drop table if exists marketing_leads;
+--enable_warnings
 
 CREATE TABLE `marketing_conversions` (
   `pkMarketingConversionID` int(10) DEFAULT NULL,
@@ -184,8 +188,10 @@ marketing_conversions  where createdon > '2011-01-01' and newuser = 1 and
 productid = 'Business-2010' group by xdate ) bus  on bus.xdate=ml.xdate group
 by ml.xdate order by ml.xdate;
 
+--disable_warnings
 drop table marketing_conversions;
 drop table marketing_events;
 drop table marketing_leads;
+--enable_warnings
 #
 
