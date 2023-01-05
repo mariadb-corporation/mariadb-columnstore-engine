@@ -11,7 +11,7 @@ else
 fi
 
 if [ $rpmmode = erase ]; then
-	columnstore-pre-uninstall  1> /tmp/columnstore-pre-uninstall.log 2>&1
+	bash -x columnstore-pre-uninstall  1> /tmp/columnstore-pre-uninstall.log 2>&1
 	cp /tmp/columnstore-pre-uninstall.log /var/log/mariadb/columnstore/.
 fi
 
