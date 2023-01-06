@@ -1521,20 +1521,6 @@ class RowGroup : public messageqcpp::Serializeable
     //   return nullValue;
     // check the out of bounds invariant somehow
     return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
-    // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
-    // {
-    //   const char* src = (const char*)&data[offsets[colIndex]];
-    //   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
-    // }
-    // inline utils::ConstString Row::getConstString(uint32_t colIndex) const
-    // {
-    //   return inStringTable(colIndex) ? strings->getConstString(*((uint64_t*)&data[offsets[colIndex]]))
-    //                                  : getShortConstString(colIndex);
-    // }
-    // inline bool Row::inStringTable(uint32_t col) const
-    // {
-    //   return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
-    // }
   }
   template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
     requires IsShortString<ColType, FromType, ToType>
@@ -1550,21 +1536,6 @@ class RowGroup : public messageqcpp::Serializeable
     // check the out of bounds invariant somehow
     const char* src = reinterpret_cast<const char*>(&data[offset2stringStoreOffset]);
     return ToType(src, strnlen(src, getColumnWidth(columnID)));
-    // inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
-    // {
-    //   const char* src = (const char*)&data[offsets[colIndex]];
-    //   return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
-    // }
-
-    // inline utils::ConstString Row::getConstString(uint32_t colIndex) const
-    // {
-    //   return inStringTable(colIndex) ? strings->getConstString(*((uint64_t*)&data[offsets[colIndex]]))
-    //                                  : getShortConstString(colIndex);
-    // }
-    // inline bool Row::inStringTable(uint32_t col) const
-    // {
-    //   return strings && getColumnWidth(col) >= sTableThreshold && !forceInline[col];
-    // }
   }
   template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
     requires IsShortStringInIntegralTypes<ColType, FromType, ToType>
