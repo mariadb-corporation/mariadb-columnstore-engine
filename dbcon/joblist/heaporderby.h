@@ -56,6 +56,9 @@ struct KeyType
   // }
   bool less(const KeyType& r, const rowgroup::RowGroup& rg,
             const joblist::OrderByKeysType& colsAndDirection) const;
+  bool less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
+            const PermutationType leftP, const PermutationType rightP,
+            const sorting::SortingThreads& prevPhaseSorting) const;
 
  private:
   uint8_t* key_;
