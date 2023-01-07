@@ -50,10 +50,6 @@ struct KeyType
   {
     return key_;
   }
-  // const ColumnsValues& values() const
-  // {
-  //   return values_;
-  // }
   bool less(const KeyType& r, const rowgroup::RowGroup& rg,
             const joblist::OrderByKeysType& colsAndDirection) const;
   bool less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
