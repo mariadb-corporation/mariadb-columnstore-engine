@@ -420,6 +420,11 @@ void SQLFrontSessionThread::operator()()
           analyzeTableHandleStats(bs);
           continue;
         }
+        else if (qb == 0)
+        {
+          // 0 => Nothing left to do. Sent by rnd_end() just to be sure.
+          continue;
+        }
         else
         {
           if (gDebug)
@@ -765,62 +770,64 @@ void SQLFrontSessionThread::operator()()
               bs << errInfo->errorMsg(jl->status());
           }
 
-          try  // @bug2244: try/catch around fIos.write() calls projecting rows
+          if (!swallowRows)
           {
-            if (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
+            try  // @bug2244: try/catch around fIos.write() calls projecting rows
             {
-              // Skip the write to the front end until the last empty band.  Used to time queries
-              // through without any front end waiting.
-              if (tableOID < 3000 || rowCount == 0)
+              if (csep.traceFlags() & execplan::CalpontSelectExecutionPlan::TRACE_NO_ROWS3)
+              {
+                // Skip the write to the front end until the last empty band.  Used to time queries
+                // through without any front end waiting.
+                if (tableOID < 3000 || rowCount == 0)
+                  fIos.write(bs);
+              }
+              else
+              {
                 fIos.write(bs);
+              }
             }
-            else
+            catch (std::exception& ex)
             {
-              fIos.write(bs);
+              msgHandler.stop();
+              std::ostringstream errMsg;
+              errMsg << "ExeMgr: error projecting rows "
+                        "for tableOID: "
+                     << tableOID << "; rowCnt: " << rowCount << "; prevTotRowCnt: " << totalRowCount << "; "
+                     << ex.what();
+              jl->abort();
+
+              while (rowCount)
+                rowCount = jl->projectTable(tableOID, bs);
+
+              if (tableOID == 100 && msgHandler.aborted())
+              {
+                /* TODO: modularize the cleanup code, as well as
+                 * the rest of this fcn */
+
+                decThreadCntPerSession(csep.sessionID() | 0x80000000);
+                statementsRunningCount->decr(stmtCounted);
+                fIos.close();
+                return;
+              }
+
+              // std::cout << "connection drop\n";
+              throw std::runtime_error(errMsg.str());
             }
-          }
-          catch (std::exception& ex)
-          {
-            msgHandler.stop();
-            std::ostringstream errMsg;
-            errMsg << "ExeMgr: error projecting rows "
-                      "for tableOID: "
-                   << tableOID << "; rowCnt: " << rowCount << "; prevTotRowCnt: " << totalRowCount << "; "
-                   << ex.what();
-            jl->abort();
-
-            while (rowCount)
-              rowCount = jl->projectTable(tableOID, bs);
-
-            if (tableOID == 100 && msgHandler.aborted())
+            catch (...)
             {
-              /* TODO: modularize the cleanup code, as well as
-               * the rest of this fcn */
+              std::ostringstream errMsg;
+              msgHandler.stop();
+              errMsg << "ExeMgr: unknown error projecting rows "
+                        "for tableOID: "
+                     << tableOID << "; rowCnt: " << rowCount << "; prevTotRowCnt: " << totalRowCount;
+              jl->abort();
 
-              decThreadCntPerSession(csep.sessionID() | 0x80000000);
-              statementsRunningCount->decr(stmtCounted);
-              fIos.close();
-              return;
+              while (rowCount)
+                rowCount = jl->projectTable(tableOID, bs);
+
+              throw std::runtime_error(errMsg.str());
             }
-
-            // std::cout << "connection drop\n";
-            throw std::runtime_error(errMsg.str());
           }
-          catch (...)
-          {
-            std::ostringstream errMsg;
-            msgHandler.stop();
-            errMsg << "ExeMgr: unknown error projecting rows "
-                      "for tableOID: "
-                   << tableOID << "; rowCnt: " << rowCount << "; prevTotRowCnt: " << totalRowCount;
-            jl->abort();
-
-            while (rowCount)
-              rowCount = jl->projectTable(tableOID, bs);
-
-            throw std::runtime_error(errMsg.str());
-          }
-
           totalRowCount += rowCount;
           totalBytesSent += bs.length();
 
