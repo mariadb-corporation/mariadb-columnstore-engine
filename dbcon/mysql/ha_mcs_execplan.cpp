@@ -2921,7 +2921,7 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
     case Item_sum::SUM_BIT_FUNC:
     {
       string funcName = isp->func_name();
-
+idblog2("func name " << funcName);
       if (funcName.compare("bit_and(") == 0)
         ac->aggOp(AggregateColumn::BIT_AND);
       else if (funcName.compare("bit_or(") == 0)

@@ -306,6 +306,7 @@ class ProtocolError : public std::logic_error
 #define idblog(x) do { } while (0)
 #define idblog_stat(x) /* nothing */
 #endif
+
 #define idblog2(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
