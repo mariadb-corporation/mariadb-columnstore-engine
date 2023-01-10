@@ -438,17 +438,17 @@ idblog("storing empty string");
       else
       {
         // fetch and store data
-        if (row.isNullValue(s))
-	{
-          (*f)->reset();
-	  (*f)->set_null();
-	}
-	else
-	{
+        //if (row.isNullValue(s))
+	//{
+        //  (*f)->reset();
+	//  (*f)->set_null();
+	//}
+	//else
+	//{
           (*f)->set_notnull();
           datatypes::StoreFieldMariaDB mf(*f, colType, timeZone);
           h->storeValueToField(row, s, &mf);
-	}
+	//}
       }
     }
 
