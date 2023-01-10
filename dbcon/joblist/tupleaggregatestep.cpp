@@ -1064,7 +1064,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     RowAggFunctionType aggOp = functionIdMap(returnedColVec[i].second);
     RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
     uint32_t key = returnedColVec[i].first;
-idblog("returnedColVec iteration " << i << ", aggOp " << ((int)aggOp) << ", GROUP_CONCAT is " << ((int)ROWAGG_GROUP_CONCAT) << ", UNDEF " << ((int)ROWAGG_FUNCT_UNDEFINE) << ", key " << key);
+idblog2("returnedColVec iteration " << i << ", aggOp " << ((int)aggOp) << ", GROUP_CONCAT is " << ((int)ROWAGG_GROUP_CONCAT) << ", UNDEF " << ((int)ROWAGG_FUNCT_UNDEFINE) << ", key " << key);
 
     if (aggOp == ROWAGG_CONSTANT)
     {
