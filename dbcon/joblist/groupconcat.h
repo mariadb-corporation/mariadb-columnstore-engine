@@ -111,8 +111,9 @@ class GroupConcator
   virtual void processRow(const rowgroup::Row&) = 0;
 
   virtual void merge(GroupConcator*) = 0;
-  virtual void getResult(uint8_t* buff, const std::string& sep) = 0;
+  virtual uint8_t* getResultImpl(const std::string& sep) = 0;
   virtual uint8_t* getResult(const std::string& sep);
+  virtual uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss);
 
   virtual const std::string toString() const;
 
@@ -126,7 +127,7 @@ class GroupConcator
   int64_t fCurrentLength;
   int64_t fGroupConcatLen;
   int64_t fConstantLen;
-  boost::scoped_array<uint8_t> fOutputString;
+  std::unique_ptr<std::string> outputBuf_;
   long fTimeZone;
 };
 
@@ -142,7 +143,7 @@ class GroupConcatNoOrder : public GroupConcator
 
   void merge(GroupConcator*);
   using GroupConcator::getResult;
-  void getResult(uint8_t* buff, const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep);
 
   const std::string toString() const;
 
@@ -173,7 +174,7 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
 
   void merge(GroupConcator*);
   using GroupConcator::getResult;
-  void getResult(uint8_t* buff, const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep);
 
   const std::string toString() const;
 
