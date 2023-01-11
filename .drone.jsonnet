@@ -2,21 +2,19 @@ local events = ['pull_request', 'cron'];
 
 local platforms = {
   develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local servers = {
   develop: ['10.6-enterprise'],
-  'develop-6': ['10.6-enterprise'],
+  'develop-22.08': ['10.6-enterprise'],
 };
 
 local platforms_arm = {
   develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['rockylinux:8'],
 };
 
 local any_branch = '**';
-local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
+local platforms_custom = ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
 local platforms_arm_custom = ['rockylinux:8'];
 
 local platforms_mtr = ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
@@ -114,7 +112,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'centos:7' || platform == 'rockylinux:8') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
+  local regression_ref = 'develop',
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
   local regression_tests = 'test000.sh,test001.sh',
   local branchp = if (branch == '**') then '' else branch,
@@ -585,9 +583,7 @@ local FinalPipeline(branch, event) = {
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
   depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']),
+              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
 
