@@ -686,7 +686,7 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
       }
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
     case CalpontSystemCatalog::VARCHAR:
