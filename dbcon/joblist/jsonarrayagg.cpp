@@ -332,11 +332,6 @@ void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
   fConcator->merge(gccAg->concator().get());
 }
 
-void JsonArrayAggregatAgUM::getResult(uint8_t* buff)
-{
-  fConcator->getResultImpl(fGroupConcat->fSeparator);
-}
-
 uint8_t* JsonArrayAggregatAgUM::getResult()
 {
   return fConcator->getResult(fGroupConcat->fSeparator);
