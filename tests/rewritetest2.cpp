@@ -35,12 +35,10 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
 #define REWRITE_TREE_TEST_DEBUG true;
 
 
-void printTrees(execplan::ParseTree* initial, execplan::ParseTree* rewritten)
+void printTrees(const std::string& queryName, execplan::ParseTree* initial, execplan::ParseTree* rewritten)
 {
 #ifdef REWRITE_TREE_TEST_DEBUG
-  std::string dotPath = std::string("/tmp/") + \
-    ::testing::UnitTest::GetInstance()->current_test_info()->name();
-
+  std::string dotPath = std::string("/tmp/") + queryName;
   std::string initialDot = dotPath + ".initial.dot";
   std::string rewrittenDot = dotPath + ".rewritten.dot";
 
@@ -56,6 +54,104 @@ void printTrees(execplan::ParseTree* initial, execplan::ParseTree* rewritten)
   system(convertRewritten.c_str());
 #endif
 }
+
+
+//std::map<std::string, unsigned char[]> tree_rewrites = { "__test_query_1", __test_query_1};
+
+
+enum class RewrittenMatchesInitial
+{
+  YES,
+  NO
+};
+
+struct ParseTreeTestParam
+{
+  std::string queryName;
+  std::vector<unsigned char> * query = nullptr;
+  RewrittenMatchesInitial rewrittenMatchesInitial;
+  std::vector<unsigned char> * manually_rewritten_query = nullptr;
+
+  friend std::ostream& operator<<(std::ostream& os, const ParseTreeTestParam& bar) {
+    return os << bar.queryName;
+  }
+};
+
+
+class ParseTreeTest : public testing::TestWithParam<::ParseTreeTestParam> {};
+
+
+TEST_P(ParseTreeTest, Rewrite)
+{
+  messageqcpp::ByteStream stream;
+  EXPECT_TRUE(GetParam().wasManuallyTested);
+
+  stream.load(GetParam().query->data(), GetParam().query->size());
+  execplan::ParseTree* initialTree = execplan::ObjectReader::createParseTree(stream);
+  TreePtr rewrittenTree;
+  rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot(initialTree));
+
+  printTrees(GetParam().queryName, initialTree, rewrittenTree.get());
+
+  if (GetParam().rewrittenMatchesInitial)
+  {
+    EXPECT_TRUE(treeEqual(initialTree, rewrittenTree.get()));
+  }
+  else
+  {
+    stream.load(GetParam().manually_rewritten_query->data(), GetParam().manually_rewritten_query->size());
+    TreePtr manuallyRewrittenTree;
+    manuallyRewrittenTree.reset(execplan::ObjectReader::createParseTree(stream));
+    EXPECT_TRUE(treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get()));
+  }
+}
+
+
+
+INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
+  /*
+  select t1.posname, t2.posname from t1,t2
+  where
+  (
+  t1.id = t2.id
+  and t1.pos + t2.pos < 1000
+  )
+  or
+  (
+  t1.id = t2.id
+  and t1.pos + t2.pos > 15000
+  );
+  */
+  ParseTreeTestParam{"Query_1", &__test_query_1, RewrittenMatchesInitial::YES},
+
+
+  /*
+  select t1.posname, t2.posname
+  from t1,t2
+  where
+  t1.id = t2.id
+  and (t1.pos + t2.pos < 1000);
+  */
+  ParseTreeTestParam{"Query_2", &__test_query_2, RewrittenMatchesInitial::YES},
+
+
+ /*
+
+  select t1.posname, t2.posname
+  from t1,t2
+  where
+  (t1.pos + t2.pos < 1000)
+  or
+  (t1.pos + t2.pos > 16000)
+  or
+  (t1.posname < dcba);
+
+  */
+  ParseTreeTestParam{"Query_3", &__test_query_3, RewrittenMatchesInitial::YES}
+));
+
+
+#if 0
 
 TEST(Simple, Q1_test)
 {
@@ -584,3 +680,5 @@ TEST(Simple, Q9_test)
 
   EXPECT_TRUE(treeEqual(query_9_tree.get(), query_9_tree_rewritten));
 }
+
+#endif
