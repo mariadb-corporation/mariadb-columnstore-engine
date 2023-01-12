@@ -774,8 +774,10 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
 
 uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& condStack)
 {
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2072,8 +2074,10 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
   query.assign(idb_mysql_query_str(thd));
   caep->data(query);
 
-  if (!get_fe_conn_info_ptr())
+  if (!get_fe_conn_info_ptr()) {
     set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
   idbassert(ci != 0);
@@ -2270,8 +2274,10 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2596,8 +2602,10 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone)
   //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
   //        return HA_ERR_END_OF_FILE;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2684,6 +2692,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    thd_set_ha_data(thd, mcs_hton, ci);
   }
 
   if (thd->lex->analyze_stmt && ci->cal_conn_hndl && ci->cal_conn_hndl->exeMgr)
@@ -2801,8 +2810,10 @@ int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* creat
 {
   THD* thd = current_thd;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2843,8 +2854,10 @@ int ha_mcs_impl_delete_table(const char* name)
   if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length))
     return 0;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2906,8 +2919,10 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
     return ER_CHECK_NOT_IMPLEMENTED;
   }
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -2957,8 +2972,10 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
 
 int ha_mcs_impl_update_row()
 {
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
   int rc = ci->rc;
@@ -2971,8 +2988,10 @@ int ha_mcs_impl_update_row()
 
 int ha_mcs_impl_delete_row()
 {
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
   int rc = ci->rc;
@@ -2990,8 +3009,10 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
   if (thd->slave_thread && !get_replication_slave(thd))
     return;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -3544,8 +3565,10 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
   std::string aTmpDir(startup::StartUp::tmpDir());
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -3695,7 +3718,12 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
         }
         else
         {
-          ha_mcs_impl::log_this(thd, "End SQL statement with error", logging::LOG_TYPE_DEBUG,
+          ostringstream oss;
+          oss << "End SQL statement with error, rc=" << rc
+              << ", aPid=" << aPid
+              << ", WIF=" << WIFEXITED(aStatus)
+              << ", WEXIT=" << WEXITSTATUS(aStatus);
+          ha_mcs_impl::log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG,
                                 tid2sid(thd->thread_id));
         }
 
@@ -3782,8 +3810,10 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
 int ha_mcs_impl_commit(handlerton* hton, THD* thd, bool all)
 {
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -3815,8 +3845,10 @@ int ha_mcs_impl_commit(handlerton* hton, THD* thd, bool all)
 
 int ha_mcs_impl_rollback(handlerton* hton, THD* thd, bool all)
 {
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -3874,6 +3906,10 @@ int ha_mcs_impl_close_connection(handlerton* hton, THD* thd)
     ci->cal_conn_hndl = 0;
   }
 
+  delete ci;
+  set_fe_conn_info_ptr(nullptr);
+  thd_set_ha_data(thd, hton, nullptr);
+
   return rc;
 }
 
@@ -3881,8 +3917,10 @@ int ha_mcs_impl_rename_table(const char* from, const char* to)
 {
   IDEBUG(cout << "ha_mcs_impl_rename_table: " << from << " => " << to << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -3925,8 +3963,10 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
   alias.assign(table->alias.ptr(), table->alias.length());
   IDEBUG(cout << "ha_mcs_impl_cond_push: " << alias << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -4032,8 +4072,10 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
   alias.assign(table->alias.ptr(), table->alias.length());
   IDEBUG(cout << "external_lock for " << alias << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -4195,8 +4237,10 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -4612,8 +4656,10 @@ int ha_mcs_impl_group_by_next(TABLE* table, long timeZone)
   if (isMCSTableUpdate(thd) || isMCSTableDelete(thd))
     return HA_ERR_END_OF_FILE;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -4693,6 +4739,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    thd_set_ha_data(thd, mcs_hton, ci);
   }
 
   if (((thd->lex)->sql_command == SQLCOM_INSERT) || ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT))
@@ -4896,8 +4943,10 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table)
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (!get_fe_conn_info_ptr())
+  if (!get_fe_conn_info_ptr()) {
     set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -5297,8 +5346,10 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table, long timeZone)
 
   int rc = HA_ERR_END_OF_FILE;
 
-  if (get_fe_conn_info_ptr() == nullptr)
+  if (get_fe_conn_info_ptr() == nullptr) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 

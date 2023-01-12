@@ -30,6 +30,7 @@ using namespace std;
 #include "idb_mysql.h"
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_sysvars.h"
+#include "ha_mcs.h"
 
 #include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
@@ -95,8 +96,10 @@ WF_FRAME frame(Window_frame_bound::Bound_precedence_type bound, Item* offset)
 }
 ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi)
 {
-  if (get_fe_conn_info_ptr() == NULL)
+  if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -302,8 +305,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
   // String str;
   // item->print(&str, QT_INFINIDB_NO_QUOTE);
   // cout << str.c_ptr() << endl;
-  if (get_fe_conn_info_ptr() == NULL)
+  if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
