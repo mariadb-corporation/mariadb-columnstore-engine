@@ -404,7 +404,7 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
 {
   const CalpontSystemCatalog::ColDataType* types = row.getColTypes();
   vector<uint32_t>::iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::iterator j = fConstCols.begin();
+  auto j = fConstCols.begin();
 
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
