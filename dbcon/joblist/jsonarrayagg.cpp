@@ -397,7 +397,7 @@ void JsonArrayAggregator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fConstantLen = strlen(gcc->fSeparator.c_str());
 
   for (uint64_t i = 0; i < fConstCols.size(); i++)
-    fConstantLen += strlen(fConstCols[i].first.c_str());
+    fConstantLen += fConstCols[i].first.length();
 }
 
 void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
