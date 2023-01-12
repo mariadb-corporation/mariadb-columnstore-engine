@@ -676,7 +676,7 @@ const string JsonArrayAggregator::toString() const
   oss << "JsonArray size-" << fGroupConcatLen;
   oss << "Concat   cols: ";
   vector<uint32_t>::const_iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::const_iterator j = fConstCols.begin();
+  auto j = fConstCols.begin();
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
   for (uint64_t k = 0; k < groupColCount; k++)
