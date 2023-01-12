@@ -412,7 +412,7 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
   {
     if (j != fConstCols.end() && k == j->second)
     {
-      oss << j->first;
+      oss << j->first.safeString(""); // XXX: NULLs???
       j++;
       continue;
     }
