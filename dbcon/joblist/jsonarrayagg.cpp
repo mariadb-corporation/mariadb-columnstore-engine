@@ -466,7 +466,7 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        std::string maybeJson = row.getStringField(*i);
+        std::string maybeJson = row.getStringField(*i).safeString(""); // XXX: NULL??? it is not checked anywhere.
         [[maybe_unused]] const auto j = json::parse(maybeJson, nullptr, false);
         if (j.is_discarded())
         {
