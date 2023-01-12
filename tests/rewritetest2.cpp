@@ -32,6 +32,31 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
           (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
 }
 
+#define REWRITE_TREE_TEST_DEBUG true;
+
+
+void printTrees(execplan::ParseTree* initial, execplan::ParseTree* rewritten)
+{
+#ifdef REWRITE_TREE_TEST_DEBUG
+  std::string dotPath = std::string("/tmp/") + \
+    ::testing::UnitTest::GetInstance()->current_test_info()->name();
+
+  std::string initialDot = dotPath + ".initial.dot";
+  std::string rewrittenDot = dotPath + ".rewritten.dot";
+
+  rewritten->drawTree(rewrittenDot);
+  initial->drawTree(initialDot);
+
+  std::string dotInvoke = "dot -Tpng ";
+
+  std::string convertInitial = dotInvoke + initialDot + " -o " +  initialDot + ".png";
+  std::string convertRewritten = dotInvoke + rewrittenDot + " -o " +  rewrittenDot + ".png";
+  std::cerr << convertRewritten << std::endl;
+  system(convertInitial.c_str());
+  system(convertRewritten.c_str());
+#endif
+}
+
 TEST(Simple, Q1_test)
 {
   messageqcpp::ByteStream stream;
@@ -55,11 +80,9 @@ TEST(Simple, Q1_test)
 
   TreePtr query_1_tree;
   query_1_tree.reset(execplan::ObjectReader::createParseTree(stream));
-  query_1_tree->drawTree("/tmp/treeq1-init.dot");
-
   auto query_1_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_1_tree.get());
-  query_1_tree_rewritten->drawTree("/tmp/treeq1-rewritten.dot");
 
+  printTrees(query_1_tree.get(), query_1_tree_rewritten);
   EXPECT_TRUE(treeEqual(query_1_tree.get(), query_1_tree_rewritten));
 }
 
@@ -87,10 +110,9 @@ TEST(Simple, Q10_test)
 
   TreePtr query_10_tree;
   query_10_tree.reset(execplan::ObjectReader::createParseTree(stream));
-  query_10_tree->drawTree("/tmp/treeq10-init.dot");
-
   auto query_10_tree_rewritten = execplan::extractCommonLeafConjunctionsToRoot(query_10_tree.get());
-  query_10_tree_rewritten->drawTree("/tmp/treeq10-rewritten.dot");
+
+  printTrees(query_10_tree.get(), query_10_tree_rewritten);
 
   EXPECT_TRUE(treeEqual(query_10_tree.get(), query_10_tree_rewritten));
 }

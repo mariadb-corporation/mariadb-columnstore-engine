@@ -76,6 +76,9 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
 {
+  if (common.empty())
+    return tree;
+
   execplan::Operator* op = new execplan::Operator();
   op->data("and");
   execplan::ParseTree* result = new execplan::ParseTree(op);
