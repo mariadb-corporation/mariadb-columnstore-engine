@@ -136,6 +136,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
           //                 value.length(), flags);
           // pos += columnWidth;
         }
+        // WIP
         else if (!sorting::isDictColumn(columnType, columnWidth))
         {
           switch (columnWidth)
@@ -163,7 +164,9 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               using StorageType =
                   datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
-                  columnId, p.rowID);
+                            columnId, p.rowID)
+                          .rtrimZero();
+              value.rtrimZero();
               *pos++ = 1;
               break;
             };
@@ -173,10 +176,12 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               using StorageType =
                   datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
-                  columnId, p.rowID);
+                            columnId, p.rowID)
+                          .rtrimZero();
+              value.rtrimZero();
               *pos++ = 1;
               // std::memset(pos, 0, columnWidth);
-              // // std::cout << "KeyType ctor flags " << flags << std::endl;
+              // // std::cout << "KeyType ctor flags " << fls.rtrimZero()ags << std::endl;
               // // WIP Hardcode
               // [[maybe_unused]] size_t nActualWeights =
               //     cs.strnxfrm(pos, columnWidth, value.length(), reinterpret_cast<const
@@ -190,7 +195,8 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               using StorageType =
                   datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
-                  columnId, p.rowID);
+                            columnId, p.rowID)
+                          .rtrimZero();
               *pos++ = 1;
               // std::memset(pos, 0, keyWidth);
               // [[maybe_unused]] size_t nActualWeights =
@@ -205,7 +211,18 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         std::memset(pos, 0, keyWidth);
         [[maybe_unused]] size_t nActualWeights = cs.strnxfrm(
             pos, keyWidth, keyWidth, reinterpret_cast<const uchar*>(value.str()), value.length(), flags);
-        pos += keyWidth;
+        uint8_t* end = pos + nActualWeights;
+        if (isDsc)
+        {
+          for (; pos < end; ++pos)
+          {
+            *pos = ~*pos;
+          }
+        }
+        else
+        {
+          pos += nActualWeights;
+        }
       }
       default: break;
     }
@@ -261,21 +278,24 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
   int32_t cmpResult = 0;
   const uint32_t stringThreshold = rg.getStringTableThreshold();
   bool longString = false;
+  bool isDsc = false;
   for (size_t i = 0; !cmpResult && i <= colsNumber; ++i)
   {
     if (i < colsNumber)
     {
-      auto [columnId, isAsc] = colsAndDirection[i];
+      auto [columnId, isDscLocal] = colsAndDirection[i];
       ++r_offset;
       if (widths[columnId] <= stringThreshold)
       {
         r_offset += widths[columnId];
+        longString = false;
         continue;
       }
       else
       {
         r_offset += stringThreshold;
         longString = true;
+        isDsc = isDscLocal;
       }
     }
     // std::cout << "less pos left " << std::hex << (uint64_t)(key_ + l_offset) << " pos right "
@@ -296,6 +316,8 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
           columnId, rightP.rowID);
       auto cs = datatypes::Charset(rg.getCharset(columnId));
       cmpResult = cs.strnncollsp(leftV, rightV);
+      cmpResult = (isDsc) ? -cmpResult : cmpResult;
+      longString = false;
     }
     // std::cout << "result " << std::dec << cmpResult << " left " << *((int64_t*)(key_ + 1)) << " left "
     //           << std::hex << *((int64_t*)(key_ + 1)) << " right " << std::dec << *((int64_t*)(r.key_ +
