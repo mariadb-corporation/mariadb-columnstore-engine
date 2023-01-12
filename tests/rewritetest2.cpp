@@ -133,7 +133,12 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
 
   */
   ParseTreeTestParam{"Query_3", &__test_query_3}
-));
+),
+  [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {
+      return info.param.queryName;
+  }
+);
+
 
 
 #if 0
