@@ -79,7 +79,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
   const uint8_t* niceBlock;  // block cast to a byte-indexed type
   const uint8_t* niceInput;  // h cast to a byte-indexed type
   const uint16_t* offsets;
-  int offsetIndex, argIndex, argsOffset;
+  int offsetIndex, argsOffset;
   bool cmpResult = false;
   int i;
   const char* sig;
@@ -122,7 +122,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
     siglen = offsets[offsetIndex - 1] - offsets[offsetIndex];
     sig = reinterpret_cast<const char*>(&niceBlock[offsets[offsetIndex]]);
     argsOffset = sizeof(TokenByScanRequestHeader);
-    argIndex = 0;
     args = reinterpret_cast<const DataValue*>(&niceInput[argsOffset]);
 
     if (eqFilter)
@@ -161,7 +160,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
           goto store;
 
         argsOffset += sizeof(uint16_t) + args->len;
-        argIndex++;
         args = (DataValue*)&niceInput[argsOffset];
 
         cmpResult = compare(cs, h->COP2, sig, siglen, args->data, args->len);
@@ -186,7 +184,6 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
             goto store;
 
           argsOffset += sizeof(uint16_t) + args->len;
-          argIndex++;
           args = (DataValue*)&niceInput[argsOffset];
         }
 
