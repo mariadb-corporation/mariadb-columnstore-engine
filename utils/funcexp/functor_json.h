@@ -5,8 +5,7 @@
 #include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
-//#include <json_lib.h>
-#include "delete_me_json_lib.h"
+#include <json_lib.h>
 
 #include "collation.h"
 #include "functor_bool.h"
