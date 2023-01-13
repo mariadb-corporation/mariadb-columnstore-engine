@@ -52,6 +52,7 @@ using namespace boost;
 #include "ha_mcs_sysvars.h"
 #include "idb_mysql.h"
 
+#include "ha_mcs.h"
 #include "ha_mcs_impl_if.h"
 using namespace cal_impl_if;
 
@@ -775,8 +776,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
   int rc = 0;
   parser.Parse(ddlStatement.c_str());
 
-  if (get_fe_conn_info_ptr() == NULL)
+  if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
