@@ -19,7 +19,7 @@
 #include "functioncolumn.h"
 #include "constantcolumn.h"
 
-#include "delete_me_json_lib.h"
+#include "json_lib.h"
 
 namespace funcexp
 {
