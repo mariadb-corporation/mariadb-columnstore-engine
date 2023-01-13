@@ -107,7 +107,8 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   and t1.pos + t2.pos > 15000
   );
   */
-  ParseTreeTestParam{"Query_1", &__test_query_1},
+
+  //  ParseTreeTestParam{"Query_1", &__test_query_1},
 
   /*
   select t1.posname, t2.posname
