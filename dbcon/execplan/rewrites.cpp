@@ -1,4 +1,5 @@
 #include "rewrites.h"
+#include <typeinfo>
 
 namespace execplan
 {
@@ -20,6 +21,8 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
   os << std::endl;
 }
 
+#define debug_rewrites true
+
 auto nodeComparator = [](const execplan::TreeNode* left, const execplan::TreeNode* right)
 { return left->data() < right->data(); };
 
@@ -34,8 +37,11 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     accumulator.clear();
     return;
   }
-  auto sep = std::string(level * 4, '-');
-  std::cerr << sep << ": " << root->data()->data() << std::endl;
+
+  #ifdef debug_rewrites
+    auto sep = std::string(level * 4, '-');
+    std::cerr << sep << ": " << root->data()->data() << " " << typeid(root->data()).name() << std::endl;
+  #endif
 
   if (root->left() == nullptr && root->left() == nullptr && orMeeted)
   {
@@ -163,8 +169,9 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
 
-  printContainer(
-      std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
+  #ifdef debug_rewrites
+    printContainer(std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
+  #endif
 
   details::removeFromTree(tree, common);
   // HACK WORKAROUND FOR case of two common nodes

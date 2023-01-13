@@ -49,9 +49,9 @@ void printTrees(const std::string& queryName, execplan::ParseTree* initial, exec
 
   std::string convertInitial = dotInvoke + initialDot + " -o " +  initialDot + ".png";
   std::string convertRewritten = dotInvoke + rewrittenDot + " -o " +  rewrittenDot + ".png";
-  std::cerr << convertRewritten << std::endl;
-  system(convertInitial.c_str());
-  system(convertRewritten.c_str());
+
+  [[maybe_unused]] auto _ = std::system(convertInitial.c_str());
+  _ = system(convertRewritten.c_str());
 #endif
 }
 
@@ -109,7 +109,6 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   */
   ParseTreeTestParam{"Query_1", &__test_query_1},
 
-
   /*
   select t1.posname, t2.posname
   from t1,t2
@@ -119,9 +118,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   */
   ParseTreeTestParam{"Query_2", &__test_query_2},
 
-
  /*
-
   select t1.posname, t2.posname
   from t1,t2
   where
