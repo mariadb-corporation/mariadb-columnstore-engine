@@ -95,7 +95,7 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
       return true;
 
     IntType arrayCounters[JSON_DEPTH_LIMIT];
-    if (del_me_json_find_path(&je, &p, &currStep, arrayCounters))
+    if (json_find_path(&je, &p, &currStep, arrayCounters))
       return true;
 
     if (json_read_value(&je))
