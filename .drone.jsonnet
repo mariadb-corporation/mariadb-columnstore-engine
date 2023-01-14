@@ -1,25 +1,25 @@
 local events = ['pull_request', 'cron'];
 
-local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-};
-
 local servers = {
   develop: ['10.6-enterprise'],
-  'develop-6': ['10.6-enterprise'],
+  'develop-22.08': ['10.6-enterprise'],
+};
+
+local platforms = {
+  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-22.08': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
   develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-6': ['rockylinux:8'],
+  'develop-22.08': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local any_branch = '**';
-local platforms_custom = ['centos:7', 'rockylinux:8', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
-local platforms_arm_custom = ['rockylinux:8'];
+local platforms_custom = platforms.develop;
+local platforms_arm_custom = platforms_arm.develop;
 
-local platforms_mtr = ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'];
+local platforms_mtr = platforms.develop;
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
@@ -34,7 +34,6 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
 local clang_version = '13';
 local gcc_version = '10';
 
-local gcc_update_alternatives = 'update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-' + gcc_version + ' 100 --slave /usr/bin/g++ g++ /usr/bin/g++-' + gcc_version + '--slave /usr/bin/gcov gcov /usr/bin/gcov-' + gcc_version + ' ';
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
 
 
@@ -70,7 +69,6 @@ local core_dump_drop = 'https://raw.githubusercontent.com/mariadb-corporation/ma
 local ansi2html = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/ansi2html.sh';
 
 local platformMap(platform, arch) =
-  local clang_force = if (arch == 'arm64') then ' && export CXX=/usr/bin/clang++ && export CC=/usr/bin/clang ';
   local platform_map = {
     'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
@@ -114,7 +112,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'centos:7' || platform == 'rockylinux:8') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == 'develop') then branch else 'develop-6',
+  local regression_ref = 'develop',
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
   local regression_tests = 'test000.sh,test001.sh',
   local branchp = if (branch == '**') then '' else branch,
@@ -269,7 +267,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'regression',
     depends_on: ['mtr'],
     image: 'docker:git',
-    [if (event == 'cron') then 'failure']: 'ignore',
+    //[if (event == 'cron') then 'failure']: 'ignore',
 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
@@ -304,6 +302,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
+      // list storage manager binary
+      'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
       'docker cp /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/',
       // check storage-manager unit test binary file
       'docker exec -t regression$${DRONE_BUILD_NUMBER} ls -l /storage-manager',
@@ -382,7 +382,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   dockerfile:: {
     name: 'dockerfile',
     depends_on: ['publish pkg'],
-    failure: 'ignore',
+    //failure: 'ignore',
     image: 'alpine/git',
     commands: [
       'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-skysql-columnstore-docker docker',
@@ -504,6 +504,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'sccache --show-stats',
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
+               // list storage manager binary
+               'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
            {
@@ -584,10 +586,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', ['develop', p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', ['develop', p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop) +
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'amd64', '10.6-enterprise']), platforms['develop-6']) +
-              std.map(function(p) std.join(' ', ['develop-6', p, event, 'arm64', '10.6-enterprise']), platforms_arm['develop-6']),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
 
