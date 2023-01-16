@@ -140,8 +140,10 @@ extern "C"
     std::string pstr(parameter);
     boost::algorithm::to_lower(pstr);
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     idbassert(ci != 0);
@@ -241,8 +243,10 @@ extern "C"
       const char* mcsgetstats(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -318,8 +322,10 @@ extern "C"
 #endif
       long long mcssettrace(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -550,8 +556,10 @@ extern "C"
   {
     THD* thd = current_thd;
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     execplan::CalpontSystemCatalog::TableName tableName;
@@ -657,8 +665,10 @@ extern "C"
       const char* mcscleartablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                     char* is_null, char* error)
   {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     long long lockID = *reinterpret_cast<long long*>(args->args[0]);
@@ -921,8 +931,10 @@ extern "C"
       }
     }
 
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -1083,8 +1095,10 @@ extern "C"
       const char* mcsgetsqlcount(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                  char* is_null, char* error)
   {
-    if (get_fe_conn_info_ptr() == NULL)
+    if (get_fe_conn_info_ptr() == NULL) {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     idbassert(ci != 0);
