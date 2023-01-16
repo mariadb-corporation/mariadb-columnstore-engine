@@ -38,11 +38,12 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     {
       case execplan::CalpontSystemCatalog::TINYINT:
       {
-        using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UTINYINT>::type;
         const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::TINYINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-        *pos++ = static_cast<uint8_t>(isNotNull);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
         std::memcpy(pos, valueBuf, columnWidth);
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80;
@@ -53,11 +54,12 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
 
       case execplan::CalpontSystemCatalog::SMALLINT:
       {
-        using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
         const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::SMALLINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-        *pos++ = static_cast<uint8_t>(isNotNull);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
         std::memcpy(pos, valueBuf, columnWidth);
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000;
@@ -71,7 +73,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::INTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-        *pos++ = static_cast<uint8_t>(isNotNull);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
         std::memcpy(pos, valueBuf, columnWidth);
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80000000;
@@ -86,7 +88,67 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-        *pos++ = static_cast<uint8_t>(isNotNull);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+        std::memcpy(pos, valueBuf, columnWidth);
+        StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+        *valPtr ^= 0x8000000000000000;
+        *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
+        pos += columnWidth;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::UTINYINT:
+      {
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UTINYINT>::type;
+        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UTINYINTNULL);
+        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+        std::memcpy(pos, valueBuf, columnWidth);
+        StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+        *valPtr ^= 0x80;
+        *valPtr = (isDsc) ? ~*valPtr : *valPtr;
+        pos += columnWidth;
+        break;
+      }
+
+      case execplan::CalpontSystemCatalog::USMALLINT:
+      {
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::USMALLINT>::type;
+        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::USMALLINTNULL);
+        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+        std::memcpy(pos, valueBuf, columnWidth);
+        StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+        *valPtr ^= 0x8000;
+        *valPtr = (isDsc) ? ~htons(*valPtr) : htons(*valPtr);
+        pos += columnWidth;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::UINT:
+      {
+        using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UINT>::type;
+        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UINTNULL);
+        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+        std::memcpy(pos, valueBuf, columnWidth);
+        StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+        *valPtr ^= 0x80000000;
+        *valPtr = (isDsc) ? ~htonl(*valPtr) : htonl(*valPtr);
+        pos += columnWidth;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::UBIGINT:
+      {
+        using StorageType =
+            datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UBIGINT>::type;
+        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UBIGINTNULL);
+        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
         std::memcpy(pos, valueBuf, columnWidth);
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000000000000000;
@@ -110,7 +172,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
           // No difference b/w VARCHAR, CHAR and TEXT types yet
           value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
               columnId, p.rowID);
-          *pos++ = 1;
+          *pos++ = (isDsc) ? 0 : 1;
           keyWidth = rg.getStringTableThreshold();
           // std::memset(pos, 0, rg.getStringTableThreshold());
           // std::cout << "KeyType ctor flags " << flags << std::endl;
@@ -127,7 +189,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
           // No difference b/w VARCHAR, CHAR and TEXT types yet
           value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
               columnId, p.rowID);
-          *pos++ = 1;
+          *pos++ = (isDsc) ? 0 : 1;
           // std::memset(pos, 0, columnWidth);
           // // std::cout << "KeyType ctor flags " << flags << std::endl;
           // // WIP Hardcode
@@ -147,7 +209,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
                   datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
                   columnId, p.rowID);
-              *pos++ = 1;
+              *pos++ = (isDsc) ? 0 : 1;
               // std::memset(pos, 0, columnWidth);
               // // std::cout << "KeyType ctor flags " << flags << std::endl;
               // // WIP Hardcode
@@ -166,8 +228,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
                             columnId, p.rowID)
                           .rtrimZero();
-              value.rtrimZero();
-              *pos++ = 1;
+              *pos++ = (isDsc) ? 0 : 1;
               break;
             };
 
@@ -178,8 +239,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
                             columnId, p.rowID)
                           .rtrimZero();
-              value.rtrimZero();
-              *pos++ = 1;
+              *pos++ = (isDsc) ? 0 : 1;
               // std::memset(pos, 0, columnWidth);
               // // std::cout << "KeyType ctor flags " << fls.rtrimZero()ags << std::endl;
               // // WIP Hardcode
@@ -197,7 +257,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
                             columnId, p.rowID)
                           .rtrimZero();
-              *pos++ = 1;
+              *pos++ = (isDsc) ? 0 : 1;
               // std::memset(pos, 0, keyWidth);
               // [[maybe_unused]] size_t nActualWeights =
               //     cs.strnxfrm(pos, keyWidth, keyWidth, reinterpret_cast<const uchar*>(value.str()),
@@ -221,7 +281,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         }
         else
         {
-          pos += nActualWeights;
+          pos = end;
         }
       }
       default: break;
@@ -278,25 +338,19 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
   int32_t cmpResult = 0;
   const uint32_t stringThreshold = rg.getStringTableThreshold();
   bool longString = false;
-  bool isDsc = false;
   for (size_t i = 0; !cmpResult && i <= colsNumber; ++i)
   {
     if (i < colsNumber)
     {
       auto [columnId, isDscLocal] = colsAndDirection[i];
-      ++r_offset;
+      ++r_offset;  // NULL byte
       if (widths[columnId] <= stringThreshold)
       {
         r_offset += widths[columnId];
-        longString = false;
         continue;
       }
-      else
-      {
-        r_offset += stringThreshold;
-        longString = true;
-        isDsc = isDscLocal;
-      }
+      r_offset += stringThreshold;
+      longString = true;
     }
     // std::cout << "less pos left " << std::hex << (uint64_t)(key_ + l_offset) << " pos right "
     //           << (uint64_t)(r.key_ + l_offset) << std::endl;
@@ -307,7 +361,7 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
       // std::cout << "less on long strings " << std::endl;
       using StorageType = utils::ConstString;
       using EncodedKeyType = StorageType;
-      auto [columnId, isAsc] = colsAndDirection[i];
+      auto [columnId, isDsc] = colsAndDirection[i];
       rg.setData(&(prevPhaseSorting[leftP.threadID]->getRGDatas()[leftP.rgdataID]));
       auto leftV = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
           columnId, leftP.rowID);
