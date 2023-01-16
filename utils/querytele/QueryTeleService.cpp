@@ -844,12 +844,12 @@ void QueryTeleServiceProcessor::process_postImport(int32_t seqid,
   }
 }
 
-::boost::shared_ptr< ::apache::thrift::TProcessor> QueryTeleServiceProcessorFactory::getProcessor(
+::std::shared_ptr< ::apache::thrift::TProcessor> QueryTeleServiceProcessorFactory::getProcessor(
     const ::apache::thrift::TConnectionInfo& connInfo)
 {
   ::apache::thrift::ReleaseHandler<QueryTeleServiceIfFactory> cleanup(handlerFactory_);
-  ::boost::shared_ptr<QueryTeleServiceIf> handler(handlerFactory_->getHandler(connInfo), cleanup);
-  ::boost::shared_ptr< ::apache::thrift::TProcessor> processor(new QueryTeleServiceProcessor(handler));
+  ::std::shared_ptr<QueryTeleServiceIf> handler(handlerFactory_->getHandler(connInfo), cleanup);
+  ::std::shared_ptr< ::apache::thrift::TProcessor> processor(new QueryTeleServiceProcessor(handler));
   return processor;
 }
 }  // namespace querytele
