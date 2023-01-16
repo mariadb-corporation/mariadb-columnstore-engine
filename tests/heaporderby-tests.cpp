@@ -30,6 +30,7 @@
 #include "conststring.h"
 #include "dbcon/joblist/heaporderby.h"
 #include "jlf_common.h"
+#include "joblisttypes.h"
 #include "pdqorderby.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
@@ -93,7 +94,6 @@ rowgroup::RowGroup setupRG(const std::vector<execplan::CalpontSystemCatalog::Col
   );
 }
 
-// integral type, col type, NULL value, socket numbers
 class KeyTypeTestInt64 : public testing::Test
 {
  public:
@@ -190,7 +190,8 @@ TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64Asc)
 
 TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64Dsc)
 {
-  keysCols_ = {{0, true}};
+  const bool isDsc = true;
+  keysCols_ = {{0, isDsc}};
   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
   uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
@@ -199,7 +200,7 @@ TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64Dsc)
     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     if (i != 42)
     {
-      expected[0] = 1;
+      expected[0] = (isDsc) ? 0 : 1;
       int64_t* v = reinterpret_cast<int64_t*>(&expected[1]);
       if (i == 8190)
       {
@@ -225,7 +226,7 @@ TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64Dsc)
     }
     else
     {
-      expected[0] = 0;
+      expected[0] = (isDsc) ? 1 : 0;
       ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
     }
   }
@@ -276,7 +277,8 @@ TEST_F(KeyTypeTestInt64, KeyTypeLessInt64Asc)
 
 TEST_F(KeyTypeTestInt64, KeyTypeLessInt64Dsc)
 {
-  keysCols_ = {{0, true}};
+  const bool isDsc = true;
+  keysCols_ = {{0, isDsc}};
   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
   uint8_t* key1Buf = new uint8_t[bufUnitSize];
   uint8_t* key2Buf = new uint8_t[bufUnitSize];
@@ -312,20 +314,74 @@ TEST_F(KeyTypeTestInt64, KeyTypeLessInt64Dsc)
   ASSERT_TRUE(key5.less(key6_, rg_, keysCols_));
   ASSERT_FALSE(key6.less(key5_, rg_, keysCols_));
 
-  ASSERT_TRUE(key1.less(key3, rg_, keysCols_));
-  ASSERT_TRUE(key1.less(key5, rg_, keysCols_));
-  ASSERT_FALSE(key4.less(key1, rg_, keysCols_));
-  ASSERT_FALSE(key5.less(key1, rg_, keysCols_));
+  ASSERT_FALSE(key1.less(key3, rg_, keysCols_));
+  ASSERT_FALSE(key1.less(key5, rg_, keysCols_));
+  ASSERT_TRUE(key4.less(key1, rg_, keysCols_));
+  ASSERT_TRUE(key5.less(key1, rg_, keysCols_));
 }
 
-// intXX_t key
-// uintXX_t key
-// no temporal b/c they are int equivalents
 // float, double key
 // decimal
 // wide decimal
-// ConstString: < 8 byte, 8 < len < StringThreshold, len < StringThreshold
-// Mixed
+
+class KeyTypeTestFloat : public testing::Test
+{
+ public:
+  void SetUp() override
+  {
+    keysCols_ = {{0, false}};
+    rg_ = setupRG({execplan::CalpontSystemCatalog::FLOAT}, {4}, {8});
+    rgData_ = rowgroup::RGData(rg_);
+    rg_.setData(&rgData_);
+    rowgroup::Row r;
+    rg_.initRow(&r);
+    uint32_t rowSize = r.getSize();
+    rg_.getRow(0, &r);
+    for (int64_t i = 0; i < rowgroup::rgCommonSize; ++i)  // Worst case scenario for PQ
+    {
+      if (i == 42)
+      {
+        r.setUintField<4>(joblist::FLOATNULL, 0);
+        r.nextRow(rowSize);
+      }
+      else if (i == 8191)
+      {
+        r.setFloatField(-3891607892.0, 0);
+        r.nextRow(rowSize);
+      }
+      else if (i == 8190)
+      {
+        r.setFloatField(-3004747259.0, 0);
+        r.nextRow(rowSize);
+      }
+      else
+      {
+        if (i > 4000)
+        {
+          r.setFloatField(-i, 0);
+          r.nextRow(rowSize);
+        }
+        else
+        {
+          r.setFloatField(i, 0);
+          r.nextRow(rowSize);
+        }
+      }
+    }
+  }
+
+  joblist::OrderByKeysType keysCols_;
+  rowgroup::RowGroup rg_;
+  rowgroup::RGData rgData_;
+};
+
+TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatAsc)
+{
+  size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
+  [[maybe_unused]] uint8_t* expected = new uint8_t[bufUnitSize];
+  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
+  // 0, 123123123.123123 vs 321321321.321321
+}
 
 const constexpr execplan::CalpontSystemCatalog::ColDataType SignedCTs[] = {
     execplan::CalpontSystemCatalog::TINYINT,  execplan::CalpontSystemCatalog::TINYINT,
@@ -334,12 +390,12 @@ const constexpr execplan::CalpontSystemCatalog::ColDataType SignedCTs[] = {
     execplan::CalpontSystemCatalog::INT,      execplan::CalpontSystemCatalog::INT,
     execplan::CalpontSystemCatalog::BIGINT};
 
-// const constexpr execplan::CalpontSystemCatalog::ColDataType SignedNULLs[] = {
-//     execplan::CalpontSystemCatalog::TINYINT,  execplan::CalpontSystemCatalog::TINYINT,
-//     execplan::CalpontSystemCatalog::SMALLINT, execplan::CalpontSystemCatalog::SMALLINT,
-//     execplan::CalpontSystemCatalog::INT,      execplan::CalpontSystemCatalog::INT,
-//     execplan::CalpontSystemCatalog::INT,      execplan::CalpontSystemCatalog::INT,
-//     execplan::CalpontSystemCatalog::BIGINT};
+const constexpr execplan::CalpontSystemCatalog::ColDataType USignedCTs[] = {
+    execplan::CalpontSystemCatalog::UTINYINT,  execplan::CalpontSystemCatalog::UTINYINT,
+    execplan::CalpontSystemCatalog::USMALLINT, execplan::CalpontSystemCatalog::USMALLINT,
+    execplan::CalpontSystemCatalog::UINT,      execplan::CalpontSystemCatalog::UINT,
+    execplan::CalpontSystemCatalog::UINT,      execplan::CalpontSystemCatalog::UINT,
+    execplan::CalpontSystemCatalog::UBIGINT};
 
 template <typename T>
 class KeyTypeTestIntT : public testing::Test
@@ -451,8 +507,9 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorAsc)
 
 TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
 {
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
   using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
-  this->keysCols_ = {{0, true}};
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
   uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
@@ -462,7 +519,8 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
     auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     if (i != 42)
     {
-      expected[0] = 1;
+      expected[0] = (isDsc) ? 0 : 1;
+      ;
       T* v = reinterpret_cast<T*>(&expected[1]);
       if (sizeof(T) == 8 && i == 8190)
       {
@@ -495,7 +553,7 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
     }
     else
     {
-      expected[0] = 0;
+      expected[0] = (isDsc) ? 1 : 0;
       ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
     }
   }
@@ -545,49 +603,297 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeLessAsc)
   ASSERT_FALSE(key5.less(key1, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 42, 0}, prevPhaseSorting));
 }
 
-// TEST_F(KeyTypeTestInt64, KeyTypeLessInt64Dsc123)
-// {
-//   keysCols_ = {{0, true}};
-//   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
-//   uint8_t* key1Buf = new uint8_t[bufUnitSize];
-//   uint8_t* key2Buf = new uint8_t[bufUnitSize];
-//   std::memset(key1Buf, 0, bufUnitSize);
-//   std::memset(key2Buf, 0, bufUnitSize);
-//   auto key1 = KeyType(rg_, keysCols_, {0, 42, 0}, key1Buf);
-//   auto key2 = KeyType(rg_, keysCols_, {0, 42, 0}, key2Buf);
-//   ASSERT_FALSE(key1.less(key2, rg_, keysCols_));
-//   ASSERT_FALSE(key2.less(key1, rg_, keysCols_));
+template <typename T>
+class KeyTypeTestUIntT : public testing::Test
+{
+ public:
+  using IntegralType = T;
 
-//   uint8_t* key3Buf = new uint8_t[bufUnitSize];
-//   uint8_t* key4Buf = new uint8_t[bufUnitSize];
-//   std::memset(key3Buf, 0, bufUnitSize);
-//   std::memset(key4Buf, 0, bufUnitSize);
-//   auto key3 = KeyType(rg_, keysCols_, {0, 4, 0}, key3Buf);
-//   auto key4 = KeyType(rg_, keysCols_, {0, 5, 0}, key4Buf);
-//   ASSERT_FALSE(key3.less(key4, rg_, keysCols_));
-//   ASSERT_TRUE(key4.less(key3, rg_, keysCols_));
+  joblist::OrderByKeysType keysCols_;
+  rowgroup::RowGroup rg_;
+  rowgroup::RGData rgData_;
 
-//   uint8_t* key5Buf = new uint8_t[bufUnitSize];
-//   uint8_t* key6Buf = new uint8_t[bufUnitSize];
-//   std::memset(key5Buf, 0, bufUnitSize);
-//   std::memset(key6Buf, 0, bufUnitSize);
-//   auto key5 = KeyType(rg_, keysCols_, {0, 4001, 0}, key5Buf);
-//   auto key6 = KeyType(rg_, keysCols_, {0, 4002, 0}, key6Buf);
-//   ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
+  void SetUp() override
+  {
+    keysCols_ = {{0, false}};
+    rg_ = setupRG({USignedCTs[sizeof(T)]}, {sizeof(T)}, {8});
+    rgData_ = rowgroup::RGData(rg_);
+    rg_.setData(&rgData_);
+    rowgroup::Row r;
+    rg_.initRow(&r);
+    uint32_t rowSize = r.getSize();
+    rg_.getRow(0, &r);
+    for (int64_t i = 0; i < rowgroup::rgCommonSize; ++i)  // Worst case scenario for PQ
+    {
+      if (i == 42)
+      {
+        r.setIntField<sizeof(T)>(sorting::getNullValue<T, T>(USignedCTs[sizeof(T)]), 0);
+        r.nextRow(rowSize);
+      }
+      else if (sizeof(T) == 8 && i == 8191)
+      {
+        r.setIntField<sizeof(T)>(3004747259, 0);
+        r.nextRow(rowSize);
+      }
+      else if (sizeof(T) == 8 && i == 8190)
+      {
+        r.setIntField<sizeof(T)>(3891607892, 0);
+        r.nextRow(rowSize);
+      }
+      else
+      {
+        r.setIntField<sizeof(T)>(i, 0);
+        r.nextRow(rowSize);
+      }
+    }
+  }
+};
 
-//   std::memset(key5Buf, 0, bufUnitSize);
-//   std::memset(key6Buf, 0, bufUnitSize);
-//   auto key5_ = KeyType(rg_, keysCols_, {0, 8190, 0}, key5Buf);
-//   auto key6_ = KeyType(rg_, keysCols_, {0, 8191, 0}, key6Buf);
-//   ASSERT_TRUE(key5.less(key6_, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key5_, rg_, keysCols_));
+using KeyTypeUIntTypes = ::testing::Types<uint64_t, uint32_t, uint16_t, uint8_t>;
+TYPED_TEST_SUITE(KeyTypeTestUIntT, KeyTypeUIntTypes);
 
-//   ASSERT_TRUE(key1.less(key3, rg_, keysCols_));
-//   ASSERT_TRUE(key1.less(key5, rg_, keysCols_));
-//   ASSERT_FALSE(key4.less(key1, rg_, keysCols_));
-//   ASSERT_FALSE(key5.less(key1, rg_, keysCols_));
-// }
+TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorAsc)
+{
+  using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
+  size_t upperBound = (sizeof(T) == 1) ? 127 : rowgroup::rgCommonSize;
+  for (size_t i = 0; i < upperBound; ++i)
+  {
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    if (i != 42)
+    {
+      expected[0] = 1;
+      T* v = reinterpret_cast<T*>(&expected[1]);
+      if (sizeof(T) == 8 && i == 8190)
+      {
+        *v = 3891607892;
+      }
+      else if (sizeof(T) == 8 && i == 8191)
+      {
+        *v = 3004747259;
+      }
+      else
+      {
+        *v = i;
+      }
+      *v ^= 1ULL << (sizeof(T) * 8 - 1);
+      switch (sizeof(T))
+      {
+        case (8): *v = htonll(*v); break;
+        case (4): *v = htonl(*v); break;
+        case (2): *v = htons(*v); break;
+        case (1): *v = *v; break;
+        default: break;
+      }
+      // *v = htonll(*v);
+      ASSERT_FALSE(key.key() == nullptr);
+      ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+    }
+    else
+    {
+      expected[0] = 0;
+      ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
+    }
+  }
+}
+
+TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorDsc)
+{
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
+  size_t upperBound = (sizeof(T) == 1) ? 127 : rowgroup::rgCommonSize;
+  for (size_t i = 0; i < upperBound; ++i)
+  {
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    if (i != 42)
+    {
+      expected[0] = (isDsc) ? 0 : 1;
+      T* v = reinterpret_cast<T*>(&expected[1]);
+      if (sizeof(T) == 8 && i == 8190)
+      {
+        *v = 3891607892;
+      }
+      else if (sizeof(T) == 8 && i == 8191)
+      {
+        *v = 3004747259;
+      }
+      else
+      {
+        *v = i;
+      }
+      *v ^= 1ULL << (sizeof(T) * 8 - 1);
+      switch (sizeof(T))
+      {
+        case (8): *v = ~htonll(*v); break;
+        case (4): *v = ~htonl(*v); break;
+        case (2): *v = ~htons(*v); break;
+        case (1): *v = ~*v; break;
+        default: break;
+      }
+      ASSERT_FALSE(key.key() == nullptr);
+      ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+    }
+    else
+    {
+      expected[0] = (isDsc) ? 1 : 0;
+      ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
+    }
+  }
+}
+
+TYPED_TEST(KeyTypeTestUIntT, KeyTypeLessAsc)
+{
+  using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* key1Buf = new uint8_t[bufUnitSize];
+  uint8_t* key2Buf = new uint8_t[bufUnitSize];
+  std::memset(key1Buf, 0, bufUnitSize);
+  std::memset(key2Buf, 0, bufUnitSize);
+  auto key1 = KeyType(this->rg_, this->keysCols_, {0, 42, 0}, key1Buf);
+  auto key2 = KeyType(this->rg_, this->keysCols_, {0, 42, 0}, key2Buf);
+  ASSERT_FALSE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key2.less(key1, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  uint8_t* key3Buf = new uint8_t[bufUnitSize];
+  uint8_t* key4Buf = new uint8_t[bufUnitSize];
+  std::memset(key3Buf, 0, bufUnitSize);
+  std::memset(key4Buf, 0, bufUnitSize);
+  auto key3 = KeyType(this->rg_, this->keysCols_, {0, 4, 0}, key3Buf);
+  auto key4 = KeyType(this->rg_, this->keysCols_, {0, 5, 0}, key4Buf);
+  ASSERT_TRUE(key3.less(key4, this->rg_, this->keysCols_, {0, 4, 0}, {0, 5, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key4.less(key3, this->rg_, this->keysCols_, {0, 5, 0}, {0, 4, 0}, prevPhaseSorting));
+
+  uint8_t* key5Buf = new uint8_t[bufUnitSize];
+  uint8_t* key6Buf = new uint8_t[bufUnitSize];
+  std::memset(key5Buf, 0, bufUnitSize);
+  std::memset(key6Buf, 0, bufUnitSize);
+  auto key5 = KeyType(this->rg_, this->keysCols_, {0, 4001, 0}, key5Buf);
+  auto key6 = KeyType(this->rg_, this->keysCols_, {0, 4002, 0}, key6Buf);
+  ASSERT_TRUE(key5.less(key6, this->rg_, this->keysCols_, {0, 4001, 0}, {0, 4002, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key6.less(key5, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 4001, 0}, prevPhaseSorting));
+
+  uint8_t* key7Buf = new uint8_t[bufUnitSize];
+  uint8_t* key8Buf = new uint8_t[bufUnitSize];
+  std::memset(key7Buf, 0, bufUnitSize);
+  std::memset(key8Buf, 0, bufUnitSize);
+  auto key7 = KeyType(this->rg_, this->keysCols_, {0, 8190, 0}, key7Buf);
+  auto key8 = KeyType(this->rg_, this->keysCols_, {0, 8191, 0}, key8Buf);
+  if (sizeof(T) == 1)
+  {
+    ASSERT_TRUE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_FALSE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+  else if (sizeof(T) == 8)
+  {
+    ASSERT_FALSE(key7.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_TRUE(key8.less(key7, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_TRUE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_TRUE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+  else
+  {
+    ASSERT_TRUE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_TRUE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+
+  ASSERT_TRUE(key1.less(key3, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4, 0}, prevPhaseSorting));
+  ASSERT_TRUE(key1.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key4.less(key1, this->rg_, this->keysCols_, {0, 4001, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key5.less(key1, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  // Permuts are not important
+  ASSERT_FALSE(key1.less(key1, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key2.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key3.less(key3, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key4.less(key4, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key5.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key6.less(key6, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
+
+TYPED_TEST(KeyTypeTestUIntT, KeyTypeLessDsc)
+{
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* key1Buf = new uint8_t[bufUnitSize];
+  uint8_t* key2Buf = new uint8_t[bufUnitSize];
+  std::memset(key1Buf, 0, bufUnitSize);
+  std::memset(key2Buf, 0, bufUnitSize);
+  auto key1 = KeyType(this->rg_, this->keysCols_, {0, 42, 0}, key1Buf);
+  auto key2 = KeyType(this->rg_, this->keysCols_, {0, 42, 0}, key2Buf);
+  ASSERT_FALSE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key2.less(key1, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  uint8_t* key3Buf = new uint8_t[bufUnitSize];
+  uint8_t* key4Buf = new uint8_t[bufUnitSize];
+  std::memset(key3Buf, 0, bufUnitSize);
+  std::memset(key4Buf, 0, bufUnitSize);
+  auto key3 = KeyType(this->rg_, this->keysCols_, {0, 4, 0}, key3Buf);
+  auto key4 = KeyType(this->rg_, this->keysCols_, {0, 5, 0}, key4Buf);
+  ASSERT_FALSE(key3.less(key4, this->rg_, this->keysCols_, {0, 4, 0}, {0, 5, 0}, prevPhaseSorting));
+  ASSERT_TRUE(key4.less(key3, this->rg_, this->keysCols_, {0, 5, 0}, {0, 4, 0}, prevPhaseSorting));
+
+  uint8_t* key5Buf = new uint8_t[bufUnitSize];
+  uint8_t* key6Buf = new uint8_t[bufUnitSize];
+  std::memset(key5Buf, 0, bufUnitSize);
+  std::memset(key6Buf, 0, bufUnitSize);
+  auto key5 = KeyType(this->rg_, this->keysCols_, {0, 4001, 0}, key5Buf);
+  auto key6 = KeyType(this->rg_, this->keysCols_, {0, 4002, 0}, key6Buf);
+  ASSERT_FALSE(key5.less(key6, this->rg_, this->keysCols_, {0, 4001, 0}, {0, 4002, 0}, prevPhaseSorting));
+  ASSERT_TRUE(key6.less(key5, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 4001, 0}, prevPhaseSorting));
+
+  uint8_t* key7Buf = new uint8_t[bufUnitSize];
+  uint8_t* key8Buf = new uint8_t[bufUnitSize];
+  std::memset(key7Buf, 0, bufUnitSize);
+  std::memset(key8Buf, 0, bufUnitSize);
+  auto key7 = KeyType(this->rg_, this->keysCols_, {0, 8190, 0}, key7Buf);
+  auto key8 = KeyType(this->rg_, this->keysCols_, {0, 8191, 0}, key8Buf);
+  if (sizeof(T) == 1)
+  {
+    ASSERT_FALSE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_TRUE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+  else if (sizeof(T) == 8)
+  {
+    ASSERT_TRUE(key7.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_FALSE(key8.less(key7, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_FALSE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_FALSE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+  else
+  {
+    ASSERT_FALSE(key5.less(key8, this->rg_, this->keysCols_, {0, 8190, 0}, {0, 8191, 0}, prevPhaseSorting));
+    ASSERT_FALSE(key6.less(key7, this->rg_, this->keysCols_, {0, 8191, 0}, {0, 8190, 0}, prevPhaseSorting));
+  }
+
+  ASSERT_FALSE(key1.less(key3, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(key1.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
+  ASSERT_TRUE(key4.less(key1, this->rg_, this->keysCols_, {0, 4001, 0}, {0, 42, 0}, prevPhaseSorting));
+  printHexArray(key1.key(), key5.key(), bufUnitSize);
+  ASSERT_TRUE(key5.less(key1, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  // Permuts are not important
+  ASSERT_FALSE(key1.less(key3, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key1.less(key4, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key1.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key1.less(key6, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(key1.less(key1, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key2.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key3.less(key3, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key4.less(key4, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key5.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(key6.less(key6, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
 
 // class MyTestSuite : public testing::TestWithParam<int>
 // {
@@ -671,7 +977,6 @@ TEST_P(KeyTypeTestVarcharP, KeyTypeCtorVarchar)
   uint flags = (charsetInfo->state & MY_CS_NOPAD) ? 0 : cs.getDefaultFlags();
   for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
   {
-    // std::cout << "s " << s.str() << std::endl;
     uint8_t* pos = expected;
     uint nweights = s.length();
     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
@@ -878,6 +1183,13 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharPadAsc)
   auto key5 = KeyType(rg_, keysCols_, {0, 5, 0}, key5Buf);
   auto key6 = KeyType(rg_, keysCols_, {0, 6, 0}, key6Buf);
 
+  ASSERT_FALSE(key1.less(key1, rg_, keysCols_, {0, 1, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key2, rg_, keysCols_, {0, 2, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key3, rg_, keysCols_, {0, 3, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key4, rg_, keysCols_, {0, 4, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key5, rg_, keysCols_, {0, 5, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 6, 0}, {0, 6, 0}, prevPhasThreads_));
+
   ASSERT_TRUE(key0.less(key1, rg_, keysCols_, {0, 0, 0}, {0, 1, 0}, prevPhasThreads_));
   ASSERT_TRUE(key0.less(key2, rg_, keysCols_, {0, 0, 0}, {0, 2, 0}, prevPhasThreads_));
   ASSERT_TRUE(key0.less(key3, rg_, keysCols_, {0, 0, 0}, {0, 3, 0}, prevPhasThreads_));
@@ -953,6 +1265,13 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharPadDsc)
   auto key5 = KeyType(rg_, keysCols_, {0, 5, 0}, key5Buf);
   auto key6 = KeyType(rg_, keysCols_, {0, 6, 0}, key6Buf);
 
+  ASSERT_FALSE(key1.less(key1, rg_, keysCols_, {0, 1, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key2, rg_, keysCols_, {0, 2, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key3, rg_, keysCols_, {0, 3, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key4, rg_, keysCols_, {0, 4, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key5, rg_, keysCols_, {0, 5, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 6, 0}, {0, 6, 0}, prevPhasThreads_));
+
   ASSERT_FALSE(key0.less(key1, rg_, keysCols_, {0, 0, 0}, {0, 1, 0}, prevPhasThreads_));
   ASSERT_FALSE(key0.less(key2, rg_, keysCols_, {0, 0, 0}, {0, 2, 0}, prevPhasThreads_));
   ASSERT_FALSE(key0.less(key3, rg_, keysCols_, {0, 0, 0}, {0, 3, 0}, prevPhasThreads_));
@@ -973,9 +1292,6 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharPadDsc)
   ASSERT_FALSE(key2.less(key5, rg_, keysCols_, {0, 2, 0}, {0, 5, 0}, prevPhasThreads_));
   ASSERT_FALSE(key2.less(key6, rg_, keysCols_, {0, 2, 0}, {0, 6, 0}, prevPhasThreads_));
 
-  // printHexArray(key1.key(), key6.key(), bufUnitSize);
-  // the next less iterates twice comparing keys not once
-  // TBD check the Asc that must also return false WIP
   ASSERT_FALSE(key1.less(key6, rg_, keysCols_, {0, 1, 0}, {0, 6, 0}, prevPhasThreads_));
   ASSERT_TRUE(key3.less(key6, rg_, keysCols_, {0, 3, 0}, {0, 6, 0}, prevPhasThreads_));
   ASSERT_TRUE(key4.less(key6, rg_, keysCols_, {0, 4, 0}, {0, 6, 0}, prevPhasThreads_));
@@ -1028,6 +1344,13 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharNoPadAsc)
   auto key4 = KeyType(rg_, keysCols_, {0, 4, 0}, key4Buf);
   auto key5 = KeyType(rg_, keysCols_, {0, 5, 0}, key5Buf);
   auto key6 = KeyType(rg_, keysCols_, {0, 6, 0}, key6Buf);
+
+  ASSERT_FALSE(key1.less(key1, rg_, keysCols_, {0, 1, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key2, rg_, keysCols_, {0, 2, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key3, rg_, keysCols_, {0, 3, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key4, rg_, keysCols_, {0, 4, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key5, rg_, keysCols_, {0, 5, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 6, 0}, {0, 6, 0}, prevPhasThreads_));
 
   ASSERT_TRUE(key0.less(key1, rg_, keysCols_, {0, 0, 0}, {0, 1, 0}, prevPhasThreads_));
   ASSERT_TRUE(key0.less(key2, rg_, keysCols_, {0, 0, 0}, {0, 2, 0}, prevPhasThreads_));
@@ -1103,6 +1426,13 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharNoPadDsc)
   auto key4 = KeyType(rg_, keysCols_, {0, 4, 0}, key4Buf);
   auto key5 = KeyType(rg_, keysCols_, {0, 5, 0}, key5Buf);
   auto key6 = KeyType(rg_, keysCols_, {0, 6, 0}, key6Buf);
+
+  ASSERT_FALSE(key1.less(key1, rg_, keysCols_, {0, 1, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key2, rg_, keysCols_, {0, 2, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key3, rg_, keysCols_, {0, 3, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key4, rg_, keysCols_, {0, 4, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key5, rg_, keysCols_, {0, 5, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 6, 0}, {0, 6, 0}, prevPhasThreads_));
 
   ASSERT_FALSE(key0.less(key1, rg_, keysCols_, {0, 0, 0}, {0, 1, 0}, prevPhasThreads_));
   ASSERT_FALSE(key0.less(key2, rg_, keysCols_, {0, 0, 0}, {0, 2, 0}, prevPhasThreads_));
@@ -1291,202 +1621,152 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadAsc)
   }
 }
 
-// TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
-// {
-//   // utf8_general_ci = 33, 'a' == 'a '
-//   bool isDsc = true;
-//   keysCols_ = {{0, isDsc}, {1, isDsc}};
-//   uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
-//   for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
-//            [&bufUnitSizeNoNull, this](const uint32_t width) {
-//              bufUnitSizeNoNull +=
-//                  (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
-//            });
-//   uint32_t nullBytesCount = rg_.getColWidths().size();
-//   uint32_t bufUnitSize = nullBytesCount + bufUnitSizeNoNull;
-//   [[maybe_unused]] uint8_t* expected = new uint8_t[bufUnitSize];
-//   [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
-//   auto* charsetInfo = &my_charset_utf8mb3_general_ci;
-//   rg_.setCharset(0, charsetInfo);
-//   datatypes::Charset cs(charsetInfo);
-//   rowgroup::Row r;
-//   rg_.initRow(&r);
-//   rg_.getRow(0, &r);
-//   uint32_t rowSize = r.getSize();
-//   [[maybe_unused]] uint flags = cs.getDefaultFlags();
-//   size_t varcharKeyLength = (rg_.getColumnWidth(0) <= rg_.getStringTableThreshold())
-//                                 ? rg_.getColumnWidth(0)
-//                                 : rg_.getStringTableThreshold();
-//   for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
-//   {
-//     std::cout << "s " << s.str() << std::endl;
-//     uint8_t* pos = expected;
-//     uint nweights = s.length();
-//     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
-//     memset(pos, 0, bufUnitSize);
-//     *pos++ = 1;
-//     size_t len = cs.strnxfrm(pos, varcharKeyLength, nweights, reinterpret_cast<const uchar*>(s.str()),
-//                              s.length(), flags);
-//     int64_t value = r.getIntField<8>(1);
-//     r.nextRow(rowSize);
-//     pos += len;
-//     *pos++ = 1;
-//     memcpy(pos, &value, sizeof(int64_t));
-//     int64_t* v = reinterpret_cast<int64_t*>(pos);
-//     *v ^= 0x8000000000000000;
-//     *v = ~htonll(*v);
-//     printHexArray(key.key(), expected, bufUnitSize);
-//     ASSERT_FALSE(key.key() == nullptr);
-//     ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
-//     ++i;
-//   }
-// }
+TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
+{
+  // utf8_general_ci = 33, 'a' == 'a '
+  const bool isDsc = true;
+  keysCols_ = {{0, isDsc}, {1, isDsc}};
+  uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
+  for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
+           [&bufUnitSizeNoNull, this](const uint32_t width) {
+             bufUnitSizeNoNull +=
+                 (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
+           });
+  uint32_t nullBytesCount = rg_.getColWidths().size();
+  uint32_t bufUnitSize = nullBytesCount + bufUnitSizeNoNull;
+  [[maybe_unused]] uint8_t* expected = new uint8_t[bufUnitSize];
+  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
+  auto* charsetInfo = &my_charset_utf8mb3_general_ci;
+  rg_.setCharset(0, charsetInfo);
+  datatypes::Charset cs(charsetInfo);
+  rowgroup::Row r;
+  rg_.initRow(&r);
+  rg_.getRow(0, &r);
+  uint32_t rowSize = r.getSize();
+  [[maybe_unused]] uint flags = cs.getDefaultFlags();
+  size_t varcharKeyLength = (rg_.getColumnWidth(0) <= rg_.getStringTableThreshold())
+                                ? rg_.getColumnWidth(0)
+                                : rg_.getStringTableThreshold();
+  for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
+  {
+    // std::cout << "s " << s.str() << std::endl;
+    uint8_t* pos = expected;
+    uint nweights = s.length();
+    auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    memset(pos, 0, bufUnitSize);
+    *pos++ = (isDsc) ? 0 : 1;  // 1st column NULL byte
+    size_t len = cs.strnxfrm(pos, varcharKeyLength, nweights, reinterpret_cast<const uchar*>(s.str()),
+                             s.length(), flags);
+    uint8_t* end = pos + len;
+    for (; pos < end; ++pos)
+    {
+      *pos = ~*pos;
+    }
+    *pos++ = (isDsc) ? 0 : 1;  // 2nd column NULL byte
+    int64_t value = r.getIntField<8>(1);
+    r.nextRow(rowSize);
+    memcpy(pos, &value, sizeof(int64_t));
+    int64_t* v = reinterpret_cast<int64_t*>(pos);
+    *v ^= 0x8000000000000000;
+    *v = ~htonll(*v);
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+    ++i;
+  }
+}
 
-// class KeyTypeTestVarchar : public testing::Test
-// {
-//  public:
-//   void SetUp() override
-//   {
-//     keysCols_ = {{0, false}};
-//     uint32_t stringMaxSize = 4;
-//     rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {33});
-//     rgData_ = rowgroup::RGData(rg_);
-//     rg_.setData(&rgData_);
-//     rowgroup::Row r;
-//     rg_.initRow(&r);
-//     uint32_t rowSize = r.getSize();
-//     rg_.getRow(0, &r);
-//     static constexpr const char str1[]{'a', '\t'};  // 'a\t'
-//     utils::ConstString cs1(str1, 2);
-//     strings_.push_back(cs1);
-//     static constexpr const char str2[]{'a'};  // 'a'
-//     utils::ConstString cs2(str2, 1);
-//     strings_.push_back(cs2);
-//     static constexpr const char str3[]{'a', ' '};  // 'a '
-//     utils::ConstString cs3(str3, 2);
-//     strings_.push_back(cs3);
-//     static constexpr const char str4[]{'a', 'z'};  // 'az'
-//     utils::ConstString cs4(str4, sizeof(str4));
-//     strings_.push_back(cs4);
-//     r.setStringField(cs1, 0);
-//     r.nextRow(rowSize);
-//     r.setStringField(cs2, 0);
-//     r.nextRow(rowSize);
-//     r.setStringField(cs3, 0);
-//     r.nextRow(rowSize);
-//     r.setStringField(cs4, 0);
-//     rg_.setRowCount(4);
-//   }
+TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadAscLess)
+{
+  // utf8_general_ci = 33, 'a' == 'a '
+  uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
+  for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
+           [&bufUnitSizeNoNull, this](const uint32_t width) {
+             bufUnitSizeNoNull +=
+                 (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
+           });
+  uint32_t nullBytesCount = rg_.getColWidths().size();
+  uint32_t bufUnitSize = nullBytesCount + bufUnitSizeNoNull;
+  [[maybe_unused]] uint8_t* expected = new uint8_t[bufUnitSize];
+  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
+  rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
+  uint8_t* key0Buf = new uint8_t[bufUnitSize];
+  uint8_t* key1Buf = new uint8_t[bufUnitSize];
+  uint8_t* key2Buf = new uint8_t[bufUnitSize];
+  uint8_t* key3Buf = new uint8_t[bufUnitSize];
+  uint8_t* key4Buf = new uint8_t[bufUnitSize];
+  uint8_t* key5Buf = new uint8_t[bufUnitSize];
+  uint8_t* key6Buf = new uint8_t[bufUnitSize];
 
-//   joblist::OrderByKeysType keysCols_;
-//   rowgroup::RowGroup rg_;
-//   rowgroup::RGData rgData_;
-//   std::vector<utils::ConstString> strings_;
-// };
+  auto key0 = KeyType(rg_, keysCols_, {0, 0, 0}, key0Buf);
+  auto key1 = KeyType(rg_, keysCols_, {0, 1, 0}, key1Buf);
+  auto key2 = KeyType(rg_, keysCols_, {0, 2, 0}, key2Buf);
+  auto key3 = KeyType(rg_, keysCols_, {0, 3, 0}, key3Buf);
+  auto key4 = KeyType(rg_, keysCols_, {0, 4, 0}, key4Buf);
+  auto key5 = KeyType(rg_, keysCols_, {0, 5, 0}, key5Buf);
+  auto key6 = KeyType(rg_, keysCols_, {0, 6, 0}, key6Buf);
 
-// TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarcharPad)
-// {
-//   // utf8_general_ci = 33, 'a' == 'a '
-//   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;  // NULL byte
-//   uint8_t* expected = new uint8_t[bufUnitSize];
-//   [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
-//   rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
-//   for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
-//   {
-//     std::cout << "s " << s.str() << std::endl;
-//     uint8_t* pos = expected;
-//     uint nweights = s.length();
-//     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
-//     *pos++ = 1;
-//     datatypes::Charset cs(&my_charset_utf8mb3_general_ci);
-//     cs.strnxfrm(pos, bufUnitSize - 1, nweights, reinterpret_cast<const uchar*>(s.str()), s.length(),
-//                 cs.getDefaultFlags());
-//     // TBD add DSC encoding swaping the bits
-//     ASSERT_FALSE(key.key() == nullptr);
-//     ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
-//     ++i;
-//   }
-// }
+  ASSERT_FALSE(key1.less(key1, rg_, keysCols_, {0, 1, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key2, rg_, keysCols_, {0, 2, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key3, rg_, keysCols_, {0, 3, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key4, rg_, keysCols_, {0, 4, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key5, rg_, keysCols_, {0, 5, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 6, 0}, {0, 6, 0}, prevPhasThreads_));
 
-// TEST_F(KeyTypeTestVarchar, KeyTypeCtorVarcharNoPad)
-// {
-//   // utf8_general_ci = 1057, 'a' != 'a '
-//   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;  // NULL byte
-//   uint8_t* expected = new uint8_t[bufUnitSize];
-//   [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * strings_.size()];
-//   rg_.setCharset(0, &my_charset_utf8mb3_general_nopad_ci);
-//   for ([[maybe_unused]] size_t i = 0; auto& s : strings_)
-//   {
-//     std::cout << "s " << s.str() << std::endl;
-//     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
-//     uint8_t* pos = expected;
-//     uint nweights = s.length();
-//     *pos++ = 1;
-//     memset(pos, 0, bufUnitSize - 1);
-//     datatypes::Charset cs(&my_charset_utf8mb3_general_nopad_ci);
-//     cs.strnxfrm(pos, bufUnitSize - 1, nweights, reinterpret_cast<const uchar*>(s.str()), s.length(), 0);
-//     // TBD add DSC encoding swaping the bits
-//     ASSERT_FALSE(key.key() == nullptr);
-//     ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
-//     ++i;
-//   }
-// }
+  ASSERT_TRUE(key0.less(key1, rg_, keysCols_, {0, 0, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key0.less(key2, rg_, keysCols_, {0, 0, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key0.less(key3, rg_, keysCols_, {0, 0, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key0.less(key4, rg_, keysCols_, {0, 0, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key0.less(key5, rg_, keysCols_, {0, 0, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key0.less(key6, rg_, keysCols_, {0, 0, 0}, {0, 6, 0}, prevPhasThreads_));
 
-// TEST_F(KeyTypeTestVarchar, KeyTypeLessVarcharPad)
-// {
-//   rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
-//   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
-//   // 1 and 2 are reserved for NULL comparison
+  ASSERT_FALSE(key1.less(key0, rg_, keysCols_, {0, 1, 0}, {0, 0, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key0, rg_, keysCols_, {0, 2, 0}, {0, 0, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key0, rg_, keysCols_, {0, 3, 0}, {0, 0, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key0, rg_, keysCols_, {0, 4, 0}, {0, 0, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key0, rg_, keysCols_, {0, 5, 0}, {0, 0, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key0, rg_, keysCols_, {0, 6, 0}, {0, 0, 0}, prevPhasThreads_));
 
-//   uint8_t* key3Buf = new uint8_t[bufUnitSize];
-//   uint8_t* key4Buf = new uint8_t[bufUnitSize];
-//   auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
-//   auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
-//   ASSERT_TRUE(key3.less(key4, rg_, keysCols_));
-//   ASSERT_FALSE(key4.less(key3, rg_, keysCols_));
+  ASSERT_TRUE(key2.less(key1, rg_, keysCols_, {0, 2, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key2.less(key3, rg_, keysCols_, {0, 2, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key2.less(key4, rg_, keysCols_, {0, 2, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key2.less(key5, rg_, keysCols_, {0, 2, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key2.less(key6, rg_, keysCols_, {0, 2, 0}, {0, 6, 0}, prevPhasThreads_));
 
-//   uint8_t* key5Buf = new uint8_t[bufUnitSize];
-//   auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
-//   ASSERT_FALSE(key4.less(key5, rg_, keysCols_));
-//   ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+  ASSERT_FALSE(key1.less(key6, rg_, keysCols_, {0, 1, 0}, {0, 6, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key3.less(key6, rg_, keysCols_, {0, 3, 0}, {0, 6, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key6, rg_, keysCols_, {0, 4, 0}, {0, 6, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key6, rg_, keysCols_, {0, 5, 0}, {0, 6, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key6, rg_, keysCols_, {0, 5, 0}, {0, 6, 0}, prevPhasThreads_));
 
-//   uint8_t* key6Buf = new uint8_t[bufUnitSize];
-//   auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
-//   ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
-//   ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
-//   ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
-// }
+  ASSERT_TRUE(key6.less(key3, rg_, keysCols_, {0, 6, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key6.less(key4, rg_, keysCols_, {0, 6, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key6.less(key5, rg_, keysCols_, {0, 6, 0}, {0, 5, 0}, prevPhasThreads_));
 
-// TEST_F(KeyTypeTestVarchar, KeyTypeLessVarcharNoPad)
-// {
-//   rg_.setCharset(0, &my_charset_utf8mb3_general_nopad_ci);
-//   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
-//   // 1 and 2 are reserved for NULL comparison
+  ASSERT_FALSE(key1.less(key6, rg_, keysCols_, {0, 1, 0}, {0, 6, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key6.less(key1, rg_, keysCols_, {0, 6, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key6.less(key2, rg_, keysCols_, {0, 6, 0}, {0, 2, 0}, prevPhasThreads_));
 
-//   uint8_t* key3Buf = new uint8_t[bufUnitSize];
-//   uint8_t* key4Buf = new uint8_t[bufUnitSize];
-//   auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
-//   auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
-//   ASSERT_FALSE(key3.less(key4, rg_, keysCols_));
-//   ASSERT_TRUE(key4.less(key3, rg_, keysCols_));
+  ASSERT_FALSE(key1.less(key2, rg_, keysCols_, {0, 1, 0}, {0, 2, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key1.less(key3, rg_, keysCols_, {0, 1, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key1.less(key4, rg_, keysCols_, {0, 1, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key1.less(key5, rg_, keysCols_, {0, 1, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key1.less(key6, rg_, keysCols_, {0, 1, 0}, {0, 6, 0}, prevPhasThreads_));
 
-//   uint8_t* key5Buf = new uint8_t[bufUnitSize];
-//   auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
-//   ASSERT_TRUE(key4.less(key5, rg_, keysCols_));
-//   ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+  ASSERT_FALSE(key3.less(key1, rg_, keysCols_, {0, 3, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key4.less(key1, rg_, keysCols_, {0, 4, 0}, {0, 1, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key1, rg_, keysCols_, {0, 5, 0}, {0, 1, 0}, prevPhasThreads_));
 
-//   uint8_t* key6Buf = new uint8_t[bufUnitSize];
-//   auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
-//   ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
-//   ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
-//   ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
-//   ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
-// }
+  ASSERT_TRUE(key4.less(key5, rg_, keysCols_, {0, 4, 0}, {0, 5, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key4.less(key3, rg_, keysCols_, {0, 4, 0}, {0, 3, 0}, prevPhasThreads_));
+
+  ASSERT_FALSE(key3.less(key4, rg_, keysCols_, {0, 3, 0}, {0, 4, 0}, prevPhasThreads_));
+  ASSERT_FALSE(key5.less(key4, rg_, keysCols_, {0, 5, 0}, {0, 4, 0}, prevPhasThreads_));
+
+  ASSERT_TRUE(key5.less(key3, rg_, keysCols_, {0, 5, 0}, {0, 3, 0}, prevPhasThreads_));
+  ASSERT_TRUE(key5.less(key3, rg_, keysCols_, {0, 5, 0}, {0, 3, 0}, prevPhasThreads_));
+
+  ASSERT_FALSE(key3.less(key5, rg_, keysCols_, {0, 3, 0}, {0, 5, 0}, prevPhasThreads_));
+}
 
 class HeapOrderByTest : public testing::Test
 {
