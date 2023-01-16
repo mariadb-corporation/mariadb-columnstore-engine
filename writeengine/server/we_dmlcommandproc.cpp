@@ -2457,7 +2457,6 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
 
   if (hasAUXCol)
   {
-    idbassert(auxColDBRootExtentInfo.size() == 1);
     colDBRootExtentInfo.insert(colDBRootExtentInfo.end(), auxColDBRootExtentInfo.begin(),
                                auxColDBRootExtentInfo.end());
   }
