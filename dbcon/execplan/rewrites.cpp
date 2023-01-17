@@ -1,5 +1,7 @@
 #include "rewrites.h"
 #include <typeinfo>
+#include "objectreader.h"
+
 
 namespace execplan
 {
@@ -164,8 +166,26 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
           (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
 }
 
+
+void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
+{
+#ifdef debug_rewrites
+  messageqcpp::ByteStream beforetree;
+  ObjectReader::writeParseTree(filters, beforetree);
+  std::ofstream before("/tmp/filters." + name + ".data");
+  before << beforetree;
+  std::string dotname = "/tmp/filters." + name +".dot";
+  filters->drawTree(dotname);
+  std::string dotInvoke = "dot -Tpng ";
+  std::string convert = dotInvoke + dotname + " -o " +  dotname + ".png";
+  [[maybe_unused]] auto _ = std::system(convert.c_str());
+#endif
+}
+
+
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree)
 {
+  dumpTreeFiles(tree, "before");
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
 
@@ -176,7 +196,10 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   details::removeFromTree(tree, common);
   // HACK WORKAROUND FOR case of two common nodes
   details::removeFromTree(tree, common);
-  return details::appendToRoot(tree, common);
+  auto result = details::appendToRoot(tree, common);
+
+  dumpTreeFiles(result, "after");
+  return result;
 }
 
 }  // namespace execplan

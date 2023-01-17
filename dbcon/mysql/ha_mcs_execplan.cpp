@@ -7119,25 +7119,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
 
   if (filters)
   {
-//  #ifdef DEBUG_WALK_COND
-
-
-    messageqcpp::ByteStream beforetree;
-    ObjectReader::writeParseTree(filters, beforetree);
-    std::ofstream before("/tmp/filters.before.data");
-    before << beforetree;
-    filters->drawTree("/tmp/filters.before.dot");
-
     filters = extractCommonLeafConjunctionsToRoot(filters);
-
-    messageqcpp::ByteStream aftertree;
-    ObjectReader::writeParseTree(filters, aftertree);
-    std::ofstream after("/tmp/filters.after.data");
-    after << aftertree;
-    filters->drawTree("/tmp/filters.after.dot");
-
-    csep->filters(filters);
-// #endif
   }
 
   return 0;
@@ -7700,6 +7682,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       case Item::CONST_ITEM:
       {
         switch (item->cmp_type())
+
         {
           case INT_RESULT:
           case STRING_RESULT:
