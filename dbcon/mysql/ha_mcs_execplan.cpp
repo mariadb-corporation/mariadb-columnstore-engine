@@ -7101,6 +7101,11 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     outerJoinStack.push(ptp);
   }
 
+  if (filters)
+  {
+    filters = extractCommonLeafConjunctionsToRoot(filters);
+  }
+
   // Append outer join filters at the end of inner join filters.
   // JLF_ExecPlanToJobList::walkTree processes ParseTree::left
   // before ParseTree::right which is what we intend to do in the
@@ -7119,7 +7124,6 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
 
   if (filters)
   {
-    filters = extractCommonLeafConjunctionsToRoot(filters);
     csep->filters(filters);
   }
 
