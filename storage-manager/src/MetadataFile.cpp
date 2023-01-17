@@ -19,6 +19,7 @@
  * MetadataFile.cpp
  */
 #include "MetadataFile.h"
+#include <set>
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/ptree.hpp>

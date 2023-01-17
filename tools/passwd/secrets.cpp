@@ -12,6 +12,8 @@
  */
 #include "secrets.h"
 
+#include <array>
+#include <cstdint>
 #include <cctype>
 #include <fstream>
 #include <pwd.h>
