@@ -91,13 +91,19 @@ TEST_P(ParseTreeTest, Rewrite)
     stream.load(GetParam().manually_rewritten_query->data(), GetParam().manually_rewritten_query->size());
     TreePtr manuallyRewrittenTree;
     manuallyRewrittenTree.reset(execplan::ObjectReader::createParseTree(stream));
-    printTrees(GetParam().queryName, initialTree, rewrittenTree.get(), manuallyRewrittenTree.get());
-    EXPECT_TRUE(treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get()));
+    bool result = treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get());
+    if (!result)
+      printTrees(GetParam().queryName, initialTree, rewrittenTree.get(), manuallyRewrittenTree.get());
+
+    EXPECT_TRUE(result);
   }
   else
   {
-    printTrees(GetParam().queryName, initialTree, rewrittenTree.get());
-    EXPECT_TRUE(treeEqual(initialTree, rewrittenTree.get()));
+    bool result = treeEqual(initialTree, rewrittenTree.get());
+    if (!result)
+      printTrees(GetParam().queryName, initialTree, rewrittenTree.get());
+
+    EXPECT_TRUE(result);
   }
 }
 
