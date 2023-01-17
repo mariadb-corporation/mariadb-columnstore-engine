@@ -7122,22 +7122,21 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
 //  #ifdef DEBUG_WALK_COND
 
 
-    messageqcpp::ByteStream debugtree;
-    ObjectReader::writeParseTree(filters, debugtree);
+    messageqcpp::ByteStream beforetree;
+    ObjectReader::writeParseTree(filters, beforetree);
     std::ofstream before("/tmp/filters.before.data");
-    before << debugtree;
+    before << beforetree;
+    filters->drawTree("/tmp/filters.before.dot");
 
-    std::string aTmpDir(startup::StartUp::tmpDir());
-    filters->drawTree(aTmpDir + "/filters.before.dot");
     filters = extractCommonLeafConjunctionsToRoot(filters);
 
-    ObjectReader::writeParseTree(filters, debugtree);
+    messageqcpp::ByteStream aftertree;
+    ObjectReader::writeParseTree(filters, aftertree);
     std::ofstream after("/tmp/filters.after.data");
-    after << debugtree ;
-    filters->drawTree(aTmpDir + "/filters.after.dot");
-    csep->filters(filters);
+    after << aftertree;
+    filters->drawTree("/tmp/filters.after.dot");
 
-    filters->drawTree(aTmpDir);
+    csep->filters(filters);
 // #endif
   }
 
