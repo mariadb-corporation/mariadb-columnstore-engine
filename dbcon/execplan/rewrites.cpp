@@ -30,7 +30,7 @@ using Comparator = decltype(nodeComparator);
 using CommonContainer = std::set<execplan::TreeNode*, Comparator>;
 
 // Walk the tree and find out common conjuctions
-void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0, bool orMeeted = false)
+void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0, bool orMeeted = false, bool andParent = false)
 {
   if (root == nullptr)
   {
@@ -43,7 +43,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     std::cerr << sep << ": " << root->data()->data() << " " << typeid(root->data()).name() << std::endl;
   #endif
 
-  if (root->left() == nullptr && root->left() == nullptr && orMeeted)
+  if (root->left() == nullptr && root->left() == nullptr && orMeeted && andParent)
   {
     accumulator.insert(root->data());
     return;
@@ -53,8 +53,8 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   {
     CommonContainer leftAcc;
     CommonContainer rightAcc;
-    collectCommonConjuctions(root->left(), leftAcc, ++level, true);
-    collectCommonConjuctions(root->right(), rightAcc, ++level, true);
+    collectCommonConjuctions(root->left(), leftAcc, ++level, true, false);
+    collectCommonConjuctions(root->right(), rightAcc, ++level, true, false);
     CommonContainer intersection;
     std::set_intersection(leftAcc.begin(), leftAcc.end(), rightAcc.begin(), rightAcc.end(),
                           std::inserter(intersection, intersection.begin()), nodeComparator);
@@ -65,18 +65,18 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
   if (root->data()->data() == "and")
   {
-    collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted);
-    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted);
+    collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, true);
+    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, true);
     return;
   }
 
   if (root->left() == nullptr)
   {
-    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted);
+    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, false);
     return;
   }
 
-  collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted);
+  collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, false);
   return;
 }
 
