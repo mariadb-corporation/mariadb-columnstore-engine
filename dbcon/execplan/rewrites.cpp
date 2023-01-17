@@ -183,9 +183,13 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 }
 
 
-execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree)
+execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly)
 {
   dumpTreeFiles(tree, "before");
+
+  if (dumpOnly)
+    return tree;
+
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
 

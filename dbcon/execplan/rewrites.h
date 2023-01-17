@@ -24,7 +24,7 @@
 namespace execplan {
 
 //Walk the tree and find out common conjuctions
-execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree);
+execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly = false);
 
 
 } // namespace execplan
