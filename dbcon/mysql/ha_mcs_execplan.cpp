@@ -7120,6 +7120,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   if (filters)
   {
     filters = extractCommonLeafConjunctionsToRoot(filters);
+    csep->filters(filters);
   }
 
   return 0;
