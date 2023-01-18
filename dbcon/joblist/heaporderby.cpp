@@ -20,6 +20,7 @@
 
 #include "heaporderby.h"
 #include "conststring.h"
+// #include "joblisttypes.h"
 #include "pdqorderby.h"
 #include "vlarray.h"
 
@@ -36,6 +37,34 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     auto columnType = rg.getColType(columnId);
     switch (columnType)
     {
+      case execplan::CalpontSystemCatalog::FLOAT:
+      {
+        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+        // float val = *((float*)valueBuf);
+        // std::cout << " KeyType " << val << std::endl;
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
+        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+
+        int floatAsInt = 0;
+        std::memcpy(&floatAsInt, valueBuf, columnWidth);
+        int32_t s = (floatAsInt & 0x80000000) ^ 0x80000000;
+        int8_t e = (floatAsInt >> 23) & 0xFF;
+        int m = (s) ? floatAsInt & 0x7FFFFF : (~(floatAsInt)) & 0x7FFFFF;
+        m = (e) ? m | 0x800000 : m << 1;
+        int8_t expVal = (e - 127) ^ 0x80;
+        int32_t expAsInt32Val = 0;
+        memcpy(&expAsInt32Val, &expVal, sizeof(expVal));
+        expAsInt32Val = ((s) ? expAsInt32Val : ~expAsInt32Val & 0xFF) << 23;
+        // NaN, Inf ?
+        int32_t key = m;
+        key ^= s;
+        key |= expAsInt32Val;
+        key = htonl(key);
+        std::memcpy(pos, &key, columnWidth);
+        pos += columnWidth;
+        break;
+      }
       case execplan::CalpontSystemCatalog::TINYINT:
       {
         using StorageType =
