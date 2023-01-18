@@ -18,6 +18,7 @@
    MA 02110-1301, USA. */
 
 #pragma once
+#include <bitset>
 #include <string>
 #include <stdint.h>
 #ifdef _MSC_VER
