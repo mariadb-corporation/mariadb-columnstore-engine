@@ -7103,7 +7103,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
 
   if (filters)
   {
-    filters = extractCommonLeafConjunctionsToRoot(filters, true);
+    filters = extractCommonLeafConjunctionsToRoot(filters);
   }
 
   // Append outer join filters at the end of inner join filters.
