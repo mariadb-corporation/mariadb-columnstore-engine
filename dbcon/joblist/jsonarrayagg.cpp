@@ -334,6 +334,7 @@ void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
 
 uint8_t* JsonArrayAggregatAgUM::getResult()
 {
+	idblog2("JsonArrayAggregatAgUM::getResult()");
   return fConcator->getResult(fGroupConcat->fSeparator);
 }
 
@@ -858,6 +859,7 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
 
 uint8_t* JsonArrayAggOrderBy::getResultImpl(const string&)
 {
+	idblog2("JsonArrayAggOrderBy::getResult");
   ostringstream oss;
   bool addSep = false;
 
@@ -1003,6 +1005,7 @@ void JsonArrayAggNoOrder::merge(GroupConcator* gc)
 
 uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
 {
+	idblog2("JsonArrayAggNoOrder::getResult");
   ostringstream oss;
   bool addSep = false;
   if (fRowGroup.getRowCount() > 0)
