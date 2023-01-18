@@ -15,9 +15,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <string>
 using namespace std;
@@ -59,7 +58,6 @@ using namespace ordering;
 #include "utils/json/json.hpp"
 using namespace nlohmann;
 
-
 namespace joblist
 {
 
@@ -73,7 +71,7 @@ void JsonArrayInfo::prepJsonArray(JobInfo& jobInfo)
     const RowColumn* rcp = dynamic_cast<const RowColumn*>(gcc->aggParms()[0].get());
 
     SP_GroupConcat groupConcat(new GroupConcat);
-    groupConcat->fSeparator = gcc->separator(); // or ,?
+    groupConcat->fSeparator = gcc->separator();  // or ,?
     groupConcat->fDistinct = gcc->distinct();
     groupConcat->fSize = gcc->resultType().colWidth;
     groupConcat->fRm = jobInfo.rm;
@@ -297,12 +295,10 @@ const string JsonArrayInfo::toString() const
   return oss.str();
 }
 
-
 JsonArrayAggregatAgUM::JsonArrayAggregatAgUM(rowgroup::SP_GroupConcat& gcc) : GroupConcatAgUM(gcc)
 {
   initialize();
 }
-
 
 JsonArrayAggregatAgUM::~JsonArrayAggregatAgUM()
 {
@@ -338,7 +334,7 @@ void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
 
 void JsonArrayAggregatAgUM::getResult(uint8_t* buff)
 {
-  fConcator->getResult(buff, fGroupConcat->fSeparator);
+  fConcator->getResultImpl(fGroupConcat->fSeparator);
 }
 
 uint8_t* JsonArrayAggregatAgUM::getResult()
@@ -383,7 +379,6 @@ void JsonArrayAggregatAgUM::applyMapping(const boost::shared_array<int>& mapping
   }
 }
 
-
 JsonArrayAggregator::JsonArrayAggregator() : GroupConcator()
 {
 }
@@ -404,7 +399,6 @@ void JsonArrayAggregator::initialize(const rowgroup::SP_GroupConcat& gcc)
   for (uint64_t i = 0; i < fConstCols.size(); i++)
     fConstantLen += strlen(fConstCols[i].first.c_str());
 }
-
 
 void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 {
@@ -704,8 +698,6 @@ const string JsonArrayAggregator::toString() const
   return oss.str();
 }
 
-
-
 JsonArrayAggOrderBy::JsonArrayAggOrderBy()
 {
   fRule.fIdbCompare = this;
@@ -869,7 +861,7 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
   }
 }
 
-void JsonArrayAggOrderBy::getResult(uint8_t* buff, const string&)
+uint8_t* JsonArrayAggOrderBy::getResultImpl(const string&)
 {
   ostringstream oss;
   bool addSep = false;
@@ -899,15 +891,9 @@ void JsonArrayAggOrderBy::getResult(uint8_t* buff, const string&)
     }
     oss << ']';
   }
-  int64_t resultSize = oss.str().size();
-  resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
-  fOutputString.reset(new uint8_t[resultSize + 2]);
-  fOutputString[resultSize] = '\0';
-  fOutputString[resultSize + 1] = '\0';
 
-  strncpy((char*)fOutputString.get(), oss.str().c_str(), resultSize);
+  return swapStreamWithStringAndReturnBuf(oss);
 }
-
 
 const string JsonArrayAggOrderBy::toString() const
 {
@@ -928,7 +914,6 @@ const string JsonArrayAggOrderBy::toString() const
 
   return (baseStr + oss.str());
 }
-
 
 JsonArrayAggNoOrder::JsonArrayAggNoOrder()
  : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
@@ -1021,7 +1006,7 @@ void JsonArrayAggNoOrder::merge(GroupConcator* gc)
   in->fMemSize = 0;
 }
 
-void JsonArrayAggNoOrder::getResult(uint8_t* buff, const string&)
+uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
 {
   ostringstream oss;
   bool addSep = false;
@@ -1050,13 +1035,7 @@ void JsonArrayAggNoOrder::getResult(uint8_t* buff, const string&)
     }
     oss << ']';
   }
-  int64_t resultSize = oss.str().size();
-  resultSize = (resultSize > fGroupConcatLen) ? fGroupConcatLen : resultSize;
-  fOutputString.reset(new uint8_t[resultSize + 2]);
-  fOutputString[resultSize] = '\0';
-  fOutputString[resultSize + 1] = '\0';
-
-  strncpy((char*)fOutputString.get(), oss.str().c_str(), resultSize);
+  return swapStreamWithStringAndReturnBuf(oss);
 }
 
 const string JsonArrayAggNoOrder::toString() const

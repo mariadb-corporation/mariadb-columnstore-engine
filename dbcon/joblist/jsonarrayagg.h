@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 /** @file */
 
 #pragma once
@@ -40,7 +39,6 @@ namespace joblist
 class JsonArrayAggregator;
 class ResourceManager;
 
-
 class JsonArrayInfo : public GroupConcatInfo
 {
  public:
@@ -52,9 +50,7 @@ class JsonArrayInfo : public GroupConcatInfo
  protected:
   uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
   boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
-
 };
-
 
 class JsonArrayAggregatAgUM : public GroupConcatAgUM
 {
@@ -105,7 +101,7 @@ class JsonArrayAggNoOrder : public JsonArrayAggregator
   using GroupConcator::merge;
   void merge(GroupConcator*);
   using GroupConcator::getResult;
-  void getResult(uint8_t* buff, const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep);
 
   const std::string toString() const;
 
@@ -136,7 +132,7 @@ class JsonArrayAggOrderBy : public JsonArrayAggregator, public ordering::IdbOrde
   using GroupConcator::merge;
   void merge(GroupConcator*);
   using GroupConcator::getResult;
-  void getResult(uint8_t* buff, const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep);
 
   const std::string toString() const;
 
