@@ -16,25 +16,27 @@
    MA 02110-1301, USA. */
 
 #include <algorithm>
+#include <bitset>
+#include <cmath>
 #include <cstdint>
 #include <functional>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <iostream>
 #include <limits>
 #include <numeric>
 #include <tuple>
 #include <type_traits>
 #include <random>
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "conststring.h"
 #include "dbcon/joblist/heaporderby.h"
 #include "jlf_common.h"
 #include "joblisttypes.h"
+#include "m_ctype.h"
 #include "pdqorderby.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
-#include "m_ctype.h"
 
 using namespace std;
 using namespace testing;
@@ -152,7 +154,6 @@ TEST_F(KeyTypeTestInt64, KeyTypeCtorInt64Asc)
   uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
   for (size_t i = 0; i < rowgroup::rgCommonSize; ++i)
   {
-    // std::cout << "value " << i << std::endl;
     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     if (i != 42)
     {
@@ -337,37 +338,17 @@ class KeyTypeTestFloat : public testing::Test
     rg_.initRow(&r);
     uint32_t rowSize = r.getSize();
     rg_.getRow(0, &r);
-    for (int64_t i = 0; i < rowgroup::rgCommonSize; ++i)  // Worst case scenario for PQ
-    {
-      if (i == 42)
-      {
-        r.setUintField<4>(joblist::FLOATNULL, 0);
-        r.nextRow(rowSize);
-      }
-      else if (i == 8191)
-      {
-        r.setFloatField(-3891607892.0, 0);
-        r.nextRow(rowSize);
-      }
-      else if (i == 8190)
-      {
-        r.setFloatField(-3004747259.0, 0);
-        r.nextRow(rowSize);
-      }
-      else
-      {
-        if (i > 4000)
-        {
-          r.setFloatField(-i, 0);
-          r.nextRow(rowSize);
-        }
-        else
-        {
-          r.setFloatField(i, 0);
-          r.nextRow(rowSize);
-        }
-      }
-    }
+    std::vector<float> data = {0.0, 123123123.123123, 321321321.321321,
+                               //  std::numeric_limits<float>::quiet_NaN(),
+                               //  std::numeric_limits<float>::infinity(),
+                               -123123123.123123, -123123223.123123};
+    for_each(data.begin(), data.end(),
+             [&r, rowSize](const float arg)
+             {
+               r.setFloatField(arg, 0);
+               r.nextRow(rowSize);
+             });
+    rg_.setRowCount(data.size());
   }
 
   joblist::OrderByKeysType keysCols_;
@@ -378,10 +359,55 @@ class KeyTypeTestFloat : public testing::Test
 TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatAsc)
 {
   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
-  [[maybe_unused]] uint8_t* expected = new uint8_t[bufUnitSize];
-  [[maybe_unused]] uint8_t* buf = new uint8_t[bufUnitSize * rowgroup::rgCommonSize + 1];
-  // 0, 123123123.123123 vs 321321321.321321
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * rg_.getRowCount() + 1];
+
+  auto makeKey = [](const float a)
+  {
+    int floatAsInt = 0;
+    memcpy(&floatAsInt, &a, sizeof(float));
+    // std::cout << "key beg " << std::bitset<32>(floatAsInt) << std::endl;
+    int s = (floatAsInt & 0x80000000) ^ 0x80000000;
+    int8_t e = (floatAsInt >> 23) & 0xFF;
+    int m = (s) ? floatAsInt & 0x7FFFFF : (~floatAsInt) & 0x7FFFFF;
+    m = (e) ? m | 0x800000 : m << 1;
+    m = (s) ? m : m & 0xFF7FFFFF;
+
+    int8_t expVal = (e - 127) ^ 0x80;
+    int32_t expAsInt32Val = 0;
+    memcpy(&expAsInt32Val, &expVal, sizeof(expVal));
+    expAsInt32Val = ((s) ? expAsInt32Val : ~expAsInt32Val & 0xFF) << 23;
+    // NaN, Inf ?
+    int key = m;
+    key ^= s;
+    key |= expAsInt32Val;
+    // std::cout << "key end " << std::bitset<32>(htonl(key)) << std::endl;
+    return htonl(key);
+  };
+  for (size_t i = 0; i < rg_.getRowCount(); ++i)
+  {
+    memset(expected, 0, sizeof(float));
+    uint8_t* pos = expected;
+    float v = rg_.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, float, float>(0, i);
+    // std::cout << v << std::endl;
+    int k = makeKey(v);
+    *pos++ = 1;
+    memcpy(pos, &k, sizeof(float));
+
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    printHexArray(key.key(), expected, bufUnitSize);
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+  }
 }
+// NaN, Inf ask Bar
+// Float DSC
+// Float LessAsc
+// Float LessDsd
+// Double Ctor Asc
+// Double Ctor Dsc
+// Double LessAsc
+// Double LessDsd
 
 const constexpr execplan::CalpontSystemCatalog::ColDataType SignedCTs[] = {
     execplan::CalpontSystemCatalog::TINYINT,  execplan::CalpontSystemCatalog::TINYINT,
@@ -878,7 +904,6 @@ TYPED_TEST(KeyTypeTestUIntT, KeyTypeLessDsc)
 
   ASSERT_FALSE(key1.less(key5, this->rg_, this->keysCols_, {0, 42, 0}, {0, 4001, 0}, prevPhaseSorting));
   ASSERT_TRUE(key4.less(key1, this->rg_, this->keysCols_, {0, 4001, 0}, {0, 42, 0}, prevPhaseSorting));
-  printHexArray(key1.key(), key5.key(), bufUnitSize);
   ASSERT_TRUE(key5.less(key1, this->rg_, this->keysCols_, {0, 4002, 0}, {0, 42, 0}, prevPhaseSorting));
 
   // Permuts are not important
