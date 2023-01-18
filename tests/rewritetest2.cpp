@@ -19,7 +19,7 @@
 using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* ){})>;
 
 
-bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
+bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0)
 {
   if (fst == nullptr)
   {
@@ -29,9 +29,12 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
   {
     return fst == nullptr;
   }
-  return fst->data() == snd->data() &&
-         ((treeEqual(fst->left(), snd->left()) && treeEqual(fst->right(), snd->right())) ||
-          (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
+  if (fst->data()->data() != snd->data()->data()) {
+    std::cerr << "Data " << fst->data()->data() << " differs from " << snd->data()->data() << " at level " << depth << '\n';
+    return false;
+  }
+  return (treeEqual(fst->left(), snd->left(), depth + 1) && treeEqual(fst->right(), snd->right(), depth + 1)) ||
+         (treeEqual(fst->left(), snd->right(), depth + 1) && treeEqual(fst->right(), snd->left(), depth + 1));
 }
 
 #define REWRITE_TREE_TEST_DEBUG true;
