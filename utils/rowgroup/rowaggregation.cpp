@@ -4943,4 +4943,26 @@ GroupConcatAg::~GroupConcatAg()
 {
 }
 
+RowAggregationSimpleDistinctUM::RowAggregationSimpleDistinctUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggDistinctCols,
+                                                               joblist::ResourceManager* r,
+                                                               boost::shared_ptr<int64_t> sessLimit)
+  : RowAggregationUM(rowAggDistinctCols, {}, r, sessLimit)
+{
+}
+
+RowAggregationSimpleDistinctUM::RowAggregationSimpleDistinctUM(const RowAggregationSimpleDistinctUM& rhs)
+  : RowAggregationUM(rhs)
+{
+}
+
+RowAggregationSimpleDistinct::RowAggregationSimpleDistinct(const vector<SP_ROWAGG_GRPBY_t>& rowAggDistinctCols)
+  : RowAggregation(rowAggDistinctCols, {})
+{
+}
+
+RowAggregationSimpleDistinct::RowAggregationSimpleDistinct(const RowAggregationSimpleDistinct& rhs)
+  : RowAggregation(rhs)
+{
+}
+
 }  // namespace rowgroup

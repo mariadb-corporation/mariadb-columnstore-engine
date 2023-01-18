@@ -536,7 +536,7 @@ class RowAggregation : public messageqcpp::Serializeable
   virtual void attachGroupConcatAg();
 
   virtual void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
-  void mergeEntries(const Row& row);
+  virtual void mergeEntries(const Row& row);
   virtual void doMinMax(const Row&, int64_t, int64_t, int);
   virtual void doSum(const Row&, int64_t, int64_t, int);
   virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
@@ -791,6 +791,51 @@ class RowAggregationUM : public RowAggregation
 
  private:
   uint64_t fLastMemUsage;
+};
+
+class RowAggregationSimpleDistinctUM : public RowAggregationUM
+{
+  public:
+    RowAggregationSimpleDistinctUM() = delete;
+    RowAggregationSimpleDistinctUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggDistinctCols,
+                                 joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessLimit);
+    RowAggregationSimpleDistinctUM(const RowAggregationSimpleDistinctUM& rhs);
+
+    ~RowAggregationSimpleDistinctUM() override
+    {}
+
+    inline RowAggregationSimpleDistinctUM* clone() const override
+    {
+      return new RowAggregationSimpleDistinctUM(*this);
+    }
+
+  protected:
+    void updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override
+    {}
+    void mergeEntries(const Row& row) override
+    {}
+};
+
+class RowAggregationSimpleDistinct : public RowAggregation
+{
+  public:
+    RowAggregationSimpleDistinct() = delete;
+    explicit RowAggregationSimpleDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggDistinctCols);
+    RowAggregationSimpleDistinct(const RowAggregationSimpleDistinct& rhs);
+
+    ~RowAggregationSimpleDistinct() override
+    {}
+
+    inline RowAggregationSimpleDistinct* clone() const override
+    {
+      return new RowAggregationSimpleDistinct(*this);
+    }
+
+  protected:
+    void updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override
+    {}
+    void mergeEntries(const Row& row) override
+    {}
 };
 
 //------------------------------------------------------------------------------

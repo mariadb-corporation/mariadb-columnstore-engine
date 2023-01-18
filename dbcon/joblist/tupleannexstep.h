@@ -77,10 +77,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   {
     fConstant = tcs;
   }
-  void setDistinct()
-  {
-    fDistinct = true;
-  }
+
   void setLimit(uint64_t s, uint64_t c)
   {
     fLimitStart = s;
@@ -100,7 +97,6 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
     return true;
   }
 
-  rowgroup::Row row1, row2;  // scratch space for distinct comparisons todo: make them private
 
  protected:
   void execute();
@@ -108,11 +104,9 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void executeNoOrderBy();
   void executeWithOrderBy();
   void executeParallelOrderBy(uint64_t id);
-  void executeNoOrderByWithDistinct();
   void formatMiniStats();
   void printCalTrace();
   void finalizeParallelOrderBy();
-  void finalizeParallelOrderByDistinct();
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -157,7 +151,6 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   uint64_t fMaxThreads;
   bool fLimitHit;
   bool fEndOfResult;
-  bool fDistinct;
   bool fParallelOp;
 
   LimitedOrderBy* fOrderBy;

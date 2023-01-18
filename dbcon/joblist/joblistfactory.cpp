@@ -602,28 +602,21 @@ void checkAggregation(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
   checkReturnedColumns(csep, jobInfo);
   RetColsVector& retCols = jobInfo.projectionCols;
 
-  jobInfo.hasDistinct = csep->distinct();
-
-  // DISTINCT with window functions must be done in tupleannexstep
-  if (csep->distinct() == true && jobInfo.windowDels.size() == 0)
-  {
-    jobInfo.hasAggregation = true;
-  }
-  else if (csep->groupByCols().size() > 0)
+  jobInfo.hasDistinct = false;
+  if (csep->groupByCols().size() > 0)
   {
     // groupby without aggregate functions is supported.
     jobInfo.hasAggregation = true;
   }
-  else
+  else if (std::any_of(retCols.cbegin(), retCols.cend(),
+                       [](decltype (*retCols.cbegin())& c) { return dynamic_cast<AggregateColumn*>(c.get()) != nullptr; }))
   {
-    for (uint64_t i = 0; i < retCols.size(); i++)
-    {
-      if (dynamic_cast<AggregateColumn*>(retCols[i].get()) != NULL)
-      {
         jobInfo.hasAggregation = true;
-        break;
-      }
-    }
+  }
+  else if (csep->distinct() == true)
+  {
+    jobInfo.hasAggregation = true;
+    jobInfo.hasDistinct = true;
   }
 }
 
