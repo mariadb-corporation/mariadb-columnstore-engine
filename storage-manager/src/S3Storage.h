@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <deque>
 #include <string>
 #include <map>
 #include "CloudStorage.h"
