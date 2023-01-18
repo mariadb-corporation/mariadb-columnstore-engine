@@ -517,9 +517,6 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   if (jobInfo.constantCol == CONST_COL_EXIST)
     tas->addConstant(new TupleConstantStep(jobInfo));
 
-  if (jobInfo.hasDistinct)
-    tas->setDistinct();
-
   //    }
 
   if (jobInfo.annexStep)

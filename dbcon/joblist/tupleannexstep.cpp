@@ -67,45 +67,6 @@ using namespace querytele;
 
 #define QUEUE_RESERVE_SIZE 100000
 
-namespace
-{
-struct TAHasher
-{
-  joblist::TupleAnnexStep* ts;
-  utils::Hasher_r h;
-  TAHasher(joblist::TupleAnnexStep* t) : ts(t)
-  {
-  }
-  uint64_t operator()(const rowgroup::Row::Pointer&) const;
-};
-struct TAEq
-{
-  joblist::TupleAnnexStep* ts;
-  TAEq(joblist::TupleAnnexStep* t) : ts(t)
-  {
-  }
-  bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
-};
-// TODO:  Generalize these and put them back in utils/common/hasher.h
-typedef tr1::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >
-    DistinctMap_t;
-};  // namespace
-
-inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
-{
-  Row& row = ts->row1;
-  row.setPointer(p);
-  return row.hash();
-}
-
-inline bool TAEq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) const
-{
-  Row &r1 = ts->row1, &r2 = ts->row2;
-  r1.setPointer(d1);
-  r2.setPointer(d2);
-  return r1.equals(r2);
-}
-
 namespace joblist
 {
 TupleAnnexStep::TupleAnnexStep(const JobInfo& jobInfo)
@@ -121,7 +82,6 @@ TupleAnnexStep::TupleAnnexStep(const JobInfo& jobInfo)
  , fLimitCount(-1)
  , fLimitHit(false)
  , fEndOfResult(false)
- , fDistinct(false)
  , fParallelOp(false)
  , fOrderBy(NULL)
  , fConstant(NULL)
@@ -180,7 +140,6 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     {
       // *DRRTUY use SP here?
       fOrderByList[id] = new LimitedOrderBy();
-      fOrderByList[id]->distinct(fDistinct);
       fOrderByList[id]->initialize(rgIn, jobInfo, false, true);
     }
   }
@@ -188,7 +147,6 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
   {
     if (fOrderBy)
     {
-      fOrderBy->distinct(fDistinct);
       fOrderBy->initialize(rgIn, jobInfo);
     }
   }
@@ -353,8 +311,6 @@ void TupleAnnexStep::execute()
 {
   if (fOrderBy)
     executeWithOrderBy();
-  else if (fDistinct)
-    executeNoOrderByWithDistinct();
   else
     executeNoOrderBy();
 
@@ -466,142 +422,6 @@ void TupleAnnexStep::executeNoOrderBy()
   fOutputDL->endOfInput();
 }
 
-void TupleAnnexStep::executeNoOrderByWithDistinct()
-{
-  utils::setThreadName("TASwoOrdDist");
-  scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
-  vector<RGData> dataVec;
-  vector<RGData> dataVecSkip;
-  RGData rgDataIn;
-  RGData rgDataOut;
-  RGData rgDataSkip;
-  RowGroup rowGroupSkip;
-  Row rowSkip;
-  bool more = false;
-
-  rgDataOut.reinit(fRowGroupOut);
-  fRowGroupOut.setData(&rgDataOut);
-  fRowGroupOut.resetRowGroup(0);
-  fRowGroupOut.getRow(0, &fRowOut);
-
-  fRowGroupOut.initRow(&row1);
-  fRowGroupOut.initRow(&row2);
-
-  rowGroupSkip = fRowGroupOut;
-  rgDataSkip.reinit(rowGroupSkip);
-  rowGroupSkip.setData(&rgDataSkip);
-  rowGroupSkip.resetRowGroup(0);
-  rowGroupSkip.initRow(&rowSkip);
-  rowGroupSkip.getRow(0, &rowSkip);
-
-  try
-  {
-    more = fInputDL->next(fInputIterator, &rgDataIn);
-
-    if (traceOn())
-      dlTimes.setFirstReadTime();
-
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
-    postStepStartTele(sts);
-
-    while (more && !cancelled() && !fLimitHit)
-    {
-      fRowGroupIn.setData(&rgDataIn);
-      fRowGroupIn.getRow(0, &fRowIn);
-
-      for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled() && !fLimitHit; ++i)
-      {
-        pair<DistinctMap_t::iterator, bool> inserted;
-        Row* rowPtr;
-
-        if (distinctMap->size() < fLimitStart)
-          rowPtr = &rowSkip;
-        else
-          rowPtr = &fRowOut;
-
-        if (fConstant)
-          fConstant->fillInConstants(fRowIn, *rowPtr);
-        else
-          copyRow(fRowIn, rowPtr);
-
-        fRowIn.nextRow();
-        inserted = distinctMap->insert(rowPtr->getPointer());
-        ++fRowsProcessed;
-
-        if (inserted.second)
-        {
-          if (UNLIKELY(fRowsReturned >= fLimitCount))
-          {
-            fLimitHit = true;
-            fJobList->abortOnLimit((JobStep*)this);
-            break;
-          }
-
-          // skip first limit-start rows
-          if (distinctMap->size() <= fLimitStart)
-          {
-            rowGroupSkip.incRowCount();
-            rowSkip.nextRow();
-            if (UNLIKELY(rowGroupSkip.getRowCount() >= rowgroup::rgCommonSize))
-            {
-              // allocate new RGData for skipped rows below the fLimitStart
-              // offset (do not take it into account in RM assuming there
-              // are few skipped rows
-              dataVecSkip.push_back(rgDataSkip);
-              rgDataSkip.reinit(rowGroupSkip);
-              rowGroupSkip.setData(&rgDataSkip);
-              rowGroupSkip.resetRowGroup(0);
-              rowGroupSkip.getRow(0, &rowSkip);
-            }
-            continue;
-          }
-
-          ++fRowsReturned;
-
-          fRowGroupOut.incRowCount();
-          fRowOut.nextRow();
-
-          if (UNLIKELY(fRowGroupOut.getRowCount() >= rowgroup::rgCommonSize))
-          {
-            dataVec.push_back(rgDataOut);
-            rgDataOut.reinit(fRowGroupOut);
-            fRowGroupOut.setData(&rgDataOut);
-            fRowGroupOut.resetRowGroup(0);
-            fRowGroupOut.getRow(0, &fRowOut);
-          }
-        }
-      }
-
-      more = fInputDL->next(fInputIterator, &rgDataIn);
-    }
-
-    if (fRowGroupOut.getRowCount() > 0)
-      dataVec.push_back(rgDataOut);
-
-    for (vector<RGData>::iterator i = dataVec.begin(); i != dataVec.end(); i++)
-    {
-      rgDataOut = *i;
-      fRowGroupOut.setData(&rgDataOut);
-      fOutputDL->insert(rgDataOut);
-    }
-  }
-  catch (...)
-  {
-    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeNoOrderByWithDistinct()");
-  }
-
-  while (more)
-    more = fInputDL->next(fInputIterator, &rgDataIn);
-
-  // Bug 3136, let mini stats to be formatted if traceOn.
-  fOutputDL->endOfInput();
-}
-
 void TupleAnnexStep::executeWithOrderBy()
 {
   utils::setThreadName("TASwOrd");
@@ -701,207 +521,6 @@ void TupleAnnexStep::executeWithOrderBy()
     When m() finishes with thread's LOBs it iterates over
     final sorting collection, populates rgDataOut, then
     sends it into outputDL.
-    Changing this method don't forget to make changes in
-    finalizeParallelOrderBy() that is a clone.
-    !!!The method doesn't set Row::baseRid
-*/
-void TupleAnnexStep::finalizeParallelOrderByDistinct()
-{
-  utils::setThreadName("TASwParOrdDistM");
-  uint64_t count = 0;
-  uint64_t offset = 0;
-  uint32_t rowSize = 0;
-
-  rowgroup::RGData rgDataOut;
-  rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-  fRowGroupOut.setData(&rgDataOut);
-  fRowGroupOut.resetRowGroup(0);
-  // Calculate offset here
-  fRowGroupOut.getRow(0, &fRowOut);
-  ordering::SortingPQ finalPQ;
-  scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
-  fRowGroupIn.initRow(&row1);
-  fRowGroupIn.initRow(&row2);
-
-  try
-  {
-    for (uint64_t id = 1; id <= fMaxThreads; id++)
-    {
-      if (cancelled())
-      {
-        break;
-      }
-      // Revert the ordering rules before we
-      // add rows into the final PQ.
-      fOrderByList[id]->getRule().revertRules();
-      ordering::SortingPQ& currentPQ = fOrderByList[id]->getQueue();
-      finalPQ.reserve(finalPQ.size() + currentPQ.size());
-      pair<DistinctMap_t::iterator, bool> inserted;
-      while (currentPQ.size())
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(currentPQ.top());
-        inserted = distinctMap->insert(topOBRow.fData);
-        if (inserted.second)
-        {
-          finalPQ.push(topOBRow);
-        }
-        currentPQ.pop();
-      }
-    }
-  }
-  catch (...)
-  {
-    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::finalizeParallelOrderByDistinct()");
-  }
-
-  // OFFSET processing
-  while (finalPQ.size() && offset < fLimitStart)
-  {
-    offset++;
-    finalPQ.pop();
-  }
-
-  // Calculate rowSize only once
-  if (finalPQ.size())
-  {
-    ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-    fRowIn.setData(topOBRow.fData);
-    if (!fConstant)
-    {
-      copyRow(fRowIn, &fRowOut);
-    }
-    else
-    {
-      fConstant->fillInConstants(fRowIn, fRowOut);
-    }
-    rowSize = fRowOut.getSize();
-    fRowGroupOut.incRowCount();
-    fRowOut.nextRow(rowSize);
-    finalPQ.pop();
-    count++;
-  }
-
-  if (!fConstant)
-  {
-    while (finalPQ.size())
-    {
-      if (cancelled())
-      {
-        break;
-      }
-
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-
-        fRowIn.setData(topOBRow.fData);
-        copyRow(fRowIn, &fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
-
-        finalPQ.pop();
-        count++;
-        if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
-        {
-          break;
-        }
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupIn, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }
-  else  // Add ConstantColumns striped earlier
-  {
-    while (finalPQ.size())
-    {
-      if (cancelled())
-      {
-        break;
-      }
-
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-
-        fRowIn.setData(topOBRow.fData);
-        fConstant->fillInConstants(fRowIn, fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
-
-        finalPQ.pop();
-        count++;
-        if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
-        {
-          break;
-        }
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }    // end of if-else
-
-  if (fRowGroupOut.getRowCount() > 0)
-  {
-    fRowsReturned += fRowGroupOut.getRowCount();
-    fOutputDL->insert(rgDataOut);
-  }
-
-  fOutputDL->endOfInput();
-
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
-  postStepSummaryTele(sts);
-
-  if (traceOn())
-  {
-    if (dlTimes.FirstReadTime().tv_sec == 0)
-      dlTimes.setFirstReadTime();
-
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
-}
-
-/*
-    The m() iterates over thread's LimitedOrderBy instances,
-    reverts the rules and then populates the final collection
-    used for final sorting. The method uses OrderByRow that
-    combination of Row::data and comparison rules.
-    When m() finishes with thread's LOBs it iterates over
-    final sorting collection, populates rgDataOut, then
-    sends it into outputDL.
-    Changing this method don't forget to make changes in
-    finalizeParallelOrderByDistinct() that is a clone.
     !!!The method doesn't set Row::baseRid
 */
 void TupleAnnexStep::finalizeParallelOrderBy()
@@ -1160,14 +779,7 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
   if (fFinishedThreads == fMaxThreads)
   {
     fParallelFinalizeMutex.unlock();
-    if (fDistinct)
-    {
-      finalizeParallelOrderByDistinct();
-    }
-    else
-    {
-      finalizeParallelOrderBy();
-    }
+    finalizeParallelOrderBy();
   }
   else
   {

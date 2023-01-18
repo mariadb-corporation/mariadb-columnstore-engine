@@ -2914,8 +2914,8 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
   // For UDAF
   uint32_t projColsUDAFIdx = 0;
   uint32_t udafcParamIdx = 0;
-  UDAFColumn* udafc = NULL;
-  mcsv1sdk::mcsv1_UDAF* pUDAFFunc = NULL;
+  UDAFColumn* udafc = nullptr;
+  mcsv1sdk::mcsv1_UDAF* pUDAFFunc = nullptr;
 
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
@@ -2973,101 +2973,66 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
     for (uint64_t i = 0; i < keysProj.size(); i++)
     {
-      projColPosMap.insert(make_pair(keysProj[i], i));
+      projColPosMap.emplace(keysProj[i], i);
       width.push_back(projRG.getColumnWidth(i));
     }
 
     // column index for PM aggregate rowgroup
     uint64_t colAggPm = 0;
 
-    // for groupby column
-    for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
+    // for groupby & distinct columns
+    for (const auto* colVec : {&jobInfo.groupByColVec, &jobInfo.distinctColVec})
     {
-      uint32_t key = jobInfo.groupByColVec[i];
-
-      if (projColPosMap.find(key) == projColPosMap.end())
+      for (uint32_t key : *colVec)
       {
-        ostringstream emsg;
-        emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
-        cerr << "prep2PhasesAggregate: groupby " << emsg.str()
-             << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
-             << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
+        if (projColPosMap.find(key) == projColPosMap.end())
+        {
+          ostringstream emsg;
+          emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
+          cerr << "prep2PhasesAggregate: " << (colVec == &jobInfo.groupByColVec ? "groupby " : "distinct ")
+            << emsg.str()
+            << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+            << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
 
-        if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
-          cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
+          if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
+            cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
 
-        cerr << endl;
-        throw logic_error(emsg.str());
+          cerr << endl;
+          throw logic_error(emsg.str());
+        }
+
+        uint64_t colProj = projColPosMap[key];
+
+        if (colVec == &jobInfo.distinctColVec)
+        {
+          // check for dup distinct column -- @bug6126
+          if (find(keysAggPm.begin(), keysAggPm.end(), key) != keysAggPm.end())
+            continue;
+        }
+
+        SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
+        groupByPm.push_back(groupby);
+
+        // PM: just copy down to aggregation rowgroup
+        oidsAggPm.push_back(oidsProj[colProj]);
+        keysAggPm.push_back(key);
+        scaleAggPm.push_back(scaleProj[colProj]);
+        precisionAggPm.push_back(precisionProj[colProj]);
+        typeAggPm.push_back(typeProj[colProj]);
+        csNumAggPm.push_back(csNumProj[colProj]);
+        widthAggPm.push_back(width[colProj]);
+
+        aggFuncMap.emplace(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc,
+                                             udafc ? udafc->getContext().getParamKeys() : nullptr),
+                           colAggPm);
+        colAggPm++;
       }
-
-      uint64_t colProj = projColPosMap[key];
-
-      SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
-      groupByPm.push_back(groupby);
-
-      // PM: just copy down to aggregation rowgroup
-      oidsAggPm.push_back(oidsProj[colProj]);
-      keysAggPm.push_back(key);
-      scaleAggPm.push_back(scaleProj[colProj]);
-      precisionAggPm.push_back(precisionProj[colProj]);
-      typeAggPm.push_back(typeProj[colProj]);
-      csNumAggPm.push_back(csNumProj[colProj]);
-      widthAggPm.push_back(width[colProj]);
-
-      aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc,
-                                                    udafc ? udafc->getContext().getParamKeys() : NULL),
-                                  colAggPm));
-      colAggPm++;
-    }
-
-    // for distinct column
-    for (uint64_t i = 0; i < jobInfo.distinctColVec.size(); i++)
-    {
-      uint32_t key = jobInfo.distinctColVec[i];
-
-      if (projColPosMap.find(key) == projColPosMap.end())
-      {
-        ostringstream emsg;
-        emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
-        cerr << "prep2PhasesAggregate: distinct " << emsg.str()
-             << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
-             << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
-
-        if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
-          cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
-
-        cerr << endl;
-        throw logic_error(emsg.str());
-      }
-
-      uint64_t colProj = projColPosMap[key];
-
-      // check for dup distinct column -- @bug6126
-      if (find(keysAggPm.begin(), keysAggPm.end(), key) != keysAggPm.end())
-        continue;
-
-      SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
-      groupByPm.push_back(groupby);
-
-      // PM: just copy down to aggregation rowgroup
-      oidsAggPm.push_back(oidsProj[colProj]);
-      keysAggPm.push_back(key);
-      scaleAggPm.push_back(scaleProj[colProj]);
-      typeAggPm.push_back(typeProj[colProj]);
-      csNumAggPm.push_back(csNumProj[colProj]);
-      widthAggPm.push_back(width[colProj]);
-      precisionAggPm.push_back(precisionProj[colProj]);
-
-      aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc,
-                                                    udafc ? udafc->getContext().getParamKeys() : NULL),
-                                  colAggPm));
-      colAggPm++;
     }
 
     // vectors for aggregate functions
     for (uint64_t i = 0; i < aggColVec.size(); i++)
     {
-      pUDAFFunc = NULL;
+      pUDAFFunc = nullptr;
       uint32_t aggKey = aggColVec[i].first;
       RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
       RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
@@ -3100,7 +3065,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
       if (aggOp == ROWAGG_UDAF)
       {
-        std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIdx;
+        auto it = jobInfo.projectionCols.begin() + projColsUDAFIdx;
         for (; it != jobInfo.projectionCols.end(); it++)
         {
           udafc = dynamic_cast<UDAFColumn*>((*it).get());
@@ -3109,10 +3074,11 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           {
             pUDAFFunc = udafc->getContext().getFunction();
             // Save the multi-parm keys for dup-detection.
-            if (pUDAFFunc && udafc->getContext().getParamKeys()->size() == 0)
+            if (pUDAFFunc && !udafc->getContext().getParamKeys()->empty())
             {
               for (uint64_t k = i + 1;
-                   k < aggColVec.size() && aggColVec[k].second == AggregateColumn::MULTI_PARM; ++k)
+                   k < aggColVec.size() && aggColVec[k].second == AggregateColumn::MULTI_PARM;
+                   ++k)
               {
                 udafc->getContext().getParamKeys()->push_back(aggColVec[k].first);
               }
@@ -3136,7 +3102,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       // skip if this is a duplicate
       if (aggOp != ROWAGG_UDAF && aggOp != ROWAGG_MULTI_PARM &&
           aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc,
-                                            udafc ? udafc->getContext().getParamKeys() : NULL)) !=
+                                            udafc ? udafc->getContext().getParamKeys() : nullptr)) !=
               aggFuncMap.end())
       {
         // skip if this is a duplicate
@@ -3144,9 +3110,8 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       }
 
       functionVecPm.push_back(funct);
-      aggFuncMap.insert(make_pair(
-          boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL),
-          colAggPm));
+      aggFuncMap.emplace(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : nullptr),
+                         colAggPm);
 
       switch (aggOp)
       {
@@ -3409,11 +3374,11 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       }
 
       // Is this a UDAF? use the function as part of the key.
-      pUDAFFunc = NULL;
-      udafc = NULL;
+      pUDAFFunc = nullptr;
+      udafc = nullptr;
       if (aggOp == ROWAGG_UDAF)
       {
-        std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIdx;
+        auto it = jobInfo.projectionCols.begin() + projColsUDAFIdx;
 
         for (; it != jobInfo.projectionCols.end(); it++)
         {
@@ -3442,7 +3407,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       }
 
       AGG_MAP::iterator it = aggFuncMap.find(
-          boost::make_tuple(retKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : NULL));
+          boost::make_tuple(retKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : nullptr));
 
       if (it != aggFuncMap.end())
       {
@@ -3465,7 +3430,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         if (aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME)
         {
           it = aggFuncMap.find(boost::make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc,
-                                                 udafc ? udafc->getContext().getParamKeys() : NULL));
+                                                 udafc ? udafc->getContext().getParamKeys() : nullptr));
 
           if (it != aggFuncMap.end())
           {
@@ -3644,8 +3609,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         continue;
 
       // if the count(k) can be associated with an avg(k)
-      map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k =
-          avgFuncMap.find(keysAggUm[functionVecUm[i]->fOutputColumnIndex]);
+      auto k = avgFuncMap.find(keysAggUm[functionVecUm[i]->fOutputColumnIndex]);
 
       if (k != avgFuncMap.end())
         k->second->fAuxColumnIndex = functionVecUm[i]->fOutputColumnIndex;
@@ -3654,7 +3618,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     // there is avg(k), but no count(k) in the select list
     uint64_t lastCol = outIdx;
 
-    for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
+    for (auto k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
     {
       if (k->second->fAuxColumnIndex == (uint32_t)-1)
       {
@@ -3731,7 +3695,17 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
+  SP_ROWAGG_UM_t rowAggUm;
+  if (jobInfo.hasDistinct)
+  {
+    // slightly optimized version for distinct-only (see dbcon/joblist/joblistfactory.cpp:checkAggregation)
+    rowAggUm.reset(new RowAggregationSimpleDistinctUM(groupByUm, jobInfo.rm, jobInfo.umMemLimit));
+  }
+  else
+  {
+    rowAggUm.reset(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
+  }
+
   rowAggUm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgUm);
   aggregators.push_back(rowAggUm);
@@ -3743,7 +3717,15 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgPm(oidsAggPm.size(), posAggPm, oidsAggPm, keysAggPm, typeAggPm, csNumAggPm, scaleAggPm,
                    precisionAggPm, jobInfo.stringTableThreshold);
-  SP_ROWAGG_PM_t rowAggPm(new RowAggregation(groupByPm, functionVecPm));
+  SP_ROWAGG_PM_t rowAggPm;
+  if (jobInfo.hasDistinct)
+  {
+    rowAggPm.reset(new RowAggregationSimpleDistinct(groupByPm));
+  }
+  else
+  {
+    rowAggPm.reset(new RowAggregation(groupByPm, functionVecPm));
+  }
   rowAggPm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgPm);
   aggregators.push_back(rowAggPm);
