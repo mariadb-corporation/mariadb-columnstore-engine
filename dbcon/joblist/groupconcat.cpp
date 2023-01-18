@@ -931,18 +931,15 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     }
   }
 
-<<<<<<< HEAD
   return swapStreamWithStringAndReturnBuf(oss);
 }
 
 uint8_t* GroupConcator::swapStreamWithStringAndReturnBuf(ostringstream& oss)
 {
-=======
   if (isNull) {
     fOutputString.reset();
     return nullptr;
   }
->>>>>>> 2eac515a6... Fix logic
   int64_t resultSize = oss.str().size();
   oss << '\0' << '\0';
   outputBuf_.reset(new std::string(std::move(*oss.rdbuf()).str()));

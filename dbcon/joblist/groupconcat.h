@@ -88,7 +88,7 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
     return fConcator;
   }
 
-  EXPORT uint8_t* getResult();
+  EXPORT uint8_t* getResult() = 0;
 
  protected:
   void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
