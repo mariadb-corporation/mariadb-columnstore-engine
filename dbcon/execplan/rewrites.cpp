@@ -82,6 +82,32 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   return;
 }
 
+void cleanupEmptyNodes(execplan::ParseTree* tree)
+{
+  if (root == nullptr)
+  {
+    return;
+  }
+
+  if (root->left() == nullptr && root-> right() != nullptr
+      && (root->data()->data() == "and" || root->data()->data() == "or"))
+  {
+    root = root->right();
+    cleanupEmptyNodes(root);
+  }
+  else if (root->left() != nullptr && root-> right() == nullptr
+      && (root->data()->data() == "and" || root->data()->data() == "or"))
+  {
+    root = root->left();
+    cleanupEmptyNodes(root);
+  }
+  else
+  {
+    cleanupEmptyNodes(root->left());
+    cleanupEmptyNodes(root->right());
+  }
+}
+
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
 {
   if (common.empty())
