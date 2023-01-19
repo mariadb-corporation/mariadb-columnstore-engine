@@ -185,7 +185,7 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly)
 {
-  dumpTreeFiles(tree, "before");
+  dumpTreeFiles(tree, "0.initial");
 
   if (dumpOnly)
     return tree;
@@ -198,11 +198,14 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   #endif
 
   details::removeFromTree(tree, common);
+  dumpTreeFiles(tree, "1.remove");
   // HACK WORKAROUND FOR case of two common nodes
   details::removeFromTree(tree, common);
+  dumpTreeFiles(tree, "2.remove");
+
   auto result = details::appendToRoot(tree, common);
 
-  dumpTreeFiles(result, "after");
+  dumpTreeFiles(result, "3.final");
   return result;
 }
 
