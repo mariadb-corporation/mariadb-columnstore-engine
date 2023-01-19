@@ -325,44 +325,53 @@ TEST_F(KeyTypeTestInt64, KeyTypeLessInt64Dsc)
 // decimal
 // wide decimal
 
-class KeyTypeTestFloat : public testing::Test
+// Double Ctor Asc
+// Double Ctor Dsc
+// Double LessAsc
+// Double LessDsd
+
+template <typename T>
+class KeyTypeFloatTest : public testing::Test
 {
  public:
+  using IntegralType = T;
+
   void SetUp() override
   {
     keysCols_ = {{0, false}};
-    rg_ = setupRG({execplan::CalpontSystemCatalog::FLOAT}, {4}, {8});
+    rg_ = setupRG({(std::is_same<float, T>::value) ? execplan::CalpontSystemCatalog::FLOAT
+                                                   : execplan::CalpontSystemCatalog::DOUBLE},
+                  {sizeof(T)}, {8});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
     rowgroup::Row r;
     rg_.initRow(&r);
     uint32_t rowSize = r.getSize();
     rg_.getRow(0, &r);
-    std::vector<float> data = {0.0, 123123123.123123, 321321321.321321,
-                               //  std::numeric_limits<float>::quiet_NaN(),
-                               //  std::numeric_limits<float>::infinity(),
-                               -123123123.123123, -123123223.123123};
+    std::vector<T> data = {0.0,
+                           123123123.123123,
+                           321321321.321321,
+                           std::numeric_limits<T>::quiet_NaN(),
+                           std::numeric_limits<T>::infinity(),
+                           -123123123.123123,
+                           -123123223.123123};
     for_each(data.begin(), data.end(),
              [&r, rowSize](const float arg)
              {
                r.setFloatField(arg, 0);
                r.nextRow(rowSize);
              });
-    rg_.setRowCount(data.size());
+    if constexpr (std::is_same<float, T>::value)
+    {
+      r.setIntField<4>(joblist::FLOATNULL, 0);
+    }
+    else
+    {
+      r.setIntField<8>(joblist::DOUBLENULL, 0);
+    }
+    rg_.setRowCount(data.size() + 1);
   }
-
-  joblist::OrderByKeysType keysCols_;
-  rowgroup::RowGroup rg_;
-  rowgroup::RGData rgData_;
-};
-
-TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatAsc)
-{
-  size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
-  uint8_t* expected = new uint8_t[bufUnitSize];
-  uint8_t* buf = new uint8_t[bufUnitSize * rg_.getRowCount() + 1];
-
-  auto makeKey = [](const float a)
+  static constexpr auto makeKeyF = [](const float a)
   {
     int floatAsInt = 0;
     memcpy(&floatAsInt, &a, sizeof(float));
@@ -384,30 +393,698 @@ TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatAsc)
     // std::cout << "key end " << std::bitset<32>(htonl(key)) << std::endl;
     return htonl(key);
   };
+
+  static constexpr auto makeKeyD = [](const double a)
+  {
+    int64_t doubleAsInt = 0;
+    memcpy(&doubleAsInt, &a, sizeof(double));
+    std::cout << "key beg " << std::bitset<64>(doubleAsInt) << std::endl;
+    int64_t s = (doubleAsInt & 0x8000000000000000) ^ 0x8000000000000000;  // sign
+    int16_t e = (doubleAsInt >> 52) & 0x07FF;                             // get 12 exponent bits
+    int64_t m = (s) ? doubleAsInt & 0x07FFFFFFFFFFFF
+                    : (~doubleAsInt) & 0x07FFFFFFFFFFFF;  // get 52 bits of a fraction
+    m = (e) ? m | 0x8000000000000
+            : m << 1;  // set an additional 52th bit if exp != 0 or move the value left 1 bit
+    m = (s) ? m : m & 0xFFF7FFFFFFFFFFFF;  // if negative take the faction or take all but extra bit instead
+    // int16_t expVal = e; // There is a question how to encode a negative sign
+    int64_t expAsInt64Val = e;
+    // memcpy(&expAsInt64Val, &expVal, sizeof(expVal));
+    expAsInt64Val = ((s) ? expAsInt64Val : ~expAsInt64Val & 0x07FF) << 51;
+    // NaN, Inf ?
+    int64_t key = m;
+    key ^= s;
+    key |= expAsInt64Val;
+    std::cout << "key end " << std::bitset<64>(key) << std::endl;
+    return htonl(key);
+  };
+  joblist::OrderByKeysType keysCols_;
+  rowgroup::RowGroup rg_;
+  rowgroup::RGData rgData_;
+};
+
+using KeyTypeFloatTypes = ::testing::Types<float>;
+// using KeyTypeFloatTypes = ::testing::Types<double, float>;
+TYPED_TEST_SUITE(KeyTypeFloatTest, KeyTypeFloatTypes);
+
+TYPED_TEST(KeyTypeFloatTest, KeyTypeCtorAsc)
+{
+  using T = typename KeyTypeFloatTest<TypeParam>::IntegralType;
+  using IntT = typename datatypes::WidthToSIntegralType<sizeof(T)>::type;
+  uint32_t columnWidth = this->rg_.getColumnWidth(0);
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * this->rg_.getRowCount() + 1];
+
+  static constexpr T nAn = std::numeric_limits<T>::quiet_NaN();
+  static constexpr T inf = std::numeric_limits<T>::infinity();
+  const uint8_t* nullValuePtr = nullptr;
+  if constexpr (std::is_same<float, T>::value)
+  {
+    nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
+  }
+  else
+  {
+    nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::DOUBLENULL);
+  }
+
+  for (size_t i = 0; i < this->rg_.getRowCount(); ++i)
+  {
+    memset(expected, 0, sizeof(T));
+    uint8_t* pos = expected;
+    rowgroup::RowGroup& rg = this->rg_;
+    IntT k = 0;
+    bool isEitherNullOrSpecial = false;
+    if constexpr (std::is_same<float, T>::value)
+    {
+      T v = rg.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, T, T>(0, i);
+      isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+      k = this->makeKeyF(v);
+    }
+    else
+    {
+      T v = rg.getColumnValue<execplan::CalpontSystemCatalog::DOUBLE, T, T>(0, i);
+      isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+      k = this->makeKeyD(v);
+    }
+
+    *pos++ = static_cast<uint8_t>(isEitherNullOrSpecial);
+    memcpy(pos, &k, sizeof(T));
+
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    if (std::is_same<double, T>::value)
+    {
+      // printHexArray(key.key(), expected, bufUnitSize);
+      // std::cout << std::bitset<64>(k) << std::endl;
+    }
+    // ASSERT_FALSE(key.key() == nullptr);
+    // ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+  }
+}
+
+TYPED_TEST(KeyTypeFloatTest, KeyTypeCtorDsc)
+{
+  using T = typename KeyTypeFloatTest<TypeParam>::IntegralType;
+  using IntT = typename datatypes::WidthToSIntegralType<sizeof(T)>::type;
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  uint32_t columnWidth = this->rg_.getColumnWidth(0);
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * this->rg_.getRowCount() + 1];
+
+  static constexpr T nAn = std::numeric_limits<T>::quiet_NaN();
+  static constexpr T inf = std::numeric_limits<T>::infinity();
+  const uint8_t* nullValuePtr = nullptr;
+  if constexpr (std::is_same<float, T>::value)
+  {
+    nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
+  }
+  else
+  {
+    nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::DOUBLENULL);
+  }
+
+  for (size_t i = 0; i < this->rg_.getRowCount(); ++i)
+  {
+    memset(expected, 0, sizeof(T));
+    uint8_t* pos = expected;
+    rowgroup::RowGroup& rg = this->rg_;
+    IntT k = 0;
+    bool isEitherNullOrSpecial = false;
+    if constexpr (std::is_same<float, T>::value)
+    {
+      T v = rg.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, T, T>(0, i);
+      isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+      k = ~this->makeKeyF(v);
+    }
+    else
+    {
+      T v = rg.getColumnValue<execplan::CalpontSystemCatalog::DOUBLE, T, T>(0, i);
+      isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+      k = ~this->makeKeyD(v);
+    }
+
+    *pos++ =
+        (isDsc) ? static_cast<uint8_t>(!isEitherNullOrSpecial) : static_cast<uint8_t>(isEitherNullOrSpecial);
+    memcpy(pos, &k, sizeof(T));
+
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    if (std::is_same<double, T>::value)
+    {
+      printHexArray(key.key(), expected, bufUnitSize);
+      std::cout << std::bitset<64>(k) << std::endl;
+    }
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+  }
+}
+
+TYPED_TEST(KeyTypeFloatTest, KeyTypeLessAsc)
+{
+  // std::vector<float> data = {0.0,
+  //                            123123123.123123,
+  //                            321321321.321321,
+  //                            std::numeric_limits<float>::quiet_NaN(),
+  //                            std::numeric_limits<float>::infinity(),
+  //                            -123123123.123123,
+  //                            -123123223.123123};
+
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBugsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBugsVec.begin(), keyBugsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+
+  // std::vector<std::vector<bool>> expectedResultsMatrix = {
+  //     {false, true, true, false, false, false, false},
+  //       {false, false, true, false, false, false, false},
+  //     {false, false, false, false, false, false, false},
+  //      {true, true, true, false, true, true, true},
+  //     {true, true, true, false, false, true, true},
+  //     {true, true, true, false, false, false, false},
+  //     {true, true, true, false, false, true, false}};
+  // size_t x = 0;
+  // size_t y = 0;
+  // for_each(keys.begin(), keys.end(),
+  //          [this, &prevPhaseSorting, &expectedResultsMatrix, &keys, &x, &y](auto& key1)
+  //          {
+  //            for_each(keys.begin(), keys.end(),
+  //                     [this, &prevPhaseSorting, &expectedResultsMatrix, &key1, &x, &y](auto& key2)
+  //                     {
+  //                       if (expectedResultsMatrix[x][y])
+  //                       {
+  //                         ASSERT_TRUE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0},
+  //                                               prevPhaseSorting));
+  //                       }
+  //                       else
+  //                       {
+  //                         ASSERT_FALSE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0},
+  //                                                prevPhaseSorting));
+  //                       }
+  //                       ++y;
+  //                     });
+  //            ++x;
+  //          });
+  ASSERT_FALSE(keys[0].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[1].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[2].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[3].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[4].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[5].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[6].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[7].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
+
+TYPED_TEST(KeyTypeFloatTest, KeyTypeLessFloatDsc)
+{
+  // std::vector<float> data = {0.0,
+  //                            123123123.123123,
+  //                            321321321.321321,
+  //                            std::numeric_limits<float>::quiet_NaN(),
+  //                            std::numeric_limits<float>::infinity(),
+  //                            -123123123.123123,
+  //                            -123123223.123123};
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBugsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBugsVec.begin(), keyBugsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+
+  ASSERT_FALSE(keys[0].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[1].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[2].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[3].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[4].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[5].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[6].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[7].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
+
+class KeyTypeTestFloat : public testing::Test
+{
+ public:
+  void SetUp() override
+  {
+    keysCols_ = {{0, false}};
+    rg_ = setupRG({execplan::CalpontSystemCatalog::FLOAT}, {4}, {8});
+    rgData_ = rowgroup::RGData(rg_);
+    rg_.setData(&rgData_);
+    rowgroup::Row r;
+    rg_.initRow(&r);
+    uint32_t rowSize = r.getSize();
+    rg_.getRow(0, &r);
+    std::vector<float> data = {0.0,
+                               123123123.123123,
+                               321321321.321321,
+                               std::numeric_limits<float>::quiet_NaN(),
+                               std::numeric_limits<float>::infinity(),
+                               -123123123.123123,
+                               -123123223.123123};
+    for_each(data.begin(), data.end(),
+             [&r, rowSize](const float arg)
+             {
+               r.setFloatField(arg, 0);
+               r.nextRow(rowSize);
+             });
+    r.setIntField<4>(joblist::FLOATNULL, 0);
+    rg_.setRowCount(data.size() + 1);
+  }
+  static constexpr auto makeKeyF = [](const float a)
+  {
+    int floatAsInt = 0;
+    memcpy(&floatAsInt, &a, sizeof(float));
+    // std::cout << "key beg " << std::bitset<32>(floatAsInt) << std::endl;
+    int s = (floatAsInt & 0x80000000) ^ 0x80000000;
+    int8_t e = (floatAsInt >> 23) & 0xFF;
+    int m = (s) ? floatAsInt & 0x7FFFFF : (~floatAsInt) & 0x7FFFFF;
+    m = (e) ? m | 0x800000 : m << 1;
+    m = (s) ? m : m & 0xFF7FFFFF;
+
+    int8_t expVal = (e - 127) ^ 0x80;
+    int32_t expAsInt32Val = 0;
+    memcpy(&expAsInt32Val, &expVal, sizeof(expVal));
+    expAsInt32Val = ((s) ? expAsInt32Val : ~expAsInt32Val & 0xFF) << 23;
+    // NaN, Inf ?
+    int key = m;
+    key ^= s;
+    key |= expAsInt32Val;
+    // std::cout << "key end " << std::bitset<32>(htonl(key)) << std::endl;
+    return htonl(key);
+  };
+  joblist::OrderByKeysType keysCols_;
+  rowgroup::RowGroup rg_;
+  rowgroup::RGData rgData_;
+};
+
+TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatAsc)
+{
+  uint32_t columnWidth = rg_.getColumnWidth(0);
+  size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * rg_.getRowCount() + 1];
+
+  static constexpr float nAn = std::numeric_limits<float>::quiet_NaN();
+  static constexpr float inf = std::numeric_limits<float>::infinity();
+  const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
   for (size_t i = 0; i < rg_.getRowCount(); ++i)
   {
     memset(expected, 0, sizeof(float));
     uint8_t* pos = expected;
     float v = rg_.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, float, float>(0, i);
-    // std::cout << v << std::endl;
-    int k = makeKey(v);
-    *pos++ = 1;
+    int k = makeKeyF(v);
+    bool isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+    *pos++ = static_cast<uint8_t>(isEitherNullOrSpecial);
     memcpy(pos, &k, sizeof(float));
 
     auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
-    printHexArray(key.key(), expected, bufUnitSize);
+    // printHexArray(key.key(), expected, bufUnitSize);
     ASSERT_FALSE(key.key() == nullptr);
     ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
   }
 }
-// NaN, Inf ask Bar
-// Float DSC
-// Float LessAsc
-// Float LessDsd
-// Double Ctor Asc
-// Double Ctor Dsc
-// Double LessAsc
-// Double LessDsd
+
+TEST_F(KeyTypeTestFloat, KeyTypeCtorFloatDsc)
+{
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  uint32_t columnWidth = rg_.getColumnWidth(0);
+  size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
+  uint8_t* expected = new uint8_t[bufUnitSize];
+  uint8_t* buf = new uint8_t[bufUnitSize * rg_.getRowCount() + 1];
+
+  static constexpr float nAn = std::numeric_limits<float>::quiet_NaN();
+  static constexpr float inf = std::numeric_limits<float>::infinity();
+  const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
+  for (size_t i = 0; i < rg_.getRowCount(); ++i)
+  {
+    memset(expected, 0, sizeof(float));
+    uint8_t* pos = expected;
+    float v = rg_.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, float, float>(0, i);
+    int k = ~makeKeyF(v);
+    bool isEitherNullOrSpecial = (memcmp(nullValuePtr, &v, columnWidth) != 0) && v != nAn && v != inf;
+    *pos++ =
+        (isDsc) ? static_cast<uint8_t>(!isEitherNullOrSpecial) : static_cast<uint8_t>(isEitherNullOrSpecial);
+    memcpy(pos, &k, sizeof(float));
+
+    auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
+    // printHexArray(key.key(), expected, bufUnitSize);
+    ASSERT_FALSE(key.key() == nullptr);
+    ASSERT_EQ(memcmp(expected, key.key(), bufUnitSize), 0);
+  }
+}
+
+TEST_F(KeyTypeTestFloat, KeyTypeLessFloatAsc)
+{
+  // std::vector<float> data = {0.0,
+  //                            123123123.123123,
+  //                            321321321.321321,
+  //                            std::numeric_limits<float>::quiet_NaN(),
+  //                            std::numeric_limits<float>::infinity(),
+  //                            -123123123.123123,
+  //                            -123123223.123123};
+
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBugsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBugsVec.begin(), keyBugsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+
+  // std::vector<std::vector<bool>> expectedResultsMatrix = {
+  //     {false, true, true, false, false, false, false},
+  //       {false, false, true, false, false, false, false},
+  //     {false, false, false, false, false, false, false},
+  //      {true, true, true, false, true, true, true},
+  //     {true, true, true, false, false, true, true},
+  //     {true, true, true, false, false, false, false},
+  //     {true, true, true, false, false, true, false}};
+  // size_t x = 0;
+  // size_t y = 0;
+  // for_each(keys.begin(), keys.end(),
+  //          [this, &prevPhaseSorting, &expectedResultsMatrix, &keys, &x, &y](auto& key1)
+  //          {
+  //            for_each(keys.begin(), keys.end(),
+  //                     [this, &prevPhaseSorting, &expectedResultsMatrix, &key1, &x, &y](auto& key2)
+  //                     {
+  //                       if (expectedResultsMatrix[x][y])
+  //                       {
+  //                         ASSERT_TRUE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0},
+  //                                               prevPhaseSorting));
+  //                       }
+  //                       else
+  //                       {
+  //                         ASSERT_FALSE(key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0},
+  //                                                prevPhaseSorting));
+  //                       }
+  //                       ++y;
+  //                     });
+  //            ++x;
+  //          });
+  ASSERT_FALSE(keys[0].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[1].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[2].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[3].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[3].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[4].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[5].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[6].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[7].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[7].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
+
+TEST_F(KeyTypeTestFloat, KeyTypeLessFloatDsc)
+{
+  // std::vector<float> data = {0.0,
+  //                            123123123.123123,
+  //                            321321321.321321,
+  //                            std::numeric_limits<float>::quiet_NaN(),
+  //                            std::numeric_limits<float>::infinity(),
+  //                            -123123123.123123,
+  //                            -123123223.123123};
+  const bool isDsc = true;
+  this->keysCols_ = {{0, isDsc}};
+  sorting::SortingThreads prevPhaseSorting;
+  size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBugsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBugsVec.begin(), keyBugsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+
+  ASSERT_FALSE(keys[0].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[0].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[0].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[1].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[1].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[1].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_TRUE(keys[2].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[2].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[2].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[3].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[3].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[4].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[4].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[4].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[5].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[5].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[5].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[6].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[3], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[4], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[6].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_TRUE(keys[6].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+
+  ASSERT_FALSE(keys[7].less(keys[0], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[1], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[2], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[5], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[6], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+  ASSERT_FALSE(keys[7].less(keys[7], this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0}, prevPhaseSorting));
+}
 
 const constexpr execplan::CalpontSystemCatalog::ColDataType SignedCTs[] = {
     execplan::CalpontSystemCatalog::TINYINT,  execplan::CalpontSystemCatalog::TINYINT,

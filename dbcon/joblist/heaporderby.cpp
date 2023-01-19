@@ -39,12 +39,15 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     {
       case execplan::CalpontSystemCatalog::FLOAT:
       {
-        const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
-        // float val = *((float*)valueBuf);
-        // std::cout << " KeyType " << val << std::endl;
+        float v = rg.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, float, float>(columnId, p.rowID);
+        const uint8_t* valueBuf = reinterpret_cast<const uint8_t*>(&v);
+        static constexpr float nAn = std::numeric_limits<float>::quiet_NaN();
+        static constexpr float inf = std::numeric_limits<float>::infinity();
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
-        bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+        bool isEitherNullOrSpecial =
+            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && v != nAn && v != inf;
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isEitherNullOrSpecial)
+                         : static_cast<uint8_t>(isEitherNullOrSpecial);
 
         int floatAsInt = 0;
         std::memcpy(&floatAsInt, valueBuf, columnWidth);
@@ -56,11 +59,10 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         int32_t expAsInt32Val = 0;
         memcpy(&expAsInt32Val, &expVal, sizeof(expVal));
         expAsInt32Val = ((s) ? expAsInt32Val : ~expAsInt32Val & 0xFF) << 23;
-        // NaN, Inf ?
         int32_t key = m;
         key ^= s;
         key |= expAsInt32Val;
-        key = htonl(key);
+        key = (isDsc) ? ~htonl(key) : htonl(key);
         std::memcpy(pos, &key, columnWidth);
         pos += columnWidth;
         break;
