@@ -112,7 +112,7 @@ class GroupConcator
   virtual void merge(GroupConcator*) = 0;
   virtual uint8_t* getResultImpl(const std::string& sep) = 0;
   virtual uint8_t* getResult(const std::string& sep);
-  virtual uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss);
+  uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull);
 
   virtual const std::string toString() const;
 

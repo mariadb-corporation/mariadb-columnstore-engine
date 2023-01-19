@@ -889,7 +889,7 @@ uint8_t* JsonArrayAggOrderBy::getResultImpl(const string&)
     oss << ']';
   }
 
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, false);
 }
 
 const string JsonArrayAggOrderBy::toString() const
@@ -1033,7 +1033,7 @@ uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
     }
     oss << ']';
   }
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, false);
 }
 
 const string JsonArrayAggNoOrder::toString() const

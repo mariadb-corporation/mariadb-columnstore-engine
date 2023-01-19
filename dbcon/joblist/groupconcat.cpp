@@ -928,11 +928,15 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     }
   }
 
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, isNull);
 }
 
-uint8_t* GroupConcator::swapStreamWithStringAndReturnBuf(ostringstream& oss)
+uint8_t* GroupConcator::swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull)
 {
+  if (isNull) {
+    outputBuf_.reset();
+    return nullptr;
+  }
   int64_t resultSize = oss.str().size();
   oss << '\0' << '\0';
   outputBuf_.reset(new std::string(std::move(*oss.rdbuf()).str()));
@@ -1111,7 +1115,7 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
     fDataQueue.pop();
   }
 
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, isNull);
 }
 
 const string GroupConcatNoOrder::toString() const
