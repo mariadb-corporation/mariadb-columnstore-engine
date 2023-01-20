@@ -2996,7 +2996,7 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
         if (cc)
         {
           vector<string> cv;
-	  auto str = cc->constval().safeString("");
+          auto str = cc->constval().safeString("");
           boost::split(cv, str, boost::is_any_of("."));
 
           if (cv.size() == 3)

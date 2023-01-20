@@ -488,10 +488,10 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
         {
           const auto str = row.getStringField(fInputIndex);
           if (str.isNull())
-	  {
+          {
             isNull = true;
-	    fResult.strVal.dropString();
-	  }
+            fResult.strVal.dropString();
+          }
           else
             fResult.strVal.assign(str.unsafeStringRef());
 

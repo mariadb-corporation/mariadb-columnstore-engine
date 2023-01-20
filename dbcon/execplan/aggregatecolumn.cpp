@@ -406,7 +406,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
         default:
         {
           auto const str = row.getConstString(fInputIndex);
-	  fResult.strVal.dropString();
+          fResult.strVal.dropString();
           if (!str.isNull())
             fResult.strVal.assign((const uint8_t*)str.str(), str.length());
 

@@ -471,7 +471,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
       if (fResultType.colWidth <= 7)
       {
         //fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
-	const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char *intAsChar = (const char*) (&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
@@ -484,7 +484,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
       if (fResultType.colWidth <= 8)
       {
         //fResult.strVal.assign((uint8_t*)(&fResult.origIntVal), sizeof(fResult.origIntVal));
-	const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char *intAsChar = (const char*) (&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
@@ -542,9 +542,9 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         else
         {
           snprintf(tmp, 312, "%.5f", base);
-	  std::string tmpCat(removeTrailing0(tmp, 312));
+          std::string tmpCat(removeTrailing0(tmp, 312));
           snprintf(tmp, 312, "e%02d", exponent);
-	  tmpCat += tmp;
+          tmpCat += tmp;
           fResult.strVal.assign(tmpCat);
         }
 
@@ -577,9 +577,9 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         else
         {
           snprintf(tmp, 312, "%.9f", base);
-	  std::string tmpCat(removeTrailing0(tmp, 312));
+          std::string tmpCat(removeTrailing0(tmp, 312));
           snprintf(tmp, 312, "e%02d", exponent);
-	  tmpCat += tmp;
+          tmpCat += tmp;
           fResult.strVal.assign(tmpCat);
         }
 
@@ -612,9 +612,9 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         else
         {
           snprintf(tmp, 312, "%.14Lf", base);
-	  std::string tmpCat = removeTrailing0(tmp, 312);
+          std::string tmpCat = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
-	  tmpCat += tmp;
+          tmpCat += tmp;
           fResult.strVal.assign(tmpCat);
         }
 

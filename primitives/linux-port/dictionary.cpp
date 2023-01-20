@@ -563,7 +563,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
         }
 
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
-	outValue->isnull = !filter->data;
+        outValue->isnull = !filter->data;
         outValue->len = filter->len;
         memcpy(outValue->data, filter->data, filter->len);
         header.NBYTES += sizeof(DataValue) + filter->len;
@@ -594,10 +594,10 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
           out->resize(out->size() * SCALE_FACTOR);
         }
 
-	idbassert(sigptr.data != nullptr || !sigptr.len);
+        idbassert(sigptr.data != nullptr || !sigptr.len);
 
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
-	outValue->isnull = sigptr.data == nullptr;
+        outValue->isnull = sigptr.data == nullptr;
         outValue->len = sigptr.len;
         memcpy(outValue->data, sigptr.data, sigptr.len);
         header.NBYTES += sizeof(DataValue) + sigptr.len;

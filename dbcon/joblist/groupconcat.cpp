@@ -88,7 +88,6 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
     int key = -1;
     const vector<SRCP>& cols = rcp->columnVec();
 
-	idbassert(groupConcat->fGroupCols.size() < 100);
     for (uint64_t j = 0, k = 0; j < cols.size(); j++)
     {
       const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(cols[j].get());
@@ -104,7 +103,6 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
         groupConcat->fConstCols.push_back(make_pair(cc->constval(), j));
       }
     }
-	idbassert(groupConcat->fGroupCols.size() < 100);
 
     vector<SRCP>& orderCols = gcc->orderCols();
 
@@ -117,7 +115,6 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       fColumns.insert(key);
       groupConcat->fOrderCols.push_back(make_pair(key, k->get()->asc()));
     }
-	idbassert(groupConcat->fGroupCols.size() < 100);
 
     fGroupConcat.push_back(groupConcat);
 
@@ -212,7 +209,6 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
     vector<pair<uint32_t, uint32_t> >::iterator i1 = (*k)->fGroupCols.begin();
 
-	idbassert((*k)->fGroupCols.size() < 100);
     while (i1 != (*k)->fGroupCols.end())
     {
       map<uint32_t, uint32_t>::iterator j = projColumnMap.find(i1->first);
@@ -714,16 +710,12 @@ GroupConcatOrderBy::~GroupConcatOrderBy()
 
 void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
-	idbassert(gcc->fGroupCols.size() < 100);
   GroupConcator::initialize(gcc);
-	idbassert(gcc->fGroupCols.size() < 100);
 
   fOrderByCond.resize(0);
-	idbassert(gcc->fGroupCols.size() < 100);
 
   for (uint64_t i = 0; i < gcc->fOrderCond.size(); i++)
     fOrderByCond.push_back(IdbSortSpec(gcc->fOrderCond[i].first, gcc->fOrderCond[i].second));
-	idbassert(gcc->fGroupCols.size() < 100);
 
   fDistinct = gcc->fDistinct;
   fRowsPerRG = 128;

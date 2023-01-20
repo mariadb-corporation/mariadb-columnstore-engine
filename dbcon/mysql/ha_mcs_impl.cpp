@@ -421,7 +421,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
         {
           //(*f)->store("", 0, (*f)->charset());
           (*f)->reset();
-	  (*f)->set_null();
+          (*f)->set_null();
         }
 
         continue;
@@ -436,18 +436,9 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
       }
       else
       {
-        // fetch and store data
-        //if (row.isNullValue(s))
-	//{
-        //  (*f)->reset();
-	//  (*f)->set_null();
-	//}
-	//else
-	//{
-          (*f)->set_notnull();
-          datatypes::StoreFieldMariaDB mf(*f, colType, timeZone);
-          h->storeValueToField(row, s, &mf);
-	//}
+        (*f)->set_notnull();
+        datatypes::StoreFieldMariaDB mf(*f, colType, timeZone);
+        h->storeValueToField(row, s, &mf);
       }
     }
 

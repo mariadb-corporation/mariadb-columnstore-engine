@@ -576,8 +576,7 @@ inline bool matchingColValue(
   switch (columnFilterMode)
   {
     // Empty filter is always true
-    case ALWAYS_TRUE:
-	    return true;
+    case ALWAYS_TRUE: return true;
 
     // Filter consisting of exactly one comparison operation
     case SINGLE_COMPARISON:
@@ -1800,7 +1799,6 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
                                    initialRID, outputType, validMinMax, emptyValue, nullValue, Min, Max,
                                    isNullValueMatches, reinterpret_cast<const uint8_t*>(blockAux));
 }  // end of filterColumnData
-
 
 }  // namespace
 

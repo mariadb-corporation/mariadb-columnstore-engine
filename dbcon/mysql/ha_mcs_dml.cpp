@@ -126,7 +126,7 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
         char buf[maxlen];
         memset(buf, 0, maxlen);
         snprintf(buf, maxlen, "%.1024f", dbval);
-	NullString value(buf, strlen(buf));
+        NullString value(buf, strlen(buf));
         ci.tableValuesMap[columnPos].push_back(value);
       }
       else
@@ -141,7 +141,7 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
 //        else
         {
           string val(attribute.ptr(), attribute.length());
-	  NullString nonNull(val);
+          NullString nonNull(val);
           ci.tableValuesMap[columnPos].push_back(nonNull);
         }
       }

@@ -5054,8 +5054,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
       {
         string separator;
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
-	char t[100];
-	sprintf(t, "%p",gc->get_separator()->ptr());
         (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
       }
     }
@@ -5749,8 +5747,8 @@ void gp_walk(const Item* item, void* arg)
             if (isp->result_type() == STRING_RESULT)
             {
               String val, *str = isp->val_str(&val);
-	      if (str)
-	      {
+              if (str)
+              {
                 string cval;
 
                 if (str->ptr())
@@ -5761,13 +5759,13 @@ void gp_walk(const Item* item, void* arg)
                 gwip->rcWorkStack.push(new ConstantColumn(cval));
                 (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
                 break;
-	      }
-	      else
-	      {
+              }
+              else
+              {
                 gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
                 (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
                 break;
-	      }
+              }
             }
 
             gwip->rcWorkStack.push(buildReturnedColumn(isp, *gwip, gwip->fatalParseError));
