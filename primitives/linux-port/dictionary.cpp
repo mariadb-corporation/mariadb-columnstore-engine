@@ -206,7 +206,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader* h, TokenB
 
         throw logging::DictionaryBufferOverflow();
       }
-      
+
 
       retDataValues->isnull = retDataValues->data == nullptr;
       retDataValues->len = siglen;
@@ -358,7 +358,7 @@ void PrimitiveProcessor::nextSig(int NVALS, const PrimToken* tokens, p_DataValue
     }
 
     /* XXXPAT: Need to check for the NULL token here */
-    
+
     ret->len = tokens[dict_OffsetIndex].len;
     ret->data = &niceBlock[tokens[dict_OffsetIndex].offset];
 

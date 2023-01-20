@@ -796,7 +796,7 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
 
       case WriteEngine::WR_TOKEN:
         ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
-	break;
+        break;
 
       case WriteEngine::WR_BINARY:
         size_t size = cscColType.colWidth;

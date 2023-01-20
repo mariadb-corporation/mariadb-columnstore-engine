@@ -250,7 +250,7 @@ void DictStep::processResult()
       pos += 2;
       if (!isnull)
       {
-	ns.assign(pos, len);
+        ns.assign(pos, len);
       }
       pos += len;
       (*strValues)[tmpResultCounter] = ns;
@@ -597,7 +597,7 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
         // We do string copy here, should maybe have a RowGroup
         // function to append strings or something?
         // XXX: can NULLs be a valid value for multipart blob?
-	if (((newRidList[i].token >> 46) < 0x3FFFF) && ((newRidList[i].token >> 46) > 0))
+        if (((newRidList[i].token >> 46) < 0x3FFFF) && ((newRidList[i].token >> 46) > 0))
         {
           StringPtr multi_part[1];
           uint16_t old_offset = primMsg->tokens[0].offset;

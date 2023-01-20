@@ -47,11 +47,11 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
     {
       case execplan::CalpontSystemCatalog::DECIMAL:
       case execplan::CalpontSystemCatalog::UDECIMAL:
-	widSum += fpi->data()->resultType().precision + 2;
-	break;
+        widSum += fpi->data()->resultType().precision + 2;
+        break;
       default:
         widSum += fpi->data()->resultType().colWidth * 3; // overprovision for bytes converted into decomals.
-	break;
+        break;
     }
   }
   if (widSum < resultType.colWidth)

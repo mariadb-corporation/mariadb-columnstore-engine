@@ -130,17 +130,17 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg2, &keyName))
         {
           if (jsEg2->s.error || json_skip_key(jsEg2))
-	  {
+          {
             return 2;
-	  }
+          }
           continue;
         }
 
         /* Json_2 has same key as Json_1. Merge them. */
         if ((ires = doMergePatch(retJS, jsEg1, jsEg2, mrgEmpty)))
-	{
+        {
           return ires;
-	}
+        }
 
         if (mrgEmpty)
           retJS = retJS.substr(0, savLen);
@@ -194,15 +194,15 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg1, &keyName))
         {
           if (jsEg1->s.error || json_skip_key(jsEg1))
-	  {
+          {
             return 2;
-	  }
+          }
           continue;
         }
         if (json_skip_key(jsEg2) || json_skip_level(jsEg1))
-	{
+        {
           return 1;
-	}
+        }
         goto continue_j2;
       }
 
@@ -228,9 +228,9 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       else
       {
         if (copyValuePatch(retJS, jsEg2))
-	{
+        {
           return 1;
-	}
+        }
         firstKey = 0;
       }
 

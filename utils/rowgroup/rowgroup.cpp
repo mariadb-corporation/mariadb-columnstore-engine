@@ -900,7 +900,7 @@ bool Row::isNullValue(uint32_t colIndex) const
         case 8: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::CHAR8NULL);
         default:
           // a case for value stored with NULL flag prefix.
-	  // see setStringField method.
+          // see setStringField method.
           return getNullMark(colIndex);
       }
 
@@ -1439,9 +1439,9 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
       }
       else if (UNLIKELY(in.isLongString(i)))
-        {
-		  out->setStringField(in.getConstString(i), mapping[i]);
-	}
+      {
+        out->setStringField(in.getConstString(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
       else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))

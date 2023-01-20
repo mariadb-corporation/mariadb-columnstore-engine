@@ -53,15 +53,15 @@ bool boolVal(SPTP& parm, Row& row, long timeZone)
       case CalpontSystemCatalog::VARCHAR:
         {
           const auto& str = parm->data()->getStrVal(timeZone);
-	  if (str.isNull())
-	  {
-	    ret = 0;
-	  }
-	  else
-	  {
+          if (str.isNull())
+          {
+            ret = 0;
+          }
+          else
+          {
             ret = (atoi((char*)(str.str())) != 0);
-	  }
-	}
+          }
+        }
         break;
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT: ret = (parm->data()->getFloatVal(row, isNull) != 0); break;

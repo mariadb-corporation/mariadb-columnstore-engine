@@ -2008,8 +2008,6 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     }
     else if (UNLIKELY(in.isLongString(i)))
     {
-	    utils::ConstString cs = in.getConstString(i);
-	    utils::NullString ns(cs.str(),cs.length());
       out->setStringField(in.getConstString(i), i);
     }
     else if (UNLIKELY(in.isShortString(i)))

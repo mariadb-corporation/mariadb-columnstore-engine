@@ -959,7 +959,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
         {
           tmpStr.dropString();
           // colTuple.data = column.colType.getNullValueForType();
-	}
+        }
         colTuple.data = tmpStr;
       }
       else if (NULLABLE_COL == column.tableColName.column)

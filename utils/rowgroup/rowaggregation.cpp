@@ -4022,7 +4022,7 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)buff);
         gcString = gccAg->getResult();
-	utils::ConstString str((char*)gcString, gcString ? strlen((const char*)gcString) : 0);
+        utils::ConstString str((char*)gcString, gcString ? strlen((const char*)gcString) : 0);
         fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
         // gccAg->getResult(buff);
       }
@@ -4033,7 +4033,7 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
         gcString = gccAg->getResult();
-	utils::ConstString str((char*)gcString, gcString ? strlen((char*)gcString) : 0);
+        utils::ConstString str((char*)gcString, gcString ? strlen((char*)gcString) : 0);
         fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
       }
     }

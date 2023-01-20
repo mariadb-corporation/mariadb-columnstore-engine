@@ -363,12 +363,12 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       {
         const utils::NullString& val = expression[i]->getStrVal(row, isNull);
 
-	// XXX: TODO: we may as well set the string field directly.
+        // XXX: TODO: we may as well set the string field directly.
         if (isNull)
-	{
+        {
           utils::NullString nullstr;
           row.setStringField(nullstr, expression[i]->outputIndex());
-	}
+        }
         else
           row.setStringField(val, expression[i]->outputIndex());
 

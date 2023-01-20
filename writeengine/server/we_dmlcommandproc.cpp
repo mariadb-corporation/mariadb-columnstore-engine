@@ -208,7 +208,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
         dctnryStruct.fCharsetNumber = colType.charsetNumber;
 
-	if (colStruct.tokenFlag)
+        if (colStruct.tokenFlag)
         {
           dctnryStruct.dctnryOid = colType.ddn.dictOID;
           dctnryStruct.columnOid = colStruct.dataOid;
@@ -293,7 +293,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               isNULL = columnPtr->get_isnull();
 
-	      isNULL = isNULL ? true : tmpStr.isNull();
+              isNULL = isNULL ? true : tmpStr.isNull();
 
               if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
               {
@@ -342,7 +342,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
           else
           {
             string x;
-	    NullString indata;
+            NullString indata;
 
             for (uint32_t i = 0; i < origVals.size(); i++)
             {
@@ -1790,8 +1790,8 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
           for (uint32_t i = 0; i < valuesPerColumn; i++)
           {
             // XXX XXX XXX XXX now isNull is in the NullString, this is not necessary!!!
-	    // XXX XXX XXX XXX but it may crash the application!!! XXX XXX XXX XXX
-	    // XXX XXX XXX XXX I need to figure out where the opposite part is!!! XXX XXX XXX XXX
+            // XXX XXX XXX XXX but it may crash the application!!! XXX XXX XXX XXX
+            // XXX XXX XXX XXX I need to figure out where the opposite part is!!! XXX XXX XXX XXX
             //bs >> tmp8;
             //isNULL = tmp8;
             bs >> tmpStr;
@@ -2052,7 +2052,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                 bs >> valStr;
 
                 if (!valStr.isNull()) // null values do not require any padding or truncation.
-		{
+                {
                   if (valStr.length() > (unsigned int)colType.colWidth)
                   {
                     valStr = NullString(valStr.unsafeStringRef().substr(0, colType.colWidth));
@@ -2066,7 +2066,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                       valStr.resize(colType.colWidth, 0);
                     }
                   }
-		}
+                }
 
                 // FIXME: colValue is uint64_t (8 bytes)
                 memcpy(&colValue, valStr.str(), valStr.length());
@@ -3088,11 +3088,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
             case CalpontSystemCatalog::VARCHAR:
             {
               value = row.getStringField(fetchColPos);
-	      if (!value.isNull())
-	      {
+              if (!value.isNull())
+              {
                 unsigned i = strlen(value.str());
                 value.assign(value.unsafeStringRef().substr(0, i));
-	      }
+              }
               break;
             }
 
@@ -3243,7 +3243,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 str += "0";
             }
 
-	    value.assign(str);
+            value.assign(str);
           }
 
           // check data length
@@ -3449,11 +3449,11 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               case CalpontSystemCatalog::VARCHAR:
               {
                 value = row.getStringField(fetchColPos);
-		if (!value.isNull())
-		{
+                if (!value.isNull())
+                {
                   unsigned i = strlen(value.str());
                   value.assign(value.safeString().substr(0, i)); // XXX: why???
-		}
+                }
                 break;
               }
 
@@ -3604,7 +3604,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
               for (uint32_t i = 0; i < (funcScale - digitsAfterPoint); i++)
                 str += "0";
             }
-	    value.assign(str);
+            value.assign(str);
           }
 
           // Check NOT NULL constraint and default value
@@ -3696,10 +3696,10 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
         }
 
         NullString inData;
-	if (!isNull)
-	{
+        if (!isNull)
+        {
           inData = columnsUpdated[j]->get_DataVector()[0];
-	}
+        }
 
         if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.safeString("").compare("0000-00-00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
