@@ -41,13 +41,11 @@ namespace execplan
  */
 ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(NULLDATA)
 {
-//idblog("default ConstantColumn constructor");
 }
 
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-//idblog("ConstantColumn constructor from SQL '" << sql << "', type " << type << "(NULLDATA is " << ((int)NULLDATA) << ")");
   fResult.strVal.assign(sql);
 
   fResult.intVal = atoll(sql.c_str());
@@ -228,21 +226,6 @@ const string ConstantColumn::toString() const
 
 const string ConstantColumn::data() const
 {
-#if 0
-int nptrs;
-void* pbuf[100];
-char** strs;
-nptrs = backtrace(pbuf, 100);
-strs = backtrace_symbols(pbuf, nptrs);
-idblog("getting data val: " << fData);
-for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
-idblog("    stk: " << i << ": " << s);
-}
-if (strs) {
-free(strs);
-}
-#endif
   return fData;
 }
 

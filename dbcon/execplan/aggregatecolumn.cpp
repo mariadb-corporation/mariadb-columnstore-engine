@@ -87,13 +87,11 @@ void getAggCols(execplan::ParseTree* n, void* obj)
  */
 AggregateColumn::AggregateColumn() : fAggOp(NOOP), fAsc(false)
 {
-idblog("cons 1");
 }
 
 AggregateColumn::AggregateColumn(const uint32_t sessionID)
  : ReturnedColumn(sessionID), fAggOp(NOOP), fAsc(false)
 {
-idblog("cons 2");
 }
 
 // deprecated constructor. use function name as string
@@ -107,7 +105,6 @@ AggregateColumn::AggregateColumn(const string& functionName, const string& conte
   // TODO: need to handle distinct
   SRCP srcp(new ArithmeticColumn(content));
   fAggParms.push_back(srcp);
-idblog("cons 3");
 }
 
 AggregateColumn::AggregateColumn(const AggregateColumn& rhs, const uint32_t sessionID)
@@ -122,7 +119,6 @@ AggregateColumn::AggregateColumn(const AggregateColumn& rhs, const uint32_t sess
 {
   fAlias = rhs.alias();
   fAggParms = rhs.fAggParms;
-idblog("cons 4");
 }
 
 /**

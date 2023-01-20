@@ -706,10 +706,8 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
       ct.nextvalue = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[16])
     {
-	      idblog("setting is (not) null constraint, ");
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
       {
-	      idblog("is not null constraint, ");
         ct.constraintType = NOTNULL_CONSTRAINT;
       }
     }
@@ -717,7 +715,6 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
-	      idblog("setting default value: <<<" << ct.defaultValue.safeString() << ">>>.");
       if (!ct.defaultValue.isNull())
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
@@ -730,10 +727,6 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
       tcn.table = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
       tcn.column = ((*it)->GetStringData(0).safeString(""));
-    else
-    {
-      idblog("skipped column with OID " << (*it)->ColumnOID());
-    }
   }
 
   // temporialy memory leak fix until defaultvalue is added.
@@ -1208,7 +1201,6 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_DEFAULTVAL)
     {
       ct.defaultValue = ((*it)->GetStringData(0));
-	    idblog("processing default value column: <<<" << ct.defaultValue.safeString() << ">>>.");
 
       if (!ct.defaultValue.isNull())
       {
@@ -1226,7 +1218,6 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
       tcn.column = ((*it)->GetStringData(0).safeString(""));
     else if ((*it)->ColumnOID() == oid[13])
     {
-	    idblog("processing constraint column");
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
       {
         ct.constraintType = NOTNULL_CONSTRAINT;
@@ -3286,7 +3277,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
-	idblog("i " << i << ", default value " << ctList[i].defaultValue.safeString());
 
         if (!ctList[i].defaultValue.isNull())
         {
@@ -5789,7 +5779,6 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
-	idblog("i " << i << ", default value " << ctList[i].defaultValue.safeString());
 
         if (!ctList[i].defaultValue.isNull())
         {

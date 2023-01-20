@@ -62,7 +62,6 @@ CalpontDMLPackage::CalpontDMLPackage(std::string schemaName, std::string tableNa
  , fIsWarnToError(false)
  , fTableOid(0)
 {
-	idblog("calpont dml package '" << schemaName << "." << tableName << "', statement '" << dmlStatement << "'");
 }
 
 CalpontDMLPackage::~CalpontDMLPackage()

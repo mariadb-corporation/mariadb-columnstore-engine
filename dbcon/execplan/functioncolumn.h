@@ -219,7 +219,6 @@ class FunctionColumn : public ReturnedColumn
   {
     fOperationType.setTimeZone(fTimeZone);
     fResult.strVal.dropString();
-    idblog("getStrVal in functor");
     std::string val = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
     if (!isNull)
     {

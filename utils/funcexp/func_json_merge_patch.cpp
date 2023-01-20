@@ -73,12 +73,10 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
 {
   if (json_read_value(jsEg1))
   {
-	  idblog("unable to read first value");
     return 1;
   }
   if (json_read_value(jsEg2))
   {
-	  idblog("unable to read second value");
     return 1;
   }
 
@@ -109,7 +107,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
 
       if (jsEg1->s.error)
       {
-	      idblog("unable to read keyname");
         return 1;
       }
 
@@ -134,7 +131,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         {
           if (jsEg2->s.error || json_skip_key(jsEg2))
 	  {
-		  idblog("unable to match or skip");
             return 2;
 	  }
           continue;
@@ -143,7 +139,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         /* Json_2 has same key as Json_1. Merge them. */
         if ((ires = doMergePatch(retJS, jsEg1, jsEg2, mrgEmpty)))
 	{
-		idblog("recursive call returned " << ires);
           return ires;
 	}
 
@@ -162,7 +157,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       /* Just append the Json_1 key value. */
       if (json_skip_key(jsEg1))
       {
-	      idblog("unable to skip");
         return 1;
       }
       retJS.append((const char*)keyStart, jsEg1->s.c_str - keyStart);
@@ -189,7 +183,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
 
       if (jsEg2->s.error)
       {
-	      idblog("unable to read key name, second");
         return 1;
       }
 
@@ -202,14 +195,12 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         {
           if (jsEg1->s.error || json_skip_key(jsEg1))
 	  {
-		  idblog("unable to match or skip, second");
             return 2;
 	  }
           continue;
         }
         if (json_skip_key(jsEg2) || json_skip_level(jsEg1))
 	{
-		idblog("unable to skip key or level");
           return 1;
 	}
         goto continue_j2;
@@ -229,7 +220,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
 
       if (json_read_value(jsEg2))
       {
-	      idblog("unable to read value");
         return 1;
       }
 
@@ -239,7 +229,6 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       {
         if (copyValuePatch(retJS, jsEg2))
 	{
-		idblog("unable to copy value patch");
           return 1;
 	}
         firstKey = 0;
@@ -255,14 +244,12 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
   {
     if (!json_value_scalar(jsEg1) && json_skip_level(jsEg1))
     {
-	    idblog("not a scalar or cannot skip level");
       return 1;
     }
 
     isEmpty = (jsEg2->value_type == JSON_VALUE_NULL);
     if (!isEmpty && copyValuePatch(retJS, jsEg2))
     {
-	    idblog("not empty and unable to copy");
       return 1;
     }
   }
@@ -296,7 +283,6 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   for (size_t i = 1; i < fp.size(); i++)
   {
     const auto& js2 = fp[i]->data()->getStrVal(row, isNull);
-    idblog("read arg ((" << js2.safeString() << "))");
     if (isNull)
     {
       hasNullArg = true;
@@ -319,10 +305,8 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
 
     initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
-    idblog("doing merge patch, tmpJS /" << tmpJS.safeString() << "', js2 '" << js2.safeString() << "'.");
     if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))
     {
-	    idblog("some error");
       goto error;
     }
 
@@ -334,16 +318,13 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     tmpJS.assign(retJS);
     retJS.clear();
   }
-idblog("end of loop");
   if (hasNullArg)
     goto error;
 
   initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
   retJS.clear();
-  idblog("formatting");
   if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
     goto error;
-idblog("returning ");
   isNull = false;
   return retJS;
 

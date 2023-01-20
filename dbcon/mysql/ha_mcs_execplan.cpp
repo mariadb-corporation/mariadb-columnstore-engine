@@ -2651,7 +2651,6 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         SimpleColumn* sc = new SimpleColumn();
         CalpontSystemCatalog::TableColName tcn = gwi.csc->colName(oidlist[j].objnum);
         CalpontSystemCatalog::ColType ct = gwi.csc->colType(oidlist[j].objnum);
-	idblog("building simple column, ct's default value is " << ct.defaultValue.safeString());
         sc->columnName(tcn.column);
         sc->tableName(tcn.table, lower_case_table_names);
         sc->schemaName(tcn.schema, lower_case_table_names);
@@ -2921,7 +2920,6 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
     case Item_sum::SUM_BIT_FUNC:
     {
       string funcName = isp->func_name();
-idblog2("func name " << funcName);
       if (funcName.compare("bit_and(") == 0)
         ac->aggOp(AggregateColumn::BIT_AND);
       else if (funcName.compare("bit_or(") == 0)
@@ -4877,7 +4875,6 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
       ConstantColumn* cc;
       if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->isNull())
       {
-idblog("cc constval: " << cc->constval().safeString());
         // Explicit NULL or a const function that evaluated to NULL
         cc = new ConstantColumnNull();
         cc->timeZone(gwi.timeZone);
@@ -4885,7 +4882,6 @@ idblog("cc constval: " << cc->constval().safeString());
         ac->constCol(SRCP(rt));
         return;
       }
-idblog("cc constval (not null): " << cc->constval().safeString());
 
       // treat as count(*)
       if (ac->aggOp() == AggregateColumn::COUNT)
@@ -5060,7 +5056,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
 	char t[100];
 	sprintf(t, "%p",gc->get_separator()->ptr());
-	idblog("assigning separator with gc->get_separator()->ptr() " << string(t));
         (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
       }
     }
@@ -7496,7 +7491,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           collectAllCols(gwi, ifp);
           break;
         }
-idblog("building a simple column");
         sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)
@@ -7637,7 +7631,6 @@ idblog("building a simple column");
           if (!hasNonSupportItem && (after_size - before_size) == 0 && !(parseInfo & AGG_BIT) &&
               !(parseInfo & SUB_BIT))
           {
-idblog("building constant column");
             ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
 
             SRCP srcp(cc);

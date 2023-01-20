@@ -120,7 +120,6 @@ class DMLColumn : public DMLObject
    */
   void set_isnull(bool isNULL)
   {
-	  idblog("setting isnull");
     fisNULL = isNULL;
   }
   /** @brief set the fIsFromCol flag

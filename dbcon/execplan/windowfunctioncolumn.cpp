@@ -219,13 +219,11 @@ void WF_OrderBy::unserialize(messageqcpp::ByteStream& b)
 
 WindowFunctionColumn::WindowFunctionColumn()
 {
-	idblog("constructor 1");
 }
 
 WindowFunctionColumn::WindowFunctionColumn(const string& functionName, const uint32_t sessionID)
  : ReturnedColumn(sessionID), fFunctionName(functionName)
 {
-	idblog("constructor 2");
 }
 
 WindowFunctionColumn::WindowFunctionColumn(const WindowFunctionColumn& rhs, const uint32_t sessionID)
@@ -237,7 +235,6 @@ WindowFunctionColumn::WindowFunctionColumn(const WindowFunctionColumn& rhs, cons
  , udafContext(rhs.getUDAFContext())
  , fTimeZone(rhs.timeZone())
 {
-	idblog("constructor 3");
 }
 
 const string WindowFunctionColumn::toString() const
@@ -400,7 +397,6 @@ void WindowFunctionColumn::adjustResultType()
 
 void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 {
-	idblog("WFC evaluate");
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::DATE:
@@ -491,7 +487,6 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
         default:
         {
           const auto str = row.getStringField(fInputIndex);
-	  idblog("str evaluated: {{" << str.safeString() << "}}");
           if (str.isNull())
 	  {
             isNull = true;

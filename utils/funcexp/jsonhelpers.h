@@ -67,7 +67,6 @@ inline static int locateJSPath(json_engine_t& jsEg, JSONPath& path, int* jsErr =
   path.currStep = path.p.steps;
   if (json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
   {
-	  idblog("error finding path " << ((int64_t)jsEg.s.error));
     if (jsErr && jsEg.s.error)
       *jsErr = 1;
     return 1;

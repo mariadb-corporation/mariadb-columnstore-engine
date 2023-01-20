@@ -705,7 +705,6 @@ class RowAggregationUM : public RowAggregation
    */
   void constantAggregate(const std::vector<ConstantAggData>& v)
   {
-	  idblog("setting constant aggregate data");
     fConstantAggregate = v;
   }
   const std::vector<ConstantAggData>& constantAggregate() const

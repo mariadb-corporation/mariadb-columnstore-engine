@@ -419,7 +419,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
             colType.colDataType == CalpontSystemCatalog::VARCHAR ||
             colType.colDataType == CalpontSystemCatalog::VARBINARY)
         {
-idblog("storing empty string");
           //(*f)->store("", 0, (*f)->charset());
           (*f)->reset();
 	  (*f)->set_null();
@@ -3061,7 +3060,6 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     if (found != string::npos)
       insertStmt.erase(found);
 
-    idblog("statement: " << insertStmt);
     found = insertStmt.find("ignore");
 
     if (found != string::npos)

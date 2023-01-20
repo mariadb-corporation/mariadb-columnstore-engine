@@ -80,7 +80,6 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
       start = jsEg.value_begin;
       if (jsEg.value_type == JSON_VALUE_OBJECT)
       {
-	      idblog("object");
         if (json_skip_level(&jsEg))
           goto error;
         end = jsEg.s.c_str;

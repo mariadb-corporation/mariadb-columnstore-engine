@@ -501,7 +501,6 @@ class Row
   inline utils::NullString getStringField(uint32_t colIndex) const
   {
     utils::ConstString x = getConstString(colIndex);
-    //idblog("getting string field, result is " << (x.str() ? ("'" + x.toString() + "'") : "NULL"));
     return utils::NullString(x);
   }
 
@@ -873,7 +872,6 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
     default:
-      idblog("getIntField colIndex " << colIndex << ", width " << getColumnWidth(colIndex));
       idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
@@ -922,13 +920,10 @@ inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
   const char* src = (const char*)&data[offset];
   if (!isNullValue(colIndex))
   {
-//utils::ConstString t(src, strnlen(src, getColumnWidth(colIndex)));
-//idblog("getShortConstString[" << colIndex << "]: '" << t.toString() << "'");
     return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
   }
   else
   {
-//idblog("getShortConstString[" << colIndex << "]: NULL");
     return utils::ConstString(nullptr, 0);
   }
 }
@@ -1044,11 +1039,9 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   uint32_t length = str.length();
 
   setNullMark(colIndex, !str.str());
-//idblog("column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)) << ", pointer is NULL " << ((int)(!str.str())));
 
   if (inStringTable(colIndex))
   {
-//idblog("string is in string table");
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
 
@@ -1062,26 +1055,6 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   {
     if (length > getColumnWidth(colIndex))
       length = getColumnWidth(colIndex);
-#if 0
-idblog_stat(
-idblog("setting short string field[" << colIndex << "]: " << (str.str() ? "'" + str.toString() + "'" : "NULL"));
-if (!str.str())
-{
-int nptrs;
-void* pbuf[100];
-char** strs;
-nptrs = backtrace(pbuf, 100);
-strs = backtrace_symbols(pbuf, nptrs);
-for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
-idblog("    stk: " << i << ": " << s);
-}
-if (strs) {
-free(strs);
-}
-}
-)
-#endif
 
     uint8_t* buf = &data[offsets[colIndex]];
     if (str.str())
@@ -1094,7 +1067,6 @@ free(strs);
       setToNull(colIndex);
     }
   }
-//idblog("checking null mark for column #" << colIndex << ", null mark is " << ((int)getNullMark(colIndex)));
 }
 
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
@@ -1401,7 +1373,6 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
                types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
   {
-idblog("another use of varbinary");
     out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
   else if (UNLIKELY(isLongString(srcIndex)))
@@ -1813,7 +1784,6 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
 
 inline uint32_t RowGroup::getRowSize() const
 {
-//idblog("get row size, column count " << columnCount);
   return offsets[columnCount] + columnCount;
 }
 
@@ -2040,7 +2010,6 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     {
 	    utils::ConstString cs = in.getConstString(i);
 	    utils::NullString ns(cs.str(),cs.length());
-	    idblog("i " << i << ", copying long string: " << ns.safeString());
       out->setStringField(in.getConstString(i), i);
     }
     else if (UNLIKELY(in.isShortString(i)))

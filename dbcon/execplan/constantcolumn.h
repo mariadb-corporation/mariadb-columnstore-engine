@@ -105,21 +105,6 @@ class ConstantColumn : public ReturnedColumn
    */
   inline const utils::NullString& constval() const
   {
-#if 0
-int nptrs;
-void* pbuf[100];
-char** strs;
-nptrs = backtrace(pbuf, 100);
-strs = backtrace_symbols(pbuf, nptrs);
-idblog("getting const val: " << fConstval.safeString());
-for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
-idblog("    stk: " << i << ": " << s);
-}
-if (strs) {
-free(strs);
-}
-#endif
     if (isNull())
     {
       static NullString nullstr;
@@ -132,7 +117,6 @@ free(strs);
    */
   inline void constval(const utils::NullString& constval)
   {
-//idblog("setting const val: " << constval.safeString());
     fConstval = constval;
     fResult.strVal = constval;
   }
@@ -165,7 +149,6 @@ free(strs);
    */
   virtual void data(const std::string data)
   {
-//idblog("setting data to '" << data << "'");
     fData = data;
   }
   /**
@@ -293,21 +276,6 @@ free(strs);
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     isNull = isNull || (fType == NULLDATA);
-#if 0
-int nptrs;
-void* pbuf[100];
-char** strs;
-nptrs = backtrace(pbuf, 100);
-strs = backtrace_symbols(pbuf, nptrs);
-idblog("getting const val: " << fConstval.safeString());
-for (int i=0; strs && i < nptrs; i++) {
-string s(strs[i]);
-idblog("    stk: " << i << ": " << s);
-}
-if (strs) {
-free(strs);
-}
-#endif
     return fResult.strVal;
   }
   /**

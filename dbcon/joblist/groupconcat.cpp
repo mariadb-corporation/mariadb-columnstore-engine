@@ -196,8 +196,6 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
   map<uint32_t, uint32_t> projColumnMap;
   const vector<uint32_t>& keysProj = projRG.getKeys();
 
-  idblog("projRG column count " << projRG.getColumnCount());
-
   for (uint64_t i = 0; i < projRG.getColumnCount(); i++)
     projColumnMap[keysProj[i]] = i;
 
@@ -320,11 +318,6 @@ GroupConcatAgUM::~GroupConcatAgUM()
 
 void GroupConcatAgUM::initialize()
 {
-	idblog("at GroupConcatAgUM::initialize, fGroupConcat # columns " << fGroupConcat->fRowGroup.getColumnCount());
-if (fGroupConcat->fRowGroup.getColumnCount() < 1)
-	idblog("at GroupConcatAgUM::initialize, fGroupConcat # columns " << fGroupConcat->fRowGroup.getColumnCount());
-idblog("at GroupConcatAgUM::initialize, fGroupConcat order cols size " << fGroupConcat->fOrderCols.size());
-idblog("at GroupConcatAgUM::initialize, fGroupConcat group cols size " << fGroupConcat->fGroupCols.size());
   if (fGroupConcat->fDistinct || fGroupConcat->fOrderCols.size() > 0)
     fConcator.reset(new GroupConcatOrderBy());
   else
@@ -367,7 +360,6 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT)
       {
-idblog("applying mapping through getConstString");
         fRow.setStringField(row.getConstString(mapping[i]), i);
       }
       else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
@@ -410,7 +402,6 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fGroupConcatLen = gcc->fSize;
   char t[100];
   sprintf(t, "%p", gcc->fSeparator.c_str());
-  idblog("separator: pointer " << std::string(t) << ", value '" << gcc->fSeparator << "'");
   size_t sepSize = gcc->fSeparator.size();
   fCurrentLength -= sepSize; // XXX Yet I have to find out why spearator has c_str() as nullptr here.
   fTimeZone = gcc->fTimeZone;
@@ -488,7 +479,6 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-idblog("about to output a string field");
         oss << row.getStringField(*i).str();
         break;
       }
@@ -742,15 +732,12 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
   fSessionMemLimit = gcc->fSessionMemLimit;
 
   vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
-idblog("expect to push " << gcc->fGroupCols.size() << " values.");
   while (i != gcc->fGroupCols.end())
   {
-	  auto x = (*i).second;
-	  idblog("pushing x=" << x );
+    auto x = (*i).second;
     fConcatColumns.push_back(x);
     i++;
   }
-idblog("everything was pushed");
 
   IdbOrderBy::initialize(gcc->fRowGroup);
 }
@@ -982,7 +969,6 @@ const string GroupConcatOrderBy::toString() const
 GroupConcatNoOrder::GroupConcatNoOrder()
  : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
 {
-idblog("constructing gcno");
 }
 
 GroupConcatNoOrder::~GroupConcatNoOrder()
@@ -993,8 +979,7 @@ GroupConcatNoOrder::~GroupConcatNoOrder()
 
 void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
-idblog("initializing gcno, gcc->getColumncount() " << gcc->fRowGroup.getColumnCount());
-  GroupConcator::initialize(gcc); idblog("after base init");
+  GroupConcator::initialize(gcc);
 
   fRowGroup = gcc->fRowGroup;
   fRowsPerRG = 128;
@@ -1026,11 +1011,9 @@ idblog("initializing gcno, gcc->getColumncount() " << gcc->fRowGroup.getColumnCo
 
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
 {
-idblog("processing a row");
   // if the row count is less than the limit
   if (fCurrentLength < fGroupConcatLen && concatColIsNull(row) == false)
   {
-idblog("about to copy row");
     copyRow(row, &fRow);
 
     // the RID is no meaning here, use it to store the estimated length.
@@ -1039,7 +1022,6 @@ idblog("about to copy row");
     fCurrentLength += estLen;
     fRowGroup.incRowCount();
     fRow.nextRow();
-idblog("done copying and stuff");
 
     if (fRowGroup.getRowCount() >= fRowsPerRG)
     {
@@ -1058,7 +1040,6 @@ idblog("done copying and stuff");
       fRowGroup.setData(&fData);
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow);
-idblog("done extending (? ? ?) rowgroup? ? ?");
     }
   }
 }
@@ -1082,7 +1063,6 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
 {
   ostringstream oss;
   bool addSep = false;
-  idblog("getting result");
 
   fDataQueue.push(fData);
   size_t prevResultSize = 0;

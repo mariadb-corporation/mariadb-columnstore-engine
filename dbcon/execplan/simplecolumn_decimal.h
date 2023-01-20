@@ -137,7 +137,6 @@ void SimpleColumn_Decimal<len>::setNullVal()
 template <int len>
 inline const utils::NullString& SimpleColumn_Decimal<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
-	idblog("simplecolumn_decimal getStrVal");
   if (row.equals<len>(fNullVal, fInputIndex))
   {
     isNull = true;

@@ -283,7 +283,6 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   int64_t dec;
   int64_t from_base = parm[1]->data()->getIntVal(row, isNull);
   int64_t to_base = parm[2]->data()->getIntVal(row, isNull);
-idblog("CONV (" << res.safeString() << ", " << from_base << ", " << to_base << ")");
 
   if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
       abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || res.length() < 1)

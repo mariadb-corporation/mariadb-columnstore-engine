@@ -125,7 +125,6 @@ class Func_Str : public Func
       case execplan::CalpontSystemCatalog::FLOAT: floatVal = fp->data()->getFloatVal(row, isNull); break;
 
       default:
-						  idblog("getting string value");
         fFloatStr = fp->data()->getStrVal(row, isNull).safeString("");
         return;
         break;

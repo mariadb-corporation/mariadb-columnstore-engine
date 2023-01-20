@@ -33,7 +33,6 @@ namespace dmlpackage
 {
 DMLColumn::DMLColumn()
 {
-	idblog("default constructor");
 }
 
 DMLColumn::DMLColumn(std::string name, utils::NullString& value, bool isFromCol,
@@ -44,7 +43,6 @@ DMLColumn::DMLColumn(std::string name, utils::NullString& value, bool isFromCol,
   fisNULL = isNULL || value.isNull() || (strcasecmp(value.str(), "NULL") == 0);
   fIsFromCol = isFromCol;
   fFuncScale = funcScale;
-	idblog("singleton constructor");
 }
 
 DMLColumn::DMLColumn(std::string name, const std::vector<utils::NullString>& valueList, bool isFromCol,
@@ -55,7 +53,6 @@ DMLColumn::DMLColumn(std::string name, const std::vector<utils::NullString>& val
   fisNULL = isNULL;
   fIsFromCol = isFromCol;
   fFuncScale = funcScale;
-	idblog("vector constructor");
 }
 
 DMLColumn::~DMLColumn()

@@ -365,7 +365,6 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       if ((pRowGroup->getScale())[col] > 0)
       {
         uint64_t uintField = row.getUintField(col);
-idblog("we are at getScales() null check. uintField is " << std::hex << uintField);
         if (uintField == joblist::UBIGINTNULL)
           ret = true;
 
@@ -376,7 +375,6 @@ idblog("we are at getScales() null check. uintField is " << std::hex << uintFiel
       // real string to check null
       if (colWidth <= 7 || (colWidth == 8 && colDataType == execplan::CalpontSystemCatalog::CHAR))
       {
-idblog("checking for short string null");
         if (colWidth == 1)
           ret = ((uint8_t)row.getUintField(col) == joblist::CHAR1NULL);
         else if (colWidth == 2)
@@ -388,7 +386,6 @@ idblog("checking for short string null");
       }
       else
       {
-idblog("checking for long string null, colWidth " << ((int)colWidth) << ", colDataType is " << ((int)colDataType) << ", CPS::CHAR is " << ((int)execplan::CalpontSystemCatalog::CHAR));
         //@bug 1821
         auto const str = row.getConstString(col);
         ret = str.isNull();
@@ -451,14 +448,12 @@ idblog("checking for long string null, colWidth " << ((int)colWidth) << ", colDa
 
     case execplan::CalpontSystemCatalog::BIGINT:
     {
-idblog("checkin for bigint null - you cannot be cautious enough");
       ret = ((uint64_t)row.getIntField(col) == joblist::BIGINTNULL);
       break;
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:
     {
-idblog("checkin for ubigint null");
       ret = ((uint64_t)row.getIntField(col) == joblist::UBIGINTNULL);
       break;
     }
@@ -710,7 +705,6 @@ void RowAggregation::initialize()
   // Need map only if groupby list is not empty.
   if (fGroupByCols.empty())
   {
-//	  idblog("empty fGroupByCols before attaching GroupConcatAgUM");
     fRowGroupOut->setRowCount(1);
     attachGroupConcatAg();
     // For UDAF, reset the data
@@ -772,7 +766,6 @@ void RowAggregation::aggReset()
   }
   fRowGroupOut->getRow(0, &fRow);
   copyNullRow(fRow);
-  //idblog("attaching GroupConcatAgUM in addReset()");
   attachGroupConcatAg();
 
   // For UDAF, reset the data
@@ -815,7 +808,6 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     if (is_new_row)
     {
       initMapData(row);
-      //idblog("attaching GroupConcatAgUM in aggregate row, a new row");
       attachGroupConcatAg();
 
       // If there's UDAF involved, reset the user data.
@@ -2000,7 +1992,6 @@ void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
                             uint64_t& funcColsIdx, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
-	idblog("doUDAF");
   std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
   if (UNLIKELY(rgContextColl != nullptr))
   {
@@ -2271,7 +2262,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
           {
             datum.columnData = rowIn.getStringField(colIn);
           }
-idblog("doUDAF assigned string");
           break;
         }
 
@@ -2370,13 +2360,6 @@ RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupB
  , fTotalMemUsage(0)
  , fLastMemUsage(0)
 {
-//	idblog("rowaggum creation from three arguments. fGroupconcat.size() " << fGroupConcat.size());
-//	if (fGroupConcat.size()) {
-//		idblog("rowaggum creation from three arguments. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
-//		if (fGroupConcat[0]->fRowGroup.getColumnCount() == 0) {
-//			idblog("breakpoint place");
-//		}
-//	}
   // Check if there are any avg, stats or UDAF functions.
   // These flags are used in finalize.
   for (uint64_t i = 0; i < fFunctionCols.size(); i++)
@@ -2411,9 +2394,6 @@ RowAggregationUM::RowAggregationUM(const RowAggregationUM& rhs)
  , fGroupConcat(rhs.fGroupConcat)
  , fLastMemUsage(rhs.fLastMemUsage)
 {
-//	if (fGroupConcat.size()) {
-//		idblog("rowaggum creation from other RAUM. fGroupconcat[0].getColumnCount() " << fGroupConcat[0]->fRowGroup.getColumnCount());
-//	}
 }
 
 RowAggregationUM::~RowAggregationUM()
@@ -2507,7 +2487,6 @@ void RowAggregationUM::attachGroupConcatAg()
       if (fFunctionColGc[i]->fAggFunction == ROWAGG_GROUP_CONCAT)
       {
         // save the object's address in the result row
-	//idblog("constructing GroupConcatAgUM, j " << j << ", # columns " << fGroupConcat[j]->fRowGroup.getColumnCount());
         SP_GroupConcatAg gcc(new joblist::GroupConcatAgUM(fGroupConcat[j++]));
         fGroupConcatAg.push_back(gcc);
         *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
@@ -2708,11 +2687,9 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.empty())
   {
-	  idblog("empty valOut");
     // Fields are initialized to NULL, which is what we want for empty;
     return;
   }
-idblog("non-empty valOut");
   int64_t intOut;
   uint64_t uintOut;
   float floatOut;
@@ -2871,18 +2848,10 @@ idblog("non-empty valOut");
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
-      idblog("SetUDAFValue in rowagg, textual");
       // XXX: check for empty valOut value? E.g., we can use nullptr inside any.
       if (valOut.compatible(strTypeId))
       {
-	      idblog("it is compatible with the string type!!!");
         utils::NullString s = valOut.cast<utils::NullString>();
-	char t[100];
-	sprintf(t, "%p", fRow.getData());
-	      idblog("s " << s.safeString() << ", fRow data size " << fRow.getSize() << ", data pointer " << std::string(t));
-	      if (fRow.getColumnCount() >= 2) {
-		      idblog("    first col width " << fRow.getColumnWidth(0) << ", second column width " << fRow.getColumnWidth(1));
-	      }
         fRow.setStringField(s, colOut);
         bSetSuccess = true;
       }
@@ -2933,7 +2902,6 @@ idblog("non-empty valOut");
 void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 {
   execplan::CalpontSystemCatalog::ColDataType colDataType = fRowGroupOut->getColTypes()[colOut];
-  idblog("set UDAF any value");
 
   // This may seem a bit convoluted. Users shouldn't return a type
   // that they didn't set in mcsv1_UDAF::init(), but this
@@ -3042,7 +3010,6 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.compatible(strTypeId))
   {
-	  idblog("compatible with strTypeID");
     strOut = valOut.cast<utils::NullString>();
     // Convert the string to numeric type, just in case.
     intOut = atol(strOut.str());
@@ -3053,7 +3020,6 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
   }
   else
   {
-	  idblog("incompatible with any type");
     strOut.assign(oss.str());
   }
 
@@ -3108,9 +3074,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::TEXT:
-						  idblog("textual in set UDAF any value");
-						  fRow.setStringField(strOut, colOut); break;
+    case execplan::CalpontSystemCatalog::TEXT:    fRow.setStringField(strOut, colOut); break;
 
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::CLOB:
@@ -3322,7 +3286,6 @@ void RowAggregationUM::fixConstantAggregate()
     {
       if (fFunctionCols[k]->fAggFunction == ROWAGG_CONSTANT)
       {
-	      idblog("j is " << j->fConstValue.safeString());
         if (j->isNull() || rowCnt == 0)
           doNullConstantAggregate(*j, k);
         else
@@ -3341,7 +3304,6 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 {
   int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
   int colDataType = (fRowGroupOut->getColTypes())[colOut];
-  idblog("NULL CONSTANT AGG");
 
   switch (aggData.fOp)
   {
@@ -3445,7 +3407,6 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
     case ROWAGG_COUNT_COL_NAME:
     case ROWAGG_COUNT_DISTINCT_COL_NAME:
     {
-	    idblog("NULL COuNT (DISTINCT) COL NAME");
       fRow.setUintField(0, colOut);
     }
     break;
@@ -3863,14 +3824,12 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
     case ROWAGG_COUNT_COL_NAME:
     {
-	    idblog("COuNT COL NAME");
       fRow.setUintField(rowCnt, colOut);
     }
     break;
 
     case ROWAGG_COUNT_DISTINCT_COL_NAME:
     {
-	    idblog("COuNT DISTINCT COL NAME");
       fRow.setUintField(1, colOut);
     }
     break;
@@ -4459,7 +4418,6 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
                                 uint64_t& funcColsIdx, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
-	idblog("doUDAF 2");
   static_any::any valOut;
   std::vector<mcsv1sdk::mcsv1Context>* udafContextsCollPtr = &fRGContextColl;
   if (UNLIKELY(rgContextColl != nullptr))
@@ -4755,8 +4713,6 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows)
   pRows->initRow(&rowIn);
   pRows->getRow(0, &rowIn);
 
-  idblog("add row group");
-
   for (i = 0; i < pRows->getRowCount(); ++i, rowIn.nextRow())
   {
     /* TODO: We can make the functors a little smarter and avoid doing this copy before the
@@ -4782,7 +4738,6 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows,
 
   pRows->initRow(&rowIn);
 
-  idblog("add row group II");
   for (i = 0; i < inRows.size(); ++i, rowIn.nextRow())
   {
     rowIn.setData(inRows[i].first);

@@ -39,7 +39,6 @@ CommandDMLPackage::CommandDMLPackage()
 CommandDMLPackage::CommandDMLPackage(std::string dmlStatement, int sessionID)
  : CalpontDMLPackage("", "", dmlStatement, sessionID)
 {
-	idblog("command dml package, statement is '" << dmlStatement << "'");
 }
 
 CommandDMLPackage::~CommandDMLPackage()

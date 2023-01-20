@@ -109,7 +109,6 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
   {
     if ((*field)->is_null())
     {
-idblog("field value is NULL");
       ci.tableValuesMap[columnPos].push_back(null);
       ci.nullValuesBitset[columnPos] = true;
     }

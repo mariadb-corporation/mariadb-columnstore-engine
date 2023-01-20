@@ -124,7 +124,6 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
 
     if (cc != NULL)
     {
-idblog("deliveredCols[" << i << "] is constant, value '" << cc->constval().safeString() << "'");
       CalpontSystemCatalog::ColType ct = cc->resultType();
 
       if (ct.colDataType == CalpontSystemCatalog::VARCHAR)
@@ -192,7 +191,6 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 
     if (cc->isNull())
     {
-idblog("constant column is null");
       if (types[*i] == CalpontSystemCatalog::CHAR || types[*i] == CalpontSystemCatalog::VARCHAR ||
           types[*i] == CalpontSystemCatalog::TEXT)
       {
@@ -260,9 +258,7 @@ idblog("constant column is null");
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-idblog("setting string field for constant column, the column constval is '" << cc->constval().safeString() << "', result's value is '" << c.strVal.safeString() << "'.");
         fRowConst.setStringField(c.strVal, *i);
-idblog("fetching value back: '" << fRowConst.getStringField(*i).safeString() << "'.");
         break;
       }
 

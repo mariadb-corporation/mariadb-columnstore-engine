@@ -401,10 +401,6 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
-  idblog("serialize rgdata, amount " << amount);
-  char t[100];
-  sprintf(t, "%pp", rowData.get());
-  idblog("row data pointer " << std::string(t));
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -435,7 +431,6 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   {
     bs >> sig;
     bs >> amount;
-	  idblog("deserializing RGData, def amount " << defAmount << ", amount read " << amount);
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);

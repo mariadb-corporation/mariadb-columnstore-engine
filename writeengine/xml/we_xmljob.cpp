@@ -931,25 +931,21 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
                                          execplan::CalpontSystemCatalog::ColType& colType, JobColumn& col)
 {
   const NullString col_defaultValue(colType.defaultValue);
-idblog("column '" << col.colName <<  "' default value: " << col_defaultValue.safeString());
 
   if (colType.constraintType == execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
   {
     col.fNotNull = true;
-idblog("not null constraint");
 
     if (!col_defaultValue.isNull())
       col.fWithDefault = true;
   }
   else if (colType.constraintType == execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
   {
-idblog("with default constraint");
     col.fWithDefault = true;
   }
 
   if (col.fWithDefault)
   {
-idblog("with default value; colDataType is " << ((int)colType.colDataType));
     bool bDefaultConvertError = false;
 
     // Convert Default Value.
@@ -966,7 +962,6 @@ idblog("with default value; colDataType is " << ((int)colType.colDataType));
       case execplan::CalpontSystemCatalog::INT:
       case execplan::CalpontSystemCatalog::BIGINT:
       {
-idblog("some int");
         errno = 0;
         col.fDefaultInt = strtoll(col_defaultValue.str(), 0, 10);
 
@@ -982,7 +977,6 @@ idblog("some int");
       case execplan::CalpontSystemCatalog::UINT:
       case execplan::CalpontSystemCatalog::UBIGINT:
       {
-idblog("some unsigned int");
         errno = 0;
         col.fDefaultUInt = strtoull(col_defaultValue.str(), 0, 10);
 
@@ -995,7 +989,6 @@ idblog("some unsigned int");
       case execplan::CalpontSystemCatalog::DECIMAL:
       case execplan::CalpontSystemCatalog::UDECIMAL:
       {
-idblog("some decimal");
         if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
         {
           col.fDefaultWideDecimal = colType.decimal128FromString(col_defaultValue.safeString(), &bDefaultConvertError);
@@ -1014,7 +1007,6 @@ idblog("some decimal");
 
       case execplan::CalpontSystemCatalog::DATE:
       {
-idblog("some date: " << col_defaultValue.safeString());
         int convertStatus;
         int32_t dt = dataconvert::DataConvert::convertColumnDate(col_defaultValue.str(),
                                                                  dataconvert::CALPONTDATE_ENUM, convertStatus,
@@ -1029,7 +1021,6 @@ idblog("some date: " << col_defaultValue.safeString());
 
       case execplan::CalpontSystemCatalog::DATETIME:
       {
-idblog("some datetime");
         int convertStatus;
         int64_t dt = dataconvert::DataConvert::convertColumnDatetime(
             col_defaultValue.str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
@@ -1044,7 +1035,6 @@ idblog("some datetime");
 
       case execplan::CalpontSystemCatalog::TIMESTAMP:
       {
-idblog("some timestamp");
         int convertStatus;
         int64_t dt = dataconvert::DataConvert::convertColumnTimestamp(
             col_defaultValue.str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
@@ -1059,7 +1049,6 @@ idblog("some timestamp");
 
       case execplan::CalpontSystemCatalog::TIME:
       {
-idblog("some time");
         int convertStatus;
         int64_t dt = dataconvert::DataConvert::convertColumnTime(col_defaultValue.str(),
                                                                  dataconvert::CALPONTTIME_ENUM, convertStatus,
@@ -1077,7 +1066,6 @@ idblog("some time");
       case execplan::CalpontSystemCatalog::UFLOAT:
       case execplan::CalpontSystemCatalog::UDOUBLE:
       {
-idblog("some float");
         errno = 0;
         col.fDefaultDbl = strtod(col_defaultValue.str(), 0);
 
@@ -1089,7 +1077,6 @@ idblog("some float");
 
       default:
       {
-idblog("some char");
         col.fDefaultChr = col_defaultValue;
         break;
       }

@@ -632,7 +632,6 @@ void pDictionaryScan::receivePrimitiveMessages()
           bsp += sizeof(pt);
           uint64_t rid = fRidResults++;
           token = (pt.LBID << 10) | pt.offset;
-//idblog("PrimToken LBID " << pt.LBID << ", offset " << pt.offset << ", length " << pt.len << " and resulting token is " << std::hex << token);
 
           fOutputRowGroup.getRow(fOutputRowGroup.getRowCount(), &r);
           // load r up w/ values

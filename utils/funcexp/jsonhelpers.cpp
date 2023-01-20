@@ -29,7 +29,6 @@ bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullSt
 {
   const int jsLen = js.length();
   const char* rawJS = js.str();
-  idblog("escaping " << js.safeString());
   int strLen = jsLen * 12 * jsCS->mbmaxlen / jsCS->mbminlen;
   char* buf = (char*)alloca(strLen);
   if ((strLen = json_escape(retCS, (const uchar*)rawJS, (const uchar*)rawJS + jsLen, jsCS, (uchar*)buf,
@@ -345,12 +344,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
     markConstFlag(path, parm);
 
   bool isNull = false;
-  idblog("parsing path $$" << parm->data()->getStrVal(row, isNull).safeString() << "$$");
   const auto& jsp = parm->data()->getStrVal(row, isNull);
-  char t[1000];
-  sprintf(t, "path %p, jsp c_str() %p", &path, jsp.str());
-  string tt(t);
-  idblog(tt);
 
   if (isNull || setupJSPath(&path.p, getCharset(parm), jsp, wildcards))
     return 1;
@@ -378,17 +372,4 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 }
 }  // namespace helpers
 }  // namespace funcexp
-
-
-#include <stdarg.h>
-
-extern "C"
-void json_log(const char* fmt, ...) {
-	va_list vl;
-	char t[1000];
-	va_start(vl, fmt);
-	vsnprintf(t, sizeof(t) - 2, fmt, vl);
-	string s(t);
-	idblog("json_log: " << s);
-} /* json_log */
 
