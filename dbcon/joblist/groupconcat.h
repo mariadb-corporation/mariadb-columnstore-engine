@@ -143,7 +143,7 @@ class GroupConcatNoOrder : public GroupConcator
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
-  uint8_t* getResult(const std::string& sep);
+  //uint8_t* getResult(const std::string& sep);
 
   const std::string toString() const;
 
@@ -175,7 +175,7 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
-  uint8_t* getResult(const std::string& sep);
+  //uint8_t* getResult(const std::string& sep);
 
   const std::string toString() const;
 
