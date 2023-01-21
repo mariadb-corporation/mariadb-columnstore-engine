@@ -37,33 +37,58 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     auto columnType = rg.getColType(columnId);
     switch (columnType)
     {
+      case execplan::CalpontSystemCatalog::DOUBLE:
+      {
+        double v =
+            rg.getColumnValue<execplan::CalpontSystemCatalog::DOUBLE, double, double>(columnId, p.rowID);
+        const uint8_t* valueBuf = reinterpret_cast<const uint8_t*>(&v);
+        const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::DOUBLENULL);
+        bool isNeitherNullOrSpecial =
+            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !isnan(v) && !isinf(v);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
+                         : static_cast<uint8_t>(isNeitherNullOrSpecial);
+
+        int64_t doubleAsInt = 0;
+        std::memcpy(&doubleAsInt, valueBuf, columnWidth);
+        int64_t s = (doubleAsInt & 0x8000000000000000) ^ 0x8000000000000000;  // sign bit
+        int64_t e = (doubleAsInt >> 52) & 0x07FF;                             // exponent part
+        int64_t m =
+            (s) ? doubleAsInt & 0x07FFFFFFFFFFFF : (~doubleAsInt) & 0x07FFFFFFFFFFFF;  // fraction part
+        m = (e) ? m | 0x8000000000000
+                : m << 1;  // set an additional 52th bit if exp != 0 or move the value left 1 bit
+        m = (s) ? m : m & 0xFFF7FFFFFFFFFFFF;  // if negative takes the faction or all but extra bit instead
+        e = ((s) ? e : ~e & 0x07FF) << 51;
+        int64_t key = m;
+        key ^= s;
+        key |= e;
+        key = (isDsc) ? ~htonll(key) : htonll(key);
+        std::memcpy(pos, &key, sizeof(double));
+        pos += columnWidth;
+        break;
+      }
       case execplan::CalpontSystemCatalog::FLOAT:
       {
         float v = rg.getColumnValue<execplan::CalpontSystemCatalog::FLOAT, float, float>(columnId, p.rowID);
         const uint8_t* valueBuf = reinterpret_cast<const uint8_t*>(&v);
-        static constexpr float nAn = std::numeric_limits<float>::quiet_NaN();
-        static constexpr float inf = std::numeric_limits<float>::infinity();
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
-        bool isEitherNullOrSpecial =
-            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && v != nAn && v != inf;
-        *pos++ = (isDsc) ? static_cast<uint8_t>(!isEitherNullOrSpecial)
-                         : static_cast<uint8_t>(isEitherNullOrSpecial);
+        bool isNeitherNullOrSpecial =
+            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !isnan(v) && !isinf(v);
+        *pos++ = (isDsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
+                         : static_cast<uint8_t>(isNeitherNullOrSpecial);
 
         int floatAsInt = 0;
-        std::memcpy(&floatAsInt, valueBuf, columnWidth);
+        std::memcpy(&floatAsInt, valueBuf, sizeof(float));
         int32_t s = (floatAsInt & 0x80000000) ^ 0x80000000;
-        int8_t e = (floatAsInt >> 23) & 0xFF;
+        int32_t e = (floatAsInt >> 23) & 0xFF;
         int m = (s) ? floatAsInt & 0x7FFFFF : (~(floatAsInt)) & 0x7FFFFF;
         m = (e) ? m | 0x800000 : m << 1;
-        int8_t expVal = (e - 127) ^ 0x80;
-        int32_t expAsInt32Val = 0;
-        memcpy(&expAsInt32Val, &expVal, sizeof(expVal));
-        expAsInt32Val = ((s) ? expAsInt32Val : ~expAsInt32Val & 0xFF) << 23;
+        m = (s) ? m : m & 0xFF7FFFFF;
+        e = ((s) ? e : ~e & 0xFF) << 23;
         int32_t key = m;
         key ^= s;
-        key |= expAsInt32Val;
+        key |= e;
         key = (isDsc) ? ~htonl(key) : htonl(key);
-        std::memcpy(pos, &key, columnWidth);
+        std::memcpy(pos, &key, sizeof(float));
         pos += columnWidth;
         break;
       }
@@ -75,7 +100,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::TINYINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80;
         *valPtr = (isDsc) ? ~*valPtr : *valPtr;
@@ -91,7 +116,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::SMALLINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000;
         *valPtr = (isDsc) ? ~htons(*valPtr) : htons(*valPtr);
@@ -105,7 +130,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::INTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80000000;
         *valPtr = (isDsc) ? ~htonl(*valPtr) : htonl(*valPtr);
@@ -120,7 +145,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000000000000000;
         *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
@@ -135,7 +160,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UTINYINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80;
         *valPtr = (isDsc) ? ~*valPtr : *valPtr;
@@ -151,7 +176,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::USMALLINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000;
         *valPtr = (isDsc) ? ~htons(*valPtr) : htons(*valPtr);
@@ -165,7 +190,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x80000000;
         *valPtr = (isDsc) ? ~htonl(*valPtr) : htonl(*valPtr);
@@ -180,7 +205,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::UBIGINTNULL);
         bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
         *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-        std::memcpy(pos, valueBuf, columnWidth);
+        std::memcpy(pos, valueBuf, sizeof(StorageType));
         StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
         *valPtr ^= 0x8000000000000000;
         *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
