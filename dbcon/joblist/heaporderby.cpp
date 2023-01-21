@@ -37,6 +37,79 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     auto columnType = rg.getColType(columnId);
     switch (columnType)
     {
+      case execplan::CalpontSystemCatalog::DECIMAL:
+      case execplan::CalpontSystemCatalog::UDECIMAL:
+      {
+        switch (columnWidth)
+        {
+          // case datatypes::MAXDECIMALWIDTH: c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
+          case 1:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UTINYINT>::type;
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::TINYINTNULL);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            std::memcpy(pos, valueBuf, sizeof(StorageType));
+            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+            *valPtr ^= 0x80;
+            *valPtr = (isDsc) ? ~*valPtr : *valPtr;
+            pos += columnWidth;
+            break;
+          }
+          case 2:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::SMALLINTNULL);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            std::memcpy(pos, valueBuf, sizeof(StorageType));
+            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+            *valPtr ^= 0x8000;
+            *valPtr = (isDsc) ? ~htons(*valPtr) : htons(*valPtr);
+            pos += columnWidth;
+            break;
+          }
+          case 3:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::INTNULL);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            std::memcpy(pos, valueBuf, sizeof(StorageType));
+            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+            *valPtr ^= 0x80000000;
+            *valPtr = (isDsc) ? ~htonl(*valPtr) : htonl(*valPtr);
+            pos += columnWidth;
+            break;
+          }
+          case 4:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            std::memcpy(pos, valueBuf, sizeof(StorageType));
+            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+            *valPtr ^= 0x8000000000000000;
+            *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
+            pos += columnWidth;
+            break;
+          }
+            // case datatypes::MAXLEGACYWIDTH: c = new BigIntCompare(*i); break;
+            // case 1: c = new TinyIntCompare(*i); break;
+            // case 2: c = new SmallIntCompare(*i); break;
+            // case 4: c = new IntCompare(*i); break;
+        }
+        break;
+      }
       case execplan::CalpontSystemCatalog::DOUBLE:
       {
         double v =
@@ -107,7 +180,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         pos += columnWidth;
         break;
       }
-
       case execplan::CalpontSystemCatalog::SMALLINT:
       {
         using StorageType =
