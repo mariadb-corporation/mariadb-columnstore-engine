@@ -41,7 +41,7 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
 {
   // operation type is not used by this functor
   int widSum = 0;
-  for (const auto fpi : fp)
+  for (const auto& fpi : fp)
   {
     switch (fpi->data()->resultType().colDataType)
     {
