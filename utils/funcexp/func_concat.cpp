@@ -40,7 +40,28 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
-  return fp[0]->data()->resultType();
+  int widSum = 0;
+  for (const auto fpi : fp)
+  {
+    switch (fpi->data()->resultType().colDataType)
+    {
+      case execplan::CalpontSystemCatalog::DECIMAL:
+      case execplan::CalpontSystemCatalog::UDECIMAL:
+        widSum += fpi->data()->resultType().precision + 2;
+        break;
+      default:
+        widSum += fpi->data()->resultType().colWidth * 3; // overprovision for bytes converted into decomals.
+        break;
+    }
+  }
+  if (widSum < resultType.colWidth)
+  {
+    widSum = resultType.colWidth;
+  }
+  auto temp = fp[0]->data()->resultType();
+  temp.colWidth = widSum;
+  resultType.colWidth = widSum;
+  return temp;
 }
 
 // Returns the string that results from concatenating the arguments.

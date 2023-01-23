@@ -24,7 +24,7 @@ FROM
 t1;
 json	value	path	result
 {"k1":123, "k2":345}	123	$.k1	1
-NULL	NULL	$	NULL
+		$	NULL
 null	null	$	1
 "10"	"10"	$	1
 "10"	10	$	0

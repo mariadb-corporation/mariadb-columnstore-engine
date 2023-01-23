@@ -25,6 +25,8 @@
 #include "vendordmlstatement.h"
 #undef VENDORDMLSTATEMENT_DLLEXPORT
 
+#include "exceptclasses.h"
+
 using namespace std;
 
 namespace dmlpackage

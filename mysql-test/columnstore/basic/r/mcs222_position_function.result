@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs222_db;
 CREATE DATABASE mcs222_db;
 USE mcs222_db;
 CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'a'),(2, 'aqaaqq'),(3, 'cqcqqcq'),(4, 'qdqdqqdq'),(5, 'aaaqq');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'a'),(2, 'aqaaqq'),(3, 'cqcqqcq'),(4, 'qdqdqqdq'),(5, 'aaaqq');
 SELECT POSITION('zz' IN 'aazazazapq');
 POSITION('zz' IN 'aazazazapq')
 0

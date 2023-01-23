@@ -664,7 +664,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
     {
-      fResult.strVal = row.getVarBinaryStringField(fInputIndex);
+      fResult.strVal.assign(row.getVarBinaryField(fInputIndex), row.getVarBinaryLength(fInputIndex));
       break;
     }
 

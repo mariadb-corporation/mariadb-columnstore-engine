@@ -27,6 +27,7 @@
 #include <map>
 #include <bitset>
 #include <stdint.h>
+#include "dmlpkg.h"
 
 #if defined(_MSC_VER) && defined(xxxVENDORDMLSTATEMENT_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -35,10 +36,6 @@
 #endif
 namespace dmlpackage
 {
-typedef std::vector<std::string> ColValuesList;
-typedef std::vector<std::string> ColNameList;
-typedef std::map<uint32_t, ColValuesList> TableValuesMap;
-typedef std::bitset<4096> NullValuesBitset;
 
 /** @brief describes the general interface
  *  and implementation of a Vendor DML Statement
@@ -64,7 +61,7 @@ class VendorDMLStatement
   EXPORT VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName, std::string schema,
                             int rows, int columns, ColNameList& colNameList, TableValuesMap& tableValuesMap,
                             NullValuesBitset& nullValues, int sessionID);
-
+ 
   /** @brief destructor
    */
   EXPORT ~VendorDMLStatement();

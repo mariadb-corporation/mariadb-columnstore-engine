@@ -161,9 +161,9 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
       row.getColumnWidth(i) > 8)
   {
     if (value != NULL)
-      row.setStringField(value, i);
+      row.setStringField((const uint8_t*)value, length, i);
     else
-      row.setStringField("", i);
+      row.setStringField(nullptr, 0, i);
   }
   else if ((colType == CalpontSystemCatalog::BLOB) || (colType == CalpontSystemCatalog::TEXT) ||
            (colType == CalpontSystemCatalog::VARBINARY))
@@ -196,7 +196,8 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, M
       ct.precision = row.getPrecision(i);
     }
 
-    row.setIntField(convertValueNum<int64_t>(value, ct), i);
+    int64_t v = convertValueNum<int64_t>(value, ct);
+    row.setIntField(v, i);
   }
 }
 
@@ -223,9 +224,8 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
   T rv = 0;
   bool pushWarning = false;
   bool nullFlag = (str == NULL);
-  boost::any anyVal =
-      ct.convertColumnData((nullFlag ? "" : str), pushWarning, fTimeZone, nullFlag, true, false);
-
+  boost::any anyVal;
+  anyVal = ct.convertColumnData((nullFlag ? "" : str), pushWarning, fTimeZone, nullFlag, true, false);
   // Out of range values are treated as NULL as discussed during design review.
   if (pushWarning)
   {
@@ -310,10 +310,17 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::CLOB:
     {
-      std::string i = boost::any_cast<std::string>(anyVal);
-      // bug 1932, pad nulls up to the size of v
-      i.resize(sizeof(rv), 0);
-      rv = *((uint64_t*)i.data());
+      if (nullFlag)
+      {
+        rv = joblist::CHAR8NULL; // SZ: I hate that.
+      }
+      else
+      {
+        std::string i = boost::any_cast<std::string>(anyVal);
+        // bug 1932, pad nulls up to the size of v
+        i.resize(sizeof(rv), 0);
+        rv = *((uint64_t*)i.data());
+      }
     }
     break;
 

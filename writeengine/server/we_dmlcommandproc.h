@@ -39,6 +39,7 @@
 #include "we_rbmetawriter.h"
 #include "rowgroup.h"
 #include "we_log.h"
+#include "nullstring.h"
 
 #if defined(_MSC_VER) && defined(xxxDDLPKGPROC_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -127,7 +128,7 @@ class WE_DMLCommandProc
                                            const std::vector<BRM::FileInfo>& files,
                                            const std::vector<BRM::OID_t>& oidsToFlush, std::string& err);
 
-  void processAuxCol(const std::vector<std::string>& origVals,
+  void processAuxCol(const std::vector<utils::NullString>& origVals,
                      WriteEngine::ColValueList& colValuesList,
                      WriteEngine::DictStrList& dicStringList);
 

@@ -35,6 +35,7 @@
 #include "we_type.h"
 #include "we_brm.h"
 #include "bytestream.h"
+#include "nullstring.h"
 
 #if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
@@ -218,7 +219,7 @@ class Dctnry : public DbFileOp
   /**
    * @brief Set dictionary default for this column
    */
-  void setDefault(const std::string& defVal)
+  void setDefault(const utils::NullString& defVal)
   {
     m_defVal = defVal;
   }
@@ -329,7 +330,7 @@ class Dctnry : public DbFileOp
   DataBlock m_curBlock;             // current "raw" (uncompressed) data block
   Log* m_logger;                    // logger, mainly for bulk load
   int m_colWidth;                   // width of this dictionary column
-  std::string m_defVal;             // optional default string value
+  utils::NullString m_defVal;             // optional default string value
   ImportDataMode m_importDataMode;  // Import data in text or binary mode
 
 };  // end of class

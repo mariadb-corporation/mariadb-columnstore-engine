@@ -189,10 +189,12 @@ int InsertDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
       n++;
       colValue = dataList[n];
       n++;
+      // XXX check for "null"? what values do we have here?
+      utils::NullString nullColValue(colValue);
 #ifdef DML_PACKAGE_DEBUG
       // cout << "The column data: " << colName << " " << colValue << endl;
 #endif
-      DMLColumn* aColumn = new DMLColumn(colName, colValue, false);
+      DMLColumn* aColumn = new DMLColumn(colName, nullColValue, false);
       (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
 
@@ -211,7 +213,7 @@ int InsertDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
   initializeTable();
   Row* aRowPtr = new Row();
   std::string colName;
-  std::vector<std::string> colValList;
+  ColValuesList colValList;
 
   for (int j = 0; j < columns; j++)
   {
@@ -261,7 +263,10 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 
       for (unsigned int i = 0; i < columnNameList.size(); i++)
       {
-        DMLColumn* aColumn = new DMLColumn(columnNameList[i], valuesList[i], isNULL);
+        // XXX can here be NULLs?
+        idbassert(!isNULL);
+        utils::NullString ithValue(valuesList[i]);
+        DMLColumn* aColumn = new DMLColumn(columnNameList[i], ithValue);
         (aRow->get_ColumnList()).push_back(aColumn);
       }
 
@@ -278,6 +283,7 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
       while (iter != valuesList.end())
       {
         colValue = *iter;
+        utils::NullString nullColValue;
 
         if (strcasecmp(colValue.c_str(), "NULL") == 0)
         {
@@ -285,10 +291,11 @@ int InsertDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
         }
         else
         {
+          nullColValue.assign(colValue);
           isNULL = false;
         }
 
-        DMLColumn* aColumn = new DMLColumn(colName, colValue, isNULL);
+        DMLColumn* aColumn = new DMLColumn(colName, nullColValue, isNULL);
         (aRow->get_ColumnList()).push_back(aColumn);
 
         ++iter;

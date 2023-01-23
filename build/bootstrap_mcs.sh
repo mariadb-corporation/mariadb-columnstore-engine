@@ -16,7 +16,7 @@ fi
 
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
-BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
+BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo" "Release")
 DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
 
