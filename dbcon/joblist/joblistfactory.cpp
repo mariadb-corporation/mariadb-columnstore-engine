@@ -1282,13 +1282,66 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         tupleKey = jobInfo.keyInfo->dictKeyMap[tupleKey];
 
       // remember the columns to be returned
-      jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
+      bool isAux = false;
+      if (jobInfo.hasAggregation && jobInfo.hasDistinct)
+      {
+        if (i >= jobInfo.windowDels.size())
+        {
+          for (const auto& col : jobInfo.windowCols)
+          {
+            auto* wc = dynamic_cast<WindowFunctionColumn*>(col.get());
+            if (wc)
+            {
+              for (const auto& awc : wc->getColumnList())
+              {
+                auto tk = getTupleKey(jobInfo, awc, false);
+                if (tk == tupleKey)
+                {
+                  isAux = true;
+                  break;
+                }
+              }
+            }
+            if (isAux)
+              break;
+          }
+        }
+        if (!isAux)
+          jobInfo.returnedColVec.emplace_back(tupleKey, op);
+      }
+      else
+      {
+        jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
+      }
 
       // bug 1499 distinct processing, save unique distinct columns
       if (doDistinct && (jobInfo.distinctColVec.end() ==
                          find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
       {
-        jobInfo.distinctColVec.push_back(tupleKey);
+        bool isAux = false;
+        if (jobInfo.hasAggregation && jobInfo.hasDistinct && i >= jobInfo.windowDels.size())
+        {
+          for (const auto& col : jobInfo.windowCols)
+          {
+            auto* wc = dynamic_cast<WindowFunctionColumn*>(col.get());
+            if (wc)
+            {
+              for (const auto& awc : wc->getColumnList())
+              {
+                auto tk = getTupleKey(jobInfo, awc, false);
+                if (tk == tupleKey)
+                {
+                  isAux = true;
+                  break;
+                }
+              }
+            }
+            if (isAux)
+              break;
+          }
+        }
+        if (!isAux)
+          jobInfo.distinctColVec.push_back(tupleKey);
       }
     }
   }

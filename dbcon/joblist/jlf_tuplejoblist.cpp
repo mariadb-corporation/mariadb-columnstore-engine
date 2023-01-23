@@ -446,7 +446,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
     deliverySteps[CNX_VTABLE_ID] = spjs;
   }
-  else
+  else if (!(jobInfo.hasDistinct && jobInfo.windowCols.size() > 0))
   {
     TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
     idbassert(tds != NULL);
@@ -492,6 +492,20 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     idbassert(ws.get());
     querySteps.push_back(ws);
     deliverySteps[CNX_VTABLE_ID] = ws;
+
+    if (jobInfo.hasAggregation && jobInfo.hasDistinct)
+    {
+      spjs = ws;
+      TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
+      idbassert(tds != NULL);
+      SJSTEP ads = TupleAggregateStep::prepAggregate(spjs, jobInfo);
+      querySteps.push_back(ads);
+
+      if (ads.get() != NULL)
+        deliverySteps[CNX_VTABLE_ID] = ads;
+      else
+        throw std::logic_error("Failed to prepare Aggregation Delivery Step.");
+    }
   }
 
   // TODO MCOL-894 we don't need to run sorting|distinct
