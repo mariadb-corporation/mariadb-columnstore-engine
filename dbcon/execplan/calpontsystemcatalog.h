@@ -215,6 +215,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     uint64_t nextvalue;  // next autoincrement value
     uint32_t charsetNumber;
     const CHARSET_INFO* cs;
+
    private:
     long timeZone;
 
@@ -842,9 +843,12 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   /** Destructor */
   ~CalpontSystemCatalog();
 
+  // This ctor must be used to produce non-shared CSC that exists for a short period,
+  // e.g. in client UDFs like calshowpartitions().
+  explicit CalpontSystemCatalog();
+
  private:
   /** Constuctors */
-  explicit CalpontSystemCatalog();
   explicit CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
 
   CalpontSystemCatalog& operator=(const CalpontSystemCatalog& rhs);
