@@ -1992,7 +1992,11 @@ CalpontSystemCatalog::CalpontSystemCatalog() : fExeMgr(new ClientRotator(0, "Exe
 
 CalpontSystemCatalog::~CalpontSystemCatalog()
 {
-  delete fExeMgr;
+  if (fExeMgr)
+  {
+    delete fExeMgr;
+    fExeMgr = nullptr;
+  }
 }
 
 #if 0
