@@ -47,11 +47,8 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   TABLE* table = tables->table;
   InformationSchemaCond isCond;
 
-  boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
-      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(
-          execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
-
-  systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+  execplan::CalpontSystemCatalog csc;
+  csc.identity(execplan::CalpontSystemCatalog::FE);
 
   if (cond)
   {
@@ -60,7 +57,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
   const std::vector<
       std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >
-      catalog_tables = systemCatalogPtr->getTables();
+      catalog_tables = csc.getTables();
 
   for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID,
                              execplan::CalpontSystemCatalog::TableName> >::const_iterator it =
@@ -72,7 +69,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
     try
     {
-      execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
+      execplan::CalpontSystemCatalog::TableInfo tb_info = csc.tableInfo((*it).second);
       std::string create_date = dataconvert::DataConvert::dateToString((*it).second.create_date);
       table->field[0]->store((*it).second.schema.c_str(), (*it).second.schema.length(), cs);
       table->field[1]->store((*it).second.table.c_str(), (*it).second.table.length(), cs);
@@ -83,7 +80,7 @@ static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       if (tb_info.tablewithautoincr)
       {
         table->field[5]->set_notnull();
-        table->field[5]->store(systemCatalogPtr->nextAutoIncrValue((*it).second));
+        table->field[5]->store(csc.nextAutoIncrValue((*it).second));
       }
       else
       {
