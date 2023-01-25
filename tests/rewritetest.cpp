@@ -31,9 +31,10 @@
 #include "query19_fixed.h"
 
 //using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* t){execplan::ParseTree::destroyTree(t);})>;
-using TreePtr = std::unique_ptr<execplan::ParseTree>;
+//using TreePtr = std::unique_ptr<execplan::ParseTree>;
+using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* ){})>;
 
-TEST(Stub, Check)
+TEST(TPCH, Query_19)
 {
   messageqcpp::ByteStream stream;
   stream.load(__query19_tree_init, sizeof(__query19_tree_init));

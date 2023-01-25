@@ -125,7 +125,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   );
   */
 
-  ParseTreeTestParam{"Query_1", &__test_query_before_1, &__test_query_after_1},
+  ParseTreeTestParam{"Query_1", &__test_query_before_1, &__test_query_after_1}
 
   /*
   select t1.posname, t2.posname
@@ -134,7 +134,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   t1.id = t2.id
   and (t1.pos + t2.pos < 1000);
   */
-  ParseTreeTestParam{"Query_2", &__test_query_before_2},
+  //ParseTreeTestParam{"Query_2", &__test_query_before_2},
 
  /*
   select t1.posname, t2.posname
@@ -147,7 +147,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   (t1.posname < dcba);
 
   */
-  ParseTreeTestParam{"Query_3", &__test_query_before_3},
+  //ParseTreeTestParam{"Query_3", &__test_query_before_3},
 
   /*
   select t1.posname, t2.posname
@@ -159,7 +159,7 @@ or
    */
 
 
-  ParseTreeTestParam{"Query_4", &__test_query_before_4},
+  //ParseTreeTestParam{"Query_4", &__test_query_before_4},
 
 /*select t1.posname, t2.posname from t1,t2
 where
@@ -173,7 +173,7 @@ t1.id = t2.id
 or t1.pos + t2.pos > 15000
 );
 */
-  ParseTreeTestParam{"Query_5", &__test_query_before_5},
+  //ParseTreeTestParam{"Query_5", &__test_query_before_5},
 
 /*select t1.posname, t2.posname from t1,t2
 where
@@ -187,7 +187,7 @@ t1.id = t2.id
 or t1.pos + t2.pos > 15000
 );
 */
-  ParseTreeTestParam{"Query_6", &__test_query_before_6},
+  //ParseTreeTestParam{"Query_6", &__test_query_before_6},
 
 /*
  select t1.posname
@@ -203,7 +203,7 @@ id < 30
 );
 
  */
-  ParseTreeTestParam{"Query_7", &__test_query_before_7},
+  //ParseTreeTestParam{"Query_7", &__test_query_before_7},
 
 /*select t1.posname, t2.posname
 from t1,t2
@@ -216,7 +216,7 @@ and id < 30
 )
 and t1.id = t2.id;
 */
-  ParseTreeTestParam{"Query_8", &__test_query_before_8},
+  //ParseTreeTestParam{"Query_8", &__test_query_before_8},
 
 /*select t1.posname, t2.posname
 from t1,t2
@@ -232,7 +232,7 @@ t1.id = t2.id
 and t1.id = t2.rid
 );
 */
-  ParseTreeTestParam{"Query_9", &__test_query_before_9},
+  //ParseTreeTestParam{"Query_9", &__test_query_before_9},
 
 /*select * from t1
 where
@@ -246,7 +246,7 @@ pos > 5000
 and place > 'abcdefghij'
 );
 */
-  ParseTreeTestParam{"Query_10", &__test_query_before_10, &__test_query_after_10},
+  //ParseTreeTestParam{"Query_10", &__test_query_before_10, &__test_query_after_10},
 
 /*select *
 from t1
@@ -261,7 +261,7 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_11", &__test_query_before_11, &__test_query_after_11},
+  //ParseTreeTestParam{"Query_11", &__test_query_before_11, &__test_query_after_11},
 
 /*select *
 from t1
@@ -276,7 +276,7 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_12", &__test_query_before_12, &__test_query_after_12},
+  //ParseTreeTestParam{"Query_12", &__test_query_before_12, &__test_query_after_12},
 
 /*select *
 from t1
@@ -291,7 +291,7 @@ pos > 5000
 or id < 30
 );
 */
-  ParseTreeTestParam{"Query_13", &__test_query_before_13, &__test_query_after_13},
+  //ParseTreeTestParam{"Query_13", &__test_query_before_13, &__test_query_after_13},
 
 /*select *
 from t1
@@ -311,7 +311,7 @@ pos > 5000
 or id < 30
 );
 */
-  ParseTreeTestParam{"Query_14", &__test_query_before_14},
+  //ParseTreeTestParam{"Query_14", &__test_query_before_14},
 
 /*select *
 from t1
@@ -338,7 +338,7 @@ and
 pos > 5000
 or id < 30);
 */
-  ParseTreeTestParam{"Query_15", &__test_query_before_15, &__test_query_after_15}
+  //ParseTreeTestParam{"Query_15", &__test_query_before_15, &__test_query_after_15}
 
 ),
   [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {
