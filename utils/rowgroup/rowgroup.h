@@ -1467,7 +1467,7 @@ class RowGroup : public messageqcpp::Serializeable
   const uint8_t* getColumnValueBuf(const uint32_t columnID, const uint32_t rowID) const
   {
     assert(data);
-    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsetArray()[columnID] + rowID * getRowSize();
     // check the out of bounds invariant somehow
     return &data[valueOffset];
   }
@@ -1563,6 +1563,7 @@ class RowGroup : public messageqcpp::Serializeable
   uint32_t getColumnWidth(uint32_t col) const;
   uint32_t getColumnCount() const;
   inline const OffsetsType& getOffsets() const;
+  inline const uint32_t* getOffsetArray() const;
   inline const std::vector<uint32_t>& getOIDs() const;
   inline const std::vector<uint32_t>& getKeys() const;
   inline const std::vector<uint32_t>& getColWidths() const;
@@ -1874,6 +1875,11 @@ inline bool RowGroup::usesStringTable() const
 inline const std::vector<uint32_t>& RowGroup::getOffsets() const
 {
   return oldOffsets;
+}
+
+inline const uint32_t* RowGroup::getOffsetArray() const
+{
+  return offsets;
 }
 
 inline const std::vector<uint32_t>& RowGroup::getOIDs() const
