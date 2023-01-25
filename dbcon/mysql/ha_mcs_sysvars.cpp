@@ -256,12 +256,10 @@ void* get_fe_conn_info_ptr(THD* thd)
 
 void set_fe_conn_info_ptr(void* ptr, THD* thd)
 {
-  if (current_thd == NULL && thd == NULL)
-  {
-    return;
-  }
+  if (thd == NULL) thd = current_thd;
+  if (thd == NULL) return;
 
-  THDVAR(current_thd, fe_conn_info_ptr) = (uint64_t)(ptr);
+  THDVAR(thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
 
 ulonglong get_original_optimizer_flags(THD* thd)
