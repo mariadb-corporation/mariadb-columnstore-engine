@@ -21,6 +21,7 @@
 #include "heaporderby.h"
 #include "conststring.h"
 // #include "joblisttypes.h"
+#include "mcs_int128.h"
 #include "pdqorderby.h"
 #include "vlarray.h"
 
@@ -42,6 +43,28 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
       {
         switch (columnWidth)
         {
+          case 16:
+          {
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&datatypes::TSInt128::NullValue);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            memcpy(pos, valueBuf, 16);
+            int64_t* wDecimaAsInt64 = reinterpret_cast<int64_t*>(pos);
+            int64_t lower = 0;
+            if (isDsc)
+            {
+              lower = ~htonll(wDecimaAsInt64[0]);
+              wDecimaAsInt64[0] = ~htonll(wDecimaAsInt64[1] ^ 0x8000000000000000);
+            }
+            else
+            {
+              lower = htonll(wDecimaAsInt64[0]);
+              wDecimaAsInt64[0] = htonll(wDecimaAsInt64[1] ^ 0x8000000000000000);
+            }
+            wDecimaAsInt64[1] = lower;
+            break;
+          }
           // case datatypes::MAXDECIMALWIDTH: c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
           case 1:
           {
