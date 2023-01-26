@@ -80,6 +80,16 @@ class ParseTree
     return fLeft;
   }
 
+  inline void nullRight()
+  {
+    fRight = nullptr;
+  }
+
+  inline void nullLeft()
+  {
+    fLeft = nullptr;
+  }
+
   inline void right(ParseTree* expressionTree)
   {
     fRight = expressionTree;

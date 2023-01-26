@@ -15,8 +15,7 @@
 #include "unitqueries_before.h"
 #include "unitqueries_after.h"
 
-// using TreePtr = std::unique_ptr<execplan::ParseTree>;
-using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* ){})>;
+using TreePtr = std::unique_ptr<execplan::ParseTree>;
 
 
 bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0)

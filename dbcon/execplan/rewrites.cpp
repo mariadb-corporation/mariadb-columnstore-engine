@@ -91,32 +91,6 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   return;
 }
 
-void cleanupEmptyNodes(execplan::ParseTree* root)
-{
-  if (root == nullptr)
-  {
-    return;
-  }
-
-  if (root->left() == nullptr && root-> right() != nullptr
-      && (root->data()->data() == "and" || root->data()->data() == "or"))
-  {
-    root = root->right();
-    cleanupEmptyNodes(root);
-  }
-  else if (root->left() != nullptr && root-> right() == nullptr
-      && (root->data()->data() == "and" || root->data()->data() == "or"))
-  {
-    root = root->left();
-    cleanupEmptyNodes(root);
-  }
-  else
-  {
-    cleanupEmptyNodes(root->left());
-    cleanupEmptyNodes(root->right());
-  }
-}
-
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
 {
   if (common.empty())
@@ -158,73 +132,6 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
   return result;
 }
 
-// TODO: investigate when AND has two comon nodes !!!!
-void removeFromAnd(execplan::ParseTree* father, execplan::ParseTree* andNode, const CommonContainer& common,
-                   bool rightChild)
-{
-  if (!andNode || andNode->data()->data() != "and")
-    return;
-
-  if (common.contains(andNode->left()->data()))
-  {
-    if (rightChild)
-      father->right(andNode->right());
-    else
-      father->left(andNode->right());
-  }
-  else if (common.contains(andNode->right()->data()))
-  {
-    if (rightChild)
-      father->right(andNode->left());
-    else
-      father->left(andNode->left());
-  }
-}
-
-void removeFromTree(execplan::ParseTree* tree, const CommonContainer& common)
-{
-  if (tree == nullptr)
-  {
-    return;
-  }
-
-  removeFromAnd(tree, tree->left(), common, false);
-  removeFromAnd(tree, tree->right(), common, true);
-
-  removeFromTree(tree->left(), common);
-  removeFromTree(tree->right(), common);
-}
-/* Clean iterative dfs traversal, here for the reference
-void dfsTraversal(execplan::ParseTree* root)
-{
-  std::vector<std::pair<execplan::ParseTree*, int>> stack;
-  stack.emplace_back(root, 0);
-  while (!stack.empty())
-  {
-    auto [node, flag] = stack.back();
-    switch (flag) {
-      case 0:
-        ++stack.back().second;
-        if (node->left() != nullptr)
-        {
-         stack.emplace_back(node->left(), 0);
-        }
-        break;
-      case 1:
-        ++stack.back().second;
-        if (node->right() != nullptr)
-        {
-          stack.emplace_back(node->right(), 0);
-        }
-        break;
-      default:
-        process(node);
-        stack.pop_back();
-        break;
-    }
-  }
-}
-*/
 
 enum class GoTo
 {
@@ -238,55 +145,62 @@ void fixUpTree(execplan::ParseTree** node, std::vector<std::pair<execplan::Parse
 {
   auto sz = stack.size();
   auto [father, fatherflag] = stack.at(sz - 2);
-  if ((*node)->data()->data() == "and")
+
+  if ((*node)->data()->data() != "and")
+    return;
+
+  bool containsLeft = !(*node)->left() || common.contains((*node)->left()->data());
+  bool containsRight = common.contains((*node)->right()->data());
+  if (containsLeft && containsRight)
   {
-    bool containsLeft = !(*node)->left() || common.contains((*node)->left()->data());
-    bool containsRight = common.contains((*node)->right()->data());
-    if (containsLeft && containsRight)
+    if (fatherflag == GoTo::Right)
     {
-      if (fatherflag == GoTo::Right)
+      father->nullLeft();
+    }
+    else
+    {
+      father->nullRight();
+      for (int prev = sz - 2; sz-->0;)
       {
-        father->left(static_cast<ParseTree*>(nullptr));
-      }
-      else
-      {
-        father->right(static_cast<ParseTree*>(nullptr));
-        for (int prev = sz - 2; sz-->0;)
+        if (stack.at(prev).first->left() == nullptr)
         {
-          if (stack.at(prev).first->left() == nullptr)
+          if (prev == 0)
           {
-            if (prev == 0)
-            {
-              *node = nullptr;
-            }
-            else
-            {
-              auto [ancestor, ancflag] = stack.at(prev - 1);
-              if (ancflag == GoTo::Right)
-                ancestor->left(static_cast<ParseTree*>(nullptr));
-              else
-                ancestor->right(static_cast<ParseTree*>(nullptr));
-            }
+            *node = nullptr;
           }
           else
-            break;
+          {
+            auto [ancestor, ancflag] = stack.at(prev - 1);
+            if (ancflag == GoTo::Right)
+              ancestor->nullLeft();
+            else
+            {
+              ancestor->nullRight();
+            }
+          }
         }
+        else
+          break;
       }
     }
-    else if (containsLeft)
+  }
+  else if (containsLeft)
+  {
+    if (fatherflag == GoTo::Up)
     {
-      if (fatherflag == GoTo::Up)
-        father->right((*node)->right());
-      else
-        father->left((*node)->right());
+      father->right((*node)->right());
     }
-    else if (containsRight)
+    else
+      father->left((*node)->right());
+  }
+  else if (containsRight)
+  {
+    if (fatherflag == GoTo::Up)
     {
-      if (fatherflag == GoTo::Up)
-        father->right((*node)->left());
-      else
-        father->left((*node)->left());
+      father->right((*node)->left());
     }
+    else
+      father->left((*node)->left());
   }
 }
 
@@ -327,11 +241,12 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
             {
               if (fatherflag == GoTo::Right)
               {
-                father->left(static_cast<ParseTree*>(nullptr));
+                father->nullLeft();
               }
               else
               {
-                father->right(static_cast<ParseTree*>(nullptr));
+                father->nullRight();
+
                 if (father->left() == nullptr)
                 {
                   *root = nullptr;
@@ -413,12 +328,7 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
     printContainer(std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
   #endif
 
-  //details::removeFromTree(tree, common);
   details::removeFromTreeIterative(&tree, common);
-  //dumpTreeFiles(tree, "1.remove");
-  // HACK WORKAROUND FOR case of two common nodes
-  //details::removeFromTree(tree, common);
-  //dumpTreeFiles(tree, "2.remove");
 
   auto result = details::appendToRoot(tree, common);
 

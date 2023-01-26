@@ -30,9 +30,8 @@
 #include "query19_init.h"
 #include "query19_fixed.h"
 
-//using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* t){execplan::ParseTree::destroyTree(t);})>;
-//using TreePtr = std::unique_ptr<execplan::ParseTree>;
-using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* ){})>;
+
+using TreePtr = std::unique_ptr<execplan::ParseTree>;
 
 TEST(TPCH, Query_19)
 {
