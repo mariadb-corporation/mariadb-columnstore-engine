@@ -2,6 +2,13 @@
 #include <typeinfo>
 #include "objectreader.h"
 #include "parsetree.h"
+#include "operator.h"
+#include "simplefilter.h"
+#include <boost/core/demangle.hpp>
+#include <set>
+#include <string>
+#include <ostream>
+
 
 
 namespace execplan
@@ -26,19 +33,20 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 #define debug_rewrites true
 
-auto nodeComparator = [](const execplan::TreeNode* left, const execplan::TreeNode* right)
-{ if (left && right)
+
+//using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
+
+using CommonPtr = execplan::TreeNode*;
+auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
+{
+    // if (left->semanticEq(right.get())
+    //   return false;
+
     return left->data() < right->data();
-  else if (left)
-    return false;
-  else if (!left && !right)
-    return false;
-  else
-    return true;
 };
 
-using Comparator = decltype(nodeComparator);
-using CommonContainer = std::set<execplan::TreeNode*, Comparator>;
+
+using CommonContainer = std::set<CommonPtr, decltype(nodeComparator)>;
 
 // Walk the tree and find out common conjuctions
 void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0, bool orMeeted = false, bool andParent = false)
@@ -51,7 +59,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
   #ifdef debug_rewrites
     auto sep = std::string(level * 4, '-');
-    std::cerr << sep << ": " << root->data()->data() << " " << typeid(root->data()).name() << std::endl;
+    std::cerr << sep << ": " << root->data()->data() << " " << boost::core::demangle(typeid(*(root->data())).name()) << std::endl;
   #endif
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)

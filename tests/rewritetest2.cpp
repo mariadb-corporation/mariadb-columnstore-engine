@@ -15,8 +15,8 @@
 #include "unitqueries_before.h"
 #include "unitqueries_after.h"
 
-using TreePtr = std::unique_ptr<execplan::ParseTree>;
 
+using TreePtr = std::unique_ptr<execplan::ParseTree>;
 
 bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0)
 {
@@ -39,28 +39,18 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0
 #define REWRITE_TREE_TEST_DEBUG true;
 
 
-void printTrees(const std::string& queryName, execplan::ParseTree* initial, execplan::ParseTree* rewritten, execplan::ParseTree* reference = nullptr)
+void printTree(const std::string& queryName, execplan::ParseTree* tree, const std::string& treeName)
 {
 #ifdef REWRITE_TREE_TEST_DEBUG
   std::string dotPath = std::string("/tmp/") + queryName;
-  std::string initialDot = dotPath + ".initial.dot";
-  std::string rewrittenDot = dotPath + ".rewritten.dot";
-  std::string referenceDot = dotPath + ".reference.dot";
+  std::string dotFile = dotPath + "." + treeName + ".dot";
 
-  rewritten->drawTree(rewrittenDot);
-  initial->drawTree(initialDot);
-  if (reference)
-    reference->drawTree(referenceDot);
+  tree->drawTree(dotFile);
 
   std::string dotInvoke = "dot -Tpng ";
+  std::string convertCommand = dotInvoke + dotFile + " -o " + dotFile + ".png";
 
-  std::string convertInitial = dotInvoke + initialDot + " -o " +  initialDot + ".png";
-  std::string convertRewritten = dotInvoke + rewrittenDot + " -o " +  rewrittenDot + ".png";
-  std::string convertReference = dotInvoke + referenceDot + " -o " +  referenceDot + ".png";
-
-  [[maybe_unused]] auto _ = std::system(convertInitial.c_str());
-  _ = system(convertRewritten.c_str());
-  _ = system(convertReference.c_str());
+  [[maybe_unused]] auto _ = std::system(convertCommand.c_str());
 #endif
 }
 
@@ -83,6 +73,7 @@ TEST_P(ParseTreeTest, Rewrite)
   messageqcpp::ByteStream stream;
   stream.load(GetParam().query->data(), GetParam().query->size());
   execplan::ParseTree* initialTree = execplan::ObjectReader::createParseTree(stream);
+  printTree(GetParam().queryName, initialTree, "initial");
 
   TreePtr rewrittenTree;
   rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot(initialTree));
@@ -94,16 +85,15 @@ TEST_P(ParseTreeTest, Rewrite)
     TreePtr manuallyRewrittenTree;
     manuallyRewrittenTree.reset(execplan::ObjectReader::createParseTree(stream));
     bool result = treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get());
-    if (!result)
-      printTrees(GetParam().queryName, initialTree, rewrittenTree.get(), manuallyRewrittenTree.get());
+    printTree(GetParam().queryName, rewrittenTree.get(), "rewritten");
+    printTree(GetParam().queryName, manuallyRewrittenTree.get(), "reference");
 
     EXPECT_TRUE(result);
   }
   else
   {
     bool result = treeEqual(initialTree, rewrittenTree.get());
-    if (!result)
-      printTrees(GetParam().queryName, initialTree, rewrittenTree.get());
+    printTree(GetParam().queryName, rewrittenTree.get(), "rewritten");
 
     EXPECT_TRUE(result);
   }
