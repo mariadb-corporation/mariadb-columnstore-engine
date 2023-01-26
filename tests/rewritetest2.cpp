@@ -358,7 +358,13 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_16", &__test_query_before_16, &__test_query_after_16}
+  ParseTreeTestParam{"Query_16", &__test_query_before_16, &__test_query_after_16},
+  ParseTreeTestParam{"Query_17", &__test_query_before_17, &__test_query_after_17},
+  ParseTreeTestParam{"Query_18", &__test_query_before_18, &__test_query_after_18},
+  ParseTreeTestParam{"Query_19", &__test_query_before_19, &__test_query_after_19},
+  ParseTreeTestParam{"Query_20", &__test_query_before_20, &__test_query_after_20},
+  ParseTreeTestParam{"Query_21", &__test_query_before_21, &__test_query_after_21}
+
 
 
 ),
