@@ -43,7 +43,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
       {
         switch (columnWidth)
         {
-          case 16:
+          case datatypes::MAXDECIMALWIDTH:
           {
             const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
             const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&datatypes::TSInt128::NullValue);
@@ -65,7 +65,21 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
             wDecimaAsInt64[1] = lower;
             break;
           }
-          // case datatypes::MAXDECIMALWIDTH: c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
+          case 8:
+          {
+            using StorageType =
+                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
+            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
+            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
+            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
+            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
+            std::memcpy(pos, valueBuf, sizeof(StorageType));
+            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
+            *valPtr ^= 0x8000000000000000;
+            *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
+            pos += columnWidth;
+            break;
+          }
           case 1:
           {
             using StorageType =
@@ -96,7 +110,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
             pos += columnWidth;
             break;
           }
-          case 3:
+          case 4:
           {
             using StorageType =
                 datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
@@ -111,25 +125,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
             pos += columnWidth;
             break;
           }
-          case 4:
-          {
-            using StorageType =
-                datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
-            const uint8_t* valueBuf = rg.getColumnValueBuf(columnId, p.rowID);
-            const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::BIGINTNULL);
-            bool isNotNull = memcmp(nullValuePtr, valueBuf, columnWidth) != 0;
-            *pos++ = (isDsc) ? static_cast<uint8_t>(!isNotNull) : static_cast<uint8_t>(isNotNull);
-            std::memcpy(pos, valueBuf, sizeof(StorageType));
-            StorageType* valPtr = reinterpret_cast<StorageType*>(pos);
-            *valPtr ^= 0x8000000000000000;
-            *valPtr = (isDsc) ? ~htonll(*valPtr) : htonll(*valPtr);
-            pos += columnWidth;
-            break;
-          }
-            // case datatypes::MAXLEGACYWIDTH: c = new BigIntCompare(*i); break;
-            // case 1: c = new TinyIntCompare(*i); break;
-            // case 2: c = new SmallIntCompare(*i); break;
-            // case 4: c = new IntCompare(*i); break;
         }
         break;
       }
