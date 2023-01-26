@@ -7165,8 +7165,7 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
             (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
         csep->limitNum(select->val_int());
         // MCOL-894 Activate parallel ORDER BY
-        csep->orderByThreads(2);
-        std::cout << "1 setting threads to 2" << std::endl;
+        csep->orderByThreads(get_orderby_threads(gwi.thd));
       }
     }
   }
