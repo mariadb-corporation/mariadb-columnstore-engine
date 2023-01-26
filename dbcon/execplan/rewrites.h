@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or

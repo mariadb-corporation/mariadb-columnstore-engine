@@ -30,6 +30,8 @@
 #include "treenode.h"
 #include "operator.h"
 #include "mcs_decimal.h"
+#include <boost/core/demangle.hpp>
+
 
 namespace rowgroup
 {
@@ -498,7 +500,10 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
     dotFile << "n" << (void*)n << " -> "
             << "n" << (void*)r << std::endl;
 
-  dotFile << "n" << (void*)n << " [label=\"" << n->data()->data() << ' ' << n->data() << "\"]" << std::endl;
+  dotFile << "n" << (void*)n << " [label=\"" <<
+           n->data()->data() << " (" <<
+           n->data() << ") " <<
+           boost::core::demangle(typeid(*n->data()).name()) << "\"]" << std::endl;
 }
 
 inline void ParseTree::drawTree(std::string filename)
