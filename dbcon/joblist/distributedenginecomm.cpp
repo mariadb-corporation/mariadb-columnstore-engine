@@ -1332,7 +1332,7 @@ void DistributedEngineComm::getLocalNetIfacesSins()
     ifaceListMembPtr = netIfacesList;
     for (; ifaceListMembPtr; ifaceListMembPtr = ifaceListMembPtr->ifa_next)
     {
-      if (ifaceListMembPtr->ifa_addr->sa_family == AF_INET)
+      if (ifaceListMembPtr->ifa_addr && ifaceListMembPtr->ifa_addr->sa_family == AF_INET)
       {
         localNetIfaceSins_.push_back(((struct sockaddr_in*)ifaceListMembPtr->ifa_addr)->sin_addr);
       }
