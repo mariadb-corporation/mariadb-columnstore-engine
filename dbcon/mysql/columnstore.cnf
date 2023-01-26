@@ -1,8 +1,8 @@
 [mysqld]
 plugin-load-add=ha_columnstore.so
 
-# Enable compression by default on create, set to NONE to turn off
-#columnstore_compression_type=SNAPPY
+# Compression is enabled by default on create, set to Snappy to change the method
+#columnstore_compression_type=LZ4
 
 # ColumnStore local query flag
 #columnstore_local_query=0

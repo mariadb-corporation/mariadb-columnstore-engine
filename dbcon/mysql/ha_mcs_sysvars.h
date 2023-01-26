@@ -32,9 +32,7 @@ enum mcs_compression_type_t
 {
   NO_COMPRESSION = 0,
   SNAPPY = 2,
-#ifdef HAVE_LZ4
   LZ4 = 3
-#endif
 };
 
 // use_import_for_batchinsert mode

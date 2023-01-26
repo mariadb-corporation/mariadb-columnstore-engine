@@ -91,7 +91,7 @@
 		<ModuleSwapCriticalThreshold2>90</ModuleSwapCriticalThreshold2>
 		<ModuleSwapMajorThreshold2>80</ModuleSwapMajorThreshold2>
 		<ModuleSwapMinorThreshold2>70</ModuleSwapMinorThreshold2>
-		<ModuleDiskMonitorFileSystem1-2>/</ModuleDiskMonitorFileSystem1-2>	
+		<ModuleDiskMonitorFileSystem1-2>/</ModuleDiskMonitorFileSystem1-2>
 		<ModuleDBRootCount1-2>unassigned</ModuleDBRootCount1-2>
 		<ModuleDBRootID1-1-2>unassigned</ModuleDBRootID1-1-2>
 		<ModuleType3>pm</ModuleType3>
@@ -190,22 +190,22 @@
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
-		<TempFileCompressionType>Snappy</TempFileCompressionType> <!-- LZ4, Snappy -->
+		<TempFileCompressionType>LZ4</TempFileCompressionType> <!-- LZ4, Snappy -->
 	</HashJoin>
 	<JobList>
 		<FlushInterval>16K</FlushInterval>
 		<FifoSize>16</FifoSize>
-		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be 
+		<RequestSize>1</RequestSize>  <!-- Number of extents per request, should be
 			  less than MaxOutstandingRequests. Otherwise, default value 1 is used. -->
 		<!--  ProcessorThreadsPerScan is the number of jobs issued to process
-			  each extent.  The default is 16.  MaxOutstandingRequests is the size of 
-			  the window of work in terms of extents.  A value of 20 means there 
+			  each extent.  The default is 16.  MaxOutstandingRequests is the size of
+			  the window of work in terms of extents.  A value of 20 means there
 			  is 20 extents worth of work for the PMs to process at any given time.
 			  ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
 			  as many threads are available across all PMs.  -->
-		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> --> 
-		<!-- MaxOutstandingRequests is going to default to the num of cores available 
-			 across all performance modules * 4 divided by the ProcessorThreadsPerScan, 
+		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
+		<!-- MaxOutstandingRequests is going to default to the num of cores available
+			 across all performance modules * 4 divided by the ProcessorThreadsPerScan,
 			 but will be lower bounded by 20 -->
 		<!-- <MaxOutstandingRequests>20</MaxOutstandingRequests>  -->
 		<ThreadPoolSize>100</ThreadPoolSize>
