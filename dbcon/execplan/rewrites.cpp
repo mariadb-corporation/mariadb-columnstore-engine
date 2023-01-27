@@ -148,8 +148,15 @@ enum class GoTo
   Up
 };
 
-void fixUpTree(execplan::ParseTree** node, std::vector<std::pair<execplan::ParseTree*, GoTo>>& stack,
-               const CommonContainer& common)
+struct StackFrame
+{
+  execplan::ParseTree* node;
+  GoTo direction;
+};
+
+using DFSStack = std::vector<StackFrame>;
+
+void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonContainer& common)
 {
   auto sz = stack.size();
   auto [father, fatherflag] = stack.at(sz - 2);
@@ -170,7 +177,7 @@ void fixUpTree(execplan::ParseTree** node, std::vector<std::pair<execplan::Parse
       father->nullRight();
       for (int prev = sz - 2; sz-->0;)
       {
-        if (stack.at(prev).first->left() == nullptr)
+        if (stack.at(prev).node->left() == nullptr)
         {
           if (prev == 0)
           {
@@ -214,7 +221,7 @@ void fixUpTree(execplan::ParseTree** node, std::vector<std::pair<execplan::Parse
 
 void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& common)
 {
-  std::vector<std::pair<execplan::ParseTree*, GoTo>> stack;
+  DFSStack stack;
   stack.emplace_back(*root, GoTo::Left);
   while (!stack.empty())
   {
@@ -223,14 +230,14 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     switch (flag)
     {
       case GoTo::Left:
-        stack.back().second = GoTo::Right;
+        stack.back().direction = GoTo::Right;
         if (node->left() != nullptr)
         {
           stack.emplace_back(node->left(), GoTo::Left);
         }
         break;
       case GoTo::Right:
-        stack.back().second = GoTo::Up;
+        stack.back().direction = GoTo::Up;
         if (node->right() != nullptr)
         {
           stack.emplace_back(node->right(), GoTo::Left);
@@ -292,14 +299,11 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
 
 bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
 {
-  if (fst == nullptr)
+  if (fst == nullptr || snd == nullptr)
   {
-    return snd == nullptr;
+    return fst == snd;
   }
-  if (snd == nullptr)
-  {
-    return fst == nullptr;
-  }
+
   return fst->data() == snd->data() &&
          ((treeEqual(fst->left(), snd->left()) && treeEqual(fst->right(), snd->right())) ||
           (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
