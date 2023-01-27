@@ -4,6 +4,7 @@
 #include "parsetree.h"
 #include "operator.h"
 #include "simplefilter.h"
+#include "logicoperator.h"
 #include <boost/core/demangle.hpp>
 #include <set>
 #include <string>
@@ -55,6 +56,25 @@ bool commonContains(const CommonContainer & common, execplan::ParseTree* node)
   return filter && common.contains(filter);
 }
 
+OpType operatorType(execplan::ParseTree* node)
+{
+  auto op = dynamic_cast<Operator*>(node->data());
+  if (!op)
+    return OP_UNKNOWN;
+
+  return op->op();
+}
+
+void printTreeLevel(execplan::ParseTree* root, int level)
+{
+#ifdef debug_rewrites
+  auto sep = std::string(level * 4, '-');
+  auto& node = *(root->data());
+  std::cerr << sep << ": " << root->data()->data() << " "
+            << boost::core::demangle(typeid(node).name()) << std::endl;
+#endif
+}
+
 // Walk the tree and find out common conjuctions
 void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0,
                               bool orMeeted = false, bool andParent = false)
@@ -65,12 +85,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-#ifdef debug_rewrites
-  auto sep = std::string(level * 4, '-');
-  auto& node = *(root->data());
-  std::cerr << sep << ": " << root->data()->data() << " "
-            << boost::core::demangle(typeid(node).name()) << std::endl;
-#endif
+  printTreeLevel(root, level);
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
   {
@@ -79,7 +94,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-  if (root->data()->data() == "or")
+  if (operatorType(root) == OP_OR)
   {
     CommonContainer leftAcc;
     CommonContainer rightAcc;
@@ -93,7 +108,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-  if (root->data()->data() == "and")
+  if (operatorType(root) == OP_AND)
   {
     collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, true);
     collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, true);
@@ -110,21 +125,24 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   return;
 }
 
+
+execplan::ParseTree* newAndNode()
+{
+  execplan::Operator* op = new execplan::Operator();
+  op->data("and");
+  return new execplan::ParseTree(op);
+}
+
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
 {
   if (common.empty())
     return tree;
 
-  execplan::Operator* op = new execplan::Operator();
-  op->data("and");
-  execplan::ParseTree* result = new execplan::ParseTree(op);
-
+  execplan::ParseTree* result = newAndNode();
   auto current = result;
   for (auto treenode = common.begin(); treenode != common.end();)
   {
-    execplan::Operator* op = new execplan::Operator();
-    op->data("and");
-    execplan::ParseTree* andOp = new execplan::ParseTree(op);
+    execplan::ParseTree* andOp = newAndNode();
     execplan::ParseTree* andCondition = new execplan::ParseTree(*treenode);
 
     ++treenode;
@@ -196,7 +214,7 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
   auto sz = stack.size();
   auto [father, fatherflag] = stack.at(sz - 2);
 
-  if ((*node)->data()->data() != "and")
+  if (operatorType(*node) != OP_AND)
     return;
 
   bool containsLeft = !(*node)->left() || commonContains(common, (*node)->left());
@@ -265,7 +283,7 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         if (sz == 2)
         {
           auto [father, fatherflag] = stack.at(0);
-          if (node->data()->data() == "and")
+          if (operatorType(node) == OP_AND)
           {
             bool containsLeft = commonContains(common, node->left());
             bool containsRight = commonContains(common, node->right());
