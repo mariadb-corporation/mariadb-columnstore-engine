@@ -56,8 +56,9 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
 #ifdef debug_rewrites
   auto sep = std::string(level * 4, '-');
+  auto node = *(root->data());
   std::cerr << sep << ": " << root->data()->data() << " "
-            << boost::core::demangle(typeid(*(root->data())).name()) << std::endl;
+            << boost::core::demangle(typeid(node).name()) << std::endl;
 #endif
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
@@ -187,6 +188,7 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
 
   bool containsLeft = !(*node)->left() || common.contains((*node)->left()->data());
   bool containsRight = common.contains((*node)->right()->data());
+
   if (containsLeft && containsRight)
   {
     nullAncestor(father, fatherflag);
