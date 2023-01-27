@@ -9,8 +9,6 @@
 #include <string>
 #include <ostream>
 
-
-
 namespace execplan
 {
 namespace details
@@ -33,23 +31,22 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 #define debug_rewrites true
 
-
-//using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
+// using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
 
 using CommonPtr = execplan::TreeNode*;
 auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
 {
-    // if (left->semanticEq(right.get())
-    //   return false;
+  // if (left->semanticEq(right.get())
+  //   return false;
 
-    return left->data() < right->data();
+  return left->data() < right->data();
 };
-
 
 using CommonContainer = std::set<CommonPtr, decltype(nodeComparator)>;
 
 // Walk the tree and find out common conjuctions
-void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0, bool orMeeted = false, bool andParent = false)
+void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0,
+                              bool orMeeted = false, bool andParent = false)
 {
   if (root == nullptr)
   {
@@ -57,10 +54,11 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-  #ifdef debug_rewrites
-    auto sep = std::string(level * 4, '-');
-    std::cerr << sep << ": " << root->data()->data() << " " << boost::core::demangle(typeid(*(root->data())).name()) << std::endl;
-  #endif
+#ifdef debug_rewrites
+  auto sep = std::string(level * 4, '-');
+  std::cerr << sep << ": " << root->data()->data() << " "
+            << boost::core::demangle(typeid(*(root->data())).name()) << std::endl;
+#endif
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
   {
@@ -140,7 +138,6 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
   return result;
 }
 
-
 enum class GoTo
 {
   Left,
@@ -156,22 +153,21 @@ struct StackFrame
 
 using DFSStack = std::vector<StackFrame>;
 
-
 void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::ParseTree* ancestor)
 {
-   if (direction == GoTo::Up)
-    {
-      father->right(ancestor);
-    }
-    else
-    {
-      father->left(ancestor);
-    }
+  if (direction == GoTo::Up)
+  {
+    father->right(ancestor);
+  }
+  else
+  {
+    father->left(ancestor);
+  }
 }
 
 void nullAncestor(execplan::ParseTree* father, GoTo direction)
 {
- if (direction == GoTo::Right)
+  if (direction == GoTo::Right)
   {
     father->nullLeft();
   }
@@ -180,7 +176,6 @@ void nullAncestor(execplan::ParseTree* father, GoTo direction)
     father->nullRight();
   }
 }
-
 
 void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonContainer& common)
 {
@@ -197,10 +192,10 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
     nullAncestor(father, fatherflag);
     if (fatherflag != GoTo::Right)
     {
-      for (int prev = sz - 2; sz-->0;)
+      for (int prev = sz - 2; sz --> 0;)
       {
         if (stack.at(prev).node->left() != nullptr)
-            break;
+          break;
 
         if (prev == 0)
         {
@@ -300,7 +295,6 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
           (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
 }
 
-
 void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 {
 #ifdef debug_rewrites
@@ -308,14 +302,13 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
   ObjectReader::writeParseTree(filters, beforetree);
   std::ofstream before("/tmp/filters." + name + ".data");
   before << beforetree;
-  std::string dotname = "/tmp/filters." + name +".dot";
+  std::string dotname = "/tmp/filters." + name + ".dot";
   filters->drawTree(dotname);
   std::string dotInvoke = "dot -Tpng ";
-  std::string convert = dotInvoke + dotname + " -o " +  dotname + ".png";
+  std::string convert = dotInvoke + dotname + " -o " + dotname + ".png";
   [[maybe_unused]] auto _ = std::system(convert.c_str());
 #endif
 }
-
 
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly)
 {
@@ -327,9 +320,10 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
 
-  #ifdef debug_rewrites
-    printContainer(std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
-  #endif
+#ifdef debug_rewrites
+  printContainer(
+      std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
+#endif
 
   details::removeFromTreeIterative(&tree, common);
 
