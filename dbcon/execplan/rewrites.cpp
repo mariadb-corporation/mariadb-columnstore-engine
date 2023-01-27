@@ -56,7 +56,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
 #ifdef debug_rewrites
   auto sep = std::string(level * 4, '-');
-  auto node = *(root->data());
+  auto& node = *(root->data());
   std::cerr << sep << ": " << root->data()->data() << " "
             << boost::core::demangle(typeid(node).name()) << std::endl;
 #endif

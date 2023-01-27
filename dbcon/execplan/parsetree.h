@@ -510,7 +510,7 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
     dotFile << "n" << (void*)n << " -> "
             << "n" << (void*)r << std::endl;
 
-  auto node = *(n->data());
+  auto& node = *(n->data());
   dotFile << "n" << (void*)n << " [label=\"" <<
            n->data()->data() << " (" <<
            n->data() << ") " <<
