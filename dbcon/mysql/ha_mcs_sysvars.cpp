@@ -79,7 +79,7 @@ static MYSQL_THDVAR_BOOL(derived_handler, PLUGIN_VAR_NOCMDARG, "Enable/Disable t
                          NULL, 1);
 
 static MYSQL_THDVAR_BOOL(group_by_handler, PLUGIN_VAR_NOCMDARG, "Enable/Disable the MCS group_by_handler",
-                         NULL, NULL, 1);
+                         NULL, NULL, 0);
 
 static MYSQL_THDVAR_BOOL(select_handler_in_stored_procedures, PLUGIN_VAR_NOCMDARG,
                          "Enable/Disable the MCS select_handler for Stored Procedures", NULL, NULL, 1);
