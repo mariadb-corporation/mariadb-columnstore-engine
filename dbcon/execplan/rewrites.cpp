@@ -156,6 +156,32 @@ struct StackFrame
 
 using DFSStack = std::vector<StackFrame>;
 
+
+void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::ParseTree* ancestor)
+{
+   if (direction == GoTo::Up)
+    {
+      father->right(ancestor);
+    }
+    else
+    {
+      father->left(ancestor);
+    }
+}
+
+void nullAncestor(execplan::ParseTree* father, GoTo direction)
+{
+ if (direction == GoTo::Right)
+  {
+    father->nullLeft();
+  }
+  else
+  {
+    father->nullRight();
+  }
+}
+
+
 void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonContainer& common)
 {
   auto sz = stack.size();
@@ -168,54 +194,33 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
   bool containsRight = common.contains((*node)->right()->data());
   if (containsLeft && containsRight)
   {
-    if (fatherflag == GoTo::Right)
+    nullAncestor(father, fatherflag);
+    if (fatherflag != GoTo::Right)
     {
-      father->nullLeft();
-    }
-    else
-    {
-      father->nullRight();
       for (int prev = sz - 2; sz-->0;)
       {
-        if (stack.at(prev).node->left() == nullptr)
+        if (stack.at(prev).node->left() != nullptr)
+            break;
+
+        if (prev == 0)
         {
-          if (prev == 0)
-          {
-            *node = nullptr;
-          }
-          else
-          {
-            auto [ancestor, ancflag] = stack.at(prev - 1);
-            if (ancflag == GoTo::Right)
-              ancestor->nullLeft();
-            else
-            {
-              ancestor->nullRight();
-            }
-          }
+          *node = nullptr;
         }
         else
-          break;
+        {
+          auto [ancestor, ancflag] = stack.at(prev - 1);
+          nullAncestor(ancestor, ancflag);
+        }
       }
     }
   }
   else if (containsLeft)
   {
-    if (fatherflag == GoTo::Up)
-    {
-      father->right((*node)->right());
-    }
-    else
-      father->left((*node)->right());
+    replaceAncestor(father, fatherflag, (*node)->right());
   }
   else if (containsRight)
   {
-    if (fatherflag == GoTo::Up)
-    {
-      father->right((*node)->left());
-    }
-    else
-      father->left((*node)->left());
+    replaceAncestor(father, fatherflag, (*node)->left());
   }
 }
 
@@ -226,7 +231,9 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
   while (!stack.empty())
   {
     auto [node, flag] = stack.back();
-    if (node != nullptr) {
+    if (node == nullptr)
+      continue;
+
     switch (flag)
     {
       case GoTo::Left:
@@ -252,35 +259,20 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
           {
             bool containsLeft = common.contains(node->left()->data());
             bool containsRight = common.contains(node->right()->data());
+
             if (containsLeft && containsRight)
             {
-              if (fatherflag == GoTo::Right)
-              {
-                father->nullLeft();
-              }
-              else
-              {
-                father->nullRight();
-
-                if (father->left() == nullptr)
-                {
-                  *root = nullptr;
-                }
-              }
+              nullAncestor(father, fatherflag);
+              if (fatherflag != GoTo::Right && father->left() == nullptr)
+                *root = nullptr;
             }
             else if (containsLeft)
             {
-              if (fatherflag == GoTo::Up)
-                father->right(node->right());
-              else
-                father->left(node->right());
+              replaceAncestor(father, fatherflag, node->right());
             }
             else if (containsRight)
             {
-              if (fatherflag == GoTo::Up)
-                father->right(node->left());
-              else
-                father->left(node->left());
+              replaceAncestor(father, fatherflag, node->left());
             }
           }
         }
@@ -290,7 +282,6 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         }
         stack.pop_back();
         break;
-    }
     }
   }
 }
