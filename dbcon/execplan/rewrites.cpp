@@ -33,7 +33,7 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 // using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
 
-using CommonPtr = execplan::TreeNode*;
+using CommonPtr = execplan::Filter*;
 auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
 {
   // if (left->semanticEq(right.get())
@@ -43,6 +43,17 @@ auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
 };
 
 using CommonContainer = std::set<CommonPtr, decltype(nodeComparator)>;
+
+CommonPtr castToFilter(execplan::ParseTree* node)
+{
+  return dynamic_cast<CommonPtr>(node->data());
+}
+
+bool commonContains(const CommonContainer & common, execplan::ParseTree* node)
+{
+  auto filter = castToFilter(node);
+  return filter && common.contains(filter);
+}
 
 // Walk the tree and find out common conjuctions
 void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0,
@@ -63,7 +74,8 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
   {
-    accumulator.insert(root->data());
+    if (auto filter = castToFilter(root))
+    accumulator.insert(filter);
     return;
   }
 
@@ -187,8 +199,8 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
   if ((*node)->data()->data() != "and")
     return;
 
-  bool containsLeft = !(*node)->left() || common.contains((*node)->left()->data());
-  bool containsRight = common.contains((*node)->right()->data());
+  bool containsLeft = !(*node)->left() || commonContains(common, (*node)->left());
+  bool containsRight = commonContains(common, (*node)->right());
 
   if (containsLeft && containsRight)
   {
@@ -255,8 +267,8 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
           auto [father, fatherflag] = stack.at(0);
           if (node->data()->data() == "and")
           {
-            bool containsLeft = common.contains(node->left()->data());
-            bool containsRight = common.contains(node->right()->data());
+            bool containsLeft = commonContains(common, node->left());
+            bool containsRight = commonContains(common, node->right());
 
             if (containsLeft && containsRight)
             {
