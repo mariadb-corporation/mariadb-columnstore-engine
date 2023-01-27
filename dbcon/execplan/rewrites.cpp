@@ -224,7 +224,7 @@ void fixUpTree(execplan::ParseTree** node, const DFSStack& stack, const CommonCo
 void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& common)
 {
   DFSStack stack;
-  stack.emplace_back(*root, GoTo::Left);
+  stack.emplace_back({*root, GoTo::Left});
   while (!stack.empty())
   {
     auto [node, flag] = stack.back();
@@ -237,14 +237,14 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         stack.back().direction = GoTo::Right;
         if (node->left() != nullptr)
         {
-          stack.emplace_back(node->left(), GoTo::Left);
+          stack.emplace_back({node->left(), GoTo::Left});
         }
         break;
       case GoTo::Right:
         stack.back().direction = GoTo::Up;
         if (node->right() != nullptr)
         {
-          stack.emplace_back(node->right(), GoTo::Left);
+          stack.emplace_back({node->right(), GoTo::Left});
         }
         break;
       default:
