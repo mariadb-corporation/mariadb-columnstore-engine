@@ -58,7 +58,6 @@ struct KeyType
 
  private:
   uint8_t* key_;
-  // ColumnsValues values_;
 };
 
 class HeapOrderBy
@@ -79,8 +78,12 @@ class HeapOrderBy
     mm_->release((heap_.size() + 1) * keyBytesSize_);
   };
   size_t getData(rowgroup::RGData& data, const SortingThreads& prevPhaseThreads);
-  size_t idxOfMin(std::vector<HeapUnit>& heap, const size_t left, const size_t right,
-                  const joblist::OrderByKeysType& colsAndDirection);
+  size_t idxOfMin(Heap& heap, const size_t left, const size_t right,
+                  const joblist::OrderByKeysType& colsAndDirection, const PermutationType leftP,
+                  const PermutationType rightP, const sorting::SortingThreads& prevPhaseSorting);
+
+  size_t findMinAndSwap(std::vector<HeapUnit>& heap, const SortingThreads& prevPhaseSortingThreads,
+                        const size_t heapIdx);
   PermutationType getTopPermuteFromHeap(std::vector<HeapUnit>& heap, const SortingThreads& prevPhaseThreads);
   uint64_t getLimitCount() const
   {

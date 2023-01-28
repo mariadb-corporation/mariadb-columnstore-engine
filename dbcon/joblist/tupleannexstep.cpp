@@ -202,6 +202,7 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     else if (!firstPhaseflatOrderBys_.empty())
     {
       // WIP no distinct yet
+      // Initialize should be called close to this step run() call.
       for (auto& thread : firstPhaseflatOrderBys_)
       {
         thread->initialize(rgIn, jobInfo);
@@ -922,12 +923,6 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
     // WIP Replace this vector with vector of RGDatas?
     // This ref lives as long as TAS this lives.
     const sorting::SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
-    // for (auto& thread : firstPhaseThreads)
-    // {
-    //   std::cout << "executePDQOrderBy firstPhaseThreads perm size " << (*thread).getPermutation().size()
-    //             << std::endl;
-    // }
-    // WIP Make this a constant
     auto perThreadRangesMatrix = calculateStats4PDQOrderBy2ndPhase(firstPhaseThreads);
     assert(perThreadRangesMatrix.size() == fMaxThreads);
     fRunnersList.push_back(jobstepThreadPool.invoke(
@@ -1032,8 +1027,8 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
-              << std::endl;
+    // std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
+    // << std::endl;
     return {left1, right1};
   }
   if (!rangeVectorDist)  // first
@@ -1042,7 +1037,7 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto rightLowerBoundValue = lowerBoundValues[1];
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
+    // std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   if (rangeVectorDist == maxRangeSize)  // last
@@ -1051,7 +1046,7 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto left1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = perm.size();
-    std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
+    // std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   idbassert(rangeVectorDist && false);
@@ -1085,7 +1080,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
 
   // std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout,
   // ","));
-  std::cout << endl;
+  // std::cout << endl;
   size_t maxVectorDistance = ranges.size() - 1;
   // WIP skip the first sorting processed in the beginning
   for (auto& sorting : sortingThreads)
@@ -1160,8 +1155,7 @@ const sorting::ValueRangesMatrix calculateStatsColumnTypeDisp(const sorting::Sor
       // inline short strings are not supported yet
       auto columnWidth = rg.getColumnWidth(columnId);
       bool forceInline = rg.getForceInline()[columnId];
-      if (sorting::isDictColumn(colType, columnWidth) && columnWidth >= rg.getStringTableThreshold() &&
-          !forceInline)
+      if (rg.isLongString(columnId) && columnWidth >= rg.getStringTableThreshold() && !forceInline)
       {
         // WIP
         constexpr auto colType = execplan::CalpontSystemCatalog::VARCHAR;
@@ -1171,8 +1165,7 @@ const sorting::ValueRangesMatrix calculateStatsColumnTypeDisp(const sorting::Sor
         return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
                                                                                     maxThreads, columnId);
       }
-      else if (sorting::isDictColumn(colType, columnWidth) &&
-               (columnWidth < rg.getStringTableThreshold() || forceInline))
+      else if (rg.isLongString(columnId) && (columnWidth < rg.getStringTableThreshold() || forceInline))
       {
         constexpr auto colType = execplan::CalpontSystemCatalog::VARCHAR;
         using EncodedKeyType = utils::ConstString;
@@ -1181,7 +1174,7 @@ const sorting::ValueRangesMatrix calculateStatsColumnTypeDisp(const sorting::Sor
         return calculateStats<isAscDirection, colType, StorageType, EncodedKeyType>(sortingThreads, rg,
                                                                                     maxThreads, columnId);
       }
-      else if (!sorting::isDictColumn(colType, columnWidth))
+      else if (!rg.isLongString(columnId))
       {
         using EncodedKeyType = utils::ConstString;
 
@@ -1400,10 +1393,10 @@ void TupleAnnexStep::joinOutputDLs()
   RGData rgDataOut;
 
   // This is set to one b/c 0th outputDL is TAS main outputDL.
-  size_t secondPhaseFlatThreadId = 1;
   try
   {
-    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    size_t secondPhaseFlatThreadId = 1;
+    // std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
     // WIP might be a costly call
     for (; !cancelled() && secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
@@ -1413,8 +1406,6 @@ void TupleAnnexStep::joinOutputDLs()
       bool more = true;
       auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
       // std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
-
-      // auto outputIterator = outputDL->getIterator();
 
       if (!outputDL)
       {
@@ -1434,50 +1425,48 @@ void TupleAnnexStep::joinOutputDLs()
         {
           fRowsReturned += rowCount;
           fOutputDL->insert(rgDataOut);
-          // WIP can be costly
+
           rgDataOut.reinit(fRowGroupIn, 0);
           fRowGroupOut.setData(&rgDataOut);
           fRowGroupOut.setRowCount(0);
         }
       }
-      std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
-                << std::endl;
+      // std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
+      //           << std::endl;
     }
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "join serialize " + std::to_string(0) + " elapsed time: " << elapsed_seconds.count()
-              << std::endl;
+    // auto end = std::chrono::steady_clock::now();
+    // std::chrono::duration<double> elapsed_seconds = end - start;
+    // std::cout << "join serialize " + std::to_string(0) + " elapsed time: " << elapsed_seconds.count()
+    // << std::endl;
   }
   catch (...)
   {
-    // // WIP
-    // for (; secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size(); ++secondPhaseFlatThreadId)
-    // {
-    //   auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-    //   bool more = true;
-    //   while (more)
-    //   {
-    //     // WIP iter number is hardcoded
-    //     more = outputDL->next(0, &rgDataOut);
-    //   }
-    // }
+    // handleException can re-trow so there is a code duplication to drain all DLs that are left
+    for (size_t secondPhaseFlatThreadId = 1; secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
+         ++secondPhaseFlatThreadId)
+    {
+      auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
+      bool more = true;
+      while (more)
+      {
+        more = outputDL->next(0, &rgDataOut);
+      }
+    }
     handleException(std::current_exception(), logging::ERR_IN_DELIVERY, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::joinOutputDLs()");
   }
 
-  // WIP drain all DLs that are left
-  // for (; secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size(); ++secondPhaseFlatThreadId)
-  // {
-  //   auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-  //   bool more = true;
-  //   while (more)
-  //   {
-  //     // WIP iter number is hardcoded
-  //     more = outputDL->next(0, &rgDataOut);
-  //   }
-  // }
-  // WIP might be a problem!!!
-  // send an empty / error band
+  // drain all DLs that are left
+  for (size_t secondPhaseFlatThreadId = 1; secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
+       ++secondPhaseFlatThreadId)
+  {
+    auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
+    bool more = true;
+    while (more)
+    {
+      more = outputDL->next(0, &rgDataOut);
+    }
+  }
   fOutputDL->endOfInput();
 }
 
@@ -1506,11 +1495,6 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   try
   {
     std::cout << "try 1 id " << id << std::endl;
-
-    if (!cancelled())
-    {
-    }
-    std::cout << "try 2 id " << id << std::endl;
     size_t rows = 0;
     while ((rows = sorting.getData(rgDataOut, firstPhaseThreads)) && !cancelled())
     {
@@ -1565,19 +1549,19 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     }
     perm.insert(perm.end(), srcPermBegin, srcPermEnd);
   }
-  std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
+  // std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
   // WIP clean up first phase perm vector when the last range is read from it
   sorting::PDQOrderBy::Ranges2SortQueue ranges2Sort;
   // means ranges2Sort is a pair of int64 and ::size() is uint64
   assert(perm.size() < std::numeric_limits<size_t>::max());
   ranges2Sort.push({0, perm.size()});
   // outputDL index is Nat
-  auto outputDL = fOutputJobStepAssociation.outAt(id + 1)->rowGroupDL();
+  auto outputDL = fOutputJobStepAssociation.outAt(idA)->rowGroupDL();
   // std::cout << "finFlat id " << id << " " << std::hex << (uint64_t)outputDL << std::endl;
   // This call produces a stream of sorted data in RGData format in id-th output DL.
   // This call presumes there is an equal number of threads at the first and the second phases .
   // WIP use a unique_ptr ref here and get it as an argument ?
-  auto start = std::chrono::steady_clock::now();
+  // auto start = std::chrono::steady_clock::now();
   try
   {
     // std::cout << "try 1 id " << id << std::endl;
@@ -1599,7 +1583,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     rowgroup::RowGroup rowGroupOut{fRowGroupOut};
     // WIP getData can return a number of rows
     // WIP use firstPhaseThreads here
-    while (secondPhaseflatOrderBys_[id]->getData(rgDataOut, firstPhaseflatOrderBys_))
+    while (secondPhaseflatOrderBys_[id]->getData(rgDataOut, firstPhaseflatOrderBys_) && !cancelled())
     {
       // rgDataOut = rgDataIn;
       // WIP This is very cost inefficent to just calc rows
@@ -1624,9 +1608,10 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::executeWithOrderByPDQOrderBy()");
   }
-  auto end = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::chrono::duration<double> elapsed_seconds = end - start;
+  // std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() <<
+  // std::endl;
   outputDL->endOfInput();
 }
 
