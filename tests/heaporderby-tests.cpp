@@ -1222,13 +1222,20 @@ class KeyTypeTestVarcharP : public testing::TestWithParam<std::tuple<uint32_t, C
     r.setStringField(cs3, 0);
     r.nextRow(rowSize);
     r.setStringField(cs4, 0);
-    rg_.setRowCount(4);
+    rg_.setRowCount(strings_.size());
+    sorting::PermutationVec perm(rg_.getRowCount());
+    size_t it = 0;
+    std::generate(perm.begin(), perm.end(), [it]() mutable { return PermutationType{0, it++, 0}; });
+    prevPhasThreads_.emplace_back(new PDQOrderBy());
+    prevPhasThreads_.back()->getRGDatas().push_back(rgData_);
+    prevPhasThreads_.back()->getMutPermutation().swap(perm);
   }
 
   joblist::OrderByKeysType keysCols_;
   rowgroup::RowGroup rg_;
   rowgroup::RGData rgData_;
   std::vector<utils::ConstString> strings_;
+  sorting::SortingThreads prevPhasThreads_;
 };
 
 TEST_P(KeyTypeTestVarcharP, KeyTypeCtorVarchar)
@@ -1263,7 +1270,7 @@ TEST_P(KeyTypeTestVarcharP, KeyTypeCtorVarchar)
   }
 }
 
-TEST_P(KeyTypeTestVarcharP, KeyTypeLessVarcharPad)
+TEST_P(KeyTypeTestVarcharP, KeyTypeLessVarcharPad1)
 {
   rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
   uint32_t columnIdx = 0;
@@ -1273,28 +1280,58 @@ TEST_P(KeyTypeTestVarcharP, KeyTypeLessVarcharPad)
            ? rg_.getStringTableThreshold()
            : w) +
       1;  // NULL byte
-  // 1 and 2 are reserved for NULL comparison
 
-  uint8_t* key3Buf = new uint8_t[bufUnitSize];
-  uint8_t* key4Buf = new uint8_t[bufUnitSize];
-  auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
-  auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
-  ASSERT_TRUE(key3.less(key4, rg_, keysCols_));
-  ASSERT_FALSE(key4.less(key3, rg_, keysCols_));
+  // size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBufsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBufsVec.begin(), keyBufsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+  // keys[0] == NULL
+  std::vector<std::vector<OutcomesT>> expectedResultsMatrix = {
+      {FAL, TR, TR, TR},
 
-  uint8_t* key5Buf = new uint8_t[bufUnitSize];
-  auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
-  ASSERT_FALSE(key4.less(key5, rg_, keysCols_));
-  ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+      {FAL, FAL, FAL, TR},
 
-  uint8_t* key6Buf = new uint8_t[bufUnitSize];
-  auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
-  ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
-  ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
-  ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
+      {FAL, FAL, FAL, TR},
+
+      {FAL, FAL, FAL, FAL},
+
+  };
+  [[maybe_unused]] size_t x = 0;
+  [[maybe_unused]] size_t y = 0;
+  bool testHadFailed = false;
+  for_each(keys.begin(), keys.end(),
+           [this, &expectedResultsMatrix, &keys, &x, &y, &testHadFailed](auto& key1)
+           {
+             y = 0;
+             for_each(keys.begin(), keys.end(),
+                      [this, &expectedResultsMatrix, &key1, &x, &y, &testHadFailed](auto& key2)
+                      {
+                        OutcomesT result = (key1.less(key2, this->rg_, this->keysCols_, {0, x, 0}, {0, y, 0},
+                                                      prevPhasThreads_))
+                                               ? TR
+                                               : FAL;
+                        if (expectedResultsMatrix[x][y] != SKIP && expectedResultsMatrix[x][y] != result)
+                        {
+                          std::cout << "Results mismatch with: left row number = " << x
+                                    << " and right row number = " << y << std::endl;
+                          testHadFailed = true;
+                        }
+                        ++y;
+                      });
+             ++x;
+           });
+  if (testHadFailed)
+  {
+    ASSERT_TRUE(false);
+  }
 }
 
 TEST_P(KeyTypeTestVarcharP, KeyTypeLessVarcharNoPad)
@@ -1307,28 +1344,58 @@ TEST_P(KeyTypeTestVarcharP, KeyTypeLessVarcharNoPad)
            ? rg_.getStringTableThreshold()
            : w) +
       1;  // NULL byte
-  // 1 and 2 are reserved for NULL comparison
 
-  uint8_t* key3Buf = new uint8_t[bufUnitSize];
-  uint8_t* key4Buf = new uint8_t[bufUnitSize];
-  auto key3 = KeyType(rg_, keysCols_, {0, 0, 0}, key3Buf);
-  auto key4 = KeyType(rg_, keysCols_, {0, 1, 0}, key4Buf);
-  ASSERT_FALSE(key3.less(key4, rg_, keysCols_));
-  ASSERT_TRUE(key4.less(key3, rg_, keysCols_));
+  // size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+  size_t keysNumber = this->rg_.getRowCount();
+  std::vector<uint8_t*> keyBufsVec(keysNumber);
+  std::vector<KeyType> keys;
+  size_t i = 0;
+  for_each(keyBufsVec.begin(), keyBufsVec.end(),
+           [this, &keys, &i, bufUnitSize](uint8_t* buf)
+           {
+             buf = new uint8_t[bufUnitSize];
+             std::memset(buf, 0, bufUnitSize);
+             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
+           });
+  // keys[0] == NULL
+  std::vector<std::vector<OutcomesT>> expectedResultsMatrix = {
+      {FAL, FAL, TR, TR},
 
-  uint8_t* key5Buf = new uint8_t[bufUnitSize];
-  auto key5 = KeyType(rg_, keysCols_, {0, 2, 0}, key5Buf);
-  ASSERT_TRUE(key4.less(key5, rg_, keysCols_));
-  ASSERT_FALSE(key5.less(key4, rg_, keysCols_));
+      {TR, FAL, TR, TR},
 
-  uint8_t* key6Buf = new uint8_t[bufUnitSize];
-  auto key6 = KeyType(rg_, keysCols_, {0, 3, 0}, key6Buf);
-  ASSERT_TRUE(key3.less(key6, rg_, keysCols_));
-  ASSERT_TRUE(key4.less(key6, rg_, keysCols_));
-  ASSERT_TRUE(key5.less(key6, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key3, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key4, rg_, keysCols_));
-  ASSERT_FALSE(key6.less(key5, rg_, keysCols_));
+      {FAL, FAL, FAL, TR},
+
+      {FAL, FAL, FAL, FAL},
+
+  };
+  [[maybe_unused]] size_t x = 0;
+  [[maybe_unused]] size_t y = 0;
+  bool testHadFailed = false;
+  for_each(keys.begin(), keys.end(),
+           [this, &expectedResultsMatrix, &keys, &x, &y, &testHadFailed](auto& key1)
+           {
+             y = 0;
+             for_each(keys.begin(), keys.end(),
+                      [this, &expectedResultsMatrix, &key1, &x, &y, &testHadFailed](auto& key2)
+                      {
+                        OutcomesT result = (key1.less(key2, this->rg_, this->keysCols_, {0, x, 0}, {0, y, 0},
+                                                      prevPhasThreads_))
+                                               ? TR
+                                               : FAL;
+                        if (expectedResultsMatrix[x][y] != SKIP && expectedResultsMatrix[x][y] != result)
+                        {
+                          std::cout << "Results mismatch with: left row number = " << x
+                                    << " and right row number = " << y << std::endl;
+                          testHadFailed = true;
+                        }
+                        ++y;
+                      });
+             ++x;
+           });
+  if (testHadFailed)
+  {
+    ASSERT_TRUE(false);
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P(KeyTypeTestVarchar, KeyTypeTestVarcharP,
