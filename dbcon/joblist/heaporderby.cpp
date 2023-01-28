@@ -20,7 +20,6 @@
 
 #include "heaporderby.h"
 #include "conststring.h"
-// #include "joblisttypes.h"
 #include "mcs_int128.h"
 #include "pdqorderby.h"
 #include "vlarray.h"
@@ -320,13 +319,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               columnId, p.rowID);
           *pos++ = (isDsc) ? 0 : 1;
           keyWidth = rg.getStringTableThreshold();
-          // std::memset(pos, 0, rg.getStringTableThreshold());
-          // std::cout << "KeyType ctor flags " << flags << std::endl;
-          // // WIP Hardcode
-          // [[maybe_unused]] size_t nActualWeights =
-          //     cs.strnxfrm(pos, rg.getStringTableThreshold(), value.length(),
-          //                 reinterpret_cast<const uchar*>(value.str()), value.length(), flags);
-          // pos += rg.getStringTableThreshold();
         }
         else if (sorting::isDictColumn(columnType, columnWidth) &&
                  (columnWidth <= rg.getStringTableThreshold() || forceInline))
@@ -336,13 +328,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
           value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
               columnId, p.rowID);
           *pos++ = (isDsc) ? 0 : 1;
-          // std::memset(pos, 0, columnWidth);
-          // // std::cout << "KeyType ctor flags " << flags << std::endl;
-          // // WIP Hardcode
-          // [[maybe_unused]] size_t nActualWeights =
-          //     cs.strnxfrm(pos, columnWidth, value.length(), reinterpret_cast<const uchar*>(value.str()),
-          //                 value.length(), flags);
-          // pos += columnWidth;
         }
         // WIP
         else if (!sorting::isDictColumn(columnType, columnWidth))
@@ -356,14 +341,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
               value = rg.getColumnValue<execplan::CalpontSystemCatalog::VARCHAR, StorageType, EncodedKeyType>(
                   columnId, p.rowID);
               *pos++ = (isDsc) ? 0 : 1;
-              // std::memset(pos, 0, columnWidth);
-              // // std::cout << "KeyType ctor flags " << flags << std::endl;
-              // // WIP Hardcode
-              // [[maybe_unused]] size_t nActualWeights =
-              //     cs.strnxfrm(pos, columnWidth, value.length(), reinterpret_cast<const
-              //     uchar*>(value.str()),
-              //                 value.length(), flags);
-              // pos += columnWidth;
               break;
             }
 
@@ -386,13 +363,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
                             columnId, p.rowID)
                           .rtrimZero();
               *pos++ = (isDsc) ? 0 : 1;
-              // std::memset(pos, 0, columnWidth);
-              // // std::cout << "KeyType ctor flags " << fls.rtrimZero()ags << std::endl;
-              // // WIP Hardcode
-              // [[maybe_unused]] size_t nActualWeights =
-              //     cs.strnxfrm(pos, columnWidth, value.length(), reinterpret_cast<const
-              //     uchar*>(value.str()),
-              //                 value.length(), flags);
               break;
             };
 
@@ -404,11 +374,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
                             columnId, p.rowID)
                           .rtrimZero();
               *pos++ = (isDsc) ? 0 : 1;
-              // std::memset(pos, 0, keyWidth);
-              // [[maybe_unused]] size_t nActualWeights =
-              //     cs.strnxfrm(pos, keyWidth, keyWidth, reinterpret_cast<const uchar*>(value.str()),
-              //                 value.length(), flags);
-              // pos += keyWidth;
               break;
             };
             default: idbassert(0);
@@ -475,11 +440,9 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
 {
   assert(rg.getColumnCount() >= 1);
   auto& widths = rg.getColWidths();
-  // auto& colTypes = rg.getColTypes();
   rowgroup::OffsetType l_offset = 0;
   rowgroup::OffsetType r_offset = 0;
   size_t colsNumber = colsAndDirection.size();
-  // int8_t normKeyCmpResult = 0;
   [[maybe_unused]] int32_t unsizedCmpResult = 0;
   int32_t cmpResult = 0;
   const uint32_t stringThreshold = rg.getStringTableThreshold();
@@ -550,8 +513,6 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
   rg_.getRow(1, &outRow_);
 
   size_t heapSize = threadNum << 1;
-  // WIP doesn't take varchars prefixes into account
-  // keyBytesSize_ = rg.getOffsets().back() - 2 + sortingKeyCols.size();
   keyBytesSize_ = sortingKeyCols.size();
   for_each(jobListorderByRGColumnIDs_.begin(), jobListorderByRGColumnIDs_.end(),
            [this](auto p)
@@ -600,12 +561,13 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
       for (; bestChildIdx < half;)
       {
         prevBestChildIdx = bestChildIdx;
+        bestChildIdx = findMinAndSwap(heap_, prevPhaseSorting, prevBestChildIdx);
         // get min of left and right.
-        bestChildIdx = idxOfMin(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1, sortingKeyCols);
-        assert(bestChildIdx >= heapIdx && bestChildIdx <= (prevBestChildIdx << 1) + 1 &&
-               bestChildIdx < heap_.size());
+        // bestChildIdx = idxOfMin(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1, sortingKeyCols);
+        // assert(bestChildIdx >= heapIdx && bestChildIdx <= (prevBestChildIdx << 1) + 1 &&
+        //        bestChildIdx < heap_.size());
         // swap the best and the current
-        std::swap(heap_[prevBestChildIdx], heap_[bestChildIdx]);
+        // std::swap(heap_[prevBestChildIdx], heap_[bestChildIdx]);
       }
 
       auto threadId = heap_[prevBestChildIdx].second.threadID;
@@ -622,19 +584,36 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
 }
 
 size_t HeapOrderBy::idxOfMin(Heap& heap, const size_t left, const size_t right,
-                             const joblist::OrderByKeysType& colsAndDirection)
+                             const joblist::OrderByKeysType& colsAndDirection, const PermutationType leftP,
+                             const PermutationType rightP, const sorting::SortingThreads& prevPhaseSorting)
 {
-  if (heap[left].first.less(heap[right].first, rg_, colsAndDirection))
-    return left;
-  return right;
+  {
+    if (heap[left].first.less(heap[right].first, rg_, colsAndDirection, leftP, rightP, prevPhaseSorting))
+      return left;
+    return right;
+  }
+}
+
+size_t HeapOrderBy::findMinAndSwap(Heap& heap, const SortingThreads& prevPhaseSortingThreads,
+                                   const size_t heapIdx)
+{
+  size_t leftHeapIdx = heapIdx << 1;
+  size_t rightHeapIdx = (heapIdx << 1) + 1;
+  auto leftP = heap[leftHeapIdx].second;
+  auto rightP = heap[rightHeapIdx].second;
+  size_t bestChildIdx = idxOfMin(heap, leftHeapIdx, rightHeapIdx, jobListorderByRGColumnIDs_, leftP, rightP,
+                                 prevPhaseSortingThreads);
+  std::swap(heap[heapIdx], heap[bestChildIdx]);
+  return bestChildIdx;
 }
 
 PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
-                                                   const SortingThreads& prevPhaseSortingThread)
+                                                   const SortingThreads& prevPhaseSortingThreads)
 {
   auto half = heap.size() >> 1;
   PermutationType topPermute = heap[1].second;
   // Use the buffer of the top.
+  assert(heap_.size() >= 2);
   auto buf = heap_[1].first.key();
   size_t bestChildIdx = 1;
   size_t heapIdx = 1;
@@ -642,8 +621,15 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   for (; heapIdx < half && heap[bestChildIdx].second != ImpossiblePermute; heapIdx = bestChildIdx)
   {
     // get min of left and right.
-    bestChildIdx = idxOfMin(heap, heapIdx << 1, (heapIdx << 1) + 1, jobListorderByRGColumnIDs_);
-    std::swap(heap[heapIdx], heap[bestChildIdx]);
+    bestChildIdx = findMinAndSwap(heap, prevPhaseSortingThreads, heapIdx);
+
+    //     size_t leftHeapIdx = heapIdx << 1;
+    // size_t rightHeapIdx = (heapIdx << 1) + 1;
+    // auto leftP = heap[leftHeapIdx].second;
+    // auto rightP = heap[rightHeapIdx].second;
+    // bestChildIdx = idxOfMin(heap, leftHeapIdx, rightHeapIdx, jobListorderByRGColumnIDs_, leftP, rightP,
+    //                         prevPhaseSortingThreads);
+    // std::swap(heap[heapIdx], heap[bestChildIdx]);
   }
 
   heapIdx = (heapIdx == 1) ? 1 : heapIdx >> 1;
@@ -662,10 +648,9 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   }
   else
   {
-    assert(p.threadID < prevPhaseSortingThread.size() &&
-           p.rgdataID < prevPhaseSortingThread[p.threadID]->getRGDatas().size());
-    rg_.setData(&(prevPhaseSortingThread[p.threadID]->getRGDatas()[p.rgdataID]));
-    // WIP the simplified key inversion is ~
+    assert(p.threadID < prevPhaseSortingThreads.size() &&
+           p.rgdataID < prevPhaseSortingThreads[p.threadID]->getRGDatas().size());
+    rg_.setData(&(prevPhaseSortingThreads[p.threadID]->getRGDatas()[p.rgdataID]));
     heap_[bestChildIdx] = {KeyType(rg_, jobListorderByRGColumnIDs_, p, buf), p};
   }
 
@@ -693,7 +678,6 @@ size_t HeapOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPh
   for (; rowsToReturn < rowsToReturnEstimate; ++rowsToReturn)
   {
     auto p = getTopPermuteFromHeap(heap_, prevPhaseThreads);
-    // WIP
     if (p == ImpossiblePermute)
     {
       break;
