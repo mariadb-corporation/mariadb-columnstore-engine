@@ -109,7 +109,7 @@ class KeyTypeWideDecimalTest : public testing::Test
  public:
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     rg_ = setupRG({execplan::CalpontSystemCatalog::DECIMAL}, {16}, {8});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
@@ -158,7 +158,7 @@ TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalAsc)
 
   for (size_t i = 0; i < rg_.getRowCount(); ++i)
   {
-    const bool isDsc = false;
+    const bool isAsc = true;
     uint8_t* pos = &expected[0];
     memset(pos, 0, bufUnitSize);
     memset(buf, 0, bufUnitSize);
@@ -168,11 +168,11 @@ TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalAsc)
             0, i);
     if (v == datatypes::TSInt128::NullValue)
     {
-      *pos++ = (isDsc) ? 1 : 0;
+      *pos++ = (!isAsc) ? 1 : 0;
     }
     else
     {
-      *pos++ = (isDsc) ? 0 : 1;
+      *pos++ = (!isAsc) ? 0 : 1;
     }
     memcpy(pos, &v.getValue(), sizeof(int128_t));
     int64_t* wDecimaAsInt64 = (int64_t*)(pos);
@@ -187,8 +187,8 @@ TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalAsc)
 
 TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
   uint8_t* buf = new uint8_t[bufUnitSize];
@@ -204,11 +204,11 @@ TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalDsc)
             0, i);
     if (v == datatypes::TSInt128::NullValue)
     {
-      *pos++ = (isDsc) ? 1 : 0;
+      *pos++ = (!isAsc) ? 1 : 0;
     }
     else
     {
-      *pos++ = (isDsc) ? 0 : 1;
+      *pos++ = (!isAsc) ? 0 : 1;
     }
     memcpy(pos, &v.getValue(), sizeof(int128_t));
     int64_t* wDecimaAsInt64 = (int64_t*)(pos);
@@ -276,8 +276,8 @@ TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalLessAsc)
 
 TEST_F(KeyTypeWideDecimalTest, KeyTypeCtorWDecimalLessDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   sorting::SortingThreads prevPhaseSorting;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   size_t keysNumber = this->rg_.getRowCount();
@@ -346,7 +346,7 @@ class KeyTypeFloatTest : public testing::Test
 
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     rg_ = setupRG({(std::is_same<float, T>::value) ? execplan::CalpontSystemCatalog::FLOAT
                                                    : execplan::CalpontSystemCatalog::DOUBLE},
                   {sizeof(T)}, {8});
@@ -434,7 +434,6 @@ class KeyTypeFloatTest : public testing::Test
 };
 
 using KeyTypeFloatTypes = ::testing::Types<double, float>;
-// using KeyTypeFloatTypes = ::testing::Types<double, float>;
 TYPED_TEST_SUITE(KeyTypeFloatTest, KeyTypeFloatTypes);
 
 TYPED_TEST(KeyTypeFloatTest, KeyTypeCtorAsc)
@@ -489,8 +488,8 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeCtorDsc)
 {
   using T = typename KeyTypeFloatTest<TypeParam>::IntegralType;
   using IntT = typename datatypes::WidthToSIntegralType<sizeof(T)>::type;
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   uint32_t columnWidth = this->rg_.getColumnWidth(0);
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
@@ -526,8 +525,8 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeCtorDsc)
       k = ~this->makeKeyD(v);
     }
 
-    *pos++ = (isDsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
-                     : static_cast<uint8_t>(isNeitherNullOrSpecial);
+    *pos++ = (!isAsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
+                      : static_cast<uint8_t>(isNeitherNullOrSpecial);
     memcpy(pos, &k, sizeof(T));
 
     auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
@@ -606,8 +605,8 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeLessAsc)
 
 TYPED_TEST(KeyTypeFloatTest, KeyTypeLessDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   sorting::SortingThreads prevPhaseSorting;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   size_t keysNumber = this->rg_.getRowCount();
@@ -699,7 +698,7 @@ class KeyTypeTestIntT : public testing::Test
 
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     rg_ = setupRG({SignedCTs[sizeof(T)]}, {sizeof(T)}, {8});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
@@ -797,8 +796,8 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorAsc)
 
 TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
@@ -809,7 +808,7 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
     auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     if (i != 42)
     {
-      expected[0] = (isDsc) ? 0 : 1;
+      expected[0] = (!isAsc) ? 0 : 1;
       ;
       T* v = reinterpret_cast<T*>(&expected[1]);
       if (sizeof(T) == 8 && i == 8190)
@@ -843,7 +842,7 @@ TYPED_TEST(KeyTypeTestIntT, KeyTypeCtorDsc)
     }
     else
     {
-      expected[0] = (isDsc) ? 1 : 0;
+      expected[0] = (!isAsc) ? 1 : 0;
       ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
     }
   }
@@ -905,7 +904,7 @@ class KeyTypeTestUIntT : public testing::Test
 
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     rg_ = setupRG({USignedCTs[sizeof(T)]}, {sizeof(T)}, {8});
     rgData_ = rowgroup::RGData(rg_);
     rg_.setData(&rgData_);
@@ -991,8 +990,8 @@ TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorAsc)
 
 TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   uint8_t* expected = new uint8_t[bufUnitSize];
@@ -1003,7 +1002,7 @@ TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorDsc)
     auto key = KeyType(this->rg_, this->keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     if (i != 42)
     {
-      expected[0] = (isDsc) ? 0 : 1;
+      expected[0] = (!isAsc) ? 0 : 1;
       T* v = reinterpret_cast<T*>(&expected[1]);
       if (sizeof(T) == 8 && i == 8190)
       {
@@ -1031,7 +1030,7 @@ TYPED_TEST(KeyTypeTestUIntT, KeyTypeCtorDsc)
     }
     else
     {
-      expected[0] = (isDsc) ? 1 : 0;
+      expected[0] = (!isAsc) ? 1 : 0;
       ASSERT_EQ(memcmp(expected, key.key(), 1), 0);
     }
   }
@@ -1109,8 +1108,8 @@ TYPED_TEST(KeyTypeTestUIntT, KeyTypeLessAsc)
 
 TYPED_TEST(KeyTypeTestUIntT, KeyTypeLessDsc)
 {
-  const bool isDsc = true;
-  this->keysCols_ = {{0, isDsc}};
+  const bool isAsc = false;
+  this->keysCols_ = {{0, isAsc}};
   using T = typename KeyTypeTestIntT<TypeParam>::IntegralType;
   sorting::SortingThreads prevPhaseSorting;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
@@ -1189,7 +1188,7 @@ class KeyTypeTestVarcharP : public testing::TestWithParam<std::tuple<uint32_t, C
  public:
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     uint32_t stringMaxSize = std::get<0>(GetParam());
     rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {33});
     // Turn a StringStore on
@@ -1427,7 +1426,7 @@ class KeyTypeTestLongVarchar : public testing::Test
  public:
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     uint32_t stringMaxSize = 50;
     rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR}, {stringMaxSize}, {33});
     rg_.setUseStringTable(true);
@@ -1584,8 +1583,8 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharPadAsc)
 
 TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharPadDsc)
 {
-  const bool isDst = true;
-  keysCols_ = {{0, isDst}};
+  const bool isAsc = false;
+  keysCols_ = {{0, isAsc}};
   rg_.setCharset(0, &my_charset_utf8mb3_general_ci);
   size_t bufUnitSize = rg_.getStringTableThreshold() + 1;
 
@@ -1746,8 +1745,8 @@ TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharNoPadAsc)
 
 TEST_F(KeyTypeTestLongVarchar, KeyTypeLessVarcharNoPadDsc)
 {
-  const bool isDst = true;
-  keysCols_ = {{0, isDst}};
+  const bool isAsc = false;
+  keysCols_ = {{0, isAsc}};
   rg_.setCharset(0, &my_charset_utf8mb3_general_nopad_ci);
   size_t bufUnitSize = rg_.getColumnWidth(0) + 1;
 
@@ -1831,7 +1830,7 @@ class KeyTypeCompositeKeyTest : public testing::Test
  public:
   void SetUp() override
   {
-    keysCols_ = {{0, false}, {1, false}};
+    keysCols_ = {{0, true}, {1, true}};
     // uint32_t stringMaxSize = 50;
     rg_ = setupRG({execplan::CalpontSystemCatalog::VARCHAR, execplan::CalpontSystemCatalog::BIGINT}, {121, 8},
                   {33, 33});
@@ -1964,8 +1963,8 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadAsc)
 TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
 {
   // utf8_general_ci = 33, 'a' == 'a '
-  const bool isDsc = true;
-  keysCols_ = {{0, isDsc}, {1, isDsc}};
+  const bool isAsc = false;
+  keysCols_ = {{0, isAsc}, {1, isAsc}};
   uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
   for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
            [&bufUnitSizeNoNull, this](const uint32_t width) {
@@ -1994,7 +1993,7 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
     uint nweights = s.length();
     auto key = KeyType(rg_, keysCols_, {0, i, 0}, &buf[i * bufUnitSize]);
     memset(pos, 0, bufUnitSize);
-    *pos++ = (isDsc) ? 0 : 1;  // 1st column NULL byte
+    *pos++ = (!isAsc) ? 0 : 1;  // 1st column NULL byte
     size_t len = cs.strnxfrm(pos, varcharKeyLength, nweights, reinterpret_cast<const uchar*>(s.str()),
                              s.length(), flags);
     uint8_t* end = pos + len;
@@ -2002,7 +2001,7 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
     {
       *pos = ~*pos;
     }
-    *pos++ = (isDsc) ? 0 : 1;  // 2nd column NULL byte
+    *pos++ = (!isAsc) ? 0 : 1;  // 2nd column NULL byte
     int64_t value = r.getIntField<8>(1);
     r.nextRow(rowSize);
     memcpy(pos, &value, sizeof(int64_t));
@@ -2113,7 +2112,7 @@ class HeapOrderByTest : public testing::Test
  public:
   void SetUp() override
   {
-    keysCols_ = {{0, false}};
+    keysCols_ = {{0, true}};
     RGFieldsType offsets{2, 10};
     RGFieldsType roids{3000};
     RGFieldsType tkeys{1};
@@ -2144,7 +2143,7 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
   size_t heapSize = 4;
   rowgroup::Row r;
   sorting::SortingThreads prevPhasThreads;
-  joblist::OrderByKeysType keysAndDirections = {{0, false}};
+  joblist::OrderByKeysType keysAndDirections = {{0, true}};
   joblist::MemManager* mm = new joblist::MemManager;  //(&rm, sl, false, false);
   // no NULLs yet
   // отсортировать
@@ -2205,10 +2204,10 @@ TEST_F(HeapOrderByTest, HeapOrderByCtorOddSourceThreadsNumber)
 
 TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
 {
-  size_t heapSize = 4;
+  size_t heapSizeHalf = 4;
   rowgroup::Row r;
   sorting::SortingThreads prevPhasThreads;
-  joblist::OrderByKeysType keysAndDirections = {{0, false}};
+  joblist::OrderByKeysType keysAndDirections = {{0, true}};
   joblist::MemManager* mm = new joblist::MemManager;  //(&rm, sl, false, false);
   // no NULLs yet
   // отсортировать
@@ -2220,8 +2219,8 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
                                           -816942484, -1665500714, -2753689374, -3087922913, -3250034565},
                                          {4144560611, 1759584866, 1642547418, 517102532, 344540230,
                                           -525087651, -976832186, -1379630329, -2362115756, -3558545988}};
-  sorting::ValueRangesVector ranges(heapSize, {0, data.front().size()});
-  for (size_t i = 0; i < heapSize; ++i)
+  sorting::ValueRangesVector ranges(heapSizeHalf, {0, data.front().size()});
+  for (size_t i = 0; i < heapSizeHalf; ++i)
   {
     rgDatas_.emplace_back(rowgroup::RGData(rg_));
     auto& rgData = rgDatas_.back();
@@ -2247,7 +2246,7 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
     prevPhasThreads.back()->getMutPermutation().swap(perm);
   }
   HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
-                heapSize, ranges);
+                heapSizeHalf, ranges);
   [[maybe_unused]] auto& keys = h.heap();
   PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
                           PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
