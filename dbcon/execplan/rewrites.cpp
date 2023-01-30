@@ -209,7 +209,7 @@ void nullAncestor(execplan::ParseTree* father, GoTo direction)
   }
 }
 
-void fixUpTree(execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
+void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
 {
   auto sz = stack.size();
   auto [father, fatherflag] = stack.at(sz - 2);
@@ -228,13 +228,27 @@ void fixUpTree(execplan::ParseTree** node, DFSStack& stack, const CommonContaine
       auto [grandfather, grandfatherflag] = stack.at(sz - 3);
       auto newfather = (*father)->right();
       replaceAncestor(*grandfather, grandfatherflag, newfather);
+      stack.at(sz - 2).direction = GoTo::Left;
     }
     else
     {
       for (int prev = sz - 2; sz --> 0;)
       {
         if ((*stack.at(prev).node)->left() != nullptr)
+        {
+          if (prev == 0)
+          {
+            *root = (*stack.at(0).node)->left();
+          }
+          else
+          {
+            auto [grandancestor, grandancestorflag] = stack.at(prev - 1);
+            auto newfather = (*stack.at(prev).node)->left();
+            replaceAncestor(*grandancestor, grandancestorflag, newfather);
+          }
+          stack.at(prev).direction = GoTo::Up;
           break;
+        }
 
         if (prev == 0)
         {
@@ -292,7 +306,7 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         break;
       default:
         auto sz = stack.size();
-        /*/if (sz == 1)
+        if (sz == 1)
         {
           if (operatorType(*node) == OP_AND)
           {
@@ -313,8 +327,7 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
             }
           }
         }
-        else */
-        if (sz == 2)
+        else if (sz == 2)
         {
           auto [father, fatherflag] = stack.at(0);
           if (operatorType(*node) == OP_AND)
@@ -325,8 +338,18 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
             if (containsLeft && containsRight)
             {
               nullAncestor(*father, fatherflag);
-              if (fatherflag != GoTo::Right && (*father)->left() == nullptr)
-                *root = nullptr;
+              if (fatherflag == GoTo::Right)
+              {
+                *root = (*root)->right();
+                stack.at(0).direction = GoTo::Left;
+              }
+              else if (fatherflag == GoTo::Up)
+              {
+                if ((*father)->left() == nullptr)
+                  *root = nullptr;
+                else
+                  *root = (*root)->left();
+              }
             }
             else if (containsLeft)
             {
@@ -340,7 +363,7 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         }
         else if (sz > 2)
         {
-          fixUpTree(node, stack, common);
+          fixUpTree(root, node, stack, common);
         }
         stack.pop_back();
         break;

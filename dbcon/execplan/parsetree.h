@@ -80,6 +80,11 @@ class ParseTree
     return fLeft;
   }
 
+  inline ParseTree** leftRef()
+  {
+    return &fLeft;
+  }
+
   inline void nullRight()
   {
     fRight = nullptr;
@@ -104,6 +109,11 @@ class ParseTree
   inline ParseTree* right() const
   {
     return fRight;
+  }
+
+  inline ParseTree** rightRef()
+  {
+    return &fRight;
   }
 
   inline void data(TreeNode* data)

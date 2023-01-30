@@ -18,7 +18,8 @@
 #include "query19_fixed.h"
 
 
-using TreePtr = std::unique_ptr<execplan::ParseTree>;
+//using TreePtr = std::unique_ptr<execplan::ParseTree>;
+using TreePtr = std::unique_ptr<execplan::ParseTree, decltype([](auto* ){})>;
 
 bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0)
 {
@@ -330,7 +331,6 @@ pos > 5000
 or id < 30);
 */
   ParseTreeTestParam{"Query_15", &__test_query_before_15, &__test_query_after_15},
-
 /*
 select *
 from t1
@@ -351,11 +351,165 @@ and id < 30
 );
 */
   ParseTreeTestParam{"Query_16", &__test_query_before_16, &__test_query_after_16},
+/*
+select *
+from t1
+where
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+);
+ */
   ParseTreeTestParam{"Query_17", &__test_query_before_17, &__test_query_after_17},
+/*
+select *
+from t1
+where
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+);
+ */
   ParseTreeTestParam{"Query_18", &__test_query_before_18, &__test_query_after_18},
+/*
+ select *
+from t1
+where
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+)
+or
+(
+pos > 5000
+and id < 30
+);
+
+ */
   ParseTreeTestParam{"Query_19", &__test_query_before_19, &__test_query_after_19},
+/*
+select *
+from t1
+where
+(
+pos > 5000
+and id < 30
+)
+or
+(
+posname > 'qwer'
+and
+id < 30
+and
+place > 'abcdefghij'
+);
+
+ */
   ParseTreeTestParam{"Query_20", &__test_query_before_20, &__test_query_after_20},
+/*
+select *
+from t1
+where
+(
+pos > 5000
+and id < 30
+)
+or
+(
+posname > 'qwer'
+and
+id < 30
+and
+place > 'abcdefghij'
+)
+or
+(
+id < 30
+and
+place < 'zyxqwertyu'
+);
+
+ */
   ParseTreeTestParam{"Query_21", &__test_query_before_21, &__test_query_after_21},
+/*
+select *
+from t1
+where
+(pos > 5000 and id < 30)
+or
+(posname > 'qwer' and id < 30 and place > 'abcdefghij' and pos > 5000)
+or
+(id < 30 and place < 'zyxqwertyu' and pos > 5000)
+or
+(pos > 5000 and id < 30);
+
+ */
+  ParseTreeTestParam{"Query_22", &__test_query_before_22, &__test_query_after_22},
   ParseTreeTestParam{"TPCH_19", &__query19_tree_init, &__query19_tree_fixed}
 ),
   [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {
