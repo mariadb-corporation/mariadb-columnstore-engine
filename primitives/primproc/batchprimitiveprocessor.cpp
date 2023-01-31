@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <cstring>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <string>
 #include <sstream>
@@ -55,6 +55,7 @@ using namespace boost;
 #include "fixedallocator.h"
 #include "blockcacheclient.h"
 #include "MonitorProcMem.h"
+#include "numeric_functions.h"
 #include "threadnaming.h"
 #include "vlarray.h"
 #include "widedecimalutils.h"
@@ -84,19 +85,6 @@ extern uint32_t defaultBufferSize;
 extern int fCacheCount;
 extern uint32_t connectionsPerUM;
 extern int noVB;
-
-// copied from https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-uint nextPowOf2(uint x)
-{
-  x--;
-  x |= x >> 1;
-  x |= x >> 2;
-  x |= x >> 4;
-  x |= x >> 8;
-  x |= x >> 16;
-  x++;
-  return x;
-}
 
 BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  : ot(BPS_ELEMENT_TYPE)
@@ -202,7 +190,7 @@ BatchPrimitiveProcessor::BatchPrimitiveProcessor(ByteStream& b, double prefetch,
  , weight_(0)
 {
   // promote processorThreads to next power of 2.  also need to change the name to bucketCount or similar
-  processorThreads = nextPowOf2(processorThreads);
+  processorThreads = common::nextPowOf2(processorThreads);
   ptMask = processorThreads - 1;
 
   pp.setLogicalBlockMode(true);
@@ -629,7 +617,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
   {
     uint64_t key;
     uint32_t value;
-  } * arr;
+  }* arr;
 #pragma pack(pop)
 
   /* skip the header */
@@ -1479,8 +1467,8 @@ void BatchPrimitiveProcessor::execute()
 
           if (!asyncLoaded[p + 1])
           {
-            loadBlockAsync(col->getLBIDAux(), versionInfo, txnID, 2, &cachedIO, &physIO,
-                           LBIDTrace, sessionID, &counterLock, &busyLoaderCount, sendThread, &vssCache);
+            loadBlockAsync(col->getLBIDAux(), versionInfo, txnID, 2, &cachedIO, &physIO, LBIDTrace, sessionID,
+                           &counterLock, &busyLoaderCount, sendThread, &vssCache);
             asyncLoaded[p + 1] = true;
           }
         }

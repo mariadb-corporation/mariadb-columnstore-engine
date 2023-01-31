@@ -1027,8 +1027,8 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    // std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
-    // << std::endl;
+    std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
+              << std::endl;
     return {left1, right1};
   }
   if (!rangeVectorDist)  // first
@@ -1037,7 +1037,7 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto rightLowerBoundValue = lowerBoundValues[1];
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    // std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
+    std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   if (rangeVectorDist == maxRangeSize)  // last
@@ -1046,7 +1046,7 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto left1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = perm.size();
-    // std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
+    std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   idbassert(rangeVectorDist && false);
@@ -1062,9 +1062,14 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
   sorting::ValueRangesMatrix ranges(maxThreads);
   sorting::ValueRangesMatrix testRanges(maxThreads);
   vector<EncodedKeyType> lowerBoundValues;
-  auto& sorting = sortingThreads.front();
+  // auto& sorting = sortingThreads.front();
+  for (auto& sorting : sortingThreads)
   {
     const auto& perm = sorting->getPermutation();
+    if (perm.empty())
+    {
+      continue;
+    }
     const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
@@ -1088,6 +1093,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     // WIP
     auto rg = sorting->getRG();
     const auto& perm = sorting->getPermutation();
+    std::cout << "calculateStats perm size " << perm.size() << std::endl;
     const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
@@ -1498,8 +1504,8 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
     size_t rows = 0;
     while ((rows = sorting.getData(rgDataOut, firstPhaseThreads)) && !cancelled())
     {
+      std::cout << "Insert rgdata with " << rows << " rows " << std::endl;
       outputDL->insert(rgDataOut);
-      // std::cout << "Insert rgdata with " << rows << " rows " << std::endl;
     }
   }
   catch (...)
@@ -1524,7 +1530,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
   assert(id < secondPhaseflatOrderBys_.size());
   assert(id < firstPhaseflatOrderBys_.size());
   assert(id < ranges.size());
-  assert(ranges.size() == firstPhaseflatOrderBys_.size() && ranges.size() == secondPhaseflatOrderBys_.size());
+  assert(ranges.size() == firstPhaseflatOrderBys_.size());
   std::string threadName("TAS2nd");
   threadName += std::to_string(id);
   // utils::setThreadName("TASwPOrdFlat2nd");
@@ -1545,6 +1551,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     // WIP hides issues
     if (srcPermBegin == srcPermEnd)
     {
+      // std::cout << threadName << " empty perm range" << std::endl;
       continue;
     }
     perm.insert(perm.end(), srcPermBegin, srcPermEnd);
@@ -1564,7 +1571,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
   // auto start = std::chrono::steady_clock::now();
   try
   {
-    // std::cout << "try 1 id " << id << std::endl;
+    std::cout << threadName << " perm " << perm.size() << std::endl;
 
     if (!cancelled())
     {
