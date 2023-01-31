@@ -21,6 +21,7 @@
 #include "heaporderby.h"
 #include "conststring.h"
 #include "mcs_int128.h"
+#include "numeric_functions.h"
 #include "pdqorderby.h"
 #include "vlarray.h"
 
@@ -399,40 +400,6 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
     }
   }
 }
-bool KeyType::less(const KeyType& r, const rowgroup::RowGroup& rg,
-                   const joblist::OrderByKeysType& colsAndDirection) const
-{
-  assert(rg.getColumnCount() >= 1);
-  auto& widths = rg.getColWidths();
-  rowgroup::OffsetType l_offset = 0;
-  rowgroup::OffsetType r_offset = 0;
-  size_t colsNumber = colsAndDirection.size();
-  int32_t cmpResult = 0;
-  for (size_t i = 0; !cmpResult && i <= colsNumber; ++i)
-  {
-    if (i < colsNumber)
-    {
-      auto [colIdx, isAsc] = colsAndDirection[i];
-      ++r_offset;
-      if (widths[colIdx] <= rg.getStringTableThreshold())
-      {
-        r_offset += widths[colIdx];
-        continue;
-      }
-      else
-      {
-        r_offset += rg.getStringTableThreshold();
-      }
-    }
-    // std::cout << "less pos left " << std::hex << (uint64_t)(key_ + l_offset) << " pos right "
-    //           << (uint64_t)(r.key_ + l_offset) << std::endl;
-
-    cmpResult = memcmp(key_ + l_offset, r.key_ + l_offset, r_offset - l_offset);
-    l_offset = r_offset;
-  }
-
-  return cmpResult < 0;
-}
 
 bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
                    const PermutationType leftP, const PermutationType rightP,
@@ -512,7 +479,8 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
   rg_.getRow(0, &inRow_);
   rg_.getRow(1, &outRow_);
 
-  size_t heapSize = threadNum << 1;
+  size_t nextPowOf2 = common::nextPowOf2(threadNum);
+  size_t heapSize = nextPowOf2 << 1;
   keyBytesSize_ = sortingKeyCols.size();
   for_each(jobListorderByRGColumnIDs_.begin(), jobListorderByRGColumnIDs_.end(),
            [this](auto p)
@@ -528,54 +496,64 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
   {
     auto [rangeLeft, rangeRight] = *range;
     ++range;
-    if (rangeLeft == rangeRight)
-    {
-      continue;
-    }
-    // std::cout << "HeapOrderBy ctor perm size " << prevPhaseSortingThread->getPermutation().size()
-    //           << std::endl;
     auto srcPermBegin = prevPhaseSortingThread->getPermutation().begin() + rangeLeft;
     auto srcPermEnd = prevPhaseSortingThread->getPermutation().begin() + rangeRight;
-    auto rangeSize = rangeRight - rangeLeft + 1;
+    auto rangeSize = rangeRight - rangeLeft + ((rangeLeft != rangeRight) ? 1 : 0);
     recordsLeftInRanges_ += rangeSize;
-    ranges_.push_back({});
+    ranges_.push_back({ImpossiblePermute});
     ranges_.back().reserve(rangeSize);
-    ranges_.back().push_back(ImpossiblePermute);
-    ranges_.back().insert(ranges_.back().end(), srcPermBegin, srcPermEnd);
+    // ranges_.back().push_back(ImpossiblePermute);
+    if (rangeSize)
+    {
+      ranges_.back().insert(ranges_.back().end(), srcPermBegin, srcPermEnd);
+    }
+  }
+
+  assert(heapSize < 256);  // WIP
+  if (heapSize > prevPhaseSorting.size())
+  {
+    for (size_t i = 0; i < nextPowOf2 - prevPhaseSorting.size(); ++i)
+    {
+      ranges_.push_back({ImpossiblePermute});
+    }
   }
 
   // Build a heap
-  auto half = threadNum;
+  auto heapSizeHalf = heapSize >> 1;
   for (size_t i = 0; i < heapSize; ++i)
   {
-    heap_.push_back({KeyType(rg_, keyBuf_.get() + (i * keyBytesSize_)), {0, 0, i % half}});
+    heap_.push_back({KeyType(rg_, keyBuf_.get() + (i * keyBytesSize_)), {0, 0, i % heapSizeHalf}});
   }
 
   size_t prevHeapIdx = heap_.size();
-  for (size_t heapIdx = threadNum; heapIdx >= 1; heapIdx >>= 1, prevHeapIdx >>= 1)  // level
+  for (size_t heapIdx = nextPowOf2; heapIdx >= 1; heapIdx >>= 1, prevHeapIdx >>= 1)  // level
   {
     for (size_t i = heapIdx; i < prevHeapIdx; ++i)  // all level items
     {
       size_t bestChildIdx = i;
       size_t prevBestChildIdx = bestChildIdx;
-      for (; bestChildIdx < half;)
+      for (; bestChildIdx < heapSizeHalf;)
       {
         prevBestChildIdx = bestChildIdx;
         bestChildIdx = findMinAndSwap(heap_, prevPhaseSorting, prevBestChildIdx);
-        // get min of left and right.
-        // bestChildIdx = idxOfMin(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1, sortingKeyCols);
-        // assert(bestChildIdx >= heapIdx && bestChildIdx <= (prevBestChildIdx << 1) + 1 &&
-        //        bestChildIdx < heap_.size());
-        // swap the best and the current
-        // std::swap(heap_[prevBestChildIdx], heap_[bestChildIdx]);
       }
-
+      if (heap_[prevBestChildIdx].second == ImpossiblePermute)  // edge case to handle empty Sources
+      {
+        auto buf = heap_[bestChildIdx].first.key();
+        heap_[bestChildIdx] = {KeyType(buf), ImpossiblePermute};
+        continue;
+      }
       auto threadId = heap_[prevBestChildIdx].second.threadID;
+      assert(threadId < ranges_.size() && !ranges_[threadId].empty());
       auto p = ranges_[threadId].back();
-      rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
       auto buf = heap_[bestChildIdx].first.key();
+      if (p == ImpossiblePermute)  // edge case to handle empty Sources
+      {
+        heap_[bestChildIdx] = {KeyType(buf), p};
+        continue;
+      }
+      rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
       auto key = KeyType(rg_, sortingKeyCols, p, buf);
-      // WIP the simplified key inversion is ~
       heap_[bestChildIdx] = {key, p};
       ranges_[threadId].pop_back();
     }
@@ -587,11 +565,14 @@ size_t HeapOrderBy::idxOfMin(Heap& heap, const size_t left, const size_t right,
                              const joblist::OrderByKeysType& colsAndDirection, const PermutationType leftP,
                              const PermutationType rightP, const sorting::SortingThreads& prevPhaseSorting)
 {
+  if (leftP == ImpossiblePermute)
   {
-    if (heap[left].first.less(heap[right].first, rg_, colsAndDirection, leftP, rightP, prevPhaseSorting))
-      return left;
     return right;
   }
+  if (rightP == ImpossiblePermute ||
+      heap[left].first.less(heap[right].first, rg_, colsAndDirection, leftP, rightP, prevPhaseSorting))
+    return left;
+  return right;
 }
 
 size_t HeapOrderBy::findMinAndSwap(Heap& heap, const SortingThreads& prevPhaseSortingThreads,
@@ -622,14 +603,6 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   {
     // get min of left and right.
     bestChildIdx = findMinAndSwap(heap, prevPhaseSortingThreads, heapIdx);
-
-    //     size_t leftHeapIdx = heapIdx << 1;
-    // size_t rightHeapIdx = (heapIdx << 1) + 1;
-    // auto leftP = heap[leftHeapIdx].second;
-    // auto rightP = heap[rightHeapIdx].second;
-    // bestChildIdx = idxOfMin(heap, leftHeapIdx, rightHeapIdx, jobListorderByRGColumnIDs_, leftP, rightP,
-    //                         prevPhaseSortingThreads);
-    // std::swap(heap[heapIdx], heap[bestChildIdx]);
   }
 
   heapIdx = (heapIdx == 1) ? 1 : heapIdx >> 1;

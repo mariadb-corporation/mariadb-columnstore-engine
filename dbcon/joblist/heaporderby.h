@@ -40,6 +40,7 @@ struct KeyType
   };
   KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
           const sorting::PermutationType p, uint8_t* buf);
+  KeyType(uint8_t* buf) : key_(buf){};
   ~KeyType(){};
 
   const uint8_t* key() const
@@ -50,8 +51,6 @@ struct KeyType
   {
     return key_;
   }
-  bool less(const KeyType& r, const rowgroup::RowGroup& rg,
-            const joblist::OrderByKeysType& colsAndDirection) const;
   bool less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
             const PermutationType leftP, const PermutationType rightP,
             const sorting::SortingThreads& prevPhaseSorting) const;

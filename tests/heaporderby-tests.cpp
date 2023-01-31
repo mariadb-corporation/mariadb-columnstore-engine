@@ -2140,7 +2140,7 @@ class HeapOrderByTest : public testing::Test
 
 TEST_F(HeapOrderByTest, HeapOrderByCtor)
 {
-  size_t heapSize = 4;
+  size_t heapSizeHalf = 4;
   rowgroup::Row r;
   sorting::SortingThreads prevPhasThreads;
   joblist::OrderByKeysType keysAndDirections = {{0, true}};
@@ -2155,8 +2155,8 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
                                           -816942484, -1665500714, -2753689374, -3087922913, -3250034565},
                                          {4144560611, 1759584866, 1642547418, 517102532, 344540230,
                                           -525087651, -976832186, -1379630329, -2362115756, -3558545988}};
-  sorting::ValueRangesVector ranges(heapSize, {0, data.front().size()});
-  for (size_t i = 0; i < heapSize; ++i)
+  sorting::ValueRangesVector ranges(heapSizeHalf, {0, data.front().size()});
+  for (size_t i = 0; i < heapSizeHalf; ++i)
   {
     rgDatas_.emplace_back(rowgroup::RGData(rg_));
     auto& rgData = rgDatas_.back();
@@ -2182,14 +2182,7 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
     prevPhasThreads.back()->getMutPermutation().swap(perm);
   }
   HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
-                heapSize, ranges);
-  // [[maybe_unused]] auto& keys = h.heap();
-  // for (auto k : keys)
-  // {
-  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID <<
-  //   "}"
-  //             << std::endl;
-  // }
+                heapSizeHalf, ranges);
   PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
                           PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
                           PermutationType{0, 9, 2}, PermutationType{0, 8, 3}};
@@ -2198,8 +2191,72 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
     ASSERT_EQ(k.second, *r++);
   }
 }
+
 TEST_F(HeapOrderByTest, HeapOrderByCtorOddSourceThreadsNumber)
 {
+  size_t heapSizeHalf = 3;
+  rowgroup::Row r;
+  sorting::SortingThreads prevPhasThreads;
+  joblist::OrderByKeysType keysAndDirections = {{0, true}};
+  joblist::MemManager* mm = new joblist::MemManager;  //(&rm, sl, false, false);
+  // no NULLs yet
+  std::vector<std::vector<int64_t>> data{
+      {3660195432, 3377000516, 3369182711, 2874400139, 2517866456, -517915385, -1950920917, -2522630870,
+       -3733817126, -3891607892},
+      {3396035276, 2989829828, 2938792700, 2907046279, 2508452465, 873216056, 220139688, -1886091209,
+       -2996493537, -3004747259},
+      {3340465022, 2029570516, 1999115580, 630267809, 149731580, -816942484, -1665500714, -2753689374,
+       -3087922913, -3250034565},
+  };
+  sorting::ValueRangesVector ranges(heapSizeHalf, {0, data.front().size()});
+  for (size_t i = 0; i < heapSizeHalf; ++i)
+  {
+    rgDatas_.emplace_back(rowgroup::RGData(rg_));
+    auto& rgData = rgDatas_.back();
+    auto& rg = rg_;
+    rg.setData(&rgData);
+    rg.initRow(&r);
+    rg.getRow(0, &r);
+    uint32_t rowSize = r.getSize();
+    sorting::PermutationVec perm(data[i].size());
+    size_t it = 0;
+    std::generate(perm.begin(), perm.end(), [i, it]() mutable { return PermutationType{0, it++, i}; });
+    std::for_each(data[i].begin(), data[i].end(),
+                  [&, rg, r, rowSize, perm](const int64_t x) mutable
+                  {
+                    r.setIntField<8>(x, 0);
+                    r.nextRow(rowSize);
+                  });
+    rg.setRowCount(data[i].size());
+    // std::cout << " i " << i << " " << rg.toString() << std::endl;
+    prevPhasThreads.emplace_back(new PDQOrderBy());
+    // добавить permutations вида {0,1,2...}
+    prevPhasThreads.back()->getRGDatas().push_back(rgData);
+    prevPhasThreads.back()->getMutPermutation().swap(perm);
+  }
+  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
+                heapSizeHalf, ranges);
+  PermutationVec right = {
+      PermutationType{0, 0, 0},
+
+      PermutationType{0, 9, 0},
+
+      PermutationType{0, 8, 0},
+
+      PermutationType{0, 9, 2},
+
+      PermutationType{0, 7, 0},
+
+      PermutationType{0, 9, 1},
+
+      PermutationType{0, 8, 2},
+
+      sorting::HeapOrderBy::ImpossiblePermute,
+  };
+  for (auto r = right.begin(); auto k : h.heap())
+  {
+    ASSERT_EQ(k.second, *r++);
+  }
 }
 
 TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
