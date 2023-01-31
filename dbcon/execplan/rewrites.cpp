@@ -217,7 +217,6 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
   if (operatorType(*node) != OP_AND)
     return;
 
-//  bool containsLeft = !(*node)->left() || commonContains(common, (*node)->left());
   bool containsLeft =  commonContains(common, (*node)->left());
   bool containsRight = commonContains(common, (*node)->right());
 
@@ -228,38 +227,22 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
     {
       auto [grandfather, grandfatherflag] = stack.at(sz - 3);
       auto newfather = (*father)->right();
-      replaceAncestor(*grandfather, grandfatherflag, newfather);
       stack.at(sz - 2).direction = GoTo::Left;
+      replaceAncestor(*grandfather, grandfatherflag, newfather);
     }
     else
     {
-      for (int prev = sz - 2; sz --> 0;)
+      if ((*stack.at(sz - 2).node)->left() != nullptr)
       {
-        if ((*stack.at(prev).node)->left() != nullptr)
-        {
-          if (prev == 0)
-          {
-            *root = (*stack.at(0).node)->left();
-          }
-          else
-          {
-            auto [grandancestor, grandancestorflag] = stack.at(prev - 1);
-            auto newfather = (*stack.at(prev).node)->left();
-            replaceAncestor(*grandancestor, grandancestorflag, newfather);
-          }
-          stack.at(prev).direction = GoTo::Up;
-          break;
-        }
-
-        if (prev == 0)
-        {
-          *node = nullptr;
-        }
-        else
-        {
-          auto [ancestor, ancflag] = stack.at(prev - 1);
-          nullAncestor(*ancestor, ancflag);
-        }
+        auto [grandancestor, grandancestorflag] = stack.at(sz - 3);
+        auto newfather = (*stack.at(sz - 2).node)->left();
+        stack.at(sz - 2).direction = GoTo::Up;
+        replaceAncestor(*grandancestor, grandancestorflag, newfather);
+      }
+      else
+      {
+        auto [ancestor, ancflag] = stack.at(sz - 3);
+        nullAncestor(*ancestor, ancflag);
       }
     }
   }
@@ -303,81 +286,76 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
   while (!stack.empty())
   {
     auto [node, flag] = stack.back();
-    if (*node == nullptr)
-    {
-      assert(stack.size() == 1);
-      stack.pop_back();
-      break;
-    }
-
-    if (flag == GoTo::Up)
-    {
-      auto sz = stack.size();
-      if (sz == 1)
-      {
-        if (operatorType(*node) == OP_AND)
-        {
-          bool containsLeft = commonContains(common, (*node)->left());
-          bool containsRight = commonContains(common, (*node)->right());
-
-          if (containsLeft && containsRight)
-          {
-            *root = nullptr;
-          }
-          else if (containsLeft)
-          {
-            *root = (*node)->right();
-          }
-          else if (containsRight)
-          {
-            *root = (*node)->left();
-          }
-        }
-      }
-      else if (sz == 2)
-      {
-        auto [father, fatherflag] = stack.at(0);
-        if (operatorType(*node) == OP_AND)
-        {
-          bool containsLeft = commonContains(common, (*node)->left());
-          bool containsRight = commonContains(common, (*node)->right());
-
-          if (containsLeft && containsRight)
-          {
-            nullAncestor(*father, fatherflag);
-            if (fatherflag == GoTo::Right)
-            {
-              *root = (*root)->right();
-              stack.at(0).direction = GoTo::Left;
-            }
-            else if (fatherflag == GoTo::Up)
-            {
-              if ((*father)->left() == nullptr)
-                *root = nullptr;
-              else
-                *root = (*root)->left();
-            }
-          }
-          else if (containsLeft)
-          {
-            replaceAncestor(*father, fatherflag, (*node)->right());
-          }
-          else if (containsRight)
-          {
-            replaceAncestor(*father, fatherflag, (*node)->left());
-          }
-        }
-      }
-      else if (sz > 2)
-      {
-        fixUpTree(root, node, stack, common);
-      }
-      stack.pop_back();
-    }
-    else
+    if (flag != GoTo::Up)
     {
       addStackFrame(stack, flag, *node);
     }
+    else
+    {
+      auto sz = stack.size();
+      if (sz > 2)
+      {
+        fixUpTree(root, node, stack, common);
+      }
+      else
+      {
+        if (operatorType(*node) == OP_AND)
+        {
+          bool containsLeft = commonContains(common, (*node)->left());
+          bool containsRight = commonContains(common, (*node)->right());
+
+          if (containsLeft && containsRight)
+          {
+            if (sz == 1)
+            {
+              *root = nullptr;
+              return; // ->>>>>>
+            }
+            else
+            {
+              auto [father, fatherflag] = stack.at(0);
+              nullAncestor(*father, fatherflag);
+              if (fatherflag == GoTo::Right)
+              {
+                *root = (*root)->right();
+                stack.at(0).direction = GoTo::Left;
+              }
+              else if (fatherflag == GoTo::Up)
+              {
+                *root = (*root)->left();
+              }
+            }
+          }
+          else if (containsLeft)
+          {
+            if (sz == 1)
+            {
+              *root = (*node)->right();
+              stack.at(0).direction = GoTo::Left;
+            }
+            else
+            {
+              auto [father, fatherflag] = stack.at(0);
+              replaceAncestor(*father, fatherflag, (*node)->right());
+            }
+          }
+          else if (containsRight)
+          {
+            if (sz == 1)
+            {
+              *root = (*node)->left();
+            }
+            else
+            {
+              auto [father, fatherflag] = stack.at(0);
+              replaceAncestor(*father, fatherflag, (*node)->left());
+            }
+          }
+        }
+      }
+
+      stack.pop_back();
+      }
   }
 }
 
