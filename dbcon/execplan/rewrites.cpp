@@ -204,8 +204,6 @@ using DFSStack = std::vector<StackFrame>;
 
 void deleteOneNode(execplan::ParseTree** node)
 {
-  *node = nullptr;
-
   if (!node || !*node)
     return;
 
