@@ -14,9 +14,9 @@ namespace execplan
 {
 namespace details
 {
-template <typename T>
+template <typename T, typename F>
 void printContainer(std::ostream& os, const T& container, const std::string& delimiter,
-                    std::function<std::string(const typename T::value_type&)> printer,
+                    const F & printer,
                     const std::string& preambule = {})
 {
   os << preambule << "\n";
@@ -34,36 +34,40 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 // using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
 
-SimpleFilter* castToSimpleFilter(execplan::Filter* node)
+SimpleFilter* castToSimpleFilter(execplan::TreeNode* node)
 {
   return dynamic_cast<SimpleFilter*>(node);
 }
 
-
-using CommonPtr = execplan::Filter*;
-auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
+auto nodeComparator = [](execplan::ParseTree* left, execplan::ParseTree* right)
 {
-  auto filterLeft = castToSimpleFilter(left);
-  auto filterRight = castToSimpleFilter(right);
+  auto filterLeft = castToSimpleFilter(left->data());
+  auto filterRight = castToSimpleFilter(right->data());
 
   if (filterLeft && filterRight &&filterLeft->semanticEq(*filterRight))
     return false;
 
-  return left->data() < right->data();
+  return left->data()->data() < right->data()->data();
 };
 
-using CommonContainer = std::set<CommonPtr, decltype(nodeComparator)>;
 
-CommonPtr castToFilter(execplan::ParseTree* node)
+
+using CommonContainer = std::pair<std::set<execplan::ParseTree*, decltype(nodeComparator)>, std::set<execplan::ParseTree*>>;
+
+execplan::Filter* castToFilter(execplan::ParseTree* node)
 {
-  return dynamic_cast<CommonPtr>(node->data());
+  return dynamic_cast<execplan::Filter*>(node->data());
 }
 
-
-bool commonContains(const CommonContainer & common, execplan::ParseTree* node)
+bool commonContainsSemantic(const CommonContainer & common, execplan::ParseTree* node)
 {
   auto filter = castToFilter(node);
-  return filter && common.contains(filter);
+  return filter && common.first.contains(node);
+}
+
+bool commonContainsPtr(const CommonContainer & common, execplan::ParseTree* node)
+{
+  return common.second.contains(node);
 }
 
 OpType operatorType(execplan::ParseTree* node)
@@ -81,7 +85,7 @@ void printTreeLevel(execplan::ParseTree* root, int level)
   auto sep = std::string(level * 4, '-');
   auto& node = *(root->data());
   std::cerr << sep << ": " << root->data()->data() << " "
-            << boost::core::demangle(typeid(node).name()) << std::endl;
+            << boost::core::demangle(typeid(node).name()) << " " << root->data() << std::endl;
 #endif
 }
 
@@ -91,7 +95,8 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 {
   if (root == nullptr)
   {
-    accumulator.clear();
+    accumulator.first.clear();
+    accumulator.second.clear();
     return;
   }
 
@@ -99,8 +104,10 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
   {
-    if (auto filter = castToFilter(root))
-    accumulator.insert(filter);
+    if (castToFilter(root))
+    {
+      accumulator.first.insert(root);
+    }
     return;
   }
 
@@ -111,8 +118,8 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     collectCommonConjuctions(root->left(), leftAcc, ++level, true, false);
     collectCommonConjuctions(root->right(), rightAcc, ++level, true, false);
     CommonContainer intersection;
-    std::set_intersection(leftAcc.begin(), leftAcc.end(), rightAcc.begin(), rightAcc.end(),
-                          std::inserter(intersection, intersection.begin()), nodeComparator);
+    std::set_intersection(leftAcc.first.begin(), leftAcc.first.end(), rightAcc.first.begin(), rightAcc.first.end(),
+                          std::inserter(intersection.first, intersection.first.begin()), nodeComparator);
 
     accumulator = intersection;
     return;
@@ -145,30 +152,30 @@ execplan::ParseTree* newAndNode()
 
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
 {
-  if (common.empty())
+  if (common.first.empty())
     return tree;
 
   execplan::ParseTree* result = newAndNode();
   auto current = result;
-  for (auto treenode = common.begin(); treenode != common.end();)
+  for (auto treenode = common.first.begin(); treenode != common.first.end();)
   {
     execplan::ParseTree* andOp = newAndNode();
-    execplan::ParseTree* andCondition = new execplan::ParseTree(*treenode);
+    execplan::ParseTree* andCondition = new execplan::ParseTree(**treenode);
 
     ++treenode;
     current->right(andCondition);
 
-    if (treenode != common.end() && std::next(treenode) != common.end())
+    if (treenode != common.first.end() && std::next(treenode) != common.first.end())
     {
       current->left(andOp);
       current = andOp;
     }
-    else if (std::next(treenode) == common.end() && tree != nullptr)
+    else if (std::next(treenode) == common.first.end() && tree != nullptr)
     {
       current->left(andOp);
       current = andOp;
     }
-    else if (std::next(treenode) == common.end() && tree == nullptr)
+    else if (std::next(treenode) == common.first.end() && tree == nullptr)
     {
       current->left(andCondition);
     }
@@ -195,14 +202,42 @@ struct StackFrame
 
 using DFSStack = std::vector<StackFrame>;
 
-void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::ParseTree* ancestor)
+void deleteOneNode(execplan::ParseTree** node)
+{
+  *node = nullptr;
+
+  if (!node || !*node)
+    return;
+
+  (*node)->nullLeft();
+  (*node)->nullRight();
+
+#ifdef debug_rewrites
+  std::cerr << "   Deleting: " <<  (*node)->data()->data() << " " << boost::core::demangle(typeid(**node).name()) <<
+            " " << "ptr: " << (*node)->data() << std::endl;
+#endif
+
+  delete *node;
+  *node = nullptr;
+}
+
+void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::ParseTree* ancestor, const CommonContainer & common)
 {
   if (direction == GoTo::Up)
   {
+    // if not in commontPtrs
+    if (!commonContainsPtr(common, father->right()))
+    {
+      deleteOneNode(father->rightRef());
+    }
     father->right(ancestor);
   }
   else
   {
+    if (!commonContainsPtr(common, father->left()))
+    {
+      deleteOneNode(father->leftRef());
+    }
     father->left(ancestor);
   }
 }
@@ -211,20 +246,14 @@ void nullAncestor(execplan::ParseTree* father, GoTo direction)
 {
   if (direction == GoTo::Right)
   {
-    father->nullLeft();
+    deleteOneNode(father->leftRef());
   }
   else
   {
-    father->nullRight();
+    deleteOneNode(father->rightRef());
   }
 }
 
-void deleteOneNode(execplan::ParseTree* node)
-{
-  node->nullLeft();
-  node->nullRight();
-  delete node;
-}
 
 void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
 {
@@ -236,8 +265,8 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
   if (operatorType(*node) != OP_AND)
     return;
 
-  bool containsLeft =  commonContains(common, (*node)->left());
-  bool containsRight = commonContains(common, (*node)->right());
+  bool containsLeft =  commonContainsSemantic(common, (*node)->left());
+  bool containsRight = commonContainsSemantic(common, (*node)->right());
 
   if (containsLeft && containsRight)
   {
@@ -247,16 +276,16 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
       auto [grandfather, grandfatherflag] = stack.at(sz - 3);
       auto newfather = (*father)->right();
       stack.at(sz - 2).direction = GoTo::Left;
-      replaceAncestor(*grandfather, grandfatherflag, newfather);
+      replaceAncestor(*grandfather, grandfatherflag, newfather, common);
     }
     else
     {
       if ((*stack.at(sz - 2).node)->left() != nullptr)
       {
-        auto [grandancestor, grandancestorflag] = stack.at(sz - 3);
+        auto [grandfather, grandfatherflag] = stack.at(sz - 3);
         auto newfather = (*stack.at(sz - 2).node)->left();
         stack.at(sz - 2).direction = GoTo::Up;
-        replaceAncestor(*grandancestor, grandancestorflag, newfather);
+        replaceAncestor(*grandfather, grandfatherflag, newfather, common);
       }
       else
       {
@@ -267,11 +296,11 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
   }
   else if (containsLeft)
   {
-    replaceAncestor(*father, fatherflag, (*node)->right());
+    replaceAncestor(*father, fatherflag, (*node)->right(), common);
   }
   else if (containsRight)
   {
-    replaceAncestor(*father, fatherflag, (*node)->left());
+    replaceAncestor(*father, fatherflag, (*node)->left(), common);
   }
 }
 
@@ -319,14 +348,14 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     {
       if (operatorType(*node) == OP_AND)
       {
-        bool containsLeft = commonContains(common, (*node)->left());
-        bool containsRight = commonContains(common, (*node)->right());
+        bool containsLeft = commonContainsSemantic(common, (*node)->left());
+        bool containsRight = commonContainsSemantic(common, (*node)->right());
 
         if (containsLeft && containsRight)
         {
           if (sz == 1)
           {
-            *root = nullptr;
+            deleteOneNode(root);
             return; // ->>>>>>
           }
           else
@@ -335,11 +364,13 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
             nullAncestor(*father, fatherflag);
             if (fatherflag == GoTo::Right)
             {
+              deleteOneNode((*root)->leftRef());
               *root = (*root)->right();
               stack.at(0).direction = GoTo::Left;
             }
             else if (fatherflag == GoTo::Up)
             {
+              deleteOneNode((*root)->rightRef());
               *root = (*root)->left();
             }
           }
@@ -348,25 +379,36 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         {
           if (sz == 1)
           {
+            auto oldRoot = root;
             *root = (*node)->right();
+            deleteOneNode(oldRoot);
             stack.at(0).direction = GoTo::Left;
           }
-          else
+          else //sz == 2
           {
             auto [father, fatherflag] = stack.at(0);
-            replaceAncestor(*father, fatherflag, (*node)->right());
+            if (!commonContainsPtr(common, (*node)->left()))
+            {
+              deleteOneNode((*node)->leftRef());
+            }
+            replaceAncestor(*father, fatherflag, (*node)->right(), common);
           }
         }
         else if (containsRight)
         {
           if (sz == 1)
           {
+            deleteOneNode(root);
             *root = (*node)->left();
           }
-          else
+          else //sz == 2
           {
             auto [father, fatherflag] = stack.at(0);
-            replaceAncestor(*father, fatherflag, (*node)->left());
+            if (!commonContainsPtr(common, (*node)->right()))
+            {
+              deleteOneNode((*node)->rightRef());
+            }
+            replaceAncestor(*father, fatherflag, (*node)->left(), common);
           }
         }
       }
@@ -415,9 +457,16 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
 
+  //// SHIIITTT
+  for (auto it = common.first.begin(); it != common.first.end(); ++it)
+  {
+    common.second.insert(*it);
+  }
+
+
 #ifdef debug_rewrites
   printContainer(
-      std::cerr, common, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
+      std::cerr, common.first, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
 #endif
 
   details::removeFromTreeIterative(&tree, common);
