@@ -159,7 +159,6 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
   auto current = result;
   for (auto treenode = common.first.begin(); treenode != common.first.end();)
   {
-    execplan::ParseTree* andOp = newAndNode();
     execplan::ParseTree* andCondition = *treenode;
 
     ++treenode;
@@ -167,11 +166,13 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
 
     if (treenode != common.first.end() && std::next(treenode) != common.first.end())
     {
+      execplan::ParseTree* andOp = newAndNode();
       current->left(andOp);
       current = andOp;
     }
     else if (std::next(treenode) == common.first.end() && tree != nullptr)
     {
+      execplan::ParseTree* andOp = newAndNode();
       current->left(andOp);
       current = andOp;
     }
