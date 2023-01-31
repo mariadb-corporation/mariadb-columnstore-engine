@@ -160,7 +160,7 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
   for (auto treenode = common.first.begin(); treenode != common.first.end();)
   {
     execplan::ParseTree* andOp = newAndNode();
-    execplan::ParseTree* andCondition = new execplan::ParseTree(**treenode);
+    execplan::ParseTree* andCondition = *treenode;
 
     ++treenode;
     current->right(andCondition);
