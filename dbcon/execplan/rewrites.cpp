@@ -34,11 +34,20 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 // using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
 
+SimpleFilter* castToSimpleFilter(execplan::Filter* node)
+{
+  return dynamic_cast<SimpleFilter*>(node);
+}
+
+
 using CommonPtr = execplan::Filter*;
 auto nodeComparator = [](const CommonPtr& left, const CommonPtr& right)
 {
-  // if (left->semanticEq(right.get())
-  //   return false;
+  auto filterLeft = castToSimpleFilter(left);
+  auto filterRight = castToSimpleFilter(right);
+
+  if (filterLeft && filterRight &&filterLeft->semanticEq(*filterRight))
+    return false;
 
   return left->data() < right->data();
 };
@@ -49,6 +58,7 @@ CommonPtr castToFilter(execplan::ParseTree* node)
 {
   return dynamic_cast<CommonPtr>(node->data());
 }
+
 
 bool commonContains(const CommonContainer & common, execplan::ParseTree* node)
 {
@@ -207,6 +217,13 @@ void nullAncestor(execplan::ParseTree* father, GoTo direction)
   {
     father->nullRight();
   }
+}
+
+void deleteOneNode(execplan::ParseTree* node)
+{
+  node->nullLeft();
+  node->nullRight();
+  delete node;
 }
 
 void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
