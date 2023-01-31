@@ -731,6 +731,51 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
     }
   }
 
+  if (!jobInfo.orderByColVec.empty())
+  {
+    for (size_t i = 0; i < jobInfo.orderByColVec.size() && scaleIter != scale.end(); ++i)
+    {
+      auto key = jobInfo.orderByColVec[i].first;
+      auto it = std::find(keys.cbegin(), keys.cend(), key);
+      if (it == keys.cend())
+      {
+        ostringstream emsg;
+        emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
+        cerr << "configDeliveredRowGroup: " << emsg.str() << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+             << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
+
+        if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
+          cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
+
+        cerr << endl;
+        throw logic_error(emsg.str());
+      }
+
+      size_t pos = std::distance(keys.cbegin(), it);
+      if (pos < retColCount)
+      {
+        // it's already here, nothing to do
+        continue;
+      }
+
+      if (pos != retColCount)
+      {
+        ostringstream emsg;
+        emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' is too far in tuple.";
+        cerr << "configDeliveredRowGroup: " << emsg.str() << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+             << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
+
+        if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
+          cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
+
+        cerr << endl;
+        throw logic_error(emsg.str());
+      }
+
+      retColCount++;
+    }
+  }
+
   vector<uint32_t>::const_iterator offsets0 = fRowGroupOut.getOffsets().begin();
   vector<CalpontSystemCatalog::ColDataType>::const_iterator types0 = fRowGroupOut.getColTypes().begin();
   vector<uint32_t> csNums = fRowGroupOut.getCharsetNumbers();

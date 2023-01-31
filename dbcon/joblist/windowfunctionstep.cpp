@@ -509,7 +509,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
   if (csep->orderByCols().size() > 0)
   {
     jobInfo.wfqOrderby = csep->orderByCols();
-    csep->orderByCols().clear();
+    // kemm csep->orderByCols().clear();
 
     // add order by columns
     for (RetColsVector::iterator i = jobInfo.wfqOrderby.begin(); i < jobInfo.wfqOrderby.end(); i++)
@@ -557,7 +557,7 @@ SJSTEP WindowFunctionStep::makeWindowFunctionStep(SJSTEP& step, JobInfo& jobInfo
   ws->initialize(ds->getDeliveredRowGroup(), jobInfo);
 
   // restore the original delivery coloumns
-  jobInfo.deliveredCols = jobInfo.windowDels;
+  // kemm jobInfo.deliveredCols = jobInfo.windowDels;
   jobInfo.nonConstDelCols.clear();
 
   for (RetColsVector::iterator i = jobInfo.windowDels.begin(); i < jobInfo.windowDels.end(); i++)
@@ -815,6 +815,22 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
       continue;
 
     delColIdx.push_back(getColumnIndex(*i, colIndexMap, jobInfo));
+  }
+
+  if (jobInfo.hasAggregation && jobInfo.hasDistinct && !jobInfo.orderByColVec.empty())
+  {
+    for (const auto& [colKey, asc] : jobInfo.orderByColVec)
+    {
+      auto i = colIndexMap.find(colKey);
+      if (i == colIndexMap.end())
+        continue;
+
+      const auto& col = jobInfo.projectionCols[i->second];
+      if (dynamic_cast<const ConstantColumn*>(col.get()) != nullptr)
+        continue;
+
+      delColIdx.push_back(i->second);
+    }
   }
 
   size_t retColCount = delColIdx.size();
