@@ -211,7 +211,9 @@ void nullAncestor(execplan::ParseTree* father, GoTo direction)
 
 void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
 {
+  // stack size is always >= 3 here
   auto sz = stack.size();
+  assert (sz >=3);
   auto [father, fatherflag] = stack.at(sz - 2);
 
   if (operatorType(*node) != OP_AND)
@@ -256,7 +258,6 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
   }
 }
 
-
 void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
 {
   if (direction == GoTo::Left)
@@ -268,7 +269,7 @@ void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
       stack.emplace_back(left, GoTo::Left);
     }
   }
-  else if ( direction ==  GoTo::Right)
+  else if (direction ==  GoTo::Right)
   {
     stack.back().direction = GoTo::Up;
     if (node->right() != nullptr)
@@ -289,73 +290,72 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     if (flag != GoTo::Up)
     {
       addStackFrame(stack, flag, *node);
+      continue;
+    }
+
+    auto sz = stack.size();
+    if (sz > 2)
+    {
+      fixUpTree(root, node, stack, common);
     }
     else
     {
-      auto sz = stack.size();
-      if (sz > 2)
+      if (operatorType(*node) == OP_AND)
       {
-        fixUpTree(root, node, stack, common);
-      }
-      else
-      {
-        if (operatorType(*node) == OP_AND)
-        {
-          bool containsLeft = commonContains(common, (*node)->left());
-          bool containsRight = commonContains(common, (*node)->right());
+        bool containsLeft = commonContains(common, (*node)->left());
+        bool containsRight = commonContains(common, (*node)->right());
 
-          if (containsLeft && containsRight)
+        if (containsLeft && containsRight)
+        {
+          if (sz == 1)
           {
-            if (sz == 1)
-            {
-              *root = nullptr;
-              return; // ->>>>>>
-            }
-            else
-            {
-              auto [father, fatherflag] = stack.at(0);
-              nullAncestor(*father, fatherflag);
-              if (fatherflag == GoTo::Right)
-              {
-                *root = (*root)->right();
-                stack.at(0).direction = GoTo::Left;
-              }
-              else if (fatherflag == GoTo::Up)
-              {
-                *root = (*root)->left();
-              }
-            }
+            *root = nullptr;
+            return; // ->>>>>>
           }
-          else if (containsLeft)
+          else
           {
-            if (sz == 1)
+            auto [father, fatherflag] = stack.at(0);
+            nullAncestor(*father, fatherflag);
+            if (fatherflag == GoTo::Right)
             {
-              *root = (*node)->right();
+              *root = (*root)->right();
               stack.at(0).direction = GoTo::Left;
             }
-            else
+            else if (fatherflag == GoTo::Up)
             {
-              auto [father, fatherflag] = stack.at(0);
-              replaceAncestor(*father, fatherflag, (*node)->right());
-            }
-          }
-          else if (containsRight)
-          {
-            if (sz == 1)
-            {
-              *root = (*node)->left();
-            }
-            else
-            {
-              auto [father, fatherflag] = stack.at(0);
-              replaceAncestor(*father, fatherflag, (*node)->left());
+              *root = (*root)->left();
             }
           }
         }
+        else if (containsLeft)
+        {
+          if (sz == 1)
+          {
+            *root = (*node)->right();
+            stack.at(0).direction = GoTo::Left;
+          }
+          else
+          {
+            auto [father, fatherflag] = stack.at(0);
+            replaceAncestor(*father, fatherflag, (*node)->right());
+          }
+        }
+        else if (containsRight)
+        {
+          if (sz == 1)
+          {
+            *root = (*node)->left();
+          }
+          else
+          {
+            auto [father, fatherflag] = stack.at(0);
+            replaceAncestor(*father, fatherflag, (*node)->left());
+          }
+        }
       }
+    }
 
-      stack.pop_back();
-      }
+    stack.pop_back();
   }
 }
 
