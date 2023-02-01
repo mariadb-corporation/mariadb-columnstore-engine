@@ -363,8 +363,9 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
             nullAncestor(*father, fatherflag);
             if (fatherflag == GoTo::Right)
             {
-              deleteOneNode((*root)->leftRef());
+              execplan::ParseTree* oldRoot = *root;
               *root = (*root)->right();
+              deleteOneNode(&oldRoot);
               stack.at(0).direction = GoTo::Left;
             }
             else if (fatherflag == GoTo::Up)
@@ -378,9 +379,9 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         {
           if (sz == 1)
           {
-            auto oldRoot = root;
+            execplan::ParseTree * oldRoot = *root;
             *root = (*node)->right();
-            deleteOneNode(oldRoot);
+            deleteOneNode(&oldRoot);
             stack.at(0).direction = GoTo::Left;
           }
           else //sz == 2
@@ -446,12 +447,31 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 #endif
 }
 
+
+std::set<execplan::ParseTree*> collectAllNodes(execplan::ParseTree* tree, std::set<execplan::ParseTree*> result = std::set<execplan::ParseTree*> {})
+{
+
+  result.insert(tree);
+  if (tree->left())
+  {
+    collectAllNodes(tree->left(), result);
+  }
+  if (tree->right())
+  {
+    collectAllNodes(tree->right(), result);
+  }
+  return result;
+}
+
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly)
 {
   dumpTreeFiles(tree, "0.initial");
 
   if (dumpOnly)
     return tree;
+
+  auto allInitial = collectAllNodes(tree);
+
 
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
@@ -464,13 +484,29 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
 
 #ifdef debug_rewrites
-  printContainer(
+  details::printContainer(
       std::cerr, common.first, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
 #endif
 
   details::removeFromTreeIterative(&tree, common);
 
   auto result = details::appendToRoot(tree, common);
+
+  auto allRewritten = collectAllNodes(result);
+
+  std::set<execplan::ParseTree*> missedNodes;
+
+  // std::set_difference(allInitial.begin(), allInitial.end(), allRewritten.begin(), allRewritten.end(),
+  //                     std::inserter(missedNodes, missedNodes.begin()));
+
+
+  // #ifdef debug_rewrites
+  // details::printContainer(
+  //     std::cerr, missedNodes, "\n", [](auto treenode) { return treenode->data(); }, "Missed nodes:");
+  // #endif
+
+
+
 
   dumpTreeFiles(result, "3.final");
   return result;
