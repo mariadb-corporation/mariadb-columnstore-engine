@@ -269,7 +269,16 @@ void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack&
 
   if (containsLeft && containsRight)
   {
+    if (!commonContainsPtr(common, (*node)->left()))
+    {
+      deleteOneNode((*node)->leftRef());
+    }
+    if (!commonContainsPtr(common, (*node)->right()))
+    {
+      deleteOneNode((*node)->rightRef());
+    }
     nullAncestor(*father, fatherflag);
+
     if (fatherflag == GoTo::Right)
     {
       auto [grandfather, grandfatherflag] = stack.at(sz - 3);
@@ -354,6 +363,14 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         {
           if (sz == 1)
           {
+            if (!commonContainsPtr(common, (*root)->left()))
+            {
+              deleteOneNode((*root)->leftRef());
+            }
+            if (!commonContainsPtr(common, (*root)->right()))
+            {
+              deleteOneNode((*root)->rightRef());
+            }
             deleteOneNode(root);
             return; // ->>>>>>
           }
@@ -380,8 +397,13 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
           if (sz == 1)
           {
             execplan::ParseTree * oldRoot = *root;
+            if (!commonContainsPtr(common, (*root)->left()))
+            {
+              deleteOneNode((*root)->leftRef());
+            }
             *root = (*node)->right();
             deleteOneNode(&oldRoot);
+
             stack.at(0).direction = GoTo::Left;
           }
           else //sz == 2
@@ -398,6 +420,10 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         {
           if (sz == 1)
           {
+            if (!commonContainsPtr(common, (*root)->right()))
+            {
+              deleteOneNode((*root)->rightRef());
+            }
             deleteOneNode(root);
             *root = (*node)->left();
           }
@@ -496,15 +522,14 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
   std::set<execplan::ParseTree*> missedNodes;
 
-  // std::set_difference(allInitial.begin(), allInitial.end(), allRewritten.begin(), allRewritten.end(),
-  //                     std::inserter(missedNodes, missedNodes.begin()));
+  std::set_difference(allInitial.begin(), allInitial.end(), allRewritten.begin(), allRewritten.end(),
+                      std::inserter(missedNodes, missedNodes.begin()));
 
 
-  // #ifdef debug_rewrites
-  // details::printContainer(
-  //     std::cerr, missedNodes, "\n", [](auto treenode) { return treenode->data(); }, "Missed nodes:");
-  // #endif
-
+  #ifdef debug_rewrites
+  details::printContainer(
+      std::cerr, missedNodes, "\n", [](auto treenode) { return treenode; }, "Missed nodes:");
+  #endif
 
 
 
