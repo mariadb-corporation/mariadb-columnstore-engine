@@ -59,7 +59,7 @@ TEST_F(CompressionTest, LZ4CanCompress)
 
   std::unique_ptr<compress::CompressInterface> compressor(new compress::CompressInterfaceLZ4());
 
-  size_t originalSize = originalData.size();
+  size_t originalSize = originalData.size() + 1;
   size_t compressedSize = compressor->maxCompressedSize(originalSize);
   std::unique_ptr<char[]> compressedData(new char[compressedSize]);
   std::memset(compressedData.get(), 0, compressedSize);
