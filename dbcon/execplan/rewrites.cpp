@@ -227,7 +227,15 @@ void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::Pars
     // if not in commontPtrs
     if (!commonContainsPtr(common, father->right()))
     {
-      deleteOneNode(father->rightRef());
+      auto rightRef = father->rightRef();
+
+      if ((*rightRef)->right() && !commonContainsPtr(common, (*rightRef)->right()) && commonContainsSemantic(common, (*rightRef)->right()))
+        deleteOneNode((*rightRef)->rightRef());
+
+      if ((*rightRef)->left() && !commonContainsPtr(common, (*rightRef)->left()) && commonContainsSemantic(common, (*rightRef)->left()))
+        deleteOneNode((*rightRef)->leftRef());
+
+      deleteOneNode(rightRef);
     }
     father->right(ancestor);
   }
@@ -235,7 +243,15 @@ void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::Pars
   {
     if (!commonContainsPtr(common, father->left()))
     {
-      deleteOneNode(father->leftRef());
+      auto leftRef = father->leftRef();
+
+      if ((*leftRef)->right() && !commonContainsPtr(common, (*leftRef)->right()) && commonContainsSemantic(common, (*leftRef)->right()))
+        deleteOneNode((*leftRef)->rightRef());
+
+      if ((*leftRef)->left() && !commonContainsPtr(common, (*leftRef)->left()) && commonContainsSemantic(common, (*leftRef)->left()))
+        deleteOneNode((*leftRef)->leftRef());
+
+      deleteOneNode(leftRef);
     }
     father->left(ancestor);
   }
@@ -532,7 +548,7 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
   #ifdef debug_rewrites
   details::printContainer(
-      std::cerr, missedNodes, "\n", [](auto treenode) { return treenode; }, "Missed nodes:");
+      std::cerr, missedNodes, "\n", [](auto treenode) { return treenode->data(); }, "Missed nodes:");
   #endif
 
 
