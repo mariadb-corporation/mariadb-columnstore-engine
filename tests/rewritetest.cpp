@@ -509,6 +509,8 @@ or
 
  */
   ParseTreeTestParam{"Query_22", &__test_query_before_22, &__test_query_after_22},
+
+  ParseTreeTestParam{"Query_27", &__test_query_before_27, &__test_query_after_27},
   ParseTreeTestParam{"TPCH_19", &__query19_tree_init, &__query19_tree_fixed}
 ),
   [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {

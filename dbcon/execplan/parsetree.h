@@ -523,7 +523,7 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
   auto& node = *(n->data());
   dotFile << "n" << (void*)n << " [label=\"" <<
            n->data()->data() << " (" <<
-           n->data() << ") " <<
+           n << ") " <<
            boost::core::demangle(typeid(node).name()) << "\"]" << std::endl;
 }
 

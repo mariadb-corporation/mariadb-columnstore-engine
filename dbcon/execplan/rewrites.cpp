@@ -85,7 +85,7 @@ void printTreeLevel(execplan::ParseTree* root, int level)
   auto sep = std::string(level * 4, '-');
   auto& node = *(root->data());
   std::cerr << sep << ": " << root->data()->data() << " "
-            << boost::core::demangle(typeid(node).name()) << " " << root->data() << std::endl;
+            << boost::core::demangle(typeid(node).name()) << " " << root << std::endl;
 #endif
 }
 
@@ -213,7 +213,7 @@ void deleteOneNode(execplan::ParseTree** node)
 
 #ifdef debug_rewrites
   std::cerr << "   Deleting: " <<  (*node)->data()->data() << " " << boost::core::demangle(typeid(**node).name()) <<
-            " " << "ptr: " << (*node)->data() << std::endl;
+            " " << "ptr: " << *node << std::endl;
 #endif
 
   delete *node;
