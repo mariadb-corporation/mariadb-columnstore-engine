@@ -232,7 +232,7 @@ void deleteOneNode(execplan::ParseTree** node)
   (*node)->nullRight();
 
 #ifdef debug_rewrites
-  std::cerr << "   Deleting: " <<  (*node)->data()->data() << " " << boost::core::demangle(typeid(**node).name()) <<
+  std::cerr << "   Deleting: " <<  (*node)->data() << " " << boost::core::demangle(typeid(**node).name()) <<
             " " << "ptr: " << *node << std::endl;
 #endif
 
@@ -294,137 +294,130 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
       else
         replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+
+      stack.pop_back();
+      continue;
+    }
+
+    if (sz == 1)
+    {
+      if (ltype == ChildType::Leave)
+      {
+        if (rtype == ChildType::Unchain)
+        {
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->left();
+          deleteOneNode(&oldNode);
+        }
+        else if (rtype == ChildType::Delete)
+        {
+          execplan::ParseTree* oldNode = *node;
+          deleteOneNode((*node)->rightRef());
+          *node = (*node)->left();
+          deleteOneNode(&oldNode);
+        }
+      }
+      else if (ltype == ChildType::Unchain)
+      {
+        if (rtype == ChildType::Leave)
+        {
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->right();
+          deleteOneNode(&oldNode);
+        }
+        else if (rtype == ChildType::Unchain)
+        {
+          deleteOneNode(node);
+        }
+        else if (rtype == ChildType::Delete)
+        {
+          deleteOneNode((*node)->rightRef());
+          deleteOneNode(node);
+        }
+      }
+      else if (ltype == ChildType::Delete)
+      {
+        deleteOneNode((*node)->leftRef());
+        if (rtype == ChildType::Leave)
+        {
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->right();
+          deleteOneNode(&oldNode);
+
+
+        }
+        else if (rtype == ChildType::Unchain)
+        {
+          deleteOneNode(node);
+        }
+        else if (rtype == ChildType::Delete)
+        {
+
+          deleteOneNode((*node)->rightRef());
+          deleteOneNode(node);
+        }
+      }
     }
     else
     {
-      if (sz == 1)
+      if (ltype == ChildType::Leave)
       {
-        if (ltype == ChildType::Leave)
+        replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+        if (rtype == ChildType::Unchain)
         {
-          if (rtype == ChildType::Unchain)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->left();
-            deleteOneNode(&oldNode);
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            execplan::ParseTree* oldNode = *node;
-            delete (*node)->right();
-            *node = (*node)->left();
-            deleteOneNode(&oldNode);
-          }
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->left();
+          deleteOneNode(&oldNode);
         }
-        else if (ltype == ChildType::Unchain)
+        else if (rtype == ChildType::Delete)
         {
-          (*node)->nullLeft();
-          if (rtype == ChildType::Leave)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->right();
-            deleteOneNode(&oldNode);
-          }
-          else if (rtype == ChildType::Unchain)
-          {
-            (*node)->nullRight();
-            *node = nullptr;
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            delete (*node)->right();
-            (*node)->nullRight();
-            *node = nullptr;
-          }
-        }
-        else if (ltype == ChildType::Delete)
-        {
-          delete (*node)->left();
-          (*node)->nullLeft();
-          if (rtype == ChildType::Leave)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->right();
-            deleteOneNode(&oldNode);
-          }
-          else if (rtype == ChildType::Unchain)
-          {
-            (*node)->nullRight();
-            *node = nullptr;
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            delete (*node)->right();
-            (*node)->nullRight();
-            *node = nullptr;
-          }
+          execplan::ParseTree* oldNode = *node;
+          deleteOneNode((*node)->rightRef());
+          *node = (*node)->left();
+          deleteOneNode(&oldNode);
         }
       }
-      else
+      else if (ltype == ChildType::Unchain)
       {
-        if (ltype == ChildType::Leave)
+        if (rtype == ChildType::Leave)
         {
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->right();
+          deleteOneNode(&oldNode);
           replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-          if (rtype == ChildType::Unchain)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->left();
-            deleteOneNode(&oldNode);
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            execplan::ParseTree* oldNode = *node;
-            delete (*node)->right();
-            *node = (*node)->left();
-            deleteOneNode(&oldNode);
-          }
         }
-        else if (ltype == ChildType::Unchain)
+        else if (rtype == ChildType::Unchain)
         {
-          (*node)->nullLeft();
-          if (rtype == ChildType::Leave)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->right();
-            deleteOneNode(&oldNode);
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-          }
-          else if (rtype == ChildType::Unchain)
-          {
-            (*node)->nullRight();
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            delete (*node)->right();
-            (*node)->nullRight();
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-          }
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
         }
-        else if (ltype == ChildType::Delete)
+        else if (rtype == ChildType::Delete)
         {
-          delete (*node)->left();
-          (*node)->nullLeft();
-          if (rtype == ChildType::Leave)
-          {
-            execplan::ParseTree* oldNode = *node;
-            *node = (*node)->right();
-            deleteOneNode(&oldNode);
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-          }
-          else if (rtype == ChildType::Unchain)
-          {
-            (*node)->nullRight();
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-          }
-          else if (rtype == ChildType::Delete)
-          {
-            delete (*node)->right();
-            (*node)->nullRight();
-            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-          }
+          deleteOneNode((*node)->rightRef());
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+        }
+      }
+      else if (ltype == ChildType::Delete)
+      {
+        deleteOneNode((*node)->leftRef());
+        if (rtype == ChildType::Leave)
+        {
+          execplan::ParseTree* oldNode = *node;
+          *node = (*node)->right();
+          deleteOneNode(&oldNode);
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+        }
+        else if (rtype == ChildType::Unchain)
+        {
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+        }
+        else if (rtype == ChildType::Delete)
+        {
+          deleteOneNode((*node)->rightRef());
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
         }
       }
     }
+
     stack.pop_back();
   }
 }
