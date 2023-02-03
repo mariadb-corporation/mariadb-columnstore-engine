@@ -320,7 +320,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   prepare_regression:: {
     name: 'prepare regression',
-    depends_on: ['mtr'],
+    depends_on: ['pkg'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
