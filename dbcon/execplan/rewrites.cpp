@@ -79,6 +79,18 @@ OpType operatorType(execplan::ParseTree* node)
   return op->op();
 }
 
+enum class ChildType
+{
+  Unchain,
+  Delete,
+  Leave
+};
+
+bool isSimpleFilter(execplan::ParseTree* node)
+{
+   return !!dynamic_cast<execplan::SimpleFilter*>(node->data());
+}
+
 void printTreeLevel(execplan::ParseTree* root, int level)
 {
 #ifdef debug_rewrites
@@ -198,7 +210,15 @@ struct StackFrame
 {
   execplan::ParseTree** node;
   GoTo direction;
-  StackFrame(execplan::ParseTree** node_, GoTo direction_) : node(node_), direction(direction_) {}
+  ChildType containsLeft;
+  ChildType containsRight;
+  StackFrame(execplan::ParseTree** node_, GoTo direction_)
+   : node(node_)
+   , direction(direction_)
+   , containsLeft(ChildType::Leave)
+   , containsRight(ChildType::Leave)
+  {
+  }
 };
 
 using DFSStack = std::vector<StackFrame>;
@@ -220,117 +240,7 @@ void deleteOneNode(execplan::ParseTree** node)
   *node = nullptr;
 }
 
-void replaceAncestor(execplan::ParseTree* father, GoTo direction, execplan::ParseTree* ancestor, const CommonContainer & common)
-{
-  if (direction == GoTo::Up)
-  {
-    // if not in commontPtrs
-    if (!commonContainsPtr(common, father->right()))
-    {
-      auto rightRef = father->rightRef();
 
-      if ((*rightRef)->right() && !commonContainsPtr(common, (*rightRef)->right()) && commonContainsSemantic(common, (*rightRef)->right()))
-        deleteOneNode((*rightRef)->rightRef());
-
-      if ((*rightRef)->left() && !commonContainsPtr(common, (*rightRef)->left()) && commonContainsSemantic(common, (*rightRef)->left()))
-        deleteOneNode((*rightRef)->leftRef());
-
-      deleteOneNode(rightRef);
-    }
-    father->right(ancestor);
-  }
-  else
-  {
-    if (!commonContainsPtr(common, father->left()))
-    {
-      auto leftRef = father->leftRef();
-
-      if ((*leftRef)->right() && !commonContainsPtr(common, (*leftRef)->right()) && commonContainsSemantic(common, (*leftRef)->right()))
-        deleteOneNode((*leftRef)->rightRef());
-
-      if ((*leftRef)->left() && !commonContainsPtr(common, (*leftRef)->left()) && commonContainsSemantic(common, (*leftRef)->left()))
-        deleteOneNode((*leftRef)->leftRef());
-
-      deleteOneNode(leftRef);
-    }
-    father->left(ancestor);
-  }
-}
-
-void nullAncestor(execplan::ParseTree* father, GoTo direction, const CommonContainer& common)
-{
-
-  execplan::ParseTree** node = nullptr;
-  if (direction == GoTo::Right)
-  {
-    node = father->leftRef();
-  }
-  else
-  {
-    node = (father->rightRef());
-  }
-
-  if (!commonContainsPtr(common, (*node)->left()))
-  {
-    deleteOneNode((*node)->leftRef());
-  }
-  if (!commonContainsPtr(common, (*node)->right()))
-  {
-    deleteOneNode((*node)->rightRef());
-  }
-
-  deleteOneNode(node);
-}
-
-
-void fixUpTree(execplan::ParseTree** root, execplan::ParseTree** node, DFSStack& stack, const CommonContainer& common)
-{
-  // stack size is always >= 3 here
-  auto sz = stack.size();
-  assert (sz >=3);
-  auto [father, fatherflag] = stack.at(sz - 2);
-
-  if (operatorType(*node) != OP_AND)
-    return;
-
-  bool containsLeft =  commonContainsSemantic(common, (*node)->left());
-  bool containsRight = commonContainsSemantic(common, (*node)->right());
-
-  if (containsLeft && containsRight)
-  {
-    nullAncestor(*father, fatherflag, common);
-    if (fatherflag == GoTo::Right)
-    {
-      auto [grandfather, grandfatherflag] = stack.at(sz - 3);
-      auto newfather = (*father)->right();
-      stack.at(sz - 2).direction = GoTo::Left;
-      replaceAncestor(*grandfather, grandfatherflag, newfather, common);
-    }
-    else
-    {
-      if ((*stack.at(sz - 2).node)->left() != nullptr)
-      {
-        auto [grandfather, grandfatherflag] = stack.at(sz - 3);
-        auto newfather = (*stack.at(sz - 2).node)->left();
-        stack.at(sz - 2).direction = GoTo::Up;
-        replaceAncestor(*grandfather, grandfatherflag, newfather, common);
-      }
-      else
-      {
-        auto [ancestor, ancflag] = stack.at(sz - 3);
-        nullAncestor(*ancestor, ancflag, common);
-      }
-    }
-  }
-  else if (containsLeft)
-  {
-    replaceAncestor(*father, fatherflag, (*node)->right(), common);
-  }
-  else if (containsRight)
-  {
-    replaceAncestor(*father, fatherflag, (*node)->left(), common);
-  }
-}
 
 void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
 {
@@ -354,13 +264,21 @@ void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
   }
 }
 
+void replaceContainsTypeFlag(StackFrame& stackframe, ChildType containsflag)
+{
+  if (stackframe.direction == GoTo::Right)
+    stackframe.containsLeft = containsflag;
+  else
+    stackframe.containsRight = containsflag;
+}
+
 void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& common)
 {
   DFSStack stack;
   stack.emplace_back(root, GoTo::Left);
   while (!stack.empty())
   {
-    auto [node, flag] = stack.back();
+    auto [node, flag, ltype, rtype] = stack.back();
     if (flag != GoTo::Up)
     {
       addStackFrame(stack, flag, *node);
@@ -368,101 +286,145 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     }
 
     auto sz = stack.size();
-    if (sz > 2)
+    if (castToFilter(*node) && stack.size() > 1)
     {
-      fixUpTree(root, node, stack, common);
+      if (commonContainsPtr(common, *node))
+        replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Unchain);
+      else if (!commonContainsPtr(common, *node) && commonContainsSemantic(common, *node))
+        replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+      else
+        replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
     }
     else
     {
-      if (operatorType(*node) == OP_AND)
+      if (sz == 1)
       {
-        bool containsLeft = commonContainsSemantic(common, (*node)->left());
-        bool containsRight = commonContainsSemantic(common, (*node)->right());
-
-        if (containsLeft && containsRight)
+        if (ltype == ChildType::Leave)
         {
-          if (sz == 1)
+          if (rtype == ChildType::Unchain)
           {
-            if (!commonContainsPtr(common, (*root)->left()))
-            {
-              deleteOneNode((*root)->leftRef());
-            }
-            if (!commonContainsPtr(common, (*root)->right()))
-            {
-              deleteOneNode((*root)->rightRef());
-            }
-            deleteOneNode(root);
-            return; // ->>>>>>
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->left();
+            deleteOneNode(&oldNode);
           }
-          else
+          else if (rtype == ChildType::Delete)
           {
-            auto [father, fatherflag] = stack.at(0);
-            nullAncestor(*father, fatherflag, common);
-            if (fatherflag == GoTo::Right)
-            {
-              execplan::ParseTree* oldRoot = *root;
-              deleteOneNode((*root)->leftRef());
-              *root = (*root)->right();
-              deleteOneNode(&oldRoot);
-              stack.at(0).direction = GoTo::Left;
-            }
-            else if (fatherflag == GoTo::Up)
-            {
-              execplan::ParseTree* oldRoot = *root;
-              deleteOneNode((*root)->rightRef());
-              *root = (*root)->left();
-              deleteOneNode(&oldRoot);
-            }
+            execplan::ParseTree* oldNode = *node;
+            delete (*node)->right();
+            *node = (*node)->left();
+            deleteOneNode(&oldNode);
           }
         }
-        else if (containsLeft)
+        else if (ltype == ChildType::Unchain)
         {
-          if (sz == 1)
+          (*node)->nullLeft();
+          if (rtype == ChildType::Leave)
           {
-            execplan::ParseTree * oldRoot = *root;
-            if (!commonContainsPtr(common, (*root)->left()))
-            {
-              deleteOneNode((*root)->leftRef());
-            }
-            *root = (*node)->right();
-            deleteOneNode(&oldRoot);
-
-            stack.at(0).direction = GoTo::Left;
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->right();
+            deleteOneNode(&oldNode);
           }
-          else //sz == 2
+          else if (rtype == ChildType::Unchain)
           {
-            auto [father, fatherflag] = stack.at(0);
-            if (!commonContainsPtr(common, (*node)->left()))
-            {
-              deleteOneNode((*node)->leftRef());
-            }
-            replaceAncestor(*father, fatherflag, (*node)->right(), common);
+            (*node)->nullRight();
+            *node = nullptr;
+          }
+          else if (rtype == ChildType::Delete)
+          {
+            delete (*node)->right();
+            (*node)->nullRight();
+            *node = nullptr;
           }
         }
-        else if (containsRight)
+        else if (ltype == ChildType::Delete)
         {
-          if (sz == 1)
+          delete (*node)->left();
+          (*node)->nullLeft();
+          if (rtype == ChildType::Leave)
           {
-            if (!commonContainsPtr(common, (*root)->right()))
-            {
-              deleteOneNode((*root)->rightRef());
-            }
-            deleteOneNode(root);
-            *root = (*node)->left();
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->right();
+            deleteOneNode(&oldNode);
           }
-          else //sz == 2
+          else if (rtype == ChildType::Unchain)
           {
-            auto [father, fatherflag] = stack.at(0);
-            if (!commonContainsPtr(common, (*node)->right()))
-            {
-              deleteOneNode((*node)->rightRef());
-            }
-            replaceAncestor(*father, fatherflag, (*node)->left(), common);
+            (*node)->nullRight();
+            *node = nullptr;
+          }
+          else if (rtype == ChildType::Delete)
+          {
+            delete (*node)->right();
+            (*node)->nullRight();
+            *node = nullptr;
+          }
+        }
+      }
+      else
+      {
+        if (ltype == ChildType::Leave)
+        {
+          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+          if (rtype == ChildType::Unchain)
+          {
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->left();
+            deleteOneNode(&oldNode);
+          }
+          else if (rtype == ChildType::Delete)
+          {
+            execplan::ParseTree* oldNode = *node;
+            delete (*node)->right();
+            *node = (*node)->left();
+            deleteOneNode(&oldNode);
+          }
+        }
+        else if (ltype == ChildType::Unchain)
+        {
+          (*node)->nullLeft();
+          if (rtype == ChildType::Leave)
+          {
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->right();
+            deleteOneNode(&oldNode);
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+          }
+          else if (rtype == ChildType::Unchain)
+          {
+            (*node)->nullRight();
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+          }
+          else if (rtype == ChildType::Delete)
+          {
+            delete (*node)->right();
+            (*node)->nullRight();
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+          }
+        }
+        else if (ltype == ChildType::Delete)
+        {
+          delete (*node)->left();
+          (*node)->nullLeft();
+          if (rtype == ChildType::Leave)
+          {
+            execplan::ParseTree* oldNode = *node;
+            *node = (*node)->right();
+            deleteOneNode(&oldNode);
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
+          }
+          else if (rtype == ChildType::Unchain)
+          {
+            (*node)->nullRight();
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
+          }
+          else if (rtype == ChildType::Delete)
+          {
+            delete (*node)->right();
+            (*node)->nullRight();
+            replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
           }
         }
       }
     }
-
     stack.pop_back();
   }
 }
