@@ -19,12 +19,21 @@
 
 #include <parsetree.h>
 #include <treenode.h>
+#include <simplefilter.h>
 
+namespace execplan
+{
 
-namespace execplan {
+execplan::OpType oppositeOperator(execplan::OpType op);
 
-//Walk the tree and find out common conjuctions
+struct NodeSemanticComparator
+{
+  bool operator()(std::unique_ptr<execplan::ParseTree> const& left,
+                  std::unique_ptr<execplan::ParseTree> const& right) const;
+  bool operator()(execplan::ParseTree* left, execplan::ParseTree* right) const;
+};
+
+// Walk the tree and find out common conjuctions
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly = false);
 
-
-} // namespace execplan
+}  // namespace execplan

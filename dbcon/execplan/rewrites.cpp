@@ -32,31 +32,16 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 #define debug_rewrites true
 
-// using CommonPtr = std::shared_ptr<execplan::SimpleFilter>;
-
-SimpleFilter* castToSimpleFilter(execplan::TreeNode* node)
-{
-  return dynamic_cast<SimpleFilter*>(node);
-}
-
-auto nodeComparator = [](execplan::ParseTree* left, execplan::ParseTree* right)
-{
-  auto filterLeft = castToSimpleFilter(left->data());
-  auto filterRight = castToSimpleFilter(right->data());
-
-  if (filterLeft && filterRight &&filterLeft->semanticEq(*filterRight))
-    return false;
-
-  return left->data()->data() < right->data()->data();
-};
-
-
-
-using CommonContainer = std::pair<std::set<execplan::ParseTree*, decltype(nodeComparator)>, std::set<execplan::ParseTree*>>;
+using CommonContainer = std::pair<std::set<execplan::ParseTree*, NodeSemanticComparator>, std::set<execplan::ParseTree*>>;
 
 execplan::Filter* castToFilter(execplan::ParseTree* node)
 {
   return dynamic_cast<execplan::Filter*>(node->data());
+}
+
+SimpleFilter* castToSimpleFilter(execplan::TreeNode * node)
+{
+  return dynamic_cast<SimpleFilter*>(node);
 }
 
 bool commonContainsSemantic(const CommonContainer & common, execplan::ParseTree* node)
@@ -131,7 +116,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     collectCommonConjuctions(root->right(), rightAcc, ++level, true, false);
     CommonContainer intersection;
     std::set_intersection(leftAcc.first.begin(), leftAcc.first.end(), rightAcc.first.begin(), rightAcc.first.end(),
-                          std::inserter(intersection.first, intersection.first.begin()), nodeComparator);
+                          std::inserter(intersection.first, intersection.first.begin()), NodeSemanticComparator{});
 
     accumulator = intersection;
     return;
@@ -162,33 +147,38 @@ execplan::ParseTree* newAndNode()
   return new execplan::ParseTree(op);
 }
 
-execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common)
+execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common_)
 {
-  if (common.first.empty())
+  if (common_.first.empty())
     return tree;
+
+  // TODO: refactor to debug
+  std::vector<execplan::ParseTree*> common;
+  std::copy(common_.first.begin(), common_.first.end(), std::back_inserter(common));
+  std::sort(common.begin(), common.end(), [](auto left, auto right) { return left->data()->data() < right->data()->data(); } );
 
   execplan::ParseTree* result = newAndNode();
   auto current = result;
-  for (auto treenode = common.first.begin(); treenode != common.first.end();)
+  for (auto treenode = common.begin(); treenode != common.end();)
   {
     execplan::ParseTree* andCondition = *treenode;
 
     ++treenode;
     current->right(andCondition);
 
-    if (treenode != common.first.end() && std::next(treenode) != common.first.end())
+    if (treenode != common.end() && std::next(treenode) != common.end())
     {
       execplan::ParseTree* andOp = newAndNode();
       current->left(andOp);
       current = andOp;
     }
-    else if (std::next(treenode) == common.first.end() && tree != nullptr)
+    else if (std::next(treenode) == common.end() && tree != nullptr)
     {
       execplan::ParseTree* andOp = newAndNode();
       current->left(andOp);
       current = andOp;
     }
-    else if (std::next(treenode) == common.first.end() && tree == nullptr)
+    else if (std::next(treenode) == common.end() && tree == nullptr)
     {
       current->left(andCondition);
     }
@@ -343,8 +333,6 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
           execplan::ParseTree* oldNode = *node;
           *node = (*node)->right();
           deleteOneNode(&oldNode);
-
-
         }
         else if (rtype == ChildType::Unchain)
         {
@@ -352,7 +340,6 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
         }
         else if (rtype == ChildType::Delete)
         {
-
           deleteOneNode((*node)->rightRef());
           deleteOneNode(node);
         }
@@ -486,7 +473,7 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
 #ifdef debug_rewrites
   details::printContainer(
-      std::cerr, common.first, "\n", [](auto treenode) { return treenode->data(); }, "Common Leaf Conjunctions:");
+      std::cerr, common.first, "\n", [](auto treenode) { return treenode->data()->data(); }, "Common Leaf Conjunctions:");
 #endif
 
   details::removeFromTreeIterative(&tree, common);
@@ -495,6 +482,63 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
   dumpTreeFiles(result, "3.final");
   return result;
+}
+
+execplan::OpType oppositeOperator(execplan::OpType op)
+{
+  if (op == OP_GT)
+    return OP_LT;
+
+  if (op == OP_GE)
+    return OP_LE;
+
+  if (op == OP_LT)
+    return OP_GT;
+
+  if (op == OP_LE)
+    return OP_GE;
+
+  return op;
+}
+
+
+std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
+{
+  if (left < right)
+    return left + op->data() + right;
+
+  std::unique_ptr<execplan::Operator> opposite (op->opposite());
+
+  return right + opposite->data() + left;
+}
+
+
+bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
+{
+  auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
+  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
+
+  std::cerr << "Left Normalized: " << leftNorm << std::endl;
+  std::cerr << "Right Normalized: " << rightNorm << std::endl;
+  return leftNorm < rightNorm;
+}
+
+bool NodeSemanticComparator::operator()(std::unique_ptr<execplan::ParseTree> const& left,
+                                        std::unique_ptr<execplan::ParseTree> const& right) const
+{
+  return this->operator()(left.get(), right.get());
+}
+
+bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::ParseTree* right) const
+{
+  auto filterLeft = details::castToSimpleFilter(left->data());
+  auto filterRight = details::castToSimpleFilter(right->data());
+
+  if (filterLeft && filterRight)
+    return simpleFiltersCmp(filterLeft, filterRight);
+
+
+  return left->data()->data() < right->data()->data();
 }
 
 }  // namespace execplan
