@@ -65,8 +65,11 @@ class SimpleFilter : public Filter
     SEMI
   };
 
+  struct ForTestPurposesWithoutColumnsOIDS{};
+
   SimpleFilter();
   SimpleFilter(const std::string& sql);
+  SimpleFilter(const std::string& sql, ForTestPurposesWithoutColumnsOIDS);
   SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone = 0);
   SimpleFilter(const SimpleFilter& rhs);
 
@@ -154,6 +157,10 @@ class SimpleFilter : public Filter
    * @return true if filter operation are the same and
    * the sets of arguments are the same; false otherwise
    */
+
+  bool operator<(const SimpleFilter& t) const;
+
+
   bool semanticEq(const SimpleFilter& t) const;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
@@ -222,7 +229,7 @@ class SimpleFilter : public Filter
   int fJoinFlag;         /// hash join type
   long fTimeZone;
 
-  void parse(std::string);
+  void parse(std::string, std::optional<ForTestPurposesWithoutColumnsOIDS> testFlag = std::nullopt);
 
   /***********************************************************
    *                      F&E framework                      *

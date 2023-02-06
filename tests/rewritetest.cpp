@@ -536,150 +536,26 @@ struct ComparatorTestParam
 class ParseTreeComparatorTest : public testing::TestWithParam<ComparatorTestParam> {};
 
 
-class SimpleFilterMock : public execplan::SimpleFilter
-{
- public:
-
-  SimpleFilterMock(std::string const& sql)
-  {
-    parse(sql);
-  }
-  void parse(std::string const& sql)
-  {
-    string delimiter[7] = {">=", "<=", "<>", "!=", "=", "<", ">"};
-    string::size_type pos;
-
-    for (int i = 0; i < 7; i++)
-    {
-      pos = sql.find(delimiter[i], 0);
-
-      if (pos == string::npos)
-        continue;
-
-    fOp.reset(new execplan::Operator(delimiter[i]));
-    string lhs = sql.substr(0, pos);
-
-    if (lhs.at(0) == ' ')
-      lhs = lhs.substr(1, pos);
-
-    if (lhs.at(lhs.length() - 1) == ' ')
-      lhs = lhs.substr(0, pos - 1);
-
-    fLhs = lhs;
-
-    pos = pos + delimiter[i].length();
-    string rhs = sql.substr(pos, sql.length());
-
-    if (rhs.at(0) == ' ')
-      rhs = rhs.substr(1, pos);
-
-    if (rhs.at(rhs.length() - 1) == ' ')
-      rhs = rhs.substr(0, pos - 1);
-
-    fRhs = rhs;
-    break;
-    }
-
-    if (fLhs.empty() || fRhs.empty())
-    throw runtime_error("invalid sql for simple filter\n");
-  }
-
-  std::string const& lhs() const
-  {
-    return fLhs;
-  }
-
-  std::string const& rhs() const
-  {
-    return fRhs;
-  }
-
-  execplan::SOP const& op() const
-  {
-    return fOp;
-  }
-
-  void op(const execplan::SOP& op)
-  {
-    fOp = op;
-  }
-
-  const std::string data() const
-  {
-    return fLhs + fOp->data() + fRhs;
-  }
-
-  void data(const std::string sql)
-  {
-    parse(sql);
-  }
-
- private:
-  execplan::SOP fOp;
-  std::string fLhs;
-  std::string fRhs;
-};
-
-
-std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
-{
-  if (left < right)
-    return left + op->data() + right;
-
-  std::unique_ptr<execplan::Operator> opposite (op->opposite());
-
-  return right + opposite->data() + left;
-}
-
-bool mockFiltersCmp(const SimpleFilterMock* left, const SimpleFilterMock* right)
-{
-  auto leftN = normalizeNode(left->lhs(), left->rhs(), left->op().get());
-  std::cerr << "Left Normalized: " << leftN << std::endl;
-  auto rightN = normalizeNode(right->lhs(), right->rhs(), right->op().get());
-  std::cerr << "Right Normalized: " << rightN << std::endl;
-  return leftN < rightN;
-
-}
-
-struct MockNodeSemanticComparator
-{
-  bool operator()(std::unique_ptr<execplan::ParseTree> const& left,
-                  std::unique_ptr<execplan::ParseTree> const& right) const
-  {
-    auto filterLeft = dynamic_cast<SimpleFilterMock*>(left->data());
-    auto filterRight = dynamic_cast<SimpleFilterMock*>(right->data());
-
-    if (filterLeft && filterRight)
-      return mockFiltersCmp(filterLeft, filterRight);
-
-
-    return left->data()->data() < right->data()->data();
-  }
-};
-
-
 TEST_P(ParseTreeComparatorTest, CompareContains)
 {
-  std::set<std::unique_ptr<execplan::ParseTree>, MockNodeSemanticComparator> container;
+  std::set<std::unique_ptr<execplan::ParseTree>, execplan::NodeSemanticComparator> container;
   for (auto const& f : GetParam().existingFilters)
   {
-
-    container.insert(std::make_unique<execplan::ParseTree>(new SimpleFilterMock(f)));
+    container.insert(std::make_unique<execplan::ParseTree>(new execplan::SimpleFilter(f, execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{})));
   }
-  auto filter = std::make_unique<execplan::ParseTree>(new SimpleFilterMock(GetParam().filter));
+  auto filter = std::make_unique<execplan::ParseTree>(new execplan::SimpleFilter(
+      GetParam().filter, execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}));
 
   ASSERT_EQ(GetParam().contains, container.contains(filter));
-
 }
 
-INSTANTIATE_TEST_SUITE_P(Comparator, ParseTreeComparatorTest,
-                         testing::Values(
-                          ComparatorTestParam{"SimpleInverse1", "a=b", {"b=a", "a=a"}, true},
-                          ComparatorTestParam{"SimpleInverse2", "acb=bdd", {"b>a", "a=b","acb=bdd" }, true},
-                          ComparatorTestParam{"SimpleInverseOpposite", "a<b", {"b>a", "a=b","acb=bdd" }, true},
-                          ComparatorTestParam{"SimpleContains", "a<b", {"a<b", "a=b","acb=bdd" }, true},
-                          ComparatorTestParam{"SimpleNotContains", "a<b", {"a<b1", "a=b","acb=bdd" }, false}
-  ),
-     [](const ::testing::TestParamInfo<ParseTreeComparatorTest::ParamType>& info)
-     { return info.param.queryName; }
- );
+INSTANTIATE_TEST_SUITE_P(
+    Comparator, ParseTreeComparatorTest,
+    testing::Values(ComparatorTestParam{"SimpleInverse1", "a=b", {"b=a", "a=a"}, true},
+                    ComparatorTestParam{"SimpleInverse2", "acb=bdd", {"b>a", "a=b", "bdd=acb"}, true},
+                    ComparatorTestParam{"SimpleInverseOpposite", "a<b", {"b>a"}, true},
+                    ComparatorTestParam{"SimpleInverseOpposite2", "a<b", {"a=c", "d=e", "b>a", "a<=b"}, true},
+                    ComparatorTestParam{"SimpleContains", "a<b", {"a<b", "a=b", "acb=bdd"}, true},
+                    ComparatorTestParam{"SimpleNotContains", "a<b", {"a<b1", "a=b", "acb=bdd"}, false}),
+    [](const ::testing::TestParamInfo<ParseTreeComparatorTest::ParamType>& info)
+    { return info.param.queryName; });

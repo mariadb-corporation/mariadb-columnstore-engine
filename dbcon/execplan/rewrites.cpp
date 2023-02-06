@@ -484,45 +484,6 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   return result;
 }
 
-execplan::OpType oppositeOperator(execplan::OpType op)
-{
-  if (op == OP_GT)
-    return OP_LT;
-
-  if (op == OP_GE)
-    return OP_LE;
-
-  if (op == OP_LT)
-    return OP_GT;
-
-  if (op == OP_LE)
-    return OP_GE;
-
-  return op;
-}
-
-
-std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
-{
-  if (left < right)
-    return left + op->data() + right;
-
-  std::unique_ptr<execplan::Operator> opposite (op->opposite());
-
-  return right + opposite->data() + left;
-}
-
-
-bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
-{
-  auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
-  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
-
-  std::cerr << "Left Normalized: " << leftNorm << std::endl;
-  std::cerr << "Right Normalized: " << rightNorm << std::endl;
-  return leftNorm < rightNorm;
-}
-
 bool NodeSemanticComparator::operator()(std::unique_ptr<execplan::ParseTree> const& left,
                                         std::unique_ptr<execplan::ParseTree> const& right) const
 {
@@ -535,7 +496,7 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
   auto filterRight = details::castToSimpleFilter(right->data());
 
   if (filterLeft && filterRight)
-    return simpleFiltersCmp(filterLeft, filterRight);
+    return *filterLeft < *filterRight;
 
 
   return left->data()->data() < right->data()->data();

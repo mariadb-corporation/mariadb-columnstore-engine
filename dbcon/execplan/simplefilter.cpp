@@ -55,6 +55,15 @@ SimpleFilter::SimpleFilter(const string& sql) : Filter(sql)
   parse(sql);
 }
 
+// TODO: only handled simplecolumn operands for now
+SimpleFilter::SimpleFilter(const string& sql, ForTestPurposesWithoutColumnsOIDS) : Filter(sql)
+{
+  parse(sql, ForTestPurposesWithoutColumnsOIDS{});
+}
+
+
+
+
 SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone)
  : fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA), fTimeZone(timeZone)
 {
@@ -244,7 +253,7 @@ const string SimpleFilter::toString() const
   return output.str();
 }
 
-void SimpleFilter::parse(string sql)
+void SimpleFilter::parse(string sql, std::optional<ForTestPurposesWithoutColumnsOIDS> testFlag)
 {
   fLhs = 0;
   fRhs = 0;
@@ -267,7 +276,10 @@ void SimpleFilter::parse(string sql)
     if (lhs.at(lhs.length() - 1) == ' ')
       lhs = lhs.substr(0, pos - 1);
 
-    fLhs = new SimpleColumn(lhs);
+    if (testFlag)
+      fLhs = new SimpleColumn(lhs, SimpleColumn::ForTestPurposeWithoutOID{});
+    else
+      fLhs = new SimpleColumn(lhs);
 
     pos = pos + delimiter[i].length();
     string rhs = sql.substr(pos, sql.length());
@@ -278,7 +290,10 @@ void SimpleFilter::parse(string sql)
     if (rhs.at(rhs.length() - 1) == ' ')
       rhs = rhs.substr(0, pos - 1);
 
-    fRhs = new SimpleColumn(rhs);
+    if (testFlag)
+      fRhs = new SimpleColumn(rhs, SimpleColumn::ForTestPurposeWithoutOID{});
+    else
+      fRhs = new SimpleColumn(rhs);
     break;
   }
 
@@ -411,6 +426,47 @@ void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
   {
     fWindowFunctionColumnList.push_back(raf);
   }
+}
+
+
+execplan::OpType oppositeOperator(execplan::OpType op)
+{
+  if (op == OP_GT)
+    return OP_LT;
+
+  if (op == OP_GE)
+    return OP_LE;
+
+  if (op == OP_LT)
+    return OP_GT;
+
+  if (op == OP_LE)
+    return OP_GE;
+
+  return op;
+}
+
+bool SimpleFilter::operator<(const SimpleFilter& t) const
+{
+  SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);
+  SimpleColumn* rsc = dynamic_cast<SimpleColumn*>(fRhs);
+  SimpleColumn* tlsc = dynamic_cast<SimpleColumn*>(t.fLhs);
+  SimpleColumn* trsc = dynamic_cast<SimpleColumn*>(t.fRhs);
+
+
+  if (lsc && rsc && tlsc && trsc)
+  {
+    int lOp = static_cast<int>(*lsc == std::min(*lsc, *rsc) ? fOp->op() : oppositeOperator(fOp->op()));
+    int rOp = static_cast<int>(*tlsc == std::min(*tlsc, *trsc) ? t.fOp->op() : oppositeOperator(t.fOp->op()));
+    return std::tie(lOp, std::min(*lsc, *rsc), std::max(*lsc, *rsc)) <
+           std::tie(rOp, std::min(*tlsc, *trsc), std::max(*tlsc, *trsc));
+  }
+
+  int lOp = static_cast<int>(fLhs->data() == std::min(fLhs->data(), fRhs->data()) ? fOp->op() : oppositeOperator(fOp->op()));
+  int rOp = static_cast<int>(t.fLhs->data() == std::min(t.fLhs->data(), t.fRhs->data()) ? t.fOp->op() : oppositeOperator(t.fOp->op()));
+
+  return std::tie(fLhs->data(), lOp, fRhs->data()) < std::tie(t.fLhs->data(), rOp, t.fRhs->data());
+
 }
 
 bool SimpleFilter::operator==(const SimpleFilter& t) const
