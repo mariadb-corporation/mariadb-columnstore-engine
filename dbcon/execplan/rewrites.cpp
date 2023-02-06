@@ -86,6 +86,27 @@ void printTreeLevel(execplan::ParseTree* root, int level)
 #endif
 }
 
+std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
+{
+  if (left < right)
+    return left + op->data() + right;
+
+  std::unique_ptr<execplan::Operator> opposite (op->opposite());
+
+  return right + opposite->data() + left;
+}
+
+
+bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
+{
+  auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
+  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
+
+  std::cerr << "Left Normalized: " << leftNorm << std::endl;
+  std::cerr << "Right Normalized: " << rightNorm << std::endl;
+  return leftNorm < rightNorm;
+}
+
 // Walk the tree and find out common conjuctions
 void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumulator, int level = 0,
                               bool orMeeted = false, bool andParent = false)
@@ -487,7 +508,7 @@ bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
 {
   auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
   auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
-#ifdef 0
+#if 0
   std::cerr << "simpleFiltersCmp: Left Normalized: " << leftNorm << std::endl;
   std::cerr << "simpleFiltersCmp: Right Normalized: " << rightNorm << std::endl;
 #endif
@@ -507,7 +528,7 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
   auto filterRight = details::castToSimpleFilter(right->data());
 
   if (filterLeft && filterRight)
-    return simpleFiltersCmp(filterLeft, filterRight);
+    return details::simpleFiltersCmp(filterLeft, filterRight);
 
 
   return left->data()->data() < right->data()->data();

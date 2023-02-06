@@ -512,7 +512,50 @@ or
  */
   ParseTreeTestParam{"Query_22", &__test_query_before_22, &__test_query_after_22},
 
+/*
+  select *
+from t1
+where
+(5000 < pos and id < 30)
+or
+(posname > 'qwer' and id < 30 and place > 'abcdefghij' and  5000 < pos)
+or
+(30 > id and place < 'zyxqwertyu' and pos > 5000)
+or
+(pos > 5000 and id < 30);
+ */
+
+  ParseTreeTestParam{"Query_23", &__test_query_before_23, &__test_query_after_23},
+/*
+select *
+from t1
+where
+(pos > 5000 and id < 30 and rid > 20)
+or
+(posname > 'qwer' and id < 30 and place > 'abcdefghij' and pos > 5000 and rid > 20)
+or
+(id < 30 and place < 'zyxqwertyu' and pos > 5000 and rid > 20)
+or
+(pos > 5000 and id < 30 and rid > 20)
+or
+(pos > 5000 and id < 30 and place < 'zyxqwertyu' and rid > 20);
+ */
+
   ParseTreeTestParam{"Query_27", &__test_query_before_27, &__test_query_after_27},
+/*
+select *
+from t1
+where
+(pos > 5000 and id < 30 and rid > 20 and place < 'zyxqwertyu')
+or
+(posname > 'qwer' and id < 30 and place > 'abcdefghij' and place < 'zyxqwertyu' and pos > 5000 and rid > 20)
+or
+(id < 30 and place < 'zyxqwertyu' and pos > 5000 and rid > 20)
+or
+(pos > 5000 and id < 30 and rid > 20 and place < 'zyxqwertyu' and place < 'zyxqwertyu');
+ */
+
+  ParseTreeTestParam{"Query_28", &__test_query_before_28, &__test_query_after_28},
   ParseTreeTestParam{"TPCH_19", &__query19_tree_init, &__query19_tree_fixed}
 ),
   [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {
