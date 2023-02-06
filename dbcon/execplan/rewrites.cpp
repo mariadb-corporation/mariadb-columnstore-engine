@@ -411,18 +411,6 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
 
 }  // namespace details
 
-bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd)
-{
-  if (fst == nullptr || snd == nullptr)
-  {
-    return fst == snd;
-  }
-
-  return fst->data() == snd->data() &&
-         ((treeEqual(fst->left(), snd->left()) && treeEqual(fst->right(), snd->right())) ||
-          (treeEqual(fst->left(), snd->right()) && treeEqual(fst->right(), snd->left())));
-}
-
 void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 {
 #ifdef debug_rewrites

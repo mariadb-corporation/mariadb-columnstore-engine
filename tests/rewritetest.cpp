@@ -30,7 +30,9 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0
   {
     return fst == nullptr;
   }
-  if (fst->data()->data() != snd->data()->data()) {
+  auto comp = execplan::NodeSemanticComparator();
+  if (comp(fst, snd) || comp(fst, snd))
+  {
     std::cerr << "Data " << fst->data()->data() << " differs from " << snd->data()->data() << " at level " << depth << '\n';
     return false;
   }
