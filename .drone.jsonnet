@@ -194,6 +194,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: name,
     depends_on: depends_on,
     image: 'docker:git',
+    volumes: [pipeline._volumes.docker],
     //[if (event == 'cron') then 'failure']: 'ignore',
     environment: {
       REGRESSION_TIMEOUT: {
