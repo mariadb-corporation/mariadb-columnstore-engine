@@ -15,8 +15,7 @@ namespace execplan
 namespace details
 {
 template <typename T, typename F>
-void printContainer(std::ostream& os, const T& container, const std::string& delimiter,
-                    const F & printer,
+void printContainer(std::ostream& os, const T& container, const std::string& delimiter, const F& printer,
                     const std::string& preambule = {})
 {
   os << preambule << "\n";
@@ -32,25 +31,26 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
 
 #define debug_rewrites true
 
-using CommonContainer = std::pair<std::set<execplan::ParseTree*, NodeSemanticComparator>, std::set<execplan::ParseTree*>>;
+using CommonContainer =
+    std::pair<std::set<execplan::ParseTree*, NodeSemanticComparator>, std::set<execplan::ParseTree*>>;
 
 execplan::Filter* castToFilter(execplan::ParseTree* node)
 {
   return dynamic_cast<execplan::Filter*>(node->data());
 }
 
-SimpleFilter* castToSimpleFilter(execplan::TreeNode * node)
+SimpleFilter* castToSimpleFilter(execplan::TreeNode* node)
 {
   return dynamic_cast<SimpleFilter*>(node);
 }
 
-bool commonContainsSemantic(const CommonContainer & common, execplan::ParseTree* node)
+bool commonContainsSemantic(const CommonContainer& common, execplan::ParseTree* node)
 {
   auto filter = castToFilter(node);
   return filter && common.first.contains(node);
 }
 
-bool commonContainsPtr(const CommonContainer & common, execplan::ParseTree* node)
+bool commonContainsPtr(const CommonContainer& common, execplan::ParseTree* node)
 {
   return common.second.contains(node);
 }
@@ -73,7 +73,7 @@ enum class ChildType
 
 bool isSimpleFilter(execplan::ParseTree* node)
 {
-   return !!dynamic_cast<execplan::SimpleFilter*>(node->data());
+  return !!dynamic_cast<execplan::SimpleFilter*>(node->data());
 }
 
 void printTreeLevel(execplan::ParseTree* root, int level)
@@ -81,26 +81,25 @@ void printTreeLevel(execplan::ParseTree* root, int level)
 #ifdef debug_rewrites
   auto sep = std::string(level * 4, '-');
   auto& node = *(root->data());
-  std::cerr << sep << ": " << root->data()->data() << " "
-            << boost::core::demangle(typeid(node).name()) << " " << root << std::endl;
+  std::cerr << sep << ": " << root->data()->data() << " " << boost::core::demangle(typeid(node).name()) << " "
+            << root << std::endl;
 #endif
 }
 
-std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
+std::string normalizeNode(std::string const& left, std::string const& right, execplan::Operator* op)
 {
   if (left < right)
     return left + op->data() + right;
 
-  std::unique_ptr<execplan::Operator> opposite (op->opposite());
+  std::unique_ptr<execplan::Operator> opposite(op->opposite());
 
   return right + opposite->data() + left;
 }
 
-
 bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
 {
   auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
-  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
+  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get());
 
   std::cerr << "Left Normalized: " << leftNorm << std::endl;
   std::cerr << "Right Normalized: " << rightNorm << std::endl;
@@ -136,8 +135,9 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     collectCommonConjuctions(root->left(), leftAcc, ++level, true, false);
     collectCommonConjuctions(root->right(), rightAcc, ++level, true, false);
     CommonContainer intersection;
-    std::set_intersection(leftAcc.first.begin(), leftAcc.first.end(), rightAcc.first.begin(), rightAcc.first.end(),
-                          std::inserter(intersection.first, intersection.first.begin()), NodeSemanticComparator{});
+    std::set_intersection(leftAcc.first.begin(), leftAcc.first.end(), rightAcc.first.begin(),
+                          rightAcc.first.end(), std::inserter(intersection.first, intersection.first.begin()),
+                          NodeSemanticComparator{});
 
     accumulator = intersection;
     return;
@@ -160,7 +160,6 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   return;
 }
 
-
 execplan::ParseTree* newAndNode()
 {
   execplan::Operator* op = new execplan::Operator();
@@ -176,7 +175,8 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContain
   // TODO: refactor to debug
   std::vector<execplan::ParseTree*> common;
   std::copy(common_.first.begin(), common_.first.end(), std::back_inserter(common));
-  std::sort(common.begin(), common.end(), [](auto left, auto right) { return left->data()->data() < right->data()->data(); } );
+  std::sort(common.begin(), common.end(),
+            [](auto left, auto right) { return left->data()->data() < right->data()->data(); });
 
   execplan::ParseTree* result = newAndNode();
   auto current = result;
@@ -224,10 +224,7 @@ struct StackFrame
   ChildType containsLeft;
   ChildType containsRight;
   StackFrame(execplan::ParseTree** node_, GoTo direction_)
-   : node(node_)
-   , direction(direction_)
-   , containsLeft(ChildType::Leave)
-   , containsRight(ChildType::Leave)
+   : node(node_), direction(direction_), containsLeft(ChildType::Leave), containsRight(ChildType::Leave)
   {
   }
 };
@@ -243,17 +240,16 @@ void deleteOneNode(execplan::ParseTree** node)
   (*node)->nullRight();
 
 #ifdef debug_rewrites
-  std::cerr << "   Deleting: " <<  (*node)->data() << " " << boost::core::demangle(typeid(**node).name()) <<
-            " " << "ptr: " << *node << std::endl;
+  std::cerr << "   Deleting: " << (*node)->data() << " " << boost::core::demangle(typeid(**node).name())
+            << " "
+            << "ptr: " << *node << std::endl;
 #endif
 
   delete *node;
   *node = nullptr;
 }
 
-
-
-void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
+void addStackFrame(DFSStack& stack, GoTo direction, execplan::ParseTree* node)
 {
   if (direction == GoTo::Left)
   {
@@ -264,7 +260,7 @@ void addStackFrame(DFSStack &stack, GoTo direction, execplan::ParseTree* node)
       stack.emplace_back(left, GoTo::Left);
     }
   }
-  else if (direction ==  GoTo::Right)
+  else if (direction == GoTo::Right)
   {
     stack.back().direction = GoTo::Up;
     if (node->right() != nullptr)
@@ -283,8 +279,48 @@ void replaceContainsTypeFlag(StackFrame& stackframe, ChildType containsflag)
     stackframe.containsRight = containsflag;
 }
 
+void fixUpTree(execplan::ParseTree** node, ChildType ltype, ChildType rtype,
+               StackFrame* parentframe = nullptr)
+{
+  if (ltype == ChildType::Leave)
+  {
+    if (rtype != ChildType::Leave)
+    {
+      execplan::ParseTree* oldNode = *node;
+      if (rtype == ChildType::Delete)
+        deleteOneNode((*node)->rightRef());
+      *node = (*node)->left();
+      deleteOneNode(&oldNode);
+    }
+  }
+  else
+  {
+    if (ltype == ChildType::Delete)
+      deleteOneNode((*node)->leftRef());
+    if (rtype == ChildType::Leave)
+    {
+      execplan::ParseTree* oldNode = *node;
+      *node = (*node)->right();
+      deleteOneNode(&oldNode);
+    }
+    else
+    {
+      if (rtype == ChildType::Delete)
+        deleteOneNode((*node)->rightRef());
+
+      if (parentframe)
+        replaceContainsTypeFlag(*parentframe, ChildType::Delete);
+      else
+        deleteOneNode(node);
+    }
+  }
+}
+
 void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& common)
 {
+  if (common.first.empty())
+    return;
+
   DFSStack stack;
   stack.emplace_back(root, GoTo::Left);
   while (!stack.empty())
@@ -297,7 +333,7 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     }
 
     auto sz = stack.size();
-    if (castToFilter(*node) && stack.size() > 1)
+    if (castToFilter(*node) && sz > 1)
     {
       if (commonContainsPtr(common, *node))
         replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Unchain);
@@ -311,120 +347,9 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
     }
 
     if (sz == 1)
-    {
-      if (ltype == ChildType::Leave)
-      {
-        if (rtype == ChildType::Unchain)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->left();
-          deleteOneNode(&oldNode);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          execplan::ParseTree* oldNode = *node;
-          deleteOneNode((*node)->rightRef());
-          *node = (*node)->left();
-          deleteOneNode(&oldNode);
-        }
-      }
-      else if (ltype == ChildType::Unchain)
-      {
-        if (rtype == ChildType::Leave)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->right();
-          deleteOneNode(&oldNode);
-        }
-        else if (rtype == ChildType::Unchain)
-        {
-          deleteOneNode(node);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          deleteOneNode((*node)->rightRef());
-          deleteOneNode(node);
-        }
-      }
-      else if (ltype == ChildType::Delete)
-      {
-        deleteOneNode((*node)->leftRef());
-        if (rtype == ChildType::Leave)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->right();
-          deleteOneNode(&oldNode);
-        }
-        else if (rtype == ChildType::Unchain)
-        {
-          deleteOneNode(node);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          deleteOneNode((*node)->rightRef());
-          deleteOneNode(node);
-        }
-      }
-    }
+      fixUpTree(node, ltype, rtype);
     else
-    {
-      if (ltype == ChildType::Leave)
-      {
-        replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-        if (rtype == ChildType::Unchain)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->left();
-          deleteOneNode(&oldNode);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          execplan::ParseTree* oldNode = *node;
-          deleteOneNode((*node)->rightRef());
-          *node = (*node)->left();
-          deleteOneNode(&oldNode);
-        }
-      }
-      else if (ltype == ChildType::Unchain)
-      {
-        if (rtype == ChildType::Leave)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->right();
-          deleteOneNode(&oldNode);
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-        }
-        else if (rtype == ChildType::Unchain)
-        {
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          deleteOneNode((*node)->rightRef());
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-        }
-      }
-      else if (ltype == ChildType::Delete)
-      {
-        deleteOneNode((*node)->leftRef());
-        if (rtype == ChildType::Leave)
-        {
-          execplan::ParseTree* oldNode = *node;
-          *node = (*node)->right();
-          deleteOneNode(&oldNode);
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Leave);
-        }
-        else if (rtype == ChildType::Unchain)
-        {
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-        }
-        else if (rtype == ChildType::Delete)
-        {
-          deleteOneNode((*node)->rightRef());
-          replaceContainsTypeFlag(stack.at(sz - 2), ChildType::Delete);
-        }
-      }
-    }
+      fixUpTree(node, ltype, rtype, &stack[sz - 2]);
 
     stack.pop_back();
   }
@@ -447,10 +372,9 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 #endif
 }
 
-
-std::set<execplan::ParseTree*> collectAllNodes(execplan::ParseTree* tree, std::set<execplan::ParseTree*> result = std::set<execplan::ParseTree*> {})
+std::set<execplan::ParseTree*> collectAllNodes(
+    execplan::ParseTree* tree, std::set<execplan::ParseTree*> result = std::set<execplan::ParseTree*>{})
 {
-
   result.insert(tree);
   if (tree->left())
   {
@@ -479,10 +403,10 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
     common.second.insert(*it);
   }
 
-
 #ifdef debug_rewrites
   details::printContainer(
-      std::cerr, common.first, "\n", [](auto treenode) { return treenode->data()->data(); }, "Common Leaf Conjunctions:");
+      std::cerr, common.first, "\n", [](auto treenode) { return treenode->data()->data(); },
+      "Common Leaf Conjunctions:");
 #endif
 
   details::removeFromTreeIterative(&tree, common);
@@ -493,28 +417,26 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   return result;
 }
 
-std::string normalizeNode(std::string const & left, std::string const & right, execplan::Operator* op)
+std::string normalizeNode(std::string const& left, std::string const& right, execplan::Operator* op)
 {
   if (left < right)
     return left + op->data() + right;
 
-  std::unique_ptr<execplan::Operator> opposite (op->opposite());
+  std::unique_ptr<execplan::Operator> opposite(op->opposite());
 
   return right + opposite->data() + left;
 }
 
-
 bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
 {
   auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
-  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get() );
+  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get());
 #if 0
   std::cerr << "simpleFiltersCmp: Left Normalized: " << leftNorm << std::endl;
   std::cerr << "simpleFiltersCmp: Right Normalized: " << rightNorm << std::endl;
 #endif
   return leftNorm < rightNorm;
 }
-
 
 bool NodeSemanticComparator::operator()(std::unique_ptr<execplan::ParseTree> const& left,
                                         std::unique_ptr<execplan::ParseTree> const& right) const
@@ -529,7 +451,6 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
 
   if (filterLeft && filterRight)
     return details::simpleFiltersCmp(filterLeft, filterRight);
-
 
   return left->data()->data() < right->data()->data();
 }
