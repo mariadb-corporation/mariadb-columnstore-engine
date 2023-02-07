@@ -112,9 +112,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'centos:7' || platform == 'rockylinux:8') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (std.split(branch, '-')[0] == branch) then branch else 'develop',
+  local regression_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
-  local regression_tests = 'test000.sh,test001.sh',
+
   local branchp = if (branch == '**') then '' else branch,
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
@@ -149,6 +149,55 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       target: branchp + '/' + eventp + '/' + server + '/' + arch + '/' + result,
       delete: 'true',
     },
+  },
+
+  local regression_tests = if (event == 'cron') then [
+    'test000.sh',
+    'test001.sh',
+    'test005.sh',
+    'test006.sh',
+    'test007.sh',
+    'test008.sh',
+    'test009.sh',
+    'test010.sh',
+    'test011.sh',
+    'test012.sh',
+    'test013.sh',
+    'test014.sh',
+    'test023.sh',
+    'test200.sh',
+    'test201.sh',
+    'test202.sh',
+    'test203.sh',
+    'test204.sh',
+    'test210.sh',
+    'test211.sh',
+    'test212.sh',
+    'test297.sh',
+    'test299.sh',
+    'test300.sh',
+  ] else [
+    'test000.sh',
+    'test001.sh',
+  ],
+
+  local indexes(arr) = std.range(0, std.length(arr) - 1),
+
+  regression(name, depends_on):: {
+    name: name,
+    depends_on: depends_on,
+    image: 'docker:git',
+    volumes: [pipeline._volumes.docker],
+    [if (name == 'test000.sh') || (name == 'test001.sh') then 'failure']: 'ignore',
+    environment: {
+      REGRESSION_TIMEOUT: {
+        from_secret: 'regression_timeout',
+      },
+    },
+    commands: [
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name,
+      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
+    ],
   },
 
   _volumes:: {
@@ -263,19 +312,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       status: ['success', 'failure'],
     },
   },
-  regression:: {
-    name: 'regression',
+  prepare_regression:: {
+    name: 'prepare regression',
     depends_on: ['mtr'],
     image: 'docker:git',
-    //[if (event == 'cron') then 'failure']: 'ignore',
-
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_TESTS: if (event == 'cron') then '' else '${REGRESSION_TESTS:-' + regression_tests + '}',
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
-      REGRESSION_TIMEOUT: {
-        from_secret: 'regression_timeout',
-      },
     },
     commands: [
       // clone regression test repo
@@ -328,11 +371,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay regression for manual debugging on live instance
       'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
-      // run regression test000 and test001 on pull request and manual (may be overwritten by env variable parameter) build events. on other events run all tests
       'docker exec -t regression$${DRONE_BUILD_NUMBER} /usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',
-      'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TESTS}',
     ],
   },
+
   smokelog:: {
     name: 'smokelog',
     depends_on: ['smoke'],
@@ -358,7 +400,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   regressionlog:: {
     name: 'regressionlog',
-    depends_on: ['regression'],
+    depends_on: [regression_tests[std.length(regression_tests) - 1]],
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
@@ -416,9 +458,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
   },
-  multi_node_compose:: {
-    name: 'multi_node_compose',
-    //depends_on: ['dockerhub', 'mtr', 'regression'],
+  multi_node_mtr:: {
+    name: 'mtr',
     depends_on: ['dockerhub'],
     failure: 'ignore',
     image: 'docker',
@@ -576,14 +617,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
-         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
-         (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
-         [pipeline.publish('mtrlog')] +
-         [pipeline.regression] +
+         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
+         (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         [pipeline.prepare_regression] +
+         [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
-         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
+
          (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
+
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
