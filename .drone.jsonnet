@@ -458,7 +458,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
   },
-  multi_node_compose:: {
+  multi_node_mtr:: {
     name: 'mtr',
     depends_on: ['dockerhub'],
     failure: 'ignore',
@@ -617,10 +617,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
-         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
-         (if (std.member(platforms_mtr, platform)) && ((platform != 'rockylinux:8') && (arch != 'amd64')) then [pipeline.mtr] else []) +
-         [pipeline.mtrlog] + [pipeline.publish('mtr')] +
-         (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr]) + [pipeline.mtrlog] + [pipeline.publish('mtr')] +
+         (if (event == 'cron') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.publish('mtrlog')] +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
