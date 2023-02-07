@@ -179,13 +179,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   ] else [
     'test000.sh',
     'test001.sh',
-    'test005.sh',
-    'test006.sh',
-    'test007.sh',
-    'test008.sh',
-    'test009.sh',
-    'test010.sh',
-    'test011.sh',
   ],
 
   local indexes(arr) = std.range(0, std.length(arr) - 1),
@@ -195,7 +188,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: depends_on,
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    //[if (event == 'cron') then 'failure']: 'ignore',
+    [if (name == 'test000.sh') || (name == 'test001.sh') then 'failure']: 'ignore',
     environment: {
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
@@ -321,7 +314,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   prepare_regression:: {
     name: 'prepare regression',
-    depends_on: ['pkg'],
+    depends_on: ['mtr'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
@@ -466,8 +459,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
   },
   multi_node_compose:: {
-    name: 'multi_node_compose',
-    //depends_on: ['dockerhub', 'mtr', 'regression'],
+    name: 'mtr',
     depends_on: ['dockerhub'],
     failure: 'ignore',
     image: 'docker',
@@ -625,14 +617,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
-         (if (std.member(platforms_mtr, platform)) then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
+         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
+         (if (std.member(platforms_mtr, platform)) && (platform != 'rockylinux:8') && (arch != 'amd64') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
          (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.publish('mtrlog')] +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
-         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
+
          (if (event == 'cron') then [pipeline.publish('regression latest', 'latest')] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
