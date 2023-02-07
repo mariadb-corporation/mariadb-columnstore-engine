@@ -617,7 +617,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
-         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] else []) +
+         (if (platform == 'rockylinux:8') && (arch == 'amd64') && (server == '10.6-enterprise') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_compose] + [pipeline.publish('mtr')] else []) +
          (if (std.member(platforms_mtr, platform)) && (platform != 'rockylinux:8') && (arch != 'amd64') then [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtr')] else []) +
          (if (event == 'cron' && std.member(platforms_mtr, platform)) then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.publish('mtrlog')] +
