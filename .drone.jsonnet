@@ -322,7 +322,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'prepare regression',
     depends_on: ['pkg'],
     image: 'docker:git',
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
     },
