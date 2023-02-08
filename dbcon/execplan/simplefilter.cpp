@@ -428,47 +428,6 @@ void SimpleFilter::unserialize(messageqcpp::ByteStream& b)
   }
 }
 
-
-execplan::OpType oppositeOperator(execplan::OpType op)
-{
-  if (op == OP_GT)
-    return OP_LT;
-
-  if (op == OP_GE)
-    return OP_LE;
-
-  if (op == OP_LT)
-    return OP_GT;
-
-  if (op == OP_LE)
-    return OP_GE;
-
-  return op;
-}
-
-bool SimpleFilter::operator<(const SimpleFilter& t) const
-{
-  SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);
-  SimpleColumn* rsc = dynamic_cast<SimpleColumn*>(fRhs);
-  SimpleColumn* tlsc = dynamic_cast<SimpleColumn*>(t.fLhs);
-  SimpleColumn* trsc = dynamic_cast<SimpleColumn*>(t.fRhs);
-
-
-  if (lsc && rsc && tlsc && trsc)
-  {
-    int lOp = static_cast<int>(*lsc == std::min(*lsc, *rsc) ? fOp->op() : oppositeOperator(fOp->op()));
-    int rOp = static_cast<int>(*tlsc == std::min(*tlsc, *trsc) ? t.fOp->op() : oppositeOperator(t.fOp->op()));
-    return std::tie(lOp, std::min(*lsc, *rsc), std::max(*lsc, *rsc)) <
-           std::tie(rOp, std::min(*tlsc, *trsc), std::max(*tlsc, *trsc));
-  }
-
-  int lOp = static_cast<int>(fLhs->data() == std::min(fLhs->data(), fRhs->data()) ? fOp->op() : oppositeOperator(fOp->op()));
-  int rOp = static_cast<int>(t.fLhs->data() == std::min(t.fLhs->data(), t.fRhs->data()) ? t.fOp->op() : oppositeOperator(t.fOp->op()));
-
-  return std::tie(fLhs->data(), lOp, fRhs->data()) < std::tie(t.fLhs->data(), rOp, t.fRhs->data());
-
-}
-
 bool SimpleFilter::operator==(const SimpleFilter& t) const
 {
   const Filter *f1, *f2;

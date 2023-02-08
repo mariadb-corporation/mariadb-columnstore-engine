@@ -86,25 +86,20 @@ void printTreeLevel(execplan::ParseTree* root, int level)
 #endif
 }
 
-std::string normalizeNode(std::string const& left, std::string const& right, execplan::Operator* op)
+auto normalizeNode(std::string const& left, std::string const& right, execplan::OpType op)
 {
   if (left < right)
-    return left + op->data() + right;
+    return std::make_tuple(op, std::ref(left), std::ref(right));
 
-  std::unique_ptr<execplan::Operator> opposite(op->opposite());
+  execplan::OpType oppositeOp = oppositeOperator(op);
 
-  return right + opposite->data() + left;
+  return std::make_tuple(oppositeOp, std::ref(right), std::ref(left));
 }
 
 bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
 {
-  auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
-  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get());
-#if 0
-  std::cerr << "simpleFiltersCmp: Left Normalized: " << leftNorm << std::endl;
-  std::cerr << "simpleFiltersCmp: Right Normalized: " << rightNorm << std::endl;
-#endif
-  return leftNorm < rightNorm;
+  return normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op()->op()) <
+         normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op()->op());
 }
 
 // Walk the tree and find out common conjuctions
@@ -389,6 +384,24 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
   dumpTreeFiles(result, "3.final");
   return result;
 }
+
+execplan::OpType oppositeOperator(execplan::OpType op)
+{
+  if (op == OP_GT)
+    return OP_LT;
+
+  if (op == OP_GE)
+    return OP_LE;
+
+  if (op == OP_LT)
+    return OP_GT;
+
+  if (op == OP_LE)
+    return OP_GE;
+
+  return op;
+}
+
 
 template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<false>(execplan::ParseTree* tree);
 template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<true>(execplan::ParseTree* tree);
