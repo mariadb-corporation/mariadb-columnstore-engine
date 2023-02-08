@@ -581,10 +581,16 @@ struct ComparatorTestParam
 
 class ParseTreeComparatorTest : public testing::TestWithParam<ComparatorTestParam> {};
 
+auto testcomparator =
+    [](std::unique_ptr<execplan::ParseTree> const& left, std::unique_ptr<execplan::ParseTree> const& right)
+{
+  execplan::NodeSemanticComparator comp;
+  return comp(left.get(), right.get());
+};
 
 TEST_P(ParseTreeComparatorTest, CompareContains)
 {
-  std::set<std::unique_ptr<execplan::ParseTree>, execplan::NodeSemanticComparator> container;
+  std::set<std::unique_ptr<execplan::ParseTree>, decltype(testcomparator)> container;
   for (auto const& f : GetParam().existingFilters)
   {
     container.insert(std::make_unique<execplan::ParseTree>(new execplan::SimpleFilter(f, execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{})));

@@ -28,8 +28,6 @@ execplan::OpType oppositeOperator(execplan::OpType op);
 
 struct NodeSemanticComparator
 {
-  bool operator()(std::unique_ptr<execplan::ParseTree> const& left,
-                  std::unique_ptr<execplan::ParseTree> const& right) const;
   bool operator()(execplan::ParseTree* left, execplan::ParseTree* right) const;
 };
 

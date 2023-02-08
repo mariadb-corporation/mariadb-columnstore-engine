@@ -401,12 +401,6 @@ execplan::OpType oppositeOperator(execplan::OpType op)
 template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<false>(execplan::ParseTree* tree);
 template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<true>(execplan::ParseTree* tree);
 
-bool NodeSemanticComparator::operator()(std::unique_ptr<execplan::ParseTree> const& left,
-                                        std::unique_ptr<execplan::ParseTree> const& right) const
-{
-  return this->operator()(left.get(), right.get());
-}
-
 bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::ParseTree* right) const
 {
   auto filterLeft = details::castToSimpleFilter(left->data());
