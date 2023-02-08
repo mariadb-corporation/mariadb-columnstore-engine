@@ -255,6 +255,18 @@ class Config
   void checkAndReloadConfig();
 };
 
+
+struct ConfigDeleter
+{
+  void operator()(Config*)
+  {
+    Config::deleteInstanceMap();
+  }
+};
+
+using ConfigUniqPtr = std::unique_ptr<Config, ConfigDeleter>;
+
+
 }  // namespace config
 
 #undef EXPORT
