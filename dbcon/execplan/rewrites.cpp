@@ -100,9 +100,10 @@ bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
 {
   auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
   auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get());
-
-  std::cerr << "Left Normalized: " << leftNorm << std::endl;
-  std::cerr << "Right Normalized: " << rightNorm << std::endl;
+#if 0
+  std::cerr << "simpleFiltersCmp: Left Normalized: " << leftNorm << std::endl;
+  std::cerr << "simpleFiltersCmp: Right Normalized: " << rightNorm << std::endl;
+#endif
   return leftNorm < rightNorm;
 }
 
@@ -112,8 +113,6 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 {
   if (root == nullptr)
   {
-    accumulator.first.clear();
-    accumulator.second.clear();
     return;
   }
 
@@ -143,20 +142,8 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-  if (operatorType(root) == OP_AND)
-  {
-    collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, true);
-    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, true);
-    return;
-  }
-
-  if (root->left() == nullptr)
-  {
-    collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, false);
-    return;
-  }
-
-  collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, false);
+  collectCommonConjuctions(root->left(), accumulator, ++level, orMeeted, operatorType(root) == OP_AND);
+  collectCommonConjuctions(root->right(), accumulator, ++level, orMeeted, operatorType(root) == OP_AND);
   return;
 }
 
@@ -167,17 +154,13 @@ execplan::ParseTree* newAndNode()
   return new execplan::ParseTree(op);
 }
 
-execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const CommonContainer& common_)
+template <typename Common>
+execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& common)
 {
-  if (common_.first.empty())
+  if (common.empty())
     return tree;
 
   // TODO: refactor to debug
-  std::vector<execplan::ParseTree*> common;
-  std::copy(common_.first.begin(), common_.first.end(), std::back_inserter(common));
-  std::sort(common.begin(), common.end(),
-            [](auto left, auto right) { return left->data()->data() < right->data()->data(); });
-
   execplan::ParseTree* result = newAndNode();
   auto current = result;
   for (auto treenode = common.begin(); treenode != common.end();)
@@ -372,36 +355,14 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 #endif
 }
 
-std::set<execplan::ParseTree*> collectAllNodes(
-    execplan::ParseTree* tree, std::set<execplan::ParseTree*> result = std::set<execplan::ParseTree*>{})
-{
-  result.insert(tree);
-  if (tree->left())
-  {
-    collectAllNodes(tree->left(), result);
-  }
-  if (tree->right())
-  {
-    collectAllNodes(tree->right(), result);
-  }
-  return result;
-}
-
-execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree, bool dumpOnly)
+template <bool stableSort>
+execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree)
 {
   dumpTreeFiles(tree, "0.initial");
 
-  if (dumpOnly)
-    return tree;
-
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
-
-  //// SHIIITTT
-  for (auto it = common.first.begin(); it != common.first.end(); ++it)
-  {
-    common.second.insert(*it);
-  }
+  std::copy(common.first.begin(), common.first.end(), std::inserter(common.second, common.second.begin()));
 
 #ifdef debug_rewrites
   details::printContainer(
@@ -411,32 +372,26 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
 
   details::removeFromTreeIterative(&tree, common);
 
-  auto result = details::appendToRoot(tree, common);
+  execplan::ParseTree* result = nullptr;
+  if constexpr (stableSort)
+  {
+    std::vector<execplan::ParseTree*> commonSorted;
+    std::copy(common.first.begin(), common.first.end(), std::back_inserter(commonSorted));
+    std::sort(commonSorted.begin(), commonSorted.end(),
+              [](auto left, auto right) { return left->data()->data() < right->data()->data(); });
+    result = details::appendToRoot(tree, commonSorted);
+  }
+  else
+  {
+    result = details::appendToRoot(tree, common.first);
+  }
 
   dumpTreeFiles(result, "3.final");
   return result;
 }
 
-std::string normalizeNode(std::string const& left, std::string const& right, execplan::Operator* op)
-{
-  if (left < right)
-    return left + op->data() + right;
-
-  std::unique_ptr<execplan::Operator> opposite(op->opposite());
-
-  return right + opposite->data() + left;
-}
-
-bool simpleFiltersCmp(const SimpleFilter* left, const SimpleFilter* right)
-{
-  auto leftNorm = normalizeNode(left->lhs()->data(), left->rhs()->data(), left->op().get());
-  auto rightNorm = normalizeNode(right->lhs()->data(), right->rhs()->data(), right->op().get());
-#if 0
-  std::cerr << "simpleFiltersCmp: Left Normalized: " << leftNorm << std::endl;
-  std::cerr << "simpleFiltersCmp: Right Normalized: " << rightNorm << std::endl;
-#endif
-  return leftNorm < rightNorm;
-}
+template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<false>(execplan::ParseTree* tree);
+template execplan::ParseTree* extractCommonLeafConjunctionsToRoot<true>(execplan::ParseTree* tree);
 
 bool NodeSemanticComparator::operator()(std::unique_ptr<execplan::ParseTree> const& left,
                                         std::unique_ptr<execplan::ParseTree> const& right) const

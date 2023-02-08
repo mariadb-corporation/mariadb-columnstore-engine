@@ -5,6 +5,7 @@
  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  You should have received a copy of the GNU General Public License along with this program; if not, write to
  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. */
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -80,7 +81,7 @@ TEST_P(ParseTreeTest, Rewrite)
   printTree(GetParam().queryName, initialTree, "initial");
 
   TreePtr rewrittenTree;
-  rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot(initialTree));
+  rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot<true>(initialTree));
 
 
   if (GetParam().manually_rewritten_query)
