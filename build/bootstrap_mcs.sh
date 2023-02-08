@@ -174,7 +174,7 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMSTORE_ASAN=ON"
         warn "Building with ASAN"
     fi
 
@@ -364,4 +364,6 @@ run_unit_tests
 run_microbenchmarks_tests
 install
 start_service
+message "Creating test database"
+mariadb -e "create database if not exists test;
 message "$color_green FINISHED $color_normal"

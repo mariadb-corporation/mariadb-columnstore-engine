@@ -573,7 +573,7 @@ void Config::deleteInstanceMap()
 
   if (globConfigInstancePtr)
   {
-    globConfigInstancePtr = nullptr;
+    delete globConfigInstancePtr.get();
   }
 }
 
