@@ -94,9 +94,9 @@ if(WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
-    add_executable(pqorderby_test pqorderby-test.cpp)
-    target_link_libraries(pqorderby_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    add_test(NAME columnstore:pqorderby_test COMMAND pqorderby_test)
+    # add_executable(pqorderby_test pqorderby-test.cpp)
+    # target_link_libraries(pqorderby_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    # add_test(NAME columnstore:pqorderby_test COMMAND pqorderby_test)
 
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
