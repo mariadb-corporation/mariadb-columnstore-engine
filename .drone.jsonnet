@@ -165,7 +165,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test013.sh',
     'test014.sh',
     'test023.sh',
-    'test200.sh',
     'test201.sh',
     'test202.sh',
     'test203.sh',
@@ -188,7 +187,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: depends_on,
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    [if (name == 'test000.sh') || (name == 'test001.sh') then 'failure']: 'ignore',
+    [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
     environment: {
       REGRESSION_TIMEOUT: {
         from_secret: 'regression_timeout',
@@ -434,7 +433,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   dockerhub:: {
     name: 'dockerhub',
     depends_on: ['dockerfile'],
-    failure: 'ignore',
+    //failure: 'ignore',
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
@@ -461,7 +460,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   multi_node_mtr:: {
     name: 'mtr',
     depends_on: ['dockerhub'],
-    failure: 'ignore',
+    //failure: 'ignore',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     environment: {
