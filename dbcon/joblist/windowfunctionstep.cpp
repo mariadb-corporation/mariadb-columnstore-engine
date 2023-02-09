@@ -18,7 +18,7 @@
 
 //  $Id: windowfunctionstep.cpp 9681 2013-07-11 22:58:05Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -557,7 +557,7 @@ SJSTEP WindowFunctionStep::makeWindowFunctionStep(SJSTEP& step, JobInfo& jobInfo
   ws->initialize(ds->getDeliveredRowGroup(), jobInfo);
 
   // restore the original delivery coloumns
-  // kemm jobInfo.deliveredCols = jobInfo.windowDels;
+  jobInfo.deliveredCols = jobInfo.windowDels;
   jobInfo.nonConstDelCols.clear();
 
   for (RetColsVector::iterator i = jobInfo.windowDels.begin(); i < jobInfo.windowDels.end(); i++)
