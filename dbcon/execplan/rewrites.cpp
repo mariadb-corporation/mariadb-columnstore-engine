@@ -29,7 +29,7 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
   os << std::endl;
 }
 
-#define debug_rewrites true
+#define debug_rewrites false
 
 using CommonContainer =
     std::pair<std::set<execplan::ParseTree*, NodeSemanticComparator>, std::set<execplan::ParseTree*>>;
@@ -70,11 +70,6 @@ enum class ChildType
   Delete,
   Leave
 };
-
-bool isSimpleFilter(execplan::ParseTree* node)
-{
-  return !!dynamic_cast<execplan::SimpleFilter*>(node->data());
-}
 
 void printTreeLevel(execplan::ParseTree* root, int level)
 {
@@ -335,9 +330,9 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 #ifdef debug_rewrites
   messageqcpp::ByteStream beforetree;
   ObjectReader::writeParseTree(filters, beforetree);
-  std::ofstream before("/tmp/filters." + name + ".data");
+  std::ofstream before(startup::StartUp::tmpDir() + "filters." + name + ".data");
   before << beforetree;
-  std::string dotname = "/tmp/filters." + name + ".dot";
+  std::string dotname = startup::StartUp::tmpDir() + "filters." + name + ".dot";
   filters->drawTree(dotname);
   std::string dotInvoke = "dot -Tpng ";
   std::string convert = dotInvoke + dotname + " -o " + dotname + ".png";

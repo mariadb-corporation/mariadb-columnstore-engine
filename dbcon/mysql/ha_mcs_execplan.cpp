@@ -7101,7 +7101,9 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     outerJoinStack.push(ptp);
   }
 
-  if (filters)
+  config::Config* cf = config::Config::makeConfig();
+  string rewriteEnabled = cf->getConfig("Rewrites", "CommonLeafConjunctionsToTop");
+  if (filters && rewriteEnabled != "OFF")
   {
     filters = extractCommonLeafConjunctionsToRoot(filters);
   }

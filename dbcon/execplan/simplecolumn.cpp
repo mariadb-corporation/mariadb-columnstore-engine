@@ -225,12 +225,6 @@ const string SimpleColumn::data() const
   return string("`" + fSchemaName + "`.`" + fTableName + "`.`" + fColumnName + "`");
 }
 
-bool SimpleColumn::operator<(const SimpleColumn& t) const
-{
-  return std::tie(fData, fTableAlias,fSchemaName, fColumnName ) < std::tie(t.fData, t.fTableAlias, t.fSchemaName, t.fColumnName);
-}
-
-
 SimpleColumn& SimpleColumn::operator=(const SimpleColumn& rhs)
 {
   if (this != &rhs)

@@ -22,14 +22,13 @@ BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
-optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
+optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 
 source $( optparse.build )
 
@@ -171,11 +170,6 @@ build()
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
         message "Buiding with unittests"
-    fi
-
-    if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON"
-        warn "Building with ASAN"
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
@@ -353,7 +347,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
 select_branch
 
-if [[ $INSTALL_DEPS = true ]] ; then
+if [[ $SKIP_DEPS = false ]] ; then
     install_deps
 fi
 
