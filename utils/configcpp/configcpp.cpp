@@ -561,17 +561,17 @@ void Config::writeConfigFile(messageqcpp::ByteStream msg) const
 /* static */
 void Config::deleteInstanceMap()
 {
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+  // boost::mutex::scoped_lock lk(fInstanceMapMutex);
 
-  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
-  {
-    Config* instance = iter->second;
-    delete instance;
-  }
+  // for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
+  // {
+  //   Config* instance = iter->second;
+  //   delete instance;
+  // }
 
-  fInstanceMap.clear();
+  // fInstanceMap.clear();
 
-  globConfigInstancePtr = nullptr;
+  // globConfigInstancePtr = nullptr;
 }
 
 /* static */

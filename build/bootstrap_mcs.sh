@@ -365,5 +365,5 @@ run_microbenchmarks_tests
 install
 start_service
 message "Creating test database"
-mariadb -e "create database if not exists test;
+mariadb -e "create database if not exists test;"
 message "$color_green FINISHED $color_normal"
