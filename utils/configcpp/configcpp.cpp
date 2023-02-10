@@ -571,10 +571,7 @@ void Config::deleteInstanceMap()
 
   fInstanceMap.clear();
 
-  if (globConfigInstancePtr)
-  {
-    delete globConfigInstancePtr.get();
-  }
+  globConfigInstancePtr = nullptr;
 }
 
 /* static */
@@ -675,6 +672,20 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
   }
   // NOTREACHED
   return {};
+}
+
+void Config::ConfigDeleter::operator()(Config* config)
+{
+  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+
+  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
+  {
+    Config* instance = iter->second;
+    delete instance;
+  }
+
+  fInstanceMap.clear();
+  delete config;
 }
 
 }  // namespace config
