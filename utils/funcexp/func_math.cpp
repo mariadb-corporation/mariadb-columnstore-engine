@@ -45,6 +45,9 @@ using namespace logging;
 
 #include "funchelpers.h"
 
+
+#include "logicoperator.h"
+
 // Just in case they're missing...
 #ifndef M_LN2
 #define M_LN2 0.69314718055994530942 /* log_e 2 */
@@ -344,6 +347,9 @@ CalpontSystemCatalog::ColType Func_atan::operationType(FunctionParm& fp,
 
 double Func_atan::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
+
+
+
   switch (parm[0]->data()->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::BIGINT:
@@ -1336,6 +1342,9 @@ CalpontSystemCatalog::ColType Func_sin::operationType(FunctionParm& fp,
 
 double Func_sin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
+
+  [[maybe_unused]] execplan::TreeNode* node = new execplan::LogicOperator("and");
+
   switch (parm[0]->data()->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::BIGINT:
@@ -1448,6 +1457,9 @@ double Func_sin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
       oss << "sin: datatype of " << execplan::colDataTypeToString(parm[0]->data()->resultType().colDataType);
       throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
     }
+
+
+
   }
 }
 

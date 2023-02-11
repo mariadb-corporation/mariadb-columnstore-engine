@@ -317,3 +317,12 @@ TEST_F(RowDecimalTest, RowEqualsCheck)
     }
   }
 }
+
+
+#include "logicoperator.h"
+
+TEST(LEAK, leak)
+{
+  [[maybe_unused]] execplan::TreeNode* node = new execplan::LogicOperator("and");
+
+}
