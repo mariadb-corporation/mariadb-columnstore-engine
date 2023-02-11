@@ -1,6 +1,7 @@
 #include "rewrites.h"
 #include <typeinfo>
 #include "objectreader.h"
+#include "installdir.h"
 #include "parsetree.h"
 #include "operator.h"
 #include "simplefilter.h"
