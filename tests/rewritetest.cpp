@@ -41,12 +41,12 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0
          (treeEqual(fst->left(), snd->right(), depth + 1) && treeEqual(fst->right(), snd->left(), depth + 1));
 }
 
-#define REWRITE_TREE_TEST_DEBUG true;
+#define REWRITE_TREE_TEST_DEBUG false
 
 
 void printTree(const std::string& queryName, execplan::ParseTree* tree, const std::string& treeName)
 {
-#ifdef REWRITE_TREE_TEST_DEBUG
+#if REWRITE_TREE_TEST_DEBUG
   std::string dotPath = std::string("/tmp/") + queryName;
   std::string dotFile = dotPath + "." + treeName + ".dot";
 

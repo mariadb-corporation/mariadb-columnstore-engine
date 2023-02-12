@@ -74,7 +74,7 @@ enum class ChildType
 
 void printTreeLevel(execplan::ParseTree* root, int level)
 {
-#ifdef debug_rewrites
+#if debug_rewrites
   auto sep = std::string(level * 4, '-');
   auto& node = *(root->data());
   std::cerr << sep << ": " << root->data()->data() << " " << boost::core::demangle(typeid(node).name()) << " "
@@ -208,7 +208,7 @@ void deleteOneNode(execplan::ParseTree** node)
   (*node)->nullLeft();
   (*node)->nullRight();
 
-#ifdef debug_rewrites
+#if debug_rewrites
   std::cerr << "   Deleting: " << (*node)->data() << " " << boost::core::demangle(typeid(**node).name())
             << " "
             << "ptr: " << *node << std::endl;
@@ -326,14 +326,20 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
 
 }  // namespace details
 
-void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
+void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name, std::string dumpfolder = {})
 {
-#ifdef debug_rewrites
+#if debug_rewrites
   messageqcpp::ByteStream beforetree;
   ObjectReader::writeParseTree(filters, beforetree);
-  std::ofstream before(startup::StartUp::tmpDir() + "filters." + name + ".data");
+
+  if (dumpfolder.empty())
+  {
+    dumpfolder = startup::StartUp::tmpDir();
+  }
+
+  std::ofstream before(dumpfolder + "filters." + name + ".data");
   before << beforetree;
-  std::string dotname = startup::StartUp::tmpDir() + "filters." + name + ".dot";
+  std::string dotname = dumpfolder + "filters." + name + ".dot";
   filters->drawTree(dotname);
   std::string dotInvoke = "dot -Tpng ";
   std::string convert = dotInvoke + dotname + " -o " + dotname + ".png";
@@ -344,13 +350,13 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name)
 template <bool stableSort>
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree)
 {
-  dumpTreeFiles(tree, "0.initial");
+  dumpTreeFiles(tree, ".initial", stableSort ? "/tmp/" : "");
 
   details::CommonContainer common;
   details::collectCommonConjuctions(tree, common);
   std::copy(common.first.begin(), common.first.end(), std::inserter(common.second, common.second.begin()));
 
-#ifdef debug_rewrites
+#if debug_rewrites
   details::printContainer(
       std::cerr, common.first, "\n", [](auto treenode) { return treenode->data()->data(); },
       "Common Leaf Conjunctions:");
@@ -372,7 +378,7 @@ execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tr
     result = details::appendToRoot(tree, common.first);
   }
 
-  dumpTreeFiles(result, "3.final");
+  dumpTreeFiles(result, ".final", stableSort ? "/tmp/" : "");
   return result;
 }
 
