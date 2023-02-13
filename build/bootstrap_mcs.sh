@@ -174,7 +174,7 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMSTORE_ASAN=ON"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMNSTORE_ASAN=ON"
         warn "Building with ASAN"
     fi
 
