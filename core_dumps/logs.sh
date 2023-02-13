@@ -11,7 +11,7 @@ mkdir "$DIR_NAME"
 dump_log ()
 {
     name=$1
-    journalctl -u "$name".service > "$DIR_NAME"/${name}_${STEP_NAME}".log
+    journalctl -u "$name".service > "$DIR_NAME"/"${name}_${STEP_NAME}".log
 }
 
 dump_log "mcs-ddlproc"
