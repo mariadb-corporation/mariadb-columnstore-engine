@@ -135,4 +135,11 @@ IDBFileSystem& IDBFactory::getFs(IDBDataFile::Types type)
   return *(s_plugins[type].filesystem);
 }
 
+FileFactoryEnt::~FileFactoryEnt()
+{
+//  delete filesystem;
+//  delete factory;
+}
+
+
 }  // namespace idbdatafile

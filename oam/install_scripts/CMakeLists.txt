@@ -20,8 +20,13 @@ SET(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG})
 
 
 if (WITH_COLUMNSTORE_ASAN)
+  SET(ASAN_PATH "/tmp/asan")
+  if (WITH_COLUMNSTORE_REPORT_PATH)
+    SET(ASAN_PATH "${WITH_COLUMNSTORE_REPORT_PATH}/asan")
+  endif (WITH_COLUMNSTORE_REPORT_PATH)
+
   SET(LD_PRELOAD_STRING "")
-  SET(ALLOC_CONFIG "ASAN_OPTIONS=print_stats:true,verbosity=1,check_initialization_order=1,detect_stack_use_after_return=1,atexit=true,log_path=/core/asan")
+  SET(ALLOC_CONFIG "ASAN_OPTIONS=print_stats=true,verbosity=1,check_initialization_order=1,detect_stack_use_after_return=1,atexit=true,log_path=${ASAN_PATH}")
   SET(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG})
   SET(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG})
   SET(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG})

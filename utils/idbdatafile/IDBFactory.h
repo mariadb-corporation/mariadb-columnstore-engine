@@ -42,6 +42,8 @@ struct FileFactoryEnt
     ;
   }
 
+  ~FileFactoryEnt();
+
   IDBDataFile::Types type;
   std::string name;
   FileFactoryBase* factory;

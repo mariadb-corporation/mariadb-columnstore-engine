@@ -30,6 +30,7 @@ optparse.define short=B long=run-microbench="Compile and run microbenchmarks " v
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 
 source $( optparse.build )
 
@@ -139,6 +140,7 @@ clean_old_installation()
     rm -f /var/lib/columnstore/storagemanager/cs-initialized
     rm -rf /var/log/mariadb/columnstore/*
     rm -rf /tmp/*
+    rm -rf $REPORT_PATH
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
@@ -175,8 +177,7 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        #MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMNSTORE_ASAN=ON -DSECURITY_HARDENED=OFF"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
         warn "Building with ASAN"
     fi
 
@@ -287,6 +288,9 @@ run_microbenchmarks_tests()
 install()
 {
     message "Installing MariaDB"
+
+    mkdir -p $REPORT_PATH
+    chmod 777 $REPORT_PATH
 
     check_user_and_group
 
