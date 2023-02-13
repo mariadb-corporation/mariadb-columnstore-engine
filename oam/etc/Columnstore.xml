@@ -246,4 +246,7 @@
 	<DataRedundancyConfig>
 		<DBRoot1PMs/>
 	</DataRedundancyConfig>
+	<Rewrites>
+		<CommonLeafConjunctionsToTop>Y</CommonLeafConjunctionsToTop>
+	</Rewrites>
 </Columnstore>
