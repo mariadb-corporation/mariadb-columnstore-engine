@@ -346,10 +346,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
       // list storage manager binary
       'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
