@@ -67,6 +67,7 @@ local core_dump_format = 'https://raw.githubusercontent.com/mariadb-corporation/
 local core_dump_check = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_check.sh';
 local core_dump_drop = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_drop.sh';
 local ansi2html = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/ansi2html.sh';
+local logs = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/with_service_logs/core_dumps/logs.sh';
 
 local platformMap(platform, arch) =
   local platform_map = {
@@ -227,10 +228,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y gdb gawk epel-release which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
@@ -263,10 +266,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
@@ -301,6 +306,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/logs.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Mtr"',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
@@ -387,6 +393,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'echo "---------- start columnstore debug log ----------"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"',
       'echo "---------- end columnstore debug log ----------"',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/logs.sh"',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "/core_dump_check.sh core /core/ Smoke"',
       'docker cp smoke$${DRONE_BUILD_NUMBER}:/core/ /drone/src/' + result + '/',
       'ls -l /drone/src/' + result,
