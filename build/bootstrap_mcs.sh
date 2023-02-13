@@ -137,6 +137,7 @@ clean_old_installation()
     rm -rf /var/lib/columnstore/local/
     rm -f /var/lib/columnstore/storagemanager/storagemanager-lock
     rm -f /var/lib/columnstore/storagemanager/cs-initialized
+    rm -rf /var/log/mariadb/columnstore/*
     rm -rf /tmp/*
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
@@ -174,7 +175,8 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMNSTORE_ASAN=ON"
+        #MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMNSTORE_ASAN=ON -DSECURITY_HARDENED=OFF"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON"
         warn "Building with ASAN"
     fi
 
