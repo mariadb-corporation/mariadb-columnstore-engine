@@ -59,7 +59,7 @@ class SlaveComm
 
   /** Use this ctor to have it connected to the rest of the DBRM system */
   EXPORT SlaveComm(std::string hostname, SlaveDBRMNode* s);  // hostname = 'DBRM_WorkerN'
-  EXPORT ~SlaveComm();
+  EXPORT ~SlaveComm() {};
 
   EXPORT void run();
   EXPORT void stop();
@@ -116,15 +116,15 @@ class SlaveComm
   void saveDelta();
   bool processExists(const uint32_t pid, const std::string& pname);
 
-  messageqcpp::MessageQueueServer* server;
+  std::unique_ptr<messageqcpp::MessageQueueServer> server;
   messageqcpp::IOSocket master;
-  SlaveDBRMNode* slave;
+  std::unique_ptr<SlaveDBRMNode> slave;
   std::string savefile;
   bool release, die, firstSlave, saveFileToggle, takeSnapshot, doSaveDelta, standalone, printOnly;
   messageqcpp::ByteStream delta;
-  idbdatafile::IDBDataFile* currentSaveFile;
+  std::unique_ptr<idbdatafile::IDBDataFile> currentSaveFile;
   std::string journalName;
-  idbdatafile::IDBDataFile* journalh;
+  std::unique_ptr<idbdatafile::IDBDataFile> journalh;
   int64_t snapshotInterval, journalCount;
   struct timespec MSG_TIMEOUT;
 #ifdef _MSC_VER

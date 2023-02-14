@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <cstdio>
 #include <ctime>
+#include <memory>
 #ifdef _MSC_VER
 #include <io.h>
 #include <psapi.h>
@@ -63,8 +64,6 @@ namespace BRM
 {
 SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
  : slave(s)
- , currentSaveFile(NULL)
- , journalh(NULL)
 #ifdef _MSC_VER
  , fPids(0)
  , fMaxPids(64)
@@ -79,7 +78,7 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
   {
     try
     {
-      server = new MessageQueueServer(hostname);
+      server = std::make_unique<MessageQueueServer>(hostname);
       break;
     }
     catch (runtime_error& re)
@@ -141,8 +140,8 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
     journalName = savefile + "_journal";
     const char* filename = journalName.c_str();
 
-    journalh = IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0);
-    if (journalh == NULL)
+    journalh.reset(IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0));
+    if (journalh == nullptr)
       throw runtime_error("Could not open the BRM journal for writing!");
   }
   else
@@ -170,8 +169,6 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
 }
 
 SlaveComm::SlaveComm()
- : currentSaveFile(NULL)
- , journalh(NULL)
 #ifdef _MSC_VER
  , fPids(0)
  , fMaxPids(64)
@@ -204,23 +201,9 @@ SlaveComm::SlaveComm()
   server = NULL;
   standalone = true;
   printOnly = false;
-  slave = new SlaveDBRMNode();
+  slave = std::make_unique<SlaveDBRMNode>();
 }
 
-SlaveComm::~SlaveComm()
-{
-  delete server;
-  server = NULL;
-
-  if (firstSlave)
-  {
-    delete currentSaveFile;
-    currentSaveFile = NULL;
-  }
-
-  delete journalh;
-  journalh = NULL;
-}
 
 void SlaveComm::stop()
 {
@@ -1958,8 +1941,7 @@ void SlaveComm::do_confirm()
   {
     if (!currentSaveFile)
     {
-      currentSaveFile =
-          IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0);
+      currentSaveFile.reset(IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0));
     }
 
     if (currentSaveFile == NULL)
@@ -1993,13 +1975,13 @@ void SlaveComm::do_confirm()
     }
 
     currentSaveFile->flush();
-    delete currentSaveFile;
-    currentSaveFile = NULL;
+
+    currentSaveFile = nullptr;
     saveFileToggle = !saveFileToggle;
 
-    delete journalh;
-    journalh = IDBDataFile::open(IDBPolicy::getType(journalName.c_str(), IDBPolicy::WRITEENG),
-                                 journalName.c_str(), "w+b", 0);
+    ;
+    journalh.reset(IDBDataFile::open(IDBPolicy::getType(journalName.c_str(), IDBPolicy::WRITEENG),
+                                 journalName.c_str(), "w+b", 0));
 
     if (!journalh)
       throw runtime_error("Could not open the BRM journal for writing!");

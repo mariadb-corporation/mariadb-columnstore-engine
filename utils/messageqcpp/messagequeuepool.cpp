@@ -84,11 +84,14 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& modul
   clock_gettime(CLOCK_MONOTONIC, &now);
   uint64_t nowSeconds = TimeSpecToSeconds(&now);
 
+
+
   newClientObject->client.reset(new MessageQueueClient(module));
   newClientObject->inUse = true;
   newClientObject->lastUsed = nowSeconds;
+  auto result = newClientObject->client.get();
   clientMap.emplace(std::move(module), std::move(newClientObject));
-  return newClientObject->client.get();
+  return result;
 }
 
 MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search)
