@@ -58,8 +58,10 @@ class SlaveComm
   EXPORT SlaveComm();
 
   /** Use this ctor to have it connected to the rest of the DBRM system */
-  EXPORT SlaveComm(std::string hostname, SlaveDBRMNode* s);  // hostname = 'DBRM_WorkerN'
+  EXPORT SlaveComm(std::string hostname);  // hostname = 'DBRM_WorkerN'
   EXPORT ~SlaveComm() {};
+
+  SlaveDBRMNode& getSlaveNode() { return *slave; }
 
   EXPORT void run();
   EXPORT void stop();
@@ -127,11 +129,6 @@ class SlaveComm
   std::unique_ptr<idbdatafile::IDBDataFile> journalh;
   int64_t snapshotInterval, journalCount;
   struct timespec MSG_TIMEOUT;
-#ifdef _MSC_VER
-  boost::mutex fPidMemLock;
-  DWORD* fPids;
-  DWORD fMaxPids;
-#endif
 };
 
 }  // namespace BRM

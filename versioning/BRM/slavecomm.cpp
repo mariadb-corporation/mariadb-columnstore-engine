@@ -28,10 +28,6 @@
 #include <cstdio>
 #include <ctime>
 #include <memory>
-#ifdef _MSC_VER
-#include <io.h>
-#include <psapi.h>
-#endif
 
 #include "messagequeue.h"
 #include "bytestream.h"
@@ -62,16 +58,11 @@ void timespec_sub(const struct timespec& tv1, const struct timespec& tv2, double
 
 namespace BRM
 {
-SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
- : slave(s)
-#ifdef _MSC_VER
- , fPids(0)
- , fMaxPids(64)
-#endif
+SlaveComm::SlaveComm(string hostname)
 {
   config::Config* config = config::Config::makeConfig();
   string tmp;
-
+  slave = std::make_unique<SlaveDBRMNode>();
   bool tellUser = true;
 
   for (;;)
@@ -169,10 +160,6 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
 }
 
 SlaveComm::SlaveComm()
-#ifdef _MSC_VER
- , fPids(0)
- , fMaxPids(64)
-#endif
 {
   config::Config* config = config::Config::makeConfig();
 
@@ -1954,9 +1941,6 @@ void SlaveComm::do_confirm()
 
     tmp = savefile + (saveFileToggle ? 'A' : 'B');
     slave->saveState(tmp);
-#ifndef _MSC_VER
-    tmp += '\n';
-#endif
     int err = 0;
 
     // MCOL-1558.  Make the _current file relative to DBRMRoot.
@@ -2126,11 +2110,6 @@ int SlaveComm::replayJournal(string prefix)
     fName = prefix.substr(0, prefix.length() - 1) + "_journal";
   }
 
-#ifdef _MSC_VER
-  else if (tmp == "a" || tmp == "b")
-    fName = prefix.substr(0, prefix.length() - 1) + "_journal";
-
-#endif
   else
   {
     fName = prefix + "_journal";
@@ -2248,8 +2227,6 @@ void SlaveComm::do_ownerCheck(ByteStream& msg)
   master.write(reply);
 }
 
-// FIXME: needs to be refactored along with SessionManagerServer::lookupProcessStatus()
-#if defined(__linux__)
 bool SlaveComm::processExists(const uint32_t pid, const string& pname)
 {
   string stat;
@@ -2281,69 +2258,6 @@ bool SlaveComm::processExists(const uint32_t pid, const string& pname)
 
   return true;
 }
-
-#elif defined(_MSC_VER)
-// FIXME
-bool SlaveComm::processExists(const uint32_t pid, const string& pname)
-{
-  boost::mutex::scoped_lock lk(fPidMemLock);
-
-  if (!fPids)
-    fPids = (DWORD*)malloc(fMaxPids * sizeof(DWORD));
-
-  DWORD needed = 0;
-
-  if (EnumProcesses(fPids, fMaxPids * sizeof(DWORD), &needed) == 0)
-    return false;
-
-  while (needed == fMaxPids * sizeof(DWORD))
-  {
-    fMaxPids *= 2;
-    fPids = (DWORD*)realloc(fPids, fMaxPids * sizeof(DWORD));
-
-    if (EnumProcesses(fPids, fMaxPids * sizeof(DWORD), &needed) == 0)
-      return false;
-  }
-
-  DWORD numPids = needed / sizeof(DWORD);
-
-  for (DWORD i = 0; i < numPids; i++)
-  {
-    if (fPids[i] == pid)
-    {
-      TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
-
-      // Get a handle to the process.
-      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, fPids[i]);
-
-      // Get the process name.
-      if (hProcess != NULL)
-      {
-        HMODULE hMod;
-        DWORD cbNeeded;
-
-        if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded))
-          GetModuleBaseName(hProcess, hMod, szProcessName, sizeof(szProcessName) / sizeof(TCHAR));
-
-        CloseHandle(hProcess);
-
-        if (pname == szProcessName)
-          return true;
-      }
-    }
-  }
-
-  return false;
-}
-#elif defined(__FreeBSD__)
-// FIXME
-bool SlaveComm::processExists(const uint32_t pid, const string& pname)
-{
-  return false;
-}
-#else
-#error Need to port processExists()
-#endif
 
 void SlaveComm::do_dmlLockLBIDRanges(ByteStream& msg)
 {
