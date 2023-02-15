@@ -1,3 +1,15 @@
+/*
+ Copyright (C) 2022 MariaDB Corporation
+ This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+ Public License as published by the Free Software Foundation; version 2 of the License. This program is
+ distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with this program; if not, write to
+ the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+
+
 #include "rewrites.h"
 #include <typeinfo>
 #include "objectreader.h"
@@ -30,7 +42,6 @@ void printContainer(std::ostream& os, const T& container, const std::string& del
   os << std::endl;
 }
 
-#define debug_rewrites false
 
 using CommonContainer =
     std::pair<std::set<execplan::ParseTree*, NodeSemanticComparator>, std::set<execplan::ParseTree*>>;
@@ -108,16 +119,17 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   }
 
   printTreeLevel(root, level);
-
+  // the condition below means leaf node
   if (root->left() == nullptr && root->right() == nullptr && orMeeted && andParent)
   {
+    // we want to collect it if it is a child of and node and or node was met before
     if (castToFilter(root))
     {
       accumulator.first.insert(root);
     }
     return;
   }
-
+  // we do set intersection for all the lower levels for the or node
   if (operatorType(root) == OP_OR && !orMeeted)
   {
     CommonContainer leftAcc;
@@ -138,6 +150,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   return;
 }
 
+// this utility function creates new and node
 execplan::ParseTree* newAndNode()
 {
   execplan::Operator* op = new execplan::Operator();
@@ -218,6 +231,7 @@ void deleteOneNode(execplan::ParseTree** node)
   *node = nullptr;
 }
 
+// this utility function adds one stack frame to a stack for dfs traversal
 void addStackFrame(DFSStack& stack, GoTo direction, execplan::ParseTree* node)
 {
   if (direction == GoTo::Left)
@@ -240,6 +254,9 @@ void addStackFrame(DFSStack& stack, GoTo direction, execplan::ParseTree* node)
   }
 }
 
+// this utility function reaplces the flag for in the stack frame,
+// indicating whether to delete, unchain or leave child node. It depends on the direction
+// specified in the stack frame
 void replaceContainsTypeFlag(StackFrame& stackframe, ChildType containsflag)
 {
   if (stackframe.direction == GoTo::Right)
@@ -248,25 +265,26 @@ void replaceContainsTypeFlag(StackFrame& stackframe, ChildType containsflag)
     stackframe.containsRight = containsflag;
 }
 
+// this utility function does the main transformation
 void fixUpTree(execplan::ParseTree** node, ChildType ltype, ChildType rtype,
                StackFrame* parentframe = nullptr)
 {
   if (ltype == ChildType::Leave)
   {
-    if (rtype != ChildType::Leave)
-    {
+    if (rtype != ChildType::Leave) // if we don't leave the right node, we replace
+    {                              // the parent node with the left child
       execplan::ParseTree* oldNode = *node;
-      if (rtype == ChildType::Delete)
-        deleteOneNode((*node)->rightRef());
+      if (rtype == ChildType::Delete) // we delete the node that is a duplicate
+        deleteOneNode((*node)->rightRef()); // of something in the common
       *node = (*node)->left();
       deleteOneNode(&oldNode);
     }
   }
   else
   {
-    if (ltype == ChildType::Delete)
+    if (ltype == ChildType::Delete) // same as above
       deleteOneNode((*node)->leftRef());
-    if (rtype == ChildType::Leave)
+    if (rtype == ChildType::Leave)  // replace the parent with the right child
     {
       execplan::ParseTree* oldNode = *node;
       *node = (*node)->right();
@@ -276,7 +294,9 @@ void fixUpTree(execplan::ParseTree** node, ChildType ltype, ChildType rtype,
     {
       if (rtype == ChildType::Delete)
         deleteOneNode((*node)->rightRef());
-
+      // if parent exists and botht children are deleted/unchained
+      // we mark the node for deletion
+      // otherwise it is the root and we just delete it
       if (parentframe)
         replaceContainsTypeFlag(*parentframe, ChildType::Delete);
       else
