@@ -118,7 +118,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
 
-  if (operatorType(root) == OP_OR)
+  if (operatorType(root) == OP_OR && !orMeeted)
   {
     CommonContainer leftAcc;
     CommonContainer rightAcc;
