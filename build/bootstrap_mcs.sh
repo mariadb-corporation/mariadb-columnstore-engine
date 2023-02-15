@@ -152,7 +152,7 @@ build()
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
-                     -DPLUGIN_COLUMNSTORE=YES
+                     -DPLUGIN_COLUMNSTORE=NO
                      -DPLUGIN_MROONGA=NO
                      -DPLUGIN_ROCKSDB=NO
                      -DPLUGIN_TOKUDB=NO
@@ -177,7 +177,7 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MSAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
         warn "Building with ASAN"
     fi
 

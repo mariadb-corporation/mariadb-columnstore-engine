@@ -205,7 +205,7 @@ IF (NOT INSTALL_LAYOUT)
     ENDIF()
     OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
     OPTION(SECURITY_HARDENED_NEW "Use new security-enhancing compilier features" OFF)
-    IF(SECURITY_HARDENED)
+    IF(SECURITY_HARDENED AND NOT WITH_ASAN AND NOT WITH_UBSAN AND NOT WITH_TSAN AND NOT WITH_GPROF)
       # security-enhancing flags
       MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
       MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
