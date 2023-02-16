@@ -24,6 +24,8 @@
 namespace execplan
 {
 
+#define debug_rewrites false
+
 execplan::OpType oppositeOperator(execplan::OpType op);
 
 struct NodeSemanticComparator
