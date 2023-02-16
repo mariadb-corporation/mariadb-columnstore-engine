@@ -130,7 +130,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
     return;
   }
   // we do set intersection for all the lower levels for the or node
-  if (operatorType(root) == OP_OR && !orMeeted)
+  if (operatorType(root) == OP_OR)
   {
     CommonContainer leftAcc;
     CommonContainer rightAcc;
