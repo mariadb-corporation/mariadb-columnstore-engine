@@ -382,7 +382,7 @@ if __name__ == '__main__':
                             if not os.path.exists(dbrmroot):
                                 os.makedirs(dbrmroot)
                                 if use_systemd:
-                                    os.system(f'chown -R {USER}:{GROUP} {COLUMNSTORE_TMP_DIR}')
+                                    os.system('chown -R {}:{} {}'.format(USER, GROUP, COLUMNSTORE_TMP_DIR))
                                     shutil.chown(dbrmroot, USER, GROUP)
 
                             current_name = '{}_{}'.format(dbrmroot, meta_type)
