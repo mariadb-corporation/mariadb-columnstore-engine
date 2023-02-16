@@ -61,9 +61,6 @@ SimpleFilter::SimpleFilter(const string& sql, ForTestPurposesWithoutColumnsOIDS)
   parse(sql, ForTestPurposesWithoutColumnsOIDS{});
 }
 
-
-
-
 SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone)
  : fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA), fTimeZone(timeZone)
 {

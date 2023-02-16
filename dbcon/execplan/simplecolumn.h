@@ -59,10 +59,10 @@ class SimpleColumn : public ReturnedColumn
    */
   class ForTestPurposeWithoutOID{};
 
-
-
   SimpleColumn();
+
   SimpleColumn(const std::string& token, ForTestPurposeWithoutOID);
+
   SimpleColumn(const std::string& token, const uint32_t sessionID = 0);
 
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
