@@ -27,6 +27,7 @@ CMAPI_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'cmapi_server.conf')
 MCS_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
 SM_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
 BYPASS_SM_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/BRM_saves'
+COLUMNSTORE_TMP_DIR = '/tmp/columnstore_tmp_files'
 MCS_DATA_PATH = '@ENGINE_DATADIR@'
 MCS_MODULE_FILE_PATH = os.path.join(MCS_DATA_PATH, 'local/module')
 MCS_BIN_DIR = '@ENGINE_BINDIR@'
@@ -381,6 +382,7 @@ if __name__ == '__main__':
                             if not os.path.exists(dbrmroot):
                                 os.makedirs(dbrmroot)
                                 if use_systemd:
+                                    os.system(f'chown -R {USER}:{GROUP} {COLUMNSTORE_TMP_DIR}')
                                     shutil.chown(dbrmroot, USER, GROUP)
 
                             current_name = '{}_{}'.format(dbrmroot, meta_type)
