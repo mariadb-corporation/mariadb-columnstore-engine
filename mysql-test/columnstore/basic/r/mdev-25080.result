@@ -2,8 +2,8 @@
 # MDEV-25080: Allow pushdown of queries involving UNIONs
 # in outer select to foreign engines
 #
-# Uncomment the actual SELECTs and add ORDER BY clause
-# after MCOL-5222 is fixed
+# Remove the sorted_result MTR qualifier and add ORDER BY
+# clause after MCOL-5222 is fixed
 #
 CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
@@ -20,39 +20,128 @@ INSERT INTO t2 VALUES ('bcd'), ('cde'), ('def'), ('efg');
 INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
 INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
 # Pushdown of the whole UNION
+SELECT * FROM t1 UNION SELECT * FROM t2;
+a
+abc
+bcd
+cde
+def
+efg
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+a
+abc
+bcd
+bcd
+cde
+cde
+def
+efg
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # UNION with a foreign engine
+SELECT * FROM t1 UNION SELECT * FROM t3;
+a
+abc
+bcd
+cde
+t3_myisam1
+t3_myisam2
+t3_myisam3
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # More than two SELECTs in a UNIT:
+SELECT * FROM t1 UNION
+SELECT * FROM t2 UNION ALL
+SELECT * FROM t1;
+a
+abc
+abc
+bcd
+bcd
+cde
+cde
+def
+efg
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+(SELECT * FROM t1 UNION
+SELECT * FROM t2) UNION ALL
+SELECT * FROM t1;
+a
+abc
+abc
+bcd
+bcd
+cde
+cde
+def
+efg
 EXPLAIN (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
 SELECT * FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t1 UNION
+SELECT * FROM t2 UNION ALL
+SELECT * FROM t3 UNION
+SELECT * FROM t4;
+a
+abc
+bcd
+cde
+def
+efg
+t3_myisam1
+t3_myisam2
+t3_myisam3
+t4_myisam1
+t4_myisam2
+t4_myisam3
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t3 UNION
 SELECT * FROM t4;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+(SELECT * FROM t1 UNION
+SELECT * FROM t2) UNION ALL
+(SELECT * FROM t3 UNION
+SELECT * FROM t4);
+a
+abc
+bcd
+cde
+def
+efg
+t3_myisam1
+t3_myisam2
+t3_myisam3
+t4_myisam1
+t4_myisam2
+t4_myisam3
 EXPLAIN (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
 (SELECT * FROM t3 UNION
 SELECT * FROM t4);
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT count(*) FROM t1 UNION
+SELECT count(*) FROM t2 UNION ALL
+SELECT count(*)+20 FROM t2 UNION
+SELECT count(*)+5 FROM t1;
+count(*)
+24
+3
+4
+8
 EXPLAIN
 SELECT count(*) FROM t1 UNION
 SELECT count(*) FROM t2 UNION ALL
@@ -91,6 +180,29 @@ SELECT a FROM
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # Prepared statements
+PREPARE stmt FROM "SELECT * FROM t1 UNION
+  SELECT * FROM t2";
+EXECUTE stmt;
+a
+abc
+bcd
+cde
+def
+efg
+EXECUTE stmt;
+a
+abc
+bcd
+cde
+def
+efg
+EXECUTE stmt;
+a
+abc
+bcd
+cde
+def
+efg
 PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
   SELECT * FROM t2";
 EXECUTE stmt;
@@ -99,6 +211,46 @@ NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXECUTE stmt;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+PREPARE stmt FROM "(SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t1 UNION
+  SELECT * FROM t2)";
+EXECUTE stmt;
+a
+abc
+abc
+bcd
+bcd
+cde
+cde
+def
+def
+efg
+efg
+EXECUTE stmt;
+a
+abc
+abc
+bcd
+bcd
+cde
+cde
+def
+def
+efg
+efg
+EXECUTE stmt;
+a
+abc
+abc
+bcd
+bcd
+cde
+cde
+def
+def
+efg
+efg
 PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   (SELECT * FROM t1 UNION

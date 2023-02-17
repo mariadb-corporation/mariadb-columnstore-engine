@@ -2,11 +2,17 @@
 --echo # MDEV-25080: Allow pushdown of queries involving UNIONs
 --echo # in outer select to foreign engines
 --echo #
---echo # Uncomment the actual SELECTs and add ORDER BY clause
---echo # after MCOL-5222 is fixed
+--echo # Remove the sorted_result MTR qualifier and add ORDER BY
+--echo # clause after MCOL-5222 is fixed
 --echo #
 
 --source ../include/have_columnstore.inc
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
 
 #
 # Enable cross engine join
@@ -45,57 +51,65 @@ INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
 INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
 
 --echo # Pushdown of the whole UNION
-#SELECT * FROM t1 UNION SELECT * FROM t2;
+--sorted_result
+SELECT * FROM t1 UNION SELECT * FROM t2;
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
 
-#SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+--sorted_result
+SELECT * FROM t1 UNION ALL SELECT * FROM t2;
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
 
 --echo # UNION with a foreign engine
-#SELECT * FROM t1 UNION SELECT * FROM t3;
+--sorted_result
+SELECT * FROM t1 UNION SELECT * FROM t3;
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
 
 --echo # More than two SELECTs in a UNIT:
-#SELECT * FROM t1 UNION
-#  SELECT * FROM t2 UNION ALL
-#  SELECT * FROM t1;
+--sorted_result
+SELECT * FROM t1 UNION
+  SELECT * FROM t2 UNION ALL
+  SELECT * FROM t1;
 
 EXPLAIN SELECT * FROM t1 UNION
   SELECT * FROM t2 UNION ALL
   SELECT * FROM t1;
 
-#(SELECT * FROM t1 UNION
-#  SELECT * FROM t2) UNION ALL
-#  SELECT * FROM t1;
+--sorted_result
+(SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  SELECT * FROM t1;
 
 EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   SELECT * FROM t1;
 
-#SELECT * FROM t1 UNION
-#  SELECT * FROM t2 UNION ALL
-#  SELECT * FROM t3 UNION
-#  SELECT * FROM t4;
+--sorted_result
+SELECT * FROM t1 UNION
+  SELECT * FROM t2 UNION ALL
+  SELECT * FROM t3 UNION
+  SELECT * FROM t4;
 
 EXPLAIN SELECT * FROM t1 UNION
   SELECT * FROM t2 UNION ALL
   SELECT * FROM t3 UNION
   SELECT * FROM t4;
 
-#(SELECT * FROM t1 UNION
-#  SELECT * FROM t2) UNION ALL
-#  (SELECT * FROM t3 UNION
-#  SELECT * FROM t4);
+--sorted_result
+(SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t3 UNION
+  SELECT * FROM t4);
 
 EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   (SELECT * FROM t3 UNION
   SELECT * FROM t4);
 
-#SELECT count(*) FROM t1 UNION
-#  SELECT count(*) FROM t2 UNION ALL
-#  SELECT count(*)+20 FROM t2 UNION
-#  SELECT count(*)+5 FROM t1;
+--sorted_result
+SELECT count(*) FROM t1 UNION
+  SELECT count(*) FROM t2 UNION ALL
+  SELECT count(*)+20 FROM t2 UNION
+  SELECT count(*)+5 FROM t1;
 
 EXPLAIN
   SELECT count(*) FROM t1 UNION
@@ -119,12 +133,15 @@ EXPLAIN
     (SELECT a FROM t1 UNION ALL SELECT a FROM t3) q ORDER BY a;
 
 --echo # Prepared statements
-#PREPARE stmt FROM "SELECT * FROM t1 UNION
-#  SELECT * FROM t2";
+PREPARE stmt FROM "SELECT * FROM t1 UNION
+  SELECT * FROM t2";
 
-#EXECUTE stmt;
-#EXECUTE stmt;
-#EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
 
 PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
   SELECT * FROM t2";
@@ -132,14 +149,17 @@ PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
 EXECUTE stmt;
 EXECUTE stmt;
 
-#PREPARE stmt FROM "(SELECT * FROM t1 UNION
-#  SELECT * FROM t2) UNION ALL
-#  (SELECT * FROM t1 UNION
-#  SELECT * FROM t2)";
+PREPARE stmt FROM "(SELECT * FROM t1 UNION
+  SELECT * FROM t2) UNION ALL
+  (SELECT * FROM t1 UNION
+  SELECT * FROM t2)";
 
-#EXECUTE stmt;
-#EXECUTE stmt;
-#EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
+--sorted_result
+EXECUTE stmt;
 
 PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
