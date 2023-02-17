@@ -306,7 +306,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
       return !(*this == t);
     }
 
-    static ColType convertUnionColType(std::vector<ColType>&);
+    static ColType convertUnionColType(std::vector<ColType>&, unsigned int&);
   };
 
   /** the structure of a table infomation

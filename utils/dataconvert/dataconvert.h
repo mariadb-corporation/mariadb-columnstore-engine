@@ -1290,7 +1290,8 @@ class DataConvert
   EXPORT static int64_t stringToTime(const std::string& data);
   // bug4388, union type conversion
   EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                         const datatypes::SystemCatalog::TypeHolderStd& type);
+                                         const datatypes::SystemCatalog::TypeHolderStd& type,
+                                         unsigned int& rc);
 
   static boost::any StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
                                 const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,

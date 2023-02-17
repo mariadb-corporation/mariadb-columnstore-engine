@@ -738,7 +738,6 @@ int ha_mcs_group_by_handler::end_scan()
  *    thd - THD pointer.
  *    sel_lex - SELECT_LEX* that describes the query.
  *    sel_unit - SELECT_LEX_UNIT* that describes the query.
- *    Only one of sel_lex and sel_unit is not null.
  * RETURN:
  *    select_handler if possible
  *    NULL in other case
@@ -816,15 +815,15 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // or unsupported feature.
   ha_columnstore_select_handler* handler;
 
-  if (sel_unit && sel_lex)
+  if (sel_unit && sel_lex) // partial pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex, sel_unit);
   }
-  else if (sel_unit)
+  else if (sel_unit) // complete pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_unit);
   }
-  else
+  else // Query only has a SELECT_LEX, no SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex);
   }

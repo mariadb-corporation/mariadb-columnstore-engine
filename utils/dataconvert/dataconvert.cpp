@@ -2934,7 +2934,8 @@ int64_t DataConvert::stringToTime(const string& data)
 }
 
 void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                      const datatypes::SystemCatalog::TypeHolderStd& type)
+                                      const datatypes::SystemCatalog::TypeHolderStd& type,
+                                      unsigned int& rc)
 {
   // limited support for VARBINARY, no implicit conversion.
   if (type.colDataType == datatypes::SystemCatalog::VARBINARY ||
@@ -2973,6 +2974,19 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UINT:
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UDECIMAL:
+
+          if (type.scale != 0)
+          {
+            const unsigned int digitsBeforeDecimal = type.precision - type.scale;
+            const unsigned int digitsBeforeDecimalUnion = unionedType.precision - unionedType.scale;
+
+            if ((std::max(digitsBeforeDecimal, digitsBeforeDecimalUnion) +
+                 std::max(type.scale, unionedType.scale)) > datatypes::INT128MAXPRECISION)
+            {
+              rc = logging::ERR_UNION_DECIMAL_OVERFLOW;
+              return;
+            }
+          }
 
           unionedType.precision = std::max(type.precision, unionedType.precision);
           unionedType.scale = std::max(type.scale, unionedType.scale);

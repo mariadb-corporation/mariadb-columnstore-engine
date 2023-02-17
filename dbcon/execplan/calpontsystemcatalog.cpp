@@ -6393,12 +6393,13 @@ boost::any CalpontSystemCatalog::ColType::convertColumnData(const std::string& d
 }
 
 CalpontSystemCatalog::ColType CalpontSystemCatalog::ColType::convertUnionColType(
-    vector<CalpontSystemCatalog::ColType>& types)
+    vector<CalpontSystemCatalog::ColType>& types,
+    unsigned int& rc)
 {
   idbassert(types.size());
   CalpontSystemCatalog::ColType unionedType = types[0];
   for (uint64_t i = 1; i < types.size(); i++)
-    dataconvert::DataConvert::joinColTypeForUnion(unionedType, types[i]);
+    dataconvert::DataConvert::joinColTypeForUnion(unionedType, types[i], rc);
   return unionedType;
 }
 
