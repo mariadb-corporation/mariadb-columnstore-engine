@@ -255,7 +255,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
-      MTR_SUITE_LIST: '${MTR_SUITE_LIST:-' + 'columnstore/setup' + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_suite_list, ','))) + '}',
+      MTR_SUITE_LIST: '${MTR_SUITE_LIST:-' + 'columnstore/setup,' + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_suite_list, ','))) + '}',
     },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
