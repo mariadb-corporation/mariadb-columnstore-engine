@@ -22,7 +22,7 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 #include <set>
@@ -169,18 +169,12 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
 
     if (dictOid > 0 && !tokenOnly)
     {
-      // This is a double-step step
-      //			if (jobInfo.trace)
-      //				cout << "doProject Emit pGetSignature for SimpleColumn " << dictOid <<
-      //endl;
-
       pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
       jobInfo.keyInfo->dictOidToColOid[dictOid] = oid;
       pds->alias(alias);
       pds->view(view);
       pds->name(sc->columnName());
       pds->cardinality(sc->cardinality());
-      // pds->setOrderRids(true);
 
       // Associate these two linked steps
       JobStepAssociation outJs;
@@ -225,6 +219,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
 
 const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 {
+  // std::cout << "######### doProject" << std::endl;
   JobStepVector jsv;
   SJSTEP sjstep;
 
@@ -609,9 +604,10 @@ void checkAggregation(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     jobInfo.hasAggregation = true;
   }
   else if (std::any_of(retCols.cbegin(), retCols.cend(),
-                       [](decltype (*retCols.cbegin())& c) { return dynamic_cast<AggregateColumn*>(c.get()) != nullptr; }))
+                       [](decltype(*retCols.cbegin())& c)
+                       { return dynamic_cast<AggregateColumn*>(c.get()) != nullptr; }))
   {
-        jobInfo.hasAggregation = true;
+    jobInfo.hasAggregation = true;
   }
   else if (csep->distinct() == true)
   {
@@ -677,6 +673,7 @@ void updateAggregateColType(AggregateColumn* ac, const SRCP& srcp, int op, JobIn
 
 const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
+  std::cout << "!!!!!!!!!!! doAggProject" << std::endl;
   vector<uint32_t> projectKeys;  // projected column keys   -- unique
   RetColsVector pcv;             // projected column vector -- may have duplicates
 
@@ -805,40 +802,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       continue;
     }
 
-#if 0
-        // MCOL-1201 Add support for multi-parameter UDAnF
-        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(retCols[i].get());
-
-        if (udafc != NULL)
-        {
-            srcp = udafc->aggParms()[0];
-            const RowColumn* rcp = dynamic_cast<const RowColumn*>(srcp.get());
-
-            const vector<SRCP>& cols = rcp->columnVec();
-
-            for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
-            {
-                srcp = *j;
-
-                if (dynamic_cast<const ConstantColumn*>(srcp.get()) == NULL)
-                    retCols.push_back(srcp);
-
-                // Do we need this?
-                const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
-                const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
-
-                if (ac != NULL || fc != NULL)
-                {
-                    // bug 3728, make a dummy expression step for each expression.
-                    scoped_ptr<ExpressionStep> es(new ExpressionStep(jobInfo));
-                    es->expression(srcp, jobInfo);
-                }
-            }
-
-            continue;
-        }
-
-#endif
     srcp = retCols[i];
     const AggregateColumn* ag = dynamic_cast<const AggregateColumn*>(retCols[i].get());
 
@@ -1631,21 +1594,6 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobS
         }
       }
 
-      //			// save the current seentable for right-hand side
-      //			if (typeid(*(iter->get())) == typeid(OrDelimiterLhs))
-      //			{
-      //				seenTableStack.push(seenTableIds);
-      //				continue;
-      //			}
-      //
-      //			// restore the seentable
-      //			else if (typeid(*(iter->get())) == typeid(OrDelimiterRhs))
-      //			{
-      //				seenTableIds = seenTableStack.top();
-      //				seenTableStack.pop();
-      //				continue;
-      //			}
-
       if (typeid(*(iter->get())) == typeid(pColStep))
       {
         pColStep* colStep = dynamic_cast<pColStep*>(iter->get());
@@ -1796,10 +1744,7 @@ void makeVtableModeSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, Job
   associateTupleJobSteps(querySteps, projectSteps, deliverySteps, jobInfo, csep->overrideLargeSideEstimate());
   uint16_t stepNo = jobInfo.subId * 10000;
   numberSteps(querySteps, stepNo, jobInfo.traceFlags);
-  //	SJSTEP ds = deliverySteps.begin()->second;
   idbassert(deliverySteps.begin()->second.get());
-  //	ds->stepId(stepNo);
-  //	ds->setTraceFlags(jobInfo.traceFlags);
 }
 
 void makeAnalyzeTableJobSteps(MCSAnalyzeTableExecutionPlan* caep, JobInfo& jobInfo, JobStepVector& querySteps,

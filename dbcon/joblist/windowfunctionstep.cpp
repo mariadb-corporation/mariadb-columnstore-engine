@@ -438,6 +438,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
     colSet.insert(key);
   }
 
+  // WIP not so obvious or right check
   // MCOL-3435 We haven't yet checked for aggregate, but we need to know
   bool hasAggregation = false;
   for (uint64_t i = 0; i < jobInfo.deliveredCols.size(); i++)
@@ -556,12 +557,20 @@ SJSTEP WindowFunctionStep::makeWindowFunctionStep(SJSTEP& step, JobInfo& jobInfo
   idbassert(ds != NULL);
   ws->initialize(ds->getDeliveredRowGroup(), jobInfo);
 
-  // restore the original delivery coloumns
-  jobInfo.deliveredCols = jobInfo.windowDels;
+  // MCOL-5187 WFS adds extra columns into RG that must be removed
+  // after WFS. This block restores the original deliveredCols only
+  // there is no DISTINCT or GROUP BY b/c DISTINCT/GB does a similar
+  // in a sequence doAggProject; TAS methods modifying
+  // jobInfo.distinctColVec
+  if (!jobInfo.hasAggregation)
+  {
+    jobInfo.deliveredCols = jobInfo.windowDels;
+  }
   jobInfo.nonConstDelCols.clear();
 
   for (RetColsVector::iterator i = jobInfo.windowDels.begin(); i < jobInfo.windowDels.end(); i++)
   {
+    // std::cout << "make windowDels " << (*i)->toString() << std::endl;
     if (NULL == dynamic_cast<const ConstantColumn*>(i->get()))
       jobInfo.nonConstDelCols.push_back(*i);
   }
@@ -778,6 +787,8 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     }
   }
 
+  // WIP TAS must do this on its own.
+  // WIP Remove this block
   // order by part
   if (jobInfo.wfqOrderby.size() > 0)
   {
@@ -817,7 +828,9 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     delColIdx.push_back(getColumnIndex(*i, colIndexMap, jobInfo));
   }
 
-  if (jobInfo.hasAggregation && jobInfo.hasDistinct && !jobInfo.orderByColVec.empty())
+  // MCOL-5187 This block retains ORDER BY key columns used later in TAS, e.g. in
+  // LimitedOrderBy::initialize().
+  if (!jobInfo.orderByColVec.empty())
   {
     for (const auto& [colKey, asc] : jobInfo.orderByColVec)
     {
@@ -1065,6 +1078,7 @@ void WindowFunctionStep::doPostProcessForSelect()
   end = (end < rowsLeft) ? end : rowsLeft;
   rowsLeft = (end > begin) ? (end - begin) : 0;
 
+  // WIP ORDER BY must do it on its own.
   if (fQueryOrderBy.get() != NULL)
     sort(rowData.begin(), rowData.size());
 
