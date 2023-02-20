@@ -1038,6 +1038,11 @@ select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_u
   if (thd->lex->sql_command == SQLCOM_CREATE_VIEW)
     return nullptr;
 
+  if (thd->stmt_arena && thd->stmt_arena->is_stmt_prepare())
+  {
+    return nullptr;
+  }
+
   return create_columnstore_select_handler_(thd, 0, sel_unit);
 }
 
