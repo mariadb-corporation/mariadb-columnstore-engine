@@ -40,12 +40,30 @@ LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS T
 select count(*) from nation where n_regionkey = 2;
 count(*)
 5
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-7; CacheI/O-7; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-260B; MsgBytesOut-1KB; Mode-Distributed
 insert into nation values(25, 'Hawaiian Nation',5,'Hello world');
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-7; CacheI/O-7; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-260B; MsgBytesOut-1KB; Mode-Distributed
 update nation set n_regionkey = -1 where n_regionkey = 5;
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-7; CacheI/O-7; BlocksTouched-7; PartitionBlocksEliminated-0; MsgBytesIn-260B; MsgBytesOut-1KB; Mode-Distributed
 insert into nation1 select * from nation;
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-30; CacheI/O-13; BlocksTouched-12; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-2KB; Mode-Distributed
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|';
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-30; CacheI/O-13; BlocksTouched-12; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-2KB; Mode-Distributed
 delete from nation;
+Warnings:
+Note	9999	Query Stats: MaxMemPct-0; NumTempFiles-0; TempFileSpace-0B; ApproxPhyI/O-30; CacheI/O-13; BlocksTouched-12; PartitionBlocksEliminated-0; MsgBytesIn-2KB; MsgBytesOut-2KB; Mode-Distributed
 select user, priority, queryType, query from infinidb_querystats.querystats;
 user	priority	queryType	query
+root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
+root	LOW	SELECT	select count(*) from nation where n_regionkey = 2
+root	LOW	UPDATE	update nation set n_regionkey = -1 where n_regionkey = 5
+root	LOW	SELECT	insert into nation1 select * from nation
+root	LOW	LOAD_DATA_INFILE	LOAD DATA INFILE '/data/qa/source/dbt3/1m/nation.tbl' INTO TABLE nation FIELDS TERMINATED BY '|'
+root	LOW	DELETE	delete from nation
 DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs4011_db;
