@@ -118,7 +118,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local regression_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
-  local branchp = if (branch == '**') then '' else branch,
+  local branchp = if (branch == '**') then '' else branch + '/',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
   local container_tags = if (event == 'cron') then [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', branch] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
@@ -149,7 +149,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
         from_secret: 'aws_secret_access_key',
       },
       source: result,
-      target: branchp + '/' + eventp + '/' + server + '/' + arch + '/' + result,
+      // branchp has slash if not empty
+      target: branchp + eventp + '/' + server + '/' + arch + '/' + result,
       delete: 'true',
     },
   },
@@ -459,7 +460,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       VERSION: container_version,
       MCS_REPO: 'columnstore',
       DEV: 'true',
-      MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      // branchp has slash if not empty
+      MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
       CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/cmapi/develop/latest/' + arch + '/',
     },
