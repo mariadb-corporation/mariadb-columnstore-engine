@@ -122,7 +122,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
-  local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', brancht] else [brancht + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
+  local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
