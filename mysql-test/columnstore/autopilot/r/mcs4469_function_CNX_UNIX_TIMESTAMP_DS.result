@@ -2,10 +2,10 @@ USE autopilot;
 SET @@session.time_zone = "+00:00";
 select cidx, CDATE, UNIX_TIMESTAMP(CDATE) from datatypetestm order by cidx;
 cidx	CDATE	UNIX_TIMESTAMP(CDATE)
-1	1997-01-01	852069600
+1	1997-01-01	852076800
 select cidx, CDATETIME, UNIX_TIMESTAMP(CDATETIME) from datatypetestm order by cidx;
 cidx	CDATETIME	UNIX_TIMESTAMP(CDATETIME)
-1	1997-01-01 00:00:00	852069600
+1	1997-01-01 00:00:00	852076800
 select cidx, CTIME, UNIX_TIMESTAMP(CTIME) from datatypetestm order by cidx;
 cidx	CTIME	UNIX_TIMESTAMP(CTIME)
 1	13:00:00	REPLACEDVALUE
