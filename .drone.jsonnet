@@ -259,7 +259,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker],
     environment: {
       MTR_SUITE_LIST: '${MTR_SUITE_LIST:-' + mtr_suite_list + '}',
-      MTR_FULL_SET: '${MTR_FULL_SET:-false}',
+      MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
     },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
@@ -297,7 +297,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'echo $MTR_FULL_SUITE',
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "$' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
       if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
       if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
