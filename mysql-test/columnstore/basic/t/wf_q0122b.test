@@ -1,0 +1,14 @@
+--source ../include/have_columnstore.inc
+--source ../include/combinations.myisam-columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS q0122b;
+--enable_warnings
+
+CREATE DATABASE q0122b;
+USE q0122b;
+
+--source ../include/regression_create_empsalary_comb.inc
+SELECT COUNT(DISTINCT salary) OVER (PARTITION BY depname), salary, empno, depname from empsalary where empno < 10000 order by 4, ifnull(salary, 9999);
+
+DROP DATABASE q0122b;
