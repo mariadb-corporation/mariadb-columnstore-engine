@@ -779,6 +779,15 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
     return nullptr;
   }
 
+  // MCOL-5432 Disable partial pushdown of the UNION operation if the query
+  // involves an order by or a limit clause.
+  if (sel_lex && sel_unit &&
+      (sel_unit->global_parameters()->limit_params.explicit_limit == true ||
+       sel_unit->global_parameters()->order_list.elements != 0))
+  {
+    return nullptr;
+  }
+
   std::vector<SELECT_LEX*> select_lex_vec;
 
   if (sel_unit && !sel_lex)
@@ -1036,9 +1045,19 @@ select_handler* create_columnstore_select_handler(THD* thd, SELECT_LEX* select_l
 select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_unit)
 {
   if (thd->lex->sql_command == SQLCOM_CREATE_VIEW)
+  {
     return nullptr;
+  }
 
   if (thd->stmt_arena && thd->stmt_arena->is_stmt_prepare())
+  {
+    return nullptr;
+  }
+
+  // MCOL-5432 Disable UNION pushdown if the query involves an order by
+  // or a limit clause.
+  if (sel_unit->global_parameters()->limit_params.explicit_limit == true ||
+      sel_unit->global_parameters()->order_list.elements != 0)
   {
     return nullptr;
   }

@@ -261,6 +261,53 @@ NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 EXECUTE stmt;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+# MCOL-5432 Disable UNION pushdown if an ORDER BY or a LIMIT
+# clause is involved, until MCOL-5222 is fixed.
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a;
+a
+abc
+bcd
+bcd
+cde
+cde
+def
+efg
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
+2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 LIMIT 3;
+a
+abc
+bcd
+cde
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 LIMIT 3;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
+2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a DESC LIMIT 5;
+a
+efg
+def
+cde
+cde
+bcd
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a DESC LIMIT 5;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
+2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3 OFFSET 2;
+a
+bcd
+cde
+cde
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3 OFFSET 2;
+id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
+2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
 DROP USER 'cejuser'@'localhost';
 DROP TABLE t1, t2, t3, t4;
 DROP DATABASE mdev25080;
