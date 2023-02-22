@@ -188,6 +188,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: depends_on,
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
+    when: {
+      status: ['success', 'failure'],
+    },
     [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
     environment: {
       REGRESSION_TIMEOUT: {
@@ -321,6 +324,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   prepare_regression:: {
     name: 'prepare regression',
     depends_on: ['mtr'],
+    when: {
+      status: ['success', 'failure'],
+    },
     image: 'docker:git',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
@@ -610,6 +616,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'pkg',
              depends_on: ['unittests'],
              image: 'docker:git',
+             when: {
+               status: ['success', 'failure'],
+             },
              volumes: [pipeline._volumes.mdb],
              commands: [
                'cd /mdb/' + builddir,
