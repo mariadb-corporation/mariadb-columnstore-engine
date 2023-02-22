@@ -1,1 +1,10 @@
 mcs6743_json_JSON_TYPE_KnownIssue : Disabled until server fix
+mcs6178_windowFunctions_CORR : Disabled because of MCOL-5435
+mcs6180_windowFunctions_COVAR_POP : Disabled because of MCOL-5435
+mcs6181_windowFunctions_COVAR_SAMP : Disabled because of MCOL-5435
+mcs6200_windowFunctions_REGR_INTERCEPT : Disabled because of MCOL-5435
+mcs6201_windowFunctions_REGR_R2 : Disabled because of MCOL-5435
+mcs6202_windowFunctions_REGR_SLOPE : Disabled because of MCOL-5435
+mcs6203_windowFunctions_REGR_SXX : Disabled because of MCOL-5435
+mcs6204_windowFunctions_REGR_SXY : Disabled because of MCOL-5435
+mcs6205_windowFunctions_REGR_SYY : Disabled because of MCOL-5435
