@@ -574,7 +574,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                // Tweak debian packaging stuff
                'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
                "sed -i 's/Depends: galera.*/Depends:/' debian/control",
-               'for i in wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
+               'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
                // Install build dependencies for deb
                if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
                // Change plugin_maturity level
