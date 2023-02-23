@@ -122,7 +122,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
   local container_tags = if (event == 'cron') then [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', branch] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
   local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
-  local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  // local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local server_remote = 'https://github.com/mariadb-corporation/MariaDBEnterprise',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
   local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
