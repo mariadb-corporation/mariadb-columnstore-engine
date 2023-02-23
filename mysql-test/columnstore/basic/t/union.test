@@ -279,7 +279,7 @@ DROP TABLE t1,t2;
 --echo #
 --echo # Union of tables containing different string data types
 --echo #
---echo # Uncomment the actual SELECTs and add ORDER BY clause
+--echo # Remove the sorted_result MTR qualifier and add ORDER BY clause
 --echo # after MCOL-5222 is fixed
 --echo #
 
@@ -287,13 +287,17 @@ CREATE TABLE t1 (a CHAR(6));
 INSERT INTO t1 VALUES ('t13abc'), ('t13xx'), ('common');
 CREATE TABLE t2 (a VARCHAR(8));
 INSERT INTO t2 VALUES ('t14abcde'), ('t14xyzzz'), ('common');
-#SELECT * FROM t1 UNION SELECT * FROM t2;
+--sorted_result
+SELECT * FROM t1 UNION SELECT * FROM t2;
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
-#SELECT * FROM t2 UNION ALL SELECT * FROM t1;
+--sorted_result
+SELECT * FROM t2 UNION ALL SELECT * FROM t1;
 EXPLAIN SELECT * FROM t2 UNION ALL SELECT * FROM t1;
-#SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
+--sorted_result
+SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
-#SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
+--sorted_result
+SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
 EXPLAIN SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
 DROP TABLE t1,t2;
 

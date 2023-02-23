@@ -868,22 +868,53 @@ DROP TABLE t1,t2;
 #
 # Union of tables containing different string data types
 #
-# Uncomment the actual SELECTs and add ORDER BY clause
+# Remove the sorted_result MTR qualifier and add ORDER BY clause
 # after MCOL-5222 is fixed
 #
 CREATE TABLE t1 (a CHAR(6));
 INSERT INTO t1 VALUES ('t13abc'), ('t13xx'), ('common');
 CREATE TABLE t2 (a VARCHAR(8));
 INSERT INTO t2 VALUES ('t14abcde'), ('t14xyzzz'), ('common');
+SELECT * FROM t1 UNION SELECT * FROM t2;
+a
+common
+t13abc
+t13xx
+t14abcde
+t14xyzzz
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t2 UNION ALL SELECT * FROM t1;
+a
+common
+common
+t13abc
+t13xx
+t14abcde
+t14xyzzz
 EXPLAIN SELECT * FROM t2 UNION ALL SELECT * FROM t1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
+a
+123456789000
+common
+t13abc
+t13xx
+t14abcde
+t14xyzzz
 EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2 UNION SELECT '123456789000';
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
+a
+123456789000
+common
+t13abc
+t13xx
+t14abcde
+t14xyzzz
 EXPLAIN SELECT * FROM t1 UNION SELECT '123456789000' UNION SELECT * FROM t2;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
