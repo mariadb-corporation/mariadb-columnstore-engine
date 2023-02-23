@@ -8,6 +8,9 @@
 #
 --source ../include/have_columnstore.inc
 #
+set character_set_database=latin1;
+set collation_database=latin1_swedish_ci;
+#
 --disable_warnings
 DROP DATABASE IF EXISTS tpch1m;
 DROP DATABASE IF EXISTS tpch1;
