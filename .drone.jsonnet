@@ -1,7 +1,7 @@
 local events = ['pull_request', 'cron'];
 
 local servers = {
-  develop: ['10.6-enterprise'],
+  develop: ['10.6-MENT-1667'],
   'develop-22.08': ['10.6-enterprise'],
 };
 
@@ -106,7 +106,7 @@ local testPreparation(platform) =
   platform_map[platform];
 
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -670,8 +670,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-MENT-1667']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-MENT-1667']), platforms_arm.develop),
 };
 
 
@@ -696,10 +696,10 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
+  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-MENT-1667')
   for p in platforms_custom
 ] +
 [
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
+  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-MENT-1667')
   for p in platforms_arm_custom
 ]
