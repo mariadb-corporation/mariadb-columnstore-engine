@@ -8,8 +8,8 @@
 #
 --source ../include/have_columnstore.inc
 #
-set character_set_database=latin1;
-set collation_database=latin1_swedish_ci;
+set character_set_server=latin1;
+set collation_server=latin1_swedish_ci;
 #
 --disable_warnings
 DROP DATABASE IF EXISTS tpch1m;
@@ -74,6 +74,6 @@ USE outerjoin;
 #
 #SET GLOBAL columnstore_use_import_for_batchinsert=ON;
 #
---exec systemctl restart mariadb
+--exec /etc/init.d/mariadb restart
 --exec sleep 10
 
