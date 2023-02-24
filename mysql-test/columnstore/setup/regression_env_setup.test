@@ -25,6 +25,9 @@ CREATE DATABASE dml;
 CREATE DATABASE autopilot;
 CREATE DATABASE outerjoin;
 #
+set character_set_database=latin1;
+set collation_database=latin1_swedish_ci;
+#
 USE tpch1m;
 --source ../include/dbt3/createTables.inc
 --source ../include/dbt3/ldiTables1m.inc
