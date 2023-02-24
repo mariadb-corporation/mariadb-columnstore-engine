@@ -38,7 +38,7 @@ using namespace oam;
 #include "errorids.h"
 using namespace logging;
 
-//#include "resourcemanager.h"
+// #include "resourcemanager.h"
 
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
@@ -98,7 +98,10 @@ extern "C"
     boost::algorithm::to_lower(pstr);
 
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     idbassert(ci != 0);
@@ -197,7 +200,10 @@ extern "C"
                               char* is_null, char* error)
   {
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -247,7 +253,10 @@ extern "C"
       long long calsettrace(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -292,7 +301,7 @@ extern "C"
 
     try
     {
-      if (dbrm.getSystemReady() > 0 && dbrm.getSystemQueryReady() > 0)      
+      if (dbrm.getSystemReady() > 0 && dbrm.getSystemQueryReady() > 0)
       {
         return 1;
       }
@@ -457,7 +466,10 @@ extern "C"
     THD* thd = current_thd;
 
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     execplan::CalpontSystemCatalog::TableName tableName;
@@ -534,7 +546,10 @@ extern "C"
                                     char* is_null, char* error)
   {
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     long long lockID = *reinterpret_cast<long long*>(args->args[0]);
@@ -625,14 +640,12 @@ extern "C"
       boost::algorithm::to_lower(tableName.table);
     }
 
-    boost::shared_ptr<execplan::CalpontSystemCatalog> csc =
-        execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(
-            execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
-    csc->identity(execplan::CalpontSystemCatalog::FE);
+    execplan::CalpontSystemCatalog csc;
+    csc.identity(execplan::CalpontSystemCatalog::FE);
 
     try
     {
-      nextVal = csc->nextAutoIncrValue(tableName);
+      nextVal = csc.nextAutoIncrValue(tableName);
     }
     catch (std::exception&)
     {
@@ -717,7 +730,10 @@ extern "C"
     }
 
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -810,7 +826,10 @@ extern "C"
                                  char* is_null, char* error)
   {
     if (get_fe_conn_info_ptr() == NULL)
+    {
       set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
 
     cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     idbassert(ci != 0);

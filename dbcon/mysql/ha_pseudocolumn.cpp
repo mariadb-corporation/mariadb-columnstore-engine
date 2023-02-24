@@ -20,6 +20,7 @@ using namespace execplan;
 #include "functor.h"
 #include "functor_str.h"
 
+#include "ha_mcs.h"
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_sysvars.h"
 using namespace cal_impl_if;
@@ -53,8 +54,10 @@ void bailout(char* error, const string& funcName)
 
 int64_t idblocalpm()
 {
-  if (get_fe_conn_info_ptr() == NULL)
+  if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
@@ -477,8 +480,10 @@ uint32_t isPseudoColumn(string funcName)
 execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& nonSupport,
                                             uint32_t pseudoType)
 {
-  if (get_fe_conn_info_ptr() == NULL)
+  if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
 
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 

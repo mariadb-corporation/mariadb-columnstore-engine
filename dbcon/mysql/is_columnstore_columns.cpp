@@ -60,15 +60,12 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   TABLE* table = tables->table;
   InformationSchemaCond isCond;
 
-  boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
-      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(
-          execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
-
+  execplan::CalpontSystemCatalog csc;
   const std::vector<
       std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >
-      catalog_tables = systemCatalogPtr->getTables();
+      catalog_tables = csc.getTables();
 
-  systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+  csc.identity(execplan::CalpontSystemCatalog::FE);
 
   if (cond)
   {
@@ -89,7 +86,7 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     // So simply ignore the dropped table.
     try
     {
-      column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true, lower_case_table_names);
+      column_rid_list = csc.columnRIDs((*it).second, true, lower_case_table_names);
     }
     catch (IDBExcept& ex)
     {
@@ -105,9 +102,8 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
     for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
     {
-      execplan::CalpontSystemCatalog::TableColName tcn =
-          systemCatalogPtr->colName(column_rid_list[col_num].objnum);
-      execplan::CalpontSystemCatalog::ColType ct = systemCatalogPtr->colType(column_rid_list[col_num].objnum);
+      execplan::CalpontSystemCatalog::TableColName tcn = csc.colName(column_rid_list[col_num].objnum);
+      execplan::CalpontSystemCatalog::ColType ct = csc.colType(column_rid_list[col_num].objnum);
 
       table->field[0]->store(tcn.schema.c_str(), tcn.schema.length(), cs);
       table->field[1]->store(tcn.table.c_str(), tcn.table.length(), cs);
