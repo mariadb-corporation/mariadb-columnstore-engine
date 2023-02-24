@@ -53,7 +53,11 @@ std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   CHARSET_INFO* cs = colType.getCharset();
   uint64_t inLen = tstr.length();
+#if MYSQL_VERSION_ID >= 101004
+  uint64_t bufLen = inLen * cs->casedn_multiply();
+#else
   uint64_t bufLen = inLen * cs->casedn_multiply;
+#endif
   char* outBuf = new char[bufLen];
 
   uint64_t outLen = cs->casedn(tstr.str(), inLen, outBuf, bufLen);
