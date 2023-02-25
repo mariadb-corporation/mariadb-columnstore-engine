@@ -8,9 +8,6 @@
 #
 --source ../include/have_columnstore.inc
 #
-#set character_set_server=latin1;
-#set collation_server=latin1_swedish_ci;
-#
 --disable_warnings
 DROP DATABASE IF EXISTS tpch1m;
 DROP DATABASE IF EXISTS tpch1;
@@ -69,11 +66,3 @@ USE outerjoin;
 --source ../include/dbt3/countTables.inc
 --source ../include/autopilot_create_outerjoin_tables.inc
 #
-# Set table name to case insensitive
-#--exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/my.cnf.d/server.cnf
-#
-#SET GLOBAL columnstore_use_import_for_batchinsert=ON;
-#
-#--exec /etc/init.d/mariadb restart
-#--exec sleep 10
-
