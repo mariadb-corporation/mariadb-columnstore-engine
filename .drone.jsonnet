@@ -19,7 +19,7 @@ local platforms_mtr = ['centos:7', 'rockylinux:8', 'ubuntu:20.04'];
 
 local server_ref_map = {
   develop: '10.8',
-  'develop-6': '10.6-enterprise',
+  'develop-6': '10.10',
   'develop-5': '10.5',
   '**': '10.8',
 };
@@ -89,7 +89,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
   local container_tags = if (event == 'cron') then [branch, branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
   local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + arch,
 
-  local server_remote = if (std.split(branch, '-')[0] == 'columnstore' || branch == 'develop-6') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local server_remote = if (std.split(branch, '-')[0] == 'columnstore') then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local pipeline = self,
 
