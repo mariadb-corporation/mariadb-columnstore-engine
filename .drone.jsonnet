@@ -1,8 +1,8 @@
 local events = ['pull_request', 'cron'];
 
 local servers = {
-  develop: ['10.6-enterprise'],
-  'develop-22.08': ['10.6-enterprise'],
+  develop: ['10.6-MENT-1667'],
+  'develop-22.08': ['10.6-MENT-1667'],
 };
 
 local platforms = {
@@ -106,7 +106,7 @@ local testPreparation(platform) =
   platform_map[platform];
 
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -122,7 +122,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local container_tags = if (event == 'cron') then [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', branch] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
   local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
-  local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local server_remote = if (std.endsWith(server, 'enterprise') || std.endsWith(server, '10.6-MENT-1667')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
   local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
@@ -679,8 +679,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-MENT-1667']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-MENT-1667']), platforms_arm.develop),
 };
 
 
@@ -705,10 +705,10 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
+  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-MENT-1667')
   for p in platforms_custom
 ] +
 [
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
+  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-MENT-1667')
   for p in platforms_arm_custom
 ]
