@@ -55,6 +55,12 @@ SimpleFilter::SimpleFilter(const string& sql) : Filter(sql)
   parse(sql);
 }
 
+// TODO: only handled simplecolumn operands for now
+SimpleFilter::SimpleFilter(const string& sql, ForTestPurposesWithoutColumnsOIDS) : Filter(sql)
+{
+  parse(sql, ForTestPurposesWithoutColumnsOIDS{});
+}
+
 SimpleFilter::SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone)
  : fOp(op), fLhs(lhs), fRhs(rhs), fIndexFlag(NOINDEX), fJoinFlag(EQUA), fTimeZone(timeZone)
 {
@@ -244,7 +250,7 @@ const string SimpleFilter::toString() const
   return output.str();
 }
 
-void SimpleFilter::parse(string sql)
+void SimpleFilter::parse(string sql, std::optional<ForTestPurposesWithoutColumnsOIDS> testFlag)
 {
   fLhs = 0;
   fRhs = 0;
@@ -267,7 +273,10 @@ void SimpleFilter::parse(string sql)
     if (lhs.at(lhs.length() - 1) == ' ')
       lhs = lhs.substr(0, pos - 1);
 
-    fLhs = new SimpleColumn(lhs);
+    if (testFlag)
+      fLhs = new SimpleColumn(lhs, SimpleColumn::ForTestPurposeWithoutOID{});
+    else
+      fLhs = new SimpleColumn(lhs);
 
     pos = pos + delimiter[i].length();
     string rhs = sql.substr(pos, sql.length());
@@ -278,7 +287,10 @@ void SimpleFilter::parse(string sql)
     if (rhs.at(rhs.length() - 1) == ' ')
       rhs = rhs.substr(0, pos - 1);
 
-    fRhs = new SimpleColumn(rhs);
+    if (testFlag)
+      fRhs = new SimpleColumn(rhs, SimpleColumn::ForTestPurposeWithoutOID{});
+    else
+      fRhs = new SimpleColumn(rhs);
     break;
   }
 

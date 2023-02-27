@@ -63,27 +63,28 @@ using namespace logging;
 #include "ha_tzinfo.h"
 using namespace cal_impl_if;
 
-#include "calpontselectexecutionplan.h"
-#include "calpontsystemcatalog.h"
-#include "simplecolumn_int.h"
-#include "simplecolumn_uint.h"
-#include "simplecolumn_decimal.h"
 #include "aggregatecolumn.h"
-#include "constantcolumn.h"
-#include "simplefilter.h"
-#include "constantfilter.h"
-#include "functioncolumn.h"
 #include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
+#include "calpontselectexecutionplan.h"
+#include "calpontsystemcatalog.h"
+#include "constantcolumn.h"
+#include "constantfilter.h"
+#include "existsfilter.h"
+#include "functioncolumn.h"
+#include "groupconcatcolumn.h"
+#include "intervalcolumn.h"
+#include "jsonarrayaggcolumn.h"
 #include "logicoperator.h"
+#include "outerjoinonfilter.h"
 #include "predicateoperator.h"
+#include "rewrites.h"
 #include "rowcolumn.h"
 #include "selectfilter.h"
-#include "existsfilter.h"
-#include "groupconcatcolumn.h"
-#include "jsonarrayaggcolumn.h"
-#include "outerjoinonfilter.h"
-#include "intervalcolumn.h"
+#include "simplecolumn_decimal.h"
+#include "simplecolumn_int.h"
+#include "simplecolumn_uint.h"
+#include "simplefilter.h"
 #include "udafcolumn.h"
 using namespace execplan;
 
@@ -7100,6 +7101,13 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     outerJoinStack.push(ptp);
   }
 
+  config::Config* cf = config::Config::makeConfig();
+  string rewriteEnabled = cf->getConfig("Rewrites", "CommonLeafConjunctionsToTop");
+  if (filters && rewriteEnabled != "OFF")
+  {
+    filters = extractCommonLeafConjunctionsToRoot(filters);
+  }
+
   // Append outer join filters at the end of inner join filters.
   // JLF_ExecPlanToJobList::walkTree processes ParseTree::left
   // before ParseTree::right which is what we intend to do in the
@@ -7119,9 +7127,6 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   if (filters)
   {
     csep->filters(filters);
-    std::string aTmpDir(startup::StartUp::tmpDir());
-    aTmpDir = aTmpDir + "/filter1.dot";
-    filters->drawTree(aTmpDir);
   }
 
   return 0;
@@ -7684,6 +7689,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       case Item::CONST_ITEM:
       {
         switch (item->cmp_type())
+
         {
           case INT_RESULT:
           case STRING_RESULT:

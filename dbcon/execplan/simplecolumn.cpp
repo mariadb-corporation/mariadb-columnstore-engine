@@ -141,6 +141,12 @@ SimpleColumn::SimpleColumn() : ReturnedColumn(), fOid(0), fisColumnStore(true)
   fDistinct = false;
 }
 
+SimpleColumn::SimpleColumn(const std::string& token, ForTestPurposeWithoutOID)
+ : ReturnedColumn(0), fOid(0), fData(token), fisColumnStore(true)
+{
+  parse(token);
+  fDistinct = false;
+}
 SimpleColumn::SimpleColumn(const string& token, const uint32_t sessionID)
  : ReturnedColumn(sessionID), fOid(0), fData(token), fisColumnStore(true)
 {
@@ -372,6 +378,7 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint32_t&)fSequence;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fisColumnStore);
 }
+
 
 bool SimpleColumn::operator==(const SimpleColumn& t) const
 {

@@ -57,8 +57,14 @@ class SimpleColumn : public ReturnedColumn
   /**
    * Constructors
    */
+  class ForTestPurposeWithoutOID{};
+
   SimpleColumn();
+
+  SimpleColumn(const std::string& token, ForTestPurposeWithoutOID);
+
   SimpleColumn(const std::string& token, const uint32_t sessionID = 0);
+
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
                const uint32_t sessionID = 0, const int lower_case_table_names = 0);
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
@@ -202,6 +208,8 @@ class SimpleColumn : public ReturnedColumn
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
   bool operator==(const SimpleColumn& t) const;
+
+  bool operator<(const SimpleColumn& t) const;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *

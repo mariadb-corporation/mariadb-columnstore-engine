@@ -30,6 +30,8 @@
 #include "treenode.h"
 #include "operator.h"
 #include "mcs_decimal.h"
+#include <boost/core/demangle.hpp>
+
 
 namespace rowgroup
 {
@@ -78,6 +80,21 @@ class ParseTree
     return fLeft;
   }
 
+  inline ParseTree** leftRef()
+  {
+    return &fLeft;
+  }
+
+  inline void nullRight()
+  {
+    fRight = nullptr;
+  }
+
+  inline void nullLeft()
+  {
+    fLeft = nullptr;
+  }
+
   inline void right(ParseTree* expressionTree)
   {
     fRight = expressionTree;
@@ -92,6 +109,11 @@ class ParseTree
   inline ParseTree* right() const
   {
     return fRight;
+  }
+
+  inline ParseTree** rightRef()
+  {
+    return &fRight;
   }
 
   inline void data(TreeNode* data)
@@ -498,7 +520,11 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
     dotFile << "n" << (void*)n << " -> "
             << "n" << (void*)r << std::endl;
 
-  dotFile << "n" << (void*)n << " [label=\"" << n->data()->data() << "\"]" << std::endl;
+  auto& node = *(n->data());
+  dotFile << "n" << (void*)n << " [label=\"" <<
+           n->data()->data() << " (" <<
+           n << ") " <<
+           boost::core::demangle(typeid(node).name()) << "\"]" << std::endl;
 }
 
 inline void ParseTree::drawTree(std::string filename)
