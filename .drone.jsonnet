@@ -366,6 +366,7 @@ local Pipeline(branch, platform, event, arch='amd64') = {
                'sed "/ha_sphinx.so/d" -i debian/mariadb-server-*.install',
                'sed "/Package: libmariadbd19/,/^$/d" -i debian/control',
                'sed "/Package: libmariadbd-dev/,/^$/d" -i debian/control',
+               "sed -i '/libfmt-dev/d' debian/control",
                // Disable Galera
                "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
                "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
