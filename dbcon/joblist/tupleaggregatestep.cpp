@@ -18,8 +18,8 @@
 
 //  $Id: tupleaggregatestep.cpp 9732 2013-08-02 15:56:15Z pleblanc $
 
-//#define NDEBUG
-// Cross engine needs to be at top due to MySQL includes
+// #define NDEBUG
+//  Cross engine needs to be at top due to MySQL includes
 #define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 
@@ -69,10 +69,6 @@ using namespace querytele;
 #include "tuplehashjoin.h"
 #include "tupleaggregatestep.h"
 
-//#include "stopwatch.cpp"
-
-// Stopwatch timer;
-
 namespace
 {
 struct cmpTuple
@@ -110,16 +106,20 @@ struct cmpTuple
           std::vector<uint32_t>* paramKeysb = boost::get<3>(b);
           if (paramKeysa == NULL || paramKeysb == NULL)
             return false;
-          if (paramKeysa->size() < paramKeysb->size())
-            return true;
-          if (paramKeysa->size() == paramKeysb->size())
+          if (paramKeysa < paramKeysb)
           {
-            for (uint64_t i = 0; i < paramKeysa->size(); ++i)
-            {
-              if ((*paramKeysa)[i] < (*paramKeysb)[i])
-                return true;
-            }
+            return true;
           }
+          // if (paramKeysa->size() < paramKeysb->size())
+          //   return true;
+          // if (paramKeysa->size() == paramKeysb->size())
+          // {
+          //   for (uint64_t i = 0; i < paramKeysa->size(); ++i)
+          //   {
+          //     if ((*paramKeysa)[i] < (*paramKeysb)[i])
+          //       return true;
+          //   }
+          // }
         }
       }
     }
@@ -741,7 +741,8 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
       {
         ostringstream emsg;
         emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
-        cerr << "configDeliveredRowGroup: " << emsg.str() << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+        cerr << "configDeliveredRowGroup: " << emsg.str()
+             << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
              << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
 
         if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
@@ -762,7 +763,8 @@ void TupleAggregateStep::configDeliveredRowGroup(const JobInfo& jobInfo)
       {
         ostringstream emsg;
         emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' is too far in tuple.";
-        cerr << "configDeliveredRowGroup: " << emsg.str() << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+        cerr << "configDeliveredRowGroup: " << emsg.str()
+             << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
              << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
 
         if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
@@ -2885,7 +2887,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                     f->fAggFunction == ROWAGG_MIN || f->fAggFunction == ROWAGG_MAX ||
                     f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                     f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
-                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT || f->fAggFunction == ROWAGG_JSON_ARRAY))
+                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT ||
+                    f->fAggFunction == ROWAGG_JSON_ARRAY))
           {
             funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                               f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
@@ -2950,7 +2953,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     // skip if not an aggregation column
     if (returnedColVec[i].second == 0)
       continue;
-
     aggColVec.push_back(returnedColVec[i]);
 
     // remember if a column has an average function,
@@ -3018,9 +3020,8 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           ostringstream emsg;
           emsg << "'" << jobInfo.keyInfo->tupleKeyToName[key] << "' isn't in tuple.";
           cerr << "prep2PhasesAggregate: " << (colVec == &jobInfo.groupByColVec ? "groupby " : "distinct ")
-            << emsg.str()
-            << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
-            << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
+               << emsg.str() << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[key].fId
+               << ", alias=" << jobInfo.keyInfo->tupleKeyVec[key].fTable;
 
           if (jobInfo.keyInfo->tupleKeyVec[key].fView.length() > 0)
             cerr << ", view=" << jobInfo.keyInfo->tupleKeyVec[key].fView;
@@ -3049,7 +3050,8 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         typeAggPm.push_back(typeProj[colProj]);
         csNumAggPm.push_back(csNumProj[colProj]);
         widthAggPm.push_back(width[colProj]);
-
+        // std::cout << "add to aggFuncMap 1 colAggPm " << colAggPm << " udafc " << ((uint64_t)udafc)
+        //           << std::endl;
         aggFuncMap.emplace(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc,
                                              udafc ? udafc->getContext().getParamKeys() : nullptr),
                            colAggPm);
@@ -3064,7 +3066,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       uint32_t aggKey = aggColVec[i].first;
       RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
       RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
-
+      // std::cout << " aggColVec i " << i << " aggOp " << aggOp << std::endl;
       // skip on PM if this is a constant
       if (aggOp == ROWAGG_CONSTANT)
         continue;
@@ -3097,6 +3099,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         for (; it != jobInfo.projectionCols.end(); it++)
         {
           udafc = dynamic_cast<UDAFColumn*>((*it).get());
+          // std::cout << "udafc " << (uint64_t)udafc << std::endl;
           projColsUDAFIdx++;
           if (udafc)
           {
@@ -3105,9 +3108,9 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
             if (pUDAFFunc && !udafc->getContext().getParamKeys()->empty())
             {
               for (uint64_t k = i + 1;
-                   k < aggColVec.size() && aggColVec[k].second == AggregateColumn::MULTI_PARM;
-                   ++k)
+                   k < aggColVec.size() && aggColVec[k].second == AggregateColumn::MULTI_PARM; ++k)
               {
+                // std::cout << " udafc " << (uint64_t)udafc << " k " << k << std::endl;
                 udafc->getContext().getParamKeys()->push_back(aggColVec[k].first);
               }
             }
@@ -3133,13 +3136,19 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
                                             udafc ? udafc->getContext().getParamKeys() : nullptr)) !=
               aggFuncMap.end())
       {
+        // std::cout << "aggFuncMap skip" << std::endl;
         // skip if this is a duplicate
         continue;
       }
 
       functionVecPm.push_back(funct);
-      aggFuncMap.emplace(boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : nullptr),
-                         colAggPm);
+      // auto* ptr = udafc ? udafc->getContext().getParamKeys() : nullptr;
+      // std::cout << "add to aggFuncMap 2 aggKey " << aggKey << " aggOp " << aggOp << " pUDAFFunc "
+      //           << (uint64_t)pUDAFFunc << " udafc " << ((uint64_t)udafc) << " Params vec " << (uint64_t)ptr
+      //           << std::endl;
+      aggFuncMap.insert(
+          {boost::make_tuple(aggKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : nullptr),
+           colAggPm});
 
       switch (aggOp)
       {
@@ -3425,6 +3434,9 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         }
       }
 
+      // auto* ptr = udafc ? udafc->getContext().getParamKeys() : nullptr;
+      // std::cout << "aggFuncMap lookup retKey " << retKey << " aggOp " << aggOp << " pUDAFFunc "
+      //           << (uint64_t)pUDAFFunc << " params " << (uint64_t)ptr << std::endl;
       AGG_MAP::iterator it = aggFuncMap.find(
           boost::make_tuple(retKey, aggOp, pUDAFFunc, udafc ? udafc->getContext().getParamKeys() : nullptr));
 
@@ -3444,6 +3456,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       else
       {
         bool returnColMissing = true;
+        // std::cout << "returnColMissing = true" << std::endl;
 
         // check if a SUM or COUNT covered by AVG
         if (aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME)
@@ -3453,6 +3466,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
           if (it != aggFuncMap.end())
           {
+            // std::cout << "returnColMissing in aggFUncMap" << std::endl;
             // false alarm
             returnColMissing = false;
 
@@ -3497,6 +3511,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggUm.push_back(ti.width);
 
           returnColMissing = false;
+          // std::cout << "returnColMissing func on agg" << std::endl;
         }
         else if (jobInfo.windowSet.find(retKey) != jobInfo.windowSet.end())
         {
@@ -3511,6 +3526,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggUm.push_back(ti.width);
 
           returnColMissing = false;
+          // std::cout << "returnColMissing WF" << std::endl;
         }
         else if (aggOp == ROWAGG_CONSTANT)
         {
@@ -3524,6 +3540,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           widthAggUm.push_back(ti.width);
 
           returnColMissing = false;
+          // std::cout << "returnColMissing agg on const " << std::endl;
         }
 
         if (returnColMissing)

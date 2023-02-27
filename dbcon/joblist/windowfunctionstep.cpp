@@ -439,6 +439,13 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
   }
 
   // MCOL-3435 We haven't yet checked for aggregate, but we need to know
+  // bool hasAggregation = ((csep->groupByCols().size() > 0) ||
+  //                        (std::any_of(jobInfo.deliveredCols.cbegin(), jobInfo.deliveredCols.cend(),
+  //                                     [](decltype(*jobInfo.deliveredCols.cbegin())& c)
+  //                                     { return dynamic_cast<AggregateColumn*>(c.get()) != nullptr; })) ||
+  //                        (csep->distinct() == true))
+  //                           ? true
+  //                           : false;
   bool hasAggregation = false;
   if (csep->groupByCols().size() > 0)
   {
@@ -453,7 +460,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
   }
   else if (csep->distinct() == true)
   {
-    q = true;
+    hasAggregation = true;
   }
 
   // add non-duplicate auxiliary columns
