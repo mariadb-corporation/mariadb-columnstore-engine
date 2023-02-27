@@ -18,7 +18,7 @@ drop table if exists `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
 
 create table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess` ( `session_duration` decimal(13,3) not null,`session_idle_down_duration` decimal(13,3) not null, `session_q5_down` int(11) not null ) engine=columnstore default charset=latin1;
 insert into p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess values (1032632.1 , 86382, 1273564557);
-select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  truncate(session_duration*session_q5_down, 2) as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  truncate(session_duration*session_q5_down, 2) as result_1, truncate((session_duration*session_q5_down)*8, 2) as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
 
 #-- bug2437
 --disable_warnings

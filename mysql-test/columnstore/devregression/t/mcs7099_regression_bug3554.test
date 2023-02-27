@@ -149,10 +149,10 @@ select avg(d129), min(d129), max(d129), (100/1000000) * avg(d129) avg2, 0.0001 *
 select avg(d130), min(d130), max(d130), (100/1000000) * avg(d130) avg2, 0.0001 * min(d130) min2, max(d130)/10000 max2 from dtypes;
 select avg(d131), min(d131), max(d131), (100/1000000) * avg(d131) avg2, 0.0001 * min(d131) min2, max(d131)/10000 max2 from dtypes;
 select avg(d132), min(d132), max(d132), (100/1000000) * avg(d132) avg2, 0.0001 * min(d132) min2, max(d132)/10000 max2 from dtypes;
-select truncate(avg(d133), 10), min(d133), max(d133), (100/1000000) * avg(d133) avg2, 0.0001 * min(d133) min2, max(d133)/10000 max2 from dtypes;
-select truncate(avg(d134), 10), min(d134), max(d134), (100/1000000) * avg(d134) avg2, 0.0001 * min(d134) min2, max(d134)/10000 max2 from dtypes;
-select truncate(avg(d135), 10), min(d135), max(d135), (100/1000000) * avg(d135) avg2, 0.0001 * min(d135) min2, max(d135)/10000 max2 from dtypes;
-select truncate(avg(d136), 10), min(d136), max(d136), (100/1000000) * avg(d136) avg2, 0.0001 * min(d136) min2, max(d136)/10000 max2 from dtypes;
+select truncate(avg(d133), 10), min(d133), max(d133), truncate((100/1000000) * avg(d133), 10) avg2, 0.0001 * min(d133) min2, max(d133)/10000 max2 from dtypes;
+select truncate(avg(d134), 10), min(d134), max(d134), truncate((100/1000000) * avg(d134), 10) avg2, 0.0001 * min(d134) min2, max(d134)/10000 max2 from dtypes;
+select truncate(avg(d135), 10), min(d135), max(d135), truncate((100/1000000) * avg(d135), 10) avg2, 0.0001 * min(d135) min2, max(d135)/10000 max2 from dtypes;
+select truncate(avg(d136), 10), min(d136), max(d136), truncate((100/1000000) * avg(d136), 10) avg2, 0.0001 * min(d136) min2, max(d136)/10000 max2 from dtypes;
 select avg(d137), min(d137), max(d137), (100/1000000) * avg(d137) avg2, 0.0001 * min(d137) min2, max(d137)/10000 max2 from dtypes;
 select avg(d138), min(d138), max(d138), (100/1000000) * avg(d138) avg2, 0.0001 * min(d138) min2, max(d138)/10000 max2 from dtypes;
 select avg(d139), min(d139), max(d139), (100/1000000) * avg(d139) avg2, 0.0001 * min(d139) min2, max(d139)/10000 max2 from dtypes;
@@ -161,11 +161,11 @@ select avg(d141), min(d141), max(d141), (100/1000000) * avg(d141) avg2, 0.0001 *
 select avg(d142), min(d142), max(d142), (100/1000000) * avg(d142) avg2, 0.0001 * min(d142) min2, max(d142)/10000 max2 from dtypes;
 select avg(d143), min(d143), max(d143), (100/1000000) * avg(d143) avg2, 0.0001 * min(d143) min2, max(d143)/10000 max2 from dtypes;
 select avg(d144), min(d144), max(d144), (100/1000000) * avg(d144) avg2, 0.0001 * min(d144) min2, max(d144)/10000 max2 from dtypes;
-select truncate(avg(d145), 10), min(d145), max(d145), (100/1000000) * avg(d145) avg2, 0.0001 * min(d145) min2, max(d145)/10000 max2 from dtypes;
-select truncate(avg(d160), 10), min(d160), max(d160), (100/1000000) * avg(d160) avg2, 0.0001 * min(d160) min2, max(d160)/10000 max2 from dtypes;
+select truncate(avg(d145), 10), min(d145), max(d145), truncate((100/1000000) * avg(d145), 10) avg2, 0.0001 * min(d145) min2, max(d145)/10000 max2 from dtypes;
+select truncate(avg(d160), 10), min(d160), max(d160), truncate((100/1000000) * avg(d160), 10) avg2, 0.0001 * min(d160) min2, max(d160)/10000 max2 from dtypes;
 select avg(d161), min(d161), max(d161), (100/1000000) * avg(d161) avg2, 0.0001 * min(d161) min2, max(d161)/10000 max2 from dtypes;
-select avg(d162), min(d162), max(d162), (100/1000000) * avg(d162) avg2, 0.0001 * min(d162) min2, max(d162)/10000 max2 from dtypes;
-select truncate(avg(d171), 10), min(d171), max(d171), (100/1000000) * avg(d171) avg2, 0.0001 * min(d171) min2, max(d171)/10000 max2 from dtypes;
+select truncate(avg(d162), 10), min(d162), max(d162), truncate((100/1000000) * avg(d162), 10) avg2, 0.0001 * min(d162) min2, max(d162)/10000 max2 from dtypes;
+select truncate(avg(d171), 10), min(d171), max(d171), truncate((100/1000000) * avg(d171), 10) avg2, 0.0001 * min(d171) min2, max(d171)/10000 max2 from dtypes;
 select avg(d172), min(d172), max(d172), (100/1000000) * avg(d172) avg2, 0.0001 * min(d172) min2, max(d172)/10000 max2 from dtypes;
 select avg(d173), min(d173), max(d173), (100/1000000) * avg(d173) avg2, 0.0001 * min(d173) min2, max(d173)/10000 max2 from dtypes;
 select avg(d174), min(d174), max(d174), (100/1000000) * avg(d174) avg2, 0.0001 * min(d174) min2, max(d174)/10000 max2 from dtypes;
@@ -174,6 +174,6 @@ select avg(d176), min(d176), max(d176), (100/1000000) * avg(d176) avg2, 0.0001 *
 select avg(d177), min(d177), max(d177), (100/1000000) * avg(d177) avg2, 0.0001 * min(d177) min2, max(d177)/10000 max2 from dtypes;
 select avg(d178), min(d178), max(d178), (100/1000000) * avg(d178) avg2, 0.0001 * min(d178) min2, max(d178)/10000 max2 from dtypes;
 select avg(d179), min(d179), max(d179), (100/1000000) * avg(d179) avg2, 0.0001 * min(d179) min2, max(d179)/10000 max2 from dtypes;
-select truncate(avg(d180), 10), min(d180), max(d180), (100/1000000) * avg(d180) avg2, 0.0001 * min(d180) min2, max(d180)/10000 max2 from dtypes;
+select truncate(avg(d180), 10), min(d180), max(d180), truncate((100/1000000) * avg(d180), 10) avg2, 0.0001 * min(d180) min2, max(d180)/10000 max2 from dtypes;
 #
 

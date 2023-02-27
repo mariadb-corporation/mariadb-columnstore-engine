@@ -3,9 +3,9 @@ set columnstore_double_for_decimal_math = 1;
 drop table if exists `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess`;
 create table `p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess` ( `session_duration` decimal(13,3) not null,`session_idle_down_duration` decimal(13,3) not null, `session_q5_down` int(11) not null ) engine=columnstore default charset=latin1;
 insert into p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess values (1032632.1 , 86382, 1273564557);
-select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  truncate(session_duration*session_q5_down, 2) as result_1, (session_duration*session_q5_down)*8 as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
+select  session_duration as session_duration,  session_idle_down_duration as session_idle_down_duration,  session_q5_down as session_q5_down,  truncate(session_duration*session_q5_down, 2) as result_1, truncate((session_duration*session_q5_down)*8, 2) as result_2, (1032632.1*1273564557)*8 as result_3 from p2_loaded_uh_p_xml_fsc_2x_for_agg_201310_valid_sess t1;
 session_duration	session_idle_down_duration	session_q5_down	result_1	result_2	result_3
-1032632.100	86382.000	1273564557	1315123642980479.70	10520989143843837.601	10520989143843837.6
+1032632.100	86382.000	1273564557	1315123642980479.70	10520989143843837.60	10520989143843837.6
 drop table if exists bug2437;
 create table bug2437 (col1 decimal(6,4)) engine=columnstore;
 insert into bug2437 values (10.0001);
