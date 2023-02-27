@@ -8,6 +8,7 @@
 #
 USE autopilot;
 #
+SET @@session.time_zone = "+00:00";
 select cidx, CDATE, UNIX_TIMESTAMP(CDATE) from datatypetestm order by cidx;
 select cidx, CDATETIME, UNIX_TIMESTAMP(CDATETIME) from datatypetestm order by cidx;
 --replace_column 3 REPLACEDVALUE

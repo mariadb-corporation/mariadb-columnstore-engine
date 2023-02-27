@@ -67,7 +67,8 @@ USE outerjoin;
 --source ../include/autopilot_create_outerjoin_tables.inc
 #
 # Set table name to case insensitive
---exec sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/my.cnf.d/server.cnf
+--exec if test -f /etc/my.cnf.d/server.cnf; then sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/my.cnf.d/server.cnf; fi
+--exec if test -f etc/mysql/mariadb.conf.d/50.server.cnf; then sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/mysql/mariadb.conf.d/50-server.cnf; fi
 #
 SET GLOBAL columnstore_use_import_for_batchinsert=ON;
 #

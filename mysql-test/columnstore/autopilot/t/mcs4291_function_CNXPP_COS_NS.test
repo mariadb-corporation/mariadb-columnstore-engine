@@ -11,7 +11,7 @@ USE autopilot;
 select cidx, CBIGINT, COS(CBIGINT) from datatypetestm order by cidx;
 select cidx, CDECIMAL1, COS(CDECIMAL1) from datatypetestm order by cidx;
 select cidx, CDECIMAL4, COS(CDECIMAL4) from datatypetestm order by cidx;
-select cidx, CDECIMAL4_2, COS(CDECIMAL4_2) from datatypetestm order by cidx;
+select cidx, CDECIMAL4_2, TRUNCATE(COS(CDECIMAL4_2), 15) from datatypetestm order by cidx;
 select cidx, CDECIMAL5, COS(CDECIMAL5) from datatypetestm order by cidx;
 select cidx, CDECIMAL9, COS(CDECIMAL9) from datatypetestm order by cidx;
 select cidx, CDECIMAL9_2, COS(CDECIMAL9_2) from datatypetestm order by cidx;

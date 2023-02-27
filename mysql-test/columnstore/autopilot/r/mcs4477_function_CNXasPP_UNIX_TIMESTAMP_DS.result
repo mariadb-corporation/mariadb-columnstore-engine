@@ -1,4 +1,5 @@
 USE autopilot;
+SET @@session.time_zone = "+00:00";
 select cidx, CDATE, UNIX_TIMESTAMP(CDATE) from datatypetestm order by cidx;
 cidx	CDATE	UNIX_TIMESTAMP(CDATE)
 1	1997-01-01	852076800

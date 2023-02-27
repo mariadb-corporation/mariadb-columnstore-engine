@@ -68,6 +68,8 @@ local core_dump_check = 'https://raw.githubusercontent.com/mariadb-corporation/m
 local core_dump_drop = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_drop.sh';
 local ansi2html = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/ansi2html.sh';
 local logs = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/with_service_logs/core_dumps/logs.sh';
+local mtr_suite_list = 'basic,bugfixes';
+local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
 
 local platformMap(platform, arch) =
   local platform_map = {
@@ -116,11 +118,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local regression_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
-  local branchp = if (branch == '**') then '' else branch,
+  local branchp = if (branch == '**') then '' else branch + '/',
+  local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
-  local container_tags = if (event == 'cron') then [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}', branch] else [branch + '-' + std.strReplace(event, '_', '-') + '-${DRONE_BUILD_NUMBER}'],
-  local container_version = branch + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
+  local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
+  local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
@@ -147,7 +150,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
         from_secret: 'aws_secret_access_key',
       },
       source: result,
-      target: branchp + '/' + eventp + '/' + server + '/' + arch + '/' + result,
+      // branchp has slash if not empty
+      target: branchp + eventp + '/' + server + '/' + arch + '/' + result,
       delete: 'true',
     },
   },
@@ -256,12 +260,16 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: ['smoke'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
+    environment: {
+      MTR_SUITE_LIST: '${MTR_SUITE_LIST:-' + mtr_suite_list + '}',
+      MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
+    },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp ' + result + ' mtr$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget procps-ng"',
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget"',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_mtr_core_dump.%p"',
@@ -282,6 +290,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       "docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'",
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"character_set_server=latin1\" >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"character_set_server=latin1\" >> /etc/my.cnf.d/columnstore.cnf"',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"collation_server=latin1_swedish_ci\" >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"collation_server=latin1_swedish_ci\" >> /etc/my.cnf.d/columnstore.cnf"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
@@ -292,7 +302,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
+      if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
+      if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
+      if (event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=' + mtr_full_set + '"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
     ],
   },
   mtrlog:: {
@@ -458,7 +471,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       VERSION: container_version,
       MCS_REPO: 'columnstore',
       DEV: 'true',
-      MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + '/' + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      // branchp has slash if not empty
+      MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
       CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/cmapi/develop/latest/' + arch + '/',
     },
