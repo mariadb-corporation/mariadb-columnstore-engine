@@ -2975,7 +2975,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UDECIMAL:
 
-          if (type.scale != 0 && unionedType.scale != 0)
+          if (type.scale != 0 && (unionedType.scale != 0 || isDecimal(unionedType.colDataType)))
           {
             const unsigned int digitsBeforeDecimal = type.precision - type.scale;
             const unsigned int digitsBeforeDecimalUnion = unionedType.precision - unionedType.scale;
