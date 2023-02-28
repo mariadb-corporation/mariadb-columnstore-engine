@@ -2934,7 +2934,8 @@ int64_t DataConvert::stringToTime(const string& data)
 }
 
 void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                      const datatypes::SystemCatalog::TypeHolderStd& type)
+                                      const datatypes::SystemCatalog::TypeHolderStd& type,
+                                      unsigned int& rc)
 {
   // limited support for VARBINARY, no implicit conversion.
   if (type.colDataType == datatypes::SystemCatalog::VARBINARY ||
@@ -2974,7 +2975,31 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UDECIMAL:
 
-          unionedType.precision = std::max(type.precision, unionedType.precision);
+          if (type.scale != 0 && (unionedType.scale != 0 || isDecimal(unionedType.colDataType)))
+          {
+            const unsigned int digitsBeforeDecimal = type.precision - type.scale;
+            const unsigned int digitsBeforeDecimalUnion = unionedType.precision - unionedType.scale;
+
+            if ((std::max(digitsBeforeDecimal, digitsBeforeDecimalUnion) +
+                 std::max(type.scale, unionedType.scale)) > datatypes::INT128MAXPRECISION)
+            {
+              rc = logging::ERR_UNION_DECIMAL_OVERFLOW;
+              return;
+            }
+          }
+
+          // Handle the scenario where the upstream code assigns special values of 9999
+          // and -1 as the precision of the unionedType.
+          if ((unionedType.precision == 9999 || unionedType.precision == -1) &&
+              (type.precision != 9999 && type.precision != -1))
+          {
+            unionedType.precision = type.precision;
+          }
+          else
+          {
+            unionedType.precision = std::max(type.precision, unionedType.precision);
+          }
+
           unionedType.scale = std::max(type.scale, unionedType.scale);
 
           if (datatypes::Decimal::isWideDecimalTypeByPrecision(unionedType.precision))
@@ -3042,6 +3067,10 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UFLOAT:
         case datatypes::SystemCatalog::UDOUBLE:
         case datatypes::SystemCatalog::LONGDOUBLE:
+          if (datatypes::isWideDecimalType(type.colDataType, type.colWidth))
+            unionedType = type;
+          break;
+
         default: break;
       }
 

@@ -6682,7 +6682,8 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
  * RETURNS
  *  error id as an int
  ***********************************************************/
-int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep)
+int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
+                bool isSelectHandlerTop, bool isSelectLexUnit)
 {
   // populate table map and trigger syscolumn cache for all the tables (@bug 1637).
   // all tables on FROM list must have at least one col in colmap
@@ -6819,9 +6820,9 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   bool unionSel = false;
   // UNION master unit check
   // Existed pushdown handlers won't get in this scope
-  // except UNION pushdown that is to come.
+  // MDEV-25080 Union pushdown would enter this scope
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
-  if (!isUnion && select_lex.master_unit()->is_unit_op())
+  if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
     // MCOL-2178 isUnion member only assigned, never used
     // MIGR::infinidb_vtable.isUnion = true;
@@ -7383,7 +7384,8 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
  *  error id as an int
  ***********************************************************/
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
-                  bool isSelectHandlerTop, const std::vector<COND*>& condStack)
+                  bool isSelectHandlerTop, bool isSelectLexUnit,
+                  const std::vector<COND*>& condStack)
 {
 #ifdef DEBUG_WALK_COND
   cerr << "getSelectPlan()" << endl;
@@ -7411,12 +7413,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   CalpontSelectExecutionPlan::SelectList derivedTbList;
   // @bug 1796. Remember table order on the FROM list.
   gwi.clauseType = FROM;
-  if ((rc = processFrom(isUnion, select_lex, gwi, csep)))
+  if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop,
+                        isSelectLexUnit)))
   {
     return rc;
   }
-
-  bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
   gwi.clauseType = WHERE;
   if ((rc = processWhere(select_lex, gwi, csep, condStack)))
@@ -7860,25 +7861,32 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   // @bug4388 normalize the project coltypes for union main select list
   if (!csep->unionVec().empty())
   {
+    unsigned int unionedTypeRc = 0;
+
     for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
     {
       vector<CalpontSystemCatalog::ColType> coltypes;
 
       for (uint32_t j = 0; j < csep->unionVec().size(); j++)
       {
-        coltypes.push_back(dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get())
-                               ->returnedCols()[i]
-                               ->resultType());
+        CalpontSelectExecutionPlan* unionCsep =
+            dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get());
+        coltypes.push_back(unionCsep->returnedCols()[i]->resultType());
 
         // @bug5976. set hasAggregate true for the main column if
         // one corresponding union column has aggregate
-        if (dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get())
-                ->returnedCols()[i]
-                ->hasAggregate())
+        if (unionCsep->returnedCols()[i]->hasAggregate())
           gwi.returnedCols[i]->hasAggregate(true);
       }
 
-      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes));
+      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
+
+      if (unionedTypeRc != 0)
+      {
+        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(unionedTypeRc);
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
     }
   }
 
@@ -8046,6 +8054,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   }
 
   SRCP minSc;  // min width projected column. for count(*) use
+
+  bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
   // Group by list. not valid for union main query
   if (!unionSel)
@@ -8805,9 +8815,10 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
   return 0;
 }
 
-int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
+                       bool isSelectLexUnit)
 {
-  SELECT_LEX& select_lex = *handler->select;
+  SELECT_LEX& select_lex = handler->select_lex ? *handler->select_lex : *handler->lex_unit->first_select();
 
   if (select_lex.where)
   {
@@ -8819,7 +8830,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   convertOuterJoinToInnerJoin(&select_lex.top_join_list, gwi.tableOnExprList, gwi.condList,
                               handler->tableOuterJoinMap);
 
-  int status = getSelectPlan(gwi, select_lex, csep, false, true);
+  int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
   if (status > 0)
     return ER_INTERNAL_ERROR;
@@ -9683,25 +9694,32 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   // @bug4388 normalize the project coltypes for union main select list
   if (!csep->unionVec().empty())
   {
+    unsigned int unionedTypeRc = 0;
+
     for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
     {
       vector<CalpontSystemCatalog::ColType> coltypes;
 
       for (uint32_t j = 0; j < csep->unionVec().size(); j++)
       {
-        coltypes.push_back(dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get())
-                               ->returnedCols()[i]
-                               ->resultType());
+        CalpontSelectExecutionPlan* unionCsep =
+            dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get());
+        coltypes.push_back(unionCsep->returnedCols()[i]->resultType());
 
         // @bug5976. set hasAggregate true for the main column if
         // one corresponding union column has aggregate
-        if (dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get())
-                ->returnedCols()[i]
-                ->hasAggregate())
+        if (unionCsep->returnedCols()[i]->hasAggregate())
           gwi.returnedCols[i]->hasAggregate(true);
       }
 
-      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes));
+      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
+
+      if (unionedTypeRc != 0)
+      {
+        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(unionedTypeRc);
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
     }
   }
 

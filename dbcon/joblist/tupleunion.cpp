@@ -1766,11 +1766,13 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
       {
         case 1: out->setUintField<1>(joblist::TINYINTNULL, col); break;
 
-        case 2: out->setUintField<1>(joblist::SMALLINTNULL, col); break;
+        case 2: out->setUintField<2>(joblist::SMALLINTNULL, col); break;
 
         case 4: out->setUintField<4>(joblist::INTNULL, col); break;
 
         case 8: out->setUintField<8>(joblist::BIGINTNULL, col); break;
+
+        case 16: out->setInt128Field(datatypes::Decimal128Null, col); break;
 
         default:
         {

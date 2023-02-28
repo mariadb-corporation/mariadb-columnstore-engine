@@ -106,6 +106,8 @@
 2058    ERR_DISKAGG_OVERFLOW1 The hash function used produces a lot of hash collisions (1).
 2059    ERR_DISKAGG_OVERFLOW2 The hash function used produces a lot of hash collisions (2).
 
+2060	ERR_UNION_DECIMAL_OVERFLOW	Union operation exceeds maximum DECIMAL precision of 38.
+
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.
 3002	ERR_MORE_THAN_1_ROW	Subquery returns more than 1 row.

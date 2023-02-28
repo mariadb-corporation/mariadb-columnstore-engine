@@ -5102,11 +5102,18 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
   unionStep->inputAssociation(jsaToUnion);
   unionStep->outputAssociation(jsa);
 
+  // This return code in the call to convertUnionColType() below would
+  // always be 0. This is because convertUnionColType() is also called
+  // in the connector code in getSelectPlan()/getGroupPlan() which handle
+  // the non-zero return code scenarios from this function call and error
+  // out, in which case, the execution does not even get to ExeMgr.
+  unsigned int dummyUnionedTypeRc = 0;
+
   // get unioned column types
   for (uint64_t j = 0; j < colCount; ++j)
   {
     CalpontSystemCatalog::ColType colType =
-        CalpontSystemCatalog::ColType::convertUnionColType(queryColTypes[j]);
+        CalpontSystemCatalog::ColType::convertUnionColType(queryColTypes[j], dummyUnionedTypeRc);
     types.push_back(colType.colDataType);
     csNums.push_back(colType.charsetNumber);
     scale.push_back(colType.scale);
