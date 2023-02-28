@@ -360,6 +360,20 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     chmod 777 /var/log/mariadb/columnstore
 }
 
+
+smoke()
+{
+    message "Creating test database"
+    mariadb -e "create database if not exists test;"
+    message "Selecting magic numbers"
+    MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
+    if [[ $MAGIC == '42' ]] ; then
+        message "Great answer correct"
+    else
+        warn "Smoke failed, answer is '$MAGIC'"
+    fi
+}
+
 select_branch
 
 if [[ $INSTALL_DEPS = true ]] ; then
@@ -373,6 +387,6 @@ run_unit_tests
 run_microbenchmarks_tests
 install
 start_service
-message "Creating test database"
-mariadb -e "create database if not exists test;"
+smoke
+
 message "$color_green FINISHED $color_normal"
