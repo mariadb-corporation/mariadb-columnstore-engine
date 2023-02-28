@@ -49,17 +49,10 @@ bool IDBFactory::installDefaultPlugins()
   // protect these methods since we are changing our static data structure
   boost::mutex::scoped_lock lock(fac_guard);
 
-  // s_plugins.emplace(std::move(IDBDataFile::BUFFERED),
-  //                   std::move(FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(),
-  //                                            new PosixFileSystem())));
-  // s_plugins.emplace(std::move(IDBDataFile::UNBUFFERED),
-  //                   std::move(FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered",
-  //                                            new UnbufferedFileFactory(), new PosixFileSystem())));
-
-  // TODO: use the installPlugin fcn below instead of declaring this statically, then remove the dependency
-  // IDBDatafile -> cloudio
-  // s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new
-  // SMFileSystem());
+  s_plugins.emplace(IDBDataFile::BUFFERED, FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(),
+                                             new PosixFileSystem()));
+  s_plugins.emplace(IDBDataFile::UNBUFFERED, FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered",
+                                             new UnbufferedFileFactory(), new PosixFileSystem()));
 
   return false;
 }
