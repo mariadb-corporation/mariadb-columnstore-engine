@@ -36,6 +36,12 @@ if (WITH_UNITTESTS)
     target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
+    add_executable(asantest asantest.cpp)
+    add_dependencies(asantest googletest)
+    target_link_libraries(asantest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
+    gtest_add_tests(TARGET asantest TEST_PREFIX columnstore:)
+
+
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
     add_dependencies(mcs_decimal_tests googletest)
     target_link_libraries(mcs_decimal_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
