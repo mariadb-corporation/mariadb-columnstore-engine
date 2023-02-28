@@ -152,7 +152,7 @@ build()
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
-                     -DPLUGIN_COLUMNSTORE=NO
+                     -DPLUGIN_COLUMNSTORE=YES
                      -DPLUGIN_MROONGA=NO
                      -DPLUGIN_ROCKSDB=NO
                      -DPLUGIN_TOKUDB=NO
@@ -177,7 +177,7 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MSAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
         warn "Building with ASAN"
     fi
 
@@ -300,8 +300,11 @@ install()
 socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
+    mkdir -p /var/lib/mysql
+    chown mysql:mysql /var/lib/mysql
+
     message "Running mysql_install_db"
-    mysql_install_db --rpm --user=mysql
+    sudo -u mysql mysql_install_db --rpm --user=mysql
     mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
 
     mkdir -p /etc/columnstore
