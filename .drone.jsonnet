@@ -555,6 +555,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
                'git config --global url."https://github.com/".insteadOf git@github.com:',
                'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
                'git reset --hard $$SERVER_SHA',
+               'echo Environment=' + "'ASAN_OPTIONS=print_stats=false,detect_odr_violation=0'" + '>> support-files/mariadb.service.in',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
