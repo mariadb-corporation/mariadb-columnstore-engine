@@ -177,8 +177,14 @@ build()
     fi
 
     if [[ $ASAN = true ]] ; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
         warn "Building with ASAN"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        if grep -q ASAN $MDB_SOURCE_PATH/support-files/mariadb.service.in; then
+            warn "MDB Server has ASAN options in support-files/mariadb.service.in, check it's compatibility"
+        else
+            echo Environment="'ASAN_OPTIONS=print_stats=false,detect_odr_violation=0'" >> $MDB_SOURCE_PATH/support-files/mariadb.service.in
+            message "ASAN options were added to support-files/mariadb.service.in"
+        fi
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
