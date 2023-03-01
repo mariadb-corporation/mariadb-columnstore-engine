@@ -1342,9 +1342,6 @@ CalpontSystemCatalog::ColType Func_sin::operationType(FunctionParm& fp,
 
 double Func_sin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-
-  [[maybe_unused]] execplan::TreeNode* node = new execplan::LogicOperator("and");
-
   switch (parm[0]->data()->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::BIGINT:

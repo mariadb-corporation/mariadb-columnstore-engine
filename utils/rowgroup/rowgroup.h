@@ -315,18 +315,23 @@ class RGData
     return (userDataStore ? (userDataStore->useUserDataMutex()) : false);
   }
 
+  bool hasRowData() const
+  {
+    return !!rowData;
+  }
+
+
+
+ private:
   boost::shared_array<uint8_t> rowData;
   boost::shared_ptr<StringStore> strings;
   boost::shared_ptr<UserDataStore> userDataStore;
-
- private:
-  // boost::shared_array<uint8_t> rowData;
-  // boost::shared_ptr<StringStore> strings;
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
 
   friend class RowGroup;
+  friend class RowGroupStorage;
 };
 
 class Row
