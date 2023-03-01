@@ -353,31 +353,15 @@ local Pipeline(branch, platform, event, arch='amd64') = {
              commands: [
                'cd /mdb/' + builddir,
                // Remove Debian build flags that could prevent ColumnStore from building
-               "sed '/-DPLUGIN_COLUMNSTORE=NO/d' -i debian/rules",
+               "sed -i '/-DPLUGIN_COLUMNSTORE=NO/d' debian/rules",
+               // Disable dh_missing strict check for missing files
+               'sed -i s/--fail-missing/--list-missing/ debian/rules',
                // Tweak debian packaging stuff
-               "sed -i -e '/Package: mariadb-backup/,/^$/d' debian/control",
-               "sed -i -e '/Package: mariadb-plugin-connect/,/^$/d' debian/control",
-               "sed -i -e '/Package: mariadb-plugin-gssapi*/,/^$/d' debian/control",
-               "sed -i -e '/Package: mariadb-plugin-xpand*/,/^$/d' debian/control",
-               'sed "/Package: mariadb-plugin-mroonga/,/^$/d" -i debian/control',
-               'sed "/Package: mariadb-plugin-rocksdb/,/^$/d" -i debian/control',
-               'sed "/Package: mariadb-plugin-spider/,/^$/d" -i debian/control',
-               'sed "/Package: mariadb-plugin-oqgraph/,/^$/d" -i debian/control',
-               'sed "/ha_sphinx.so/d" -i debian/mariadb-server-*.install',
-               'sed "/Package: libmariadbd19/,/^$/d" -i debian/control',
-               'sed "/Package: libmariadbd-dev/,/^$/d" -i debian/control',
-               "sed -i '/libfmt-dev/d' debian/control",
-               // Disable Galera
-               "sed -i -e 's/Depends: galera.*/Depends:/' debian/control",
-               "sed -i -e 's/\"galera-enterprise-4\"//' cmake/cpack_rpm.cmake",
-               "sed -i -e '/wsrep/d' debian/mariadb-server-*.install",
-               // Leave test package for mtr
-               "sed -i '/(mariadb|mysql)-test/d;/-test/d' debian/autobake-deb.sh",
-               "sed -i '/test-embedded/d' debian/mariadb-test.install",
-               // From Debian Bullseye/Ubuntu Groovy, liburing replaces libaio
-               "apt-cache madison liburing-dev | grep 'liburing-dev' || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules",
-               // From Debian Buster/Ubuntu Focal onwards libpmem-dev is available
-               "apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules",
+               'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
+               "sed -i 's/Depends: galera.*/Depends:/' debian/control",
+               'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
+               // Install build dependencies for deb
+               if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
                // Change plugin_maturity level
                // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
                // Workaround till upstream removes 4535 workaround (workaround for workaround!)
