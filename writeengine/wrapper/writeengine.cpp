@@ -995,6 +995,29 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   return rc;
 }
 
+// TODO: Get rid of this
+void emptyValueToAny(boost::any* any, const uint8_t* emptyValue, int colWidth)
+{
+  switch (colWidth)
+  {
+    case 16:
+      *any = *(int128_t*)emptyValue;
+      break;
+    case 8:
+      *any = *(int64_t*)emptyValue;
+      break;
+    case 4:
+      *any = *(int32_t*)emptyValue;
+      break;
+    case 2:
+      *any = *(int16_t*)emptyValue;
+      break;
+    default:
+      *any = *emptyValue;
+  }
+}
+
+
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
                                   vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol)
@@ -1035,10 +1058,7 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
       const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->getEmptyRowValue(
           curColStruct.colDataType, curColStruct.colWidth);
 
-      if (curColStruct.colWidth == datatypes::MAXDECIMALWIDTH)
-        curTuple.data = *(int128_t*)emptyVal;
-      else
-        curTuple.data = *(int64_t*)emptyVal;
+      emptyValueToAny(&curTuple.data, emptyVal, curColStruct.colWidth);
 
       curTupleList.push_back(curTuple);
       colValueList.push_back(curTupleList);
