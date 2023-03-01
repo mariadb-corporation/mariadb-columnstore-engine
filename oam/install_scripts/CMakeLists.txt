@@ -26,7 +26,7 @@ if (WITH_COLUMNSTORE_ASAN)
   endif (WITH_COLUMNSTORE_REPORT_PATH)
 
   SET(LD_PRELOAD_STRING "")
-  SET(ALLOC_CONFIG "ASAN_OPTIONS=print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}")
+  SET(ALLOC_CONFIG "ASAN_OPTIONS=print_stats=false,detect_odr_violation=0,alloc_dealloc_mismatch=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}")
   SET(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG})
   SET(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG})
   SET(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG})

@@ -21,8 +21,8 @@
 
 namespace utils
 {
-const uint8_t MAXLEGACYWIDTH = 8ULL;
-const uint8_t MAXCOLUMNWIDTH = 16ULL;
+constexpr uint8_t MAXLEGACYWIDTH = 8ULL;
+constexpr uint8_t MAXCOLUMNWIDTH = 16ULL;
 
 inline bool isWide(uint8_t width)
 {
