@@ -17,7 +17,11 @@
 
 #pragma once
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <boost/property_tree/ptree.hpp>
+#pragma GCC diagnostic pop
 #include <boost/thread.hpp>
 #include <sys/types.h>
 #include <functional>

@@ -22,7 +22,10 @@
 #include <set>
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <boost/property_tree/ptree.hpp>
+#pragma GCC diagnostic pop
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/uuid/uuid.hpp>

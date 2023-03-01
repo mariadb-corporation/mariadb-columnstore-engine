@@ -627,7 +627,7 @@ void ColumnCommand::prep(int8_t outputType, bool absRids)
   }
 }
 
-void ColumnCommand::fillInPrimitiveMessageHeaderF(const int8_t outputType, const bool absRids)
+void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const bool absRids)
 {
   // WIP Align this structure or move input RIDs away.
   baseMsgLength = sizeof(NewColRequestHeader) + (suppressFilter ? 0 : filterString.length());
