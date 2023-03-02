@@ -37,7 +37,9 @@ struct FileFactoryEnt
     ;
   }
 
-  FileFactoryEnt(FileFactoryEnt&) =  delete;
+  FileFactoryEnt(const FileFactoryEnt&) = delete;
+  FileFactoryEnt& operator=(const FileFactoryEnt&) = delete;
+  FileFactoryEnt& operator=(FileFactoryEnt&&) = delete;
   FileFactoryEnt(FileFactoryEnt&& temporary)
     : factory(temporary.factory)
     , filesystem(temporary.filesystem)
@@ -46,7 +48,7 @@ struct FileFactoryEnt
     temporary.filesystem = nullptr;
   }
 
-  FileFactoryEnt& operator=(const FileFactoryEnt) = delete;
+
 
   ~FileFactoryEnt();
 

@@ -140,7 +140,11 @@ inline T derefFromTwoVectorPtrs(const std::vector<T>* outer, const std::vector<T
 class StringStore
 {
  public:
-  StringStore();
+  StringStore() = default;
+  StringStore(const StringStore&) = delete;
+  StringStore(StringStore&&) = delete;
+  StringStore& operator=(const StringStore&) = delete;
+  StringStore& operator=(StringStore&&) = delete;
   virtual ~StringStore();
 
   inline std::string getString(uint64_t offset) const;
@@ -182,17 +186,14 @@ class StringStore
 
  private:
   std::string empty_str;
-
-  StringStore(const StringStore&);
-  StringStore& operator=(const StringStore&);
   static constexpr const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
 
   std::vector<boost::shared_array<uint8_t>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
   std::vector<boost::shared_array<uint8_t>> longStrings;
-  bool empty;
-  bool fUseStoreStringMutex;  //@bug6065, make StringStore::storeString() thread safe
+  bool empty = true;
+  bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
   boost::mutex fMutex;
 };
 
@@ -219,8 +220,13 @@ class UserDataStore
   };
 
  public:
-  UserDataStore();
-  virtual ~UserDataStore();
+  UserDataStore() = default;
+  virtual ~UserDataStore() = default;
+  UserDataStore(const UserDataStore&) = delete;
+  UserDataStore(UserDataStore&&) = delete;
+  UserDataStore& operator=(const UserDataStore&) = delete;
+  UserDataStore& operator=(UserDataStore&&) = delete;
+
 
   void serialize(messageqcpp::ByteStream&) const;
   void deserialize(messageqcpp::ByteStream&);
@@ -242,12 +248,10 @@ class UserDataStore
   boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t offset) const;
 
  private:
-  UserDataStore(const UserDataStore&);
-  UserDataStore& operator=(const UserDataStore&);
 
   std::vector<StoreData> vStoreData;
 
-  bool fUseUserDataMutex;
+  bool fUseUserDataMutex = false;
   boost::mutex fMutex;
 };
 
@@ -319,8 +323,6 @@ class RGData
   {
     return !!rowData;
   }
-
-
 
  private:
   boost::shared_array<uint8_t> rowData;

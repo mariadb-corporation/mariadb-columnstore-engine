@@ -50,19 +50,7 @@ namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
-StringStore::StringStore() : empty(true), fUseStoreStringMutex(false)
-{
-}
 
-StringStore::StringStore(const StringStore&)
-{
-  throw logic_error("Don't call StringStore copy ctor");
-}
-
-StringStore& StringStore::operator=(const StringStore&)
-{
-  throw logic_error("Don't call StringStore operator=");
-}
 
 StringStore::~StringStore()
 {
@@ -213,14 +201,6 @@ void StringStore::clear()
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
   empty = true;
-}
-
-UserDataStore::UserDataStore() : fUseUserDataMutex(false)
-{
-}
-
-UserDataStore::~UserDataStore()
-{
 }
 
 uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
