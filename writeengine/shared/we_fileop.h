@@ -456,7 +456,6 @@ class FileOp : public BlockOp, public WeUIDGID
                                  execplan::CalpontSystemCatalog::ColDataType colDataType);
 
   static void initDbRootExtentMutexes();
-  static void removeDbRootExtentMutexes();
 
   int writeInitialCompColumnChunk(IDBDataFile* pFile, int nBlocksAllocated, int nRows,
                                   const uint8_t* emptyVal, int width, BRM::LBID_t lbid,
@@ -470,7 +469,7 @@ class FileOp : public BlockOp, public WeUIDGID
   static boost::mutex m_createDbRootMutexes;
 
   // Mutexes used to serialize extent creation within each DBRoot
-  static std::map<int, boost::mutex*> m_DbRootAddExtentMutexes;
+  static std::map<int, boost::mutex> m_DbRootAddExtentMutexes;
 
   // protect race condition in creating directories
   static boost::mutex m_mkdirMutex;

@@ -60,7 +60,7 @@ namespace WriteEngine
 {
 /*static*/ boost::mutex FileOp::m_createDbRootMutexes;
 /*static*/ boost::mutex FileOp::m_mkdirMutex;
-/*static*/ std::map<int, boost::mutex*> FileOp::m_DbRootAddExtentMutexes;
+/*static*/ std::map<int, boost::mutex> FileOp::m_DbRootAddExtentMutexes;
 // in 1 call to fwrite(), during initialization
 
 // StopWatch timer;
@@ -1005,7 +1005,7 @@ int FileOp::initColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, c
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 
 #endif
-    boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
+    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
 
     if (bExpandExtent)
@@ -1726,7 +1726,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
 
-    boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
+    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 
 #ifdef PROFILE
     if (bExpandExtent)
@@ -1821,30 +1821,10 @@ void FileOp::initDbRootExtentMutexes()
 
     for (size_t i = 0; i < rootIds.size(); i++)
     {
-      boost::mutex* pM = new boost::mutex;
-      m_DbRootAddExtentMutexes[rootIds[i]] = pM;
+      m_DbRootAddExtentMutexes.emplace(std::piecewise_construct,
+                                       std::forward_as_tuple(rootIds[i]),
+                                       std::forward_as_tuple());
     }
-  }
-}
-
-/***********************************************************
- * DESCRIPTION:
- *    Cleans up memory allocated to the DBRoot extent mutexes.  Calling
- *    this function is not necessary, but it is provided for completeness,
- *    to complement initDbRootExtentMutexes(), and to provide a way to
- *    free up memory at the end of program execution.
- ***********************************************************/
-/* static */
-void FileOp::removeDbRootExtentMutexes()
-{
-  boost::mutex::scoped_lock lk(m_createDbRootMutexes);
-
-  std::map<int, boost::mutex*>::iterator k = m_DbRootAddExtentMutexes.begin();
-
-  while (k != m_DbRootAddExtentMutexes.end())
-  {
-    delete k->second;
-    ++k;
   }
 }
 
