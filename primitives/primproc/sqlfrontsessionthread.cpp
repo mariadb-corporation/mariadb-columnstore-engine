@@ -894,7 +894,7 @@ void SQLFrontSessionThread::operator()()
         std::unique_lock<std::mutex> scoped(jlMutex);
         destructing++;
         std::thread bgdtor(
-            [jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing, &msgLog]
+            [jl, &jlMutex, &jlCleanupDone, stmtID, li, &destructing, &msgLog]
             {
               std::unique_lock<std::mutex> scoped(jlMutex);
               const_cast<joblist::SJLP&>(jl).reset();  // this happens second; does real destruction
