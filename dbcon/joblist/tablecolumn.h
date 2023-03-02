@@ -34,11 +34,7 @@
 
 //#define TC_CHECK_RIDS 1
 
-#if defined(_MSC_VER) && defined(JOBLIST_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace joblist
 {

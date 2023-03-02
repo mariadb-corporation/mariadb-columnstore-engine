@@ -74,10 +74,8 @@
 #include <errno.h>
 #include <cstring>
 #include <stdexcept>
-#if __linux__
 #include <values.h>
 #include <sys/file.h>
-#endif
 #include <sstream>
 //#define NDEBUG
 #include <cassert>
@@ -310,10 +308,8 @@ OIDServer::OIDServer() : fFp(NULL), fFd(-1)
       throw ios_base::failure(os.str());
     }
 
-#ifndef _MSC_VER
     if (fFp)
       chmod(fFilename.c_str(), 0664);  // XXXPAT: override umask at least for testing
-#endif
 
     try
     {

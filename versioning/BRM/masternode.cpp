@@ -129,11 +129,9 @@ void ServiceControllerNode::setupChildSignalHandlers()
 
   signal(SIGINT, stop);
   signal(SIGTERM, stop);
-#ifndef _MSC_VER
   signal(SIGHUP, SIG_IGN);
   signal(SIGUSR1, restart);
   signal(SIGPIPE, SIG_IGN);
-#endif
   struct sigaction ign;
 
   memset(&ign, 0, sizeof(ign));

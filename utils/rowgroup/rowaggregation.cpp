@@ -3574,11 +3574,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-#ifdef _MSC_VER
-          fRow.setFloatField(strtod(aggData.fConstValue.c_str(), 0), colOut);
-#else
           fRow.setFloatField(strtof(aggData.fConstValue.c_str(), nullptr), colOut);
-#endif
         }
         break;
 
@@ -3714,11 +3710,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
           double flt;
-#ifdef _MSC_VER
-          flt = strtod(aggData.fConstValue.c_str(), 0) * rowCnt;
-#else
           flt = strtof(aggData.fConstValue.c_str(), nullptr) * rowCnt;
-#endif
           fRow.setFloatField(flt, colOut);
         }
         break;
@@ -3916,11 +3908,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-#ifdef _MSC_VER
-          datum.columnData = strtod(aggData.fConstValue.c_str(), 0);
-#else
           datum.columnData = strtof(aggData.fConstValue.c_str(), nullptr);
-#endif
         }
         break;
 

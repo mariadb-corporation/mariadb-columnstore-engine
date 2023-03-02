@@ -29,9 +29,6 @@
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <string>
-#ifdef _MSC_VER
-#include <io.h>
-#endif
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>

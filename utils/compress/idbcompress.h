@@ -20,20 +20,14 @@
 #pragma once
 
 #include <unistd.h>
-#ifdef __linux__
 #include <sys/types.h>
-#endif
 #include <vector>
 #include <utility>
 #include <unordered_map>
 
 #include "calpontsystemcatalog.h"
 
-#if defined(_MSC_VER) && defined(xxxIDBCOMP_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace compress
 {

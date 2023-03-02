@@ -19,11 +19,7 @@
 
 #pragma once
 
-#ifndef _MSC_VER
 #include <tr1/unordered_map>
-#else
-#include <unordered_map>
-#endif
 #include "windowfunctiontype.h"
 #include "mcsv1_udaf.h"
 

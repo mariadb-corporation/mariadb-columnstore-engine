@@ -631,13 +631,7 @@ string Func_sha::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
   sha << parm[0]->data()->getStrVal(row, isNull).c_str();
 
   // can not compute
-#ifdef _MSC_VER
-
-  // This cast is probably portable, but we'll leave it for Windows only for now...
-  if (!sha.Result(reinterpret_cast<unsigned int*>(message_digest)))
-#else
   if (!sha.Result(message_digest))
-#endif
   {
     isNull = true;
     return "";

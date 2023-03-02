@@ -46,11 +46,7 @@
 #include "bytestream.h"
 #include "logicalpartition.h"
 
-#if defined(_MSC_VER) && defined(xxxDDLPKG_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace ddlpackage
 {

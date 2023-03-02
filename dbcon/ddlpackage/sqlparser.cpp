@@ -29,11 +29,7 @@
 #include "sqlparser.h"
 #undef DDLPKGSQLPARSER_DLLEXPORT
 
-#ifdef _MSC_VER
-#include "ddl-gram-win.h"
-#else
 #include "ddl-gram.h"
-#endif
 
 void scanner_finish(void* yyscanner);
 void scanner_init(const char* str, void* yyscanner);

@@ -30,7 +30,7 @@
 #if defined(__FreeBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
-#elif !defined(_MSC_VER)
+#else
 #include <sys/vfs.h>
 #endif
 #include <boost/filesystem/operations.hpp>
@@ -737,13 +737,7 @@ int FileOp::extendFile(OID oid, const uint8_t* emptyVal, int width,
     }
   }
 
-#ifdef _MSC_VER
-
-  // Need to call the win version with a dir, not a file
-  if (!isDiskSpaceAvail(Config::getDBRootByNum(dbRoot), allocSize))
-#else
   if (!isDiskSpaceAvail(segFile, allocSize))
-#endif
   {
     return ERR_FILE_DISK_SPACE;
   }
@@ -868,13 +862,7 @@ int FileOp::addExtentExactFile(OID oid, const uint8_t* emptyVal, int width, int&
     }
   }
 
-#ifdef _MSC_VER
-
-  // Need to call the win version with a dir, not a file
-  if (!isDiskSpaceAvail(Config::getDBRootByNum(dbRoot), allocSize))
-#else
   if (!isDiskSpaceAvail(segFile, allocSize))
-#endif
   {
     return ERR_FILE_DISK_SPACE;
   }
@@ -2556,25 +2544,6 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
 
   if (maxDiskUsage < 100)  // 100% means to disable the check
   {
-#ifdef _MSC_VER
-    ULARGE_INTEGER freeBytesAvail;
-    ULARGE_INTEGER totalBytesAvail;
-
-    if (GetDiskFreeSpaceEx(fileName.c_str(), &freeBytesAvail, &totalBytesAvail, 0) != 0)
-    {
-      double avail = (double)freeBytesAvail.QuadPart;
-      double total = (double)totalBytesAvail.QuadPart;
-      double wanted = (double)nBlocks * (double)BYTE_PER_BLOCK;
-
-      // If we want more than there is, return an error
-      if (wanted > avail)
-        bSpaceAvail = false;
-      // If the remaining bytes would be too few, return an error
-      else if ((total - (avail - wanted)) / total * 100.0 > maxDiskUsage)
-        bSpaceAvail = false;
-    }
-
-#else
     struct statfs fStats;
     int rc = statfs(fileName.c_str(), &fStats);
 
@@ -2596,7 +2565,6 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
       //"; bAvail: "      << bSpaceAvail          << std::endl;
     }
 
-#endif
   }
 
   return bSpaceAvail;

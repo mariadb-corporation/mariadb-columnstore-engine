@@ -36,14 +36,9 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/foreach.hpp>
-#ifdef _MSC_VER
-#include <unordered_map>
-typedef int pthread_t;
-#else
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <pthread.h>
-#endif
 #include <cerrno>
 
 using namespace std;
@@ -119,9 +114,7 @@ static const char* statsName = {"pm"};
 dbbc::Stats* gPMStatsPtr = 0;
 bool gPMProfOn = false;
 uint32_t gSession = 0;
-#ifndef _MSC_VER
 dbbc::Stats pmstats(statsName);
-#endif
 
 oam::OamCache* oamCache = oam::OamCache::makeOamCache();
 
@@ -130,9 +123,7 @@ namespace primitiveprocessor
 {
 
 BlockRequestProcessor** BRPp;
-#ifndef _MSC_VER
 dbbc::Stats stats;
-#endif
 extern DebugLevel gDebugLevel;
 BRM::DBRM* brm;
 int fCacheCount;
@@ -214,11 +205,7 @@ void waitForRetry(long count)
   timespec ts;
   ts.tv_sec = 5L * count / 10L;
   ts.tv_nsec = (5L * count % 10L) * 100000000L;
-#ifdef _MSC_VER
-  Sleep(ts.tv_sec * 1000 + ts.tv_nsec / 1000 / 1000);
-#else
   nanosleep(&ts, 0);
-#endif
 }
 
 void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
@@ -363,7 +350,6 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
 
   *blocksWereVersioned = false;
 
-#ifndef _MSC_VER
 
   if (LBIDTrace)
   {
@@ -373,7 +359,6 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
     }
   }
 
-#endif
   VER_t* vers = (VER_t*)alloca(blockCount * sizeof(VER_t));
   vbFlags = (bool*)alloca(blockCount);
   vssRCs = (int*)alloca(blockCount * sizeof(int));
@@ -427,12 +412,10 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
   {
     prefetchBlocks(lbids[0], compType, &blksRead);
 
-#ifndef _MSC_VER
 
     if (fPMProfOn)
       pmstats.markEvent(lbids[0], (pthread_t)-1, sessionID, 'M');
 
-#endif
     /* After the prefetch they're all cached if they are in the same range, so
      * prune the block list and try getCachedBlocks again first, then fall back
      * to single-block IO requests if for some reason they aren't. */
@@ -513,12 +496,10 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
   uint32_t blksRead = 0;
   VSSCache::iterator it;
 
-#ifndef _MSC_VER
 
   if (LBIDTrace)
     stats.touchedLBID(lbid, pthread_self(), sessionID);
 
-#endif
 
   if (vssCache)
   {
@@ -575,22 +556,13 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         SUMMARY_INFO2("open failed: ", fileNamePtr);
         char errbuf[80];
         string errMsg;
-#ifdef __linux__
         //#if STRERROR_R_CHAR_P
         const char* p;
 
         if ((p = strerror_r(errCode, errbuf, 80)) != 0)
           errMsg = p;
 
-#else
-        int p;
 
-        if ((p = strerror_r(errCode, errbuf, 80)) == 0)
-          errMsg = errbuf;
-
-#endif
-
-#ifndef _MSC_VER
 
         if (errCode == EINVAL)
         {
@@ -598,7 +570,6 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
                                    logging::ERR_O_DIRECT);
         }
 
-#endif
         string errStr(fileNamePtr);
         errStr += ": open: ";
         errStr += errMsg;
@@ -840,12 +811,10 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
   {
     prefetchBlocks(lbid, compType, &blksRead);
 
-#ifndef _MSC_VER
 
     if (fPMProfOn)
       pmstats.markEvent(lbid, (pthread_t)-1, sessionID, 'M');
 
-#endif
     bc.getBlock(lbid, v, txn, compType, (uint8_t*)bufferPtr, flg, wasBlockInCache);
 
     if (!wasBlockInCache)

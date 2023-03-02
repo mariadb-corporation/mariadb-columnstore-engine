@@ -47,11 +47,7 @@
 #include "../../writeengine/client/we_clients.h"
 #include "liboamcpp.h"
 
-#if defined(_MSC_VER) && defined(DDLPKGPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 //#define IDB_DDL_DEBUG
 namespace ddlpackageprocessor

@@ -70,11 +70,7 @@ void Log::formatMsg(const std::string& msg, MsgLevel level, std::ostringstream& 
   if (isDebug(DEBUG_2))
   {
     oss << " (" << m_pid << ":" <<
-#ifdef _MSC_VER
-        GetCurrentThreadId()
-#else
         pthread_self()
-#endif
         << ") " << MSG_LEVEL_STR[level] << " : " << msg;
   }
   else
@@ -155,19 +151,6 @@ void Log::setLogFileName(const char* logfile, const char* errlogfile, bool conso
   m_logFileName = logfile;
   m_errlogFileName = errlogfile;
   m_bConsoleOutput = consoleFlag;
-#ifdef _MSC_VER
-  // cpimport.bin calls BulkLoad::loadJobInfo() before calling
-  // BulkLoad::processJob(). loadJobInfo() attempts to write to this log
-  // before it's opened (by processJob()). This doesn't seem to bother Linux
-  // but puts Windows in a bad state. Once this logic is fixed, this hack can
-  // go away.
-  // This code probably wouldn't hurt if run on Linux, but I'll leave this
-  // here as a reminder to fix the logic for all platforms.
-  m_logFile.close();
-  m_logFile.clear();
-  m_errLogFile.close();
-  m_errLogFile.clear();
-#endif
   m_logFile.open(m_logFileName.c_str(), std::ofstream::out | std::ofstream::app);
   m_errLogFile.open(m_errlogFileName.c_str(), std::ofstream::out | std::ofstream::app);
 }

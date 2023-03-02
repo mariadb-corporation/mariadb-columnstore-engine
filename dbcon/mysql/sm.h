@@ -39,11 +39,7 @@
 #define IDB_SM_DEBUG 0
 #define IDB_SM_PROFILE 0
 
-#if defined(_MSC_VER) && defined(xxxDLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 #if IDB_SM_PROFILE
 #include <sys/time.h>

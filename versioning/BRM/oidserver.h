@@ -33,11 +33,7 @@
 
 #include <boost/thread/mutex.hpp>
 
-#if defined(_MSC_VER) && defined(xxxBRMOIDSVR_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace idbdatafile
 {

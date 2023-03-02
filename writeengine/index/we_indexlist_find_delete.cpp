@@ -25,9 +25,7 @@
 /* ========================================================================== */
 #include <stdio.h>
 #include <string.h>
-#ifndef _MSC_VER
 #include <inttypes.h>
-#endif
 #include "we_indextree.h"
 #include "we_indexlist.h"
 

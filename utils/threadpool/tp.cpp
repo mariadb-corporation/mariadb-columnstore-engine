@@ -38,11 +38,7 @@ const string timeNow()
   struct tm ltm;
   char buf[32];  // ctime(3) says at least 26
   size_t len = 0;
-#ifdef _MSC_VER
-  asctime_s(buf, 32, localtime_r(&outputTime, &ltm));
-#else
   asctime_r(localtime_r(&outputTime, &ltm), buf);
-#endif
   len = strlen(buf);
 
   if (len > 0)

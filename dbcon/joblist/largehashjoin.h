@@ -32,11 +32,7 @@
 #include <sstream>
 #include <vector>
 #include <list>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 
 #include <boost/thread.hpp>
 #include <boost/scoped_array.hpp>

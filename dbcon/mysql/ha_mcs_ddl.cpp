@@ -2739,9 +2739,6 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
 
 extern "C"
 {
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long calonlinealter(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     string stmt(args->args[0], args->lengths[0]);
@@ -2780,9 +2777,6 @@ extern "C"
     return rc;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calonlinealter_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1 || args->arg_type[0] != STRING_RESULT)
@@ -2794,9 +2788,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calonlinealter_deinit(UDF_INIT* initid)
   {
   }

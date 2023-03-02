@@ -2097,11 +2097,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
     totalMsgs += blocksToScan;
 
     // how many logical blocks to process with a single job (& single thread on the PM)
-#if defined(_MSC_VER) && BOOST_VERSION < 105200
-    blocksPerJob = max(blocksToScan / fProcessorThreadsPerScan, 16UL);
-#else
     blocksPerJob = max(blocksToScan / fProcessorThreadsPerScan, 16U);
-#endif
 
     startingLBID = scannedExtents[i].range.start;
     bool isExeMgrDEC = fDec->isExeMgrDEC();

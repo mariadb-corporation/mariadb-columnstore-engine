@@ -40,11 +40,7 @@
 #include "brmtypes.h"
 #include "we_fileop.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 #define DBROOT_BULK_ROLLBACK_SUBDIR "bulkRollback"
 

@@ -56,10 +56,8 @@ select_handler* create_columnstore_unit_handler(THD* thd, SELECT_LEX_UNIT* sel_u
 */
 static HASH mcs_open_tables;
 
-#ifndef _MSC_VER
 /* The mutex used to init the hash; variable for example share methods */
 pthread_mutex_t mcs_mutex;
-#endif
 
 #ifdef DEBUG_ENTER
 #undef DEBUG_ENTER
@@ -1819,9 +1817,7 @@ static int columnstore_init_func(void* p)
 
   mcs_hton = (handlerton*)p;
 
-#ifndef _MSC_VER
   (void)pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
-#endif
   (void)my_hash_init(PSI_NOT_INSTRUMENTED, &mcs_open_tables, system_charset_info, 32, 0, 0,
                      (my_hash_get_key)mcs_get_key, 0, 0);
 
@@ -1856,9 +1852,7 @@ static int columnstore_done_func(void* p)
 
   config::Config::deleteInstanceMap();
   my_hash_free(&mcs_open_tables);
-#ifndef _MSC_VER
   pthread_mutex_destroy(&mcs_mutex);
-#endif
 
   if (plugin_maria)
   {

@@ -23,10 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <type_traits>
-#ifndef _MSC_VER
 #include <pthread.h>
-#else
-#endif
 using namespace std;
 
 #include <boost/scoped_array.hpp>

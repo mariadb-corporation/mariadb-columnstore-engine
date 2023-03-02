@@ -68,11 +68,7 @@
 #define VSS_SIZE(entries) \
   ((entries * sizeof(VSSEntry)) + (entries / 4 * sizeof(int)) + sizeof(VSSShmsegHeader))
 
-#if defined(_MSC_VER) && defined(xxxVSS_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

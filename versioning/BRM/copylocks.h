@@ -47,11 +47,7 @@
 #define CL_INITIAL_SIZE (50 * sizeof(CopyLockEntry))
 #define CL_INCREMENT (50 * sizeof(CopyLockEntry))
 
-#if defined(_MSC_VER) && defined(xxxCOPYLOCKS_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace idbdatafile
 {

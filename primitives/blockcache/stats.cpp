@@ -22,11 +22,7 @@
 
 #include <ctime>
 #include <sys/time.h>
-#ifndef _MSC_VER
 #include <pthread.h>
-#else
-typedef int pthread_t;
-#endif
 #include <iomanip>
 #include <map>
 // #define NDEBUG
@@ -58,9 +54,6 @@ void pause_(unsigned delay)
 
   rem.tv_sec = 0;
   rem.tv_nsec = 0;
-#ifdef _MSC_VER
-  Sleep(req.tv_sec * 1000);
-#else
 again:
 
   if (nanosleep(&req, &rem) != 0)
@@ -70,7 +63,6 @@ again:
       goto again;
     }
 
-#endif
 }
 
 const string timestr()
@@ -104,11 +96,7 @@ class TraceFile
         outName = name;
 
       ostringstream oss;
-#ifdef _MSC_VER
-      oss << "C:/Calpont/log/trace/" << outName << '.' << sessionID;
-#else
       oss << MCSLOGDIR << "/trace/" << outName << '.' << sessionID;
-#endif
       oFile.reset(new ofstream());
       oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);
     }
@@ -185,14 +173,12 @@ class StatMon
  public:
   StatMon()
   {
-#ifndef _MSC_VER
     sigset_t sigset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGPIPE);
     sigaddset(&sigset, SIGUSR1);
     sigaddset(&sigset, SIGUSR2);
     pthread_sigmask(SIG_BLOCK, &sigset, 0);
-#endif
   }
   void operator()() const
   {

@@ -49,13 +49,8 @@ bool IDBLogger::s_enabled = false;
  */
 void IDBLogger::writeLog(const std::string& logmsg)
 {
-#ifdef _MSC_VER
-  DWORD pid = GetCurrentProcessId();
-  DWORD threadid = GetCurrentThreadId();
-#else
   pid_t pid = getpid();
   pthread_t threadid = pthread_self();
-#endif
   ostringstream fname;
 
   string tmpDir = startup::StartUp::tmpDir();
@@ -70,17 +65,7 @@ void IDBLogger::writeLog(const std::string& logmsg)
   struct tm tm;
 
   gettimeofday(&tv, NULL);
-#ifdef _MSC_VER
-  errno_t p = 0;
-  time_t t = (time_t)tv.tv_sec;
-  p = localtime_s(&tm, &t);
-
-  if (p != 0)
-    memset(&tm, 0, sizeof(tm));
-
-#else
   localtime_r(&tv.tv_sec, &tm);
-#endif
   strftime(fmt, sizeof fmt, "\'%Y-%m-%d %H:%M:%S.%%06u", &tm);
   snprintf(buf, sizeof buf, fmt, tv.tv_usec);
 

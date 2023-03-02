@@ -1,11 +1,5 @@
 #include <iostream>
-#ifdef _MSC_VER
-#include <boost/cstdint.hpp>
-#include <fcntl.h>
-#include <io.h>
-#else
 #include <inttypes.h>
-#endif
 #include <string>
 #include <cstring>
 #include <cstdlib>
@@ -17,19 +11,6 @@ using namespace std;
 #include <boost/static_assert.hpp>
 using namespace boost;
 
-#ifdef _MSC_VER
-namespace
-{
-inline long long atoll(const char* s)
-{
-  return _strtoi64(s, 0, 10);
-}
-inline uint64_t strtoull(const char* s, char** a, int b)
-{
-  return _strtoi64(s, a, b);
-}
-}  // namespace
-#endif
 
 // 1|155190|7706|1|17|21168.23|0.04|0.02|N|O|1996-03-13|1996-02-12|1996-03-22|DELIVER IN PERSON|TRUCK|egular
 // courts above the|
@@ -245,9 +226,6 @@ int main(int argc, char** argv)
 
   string input;
 
-#ifdef _MSC_VER
-  _setmode(1, _O_BINARY);
-#endif
 
   getline(cin, input);
 

@@ -28,11 +28,7 @@
 #include <bitset>
 #include <stdint.h>
 
-#if defined(_MSC_VER) && defined(xxxVENDORDMLSTATEMENT_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 namespace dmlpackage
 {
 typedef std::vector<std::string> ColValuesList;

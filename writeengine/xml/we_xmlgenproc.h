@@ -31,11 +31,7 @@
 #include "we_log.h"
 #include "we_xmlgendata.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINEXMLGENPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace WriteEngine
 {

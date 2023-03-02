@@ -21,10 +21,8 @@
  *
  ****************************************************************************/
 
-#ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#endif
 #include <iostream>  // included when debugging
 #include <sstream>
 #include <climits>
@@ -270,12 +268,8 @@ void Func_inet_ntoa::convertNtoa(int64_t ipNum, std::string& ipString)
   sa.sin_addr.s_addr = htonl(ipNum);
 
   // now get it back and print it
-#ifdef _MSC_VER
-  ipString = inet_ntoa(sa.sin_addr);
-#else
   char str[INET_ADDRSTRLEN];
   ipString = inet_ntop(AF_INET, &(sa.sin_addr), str, INET_ADDRSTRLEN);
-#endif
 }
 
 }  // namespace funcexp

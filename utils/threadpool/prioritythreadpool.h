@@ -35,7 +35,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <atomic>
-#include "../winport/winport.h"
 #include "primitives/primproc/umsocketselector.h"
 #include "atomicops.h"
 

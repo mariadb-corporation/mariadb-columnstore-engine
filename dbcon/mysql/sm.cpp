@@ -278,11 +278,7 @@ void sighandler(int sig_num)
 
 namespace sm
 {
-#ifdef _MSC_VER
-const std::string DEFAULT_SAVE_PATH = "C:\\Calpont\\tmp";
-#else
 const std::string DEFAULT_SAVE_PATH = "/var/tmp";
-#endif
 
 status_t tpl_open(tableid_t tableid, cpsm_tplh_t* ntplh, cpsm_conhdl_t* conn_hdl)
 {
@@ -492,9 +488,6 @@ status_t sm_cleanup(cpsm_conhdl_t* conn_hdl)
 
 void cpsm_conhdl_t::write(ByteStream bs)
 {
-#ifdef _MSC_VER
-  exeMgr->write(bs);
-#else
   sighandler_t old_handler = signal(SIGPIPE, sighandler);
   sigFlag = false;
   exeMgr->write(bs);
@@ -503,7 +496,6 @@ void cpsm_conhdl_t::write(ByteStream bs)
   if (sigFlag)
     throw runtime_error("Broken Pipe Error");
 
-#endif
 }
 
 }

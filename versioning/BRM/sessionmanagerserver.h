@@ -37,16 +37,8 @@
 
 #include "atomicops.h"
 
-#if defined(_MSC_VER) && defined(xxxSESSIONMANAGERSERVER_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4200)
-#endif
 
 namespace BRM
 {
@@ -289,8 +281,5 @@ class SessionManagerServer
 
 }  // namespace BRM
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #undef EXPORT

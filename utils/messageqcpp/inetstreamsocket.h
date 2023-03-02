@@ -25,20 +25,14 @@
 
 #include <ctime>
 #include <unistd.h>
-#ifndef _MSC_VER
 #include <netinet/in.h>
-#endif
 #include <cstring>
 
 #include "socket.h"
 #include "socketparms.h"
 #include "bytestream.h"
 
-#if defined(_MSC_VER) && defined(xxxINETSTREAMSOCKET_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 class MessageQTestSuite;
 

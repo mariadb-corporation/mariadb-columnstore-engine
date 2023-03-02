@@ -155,7 +155,6 @@ void added_a_pm(int)
 
 void ServiceDDLProc::setupChildSignalHandlers()
 {
-#ifndef _MSC_VER
   /* set up some signal handlers */
   struct sigaction ign;
   memset(&ign, 0, sizeof(ign));
@@ -168,7 +167,6 @@ void ServiceDDLProc::setupChildSignalHandlers()
   sigaction(SIGSEGV, &ign, 0);
   sigaction(SIGABRT, &ign, 0);
   sigaction(SIGFPE, &ign, 0);
-#endif
 }
 
 int ServiceDDLProc::Child()
@@ -187,11 +185,6 @@ int ServiceDDLProc::Child()
   }
 
   WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DDLPROC);
-#ifdef _MSC_VER
-  // In windows, initializing the wrapper (A dll) does not set the static variables
-  // in the main program
-  idbdatafile::IDBPolicy::configIDBPolicy();
-#endif
 
   ResourceManager* rm = ResourceManager::instance();
   Dec = DistributedEngineComm::instance(rm);

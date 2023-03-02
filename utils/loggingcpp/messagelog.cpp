@@ -89,17 +89,7 @@ string timestr()
   struct tm tm;
   struct timeval tv;
   gettimeofday(&tv, 0);
-#ifdef _MSC_VER
-  errno_t p = 0;
-  time_t t = (time_t)tv.tv_sec;
-  p = localtime_s(&tm, &t);
-
-  if (p != 0)
-    memset(&tm, 0, sizeof(tm));
-
-#else
   localtime_r(&tv.tv_sec, &tm);
-#endif
 
   ostringstream oss;
   oss << setfill('0') << setw(2) << tm.tm_sec << '.' << setw(6) << tv.tv_usec;

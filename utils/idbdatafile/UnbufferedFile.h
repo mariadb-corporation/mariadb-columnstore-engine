@@ -52,11 +52,7 @@ class UnbufferedFile : public IDBDataFile, boost::noncopyable
   int close();
 
  private:
-#ifdef _MSC_VER
-  HANDLE m_fd;
-#else
   int m_fd;
-#endif
 };
 
 }  // namespace idbdatafile

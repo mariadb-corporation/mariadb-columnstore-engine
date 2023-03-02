@@ -46,9 +46,6 @@ function_init()
 
 ::
 
- #ifdef _MSC_VER
- __declspec(dllexport)
- #endif
  my_bool ssq_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
  {
     struct ssq_data* data;
@@ -85,9 +82,6 @@ function_deinit()
 
 ::
 
- #ifdef _MSC_VER
- __declspec(dllexport)
- #endif
  void ssq_deinit(UDF_INIT* initid)
  {
     free(initid->ptr);
@@ -112,9 +106,6 @@ function_clear()
 
 ::
 
- #ifdef _MSC_VER
- __declspec(dllexport)
- #endif
  void
  ssq_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                char* message __attribute__((unused)))
@@ -144,9 +135,6 @@ function_add()
 
 ::
 
- #ifdef _MSC_VER
- __declspec(dllexport)
- #endif
  void ssq_add(UDF_INIT* initid, UDF_ARGS* args,
                   char* is_null,
                   char* message __attribute__((unused)))
@@ -177,9 +165,6 @@ function
 
 ::
 
- #ifdef _MSC_VER
- __declspec(dllexport)
- #endif
  long long ssq(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
                char* is_null, char* error __attribute__((unused)))
  {

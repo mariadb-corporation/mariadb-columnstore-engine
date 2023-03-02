@@ -29,9 +29,6 @@
 
 using namespace std;
 
-#ifdef _MSC_VER
-#include "utils_utf8.h"
-#endif
 
 namespace idbdatafile
 {
@@ -76,20 +73,6 @@ int PosixFileSystem::remove(const char* pathname)
     boost::filesystem::remove_all(dirPath);
   }
 
-#ifdef _MSC_VER
-  catch (std::exception& ex)
-  {
-    // FIXME: alas, Windows cannot delete a file that is in use :-(
-    std::string reason(ex.what());
-    std::string ignore("The directory is not empty");
-
-    if (reason.find(ignore) != std::string::npos)
-      (void)0;
-    else
-      ret = -1;
-  }
-
-#endif
   catch (...)
   {
     // TODO Log this

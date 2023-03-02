@@ -142,18 +142,10 @@ class SimpleAllocator
     fPool->deallocate(p, n * sizeof(T));
   }
 
-#ifdef _MSC_VER
-  // The MSVC STL library really needs this to return a big number...
-  size_type max_size() const throw()
-  {
-    return std::numeric_limits<size_type>::max();
-  }
-#else
   inline size_type max_size() const throw()
   {
     return fPool->max_size() / sizeof(T);
   }
-#endif
   inline void construct(pointer ptr, const T& val)
   {
     new ((void*)ptr) T(val);

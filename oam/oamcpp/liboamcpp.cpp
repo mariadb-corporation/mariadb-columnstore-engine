@@ -26,23 +26,12 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-#if defined(__linux__)
 #include <sys/statfs.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
 
-#elif defined(_MSC_VER)
-#elif defined(__FreeBSD__)
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/mount.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#endif
 #include <stdexcept>
 #include <csignal>
 #include <sstream>
@@ -54,9 +43,6 @@
 #include "liboamcpp.h"
 #undef LIBOAM_DLLEXPORT
 
-#ifdef _MSC_VER
-#include "idbregistry.h"
-#endif
 #include "mcsconfig.h"
 #include "installdir.h"
 #include "dbrm.h"

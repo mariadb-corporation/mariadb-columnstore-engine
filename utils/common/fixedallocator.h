@@ -40,11 +40,7 @@
 #include <atomic>
 #include "spinlock.h"
 
-#if defined(_MSC_VER) && defined(xxxFIXEDALLOCATOR_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace utils
 {

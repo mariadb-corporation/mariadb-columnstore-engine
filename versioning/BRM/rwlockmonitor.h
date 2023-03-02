@@ -29,11 +29,7 @@
 
 #include "rwlock.h"
 
-#if defined(_MSC_VER) && defined(xxxRWLOCKMONITOR_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

@@ -46,11 +46,7 @@ BlockRequestProcessor::BlockRequestProcessor(uint32_t numBlcks, int thrCount, in
   config::Config* fConfig = config::Config::makeConfig();
   string val = fConfig->getConfig("DBBC", "BRPTracing");
   int temp = 0;
-#ifdef _MSC_VER
-  int tid = GetCurrentThreadId();
-#else
   pthread_t tid = pthread_self();
-#endif
 
   if (val.length() > 0)
     temp = static_cast<int>(config::Config::fromText(val));
@@ -63,11 +59,7 @@ BlockRequestProcessor::BlockRequestProcessor(uint32_t numBlcks, int thrCount, in
   if (fTrace)
   {
     ostringstream brpLogFileName;
-#ifdef _MSC_VER
-    brpLogFileName << "C:/Calpont/log/trace/brp." << tid;
-#else
     brpLogFileName << MCSLOGDIR << "/trace/brp." << tid;
-#endif
     fLogFile.open(brpLogFileName.str().c_str(), ios_base::app | ios_base::ate);
   }
 }

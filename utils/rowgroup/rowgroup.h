@@ -37,13 +37,8 @@
 #include <boost/thread/mutex.hpp>
 #include <cmath>
 #include <cfloat>
-#ifdef __linux__
 #include <execinfo.h>
-#endif
 
-#if defined(_MSC_VER) && !defined(isnan)
-#define isnan _isnan
-#endif
 
 #include "hasher.h"
 
@@ -55,8 +50,6 @@
 
 #include "branchpred.h"
 #include "datatypes/mcs_int128.h"
-
-#include "../winport/winport.h"
 
 #include "collation.h"
 #include "common/hashfamily.h"
@@ -124,10 +117,6 @@ const int16_t rgCommonSize = 8192;
 
 // VS'08 carps that struct MemChunk is not default copyable because of the zero-length array.
 // This may be so, and we'll get link errors if someone trys, but so far no one has.
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4200)
-#endif
 
 // Helper to get a value from nested vector pointers.
 template <typename T>
@@ -251,9 +240,6 @@ class UserDataStore
   boost::mutex fMutex;
 };
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 class RowGroup;
 class Row;

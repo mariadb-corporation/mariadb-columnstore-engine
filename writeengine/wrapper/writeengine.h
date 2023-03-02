@@ -29,11 +29,7 @@
 #include <fcntl.h>
 // end
 #include <boost/lexical_cast.hpp>
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
 #include <tr1/unordered_set>
-#endif
 
 #include "we_brm.h"
 #include "we_colop.h"
@@ -46,11 +42,7 @@
 
 #define IO_BUFF_SIZE 81920
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 /** Namespace WriteEngine */
 namespace WriteEngine
 {

@@ -83,11 +83,7 @@ string get_trace_file()
 {
   ostringstream oss;
   pid_t pid = getpid();
-#ifdef _MSC_VER
-  DWORD threadid = GetCurrentThreadId();
-#else
   pthread_t threadid = pthread_self();
-#endif
   oss << "/tmp/qt-consumer-" << pid << "-" << threadid;
 
   return oss.str();

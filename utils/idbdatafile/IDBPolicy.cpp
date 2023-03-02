@@ -31,9 +31,6 @@
 //#include "HdfsFsCache.h"
 #include "IDBLogger.h"
 #include "IDBFactory.h"
-#ifdef _MSC_VER
-#include "utils_utf8.h"  // idb_wcstombs()
-#endif
 
 #include "installdir.h"
 #include "vlarray.h"
@@ -122,14 +119,7 @@ bool IDBPolicy::installPlugin(const std::string& plugin)
 bool IDBPolicy::isLocalFile(const std::string& path)
 {
   boost::filesystem::path filepath(path);
-#ifdef _MSC_VER
-  size_t strmblen = utf8::idb_wcstombs(0, filepath.extension().c_str(), 0) + 1;
-  char* outbuf = (char*)alloca(strmblen * sizeof(char));
-  strmblen = utf8::idb_wcstombs(outbuf, filepath.extension().c_str(), strmblen);
-  string fileExt(outbuf, strmblen);
-#else
   // string fileExt  = filepath.extension().c_str();
-#endif
   bool isXml = filepath.extension() == ".xml";
   // bool isDbrm = path.find("dbrm") != string::npos;   // StorageManager: debatable whether dbrm files should
   // go in the cloud

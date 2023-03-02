@@ -113,7 +113,6 @@ int toInt(const string& val)
 
 void setupSignalHandlers()
 {
-#ifndef _MSC_VER
   struct sigaction ign;
   memset(&ign, 0, sizeof(ign));
   ign.sa_handler = SIG_IGN;
@@ -126,7 +125,6 @@ void setupSignalHandlers()
   sigaddset(&sigset, SIGUSR2);
   sigprocmask(SIG_BLOCK, &sigset, 0);
 
-#endif
 }
 
 int8_t setupCwd(Config* cf)
@@ -146,7 +144,6 @@ int8_t setupCwd(Config* cf)
 
 int setupResources()
 {
-#ifndef _MSC_VER
   struct rlimit rlim;
 
   if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
@@ -171,7 +168,6 @@ int setupResources()
     return -4;
   }
 
-#endif
   return 0;
 }
 
@@ -225,9 +221,7 @@ class QszMonThd
 };
 #endif
 
-#ifndef _MSC_VER
 #define DUMP_CACHE_CONTENTS
-#endif
 #ifdef DUMP_CACHE_CONTENTS
 void* waitForSIGUSR1(void* p)
 {
@@ -238,7 +232,6 @@ void* waitForSIGUSR1(void* p)
 #else
   int cacheCount = reinterpret_cast<int>(p);
 #endif
-#ifndef _MSC_VER
   sigset_t oset;
   int rec_sig;
   int32_t rpt_state = 0;
@@ -250,7 +243,6 @@ void* waitForSIGUSR1(void* p)
   sigemptyset(&oset);
   sigaddset(&oset, SIGUSR1);
   sigaddset(&oset, SIGUSR2);
-#endif
 
   for (;;)
   {
@@ -467,27 +459,6 @@ int ServicePrimProc::Child()
   string strBlockPct = cf->getConfig(dbbc, "NumBlocksPct");
   temp = atoi(strBlockPct.c_str());
 
-#ifdef _MSC_VER
-  /* TODO: implement handling for the 'm' or 'g' chars in NumBlocksPct */
-  if (temp > 0)
-    BRPBlocksPct = temp;
-
-  MEMORYSTATUSEX memStat;
-  memStat.dwLength = sizeof(memStat);
-
-  if (GlobalMemoryStatusEx(&memStat) == 0)
-    // FIXME: Assume 2GB?
-    BRPBlocks = 2621 * BRPBlocksPct;
-  else
-  {
-#ifndef _WIN64
-    memStat.ullTotalPhys = std::min(memStat.ullTotalVirtual, memStat.ullTotalPhys);
-#endif
-    // We now have the total phys mem in bytes
-    BRPBlocks = memStat.ullTotalPhys / (8 * 1024) / 100 * BRPBlocksPct;
-  }
-
-#else
   bool absCache = false;
   if (temp > 0)
   {
@@ -505,7 +476,6 @@ int ServicePrimProc::Child()
     BRPBlocks = BRPBlocksPct / 8192;
   else
     BRPBlocks = ((BRPBlocksPct / 100.0) * (double)cg.getTotalMemory()) / 8192;
-#endif
 #if 0
     temp = toInt(cf->getConfig(dbbc, "NumThreads"));
 
@@ -591,11 +561,7 @@ int ServicePrimProc::Child()
   if (priority < -20)
     priority = -20;
 
-#ifdef _MSC_VER
-    // FIXME:
-#else
   setpriority(PRIO_PROCESS, 0, priority);
-#endif
   //..Instantiate UmSocketSelector singleton.  Disable rotating destination
   //..selection if no UM IP addresses are in the Calpo67108864LLnt.xml file.
   UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
@@ -667,7 +633,6 @@ int ServicePrimProc::Child()
   if (temp > 0)
     BRPThreads = temp;
 
-#ifndef _MSC_VER
   // @bug4598, switch for O_DIRECT to support gluster fs.
   // directIOFlag == O_DIRECT, by default
   strVal = cf->getConfig(primitiveServers, "DirectIO");
@@ -675,7 +640,6 @@ int ServicePrimProc::Child()
   if ((strVal == "n") || (strVal == "N"))
     directIOFlag = 0;
 
-#endif
 
   IDBPolicy::configIDBPolicy();
 
@@ -698,11 +662,7 @@ int ServicePrimProc::Child()
 
   if (gDebugLevel >= STATS)
   {
-#ifdef _MSC_VER
-    ofstream* qszLog = new ofstream("C:/Calpont/log/trace/ppqsz.dat");
-#else
     ofstream* qszLog = new ofstream("/var/log/mariadb/columnstore/trace/ppqsz.dat");
-#endif
 
     if (!qszLog->good())
     {
