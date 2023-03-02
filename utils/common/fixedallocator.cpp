@@ -25,7 +25,6 @@
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1)
 #error "This is a very old GCC, and it's probably not going to work."
 #endif
-#elif defined(_MSC_VER)
 #else
 #error "This compiler is not known and it's probably not going to work."
 #endif

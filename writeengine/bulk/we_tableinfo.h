@@ -642,15 +642,8 @@ inline void TableInfo::setJobUUID(const boost::uuids::uuid& jobUUID)
 inline void TableInfo::setErrorDir(const std::string& errorDir)
 {
   fErrorDir = errorDir;
-#ifdef _MSC_VER
-
-  if (fErrorDir.length() > 0 && *(--(fErrorDir.end())) != '/' && *(--(fErrorDir.end())) != '\\')
-    fErrorDir.push_back('\\');
-}
-#else
 
   if (fErrorDir.length() > 0 && *(--(fErrorDir.end())) != '/')
     fErrorDir.push_back('/');
 }
-#endif
 }  // namespace WriteEngine

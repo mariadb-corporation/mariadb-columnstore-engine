@@ -26,9 +26,6 @@
 #include <limits>
 #include <cstring>
 #include <vector>
-#ifdef _MSC_VER
-#include <cstdio>
-#endif
 #include "mcsconfig.h"
 
 #include "we_convertor.h"

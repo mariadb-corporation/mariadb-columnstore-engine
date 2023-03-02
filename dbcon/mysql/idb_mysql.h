@@ -24,13 +24,6 @@
 #error mcsconfig.h was included before idb_mysql.h
 #endif
 
-#ifdef _MSC_VER
-#include <stdint.h>
-#if _MSC_VER >= 1800
-template <class T>
-bool isnan(T);
-#endif
-#endif
 
 //#define INFINIDB_DEBUG
 //#define DEBUG_WALK_COND
@@ -41,13 +34,11 @@ bool isnan(T);
 #undef LOG_INFO
 
 #ifdef _DEBUG
-#ifndef _MSC_VER
 #ifndef SAFE_MUTEX
 #define SAFE_MUTEX
 #endif
 #ifndef SAFEMALLOC
 #define SAFEMALLOC
-#endif
 #endif
 #ifndef ENABLED_DEBUG_SYNC
 #define ENABLED_DEBUG_SYNC
@@ -61,13 +52,6 @@ bool isnan(T);
 #undef ENABLED_DEBUG_SYNC
 #undef DBUG_ON
 #define DBUG_OFF 1
-#endif
-#ifdef _MSC_VER
-#define MYSQL_DYNAMIC_PLUGIN
-#define DONT_DEFINE_VOID
-#ifdef ETIMEDOUT
-#undef ETIMEDOUT
-#endif
 #endif
 
 #include "sql_plugin.h"

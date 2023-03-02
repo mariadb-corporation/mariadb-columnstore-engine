@@ -43,11 +43,7 @@
 #include "brmtypes.h"
 #include "joblist.h"
 
-#if defined(_MSC_VER) && defined(xxxDDLPKGPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 #include <boost/algorithm/string/case_conv.hpp>
 

@@ -42,11 +42,7 @@ class ByteStream;
 
 }
 
-#if defined(_MSC_VER) && defined(LIBCONFIG_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace config
 {

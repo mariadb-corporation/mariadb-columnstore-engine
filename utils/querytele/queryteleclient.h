@@ -26,11 +26,7 @@
 #include "queryteleserverparms.h"
 #include "querystepparms.h"
 
-#if defined(_MSC_VER) && defined(LIBQUERYTELE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace querytele
 {

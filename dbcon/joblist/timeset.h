@@ -86,12 +86,7 @@ inline void TimeSet::displayAll() const
   for (ElapsedMap::const_iterator it = fElapsed.begin(); it != itend; ++it)
   {
     double t;
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-    // FIXME
-    t = 0.0;
-#else
     t = (double)it->second.tv_sec + (double)it->second.tv_nsec / 1000000000.0;
-#endif
     std::cout << "TimeSet " << it->first << ": " << t << "s\n";
   }
 
@@ -112,11 +107,7 @@ inline void TimeSet::display(const std::string& key) const
   if (fElapsed.end() != em)
   {
     double t;
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-    t = 0.0;
-#else
     t = (double)em->second.tv_sec + (double)em->second.tv_nsec / 1000000000.0;
-#endif
     std::cout << "TimeSet elapse " << em->first << ": " << t << "s\n";
   }
   else
@@ -126,11 +117,7 @@ inline void TimeSet::display(const std::string& key) const
     if (fTimer.end() != tm)
     {
       double t;
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-      t = 0.0;
-#else
       t = (double)tm->second.tv_sec + (double)tm->second.tv_nsec / 1000000000.0;
-#endif
       std::cout << "TimeSet start " << tm->first << ": " << t << "s\n";
     }
   }
@@ -148,18 +135,10 @@ inline double TimeSet::totalTime() const
 
   for (ElapsedMap::const_iterator it = fElapsed.begin(); it != itend; ++it)
   {
-#if defined(_MSC_VER) && !defined(_my_pthread_h)
-    tSum.tv_sec += it->second.tv_sec;
-    tSum.tv_nsec += it->second.tv_nsec;
-#endif
   }
 
   double totSeconds;
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-  totSeconds = 0.0;
-#else
   totSeconds = (double)tSum.tv_sec + (double)tSum.tv_nsec / 1000000000.0;
-#endif
 
   return totSeconds;
 }
@@ -175,11 +154,7 @@ inline double TimeSet::totalTime(const std::string& key) const
   if (fElapsed.end() != el)
   {
     double totSeconds;
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-    totSeconds = 0.0;
-#else
     totSeconds = (double)el->second.tv_sec + (double)el->second.tv_nsec / 1000000000.0;
-#endif
     return totSeconds;
   }
   else
@@ -206,8 +181,6 @@ inline void TimeSet::holdTimer(const std::string& key)
     struct timespec tDiff;
 #if defined(CLOCK_REALTIME)
     clock_gettime(CLOCK_REALTIME, &tEnd);
-#elif defined(_MSC_VER) && defined(_my_pthread_h)
-    tEnd.tv.i64 = tEnd.max_timeout_msec = 0;
 #else
     tEnd.tv_sec = tEnd.tv_nsec = 0;
 #endif
@@ -227,8 +200,6 @@ inline void TimeSet::startTimer(const std::string& key)
   struct timespec ts;
 #if defined(CLOCK_REALTIME)
   clock_gettime(CLOCK_REALTIME, &ts);
-#elif defined(_MSC_VER) && defined(_my_pthread_h)
-  ts.tv.i64 = ts.max_timeout_msec = 0;
 #else
   ts.tv_sec = ts.tv_nsec = 0;
 #endif
@@ -250,8 +221,6 @@ inline void TimeSet::stopTimer(const std::string& key)
     struct timespec tDiff;
 #if defined(CLOCK_REALTIME)
     clock_gettime(CLOCK_REALTIME, &tEnd);
-#elif defined(_MSC_VER) && defined(_my_pthread_h)
-    tEnd.tv.i64 = tEnd.max_timeout_msec = 0;
 #else
     tEnd.tv_sec = tEnd.tv_nsec = 0;
 #endif
@@ -301,9 +270,6 @@ inline void TimeSet::timespec_sub(const struct timespec& tv1,  // start time
                                   const struct timespec& tv2,  // end time
                                   struct timespec& diff) const
 {
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-  diff.tv.i64 = diff.max_timeout_msec = 0;
-#else
 
   if (tv2.tv_nsec < tv1.tv_nsec)
   {
@@ -316,7 +282,6 @@ inline void TimeSet::timespec_sub(const struct timespec& tv1,  // start time
     diff.tv_nsec = tv2.tv_nsec - tv1.tv_nsec;
   }
 
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -329,9 +294,6 @@ inline void TimeSet::timespec_add(const struct timespec& tv1,  // start time
                                   const struct timespec& tv2,  // end time
                                   struct timespec& sum) const
 {
-#if defined(_MSC_VER) && defined(_my_pthread_h)
-  sum.tv.i64 = sum.max_timeout_msec = 0;
-#else
   sum.tv_sec = tv1.tv_sec + tv2.tv_sec;
   sum.tv_nsec = tv1.tv_nsec + tv2.tv_nsec;
 
@@ -341,7 +303,6 @@ inline void TimeSet::timespec_add(const struct timespec& tv1,  // start time
     sum.tv_nsec -= 1000000000;
   }
 
-#endif
 }
 
 };  // namespace joblist

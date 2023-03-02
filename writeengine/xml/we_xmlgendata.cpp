@@ -35,24 +35,12 @@ namespace WriteEngine
 {
 /* static */ const std::string XMLGenData::DELIMITER("-d");
 /* static */ const std::string XMLGenData::DESCRIPTION("-s");
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
     /* static */ const std::string XMLGenData::ENCLOSED_BY_CHAR("-E");
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
     /* static */ const std::string XMLGenData::ESCAPE_CHAR("-C");
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
     /* static */ const std::string XMLGenData::JOBID("-j");
 /* static */ const std::string XMLGenData::MAXERROR("-e");
 /* static */ const std::string XMLGenData::NAME("-n");
 /* static */ const std::string XMLGenData::PATH("-p");
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
     /* static */ const std::string XMLGenData::RPT_DEBUG("-b");
 /* static */ const std::string XMLGenData::USER("-u");
 /* static */ const std::string XMLGenData::NO_OF_READ_BUFFER("-r");
@@ -73,13 +61,7 @@ XMLGenData::XMLGenData()
   fParms.insert(ParmList::value_type(JOBID, std::string("299")));
   fParms.insert(ParmList::value_type(MAXERROR, std::string("10")));
   fParms.insert(ParmList::value_type(NAME, std::string()));
-#ifdef _MSC_VER
-  std::string br;
-  br = Config::getBulkRoot();
-  boost::filesystem::path p(br);
-#else
   boost::filesystem::path p{std::string(Config::getBulkRoot())};
-#endif
   p /= JOBDIR;
   fParms.insert(ParmList::value_type(PATH, p.string()));
 

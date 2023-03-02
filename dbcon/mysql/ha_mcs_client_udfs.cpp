@@ -111,9 +111,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcssetparms(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
@@ -184,42 +181,27 @@ extern "C"
   }
 
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcssetparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return setparms_init(initid, args, message, "MCSSETPARMS");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcssetparms_deinit(UDF_INIT* initid)
   {
   }
 
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calsetparms(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
     return mcssetparms(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calsetparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return setparms_init(initid, args, message, "CALSETPARMS");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calsetparms_deinit(UDF_INIT* initid)
   {
   }
@@ -238,9 +220,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcsgetstats(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
@@ -269,41 +248,26 @@ extern "C"
   }
 
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsgetstats_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getstats_init(initid, args, message, "MCSGETSTATS");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsgetstats_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calgetstats(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
     return mcsgetstats(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calgetstats_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getstats_init(initid, args, message, "CALGETSTATS");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calgetstats_deinit(UDF_INIT* initid)
   {
   }
@@ -319,9 +283,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcssettrace(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     if (get_fe_conn_info_ptr() == NULL)
@@ -340,47 +301,29 @@ extern "C"
     return oldTrace;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcssettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return settrace_init(initid, args, message, "MCSSETTRACE");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcssettrace_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long calsettrace(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     return mcssettrace(initid, args, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calsettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return settrace_init(initid, args, message, "CALSETTRACE");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calsettrace_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       // Return 1 if system is ready for reads or 0 if not.
       long long mcssystemready(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
@@ -403,24 +346,15 @@ extern "C"
     return rtn;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcssystemready_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcssystemready_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       // Return non-zero if system is read only; 0 if writeable
       long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
@@ -448,24 +382,15 @@ extern "C"
     return rtn;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcssystemreadonly_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcssystemreadonly_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       // Return non-zero if this is the primary UM; 0 if not primary
       long long mcssystemprimary(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
@@ -499,17 +424,11 @@ extern "C"
     return rtn;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcssystemprimary_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcssystemprimary_deinit(UDF_INIT* initid)
   {
   }
@@ -543,17 +462,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsviewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return viewtablelock_init(initid, args, message, "MCSVIEWTABLELOCK");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcsviewtablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                    char* is_null, char* error)
   {
@@ -609,33 +522,21 @@ extern "C"
     return result;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsviewtablelock_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calviewtablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return viewtablelock_init(initid, args, message, "CALVIEWTABLELOCK");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calviewtablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                    char* is_null, char* error)
   {
     return mcsviewtablelock(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calviewtablelock_deinit(UDF_INIT* initid)
   {
   }
@@ -655,17 +556,11 @@ extern "C"
   }
 
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcscleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return cleartablelock_init(initid, args, message, "MCSCLEARTABLELOCK");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcscleartablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                     char* is_null, char* error)
   {
@@ -693,33 +588,21 @@ extern "C"
     return result;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcscleartablelock_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calcleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return cleartablelock_init(initid, args, message, "CALCLEARTABLELOCK");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calcleartablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                     char* is_null, char* error)
   {
     return mcscleartablelock(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calcleartablelock_deinit(UDF_INIT* initid)
   {
   }
@@ -754,17 +637,11 @@ extern "C"
   }
 
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcslastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return lastinsertid_init(initid, args, message, "MCSLASTINSERTID");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcslastinsertid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     THD* thd = current_thd;
@@ -825,32 +702,20 @@ extern "C"
     return (nextVal - 1);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcslastinsertid_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool callastinsertid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return lastinsertid_init(initid, args, message, "CALLASTINSERTID");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long callastinsertid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     return mcslastinsertid(initid, args, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void callastinsertid_deinit(UDF_INIT* initid)
   {
   }
@@ -866,47 +731,29 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsflushcache_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcsflushcache(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     return static_cast<long long>(cacheutils::flushPrimProcCache());
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsflushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return flushcache_init(initid, args, message, "MCSFLUSHCACHE");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calflushcache_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long calflushcache(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     return mcsflushcache(initid, args, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calflushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return flushcache_init(initid, args, message, "CALFLUSHCACHE");
@@ -917,9 +764,6 @@ extern "C"
 // mysqld will call this with only 766 bytes available in result no matter what we asked for in
 // calgettrace_init()
 // if we return a pointer that is not result, mysqld will take our pointer and use it, freeing up result
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcsgettrace(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
@@ -981,41 +825,26 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsgettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return gettrace_init(initid, args, message, "MCSGETTRACE");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsgettrace_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calgettrace(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                               char* is_null, char* error)
   {
     return mcsgettrace(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calgettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return gettrace_init(initid, args, message, "CALGETTRACE");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calgettrace_deinit(UDF_INIT* initid)
   {
   }
@@ -1031,9 +860,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcsgetversion(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                 char* is_null, char* error)
   {
@@ -1043,41 +869,26 @@ extern "C"
     return result;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsgetversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getversion_init(initid, args, message, "MCSGETVERSION");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsgetversion_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calgetversion(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                 char* is_null, char* error)
   {
     return mcsgetversion(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calgetversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getversion_init(initid, args, message, "CALGETVERSION");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calgetversion_deinit(UDF_INIT* initid)
   {
   }
@@ -1093,9 +904,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* mcsgetsqlcount(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                  char* is_null, char* error)
   {
@@ -1138,57 +946,36 @@ extern "C"
     return result;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcsgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getstats_init(initid, args, message, "MCSGETSQLCOUNT");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcsgetsqlcount_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* calgetsqlcount(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                  char* is_null, char* error)
   {
     return mcsgetsqlcount(initid, args, result, length, is_null, error);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool calgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     return getstats_init(initid, args, message, "CALGETSQLCOUNT");
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void calgetsqlcount_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcs_emindex_size(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     DBRM dbrm;
     return dbrm.EMIndexShmemSize();
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcs_emindex_size_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
@@ -1200,25 +987,16 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcs_emindex_size_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcs_emindex_free(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     DBRM dbrm;
     return dbrm.EMIndexShmemFree();
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcs_emindex_free_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
@@ -1230,9 +1008,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcs_emindex_free_deinit(UDF_INIT* initid)
   {
   }

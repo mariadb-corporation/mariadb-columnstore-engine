@@ -617,14 +617,8 @@ class expression_parser
   {
     try
     {
-#if _MSC_VER > 1600
-      return std::_Copy_impl(first, last, start());
-    }
-
-#else
       return std::copy(first, last, start());
     }
-#endif
     catch (const std::runtime_error&)
     {
       m_policy.cleanup(operandStack, operatorStack);

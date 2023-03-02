@@ -20,11 +20,7 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
-#ifndef _MSC_VER
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
 
 #include "hasher.h"
 #include "lbidlist.h"

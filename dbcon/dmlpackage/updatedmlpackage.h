@@ -27,11 +27,7 @@
 #include "calpontdmlpackage.h"
 #include "bytestream.h"
 
-#if defined(_MSC_VER) && defined(xxxUPDATEDMLPKG_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace dmlpackage
 {

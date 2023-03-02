@@ -29,9 +29,6 @@ using namespace std;
 #include "insertdmlpackage.h"
 #undef INSERTDMLPKG_DLLEXPORT
 
-#ifdef _MSC_VER
-#define strcasecmp stricmp
-#endif
 
 namespace dmlpackage
 {

@@ -33,11 +33,7 @@
 #include <map>
 #include <stdexcept>
 #include <sstream>
-#ifndef _MSC_VER
 #include <tr1/memory>
-#else
-#include <memory>
-#endif
 
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>

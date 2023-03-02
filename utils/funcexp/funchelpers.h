@@ -24,10 +24,8 @@
 
 #include <string>
 
-#ifndef _MSC_VER
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
-#endif
 #endif
 
 #include <inttypes.h>
@@ -654,22 +652,14 @@ inline int dayOfWeek(std::string day)  // Sunday = 0
 inline string intToString(int64_t i)
 {
   char buf[32];
-#ifndef _MSC_VER
   snprintf(buf, 32, "%" PRId64 "", i);
-#else
-  snprintf(buf, 32, "%lld", i);
-#endif
   return buf;
 }
 
 inline string uintToString(uint64_t i)
 {
   char buf[32];
-#ifndef _MSC_VER
   snprintf(buf, 32, "%" PRIu64 "", i);
-#else
-  snprintf(buf, 32, "%llu", i);
-#endif
   return buf;
 }
 

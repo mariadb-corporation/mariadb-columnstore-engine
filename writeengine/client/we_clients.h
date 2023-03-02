@@ -36,11 +36,7 @@
 #include "rwlock_local.h"
 #include "resourcemanager.h"
 
-#if defined(_MSC_VER) && defined(xxxWECLIENTS_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace WriteEngine
 {

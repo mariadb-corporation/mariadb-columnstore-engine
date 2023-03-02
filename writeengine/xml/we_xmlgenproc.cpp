@@ -424,11 +424,6 @@ std::string XMLGenProc::genJobXMLFileName() const
 
   // If the filespec doesn't begin with a '/' (i.e. it's not an absolute path),
   // attempt to make it absolute so that we can log the full pathname.
-#ifdef _MSC_VER
-  // We won't worry about being so fancy in Windows, just print a relative
-  // path if so given
-  xmlFileName = p.string();
-#else
 
   if (!p.has_root_path())
   {
@@ -446,7 +441,6 @@ std::string XMLGenProc::genJobXMLFileName() const
     xmlFileName = p.string();
   }
 
-#endif
 
   return xmlFileName;
 }

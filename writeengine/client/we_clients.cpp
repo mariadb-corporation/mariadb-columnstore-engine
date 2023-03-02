@@ -26,11 +26,9 @@
 #include <ctime>
 #include <algorithm>
 #include <unistd.h>
-#ifndef _MSC_VER
 #include <arpa/inet.h>
 #if __FreeBSD__
 #include <sys/socket.h>
-#endif
 #endif
 using namespace std;
 

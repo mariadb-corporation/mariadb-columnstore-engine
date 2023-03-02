@@ -30,11 +30,7 @@
 
 #include "brmtypes.h"
 
-#if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

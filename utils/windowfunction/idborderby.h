@@ -29,11 +29,7 @@
 #include <boost/shared_array.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
 #include <tr1/unordered_set>
-#endif
 
 #include "rowgroup.h"
 #include "hasher.h"

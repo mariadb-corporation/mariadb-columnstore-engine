@@ -8,9 +8,7 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using namespace boost;
 
-#ifndef _MSC_VER
 #include "mcsconfig.h"
-#endif
 
 #include "socktype.h"
 

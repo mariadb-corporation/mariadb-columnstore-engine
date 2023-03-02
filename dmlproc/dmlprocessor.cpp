@@ -1340,12 +1340,10 @@ void DMLProcessor::operator()()
         fConcurrentSupport = false;
     }
 
-#ifndef _MSC_VER
     struct sigaction ign;
     memset(&ign, 0, sizeof(ign));
     ign.sa_handler = added_a_pm;
     sigaction(SIGHUP, &ign, 0);
-#endif
     fEC->Open();
 
     for (;;)
@@ -1626,9 +1624,6 @@ void DMLProcessor::operator()()
           {
             for (; i < numTries; i++)
             {
-#ifdef _MSC_VER
-              Sleep(rm_ts.tv_sec * 1000);
-#else
               struct timespec abs_ts;
 
               // cout << "session " << sessionID << " nanosleep on package type " << (int)packageType << endl;
@@ -1638,7 +1633,6 @@ void DMLProcessor::operator()()
                 abs_ts.tv_nsec = rm_ts.tv_nsec;
               } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
               anyOtherActiveTransaction =
                   sessionManager.checkActiveTransaction(sessionID, bIsDbrmUp, blockingsid);
 

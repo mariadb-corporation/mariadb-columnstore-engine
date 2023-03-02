@@ -27,15 +27,9 @@
 
 #include <stdexcept>
 #include <vector>
-#ifndef _MSC_VER
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
 
-#ifdef __linux__
 #define POSIX_REGEX
-#endif
 
 #ifdef POSIX_REGEX
 #include <regex.h>

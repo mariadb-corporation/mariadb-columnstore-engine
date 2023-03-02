@@ -19,21 +19,10 @@
         Protocol definition:
 */
 
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <icmpapi.h>
-#include <stdio.h>
-#else
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif
 #include <iostream>
 #include <string>
 #include <stdexcept>
@@ -54,9 +43,7 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 using namespace boost;
 
-#ifndef _MSC_VER
 #include "mcsconfig.h"
-#endif
 
 #include "socktype.h"
 #include "parsequery.h"
@@ -160,7 +147,6 @@ class ThreadFunc
 
 bool serverInit()
 {
-#ifndef _MSC_VER
 
   setsid();
 
@@ -194,25 +180,17 @@ bool serverInit()
     }
 
 #endif
-#endif
   return true;
 }
 
 SockType initListenSock(short portNo)
 {
   SockType listenSock = -1;
-#ifdef _MSC_VER
-  WSAData wsadata;
-  const WORD minVersion = MAKEWORD(2, 2);
-  WSAStartup(minVersion, &wsadata);
-#endif
   listenSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   idbassert_s(listenSock >= 0, string("socket create error: ") + strerror(errno));
   // if (listenSock < 0) throw runtime_error(string("socket create error: ") + strerror(errno));
-#ifndef _MSC_VER
   int optval = 1;
   setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&optval), sizeof(optval));
-#endif
   int rc = 0;
   struct sockaddr_in serv_addr;
   memset(&serv_addr, 0, sizeof(serv_addr));
@@ -226,13 +204,7 @@ again:
 
   if (rc < 0)
   {
-#ifdef _MSC_VER
-    int x = WSAGetLastError();
-
-    if (x == WSAEADDRINUSE)
-#else
     if (errno == EADDRINUSE)
-#endif
     {
       // cerr << "Addr in use..." << endl;
       if (++tries >= MaxTries)
@@ -311,15 +283,6 @@ struct ScopedCleaner
   ScopedCleaner(SockType fd = -1) : fFd(fd)
   {
   }
-#ifdef _MSC_VER
-  ~ScopedCleaner()
-  {
-    if (fFd >= 0)
-      shutdown(fFd, SHUT_RDWR);
-
-    closesocket(fFd);
-  }
-#else
   ~ScopedCleaner()
   {
     if (fFd >= 0)
@@ -328,7 +291,6 @@ struct ScopedCleaner
     close(fFd);
   }
 
-#endif
   SockType fFd;
 };
 
@@ -411,11 +373,7 @@ int main(int argc, char** argv)
   if (portNo <= 0)
     portNo = 9198;
 
-#ifdef _MSC_VER
-  listenSock = INVALID_SOCKET;
-#else
   listenSock = -1;
-#endif
   opterr = 0;
 
   while ((c = getopt(argc, argv, "p:")) != -1)
@@ -440,53 +398,9 @@ int main(int argc, char** argv)
 
   for (;;)
   {
-#ifdef _MSC_VER
-    SOCKET querySock = INVALID_SOCKET;
-    querySock = accept(listenSock, 0, 0);
-    idbassert_s(querySock != INVALID_SOCKET, string("socket accept error: ") + strerror(errno));
-#if 0
-        uint32_t sndbufsize;
-        int sndbufsizelen = 4;
-        int rc;
-        rc = getsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (char*)&sndbufsize, &sndbufsizelen);
-
-        if (rc != SOCKET_ERROR)
-        {
-            if (sndbufsizelen == 4)
-            {
-                cerr << "getsockopt(): current SO_SNDBUF = " << sndbufsize << endl;
-                sndbufsize = atoi(getenv("SO_SNDBUF"));
-                cerr << "setsockopt(): setting SO_SNDBUF = " << sndbufsize << endl;
-                rc = setsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (const char*)&sndbufsize, sndbufsizelen);
-
-                if (rc != SOCKET_ERROR)
-                {
-                    getsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (char*)&sndbufsize, &sndbufsizelen);
-                    cerr << "getsockopt(): new SO_SNDBUF = " << sndbufsize << endl;
-                }
-                else
-                {
-                    cerr << "setsockopt(): " << WSAGetLastError() << endl;
-                }
-            }
-            else
-            {
-                cerr << "getsockopt(): expecting 4 bytes, got " << sndbufsizelen << endl;
-            }
-        }
-        else
-        {
-            cerr << "getsockopt(): " << WSAGetLastError() << endl;
-        }
-
-#endif
-    uint32_t sndbufsize = 512 * 1024;
-    setsockopt(querySock, SOL_SOCKET, SO_SNDBUF, (const char*)&sndbufsize, 4);
-#else
     int querySock = -1;
     querySock = accept(listenSock, 0, 0);
     idbassert_s(querySock >= 0, string("socket accept error: ") + strerror(errno));
-#endif
 
     // ThreadFunc now owns querySock and is responsible for cleaning it up
     ThreadFunc tf(querySock);

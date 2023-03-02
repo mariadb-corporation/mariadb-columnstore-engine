@@ -24,9 +24,7 @@
 #pragma once
 
 #include <unistd.h>
-#ifndef _MSC_VER
 #include <netinet/in.h>
-#endif
 
 #include "socket.h"
 #include "iosocket.h"

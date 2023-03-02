@@ -25,10 +25,6 @@
 #include <fstream>
 #include <algorithm>
 
-#ifdef _MSC_VER
-#include <process.h>
-#include <ctime>
-#endif
 
 #include <unistd.h>
 

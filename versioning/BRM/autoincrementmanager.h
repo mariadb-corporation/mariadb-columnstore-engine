@@ -29,11 +29,7 @@
 
 #pragma once
 
-#if defined(_MSC_VER) && defined(xxxBRMAUTOINCMGR_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

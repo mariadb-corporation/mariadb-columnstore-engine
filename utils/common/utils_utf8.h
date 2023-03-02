@@ -21,10 +21,7 @@
 #pragma once
 
 #include <string>
-#if defined(_MSC_VER)
-#include <malloc.h>
-#include <windows.h>
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
 //#include <cstdlib>
 #else
 #include <alloca.h>
@@ -44,16 +41,7 @@ const int MAX_UTF8_BYTES_PER_CHAR = 4;
 // Params dest and max should have enough length to accomodate NULL
 inline size_t idb_mbstowcs(wchar_t* dest, const char* src, size_t max)
 {
-#ifdef _MSC_VER
-  // 4th param (-1) denotes to convert till hit NULL char
-  // if 6th param max = 0, will return the required buffer size
-  size_t strwclen = MultiByteToWideChar(CP_UTF8, 0, src, -1, dest, (int)max);
-  // decrement the count of NULL; will become -1 on failure
-  return --strwclen;
-
-#else
   return mbstowcs(dest, src, max);
-#endif
 }
 
 // BUG 5241
@@ -61,15 +49,7 @@ inline size_t idb_mbstowcs(wchar_t* dest, const char* src, size_t max)
 // Params dest and max should have enough length to accomodate NULL
 inline size_t idb_wcstombs(char* dest, const wchar_t* src, size_t max)
 {
-#ifdef _MSC_VER
-  // 4th param (-1) denotes to convert till hit NULL char
-  // if 6th param max = 0, will return the required buffer size
-  size_t strmblen = WideCharToMultiByte(CP_UTF8, 0, src, -1, dest, (int)max, NULL, NULL);
-  // decrement the count of NULL; will become -1 on failure
-  return --strmblen;
-#else
   return wcstombs(dest, src, max);
-#endif
 }
 
 // convert UTF-8 string to wstring

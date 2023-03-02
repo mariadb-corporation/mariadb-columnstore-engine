@@ -273,8 +273,6 @@ inline bool operator<(const value_t lhs, const value_t rhs) noexcept
     #define JSON_HEDLEY_MSVC_VERSION JSON_HEDLEY_VERSION_ENCODE(_MSC_FULL_VER / 10000000, (_MSC_FULL_VER % 10000000) / 100000, (_MSC_FULL_VER % 100000) / 100)
 #elif defined(_MSC_FULL_VER) && !defined(__ICL)
     #define JSON_HEDLEY_MSVC_VERSION JSON_HEDLEY_VERSION_ENCODE(_MSC_FULL_VER / 1000000, (_MSC_FULL_VER % 1000000) / 10000, (_MSC_FULL_VER % 10000) / 10)
-#elif defined(_MSC_VER) && !defined(__ICL)
-    #define JSON_HEDLEY_MSVC_VERSION JSON_HEDLEY_VERSION_ENCODE(_MSC_VER / 100, _MSC_VER % 100, 0)
 #endif
 
 #if defined(JSON_HEDLEY_MSVC_VERSION_CHECK)
@@ -282,10 +280,6 @@ inline bool operator<(const value_t lhs, const value_t rhs) noexcept
 #endif
 #if !defined(JSON_HEDLEY_MSVC_VERSION)
     #define JSON_HEDLEY_MSVC_VERSION_CHECK(major,minor,patch) (0)
-#elif defined(_MSC_VER) && (_MSC_VER >= 1400)
-    #define JSON_HEDLEY_MSVC_VERSION_CHECK(major,minor,patch) (_MSC_FULL_VER >= ((major * 10000000) + (minor * 100000) + (patch)))
-#elif defined(_MSC_VER) && (_MSC_VER >= 1200)
-    #define JSON_HEDLEY_MSVC_VERSION_CHECK(major,minor,patch) (_MSC_FULL_VER >= ((major * 1000000) + (minor * 10000) + (patch)))
 #else
     #define JSON_HEDLEY_MSVC_VERSION_CHECK(major,minor,patch) (_MSC_VER >= ((major * 100) + (minor)))
 #endif
@@ -2367,10 +2361,6 @@ using is_detected_convertible =
         #endif
 
         // no filesystem support before MSVC 19.14: https://en.cppreference.com/w/cpp/compiler_support
-        #if defined(_MSC_VER) && _MSC_VER < 1914
-            #undef JSON_HAS_FILESYSTEM
-            #undef JSON_HAS_EXPERIMENTAL_FILESYSTEM
-        #endif
 
         // no filesystem support before iOS 13
         #if defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED < 130000
@@ -17460,14 +17450,8 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 
 #ifdef _WIN32
         result["platform"] = "win32";
-#elif defined __linux__
-        result["platform"] = "linux";
-#elif defined __APPLE__
-        result["platform"] = "apple";
-#elif defined __unix__
-        result["platform"] = "unix";
 #else
-        result["platform"] = "unknown";
+        result["platform"] = "linux";
 #endif
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)
@@ -17480,8 +17464,6 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         result["compiler"] = "hp"
 #elif defined(__IBMCPP__)
         result["compiler"] = {{"family", "ilecpp"}, {"version", __IBMCPP__}};
-#elif defined(_MSC_VER)
-        result["compiler"] = {{"family", "msvc"}, {"version", _MSC_VER}};
 #elif defined(__PGI)
         result["compiler"] = {{"family", "pgcpp"}, {"version", __PGI}};
 #elif defined(__SUNPRO_CC)

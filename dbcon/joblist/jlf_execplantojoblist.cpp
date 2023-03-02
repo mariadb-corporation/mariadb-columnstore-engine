@@ -307,20 +307,12 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
 
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::INT:
-#ifdef _MSC_VER
-      v = boost::any_cast<int>(anyVal);
-#else
       v = boost::any_cast<int32_t>(anyVal);
-#endif
       break;
 
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::UINT:
-#ifdef _MSC_VER
-      v = boost::any_cast<unsigned int>(anyVal);
-#else
       v = boost::any_cast<uint32_t>(anyVal);
-#endif
       break;
 
     case CalpontSystemCatalog::BIGINT: v = boost::any_cast<long long>(anyVal); break;
@@ -390,12 +382,7 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
       else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
         v = boost::any_cast<long long>(anyVal);
       else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
-#ifdef _MSC_VER
-        v = boost::any_cast<int>(anyVal);
-
-#else
         v = boost::any_cast<int32_t>(anyVal);
-#endif
       else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
         v = boost::any_cast<int16_t>(anyVal);
       else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)

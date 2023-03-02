@@ -55,9 +55,6 @@ extern "C"
   /**
    * MCS_ADD connector stub
    */
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcs_add_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 2)
@@ -69,16 +66,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcs_add_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       double mcs_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     double op1, op2;
@@ -93,9 +84,6 @@ extern "C"
    * MCS_ISNULL connector stub
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool mcs_isnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -107,16 +95,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void mcs_isnull_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long mcs_isnull(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     return 0;
@@ -131,9 +113,6 @@ extern "C"
     ulonglong totalNulls;
   };
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool allnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct allnull_data* data;
@@ -157,17 +136,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void allnull_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long allnull(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                         char* error __attribute__((unused)))
   {
@@ -175,9 +148,6 @@ extern "C"
     return data->totalQuantity > 0 && data->totalNulls == data->totalQuantity;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void allnull_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                          char* message __attribute__((unused)))
   {
@@ -186,9 +156,6 @@ extern "C"
     data->totalNulls = 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void allnull_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     struct allnull_data* data = (struct allnull_data*)initid->ptr;
@@ -209,9 +176,6 @@ extern "C"
     double sumsq;
   };
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool ssq_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct ssq_data* data;
@@ -234,17 +198,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void ssq_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void ssq_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                      char* message __attribute__((unused)))
   {
@@ -252,9 +210,6 @@ extern "C"
     data->sumsq = 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void ssq_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     struct ssq_data* data = (struct ssq_data*)initid->ptr;
@@ -262,9 +217,6 @@ extern "C"
     data->sumsq = val * val;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long ssq(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                     char* error __attribute__((unused)))
   {
@@ -277,9 +229,6 @@ extern "C"
   /**
    * MEDIAN connector stub
    */
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool median_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -301,17 +250,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void median_deinit(UDF_INIT* initid)
   {
     //	free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void median_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                         char* message __attribute__((unused)))
   {
@@ -319,9 +262,6 @@ extern "C"
     //	data->sumsq = 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void median_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
@@ -329,9 +269,6 @@ extern "C"
     //	data->sumsq = val*val;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long median(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                        char* error __attribute__((unused)))
   {
@@ -343,9 +280,6 @@ extern "C"
   /**
    * avg_mode connector stub
    */
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool avg_mode_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -367,17 +301,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avg_mode_deinit(UDF_INIT* initid)
   {
     //	free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avg_mode_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                           char* message __attribute__((unused)))
   {
@@ -385,9 +313,6 @@ extern "C"
     //	data->sumsq = 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avg_mode_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
                         char* message __attribute__((unused)))
   {
@@ -396,9 +321,6 @@ extern "C"
     //	data->sumsq = val*val;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long avg_mode(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                          char* error __attribute__((unused)))
   {
@@ -420,9 +342,6 @@ extern "C"
     int64_t cnt;
   };
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct avgx_data* data;
@@ -444,17 +363,11 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avgx_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avgx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                       char* message __attribute__((unused)))
   {
@@ -463,9 +376,6 @@ extern "C"
     data->cnt = 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void avgx_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     // TODO test for NULL in x and y
@@ -475,9 +385,6 @@ extern "C"
     data->sumx += xval;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long avgx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                      char* error __attribute__((unused)))
   {
@@ -488,9 +395,6 @@ extern "C"
 /**
  * distinct_count connector stub
  */
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool distinct_count_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -502,33 +406,21 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void distinct_count_deinit(UDF_INIT* initid)
   {
     //	free(initid->ptr);
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void distinct_count_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                                 char* message __attribute__((unused)))
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void distinct_count_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
                               char* message __attribute__((unused)))
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long distinct_count(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                                char* error __attribute__((unused)))
   {

@@ -204,11 +204,7 @@ class WindowFunctionStep : public JobStep, public TupleDeliveryStep
   std::vector<boost::shared_ptr<windowfunction::WindowFunction> > fFunctions;
   uint64_t fFunctionCount;
   uint64_t fTotalThreads;
-#ifdef _MSC_VER
-  volatile LONG fNextIndex;
-#else
   int fNextIndex;
-#endif
 
   // query order by
   boost::shared_ptr<ordering::OrderByData> fQueryOrderBy;

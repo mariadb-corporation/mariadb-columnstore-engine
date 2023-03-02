@@ -25,11 +25,7 @@
 #pragma once
 
 #include <string>
-#ifndef _MSC_VER
 #include <tr1/unordered_map>
-#else
-#include <unordered_map>
-#endif
 
 #include <stddef.h>
 

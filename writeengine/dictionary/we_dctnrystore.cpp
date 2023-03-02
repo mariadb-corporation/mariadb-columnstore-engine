@@ -20,9 +20,7 @@
  *
  *******************************************************************************/
 #include <string.h>
-#ifndef _MSC_VER
 #include <inttypes.h>
-#endif
 #define WRITEENGINEDCTSTORE_DLLEXPORT
 #include "we_dctnrystore.h"
 #undef WRITEENGINEDCTSTORE_DLLEXPORT

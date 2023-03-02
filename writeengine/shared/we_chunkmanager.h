@@ -33,17 +33,8 @@
 #include "idbcompress.h"
 #include "IDBFileSystem.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
-#ifdef _MSC_VER
-#define WE_COMP_DBG(x) \
-  {                    \
-  }
-#else
 //#define IDB_COMP_DEBUG
 #ifdef IDB_COMP_DEBUG
 #define WE_COMP_DBG(x) \
@@ -54,7 +45,6 @@
 #define WE_COMP_DBG(x) \
   {                    \
   }
-#endif
 #endif
 
 namespace logging

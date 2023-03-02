@@ -24,11 +24,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/scoped_array.hpp>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 
 #include "rowgroup.h"
 #include "joiner.h"

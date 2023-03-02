@@ -220,9 +220,6 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
 
       for (; i < numTries; i++)
       {
-#ifdef _MSC_VER
-        Sleep(rm_ts.tv_sec * 1000);
-#else
         struct timespec abs_ts;
 
         do
@@ -231,7 +228,6 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
 
         try
         {
@@ -882,9 +878,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
       for (; i < numTries; i++)
       {
-#ifdef _MSC_VER
-        Sleep(rm_ts.tv_sec * 1000);
-#else
         struct timespec abs_ts;
 
         do
@@ -893,7 +886,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
 
         try
         {
@@ -1299,13 +1291,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     }
   }
 
-#ifdef _MSC_VER
-  catch (std::exception&)
-  {
-    // FIXME: Windows can't delete a file that's still open by another process
-  }
-
-#else
   catch (std::exception& ex)
   {
     Message::Args args;
@@ -1323,7 +1308,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     return result;
   }
 
-#endif
   catch (...)
   {
     Message::Args args;

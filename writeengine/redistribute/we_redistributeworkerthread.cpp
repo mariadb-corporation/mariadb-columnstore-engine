@@ -246,16 +246,12 @@ int RedistributeWorkerThread::grabTableLock()
 
         // always wait long enough for ddl/dml/cpimport to get table lock
         // for now, triple the ddl/dml/cpimport retry interval: 3 * 100ms
-#ifdef _MSC_VER
-      Sleep(ts.tv_nsec * 1000);
-#else
       struct timespec tmp = ts;
 
       while (nanosleep(&tmp, &ts) < 0)
         ;
 
       tmp = ts;
-#endif
 
       try
       {

@@ -30,11 +30,7 @@
 #include "collation.h"  // CHARSET_INFO
 #include "ddlpkg.h"
 
-#if defined(_MSC_VER) && defined(xxxDDLPKGSQLPARSER_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace ddlpackage
 {

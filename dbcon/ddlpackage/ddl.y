@@ -43,11 +43,7 @@
 %{
 #include "sqlparser.h"
 
-#ifdef _MSC_VER
-#include "ddl-gram-win.h"
-#else
 #include "ddl-gram.h"
-#endif
 
 #include "mariadb_my_sys.h" // CHARSET_INFO
 

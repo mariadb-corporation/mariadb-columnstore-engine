@@ -117,18 +117,6 @@ MSTEntry::MSTEntry() : tableShmkey(-1), allocdSize(0), currentSize(0)
 
 MasterSegmentTable::MasterSegmentTable()
 {
-#ifdef _MSC_VER
-  const char* envp = getenv("SystemRoot");
-  string SystemRoot;
-
-  if (envp && *envp)
-    SystemRoot = envp;
-  else
-    SystemRoot = "C:\\WINDOWS";
-
-  string tmpEnv = "TMP=" + SystemRoot + "\\Temp";
-  _putenv(tmpEnv.c_str());
-#endif
 
   int i;
   bool initializer = false;

@@ -37,11 +37,7 @@
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#if defined(_MSC_VER) && defined(xxxRWLOCK_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace rwlock
 {
@@ -64,19 +60,11 @@ class RWLockMonitor
 */
 struct LockState
 {
-#ifdef _MSC_VER
-  LONG writerswaiting;
-  LONG writing;
-  LONG readerswaiting;
-  LONG reading;
-  bool mutexLocked;
-#else
   int writerswaiting;
   int writing;
   int readerswaiting;
   int reading;
   bool mutexLocked;
-#endif
 };
 
 class RWLockShmImpl

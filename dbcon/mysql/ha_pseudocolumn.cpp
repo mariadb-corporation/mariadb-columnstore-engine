@@ -79,9 +79,6 @@ extern "C"
   /**
    * IDBDBROOT
    */
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbdbroot_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -93,16 +90,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbdbroot_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbdbroot(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbdbroot");
@@ -113,9 +104,6 @@ extern "C"
    * IDBPM
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -127,16 +115,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbpm_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbpm");
@@ -147,9 +129,6 @@ extern "C"
    * IDBEXTENTRELATIVERID
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbextentrelativerid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -161,16 +140,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbextentrelativerid_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbextentrelativerid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbextentrelativerid");
@@ -181,9 +154,6 @@ extern "C"
    * IDBBLOCKID
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbblockid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -195,16 +165,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbblockid_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbblockid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbblockid");
@@ -215,9 +179,6 @@ extern "C"
    * IDBEXTENTID
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbextentid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -229,16 +190,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbextentid_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbextentid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbextentid");
@@ -249,9 +204,6 @@ extern "C"
    * IDBSEGMENT
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbsegment_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -263,16 +215,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbsegment_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbsegment(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbsegment");
@@ -283,9 +229,6 @@ extern "C"
    * IDBSEGMENTDIR
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbsegmentdir_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -297,16 +240,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbsegmentdir_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idbsegmentdir(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     bailout(error, "idbsegmentdir");
@@ -317,9 +254,6 @@ extern "C"
    * IDBPARTITION
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbpartition_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -331,16 +265,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbpartition_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* idbpartition(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                char* is_null, char* error)
   {
@@ -352,9 +280,6 @@ extern "C"
    * IDBEXTENTMIN
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbextentmin_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -367,16 +292,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbextentmin_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* idbextentmin(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                char* is_null, char* error)
   {
@@ -388,9 +307,6 @@ extern "C"
    * IDBEXTENTMAX
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idbextentmax_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
@@ -403,16 +319,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idbextentmax_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       const char* idbextentmax(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                char* is_null, char* error)
   {
@@ -424,9 +334,6 @@ extern "C"
    * IDBLOCALPM
    */
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       my_bool idblocalpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
@@ -439,16 +346,10 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       void idblocalpm_deinit(UDF_INIT* initid)
   {
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
       long long idblocalpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
   {
     longlong localpm = idblocalpm();

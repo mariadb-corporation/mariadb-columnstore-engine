@@ -625,30 +625,6 @@ void ByteStream::needAtLeast(size_t amount)
     growBuf(fMaxLen + amount);
 }
 
-#ifdef _MSC_VER
-#if BOOST_VERSION < 104500
-ByteStream& ByteStream::operator<<(const uint32_t ui)
-{
-  if (fBuf == 0 || (fCurInPtr - fBuf + 4U > fMaxLen + ISSOverhead))
-    growBuf(fMaxLen + BlockSize);
-
-  uint32_t q = ui;
-  *((uint32_t*)fCurInPtr) = q;
-  fCurInPtr += 4;
-
-  return *this;
-}
-
-ByteStream& ByteStream::operator>>(uint32_t& ui)
-{
-  uint32_t q;
-  peek(q);
-  fCurOutPtr += 4;
-  ui = q;
-  return *this;
-}
-#endif
-#endif
 
 ByteStream& ByteStream::operator<<(const ByteStream& bs)
 {
