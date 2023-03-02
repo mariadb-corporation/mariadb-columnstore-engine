@@ -27,14 +27,8 @@
 using namespace std;
 
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#endif
 
 #define IOSOCKET_DLLEXPORT
 #include "iosocket.h"
@@ -85,9 +79,7 @@ const string IOSocket::toString() const
   SocketParms sp = fSocket->socketParms();
   const sockaddr_in* sinp = reinterpret_cast<const sockaddr_in*>(&fSa);
   oss << "IOSocket: sd: " << sp.sd() <<
-#ifndef _MSC_VER
       " inet: " << inet_ntop(AF_INET, &sinp->sin_addr, buf, INET_ADDRSTRLEN) <<
-#endif
       " port: " << ntohs(sinp->sin_port);
   return oss.str();
 #endif

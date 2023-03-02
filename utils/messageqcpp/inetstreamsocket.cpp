@@ -48,16 +48,6 @@ either expressed or implied, of the FreeBSD Project.
 
 #include <cstdio>
 #include <cerrno>
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <icmpapi.h>
-#include <stdio.h>
-#else
 #if __FreeBSD__
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -71,7 +61,6 @@ either expressed or implied, of the FreeBSD Project.
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#endif
 #include <sys/types.h>
 #include <sys/time.h>
 #include <cstring>
@@ -108,9 +97,6 @@ namespace
 // read(), so adding logic to retry after ERESTARTSYS the way we do for EINTR.
 // const int KERR_ERESTARTSYS = 512;
 
-#ifdef _MSC_VER
-const int MaxSendPacketSize = 64 * 1024;
-#endif
 
 int in_cksum(unsigned short* buf, int sz)
 {
@@ -168,32 +154,6 @@ void InetStreamSocket::open()
 
   if (sd < 0)
   {
-#ifdef _MSC_VER
-    int wsaError = WSAGetLastError();
-
-    if (wsaError == WSANOTINITIALISED)
-    {
-      WSAData wsadata;
-      const WORD minVersion = MAKEWORD(2, 2);
-
-      if (WSAStartup(minVersion, &wsadata) == 0)
-      {
-        if (wsadata.wVersion == minVersion)
-        {
-          sd = ::socket(fSocketParms.domain(), fSocketParms.type(), fSocketParms.protocol());
-          e = errno;
-
-          if (sd >= 0)
-            goto setopts;
-        }
-
-        // Didn't get the required min version, error out
-      }
-
-      // WSAStartup failed, continue to report error
-    }
-
-#endif
     string msg = "InetStreamSocket::open: socket() error: ";
     scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
@@ -212,9 +172,6 @@ void InetStreamSocket::open()
     throw runtime_error(msg);
   }
 
-#ifdef _MSC_VER
-setopts:
-#endif
 
   /*  XXXPAT:  If we have latency problems again, try these...
       bufferSizeSize = 4;
@@ -253,11 +210,7 @@ void InetStreamSocket::close()
   if (isOpen())
   {
     ::shutdown(fSocketParms.sd(), SHUT_RDWR);
-#ifdef _MSC_VER
-    ::closesocket(fSocketParms.sd());
-#else
     ::close(fSocketParms.sd());
-#endif
     fSocketParms.sd(-1);
   }
 }
@@ -408,27 +361,11 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
 
     fMagicBuffer = fMagicBuffer >> 8;
   retry:
-#ifdef _MSC_VER
-    err = ::recv(fSocketParms.sd(), (char*)&magicBuffer8[3], 1, 0);
-#else
     err = ::read(fSocketParms.sd(), &magicBuffer8[3], 1);
-#endif
 
     if (err < 0)
     {
       int e = errno;
-#ifdef _MSC_VER
-
-      if (WSAGetLastError() == WSAECONNRESET)
-      {
-        // throw runtime_error("connection reset by peer");
-        if (msecs < 0)
-          return false;
-        else
-          throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
-      }
-
-#endif
 
       if (e == EINTR)
       {
@@ -444,9 +381,6 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
       ostringstream oss;
       oss << "InetStreamSocket::readToMagic(): I/O error2.1: "
           << "err = " << err << " e = " << e <<
-#ifdef _MSC_VER
-          " WSA error = " << WSAGetLastError() <<
-#endif
           ": " << strerror(e);
       throw runtime_error(oss.str());
     }
@@ -500,14 +434,7 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, co
       }
     }
 
-#ifdef _MSC_VER
-    currentBytesRead =
-        ::recv(fSocketParms.sd(), (char*)(buffer + bytesRead),
-               std::min(numberOfBytes - bytesRead, reinterpret_cast<size_t>(MaxSendPacketSize));
-               readAmoumt, 0);
-#else
     currentBytesRead = ::read(fSocketParms.sd(), buffer + bytesRead, numberOfBytes - bytesRead);
-#endif
 
     if (currentBytesRead == 0)
     {
@@ -742,9 +669,7 @@ void InetStreamSocket::bind(const sockaddr* serv_addr)
 
 void InetStreamSocket::listen(int backlog)
 {
-#ifndef _MSC_VER
   fcntl(socketParms().sd(), F_SETFD, fcntl(socketParms().sd(), F_GETFD) | FD_CLOEXEC);
-#endif
 
   if (::listen(socketParms().sd(), backlog) != 0)
   {
@@ -879,17 +804,6 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   {
     int e = errno;
     string msg = "InetStreamSocket::connect: connect() error: ";
-#ifdef _MSC_VER
-    char m[80];
-    int x = WSAGetLastError();
-
-    if (x == WSAECONNREFUSED)
-      strcpy(m, "connection refused");
-    else
-      sprintf(m, "%d 0x%x", x, x);
-
-    msg += m;
-#else
     scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
     const char* p;
@@ -903,7 +817,6 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
     if ((p = strerror_r(e, buf.get(), 80)) == 0)
       msg += buf.get();
 
-#endif
 #endif
     msg += " to: " + toString();
     throw runtime_error(msg);
@@ -931,13 +844,8 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   // success
   if (ret == 1)
   {
-#ifdef _MSC_VER
-    char buf = '\0';
-    (void)::recv(socketParms().sd(), &buf, 1, 0);
-#else
     char buf = '\0';
     std::ignore = ::read(socketParms().sd(), &buf, 1);  // we know 1 byte is in the recv buffer
-#endif
     return;
   }
 
@@ -973,9 +881,7 @@ const string InetStreamSocket::toString() const
   char buf[INET_ADDRSTRLEN];
   const SocketParms& sp = fSocketParms;
   oss << "InetStreamSocket: sd: " << sp.sd() <<
-#ifndef _MSC_VER
       " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
-#endif
       " port: " << ntohs(fSa.sin_port);
   return oss.str();
 }
@@ -1013,13 +919,7 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
   while (nleft > 0)
   {
     // the O_NONBLOCK flag is not set, this is a blocking I/O.
-#ifdef _MSC_VER
-    int writeAmount = std::min((int)nleft, MaxSendPacketSize);
-
-    if ((nwritten = ::send(fd, bufp, writeAmount, 0)) < 0)
-#else
     if ((nwritten = ::write(fd, bufp, nleft)) < 0)
-#endif
     {
       if (errno == EINTR)
         nwritten = 0;
@@ -1056,13 +956,8 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
 const string InetStreamSocket::addr2String() const
 {
   string s;
-#ifdef _MSC_VER
-  // This is documented to be thread-safe in Windows
-  s = inet_ntoa(fSa.sin_addr);
-#else
   char dst[INET_ADDRSTRLEN];
   s = inet_ntop(AF_INET, &fSa.sin_addr, dst, INET_ADDRSTRLEN);
-#endif
   return s;
 }
 
@@ -1094,7 +989,6 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
   if (timeout)
     msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
-#ifndef _MSC_VER
   int pingsock;
   pingsock = ::socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
@@ -1153,43 +1047,6 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
 
   ::close(pingsock);
 
-#else  // Windows version
-  HANDLE icmpFile;
-  icmpFile = IcmpCreateFile();
-
-  if (icmpFile == INVALID_HANDLE_VALUE)
-    return -1;
-
-  DWORD ret;
-  const size_t PingPktSize = 1024;
-  char rqd[PingPktSize];
-  WORD rqs = PingPktSize;
-  char rpd[PingPktSize];
-  DWORD rps = PingPktSize;
-
-  ZeroMemory(rqd, PingPktSize);
-  ZeroMemory(rpd, PingPktSize);
-
-  rqs = 64;
-
-  ret = IcmpSendEcho(icmpFile, pingaddr.sin_addr.s_addr, rqd, rqs, 0, rpd, rps, msecs);
-
-  if (ret <= 0)
-  {
-    IcmpCloseHandle(icmpFile);
-    return -1;
-  }
-
-  PICMP_ECHO_REPLY echoReply = (PICMP_ECHO_REPLY)rpd;
-
-  if (echoReply->Status != IP_SUCCESS)
-  {
-    IcmpCloseHandle(icmpFile);
-    return -1;
-  }
-
-  IcmpCloseHandle(icmpFile);
-#endif
 
   return 0;
 }

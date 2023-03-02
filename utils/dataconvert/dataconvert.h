@@ -31,9 +31,7 @@
 
 #include <netinet/in.h>
 
-#ifdef __linux__
 #define POSIX_REGEX
-#endif
 
 #ifdef POSIX_REGEX
 #include <regex.h>
@@ -50,7 +48,6 @@
 #include "errorids.h"
 
 // remove this block if the htonll is defined in library
-#ifdef __linux__
 #include <endian.h>
 #if __BYTE_ORDER == __BIG_ENDIAN  // 4312
 inline uint64_t htonll(uint64_t n)
@@ -66,15 +63,6 @@ inline uint64_t htonll(uint64_t n)
 inline uint64_t htonll(uint64_t n);
 // don't know 34127856 or 78563412, hope never be required to support this byte order.
 #endif
-#else  //!__linux__
-#if _MSC_VER < 1600
-// Assume we're on little-endian
-inline uint64_t htonll(uint64_t n)
-{
-  return ((((uint64_t)htonl(n & 0xFFFFFFFFULL)) << 32) | (htonl((n & 0xFFFFFFFF00000000ULL) >> 32)));
-}
-#endif  //_MSC_VER
-#endif  //__linux__
 
 #define LEAPS_THRU_END_OF(y) ((y) / 4 - (y) / 100 + (y) / 400)
 #define isleap(y) (((y) % 4) == 0 && (((y) % 100) != 0 || ((y) % 400) == 0))
@@ -87,11 +75,7 @@ inline uint64_t uint64ToStr(uint64_t n)
 
 using cscDataType = datatypes::SystemCatalog::ColDataType;
 
-#if defined(_MSC_VER) && defined(xxxDATACONVERT_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 const int64_t IDB_pow[19] = {1,
                              10,

@@ -31,9 +31,6 @@ CacheControl* Cache::m_cacheParam = NULL;
 FreeBufList* Cache::m_freeList = NULL;
 CacheMap* Cache::m_lruList = NULL;
 CacheMap* Cache::m_writeList = NULL;
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
     bool Cache::m_useCache = false;
 /***********************************************************
  * DESCRIPTION:

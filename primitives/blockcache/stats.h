@@ -23,12 +23,7 @@
 
 #pragma once
 
-#ifndef _MSC_VER
 #include <pthread.h>
-#else
-// FIXME: find a portable solution
-typedef int pthread_t;
-#endif
 #include <boost/thread.hpp>
 #include <iostream>
 #include <sstream>

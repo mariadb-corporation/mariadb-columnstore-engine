@@ -49,33 +49,6 @@ using namespace std;
 using namespace boost;
 using namespace execplan;
 
-#if defined(_MSC_VER) && !defined(isnan)
-#define isnan _isnan
-namespace
-{
-inline int __signbitf(float __x)
-{
-  union
-  {
-    float __f;
-    int __i;
-  } __u;
-  __u.__f = __x;
-  return __u.__i < 0;
-}
-inline int __signbit(double __x)
-{
-  union
-  {
-    double __d;
-    int __i[2];
-  } __u;
-  __u.__d = __x;
-  return __u.__i[1] < 0;
-}
-}  // namespace
-#define signbit(x) (sizeof(x) == sizeof(float) ? __signbitf(x) : __signbit(x))
-#endif
 
 namespace
 {
@@ -368,20 +341,11 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
         {
           errno = 0;
 
-#ifdef _MSC_VER
-          fVal = (float)strtod(field, 0);
-#else
           fVal = strtof(field, 0);
-#endif
 
           if (errno == ERANGE)
           {
-#ifdef _MSC_VER
-
-            if (abs(fVal) == HUGE_VAL)
-#else
             if (abs(fVal) == HUGE_VALF)
-#endif
             {
               if (fVal > 0)
                 fVal = maxFltSat;
@@ -473,12 +437,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
 
           if (errno == ERANGE)
           {
-#ifdef _MSC_VER
-
-            if (abs(dVal) == HUGE_VAL)
-#else
             if (abs(dVal) == HUGE_VALL)
-#endif
             {
               if (dVal > 0)
                 dVal = column.fMaxDblSat;

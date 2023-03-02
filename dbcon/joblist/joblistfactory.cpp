@@ -2121,17 +2121,7 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm,
         gettimeofday(&stTime, 0);
 
         struct tm tmbuf;
-#ifdef _MSC_VER
-        errno_t p = 0;
-        time_t t = stTime.tv_sec;
-        p = localtime_s(&tmbuf, &t);
-
-        if (p != 0)
-          memset(&tmbuf, 0, sizeof(tmbuf));
-
-#else
         localtime_r(&stTime.tv_sec, &tmbuf);
-#endif
         ostringstream tms;
         tms << setfill('0') << setw(4) << (tmbuf.tm_year + 1900) << setw(2) << (tmbuf.tm_mon + 1) << setw(2)
             << (tmbuf.tm_mday) << setw(2) << (tmbuf.tm_hour) << setw(2) << (tmbuf.tm_min) << setw(2)
@@ -2142,16 +2132,7 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm,
         jlf_graphics::writeDotCmds(dotFile, querySteps, projectSteps);
 
         char timestamp[80];
-#ifdef _MSC_VER
-        t = stTime.tv_sec;
-        p = ctime_s(timestamp, 80, &t);
-
-        if (p != 0)
-          strcpy(timestamp, "UNKNOWN");
-
-#else
         ctime_r((const time_t*)&stTime.tv_sec, timestamp);
-#endif
         oss << "runtime updates: start at " << timestamp;
         cout << oss.str();
         Message::Args args;

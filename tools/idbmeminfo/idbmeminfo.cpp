@@ -15,12 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <process.h>
-#include <psapi.h>
-#endif
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -43,24 +37,7 @@ memInfo getMemInfo()
   size_t memTot;
   size_t memFree;
 
-#if defined(_MSC_VER)
-  MEMORYSTATUSEX memStat;
-  memStat.dwLength = sizeof(memStat);
-
-  if (GlobalMemoryStatusEx(&memStat) == 0)
-  {
-    // FIXME: Assume 2GB?
-    memTot = 2 * 1024 * 1024;
-    memFree = 0;
-  }
-  else
-  {
-    // We now have the total phys mem in bytes
-    memTot = memStat.ullTotalPhys / 1024;
-    memFree = memStat.ullAvailPhys / 1024;
-  }
-
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
   string cmd("sysctl -a | awk '/realmem/ {print int(($2+1023)/1024);} /Free Memory Pages/ {print $NF;}'");
   FILE* cmdPipe;
   char input[80];
@@ -74,7 +51,7 @@ memInfo getMemInfo()
   input[79] = '\0';
   memTot = atoi(input);
   pclose(cmdPipe);
-#elif defined(__linux__)
+#else
   ifstream in("/proc/meminfo");
   string input;
   string x;
@@ -92,8 +69,6 @@ memInfo getMemInfo()
     ss >> x;
     ss >> memFree;
   }
-#else
-#error O/S not supported!
 #endif
 
   // memTot is now in KB, convert to MB

@@ -1941,6 +1941,7 @@ void SlaveComm::do_confirm()
 
     tmp = savefile + (saveFileToggle ? 'A' : 'B');
     slave->saveState(tmp);
+    tmp += '\n';
     int err = 0;
 
     // MCOL-1558.  Make the _current file relative to DBRMRoot.
@@ -1990,7 +1991,6 @@ void SlaveComm::do_flushInodeCache()
     return;
   }
 
-#ifdef __linux__
 #ifdef USE_VERY_COMPLEX_DROP_CACHES
   double elapsedTime = 0.0;
   char msgChString[100];
@@ -2049,7 +2049,6 @@ void SlaveComm::do_flushInodeCache()
     }
   }
 
-#endif
 #endif
   reply << (uint8_t)ERR_OK;
 

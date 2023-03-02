@@ -57,12 +57,10 @@ namespace
 {
 int setUp()
 {
-#ifndef _MSC_VER
   string cmd = "/bin/rm -f " + logFile + " >/dev/null 2>&1";
   int rc = system(cmd.c_str());
   cmd = "/bin/touch -f " + logFile + " >/dev/null 2>&1";
   rc = system(cmd.c_str());
-#endif
   return rc;
 }
 
@@ -310,12 +308,7 @@ int main(int argc, char* argv[])
       if (canWrite)
         rc = system(cmd.c_str());
       else
-#ifdef _MSC_VER
-        (void)0;
-
-#else
         cerr << cmd << endl;
-#endif
 
       cmd = "save_brm";
 

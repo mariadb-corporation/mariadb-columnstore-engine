@@ -25,16 +25,6 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <icmpapi.h>
-#include <stdio.h>
-#else
 #if __FreeBSD__
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -47,7 +37,6 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
-#endif
 
 #include "compressed_iss.h"
 #include "iosocket.h"

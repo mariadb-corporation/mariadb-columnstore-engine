@@ -34,10 +34,6 @@
 #include <string>
 #include <stdexcept>
 #include <limits>
-#ifdef _MSC_VER
-#include <io.h>
-#include <psapi.h>
-#endif
 using namespace std;
 
 #include <boost/thread/mutex.hpp>

@@ -119,9 +119,7 @@ void Config::checkReload()
   if (m_bulkRoot.length() == 0)
   {
     m_bulkRoot = "/var/log/mariadb/columnstore";
-#ifndef _MSC_VER
     m_bulkRoot += "/data";
-#endif
     m_bulkRoot += "/bulk";
   }
 

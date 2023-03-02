@@ -2018,14 +2018,6 @@ int ChunkManager::reallocateChunks(CompFileData* fileData)
 
   if (rc == NO_ERROR)
   {
-#ifdef _MSC_VER
-    // We need to do this early on so the ::rename() call below will work on Windows
-    // we'll do it again later on, but that's life...
-    // FIXME: there's a race here that a query will re-open the files before we can jigger
-    // them around. We need to make sure PP is opening these files with the right perms
-    // to allow another process to delete them.
-    cacheutils::dropPrimProcFdCache();
-#endif
 
     // @bug3913, keep the original file until the new file is properly renamed.
     // 1. check the new file size is NOT 0, matching ptr[k].

@@ -33,15 +33,7 @@
 #include <cerrno>
 
 #include <unistd.h>  //pipe() && fork()
-#if defined(__linux__)
 #include <wait.h>  //wait()
-#elif defined(__FreeBSD__)
-#include <sys/types.h>
-#include <sys/stat.h>  // For stat().
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -168,10 +160,8 @@ WEDataLoader::~WEDataLoader()
 
 void WEDataLoader::setupSignalHandlers()
 {
-#ifndef _MSC_VER
   signal(SIGPIPE, SIG_IGN);
   signal(SIGCHLD, WEDataLoader::onSigChild);
-#endif
 }
 //------------------------------------------------------------------------------
 // handles on signal Terminate

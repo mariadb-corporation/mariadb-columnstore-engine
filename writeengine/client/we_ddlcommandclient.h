@@ -27,11 +27,7 @@
 #include "liboamcpp.h"
 #include "writeengine.h"
 
-#if defined(_MSC_VER) && defined(xxxWE_DDLCOMMANDCLIENT_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 #include "dataconvert.h"
 

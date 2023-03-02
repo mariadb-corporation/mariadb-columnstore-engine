@@ -28,11 +28,7 @@
 
 #include "rgnode.h"
 
-#if defined(_MSC_VER) && defined(xxxRESOURCENODE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

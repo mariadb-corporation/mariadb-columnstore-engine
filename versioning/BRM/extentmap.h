@@ -63,11 +63,7 @@
 #undef WRITE
 #endif
 
-#if defined(_MSC_VER) && defined(xxxEXTENTMAP_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace bi = boost::interprocess;
 

@@ -38,11 +38,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
-#ifndef _MSC_VER
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>

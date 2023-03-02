@@ -27,9 +27,6 @@ using namespace std;
 #include <boost/thread/mutex.hpp>
 using namespace boost;
 
-#ifdef _MSC_VER
-#include "idbregistry.h"
-#endif
 #include "installdir.h"
 #include "configcpp.h"
 
@@ -54,16 +51,6 @@ const string StartUp::tmpDir()
   if (fTmpDirp)
     return *fTmpDirp;
 
-#ifdef _MSC_VER
-  fTmpDirp = new string("C:\\Calpont\Tmp");
-  string cfStr = IDBreadRegistry("");
-
-  if (!cfStr.empty())
-    *fTmpDirp = cfStr;
-
-  return *fTmpDirp;
-
-#else
 
   // check for non-root user
   /*    const char* p = getenv("HOME");
@@ -108,7 +95,6 @@ const string StartUp::tmpDir()
 
   return TempFileDir;
 
-#endif
 }
 
 }  // namespace startup

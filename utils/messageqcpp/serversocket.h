@@ -24,13 +24,7 @@
 #pragma once
 
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
 #include <netinet/in.h>
-#endif
 
 class MessageQTestSuite;
 

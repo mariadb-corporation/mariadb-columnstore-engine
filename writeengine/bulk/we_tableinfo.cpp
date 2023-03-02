@@ -37,11 +37,7 @@
 // @bug 2099+
 #include <iostream>
 #include <libmarias3/marias3.h>
-#ifdef _MSC_VER
-#include <stdlib.h>
-#else
 #include <string.h>
-#endif
 using namespace std;
 
 // @bug 2099-
@@ -101,9 +97,6 @@ void TableInfo::sleepMS(long ms)
 
   rm_ts.tv_sec = ms / 1000;
   rm_ts.tv_nsec = ms % 1000 * 1000000;
-#ifdef _MSC_VER
-  Sleep(ms);
-#else
   struct timespec abs_ts;
 
   do
@@ -112,7 +105,6 @@ void TableInfo::sleepMS(long ms)
     abs_ts.tv_nsec = rm_ts.tv_nsec;
   } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1115,11 +1107,7 @@ int TableInfo::getColumnForParse(const int& id, const int& bufferId, bool report
 
     if (report)
     {
-#ifdef _MSC_VER
-      oss << " ----- " << GetCurrentThreadId() << ":fBuffers[" << bufferId <<
-#else
       oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId <<
-#endif
           "]: (colLocker,status,lasttime)- ";
     }
 
@@ -1204,11 +1192,7 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
     ostringstream oss;
     string bufStatusStr;
     ColumnInfo::convertStatusToString(stat, bufStatusStr);
-#ifdef _MSC_VER
-    oss << " --- " << GetCurrentThreadId() <<
-#else
     oss << " --- " << pthread_self() <<
-#endif
         ":fBuffers[" << bufferId << "]=" << bufStatusStr << " (" << stat << ")" << std::endl;
     cout << oss.str();
   }
@@ -1225,17 +1209,6 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
 int TableInfo::initializeBuffers(int noOfBuffers, const JobFieldRefList& jobFieldRefList,
                                  unsigned int fixedBinaryRecLen)
 {
-#ifdef _MSC_VER
-
-  //@bug 3751
-  // When reading from STDIN, Windows doesn't like the huge default buffer of
-  //  1M, so turn it down.
-  if (fReadFromStdin)
-  {
-    fBufferSize = std::min(10240, fBufferSize);
-  }
-
-#endif
 
   fReadBufCount = noOfBuffers;
 
@@ -1293,19 +1266,10 @@ int TableInfo::openTableFile()
   {
     fHandle = stdin;
 
-#ifdef _MSC_VER
-
-    // If this is a binary import from STDIN, then set stdin to binary
-    if (fImportDataMode != IMPORT_DATA_TEXT)
-      _setmode(_fileno(stdin), _O_BINARY);
-
-    fFileBuffer = 0;
-#else
     // Not 100% sure that calling setvbuf on stdin does much, but in
     // some tests, it made a slight difference.
     fFileBuffer = new char[fFileBufSize];
     setvbuf(fHandle, fFileBuffer, _IOFBF, fFileBufSize);
-#endif
     ostringstream oss;
     oss << BOLD_START << "Reading input from STDIN to import into table " << fTableName << "..." << BOLD_STOP;
     fLog->logMsg(oss.str(), MSGLVL_INFO1);
@@ -1441,14 +1405,7 @@ void TableInfo::writeBadRows(const std::vector<std::string>* errorDatRows, bool 
 
       if (fErrorDir.size() > 0)
       {
-#ifdef _MSC_VER
-        char filename[_MAX_FNAME];
-        char ext[_MAX_EXT];
-        _splitpath(const_cast<char*>(getFileName().c_str()), NULL, NULL, filename, ext);
-        rejectFileName << fErrorDir << "\\" << filename << ext;
-#else
         rejectFileName << fErrorDir << basename(getFileName().c_str());
-#endif
       }
       else
       {
@@ -1547,14 +1504,7 @@ void TableInfo::writeErrReason(const std::vector<std::pair<RID, string> >* error
 
       if (fErrorDir.size() > 0)
       {
-#ifdef _MSC_VER
-        char filename[_MAX_FNAME];
-        char ext[_MAX_EXT];
-        _splitpath(const_cast<char*>(getFileName().c_str()), NULL, NULL, filename, ext);
-        errFileName << fErrorDir << "\\" << filename << ext;
-#else
         errFileName << fErrorDir << basename(getFileName().c_str());
-#endif
       }
       else
       {

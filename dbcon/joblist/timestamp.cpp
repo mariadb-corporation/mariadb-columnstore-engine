@@ -51,26 +51,8 @@ const string JSTimeStamp::format(const struct timeval& tvbuf)
   string res;
   char timeString[50];
   struct tm tmbuf;
-#ifdef _MSC_VER
-  errno_t p = 0;
-  time_t t = tvbuf.tv_sec;
-  p = localtime_s(&tmbuf, &t);
-
-  if (p != 0)
-  {
-    memset(&tmbuf, 0, sizeof(tmbuf));
-    strcpy(timeString, "UNKNOWN");
-  }
-  else
-  {
-    if (strftime(timeString, 50, "%Y-%m-%d %H:%M:%S", &tmbuf) == 0)
-      strcpy(timeString, "UNKNOWN");
-  }
-
-#else
   localtime_r(&tvbuf.tv_sec, &tmbuf);
   strftime(timeString, 50, "%F %T", &tmbuf);
-#endif
   const int len = strlen(timeString);
   snprintf(&timeString[len], (50 - len), ".%06lu", tvbuf.tv_usec);
   res = timeString;

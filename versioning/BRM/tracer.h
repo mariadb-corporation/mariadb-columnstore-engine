@@ -31,11 +31,7 @@
 #include <vector>
 #include <stdint.h>
 
-#if defined(_MSC_VER) && defined(xxxTRACER_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

@@ -39,11 +39,7 @@
 
 class ByteStreamTestSuite;
 
-#if defined(_MSC_VER) && defined(xxxBYTESTREAM_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace messageqcpp
 {
@@ -126,15 +122,6 @@ class ByteStream : public Serializeable
    *	push a uint32_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
   EXPORT ByteStream& operator<<(const uint32_t q);
-#ifdef _MSC_VER
-#if BOOST_VERSION < 104500
-  // These 2 are to make MS VC++ w/ boost < 1.45 happy
-  // TODO: Do we still need these?
-  EXPORT ByteStream& operator<<(const uint32_t ui);
-
-  EXPORT ByteStream& operator>>(uint32_t& ui);
-#endif
-#endif
   /**
    *	push an int64_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
@@ -673,11 +660,6 @@ void deserializeVector(ByteStream& bs, std::vector<T>& v)
   }
 }
 
-#ifdef _MSC_VER
-// Until the API is fixed to be 64-bit clean...
-#pragma warning(push)
-#pragma warning(disable : 4267)
-#endif
 
 template <typename T>
 void serializeInlineVector(ByteStream& bs, const std::vector<T>& v)
@@ -712,9 +694,6 @@ void deserializeInlineVector(ByteStream& bs, std::vector<T>& v)
   }
 }
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 inline void deserializeVector(ByteStream& bs, std::vector<int64_t>& v)
 {

@@ -52,9 +52,6 @@ using namespace rowgroup;
 #include "joblisttypes.h"
 using namespace joblist;
 
-#ifdef _MSC_VER
-#define strcasecmp stricmp
-#endif
 
 namespace execplan
 {

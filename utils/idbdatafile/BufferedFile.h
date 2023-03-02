@@ -22,9 +22,6 @@
 #include "IDBDataFile.h"
 #include <unistd.h>
 
-#ifdef _MSC_VER
-typedef void* HANDLE;
-#endif
 
 namespace idbdatafile
 {

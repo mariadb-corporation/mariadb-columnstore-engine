@@ -47,11 +47,7 @@
 #include "configcpp.h"
 #include "mastersegmenttable.h"
 
-#if defined(_MSC_VER) && defined(xxxDBRM_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 #ifdef BRM_DEBUG
 #define DBRM_THROW

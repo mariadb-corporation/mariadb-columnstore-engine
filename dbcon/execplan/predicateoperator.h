@@ -27,9 +27,7 @@
 
 #include <string>
 #include <sstream>
-#if defined(_MSC_VER)
-#include <malloc.h>
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
 #include <cstdlib>
 #else
 #include <alloca.h>

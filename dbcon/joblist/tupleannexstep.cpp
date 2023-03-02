@@ -22,11 +22,7 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-#ifdef _MSC_VER
-#include <unordered_set>
-#else
 #include <tr1/unordered_set>
-#endif
 using namespace std;
 
 #include <boost/shared_ptr.hpp>

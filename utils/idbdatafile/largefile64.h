@@ -21,16 +21,6 @@
 #define _LARGEFILE64_SOURCE
 #endif
 
-#ifdef _MSC_VER
-#ifndef off64_t
-#define off64_t __int64
-#endif
-#define fseek64 _fseeki64
-#define lseek64 _lseeki64
-#define fstat64 _fstati64
-#define ftell64 _ftelli64
-#define stat64 _stati64
-#endif
 
 #ifdef __FreeBSD__
 typedef int64_t off64_t;

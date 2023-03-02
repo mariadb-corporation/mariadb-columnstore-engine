@@ -43,9 +43,6 @@ using namespace boost::algorithm;
 #include "dataconvert.h"
 #undef DATACONVERT_DLLEXPORT
 
-#ifndef __linux__
-typedef uint32_t ulong;
-#endif
 
 using namespace logging;
 
@@ -1452,36 +1449,12 @@ boost::any DataConvert::StringToFloat(cscDataType typeCode, const std::string& d
   {
     float floatvalue;
     errno = 0;
-#ifdef _MSC_VER
-    double dval = strtod(data.c_str(), 0);
-
-    if (dval > MAX_FLOAT)
-    {
-      pushWarning = true;
-      floatvalue = MAX_FLOAT;
-    }
-    else if (dval < MIN_FLOAT)
-    {
-      pushWarning = true;
-      floatvalue = MIN_FLOAT;
-    }
-    else
-    {
-      floatvalue = (float)dval;
-    }
-#else
     floatvalue = strtof(data.c_str(), 0);
-#endif
 
     if (errno == ERANGE)
     {
       pushWarning = true;
-#ifdef _MSC_VER
-
-      if (abs(floatvalue) == HUGE_VAL)
-#else
       if (abs(floatvalue) == HUGE_VALF)
-#endif
       {
         if (floatvalue > 0)
           floatvalue = MAX_FLOAT;
@@ -1531,12 +1504,7 @@ boost::any DataConvert::StringToDouble(cscDataType typeCode, const std::string& 
     if (errno == ERANGE)
     {
       pushWarning = true;
-#ifdef _MSC_VER
-
-      if (abs(doublevalue) == HUGE_VAL)
-#else
       if (abs(doublevalue) == HUGE_VALL)
-#endif
       {
         if (doublevalue > 0)
           value = MAX_DOUBLE;

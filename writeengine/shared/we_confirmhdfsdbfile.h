@@ -24,11 +24,7 @@
 #include "IDBFileSystem.h"
 #include "we_type.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace WriteEngine
 {

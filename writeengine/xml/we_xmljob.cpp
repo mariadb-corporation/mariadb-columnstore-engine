@@ -1211,9 +1211,6 @@ int XMLJob::genJobXMLFileName(const string& sXMLJobDir, const string& jobDir, co
     // attempt to make it absolute so that we can log the full pathname.
     if (!xmlFilePath.has_root_path())
     {
-#ifdef _MSC_VER
-      // nothing else to do
-#else
       char cwdPath[4096];
       char* err;
       err = getcwd(cwdPath, sizeof(cwdPath));
@@ -1225,7 +1222,6 @@ int XMLJob::genJobXMLFileName(const string& sXMLJobDir, const string& jobDir, co
       string trailingPath(xmlFilePath.string());
       xmlFilePath = cwdPath;
       xmlFilePath /= trailingPath;
-#endif
     }
   }
 

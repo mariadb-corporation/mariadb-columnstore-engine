@@ -60,9 +60,6 @@ BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
 boost::mutex BRMWrapper::m_instanceCreateMutex;
 
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
 
     bool BRMWrapper::m_useVb = true;
 OID BRMWrapper::m_curVBOid = INVALID_NUM;

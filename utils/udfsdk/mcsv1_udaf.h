@@ -67,21 +67,13 @@
 #include <vector>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 #include "any.hpp"
 #include "calpontsystemcatalog.h"
 #include "wf_frame.h"
 #include "my_decimal_limits.h"
 
-#if defined(_MSC_VER) && defined(xxxRGNODE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace mcsv1sdk
 {

@@ -1147,13 +1147,6 @@ int RBMetaWriter::writeHWMChunk(bool bColumnFile,    // is this a column (vs dic
   //   IDBDataFile flush() does a sync where appropriate
   delete backupFile;
 
-#ifdef _MSC_VER
-  // Windows rename() behaves differently from Linux: it will return an error
-  // if the target exists
-  // FIXME: The Linux version seems a bit safer, perhaps implement a better
-  // Windows port?
-  unlink(fileName.c_str());
-#endif
 
   // Rename HWM backup file to final name.
   if (fs.rename(fileNameTmp.c_str(), fileName.c_str()))

@@ -57,12 +57,7 @@ namespace fs = boost::filesystem;
 
 #include "exceptclasses.h"
 #include "installdir.h"
-#ifdef _MSC_VER
-#include "idbregistry.h"
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 
 #include "bytestream.h"
 
@@ -351,29 +346,6 @@ void Config::writeConfig(const string& configFile) const
   if (fDoc == 0)
     throw runtime_error("Config::writeConfig: no XML document!");
 
-#ifdef _MSC_VER
-  fs::path configFilePth(configFile);
-  fs::path outFilePth(configFilePth);
-  outFilePth.replace_extension("temp");
-
-  if ((fi = fopen(outFilePth.string().c_str(), "wt")) == NULL)
-    throw runtime_error("Config::writeConfig: error opening config file for write " + outFilePth.string());
-
-  int rc = -1;
-  rc = xmlDocDump(fi, fDoc);
-
-  if (rc < 0)
-  {
-    throw runtime_error("Config::writeConfig: error writing config file " + outFilePth.string());
-  }
-
-  fclose(fi);
-
-  if (fs::exists(configFilePth))
-    fs::remove(configFilePth);
-
-  fs::rename(outFilePth, configFilePth);
-#else
 
   const fs::path defaultConfigFilePathTemp("Columnstore.xml.temp");
   const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
@@ -462,18 +434,13 @@ void Config::writeConfig(const string& configFile) const
     fclose(fi);
   }
 
-#endif
   return;
 }
 
 void Config::write(void) const
 {
   boost::mutex::scoped_lock lk(fWriteXmlLock);
-#ifdef _MSC_VER
-  writeConfig(fConfigFile);
-#else
   write(fConfigFile);
-#endif
 }
 
 void Config::write(const string& configFile) const

@@ -40,11 +40,7 @@
 #include "rowgroup.h"
 #include "we_log.h"
 
-#if defined(_MSC_VER) && defined(xxxDDLPKGPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace WriteEngine
 {

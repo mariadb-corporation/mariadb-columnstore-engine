@@ -27,16 +27,7 @@
 #undef DECIMAL
 #undef DELETE
 #undef IN
-#ifdef _MSC_VER
-#include "dml-gram-win.h"
-#else
 #include "dml-gram.h"
-#endif
-#ifdef _MSC_VER
-#define YY_NO_UNISTD_H
-extern "C" int _isatty(int);
-#define isatty _isatty
-#endif
 
 /* These don't seem to be covered by the prefix option of flex 2.5.4
  * Bison 2.0 puts extern dml_yylval in dml-gram.h. */

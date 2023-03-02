@@ -37,11 +37,7 @@
 #include "vss.h"
 #include "copylocks.h"
 
-#if defined(_MSC_VER) && defined(xxxBLOCKRESOLUTIONMANAGER_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

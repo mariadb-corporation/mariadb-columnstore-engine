@@ -25,10 +25,6 @@
 #include <memory>
 #include <string>
 #include <clocale>
-#ifdef _MSC_VER
-#include <process.h>
-#include <winsock2.h>
-#endif
 #include "slavedbrmnode.h"
 #include "slavecomm.h"
 #include "liboamcpp.h"

@@ -49,9 +49,6 @@ using namespace rowgroup;
 #include "messageids.h"
 using namespace logging;
 
-#ifdef _MSC_VER
-#define llabs labs
-#endif
 
 namespace primitiveprocessor
 {

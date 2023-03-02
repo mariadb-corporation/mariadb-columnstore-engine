@@ -30,11 +30,7 @@
 #include <we_freemgr.h>
 #include <we_indexlist.h>
 
-#if defined(_MSC_VER) && defined(WRITEENGINEINDEXTREE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 /** Namespace WriteEngine */
 namespace WriteEngine

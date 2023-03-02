@@ -61,13 +61,7 @@ BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) : BRMShmImplPare
     {
       bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
       off_t curSize = 0;
-#ifdef _MSC_VER
-      bi::offset_t tmp = 0;
-      shm.get_size(tmp);
-      curSize = static_cast<off_t>(tmp);
-#else
       shm.get_size(curSize);
-#endif
 
       if (curSize == 0)
         throw bi::interprocess_exception("shm size is zero");
@@ -117,13 +111,7 @@ BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) : BRMShmImplPare
       throw;
     }
     off_t curSize = 0;
-#ifdef _MSC_VER
-    bi::offset_t tmp = 0;
-    shm->get_size(tmp);
-    curSize = static_cast<off_t>(tmp);
-#else
     shm->get_size(curSize);
-#endif
     idbassert(curSize > 0);
     idbassert(curSize >= fSize);
     fShmobj.swap(*shm);

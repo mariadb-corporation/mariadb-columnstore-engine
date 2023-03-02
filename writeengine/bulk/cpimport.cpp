@@ -33,11 +33,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <sys/time.h>
-#ifndef _MSC_VER
 #include <sys/resource.h>
-#else
-#include <cstdio>
-#endif
 #include <boost/filesystem/path.hpp>
 #include "idberrorinfo.h"
 #include "we_simplesyslog.h"
@@ -210,18 +206,6 @@ void handleControlC(int i)
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
 
-#ifdef _MSC_VER
-BOOL WINAPI HandlerCtrlCRoutine(_In_ DWORD dwCtrlType)
-{
-  // Log to syslog
-  logging::Message::Args errMsgArgs;
-  errMsgArgs.add("Received Break to terminate the process");
-  SimpleSysLog::instance()->logMsg(errMsgArgs, logging::LOG_TYPE_DEBUG, logging::M0087);
-
-  handleControlC(dwCtrlType);
-  return true;
-}
-#endif
 
 //------------------------------------------------------------------------------
 // If error occurs during startup, this function is called to log the specified
@@ -261,9 +245,6 @@ void startupError(const std::string& errMsg, bool showHint)
 //------------------------------------------------------------------------------
 void setupSignalHandlers()
 {
-#ifdef _MSC_VER
-  BOOL brtn = SetConsoleCtrlHandler(HandlerCtrlCRoutine, true);
-#else
   struct sigaction ign;
 
   // Ignore SIGPIPE signal
@@ -293,7 +274,6 @@ void setupSignalHandlers()
   memset(&act, 0, sizeof(act));
   act.sa_handler = handleSigTerm;
   sigaction(SIGTERM, &act, 0);
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1020,9 +1000,6 @@ void logInitiateMsg(const char* initText)
 //------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-#ifdef _MSC_VER
-  _setmaxstdio(2048);
-#endif
   setupSignalHandlers();
 
   // Set locale language
@@ -1132,11 +1109,7 @@ int main(int argc, char** argv)
     //--------------------------------------------------------------------------
     // Set scheduling priority for this cpimport.bin process
     //--------------------------------------------------------------------------
-#ifdef _MSC_VER
-    // FIXME
-#else
     setpriority(PRIO_PROCESS, 0, Config::getBulkProcessPriority());
-#endif
 
     if (bDebug)
       logInitiateMsg("Config cache initialized");

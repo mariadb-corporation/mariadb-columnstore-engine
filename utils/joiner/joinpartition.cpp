@@ -31,19 +31,6 @@ using namespace rowgroup;
 using namespace messageqcpp;
 using namespace logging;
 
-#ifdef _MSC_VER
-namespace
-{
-// returns a value between 0 and RAND_MAX (on Linux this is the max signed int)
-int rand_r(unsigned int* seedp)
-{
-  unsigned int randval = 0;
-  rand_s(&randval);  // returns 0 if okay, 0<=randval<UINT_MAX
-  // should implicitly cast to signed okay here...
-  return randval;
-}
-}  // namespace
-#endif
 
 namespace joiner
 {

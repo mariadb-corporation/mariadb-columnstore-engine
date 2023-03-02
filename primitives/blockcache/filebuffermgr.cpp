@@ -34,9 +34,7 @@
 #include <limits>
 #include <boost/thread.hpp>
 
-#ifndef _MSC_VER
 #include <pthread.h>
-#endif
 
 #include "stats.h"
 #include "configcpp.h"
@@ -71,11 +69,7 @@ FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, cons
   fFBPool.reserve(numBlcks);
   fConfig = Config::makeConfig();
   setReportingFrequency(0);
-#ifdef _MSC_VER
-  fLog.open("C:/Calpont/log/trace/bc", ios_base::app | ios_base::ate);
-#else
   fLog.open(string(MCSLOGDIR) + "/trace/bc", ios_base::app | ios_base::ate);
-#endif
 }
 
 FileBufferMgr::~FileBufferMgr()
@@ -433,21 +427,11 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
   bool ret = false;
 
   if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-    gPMStatsPtr->markEvent(keyFb.lbid, GetCurrentThreadId(), gSession, 'L');
-
-#else
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'L');
-#endif
   boost::mutex::scoped_lock lk(fWLock);
 
   if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-    gPMStatsPtr->markEvent(keyFb.lbid, GetCurrentThreadId(), gSession, 'M');
-
-#else
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'M');
-#endif
   filebuffer_uset_iter_t it = fbSet.find(keyFb);
 
   if (fbSet.end() != it)
@@ -461,12 +445,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
     memcpy(bufferPtr, (fFBPool[idx]).getData(), 8192);
 
     if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(keyFb.lbid, GetCurrentThreadId(), gSession, 'U');
-
-#else
       gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'U');
-#endif
     ret = true;
   }
 
@@ -484,11 +463,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
   {
     for (i = 0; i < count; i++)
     {
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(lbids[i], GetCurrentThreadId(), gSession, 'L');
-#else
       gPMStatsPtr->markEvent(lbids[i], pthread_self(), gSession, 'L');
-#endif
     }
   }
 
@@ -498,11 +473,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
   {
     for (i = 0; i < count; i++)
     {
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(lbids[i], GetCurrentThreadId(), gSession, 'M');
-#else
       gPMStatsPtr->markEvent(lbids[i], pthread_self(), gSession, 'M');
-#endif
     }
   }
 
@@ -536,11 +507,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
 
       if (gPMProfOn && gPMStatsPtr)
       {
-#ifdef _MSC_VER
-        gPMStatsPtr->markEvent(lbids[i], GetCurrentThreadId(), gSession, 'U');
-#else
         gPMStatsPtr->markEvent(lbids[i], pthread_self(), gSession, 'U');
-#endif
       }
     }
 
@@ -578,12 +545,7 @@ int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const ui
   int ret = 0;
 
   if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-    gPMStatsPtr->markEvent(lbid, GetCurrentThreadId(), gSession, 'I');
-
-#else
     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
-#endif
 
   boost::mutex::scoped_lock lk(fWLock);
 
@@ -612,12 +574,7 @@ int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const ui
   {
     // if it's a duplicate there's nothing to do
     if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(lbid, GetCurrentThreadId(), gSession, 'D');
-
-#else
       gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'D');
-#endif
     return ret;
   }
 
@@ -683,12 +640,7 @@ int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const ui
   fFBPool[pi].listLoc(fbList.begin());
 
   if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-    gPMStatsPtr->markEvent(lbid, GetCurrentThreadId(), gSession, 'J');
-
-#else
     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'J');
-#endif
 
   idbassert(fCacheSize <= maxCacheSize());
   // 	idbassert(fCacheSize == fbSet.size());
@@ -800,12 +752,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
     const CacheInsert_t& op = ops[i];
 
     if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(op.lbid, GetCurrentThreadId(), gSession, 'I');
-
-#else
       gPMStatsPtr->markEvent(op.lbid, pthread_self(), gSession, 'I');
-#endif
 
     HashObject_t fbIndex(op.lbid, op.ver, 0);
     filebuffer_pair_t pr = fbSet.insert(fbIndex);
@@ -813,12 +760,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
     if (!pr.second)
     {
       if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-        gPMStatsPtr->markEvent(op.lbid, GetCurrentThreadId(), gSession, 'D');
-
-#else
         gPMStatsPtr->markEvent(op.lbid, pthread_self(), gSession, 'D');
-#endif
       continue;
     }
 
@@ -837,12 +779,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
     fFBPool[pi].listLoc(fbList.begin());
 
     if (gPMProfOn && gPMStatsPtr)
-#ifdef _MSC_VER
-      gPMStatsPtr->markEvent(op.lbid, GetCurrentThreadId(), gSession, 'J');
-
-#else
       gPMStatsPtr->markEvent(op.lbid, pthread_self(), gSession, 'J');
-#endif
     ret++;
   }
   if (fReportFrequency)

@@ -1364,12 +1364,7 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
 
   for (str = filenames;; str = NULL)
   {
-#ifdef _MSC_VER
-    // On Windows, only comma and vertbar can separate input files
-    token = strtok(str, ",|");
-#else
     token = strtok(str, ", |");
-#endif
 
     if (token == NULL)
       break;
@@ -1389,9 +1384,6 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
       fullPath += token;
     }
 
-#ifdef _MSC_VER
-    loadFiles.push_back(fullPath);
-#else
 
     // If running mode2, then support a filename with wildcards
     if (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC)
@@ -1476,7 +1468,6 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
       loadFiles.push_back(fullPath);
     }  // not mode2
 
-#endif
   }  // loop through filename tokens
 
   delete[] filenames;

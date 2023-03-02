@@ -23,11 +23,7 @@
 #include <sys/types.h>
 #include "stdint.h"
 #include <unistd.h>
-#ifdef _MSC_VER
-#undef tell
-#else
 #define INVALID_HANDLE_VALUE 0  // Defined already in MSC
-#endif
 
 namespace idbdatafile
 {

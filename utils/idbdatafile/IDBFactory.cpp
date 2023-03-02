@@ -19,9 +19,7 @@
 
 #include <boost/thread.hpp>
 #include <sstream>
-#ifndef _MSC_VER
 #include <dlfcn.h>
-#endif
 #include <string.h>
 #include <errno.h>
 #include <iostream>
@@ -59,11 +57,6 @@ bool IDBFactory::installDefaultPlugins()
 
 bool IDBFactory::installPlugin(const std::string& plugin)
 {
-#ifdef _MSC_VER
-  ostringstream oss;
-  oss << "InfiniDB for Windows does not support plugins: plugin = " << plugin;
-  throw std::runtime_error(oss.str());
-#else
   // protect these methods since we are changing our static data structure
   boost::mutex::scoped_lock lock(fac_guard);
 
@@ -94,7 +87,6 @@ bool IDBFactory::installPlugin(const std::string& plugin)
   oss << "IDBFactory::installPlugin: installed filesystem plugin " << plugin;
   IDBLogger::syslog(oss.str(), logging::LOG_TYPE_DEBUG);
   return true;
-#endif
 }
 
 vector<IDBDataFile::Types> IDBFactory::listPlugins()

@@ -38,11 +38,7 @@
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 /** Namespace WriteEngine */
 namespace WriteEngine
@@ -470,9 +466,6 @@ class BRMWrapper : public WEObj
   static boost::thread_specific_ptr<int> m_ThreadDataPtr;
   static boost::mutex m_instanceCreateMutex;
 
-#if defined(_MSC_VER) && !defined(WRITEENGINE_DLLEXPORT)
-  __declspec(dllimport)
-#endif
       EXPORT static bool m_useVb;
 
   static OID m_curVBOid;

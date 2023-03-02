@@ -26,14 +26,8 @@
 #include <ctime>
 
 #include <sys/types.h>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
 #include <netinet/in.h>
 #include <netdb.h>
-#endif
 
 #include "serversocket.h"
 #include "iosocket.h"
@@ -46,11 +40,7 @@ class Config;
 
 class MessageQTestSuite;
 
-#if defined(_MSC_VER) && defined(xxxMESSAGEQUEUE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace messageqcpp
 {

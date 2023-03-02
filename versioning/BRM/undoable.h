@@ -31,11 +31,7 @@
 
 #include "brmtypes.h"
 
-#if defined(_MSC_VER) && defined(xxxUNDOABLE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

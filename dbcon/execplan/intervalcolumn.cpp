@@ -33,9 +33,6 @@ using namespace boost;
 #include "intervalcolumn.h"
 using namespace funcexp;
 
-#ifdef _MSC_VER
-#define strcasecmp stricmp
-#endif
 
 namespace execplan
 {

@@ -24,14 +24,10 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#ifndef _MSC_VER
 #include <signal.h>
 #include <stdexcept>
 #include "logger.h"
-#endif
-#ifndef _MSC_VER
 #include <sys/resource.h>
-#endif
 using namespace std;
 
 #include "messagequeue.h"
@@ -129,7 +125,6 @@ void added_a_pm(int)
 
 int ServiceWriteEngine::setupResources()
 {
-#ifndef _MSC_VER
   struct rlimit rlim;
 
   if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
@@ -153,13 +148,11 @@ int ServiceWriteEngine::setupResources()
   {
     return -4;
   }
-#endif
   return 0;
 }
 
 void ServiceWriteEngine::setupChildSignalHandlers()
 {
-#ifndef _MSC_VER
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = added_a_pm;
@@ -172,7 +165,6 @@ void ServiceWriteEngine::setupChildSignalHandlers()
   sigaction(SIGSEGV, &sa, 0);
   sigaction(SIGABRT, &sa, 0);
   sigaction(SIGFPE, &sa, 0);
-#endif
 }
 
 int ServiceWriteEngine::Child()
@@ -182,11 +174,6 @@ int ServiceWriteEngine::Child()
   // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
   WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_WE_SRV);
 
-#ifdef _MSC_VER
-  // In windows, initializing the wrapper (A dll) does not set the static variables
-  // in the main program
-  idbdatafile::IDBPolicy::configIDBPolicy();
-#endif
   Config weConfig;
 
   ostringstream serverParms;

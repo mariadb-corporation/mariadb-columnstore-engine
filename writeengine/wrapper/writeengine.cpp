@@ -65,9 +65,6 @@ using namespace idbdatafile;
 #include "dataconvert.h"
 #include "string_prefixes.h"
 
-#ifdef _MSC_VER
-#define isnan _isnan
-#endif
 
 namespace WriteEngine
 //#define PROFILE 1
