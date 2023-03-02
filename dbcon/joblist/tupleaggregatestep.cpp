@@ -18,8 +18,8 @@
 
 //  $Id: tupleaggregatestep.cpp 9732 2013-08-02 15:56:15Z pleblanc $
 
-//#define NDEBUG
-// Cross engine needs to be at top due to MySQL includes
+// #define NDEBUG
+//  Cross engine needs to be at top due to MySQL includes
 #define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 
@@ -69,7 +69,7 @@ using namespace querytele;
 #include "tuplehashjoin.h"
 #include "tupleaggregatestep.h"
 
-//#include "stopwatch.cpp"
+// #include "stopwatch.cpp"
 
 // Stopwatch timer;
 
@@ -1290,7 +1290,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
         keysAgg.push_back(key);
         scaleAgg.push_back(0);
         // work around count() in select subquery
-        precisionAgg.push_back(9999);
+        precisionAgg.push_back(rowgroup::MagicPrecisionForCountAgg);
         typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
         csNumAgg.push_back(csNumProj[colProj]);
         widthAgg.push_back(bigIntWidth);
@@ -1858,7 +1858,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           keysAgg.push_back(aggKey);
           scaleAgg.push_back(0);
           // work around count() in select subquery
-          precisionAgg.push_back(9999);
+          precisionAgg.push_back(rowgroup::MagicPrecisionForCountAgg);
 
           if (isUnsigned(typeProj[colProj]))
           {
@@ -2196,7 +2196,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
           keysAggDist.push_back(retKey);
           scaleAggDist.push_back(0);
           // work around count() in select subquery
-          precisionAggDist.push_back(9999);
+          precisionAggDist.push_back(rowgroup::MagicPrecisionForCountAgg);
           typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAggDist.push_back(8);
           widthAggDist.push_back(bigIntWidth);
@@ -2840,7 +2840,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                     f->fAggFunction == ROWAGG_MIN || f->fAggFunction == ROWAGG_MAX ||
                     f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                     f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
-                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT || f->fAggFunction == ROWAGG_JSON_ARRAY))
+                    f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT ||
+                    f->fAggFunction == ROWAGG_JSON_ARRAY))
           {
             funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                               f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
@@ -3189,7 +3190,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
           // work around count() in select subquery
-          precisionAggPm.push_back(9999);
+          precisionAggPm.push_back(rowgroup::MagicPrecisionForCountAgg);
           typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
           csNumAggPm.push_back(8);
           widthAggPm.push_back(bigIntWidth);
@@ -4080,7 +4081,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           keysAggPm.push_back(aggKey);
           scaleAggPm.push_back(0);
           // work around count() in select subquery
-          precisionAggPm.push_back(9999);
+          precisionAggPm.push_back(rowgroup::MagicPrecisionForCountAgg);
 
           if (isUnsigned(typeProj[colProj]))
           {
@@ -4463,7 +4464,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
             keysAggDist.push_back(retKey);
             scaleAggDist.push_back(0);
             // work around count() in select subquery
-            precisionAggDist.push_back(9999);
+            precisionAggDist.push_back(rowgroup::MagicPrecisionForCountAgg);
             typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
             csNumAggDist.push_back(8);
             widthAggDist.push_back(bigIntWidth);

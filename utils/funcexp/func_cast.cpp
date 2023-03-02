@@ -484,7 +484,6 @@ IDB_Decimal Func_cast_date::getDecimalVal(Row& row, FunctionParm& parm, bool& is
                                           CalpontSystemCatalog::ColType& operationColType)
 {
   IDB_Decimal decimal;
-
   if (parm[0]->data()->resultType().isWideDecimalType())
     decimal.s128Value = Func_cast_date::getDatetimeIntVal(row, parm, isNull, operationColType);
   else
@@ -1007,6 +1006,9 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
   int32_t decimals = parm[1]->data()->getIntVal(row, isNull);
   int64_t max_length = parm[2]->data()->getIntVal(row, isNull);
 
+  assert(max_length == rowgroup::MagicPrecisionForCountAgg ||
+         (max_length <= datatypes::INT128MAXPRECISION || max_length >= 0));
+
   if (max_length > datatypes::INT128MAXPRECISION || max_length <= 0)
     max_length = datatypes::INT128MAXPRECISION;
 
@@ -1022,10 +1024,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+        int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         decimal.s128Value = parm[0]->data()->getIntVal(row, isNull);
         decimal.scale = 0;
         int128_t scaleDivisor;
@@ -1072,10 +1071,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+        int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
 
         uint128_t uval = parm[0]->data()->getUintVal(row, isNull);
 
@@ -1127,11 +1123,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         float128_t value = parm[0]->data()->getDoubleVal(row, isNull);
 
         int128_t scaleDivisor;
@@ -1178,11 +1170,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         float128_t value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
         int128_t scaleDivisor;
@@ -1230,11 +1218,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
         int128_t scaleDivisor;

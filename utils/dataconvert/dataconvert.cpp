@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <type_traits>
+#include "mcs_decimal.h"
 using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string.hpp>
@@ -42,7 +43,6 @@ using namespace boost::algorithm;
 #define DATACONVERT_DLLEXPORT
 #include "dataconvert.h"
 #undef DATACONVERT_DLLEXPORT
-
 
 using namespace logging;
 
@@ -246,24 +246,6 @@ void number_int_value(const string& data, cscDataType typeCode,
         ++dpos;
         leftStr = valStr.substr(dpos);
       }
-
-// add above to keep the old behavior, to comply with tdriver
-// uncomment code below to support negative scale
-#if 0
-            // check if enough digits in the integer part
-            size_t spos = intPart.find_first_of("0123456789");
-
-            if (string::npos == spos)
-                spos = intPart.length();
-
-            size_t len = intPart.substr(spos).length();
-
-            if (len < scale)
-                intPart.insert(spos, scale - len, '0');  // padding digit 0, not null.
-
-            leftStr = intPart.substr(intPart.length() - scale) + leftStr;
-            intPart.erase(intPart.length() - scale, scale);
-#endif
     }
 
     valStr = intPart;
@@ -501,9 +483,14 @@ void number_int_value(const string& data, cscDataType typeCode,
     }
     else
     {
-      bool dummy = false;
-      char* ep = NULL;
-      rangeUp = (T)dataconvert::strtoll128(columnstore_big_precision[ct.precision - 19].c_str(), dummy, &ep);
+      auto precision =
+          ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
+      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
+      {
+        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                              dataTypeErr);
+      }
+      rangeUp = datatypes::ConversionRangeMaxValue[ct.precision - 19];
     }
 
     rangeLow = -rangeUp;
@@ -2902,8 +2889,7 @@ int64_t DataConvert::stringToTime(const string& data)
 }
 
 void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                      const datatypes::SystemCatalog::TypeHolderStd& type,
-                                      unsigned int& rc)
+                                      const datatypes::SystemCatalog::TypeHolderStd& type, unsigned int& rc)
 {
   // limited support for VARBINARY, no implicit conversion.
   if (type.colDataType == datatypes::SystemCatalog::VARBINARY ||
