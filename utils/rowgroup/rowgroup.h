@@ -266,13 +266,16 @@ class Row;
 class RGData
 {
  public:
-  RGData();  // useless unless followed by an = or a deserialize operation
+  RGData() = default;  // useless unless followed by an = or a deserialize operation
   RGData(const RowGroup& rg, uint32_t rowCount);  // allocates memory for rowData
   explicit RGData(const RowGroup& rg);
-  RGData(const RGData&);
-  virtual ~RGData();
+  RGData& operator=(const RGData&) = default;
+  RGData& operator=(RGData&&) = default;
+  RGData(const RGData&) = default;
+  RGData(RGData&&) = default;
+  virtual ~RGData() = default;
 
-  inline RGData& operator=(const RGData&);
+
 
   // amount should be the # returned by RowGroup::getDataSize()
   void serialize(messageqcpp::ByteStream&, uint32_t amount) const;
@@ -360,9 +363,9 @@ class Row
     UserDataStore* userDataStore;
   };
 
-  Row();
+  Row() = default;
   Row(const Row&);
-  ~Row();
+  ~Row() = default;
 
   Row& operator=(const Row&);
   bool operator==(const Row&) const;
@@ -1544,12 +1547,12 @@ class RowGroup : public messageqcpp::Serializeable
   const CHARSET_INFO* getCharset(uint32_t col);
 
  private:
-  uint32_t columnCount;
-  uint8_t* data;
+  uint32_t columnCount = 0;
+  uint8_t* data = nullptr;
 
   std::vector<uint32_t> oldOffsets;  // inline data offsets
   std::vector<uint32_t> stOffsets;   // string table offsets
-  uint32_t* offsets;                 // offsets either points to oldOffsets or stOffsets
+  uint32_t* offsets = nullptr;                 // offsets either points to oldOffsets or stOffsets
   std::vector<uint32_t> colWidths;
   // oids: the real oid of the column, may have duplicates with alias.
   // This oid is necessary for front-end to decide the real column width.
@@ -1567,12 +1570,12 @@ class RowGroup : public messageqcpp::Serializeable
   std::vector<uint32_t> precision;
 
   // string table impl
-  RGData* rgData;
-  StringStore* strings;  // note, strings and data belong to rgData
-  bool useStringTable;
-  bool hasCollation;
-  bool hasLongStringField;
-  uint32_t sTableThreshold;
+  RGData* rgData = nullptr;
+  StringStore* strings = nullptr;  // note, strings and data belong to rgData
+  bool useStringTable = true;
+  bool hasCollation = false;
+  bool hasLongStringField = false;
+  uint32_t sTableThreshold = 20;
   boost::shared_array<bool> forceInline;
 
   static const uint32_t headerSize = 18;
@@ -2142,14 +2145,6 @@ inline uint64_t StringStore::getSize() const
   }
 
   return ret;
-}
-
-inline RGData& RGData::operator=(const RGData& r)
-{
-  rowData = r.rowData;
-  strings = r.strings;
-  userDataStore = r.userDataStore;
-  return *this;
 }
 
 inline void RGData::getRow(uint32_t num, Row* row)

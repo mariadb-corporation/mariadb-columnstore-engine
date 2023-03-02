@@ -248,7 +248,7 @@ void SQLFrontSessionThread::analyzeTableExecute(messageqcpp::ByteStream& bs, job
   auto rowCount = jl->projectTable(dummyTableOid, bs);
   while (rowCount)
   {
-    auto outRG = (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
+    auto const& outRG = (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
     statisticsManager->collectSample(outRG);
     rowCount = jl->projectTable(dummyTableOid, bs);
   }
