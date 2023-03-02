@@ -1,0 +1,13 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol-5438`;
+--enable_warnings
+CREATE DATABASE `mcol-5438`;
+USE `mcol-5438`;
+
+CREATE TABLE cs1 (d DECIMAL(38))ENGINE=COLUMNSTORE;
+INSERT INTO cs1 VALUES (42);
+SELECT COUNT(CASE WHEN d IN(42,4) THEN 1 ELSE 0 END) * 100/SUM(1) from cs1;
+
+DROP DATABASE `mcol-5438`;
