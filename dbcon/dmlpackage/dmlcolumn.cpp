@@ -25,9 +25,6 @@
 #include "dmlcolumn.h"
 #undef DMLPKGCOLUMN_DLLEXPORT
 
-#ifdef _MSC_VER
-#define strcasecmp stricmp
-#endif
 
 namespace dmlpackage
 {

@@ -30,11 +30,7 @@
 #include <limits>
 #include <stdint.h>
 #include <set>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 #include <boost/thread/mutex.hpp>
 
 #include "brmtypes.h"

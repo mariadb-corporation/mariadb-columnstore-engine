@@ -20,13 +20,6 @@
  *
  *****************************************************************************/
 
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <process.h>
-#include <psapi.h>
-#endif
 #include <sys/types.h>
 #include <fstream>
 #include <iostream>
@@ -101,21 +94,7 @@ size_t MonitorProcMem::rss() const
 {
   uint64_t rss;
 
-#if defined(_MSC_VER)
-  HANDLE hProcess;
-  PROCESS_MEMORY_COUNTERS pmc;
-  hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, fPid);
-
-  if (NULL == hProcess)
-    return 0;
-
-  if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
-    rss = pmc.WorkingSetSize;
-  else
-    rss = 0;
-
-  CloseHandle(hProcess);
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
   ostringstream cmd;
   cmd << "ps -a -o rss -p " << getpid() << " | tail +2";
   FILE* cmdPipe;
@@ -158,9 +137,6 @@ void MonitorProcMem::pause_() const
 
   while (1)
   {
-#ifdef _MSC_VER
-    Sleep(req.tv_sec * 1000);
-#else
 
     if (nanosleep(&req, &rem) != 0)
     {
@@ -171,7 +147,6 @@ void MonitorProcMem::pause_() const
       }
     }
 
-#endif
     break;
   }
 }

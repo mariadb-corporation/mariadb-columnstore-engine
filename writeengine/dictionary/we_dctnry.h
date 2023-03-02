@@ -36,11 +36,7 @@
 #include "we_brm.h"
 #include "bytestream.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 /** Namespace WriteEngine */
 namespace WriteEngine

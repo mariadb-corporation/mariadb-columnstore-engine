@@ -27,13 +27,7 @@
 #include <cassert>
 #include <sys/types.h>
 #include <ctime>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
 #include <netinet/in.h>
-#endif
 #if __FreeBSD__
 #include <sys/socket.h>
 #endif
@@ -45,11 +39,7 @@
 
 class MessageQTestSuite;
 
-#if defined(_MSC_VER) && defined(xxxIOSOCKET_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace messageqcpp
 {

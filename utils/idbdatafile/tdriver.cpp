@@ -16,9 +16,7 @@
    MA 02110-1301, USA. */
 
 #include <stdio.h>
-#ifndef _MSC_VER
 #include <stdio_ext.h>
-#endif
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>

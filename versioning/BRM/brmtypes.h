@@ -33,14 +33,10 @@
 #include "mcs_basic_types.h"
 #include "logicalpartition.h"
 
-#ifndef _MSC_VER
 #include <tr1/unordered_map>
 #ifndef _UNORDERED_MAP_FIX_
 #define _UNORDERED_MAP_FIX_
 #endif  //_UNORDERED_MAP_FIX_
-#else
-#include <unordered_map>
-#endif  //_MSC_VER
 
 #include "calpontsystemcatalog.h"
 #include "bytestream.h"
@@ -48,11 +44,7 @@
 #include "messagelog.h"
 #include "loggingid.h"
 
-#if defined(_MSC_VER) && defined(xxxBRMTYPES_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace idbdatafile
 {

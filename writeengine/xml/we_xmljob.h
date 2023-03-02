@@ -31,11 +31,7 @@
 #include "we_xmlop.h"
 #include "calpontsystemcatalog.h"
 
-#if defined(_MSC_VER) && defined(xxxWRITEENGINEXMLJOB_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 /** Namespace WriteEngine */
 namespace WriteEngine

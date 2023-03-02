@@ -20,12 +20,6 @@
 #include <sys/stat.h>
 #include <sstream>
 #include <iostream>
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <io.h>
-#include <windows.h>
-#endif
 #include "utility.h"
 #include "BufferedFile.h"
 #include "IDBLogger.h"
@@ -154,11 +148,7 @@ int BufferedFile::seek(off64_t offset, int whence)
 {
   int ret = 0;
   int savedErrno;
-#ifdef _MSC_VER
-  ret = _fseeki64(m_fp, offset, whence);
-#else
   ret = fseek(m_fp, offset, whence);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -173,11 +163,7 @@ int BufferedFile::truncate(off64_t length)
   int ret = 0;
   int savedErrno;
 
-#ifdef _MSC_VER
-  ret = _chsize_s(_fileno(m_fp), length);
-#else
   ret = ftruncate(fileno(m_fp), length);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -189,9 +175,6 @@ int BufferedFile::truncate(off64_t length)
 
 off64_t BufferedFile::size()
 {
-#ifdef _MSC_VER
-  return _filelengthi64(fileno(m_fp));  // Interestingly, implemented as fseek/ftell in the windows crt
-#else
   // going to calculate size 2 ways - first, via seek
   off64_t length = -1;
   off64_t here;
@@ -217,16 +200,11 @@ off64_t BufferedFile::size()
   }
 
   return length;
-#endif
 }
 
 off64_t BufferedFile::tell()
 {
-#ifdef _MSC_VER
-  return _ftelli64(m_fp);
-#else
   return ftell(m_fp);
-#endif
 }
 
 int BufferedFile::flush()
@@ -236,11 +214,7 @@ int BufferedFile::flush()
 
   if (rc == 0)
   {
-#ifdef _MSC_VER
-    rc = _commit(_fileno(m_fp));
-#else
     rc = fsync(fileno(m_fp));
-#endif
     savedErrno = errno;
   }
 

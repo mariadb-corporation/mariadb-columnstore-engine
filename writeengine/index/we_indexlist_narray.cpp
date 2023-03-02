@@ -26,9 +26,7 @@
 #include <stdio.h>
 //#include <pthread.h>
 #include <string.h>
-#ifndef _MSC_VER
 #include <inttypes.h>
-#endif
 #include <math.h>
 #include "we_indextree.h"
 #include "we_indexlist.h"

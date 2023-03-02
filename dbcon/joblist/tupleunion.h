@@ -28,11 +28,7 @@
 //
 
 #include "jobstep.h"
-#ifndef _MSC_VER
 #include <tr1/unordered_set>
-#else
-#include <unordered_set>
-#endif
 
 #include "stlpoolallocator.h"
 #include "threadnaming.h"

@@ -21,11 +21,7 @@
  */
 
 #include <my_config.h>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 using namespace std;
 
 #include "idb_mysql.h"

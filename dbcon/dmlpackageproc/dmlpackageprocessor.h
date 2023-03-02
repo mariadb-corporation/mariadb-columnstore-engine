@@ -43,11 +43,7 @@
 #include "querystats.h"
 #include "clientrotator.h"
 
-#if defined(_MSC_VER) && defined(DMLPKGPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 //#define IDB_DML_DEBUG
 namespace dmlpackageprocessor

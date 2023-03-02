@@ -65,50 +65,5 @@ inline int modeStrToFlags(const char* mode)
   }
 }
 
-#ifdef _MSC_VER
-inline int modeStrToFlags(const char* mode, int& createflags)
-{
-  std::string modestr = mode;
-  createflags = 0;
-
-  // this could easily be migrated to a lookup table if performance
-  // ever became a concern, but for now this is fine.
-  if (modestr == "r" || modestr == "rb")
-  {
-    createflags = OPEN_EXISTING;
-    return GENERIC_READ;
-  }
-  else if (modestr == "r+" || modestr == "r+b")
-  {
-    createflags = OPEN_EXISTING;
-    return GENERIC_READ | GENERIC_WRITE;
-  }
-  else if (modestr == "w" || modestr == "wb")
-  {
-    createflags = CREATE_ALWAYS;
-    return GENERIC_WRITE;
-  }
-  else if (modestr == "w+" || modestr == "w+b")
-  {
-    createflags = CREATE_ALWAYS;
-    return GENERIC_READ | GENERIC_WRITE;
-  }
-  else if (modestr == "a" || modestr == "ab")
-  {
-    createflags = OPEN_ALWAYS;
-    return FILE_APPEND_DATA;
-  }
-  else if (modestr == "a+" || modestr == "a+b")
-  {
-    createflags = OPEN_ALWAYS;
-    return GENERIC_READ | FILE_APPEND_DATA;
-  }
-  else
-  {
-    // error
-    return -1;
-  }
-}
-#endif
 
 }  // namespace idbdatafile

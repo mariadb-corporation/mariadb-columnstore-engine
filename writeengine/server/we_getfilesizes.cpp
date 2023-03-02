@@ -357,9 +357,6 @@ int WE_GetFileSizes::processTable(messageqcpp::ByteStream& bs, std::string& errM
 
     while (currentActiveThreads > 0)
     {
-#ifdef _MSC_VER
-      Sleep(sleepTime);
-#else
       struct timespec abs_ts;
 
       do
@@ -368,7 +365,6 @@ int WE_GetFileSizes::processTable(messageqcpp::ByteStream& bs, std::string& errM
         abs_ts.tv_nsec = rm_ts.tv_nsec;
       } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
       currentActiveThreads = activeThreadCounter->cur();
     }
   }

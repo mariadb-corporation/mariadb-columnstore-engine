@@ -32,9 +32,6 @@
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#ifdef _MSC_VER
-#include <io.h>
-#endif
 
 #include "rwlock.h"
 #include "brmtypes.h"

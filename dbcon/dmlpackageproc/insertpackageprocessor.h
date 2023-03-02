@@ -31,11 +31,7 @@
 #include "dataconvert.h"
 #include "we_chunkmanager.h"
 
-#if defined(_MSC_VER) && defined(DMLPKGPROC_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace dmlpackageprocessor
 {

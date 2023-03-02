@@ -41,11 +41,7 @@
 #include "we_type.h"
 #include "we_dctnry.h"
 
-#if defined(_MSC_VER) && defined(WRITEENGINEDCTSTORE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 /**@brief Namespace WriteEngine */
 

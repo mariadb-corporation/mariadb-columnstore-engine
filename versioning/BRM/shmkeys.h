@@ -22,11 +22,7 @@
 #include <stdint.h>
 #include <string>
 
-#if defined(_MSC_VER) && defined(xxxSHMKEYS_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {
@@ -45,8 +41,6 @@ struct ShmKeys
   /******** The shmseg/sem key range assigments  *******/
 #if defined(COMMUNITY_KEYRANGE)
   const static uint32_t KEYRANGE_SIZE = 0x1000;
-#elif defined(_MSC_VER)
-  const static uint32_t KEYRANGE_SIZE = 0x3800;
 #else
   const static uint32_t KEYRANGE_SIZE = 0x10000;
 #endif

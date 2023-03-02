@@ -26,11 +26,7 @@
 
 #include <string>
 #include <vector>
-#ifdef _MSC_VER
-#include <unordered_map>
-#else
 #include <tr1/unordered_map>
-#endif
 #include <boost/thread/mutex.hpp>
 
 #include "rowgroup.h"

@@ -551,7 +551,6 @@ int8_t setupCwd()
 
 void ServiceDMLProc::setupChildSignalHandlers()
 {
-#ifndef _MSC_VER
   /* set up some signal handlers */
   struct sigaction ign;
   memset(&ign, 0, sizeof(ign));
@@ -565,7 +564,6 @@ void ServiceDMLProc::setupChildSignalHandlers()
   sigaction(SIGSEGV, &ign, 0);
   sigaction(SIGABRT, &ign, 0);
   sigaction(SIGFPE, &ign, 0);
-#endif
 }
 
 int ServiceDMLProc::Child()
@@ -589,11 +587,6 @@ int ServiceDMLProc::Child()
   }
 
   WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DMLPROC);
-#ifdef _MSC_VER
-  // In windows, initializing the wrapper (A dll) does not set the static variables
-  // in the main program
-  idbdatafile::IDBPolicy::configIDBPolicy();
-#endif
 
   //@Bug 1627
   try

@@ -43,9 +43,6 @@ using namespace messageqcpp;
 #include <fstream>
 #include <istream>
 #include <list>
-#ifdef _MSC_VER
-#include <io.h>
-#endif
 using namespace std;
 
 #include "we_filereadthread.h"
@@ -554,19 +551,6 @@ void WEFileReadThread::openInFile()
       fInFile.rdbuf(fIfFile.rdbuf());  //@BUG 4326
     }
 
-#ifdef _MSC_VER
-    else  // @bug 5193: binary import
-    {
-      if (fSdh.getImportDataMode() != IMPORT_DATA_TEXT)
-      {
-        if (_setmode(_fileno(stdin), _O_BINARY) == -1)
-        {
-          throw runtime_error("Could not change stdin to binary");
-        }
-      }
-    }
-
-#endif
     //@BUG 4326  -below three lines commented out
     //		if (!fInFile.is_open()) fInFile.open(fInFileName.c_str());
     //		if (!fInFile.good())

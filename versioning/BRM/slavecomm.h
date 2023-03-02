@@ -36,11 +36,7 @@
 #include "messagequeue.h"
 #include "bytestream.h"
 
-#if defined(_MSC_VER) && defined(xxxSLAVECOMM_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 // forward reference
 namespace idbdatafile
@@ -127,11 +123,6 @@ class SlaveComm
   idbdatafile::IDBDataFile* journalh;
   int64_t snapshotInterval, journalCount;
   struct timespec MSG_TIMEOUT;
-#ifdef _MSC_VER
-  boost::mutex fPidMemLock;
-  DWORD* fPids;
-  DWORD fMaxPids;
-#endif
 };
 
 }  // namespace BRM

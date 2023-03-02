@@ -24,12 +24,7 @@
 #include <stdio.h>
 #include "sqlparser.h"
 #include "ddlpkg.h"
-
-#ifdef _MSC_VER
-#include "ddl-gram-win.h"
-#else
 #include "ddl-gram.h"
-#endif
 
 using namespace ddlpackage;
 typedef enum { NOOP, STRIP_QUOTES } copy_action_t;

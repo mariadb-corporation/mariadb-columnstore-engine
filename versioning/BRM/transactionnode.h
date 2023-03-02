@@ -32,11 +32,7 @@
 #include "brmtypes.h"
 #include "rgnode.h"
 
-#if defined(_MSC_VER) && defined(xxxTRANSACTIONNODE_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace BRM
 {

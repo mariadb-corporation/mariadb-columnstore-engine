@@ -33,11 +33,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#ifndef _MSC_VER
 #include <tr1/unordered_map>
-#else
-#include <unordered_map>
-#endif
 #include <boost/thread.hpp>
 
 #include "errorcodes.h"

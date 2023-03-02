@@ -41,9 +41,6 @@ void BulkLoad::sleepMS(long ms)
 
   rm_ts.tv_sec = ms / 1000;
   rm_ts.tv_nsec = ms % 1000 * 1000000;
-#ifdef _MSC_VER
-  Sleep(ms);
-#else
   struct timespec abs_ts;
 
   do
@@ -52,7 +49,6 @@ void BulkLoad::sleepMS(long ms)
     abs_ts.tv_nsec = rm_ts.tv_nsec;
   } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -274,11 +270,7 @@ void BulkLoad::parse(int id)
                 << endl
                 << timeString << ": BulkLoad::parse(" << id << "); "
                 <<
-#ifdef _MSC_VER
-                " Worker Thread " << GetCurrentThreadId() <<
-#else
                 " Worker Thread " << pthread_self() <<
-#endif
                 ":" << endl
                 << "---------------------------------------"
                    "-------------------"
@@ -444,11 +436,7 @@ bool BulkLoad::lockColumnForParse(int thrdId, int& tableId, int& columnId, int& 
         std::string bufStatusStr;
         Status stat = fTableInfo[i].getStatusTI();
         ColumnInfo::convertStatusToString(stat, bufStatusStr);
-#ifdef _MSC_VER
-        oss << " - " << GetCurrentThreadId() <<
-#else
         oss << " - " << pthread_self() <<
-#endif
             ":fTableInfo[" << i << "]" << bufStatusStr << " (" << stat << ")";
 
         if (stat != WriteEngine::PARSE_COMPLETE)

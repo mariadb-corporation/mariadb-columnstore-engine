@@ -252,20 +252,12 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
 
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::INT:
-#ifdef _MSC_VER
-      rv = boost::any_cast<int>(anyVal);
-#else
       rv = boost::any_cast<int32_t>(anyVal);
-#endif
       break;
 
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::UINT:
-#ifdef _MSC_VER
-      rv = boost::any_cast<unsigned int>(anyVal);
-#else
       rv = boost::any_cast<uint32_t>(anyVal);
-#endif
       break;
 
     case CalpontSystemCatalog::BIGINT: rv = boost::any_cast<long long>(anyVal); break;
@@ -332,12 +324,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
       else if (ct.colWidth == execplan::CalpontSystemCatalog::EIGHT_BYTE)
         rv = boost::any_cast<long long>(anyVal);
       else if (ct.colWidth == execplan::CalpontSystemCatalog::FOUR_BYTE)
-#ifdef _MSC_VER
-        rv = boost::any_cast<int>(anyVal);
-
-#else
         rv = boost::any_cast<int32_t>(anyVal);
-#endif
       else if (ct.colWidth == execplan::CalpontSystemCatalog::TWO_BYTE)
         rv = boost::any_cast<int16_t>(anyVal);
       else if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)

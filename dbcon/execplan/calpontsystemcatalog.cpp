@@ -74,9 +74,6 @@ using namespace rowgroup;
 #include <boost/thread/mutex.hpp>
 #include <boost/version.hpp>
 
-#ifdef _MSC_VER
-#include "idbregistry.h"
-#endif
 
 #undef BAIL_IF_0
 #if 1
@@ -861,11 +858,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     if (retryNum >= 6)
       throw runtime_error("Error occured when calling makeJobList");
 
-#ifdef _MSC_VER
-    Sleep(1 * 1000);
-#else
     sleep(1);
-#endif
     jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
     retryNum++;
   }
@@ -1948,16 +1941,7 @@ CalpontSystemCatalog::CalpontSystemCatalog() : fExeMgr(new ClientRotator(0, "Exe
     string localModuleType;
     const char* p = 0;
     // see if env is set to override identity lookup
-#ifdef _MSC_VER
-    p = "EC";
-    string cfStr = IDBreadRegistry("SyscatIdent");
-
-    if (!cfStr.empty())
-      p = cfStr.c_str();
-
-#else
     p = getenv("CALPONT_CSC_IDENT");
-#endif
 
     if (p && *p)
     {

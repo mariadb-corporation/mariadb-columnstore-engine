@@ -1,19 +1,8 @@
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <icmpapi.h>
-#include <stdio.h>
-#else
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#endif
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -87,23 +76,11 @@ int main(int argc, char** argv)
 
   SockType fd = -1;
 
-#ifdef _MSC_VER
-  WSAData wsadata;
-  const WORD minVersion = MAKEWORD(2, 2);
-
-  if (WSAStartup(minVersion, &wsadata) != 0)
-    cerr << "networking startup error: " << IDBSysErrorStr(WSAGetLastError()) << endl;
-
-#endif
   fd = ::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
   if (fd < 0)
   {
-#ifdef _MSC_VER
-    cerr << "socket create error: " << IDBSysErrorStr(WSAGetLastError()) << endl;
-#else
     cerr << "socket create error: " << strerror(errno) << endl;
-#endif
     return 1;
   }
 
@@ -135,12 +112,7 @@ int main(int argc, char** argv)
 
   if (rc < 0)
   {
-#ifdef _MSC_VER
-    cerr << "socket connect error: " << IDBSysErrorStr(WSAGetLastError()) << endl;
-    WSACleanup();
-#else
     cerr << "socket connect error: " << strerror(errno) << endl;
-#endif
     return 1;
   }
 
@@ -169,12 +141,7 @@ int main(int argc, char** argv)
   SockWriteFcn(fd, &flag, 4);
 bailout:
   ::shutdown(fd, SHUT_RDWR);
-#ifdef _MSC_VER
-  ::closesocket(fd);
-  WSACleanup();
-#else
   ::close(fd);
-#endif
   fd = -1;
 
   return 0;

@@ -147,15 +147,9 @@ uint32_t CGroupConfigurator::getNumCoresFromCGroup()
 
 uint32_t CGroupConfigurator::getNumCoresFromProc()
 {
-#ifdef _MSC_VER
-  SYSTEM_INFO siSysInfo;
-  GetSystemInfo(&siSysInfo);
-  return siSysInfo.dwNumberOfProcessors;
-#else
   uint32_t nc = sysconf(_SC_NPROCESSORS_ONLN);
 
   return nc;
-#endif
 }
 
 uint32_t CGroupConfigurator::getNumCores()
@@ -207,23 +201,7 @@ uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 {
   size_t memTot;
 
-#if defined(_MSC_VER)
-  MEMORYSTATUSEX memStat;
-  memStat.dwLength = sizeof(memStat);
-
-  if (GlobalMemoryStatusEx(&memStat) == 0)
-    // FIXME: Assume 2GB?
-    memTot = 2 * 1024 * 1024;
-  else
-  {
-#ifndef _WIN64
-    memStat.ullTotalPhys = std::min(memStat.ullTotalVirtual, memStat.ullTotalPhys);
-#endif
-    // We now have the total phys mem in bytes
-    memTot = memStat.ullTotalPhys / 1024;
-  }
-
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
   string cmd("sysctl -a | awk '/realmem/ {print int(($2+1023)/1024);}'");
   FILE* cmdPipe;
   char input[80];
@@ -342,23 +320,7 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
   uint64_t memTotal = 0;
   uint64_t memAvailable = 0;
 
-#if defined(_MSC_VER)
-  MEMORYSTATUSEX memStat;
-  memStat.dwLength = sizeof(memStat);
-
-  if (GlobalMemoryStatusEx(&memStat))
-  {
-    memAvailable = memStat.ullAvailPhys;
-#ifndef _WIN64
-    uint64_t tmp = getTotalMemoryFromProc();
-
-    if (memFree > tmp)
-      memAvailable = tmp;
-
-#endif
-  }
-
-#elif defined(__FreeBSD__)
+#if   defined(__FreeBSD__)
   // FreeBSD is not supported, no optimization.
   memAvailable = 0;
 #else

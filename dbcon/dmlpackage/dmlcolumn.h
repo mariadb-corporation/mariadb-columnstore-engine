@@ -29,11 +29,7 @@
 #include "bytestream.h"
 #include <boost/algorithm/string/case_conv.hpp>
 
-#if defined(_MSC_VER) && defined(xxxDMLPKGCOLUMN_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace dmlpackage
 {

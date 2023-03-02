@@ -166,9 +166,6 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
 
           for (; i < numTries; i++)
           {
-#ifdef _MSC_VER
-            Sleep(rm_ts.tv_sec * 1000);
-#else
             struct timespec abs_ts;
 
             do
@@ -177,7 +174,6 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-#endif
 
             try
             {

@@ -46,9 +46,6 @@ using namespace boost;
 #include "functor_str.h"
 using namespace funcexp;
 
-#ifdef _MSC_VER
-#define strcasecmp stricmp
-#endif
 
 namespace execplan
 {

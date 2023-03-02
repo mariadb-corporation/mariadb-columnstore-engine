@@ -94,9 +94,7 @@ int main(int argc, char** argv)
 
   try
   {
-#ifndef _MSC_VER
     prefix += '\n';
-#endif
     // for MCOL-1558.  Make the _current file relative to DBRMRoot
     string relative = prefix.substr(prefix.find_last_of('/') + 1);
     currentFile->write(relative.c_str(), relative.length());

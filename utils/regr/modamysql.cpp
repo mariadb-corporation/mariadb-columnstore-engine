@@ -19,11 +19,7 @@ inline bool isNumeric(int type, const char* attr)
   {
     return true;
   }
-#if _MSC_VER
-  if (_strnicmp("NULL", attr, 4) == 0))
-#else
   if (strncasecmp("NULL", attr, 4) == 0)
-#endif
     {
       return true;
     }
@@ -80,9 +76,6 @@ void moda(CONTAINER& container, struct moda_data* data)
 
 extern "C"
 {
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
   my_bool moda_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct moda_data* data;
@@ -109,9 +102,6 @@ extern "C"
     return 0;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
   void moda_deinit(UDF_INIT* initid)
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
@@ -119,9 +109,6 @@ extern "C"
     delete data;
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
   void moda_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                   char* message __attribute__((unused)))
   {
@@ -129,9 +116,6 @@ extern "C"
     data->clear();
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
   void moda_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     // Test for NULL
@@ -171,9 +155,6 @@ extern "C"
     }
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
   void moda_remove(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     // Test for NULL
@@ -212,9 +193,6 @@ extern "C"
     }
   }
 
-#ifdef _MSC_VER
-  __declspec(dllexport)
-#endif
 //char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
   char* moda(UDF_INIT * initid, UDF_ARGS * args, char* result, ulong* res_length, char* is_null, char* error __attribute__((unused)))
   {

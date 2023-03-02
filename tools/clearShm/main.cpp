@@ -133,18 +133,6 @@ class ThdFunc
 
 int main(int argc, char** argv)
 {
-#ifdef _MSC_VER
-  const char* envp = getenv("SystemRoot");
-  string SystemRoot;
-
-  if (envp && *envp)
-    SystemRoot = envp;
-  else
-    SystemRoot = "C:\\WINDOWS";
-
-  string tmpEnv = "TMP=" + SystemRoot + "\\Temp";
-  _putenv(tmpEnv.c_str());
-#endif
 
   int c;
   opterr = 0;

@@ -17,9 +17,7 @@
 
 // $Id: udf.cpp 2035 2013-01-21 14:12:19Z rdempsey $
 
-#ifndef _MSC_VER
 #include <dlfcn.h>
-#endif
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -37,7 +35,6 @@ namespace primitiveprocessor
 {
 void loadUDFs()
 {
-#ifndef _MSC_VER
   int flags = RTLD_NOW;
 
   void* libPtr = 0;
@@ -65,7 +62,6 @@ void loadUDFs()
   }
 
   cout << "loaded " << UDFFcnMap.size() << " UDF's" << endl;
-#endif
 }
 
 }  // namespace primitiveprocessor

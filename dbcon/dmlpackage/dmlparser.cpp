@@ -29,11 +29,7 @@
 #undef DECIMAL
 #undef DELETE
 #undef IN
-#ifdef _MSC_VER
-#include "dml-gram-win.h"
-#else
 #include "dml-gram.h"
-#endif
 
 #include <stdio.h>
 #include <string.h>

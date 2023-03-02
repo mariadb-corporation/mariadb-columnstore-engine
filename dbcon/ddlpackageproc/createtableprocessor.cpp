@@ -167,23 +167,6 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
   // This is a current db bug, it should not turn OID is it cannot find
   if (roPair.objnum >= 3000)
   {
-#ifdef _MSC_VER
-    // FIXME: Why do we need to do this???
-    systemCatalogPtr->flushCache();
-
-    try
-    {
-      roPair = systemCatalogPtr->tableRID(tableName);
-    }
-    catch (...)
-    {
-      roPair.objnum = 0;
-    }
-
-    if (roPair.objnum < 3000)
-      goto keepGoing;
-
-#endif
     Message::Args args;
     Message message(9);
     args.add("Internal create table error for");
@@ -199,9 +182,6 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     return result;
   }
 
-#ifdef _MSC_VER
-keepGoing:
-#endif
   // Start a new transaction
   VERBOSE_INFO("Starting a new transaction");
 

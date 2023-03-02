@@ -30,18 +30,6 @@ namespace idbdatafile
 {
 UnbufferedFile::UnbufferedFile(const char* fname, const char* mode, unsigned opts) : IDBDataFile(fname)
 {
-#ifdef _MSC_VER
-  int createFlags;
-  int flags = modeStrToFlags(mode, createFlags);
-  m_fd = CreateFile(fname, flags, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0, createFlags,
-                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, 0);
-
-  if (m_fd == INVALID_HANDLE_VALUE)
-  {
-    throw std::runtime_error("unable to open Unbuffered file ");
-  }
-
-#else
   int flags = modeStrToFlags(mode);
 
   if (flags == -1)
@@ -67,7 +55,6 @@ UnbufferedFile::UnbufferedFile(const char* fname, const char* mode, unsigned opt
     throw std::runtime_error("unable to open Unbuffered file ");
   }
 
-#endif
 }
 
 UnbufferedFile::~UnbufferedFile()
@@ -83,24 +70,8 @@ ssize_t UnbufferedFile::pread(void* ptr, off64_t offset, size_t count)
   if (m_fd == INVALID_HANDLE_VALUE)
     return -1;
 
-#ifdef _MSC_VER
-  OVERLAPPED ovl;
-  memset(&ovl, 0, sizeof(ovl));
-  DWORD mtest = (DWORD)offset;
-  ovl.Offset = (DWORD)(offset & 0x00000000FFFFFFFF);
-  ovl.OffsetHigh = (DWORD)(offset >> 32);
-  DWORD bytesRead;
-
-  if (ReadFile(m_fd, ptr, (DWORD)count, &bytesRead, &ovl))
-    ret = bytesRead;
-  else
-    ret = -1;
-
-  savedErrno = errno;
-#else
   ret = ::pread(m_fd, ptr, count, offset);
   savedErrno = errno;
-#endif
 
   if (IDBLogger::isEnabled())
     IDBLogger::logRW("pread", m_fname, this, offset, count, ret);
@@ -115,17 +86,7 @@ ssize_t UnbufferedFile::read(void* ptr, size_t count)
   ssize_t offset = tell();
   int savedErrno;
 
-#ifdef _MSC_VER
-  DWORD bytesRead;
-
-  if (ReadFile(m_fd, ptr, (DWORD)count, &bytesRead, NULL))
-    ret = bytesRead;
-  else
-    ret = -1;
-
-#else
   ret = ::read(m_fd, ptr, count);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -141,17 +102,7 @@ ssize_t UnbufferedFile::write(const void* ptr, size_t count)
   ssize_t offset = tell();
   int savedErrno;
 
-#ifdef _MSC_VER
-  DWORD bytesWritten;
-
-  if (WriteFile(m_fd, ptr, (DWORD)count, &bytesWritten, NULL))
-    ret = bytesWritten;
-  else
-    ret = -1;
-
-#else
   ret = ::write(m_fd, ptr, count);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -166,13 +117,7 @@ int UnbufferedFile::seek(off64_t offset, int whence)
   int ret;
   int savedErrno;
 
-#ifdef _MSC_VER
-  LONG lDistanceToMove = LONG(offset & 0x00000000FFFFFFFF);
-  LONG lDistanceToMoveHigh = LONG(offset >> 32);
-  ret = SetFilePointer(m_fd, lDistanceToMove, &lDistanceToMoveHigh, whence);
-#else
   ret = (lseek(m_fd, offset, whence) >= 0) ? 0 : -1;
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -187,17 +132,7 @@ int UnbufferedFile::truncate(off64_t length)
   int ret;
   int savedErrno;
 
-#ifdef _MSC_VER
-  LONG lDistanceToMove = LONG(length & 0x00000000FFFFFFFF);
-  LONG lDistanceToMoveHigh = LONG(length >> 32);
-  ret = SetFilePointer(m_fd, lDistanceToMove, &lDistanceToMoveHigh, SEEK_SET);
-
-  if (ret > 0)
-    ret = SetEndOfFile(m_fd);
-
-#else
   ret = ftruncate(m_fd, length);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -212,15 +147,9 @@ off64_t UnbufferedFile::size()
   off64_t ret = 0;
   int savedErrno;
 
-#ifdef _MSC_VER
-  DWORD hi = 0;
-  DWORD lo = GetFileSize(m_fd, &hi);
-  ret = off64_t(((uint64_t)hi) << 32) | lo;
-#else
   struct stat statBuf;
   int rc = ::fstat(m_fd, &statBuf);
   ret = ((rc == 0) ? statBuf.st_size : -1);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -233,15 +162,7 @@ off64_t UnbufferedFile::size()
 off64_t UnbufferedFile::tell()
 {
   off64_t ret;
-#ifdef _MSC_VER
-  LARGE_INTEGER wRet;
-  LARGE_INTEGER dist;
-  dist.QuadPart = 0;
-  SetFilePointerEx(m_fd, dist, &wRet, FILE_CURRENT);
-  ret = wRet.QuadPart;
-#else
   ret = lseek(m_fd, 0, SEEK_CUR);
-#endif
   return ret;
 }
 
@@ -250,18 +171,7 @@ int UnbufferedFile::flush()
   int ret;
   int savedErrno;
 
-#ifdef _MSC_VER
-  ret = FlushFileBuffers(m_fd);
-
-  // In this case for Windows, ret is the reverse of Linux
-  if (ret == 0)
-    ret = -1;
-  else
-    ret = 0;
-
-#else
   ret = fsync(m_fd);
-#endif
   savedErrno = errno;
 
   if (IDBLogger::isEnabled())
@@ -274,19 +184,6 @@ int UnbufferedFile::flush()
 time_t UnbufferedFile::mtime()
 {
   time_t ret = 0;
-#ifdef _MSC_VER
-  BY_HANDLE_FILE_INFORMATION info;
-
-  if (GetFileInformationByHandle(m_fd, &info))
-  {
-    ret = time_t((uint64_t)info.ftLastAccessTime.dwHighDateTime << 32) | info.ftLastAccessTime.dwLowDateTime;
-  }
-  else
-  {
-    ret = (time_t)-1;
-  }
-
-#else
   struct stat statbuf;
 
   if (::fstat(m_fd, &statbuf) == 0)
@@ -294,7 +191,6 @@ time_t UnbufferedFile::mtime()
   else
     ret = (time_t)-1;
 
-#endif
   return ret;
 }
 
@@ -305,18 +201,7 @@ int UnbufferedFile::close()
 
   if (m_fd != INVALID_HANDLE_VALUE)
   {
-#ifdef _MSC_VER
-    ret = CloseHandle(m_fd);
-
-    // In this case for Windows, ret is the reverse of Linux
-    if (ret == 0)
-      ret = -1;
-    else
-      ret = 0;
-
-#else
     ret = ::close(m_fd);
-#endif
     savedErrno = errno;
   }
 

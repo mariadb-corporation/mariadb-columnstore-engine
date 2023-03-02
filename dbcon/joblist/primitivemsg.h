@@ -34,10 +34,6 @@
 
 #pragma pack(push, 1)
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4200)
-#endif
 
 // from blocksize.h
 const int32_t DATA_BLOCK_SIZE = BLOCK_SIZE;
@@ -880,8 +876,5 @@ struct LbidAtVer
   uint32_t Ver;
 };
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #pragma pack(pop)

@@ -48,7 +48,6 @@ const string resolveInDir(const string& dir, const string& name)
     return ret;
 
   idbassert(fs::exists(path));
-#ifndef _MSC_VER
 
   if (!fs::is_symlink(path))
     return ret;
@@ -65,7 +64,6 @@ const string resolveInDir(const string& dir, const string& name)
   fs::path realpath("/dev");
   realpath /= linkname.filename();
   ret = realpath.string();
-#endif
   return ret;
 }
 
@@ -86,7 +84,6 @@ namespace fsutils
 const string symname2devname(const string& sympath)
 {
   string ret;
-#ifndef _MSC_VER
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep("=");
   tokenizer tokens(sympath, sep);
@@ -112,7 +109,6 @@ const string symname2devname(const string& sympath)
   else if (symtype == "UUID")
     ret = uuid2dev(symname);
 
-#endif
   return ret;
 }
 

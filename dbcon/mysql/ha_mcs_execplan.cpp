@@ -21,13 +21,8 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#ifdef _MSC_VER
-#include <unordered_map>
-#include <unordered_set>
-#else
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#endif
 #include <fstream>
 #include <sstream>
 #include <cerrno>
@@ -4212,15 +4207,10 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     // add my_time_zone
     if (funcName == "unix_timestamp")
     {
-#ifndef _MSC_VER
       time_t tmp_t = 1;
       struct tm tmp;
       localtime_r(&tmp_t, &tmp);
       sptp.reset(new ParseTree(new ConstantColumn(static_cast<int64_t>(tmp.tm_gmtoff), ConstantColumn::NUM)));
-#else
-      // FIXME: Get GMT offset (in seconds east of GMT) in Windows...
-      sptp.reset(new ParseTree(new ConstantColumn(static_cast<int64_t>(0), ConstantColumn::NUM)));
-#endif
       (dynamic_cast<ConstantColumn*>(sptp->data()))->timeZone(gwi.timeZone);
       funcParms.push_back(sptp);
     }

@@ -32,13 +32,8 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
-#ifdef _MSC_VER
-#include <unordered_map>
-#include <unordered_set>
-#else
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#endif
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/scoped_array.hpp>

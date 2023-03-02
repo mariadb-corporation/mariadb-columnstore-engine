@@ -26,17 +26,8 @@
  */
 
 #include "umsocketselector.h"
-#ifdef _MSC_VER
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#else
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#endif
 #include <iostream>
 #include <climits>
 #include <sstream>
@@ -582,10 +573,8 @@ void UmIPSocketConns::nextIOSocket(SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock)
 /* static */ char* UmIPSocketConns::nwToString(in_addr_t addr, char* ipString)
 {
   in_addr addrStruct = {addr};
-#ifndef _MSC_VER
 
   if (!inet_ntop(AF_INET, &addrStruct, ipString, INET_ADDRSTRLEN))
-#endif
     strcpy(ipString, "unknown");
 
   return ipString;

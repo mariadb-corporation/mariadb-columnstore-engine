@@ -32,9 +32,7 @@ using namespace std;
 #include "rowgroup.h"
 using namespace execplan;
 
-#ifndef _MSC_VER
 #include "zlib.h"
-#endif
 
 namespace funcexp
 {

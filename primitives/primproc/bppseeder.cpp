@@ -31,12 +31,8 @@
 
 #include <unistd.h>
 #include <sstream>
-#ifndef _MSC_VER
 #include <pthread.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#else
-typedef int pthread_t;
-#endif
 #include <boost/thread.hpp>
 
 #include "bppseeder.h"
@@ -177,7 +173,6 @@ int BPPSeeder::operator()()
           if (boost::posix_time::second_clock::universal_time() > dieTime)
           {
 #if 0  // for debugging
-#ifndef _MSC_VER
                         boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
 
                         if (sessionID & 0x80000000)
@@ -187,7 +182,6 @@ int BPPSeeder::operator()()
                             cout << "BPPSeeder couldn't find the sessionID/stepID pair.  sessionID="
                                  << sessionID << " stepID=" << stepID << pt << endl;
 
-#endif
                         throw logic_error("BPPSeeder couldn't find the sessionID/stepID pair");
 #endif
             return 0;
@@ -226,11 +220,7 @@ int BPPSeeder::operator()()
     if (fTrace)
     {
       PTLogsMap_t::iterator it;
-#ifdef _MSC_VER
-      tid = GetCurrentThreadId();
-#else
       tid = pthread_self();
-#endif
 
       // only lock map while inserted objects
       // once there is an object for each thread
@@ -247,11 +237,7 @@ int BPPSeeder::operator()()
       {
         ostringstream LogFileName;
         SPPTLogs_t spof;
-#ifdef _MSC_VER
-        LogFileName << "C:/Calpont/log/trace/pt." << tid;
-#else
         LogFileName << MCSLOGDIR << "/trace/pt." << tid;
-#endif
         spof.reset(new PTLogs_t(gThdCnt, LogFileName.str().c_str()));
         gThdCnt++;
 

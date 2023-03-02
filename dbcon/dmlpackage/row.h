@@ -29,11 +29,7 @@
 #include "dmlcolumn.h"
 #include "we_typeext.h"
 
-#if defined(_MSC_VER) && defined(xxxDMLPKGROW_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
 #define EXPORT
-#endif
 
 namespace dmlpackage
 {
