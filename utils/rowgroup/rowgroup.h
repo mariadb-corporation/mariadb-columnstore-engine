@@ -56,8 +56,6 @@
 #include "branchpred.h"
 #include "datatypes/mcs_int128.h"
 
-#include "../winport/winport.h"
-
 #include "collation.h"
 #include "common/hashfamily.h"
 
