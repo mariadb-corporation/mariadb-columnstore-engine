@@ -312,6 +312,9 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   if (rg.usesStringTable() && rowCount > 0)
     strings.reset(new StringStore());
 
+  userDataStore.reset();
+
+
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
    * filled in yet.  Need to look into that.  Valgrind complains that
@@ -330,6 +333,8 @@ RGData::RGData(const RowGroup& rg)
   if (rg.usesStringTable())
     strings.reset(new StringStore());
 
+  userDataStore.reset();
+
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
    * filled in yet.  Need to look into that.  Valgrind complains that
@@ -342,6 +347,7 @@ RGData::RGData(const RowGroup& rg)
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  userDataStore.reset();
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -431,6 +437,7 @@ void RGData::clear()
 {
   rowData.reset();
   strings.reset();
+  userDataStore.reset();
 }
 
 // UserDataStore is only used for UDAF.

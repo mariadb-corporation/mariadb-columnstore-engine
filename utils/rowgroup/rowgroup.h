@@ -289,7 +289,7 @@ class RGData
   void clear();
   void reinit(const RowGroup& rg);
   void reinit(const RowGroup& rg, uint32_t rowCount);
-  inline void setStringStore(boost::shared_ptr<StringStore>& ss)
+  inline void setStringStore(std::shared_ptr<StringStore>& ss)
   {
     strings = ss;
   }
@@ -328,9 +328,9 @@ class RGData
   }
 
  private:
-  boost::shared_array<uint8_t> rowData;
-  boost::shared_ptr<StringStore> strings;
-  boost::shared_ptr<UserDataStore> userDataStore;
+  std::shared_ptr<uint8_t[]> rowData;
+  std::shared_ptr<StringStore> strings;
+  std::shared_ptr<UserDataStore> userDataStore;
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
@@ -344,23 +344,21 @@ class Row
  public:
   struct Pointer
   {
-    inline Pointer() : data(NULL), strings(NULL), userDataStore(NULL)
-    {
-    }
+    inline Pointer() = default;
 
     // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
-    inline Pointer(uint8_t* d) : data(d), strings(NULL), userDataStore(NULL)
+    inline Pointer(uint8_t* d) : data(d)
     {
     }
-    inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s), userDataStore(NULL)
+    inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s)
     {
     }
     inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) : data(d), strings(s), userDataStore(u)
     {
     }
-    uint8_t* data;
-    StringStore* strings;
-    UserDataStore* userDataStore;
+    uint8_t* data = nullptr;
+    StringStore* strings = nullptr;
+    UserDataStore* userDataStore = nullptr;
   };
 
   Row() = default;
@@ -515,7 +513,7 @@ class Row
   template <typename T>
   inline void setBinaryField_offset(const T* value, uint32_t width, uint32_t colIndex);
   // support VARBINARY
-  // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
+  // Add 2-byte length at the CHARSET_INFO*beginning of the field.  nullptr and zero length field are
   // treated the same, could use one of the length bit to distinguish these two cases.
   inline std::string getVarBinaryStringField(uint32_t colIndex) const;
   inline void setVarBinaryField(const std::string& val, uint32_t colIndex);
@@ -1504,8 +1502,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline bool usesStringTable() const;
   inline void setUseStringTable(bool);
 
-  //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
+  //	RGData *convertToInlineData(uint64_t *size = nullptr) const;  // caller manages the memory returned by
+  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = nullptr) const; 	void
   //convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
@@ -1542,7 +1540,7 @@ class RowGroup : public messageqcpp::Serializeable
                          const uint16_t& blockNum);
   inline void getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* extentNum, uint16_t* blockNum);
 
-  inline void setStringStore(boost::shared_ptr<StringStore>);
+  inline void setStringStore(std::shared_ptr<StringStore>);
 
   const CHARSET_INFO* getCharset(uint32_t col);
 
@@ -1612,7 +1610,7 @@ every row, they're a measurable performance penalty */
 inline uint32_t RowGroup::getRowCount() const
 {
   // 	idbassert(data);
-  // 	if (!data) throw std::logic_error("RowGroup::getRowCount(): data is NULL!");
+  // 	if (!data) throw std::logic_error("RowGroup::getRowCount(): data is nullptr!");
   return *((uint32_t*)&data[rowCountOffset]);
 }
 
@@ -1643,8 +1641,8 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
 inline void RowGroup::setData(uint8_t* d)
 {
   data = d;
-  strings = NULL;
-  rgData = NULL;
+  strings = nullptr;
+  rgData = nullptr;
   setUseStringTable(false);
 }
 
@@ -1678,7 +1676,7 @@ inline void RowGroup::setUseStringTable(bool b)
     offsets = &oldOffsets[0];
 
   if (!useStringTable)
-    strings = NULL;
+    strings = nullptr;
 }
 
 inline uint64_t RowGroup::getBaseRid() const
@@ -1738,7 +1736,7 @@ inline uint32_t RowGroup::getRowSizeWithStrings() const
 
 inline uint64_t RowGroup::getSizeWithStrings(uint64_t n) const
 {
-  if (strings == NULL)
+  if (strings == nullptr)
     return getDataSize(n);
   else
     return getDataSize(n) + strings->getSize();
@@ -1862,7 +1860,7 @@ inline uint32_t RowGroup::getStringTableThreshold() const
   return sTableThreshold;
 }
 
-inline void RowGroup::setStringStore(boost::shared_ptr<StringStore> ss)
+inline void RowGroup::setStringStore(std::shared_ptr<StringStore> ss)
 {
   if (useStringTable)
   {
@@ -2057,7 +2055,7 @@ inline bool StringStore::isNullValue(uint64_t off) const
   if (off == std::numeric_limits<uint64_t>::max())
     return true;
 
-  // Long strings won't be NULL
+  // Long strings won't be nullptr
   if (off & 0x8000000000000000)
     return false;
 
@@ -2080,7 +2078,7 @@ inline bool StringStore::isNullValue(uint64_t off) const
   if ((offset + length) > mc->currentSize)
     return true;
 
-  if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
+  if (mc->data[offset + 4] == 0)  // "" = nullptr string for some reason...
     return true;
   return (memcmp(&mc->data[offset + 4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
 }
