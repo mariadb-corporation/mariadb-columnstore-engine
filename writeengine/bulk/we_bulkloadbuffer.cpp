@@ -2515,7 +2515,7 @@ void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
           // cout << "triming ... " << endl;
           char* tmp = p;
 
-          while (*(--tmp) == ' ')
+          while (tmp != lastRowHead && *(--tmp) == ' ')
           {
             // cout << "offset is " << offset <<endl;
             offset--;
