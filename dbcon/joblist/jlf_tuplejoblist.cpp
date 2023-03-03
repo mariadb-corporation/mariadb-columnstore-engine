@@ -1838,10 +1838,10 @@ void CircularJoinGraphTransformer::chooseEdgeToTransform(Cycle& cycle,
   }
 
   if (jobInfo.trace)
-    std::cout << "FK FK key not found, removing the first one inner join edge" << std::endl;
+    std::cout << "FK FK key not found, removing the last one inner join edge" << std::endl;
 
-  // Take just a first.
-  resultEdge = std::make_pair(cycle.front(), 0 /*Dummy weight*/);
+  // Take last one, it will help to solve TPC-H Q5 without statistics, until we have proper optimizer.
+  resultEdge = std::make_pair(cycle.back(), 0 /*Dummy weight*/);
 }
 
 void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(const JoinEdge& joinEdge)
