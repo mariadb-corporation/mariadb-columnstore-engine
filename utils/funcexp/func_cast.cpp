@@ -1022,10 +1022,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+        int128_t max_number_decimal = maxNumberDecimal(max_length);
         decimal.s128Value = parm[0]->data()->getIntVal(row, isNull);
         decimal.scale = 0;
         int128_t scaleDivisor;
@@ -1072,11 +1069,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = maxNumberDecimal(max_length);
         uint128_t uval = parm[0]->data()->getUintVal(row, isNull);
 
         if (uval > (uint128_t)datatypes::Decimal::maxInt128)
@@ -1127,11 +1120,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = maxNumberDecimal(max_length);
         float128_t value = parm[0]->data()->getDoubleVal(row, isNull);
 
         int128_t scaleDivisor;
@@ -1178,11 +1167,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = maxNumberDecimal(max_length);
         float128_t value = parm[0]->data()->getLongDoubleVal(row, isNull);
 
         int128_t scaleDivisor;
@@ -1230,11 +1215,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-        bool dummy = false;
-        char* ep = NULL;
-        int128_t max_number_decimal =
-            dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-
+        int128_t max_number_decimal = maxNumberDecimal(max_length);
         decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
         int128_t scaleDivisor;

@@ -97,6 +97,28 @@ const int64_t IDB_pow[19] = {1,
                              100000000000000000LL,
                              1000000000000000000LL};
 
+
+const int64_t columnstore_precision[19] = {0,
+                                           9,
+                                           99,
+                                           999,
+                                           9999,
+                                           99999,
+                                           999999,
+                                           9999999,
+                                           99999999,
+                                           999999999,
+                                           9999999999LL,
+                                           99999999999LL,
+                                           999999999999LL,
+                                           9999999999999LL,
+                                           99999999999999LL,
+                                           999999999999999LL,
+                                           9999999999999999LL,
+                                           99999999999999999LL,
+                                           999999999999999999LL};
+
+
 const std::string columnstore_big_precision[20] = {"9999999999999999999",
                                                    "99999999999999999999",
                                                    "999999999999999999999",
@@ -1559,6 +1581,28 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
     *ep = (char*)data;
 
   return res;
+}
+
+inline int128_t maxNumberDecimal(int64_t max_length)
+{
+  bool dummy = false;
+  char* ep = nullptr;
+  return dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
+}
+
+template <class T>
+T decimalRangeUp(int32_t precision)
+{
+  if (precision < 19)
+  {
+    return (T)columnstore_precision[precision];
+  }
+  else
+  {
+    bool dummy = false;
+    char* ep = NULL;
+    return (T)dataconvert::strtoll128(columnstore_big_precision[precision - 19].c_str(), dummy, &ep);
+  }
 }
 
 template <>

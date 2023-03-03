@@ -48,25 +48,6 @@ using namespace logging;
 
 namespace
 {
-const int64_t columnstore_precision[19] = {0,
-                                           9,
-                                           99,
-                                           999,
-                                           9999,
-                                           99999,
-                                           999999,
-                                           9999999,
-                                           99999999,
-                                           999999999,
-                                           9999999999LL,
-                                           99999999999LL,
-                                           999999999999LL,
-                                           9999999999999LL,
-                                           99999999999999LL,
-                                           999999999999999LL,
-                                           9999999999999999LL,
-                                           99999999999999999LL,
-                                           999999999999999999LL};
 
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
@@ -493,20 +474,8 @@ void number_int_value(const string& data, cscDataType typeCode,
   if ((typeCode == datatypes::SystemCatalog::DECIMAL) || (typeCode == datatypes::SystemCatalog::UDECIMAL) ||
       (ct.scale > 0))
   {
-    T rangeUp, rangeLow;
-
-    if (ct.precision < 19)
-    {
-      rangeUp = (T)columnstore_precision[ct.precision];
-    }
-    else
-    {
-      bool dummy = false;
-      char* ep = NULL;
-      rangeUp = (T)dataconvert::strtoll128(columnstore_big_precision[ct.precision - 19].c_str(), dummy, &ep);
-    }
-
-    rangeLow = -rangeUp;
+    T rangeUp = decimalRangeUp<T>(ct.precision);
+    T rangeLow = -rangeUp;
 
     if (intVal > rangeUp)
     {
