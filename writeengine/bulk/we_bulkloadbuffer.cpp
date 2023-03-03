@@ -2415,7 +2415,7 @@ void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
       //------------------------------------------------------------------
       case FLD_PARSE_ENCLOSED_STATE:
       {
-        char next = *(p + 1);
+        char next = p + 1 < pEndOfData ? *(p + 1) : 0;
 
         if ((p + 1 < pEndOfData) &&
             (((c == ESCAPE_CHAR) && ((next == STRING_ENCLOSED_CHAR) || (next == ESCAPE_CHAR) ||
