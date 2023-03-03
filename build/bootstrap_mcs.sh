@@ -244,7 +244,9 @@ build()
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
     ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
-    make -j $CPUS install
+    make -j $CPUS
+    message "Installing silently"
+    make -j $CPUS install > /dev/null
 
     if [ $? -ne 0 ]; then
         error "!!!! BUILD FAILED"
