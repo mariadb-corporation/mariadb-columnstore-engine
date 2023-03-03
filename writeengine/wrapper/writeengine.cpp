@@ -65,6 +65,7 @@ using namespace idbdatafile;
 #include "dataconvert.h"
 #include "string_prefixes.h"
 
+#include "mcs_decimal.h"
 
 namespace WriteEngine
 //#define PROFILE 1
@@ -917,7 +918,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   Column refCol;
   ColType newColType;
   ColType refColType;
-  boost::scoped_array<char> defVal(new char[MAX_COLUMN_BOUNDARY]);
+  boost::scoped_array<char> defVal(new char[datatypes::MAXDECIMALWIDTH]);
   ColumnOp* colOpNewCol = m_colOp[op(compressionType)];
   ColumnOp* refColOp = m_colOp[op(refCompressionType)];
   Dctnry* dctnry = m_dctnry[op(compressionType)];
