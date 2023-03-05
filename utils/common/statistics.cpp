@@ -62,7 +62,7 @@ void StatisticsManager::collectSample(const rowgroup::RowGroup& rowGroup)
   // Generate a uniform distribution.
   std::random_device randomDevice;
   std::mt19937 gen32(randomDevice());
-  std::uniform_int_distribution<> uniformDistribution(0, currentRowIndex + rowCount - 1);
+  std::uniform_int_distribution<uint32_t> uniformDistribution(0, currentRowIndex + rowCount - 1);
 
   for (uint32_t i = 0; i < rowCount; ++i)
   {
@@ -122,9 +122,8 @@ void StatisticsManager::analyzeSample(bool traceOn)
     // MCV statistics.
     std::vector<pair<uint64_t, uint32_t>> mcvList(columnMCV.begin(), columnMCV.end());
     std::sort(mcvList.begin(), mcvList.end(),
-              [](const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b) {
-                return a.second > b.second;
-              });
+              [](const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b)
+              { return a.second > b.second; });
 
     // 200 buckets as Microsoft does.
     const auto mcvSize = std::min(columnMCV.size(), static_cast<uint64_t>(200));
