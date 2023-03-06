@@ -156,6 +156,7 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
             xmlFree(cur3->content);
           }
 
+          xmlFree(cur3->content);
           cur3->content = xmlStrdup((const xmlChar*)value.c_str());
           return;
         }
