@@ -11,32 +11,6 @@ mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 analyze_table: hard to fix
 
 
-func_json_array : temporary
-func_json_array_append : temporary
-func_json_array_insert : temporary
-func_json_contains : temporary
-func_json_contains_path : temporary
-func_json_depth : temporary
-func_json_equals : temporary
-func_json_exists : temporary
-func_json_extract : temporary
-func_json_insert : temporary
-func_json_keys : temporary
-func_json_length : temporary
-func_json_merge : temporary
-func_json_merge_patch : temporary
-func_json_normalize : temporary
-func_json_object : temporary
-func_json_overlaps : temporary
-func_json_quote : temporary
-func_json_remove : temporary
-func_json_search : temporary
-func_json_type : temporary
-func_json_valid : temporary
-func_json_value : temporary
-func_jsonarrayagg : temporary
-json_range_expression : temporary
-
 
 mcs29_load_data_local_infile_negative: execs in test, debug later
 mcs79_exists: execs in test, debug later
@@ -93,7 +67,6 @@ mcs136_window_function_sum : OVER SEGFAULTS
 mcs148_window_function_bit_or : OVER SEGFAULTS
 mcs140_window_function_median : OVER SEGFAULTS
 mcs163_win_frame_stddev_pop : OVER SEGFAULTS
-func_json_overlaps : OVER SEGFAULTS
 mcs144_window_function_stddev_samp : OVER SEGFAULTS
 mcs160_win_frame_ntile : OVER SEGFAULTS
 mcs153_win_frame_bit_and : OVER SEGFAULTS
@@ -108,7 +81,6 @@ mcs198_regr_intercept_function : OVER SEGFAULTS
 mcs134_window_function_rank : OVER SEGFAULTS
 mcs139_window_function_min : OVER SEGFAULTS
 mcs167_win_frame_var_samp : OVER SEGFAULTS
-func_jsonarrayagg : OVER SEGFAULTS
 mcs127_window_function_last_value : OVER SEGFAULTS
 mcs195_regr_avgx_avgy_function : OVER SEGFAULTS
 mcs152_win_frame_avg : OVER SEGFAULTS
