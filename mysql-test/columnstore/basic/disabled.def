@@ -11,32 +11,6 @@ mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 analyze_table: hard to fix
 
 
-
-mcs29_load_data_local_infile_negative: execs in test, debug later
-mcs79_exists: execs in test, debug later
-mcs47_cpimport_central_loc_sin_source: execs in test, debug later
-mcs90_aggregate_functions: execs in test, debug later
-mcs67_ldi_datafile_separators: execs in test, debug later
-mcs80_set_operations: execs in test, debug later
-mcs63_crossengine_views: execs in test, debug later
-mcs64_crossengine_group_by: execs in test, debug later
-mcs85_derived_table: execs in test, debug later
-mcs229_data_compression_type: execs in test, debug later
-mcs50_cpimport_stdin: execs in test, debug later
-mcs71_crossengine_where_groupby_orderby_limit: execs in test, debug later
-mcs55_cpimport_binary_source: execs in test, debug later
-mcs68_cpimport_datafile_separators: execs in test, debug later
-mcs88_import_export_csv: execs in test, debug later
-mcs44_select_crossengine_join: execs in test, debug later
-mdev: execs in test, debug later
-mcol641: execs in test, debug later
-mcs51_cpimport_select_from: execs in test, debug later
-mcol: execs in test, debug later
-mcs65_crossengine_order_by: execs in test, debug later
-mcs45_write_crossengine_join: execs in test, debug later
-mdev-25080 : execs in test, debug later
-
-
 mcs150_window_function_bit_xor : OVER SEGFAULTS
 mcs155_win_frame_bit_xor : OVER SEGFAULTS
 mcs192_corr_function : OVER SEGFAULTS

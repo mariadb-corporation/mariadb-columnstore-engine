@@ -150,13 +150,13 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
           {
             xmlAddChild(cur2, xmlNewText((const xmlChar*)"\t"));
             cur3 = cur2->xmlChildrenNode;
+            xmlFree(cur3->content);
           }
           else
           {
             xmlFree(cur3->content);
           }
 
-          xmlFree(cur3->content);
           cur3->content = xmlStrdup((const xmlChar*)value.c_str());
           return;
         }
