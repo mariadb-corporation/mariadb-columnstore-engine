@@ -2784,7 +2784,8 @@ int64_t DataConvert::stringToTime(const string& data)
   {
     if (!hasDate)
     {
-      day = strtol(data.substr(0, pos).c_str(), &end, 10);
+      std::string tmpDataSegment = data.substr(0, pos);
+      day = strtol(tmpDataSegment.c_str(), &end, 10);
 
       if (*end != '\0')
         return -1;
