@@ -1951,7 +1951,7 @@ void SlaveComm::do_confirm()
     if (err < (int)relative.length())
     {
       ostringstream os;
-      os << "WorkerComm: currentfile write() returned " << err << " file pointer is " << currentSaveFile;
+      os << "WorkerComm: currentfile write() returned " << err << " file pointer is " << currentSaveFile.get();
 
       if (err < 0)
         os << " errno: " << strerror(errno);
