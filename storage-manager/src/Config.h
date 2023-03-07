@@ -19,9 +19,11 @@
 
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#ifndef __clang__
+  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <boost/property_tree/ptree.hpp>
-#pragma GCC diagnostic pop
+  #pragma GCC diagnostic pop
+#endif
 #include <boost/thread.hpp>
 #include <sys/types.h>
 #include <functional>
