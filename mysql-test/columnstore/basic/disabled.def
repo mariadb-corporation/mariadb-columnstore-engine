@@ -7,74 +7,7 @@ mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
 udf_calshowpartitions : unstable values for min/max in the output(sometimes N/A, sometimes numbers) 2022-07-26 roman.nozdrin@mariadb.com
 mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 
-
-
-
-
-# mcs150_window_function_bit_xor : OVER SEGFAULTS
-# mcs155_win_frame_bit_xor : OVER SEGFAULTS
-# mcs192_corr_function : OVER SEGFAULTS
-# mcol_4617 : OVER SEGFAULTS
-# mcs196_regr_sxx_sxy_syy_functions : OVER SEGFAULTS
-# std_aggregate_window_columnstore : OVER SEGFAULTS
-# mcs162_win_frame_stddev : OVER SEGFAULTS
-# mcs126_window_function_lag : OVER SEGFAULTS
-# mcs164_win_frame_stddev_samp : OVER SEGFAULTS
-# mcs166_win_frame_var_pop : OVER SEGFAULTS
-# mcs133_window_function_percentile_disc : OVER SEGFAULTS
-# mcs193_covar_pop_function : OVER SEGFAULTS
-# mcs145_window_function_variance : OVER SEGFAULTS
-# mcs200_regr_slope_function : OVER SEGFAULTS
-# mcs149_window_function_bit_and : OVER SEGFAULTS
-# mcs159_win_frame_min : OVER SEGFAULTS
-# mcs194_covar_samp_function : OVER SEGFAULTS
-# mcs129_window_function_nth_value : OVER SEGFAULTS
-# mcs197_regr_count_function : OVER SEGFAULTS
-# mcs135_window_function_row_number : OVER SEGFAULTS
-# mcs123_window_function_cume_dist : OVER SEGFAULTS
-# mcs141_window_function_std : OVER SEGFAULTS
-# mcol-4410 : OVER SEGFAULTS
-# mcs124_window_function_dense_rank : OVER SEGFAULTS
-# mcs125_window_function_first_value : OVER SEGFAULTS
-# mcs199_regr_r2_function : OVER SEGFAULTS
-# mcs136_window_function_sum : OVER SEGFAULTS
-# mcs148_window_function_bit_or : OVER SEGFAULTS
-# mcs140_window_function_median : OVER SEGFAULTS
-# mcs163_win_frame_stddev_pop : OVER SEGFAULTS
-# mcs144_window_function_stddev_samp : OVER SEGFAULTS
-# mcs160_win_frame_ntile : OVER SEGFAULTS
-# mcs153_win_frame_bit_and : OVER SEGFAULTS
-# mcs142_window_function_stddev : OVER SEGFAULTS
-# mcs157_win_frame_lead : OVER SEGFAULTS
-# mcs147_window_function_var_samp : OVER SEGFAULTS
-# mcs158_win_frame_max : OVER SEGFAULTS
-# mcol641-arithmetic : OVER SEGFAULTS
-# mcol641-functions : OVER SEGFAULTS
-# mcs146_window_function_var_pop : OVER SEGFAULTS
-# mcs198_regr_intercept_function : OVER SEGFAULTS
-# mcs134_window_function_rank : OVER SEGFAULTS
-# mcs139_window_function_min : OVER SEGFAULTS
-# mcs167_win_frame_var_samp : OVER SEGFAULTS
-# mcs127_window_function_last_value : OVER SEGFAULTS
-# mcs195_regr_avgx_avgy_function : OVER SEGFAULTS
-# mcs152_win_frame_avg : OVER SEGFAULTS
-# mcs131_window_function_percent_rank : OVER SEGFAULTS
-# mcs154_win_frame_bit_or : OVER SEGFAULTS
-# type_timestamp : OVER SEGFAULTS
-# mcs168_win_frame_variance : OVER SEGFAULTS
-# mcs143_window_function_stddev_pop : OVER SEGFAULTS
-# mcs130_window_function_ntile : OVER SEGFAULTS
-# mcs151_window_function_avg : OVER SEGFAULTS
-# mcs128_window_function_lead : OVER SEGFAULTS
-# mcs138_window_function_max : OVER SEGFAULTS
-# mcs165_win_frame_sum : OVER SEGFAULTS
-# mcs161_win_frame_std : OVER SEGFAULTS
-# mcs132_window_function_percentile_cont : OVER SEGFAULTS
-# mcs156_win_frame_count : OVER SEGFAULTS
-# mcs137_window_function_count : OVER SEGFAULTS
-
-
 mcs179_addtime_function : stack lockl need to investigate DataConvert::stringToTime
 mcs265_subtime_function : stack lockl need to investigate DataConvert::stringToTime
 
-analyze_table: hard to fix
+
