@@ -47,7 +47,7 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
 local centos7_asan = 'devtoolset-' + gcc_version + '-libasan-devel';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel '
                             + centos7_asan +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
 
@@ -55,7 +55,7 @@ local rockylinux8_asan = 'gcc-toolset-' + gcc_version + '-libasan-devel';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
-                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
+                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel '
                                 + rockylinux8_asan +
                                '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
 
