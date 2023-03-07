@@ -17,13 +17,17 @@
 
 #pragma once
 
-
-#pragma GCC diagnostic push
 #ifndef __clang__
+  #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 #include <boost/property_tree/ptree.hpp>
+
+#ifndef __clang__
   #pragma GCC diagnostic pop
 #endif
+
 #include <boost/thread.hpp>
 #include <sys/types.h>
 #include <functional>
