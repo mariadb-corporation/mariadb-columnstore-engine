@@ -999,16 +999,16 @@ void emptyValueToAny(boost::any* any, const uint8_t* emptyValue, int colWidth)
   switch (colWidth)
   {
     case 16:
-      *any = *(int128_t*)emptyValue;
+      *any = *(uint128_t*)emptyValue;
       break;
     case 8:
-      *any = *(int64_t*)emptyValue;
+      *any = *(uint64_t*)emptyValue;
       break;
     case 4:
-      *any = *(int32_t*)emptyValue;
+      *any = *(uint32_t*)emptyValue;
       break;
     case 2:
-      *any = *(int16_t*)emptyValue;
+      *any = *(uint16_t*)emptyValue;
       break;
     default:
       *any = *emptyValue;
