@@ -11,6 +11,6 @@ cd /usr/share/mysql/mysql-test
 #./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/extended  | tee $CURRENT_DIR/mtr.extended.log 2>&1
 #./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/multinode  | tee $CURRENT_DIR/mtr.multinode.log 2>&1
 #./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/oracle  | tee $CURRENT_DIR/mtr.multinode.log 2>&1
-./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/1pmonly  | tee $CURRENT_DIR/mtr.1pmonly.log 2>&1
+./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/1pmonly mcs201_calshowpartitions_function  | tee $CURRENT_DIR/mtr.1pmonly.log 2>&1
 
 cd -

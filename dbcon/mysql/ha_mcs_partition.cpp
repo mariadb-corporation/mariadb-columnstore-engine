@@ -569,7 +569,7 @@ extern "C"
 
       void calshowpartitions_deinit(UDF_INIT* initid)
   {
-    delete initid->ptr;
+    delete[] initid->ptr;
   }
 
       const char* calshowpartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
@@ -1164,7 +1164,7 @@ extern "C"
 
       void calshowpartitionsbyvalue_deinit(UDF_INIT* initid)
   {
-    delete initid->ptr;
+    delete[] initid->ptr;
   }
 
       const char* calshowpartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result,

@@ -182,7 +182,7 @@ build()
         if grep -q ASAN $MDB_SOURCE_PATH/support-files/mariadb.service.in; then
             warn "MDB Server has ASAN options in support-files/mariadb.service.in, check it's compatibility"
         else
-            echo Environment="'ASAN_OPTIONS=print_stats=false,detect_odr_violation=0'" >> $MDB_SOURCE_PATH/support-files/mariadb.service.in
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SOURCE_PATH/support-files/mariadb.service.in
             message "ASAN options were added to support-files/mariadb.service.in"
         fi
     fi
