@@ -106,7 +106,7 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel ' + centos7_asan,
+    'centos:7': 'yum -y install epel-release centos-release-scl && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel ' + centos7_asan,
     'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel ' + rockylinux8_asan,
     'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel libasan',
     'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libasan6',
@@ -292,7 +292,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '' ,
-      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y "' + centos7_asan   else '' ,
+      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y "' + centos7_asan   else '' ,
       if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y "' + rockylinux8_asan   else '' ,
       if (platform == 'rockylinux:9') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y libasan"' else '' ,
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
