@@ -89,7 +89,7 @@ local platformMap(platform, arch) =
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
-  platform_map[platform] + ' 2 > &1 | tee ' + result + '/build.log';
+  platform_map[platform] + ' >(tee -a ' + result + '/build.log) 2> >(tee -a ' + result + '/build.err >&2) ';
 
 
 local testRun(platform) =
