@@ -619,7 +619,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
                testPreparation(platform),
                // disable LTO for 22.04 for now
                if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
-               "bash -c '" + platformMap(platform, arch) +"'",
+               'bash -c "' + platformMap(platform, arch) +'"',
                'sccache --show-stats',
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
