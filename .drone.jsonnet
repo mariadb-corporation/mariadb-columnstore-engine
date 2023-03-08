@@ -64,8 +64,8 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++ libasan';
 
-local debian11_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-" + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-local ubuntu20_04_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-" + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
+local debian11_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-" + clang_version + ' && ' + clang_update_alternatives;
+local ubuntu20_04_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-" + clang_version + ' &&' + clang_update_alternatives;
 
 local deb_build_deps = "apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i ";
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
