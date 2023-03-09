@@ -233,7 +233,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp ' + result + ' smoke$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:7') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan else '',
+      if (platform == 'centos:7') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget"',
@@ -293,8 +293,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '' ,
-      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y "' + centos7_asan   else '' ,
-      if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y "' + rockylinux8_asan   else '' ,
+      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y "' + centos7_asan + '"'  else '' ,
+      if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y ' + rockylinux8_asan  + '"' else '' ,
       if (platform == 'rockylinux:9') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y libasan"' else '' ,
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch libasan6 && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
@@ -367,7 +367,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --ulimit core=-1 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
       'docker cp ' + result + ' regression$${DRONE_BUILD_NUMBER}:/',
-      if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan else '',
+      if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y procps-ng wget"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget"',
