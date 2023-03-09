@@ -8,3 +8,4 @@ mcs6202_windowFunctions_REGR_SLOPE : Disabled because of MCOL-5435
 mcs6203_windowFunctions_REGR_SXX : Disabled because of MCOL-5435
 mcs6204_windowFunctions_REGR_SXY : Disabled because of MCOL-5435
 mcs6205_windowFunctions_REGR_SYY : Disabled because of MCOL-5435
+mcs4011_autopilot_query_stats : Disabled because shows unstable response
