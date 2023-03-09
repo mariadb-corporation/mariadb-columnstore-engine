@@ -30,6 +30,7 @@ optparse.define short=B long=run-microbench="Compile and run microbenchmarks " v
 optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 
 source $( optparse.build )
@@ -192,6 +193,13 @@ build()
 
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+    fi
+
+    if [[ $MAKEFILE_VERBOSE = true ]] ; then
+        warn "Verbosing Makefile Commands"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+    else
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
     fi
 
     if [[ $RUN_BENCHMARKS = true ]] ; then
