@@ -30,7 +30,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_CONNECT=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO ' +
                    '-DPLUGIN_SPHINX=NO -DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO ' +
                    '-DWITH_COREDUMPS=OFF -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON ' +
-                   '-DWITH_COLUMNSTORE_REPORT_PATH=/core';
+                   '-DWITH_COLUMNSTORE_REPORT_PATH=/core -DCMAKE_VERBOSE_MAKEFILE=TRUE';
 
 local clang_version = '13';
 local gcc_version = '10';
