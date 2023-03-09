@@ -25,8 +25,8 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -446,7 +446,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
     deliverySteps[CNX_VTABLE_ID] = spjs;
   }
-  else if (!(jobInfo.hasDistinct && jobInfo.windowCols.size() > 0))
+  else if (jobInfo.windowCols.empty())
   {
     TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
     idbassert(tds != NULL);
@@ -493,7 +493,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     querySteps.push_back(ws);
     deliverySteps[CNX_VTABLE_ID] = ws;
 
-    if (jobInfo.hasAggregation && jobInfo.hasDistinct)
+    if (jobInfo.hasAggregation && !jobInfo.hasDistinct)
     {
       spjs = ws;
       TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
@@ -716,7 +716,8 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
     {
       //			if (jobInfo.trace && bps->tableOid() >= 3000)
       //				cout << "1 setting project BPP for " << tbps->toString() << " with "
-      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString() << endl;
+      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
+      //<< endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -1887,7 +1888,6 @@ void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(con
       if ((tableKey1 == joinEdge.first && tableKey2 == joinEdge.second) ||
           (tableKey1 == joinEdge.second && tableKey2 == joinEdge.first))
       {
-
         if (jobInfo.trace)
           std::cout << "Erase matched join step with keys: " << tableKey1 << " <-> " << tableKey2
                     << std::endl;
@@ -2141,9 +2141,8 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
-            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b) {
-              return a.second < b.second;
-            });
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
+            { return a.second < b.second; });
 
   // For each weighted adjacent node.
   for (const auto& adjNodeWeighted : adjacentListWeighted)

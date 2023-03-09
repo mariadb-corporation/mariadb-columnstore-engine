@@ -460,7 +460,7 @@ void WindowFunctionStep::checkWindowFunction(CalpontSelectExecutionPlan* csep, J
   }
   else if (csep->distinct() == true)
   {
-    hasAggregation = true;
+    // hasAggregation = true;
   }
 
   // add non-duplicate auxiliary columns
