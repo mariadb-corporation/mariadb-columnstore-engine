@@ -24,9 +24,9 @@
 namespace messageqcpp
 {
 
-std::mutex& getQueueMutex()
+boost::mutex& getQueueMutex()
 {
-  static std::mutex queueMutex;
+  static boost::mutex queueMutex;
   return queueMutex;
 }
 
@@ -164,8 +164,14 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
 
   if (client == NULL)
     return;
-
-  std::scoped_lock lock(getQueueMutex());
+  try
+  {
+    boost::mutex::scoped_lock lock(queueMutex);
+  }
+  catch (const std::exception &exc)
+  {
+    std::cerr << exc.what();
+  }
   std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
   while (it != clientMap.end())
