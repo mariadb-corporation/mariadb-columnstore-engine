@@ -31,8 +31,6 @@ ExternalProject_Add(external_boost
   PREFIX .boost
   URL https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.bz2
   URL_HASH SHA256=71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa
-  #URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2
-  #URL_HASH SHA256=475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39
   CONFIGURE_COMMAND ./bootstrap.sh
   UPDATE_COMMAND ""
   BUILD_COMMAND ./b2 -q ${_b2args}

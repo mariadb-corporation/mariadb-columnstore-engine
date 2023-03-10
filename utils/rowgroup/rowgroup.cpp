@@ -26,7 +26,7 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
-//#define NDEBUG
+// #define NDEBUG
 #include <sstream>
 #include <iterator>
 using namespace std;
@@ -647,7 +647,7 @@ void Row::initToNull()
         break;
 
       case CalpontSystemCatalog::BIGINT:
-        if (precision[i] != 9999)
+        if (precision[i] != MagicPrecisionForCountAgg)
           *((uint64_t*)&data[offsets[i]]) = joblist::BIGINTNULL;
         else  // work around for count() in outer join result.
           *((uint64_t*)&data[offsets[i]]) = 0;
@@ -1691,4 +1691,3 @@ RowGroup RowGroup::truncate(uint32_t cols)
 }
 
 }  // namespace rowgroup
-
