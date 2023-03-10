@@ -8,3 +8,7 @@
 [mysqld]
 datadir=%DATADIR%
 plugin-load-add=ha_columnstore.so
+
+
+[mysqld]
+thread_stack = 2M

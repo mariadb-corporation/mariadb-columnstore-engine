@@ -168,7 +168,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
 
 
   std::scoped_lock lock(getQueueMutex());
-  std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
+  auto it = clientMap.begin();
 
   while (it != clientMap.end())
   {
@@ -197,7 +197,7 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
 
 
   std::scoped_lock lock(getQueueMutex());
-  std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
+  auto it = clientMap.begin();
 
   while (it != clientMap.end())
   {

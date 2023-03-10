@@ -1221,7 +1221,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-
         int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         decimal = parm[0]->data()->getDecimalVal(row, isNull);
 

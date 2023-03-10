@@ -48,6 +48,25 @@ using namespace logging;
 
 namespace
 {
+const int64_t columnstore_precision[19] = {0,
+                                           9,
+                                           99,
+                                           999,
+                                           9999,
+                                           99999,
+                                           999999,
+                                           9999999,
+                                           99999999,
+                                           999999999,
+                                           9999999999LL,
+                                           99999999999LL,
+                                           999999999999LL,
+                                           9999999999999LL,
+                                           99999999999999LL,
+                                           999999999999999LL,
+                                           9999999999999999LL,
+                                           99999999999999999LL,
+                                           999999999999999999LL};
 
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))

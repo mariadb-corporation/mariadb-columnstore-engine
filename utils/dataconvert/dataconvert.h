@@ -1546,25 +1546,17 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
   return res;
 }
 
-inline int128_t maxNumberDecimal(int64_t max_length)
-{
-  bool dummy = false;
-  char* ep = nullptr;
-  return dataconvert::strtoll128(columnstore_big_precision[max_length - 19].c_str(), dummy, &ep);
-}
 
 template <class T>
 T decimalRangeUp(int32_t precision)
 {
   if (precision < 19)
   {
-    return (T)columnstore_precision[precision];
+    return (T)datatypes::columnstore_precision[precision];
   }
   else
   {
-    bool dummy = false;
-    char* ep = NULL;
-    return (T)dataconvert::strtoll128(columnstore_big_precision[precision - 19].c_str(), dummy, &ep);
+    return datatypes::ConversionRangeMaxValue[precision - 19];
   }
 }
 
