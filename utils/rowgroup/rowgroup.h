@@ -30,7 +30,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -523,7 +523,6 @@ class Row
   // an adapter for code that uses the copyField call above;
   // that's not string-table safe, this one is
   inline void copyField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
-
 
   inline void copyBinaryField(Row& dest, uint32_t destIndex, uint32_t srcIndex) const;
 
@@ -1070,7 +1069,7 @@ inline void Row::getInt128Field(uint32_t colIndex, int128_t& x) const
 
 inline datatypes::TSInt128 Row::getTSInt128Field(uint32_t colIndex) const
 {
-  const int128_t* ptr = reinterpret_cast<int128_t*>(&data[offsets[colIndex]]);;
+  const int128_t* ptr = reinterpret_cast<int128_t*>(&data[offsets[colIndex]]);
   return datatypes::TSInt128(ptr);
 }
 
@@ -1316,7 +1315,6 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
   }
 }
 
-
 inline void Row::copyBinaryField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
   out.setInt128Field(getTSInt128Field(srcIndex).getValue(), destIndex);
@@ -1481,8 +1479,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
-  //convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL)
+  // const; void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
@@ -2139,4 +2137,3 @@ inline void RGData::getRow(uint32_t num, Row* row)
 }
 
 }  // namespace rowgroup
-

@@ -76,6 +76,7 @@ enum ErrorCodeValues
   incompatJoinCols,
   incompatFilterCols,
   aggregateResourceErr,
+  dataConvertUnsupportedPrecisionValue,
   statisticsJobListEmpty = 301
 };
 

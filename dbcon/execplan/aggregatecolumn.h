@@ -78,7 +78,6 @@ class AggregateColumn : public ReturnedColumn
     UDAF,
     MULTI_PARM
   };
-
   /**
    * typedef
    */

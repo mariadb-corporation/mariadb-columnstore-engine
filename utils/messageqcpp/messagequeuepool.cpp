@@ -17,14 +17,19 @@
 
 #include <sstream>
 #include <map>
-#include <boost/thread/mutex.hpp>
 #include <time.h>
 #include "messagequeuepool.h"
 #include "messagequeue.h"
 
 namespace messageqcpp
 {
-boost::mutex queueMutex;
+
+std::mutex& getQueueMutex()
+{
+  static std::mutex queueMutex;
+  return queueMutex;
+}
+
 // Make linker happy
 std::multimap<std::string, ClientObject*> MessageQueueClientPool::clientMap;
 
@@ -38,7 +43,7 @@ static uint64_t TimeSpecToSeconds(struct timespec* ts)
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrIp, uint64_t port)
 {
-  boost::mutex::scoped_lock lock(queueMutex);
+  std::scoped_lock lock(getQueueMutex());
 
   std::ostringstream oss;
   oss << dnOrIp << "_" << port;
@@ -67,7 +72,7 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrI
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& module)
 {
-  boost::mutex::scoped_lock lock(queueMutex);
+  std::scoped_lock lock(getQueueMutex());
 
   MessageQueueClient* returnClient = MessageQueueClientPool::findInPool(module);
 
@@ -160,7 +165,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  boost::mutex::scoped_lock lock(queueMutex);
+  std::scoped_lock lock(getQueueMutex());
   std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
   while (it != clientMap.end())
@@ -188,7 +193,7 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  boost::mutex::scoped_lock lock(queueMutex);
+  std::scoped_lock lock(getQueueMutex());
   std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
   while (it != clientMap.end())
