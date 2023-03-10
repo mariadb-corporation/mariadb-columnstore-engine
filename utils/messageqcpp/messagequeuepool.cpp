@@ -170,7 +170,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   }
   catch (const std::exception &exc)
   {
-    std::cerr << exc.what();
+    std::cout << exc.what();
   }
   std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
