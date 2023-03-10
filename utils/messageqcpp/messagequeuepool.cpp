@@ -168,7 +168,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
 
   try
   {
-    boost::mutex::scoped_lock lock(queueMutex);
+    boost::mutex::scoped_lock lock(getQueueMutex());
   }
   catch (const boost::exception& exc)
   {
