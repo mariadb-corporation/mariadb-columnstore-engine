@@ -190,15 +190,12 @@ build()
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
         warn "Cores are not dumped"
-
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
         warn "Verbosing Makefile Commands"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-    else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
     fi
 
@@ -219,7 +216,6 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
         message "Buiding without microbenchmarks"
     fi
-
 
     cd $MDB_SOURCE_PATH
 
@@ -257,7 +253,7 @@ build()
     make -j $CPUS install > /dev/null
 
     if [ $? -ne 0 ]; then
-        error "!!!! BUILD FAILED"
+        error "!!!! BUILD FAILED !!!!"
         exit 1
     fi
     cd -
