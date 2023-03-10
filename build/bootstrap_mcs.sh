@@ -180,11 +180,23 @@ build()
     if [[ $ASAN = true ]] ; then
         warn "Building with ASAN"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
-        if grep -q ASAN $MDB_SOURCE_PATH/support-files/mariadb.service.in; then
-            warn "MDB Server has ASAN options in support-files/mariadb.service.in, check it's compatibility"
+
+        COLUMNSTORE_CONFIG=$MDB_SOURCE_PATH/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf
+        if grep -q ASAN $COLUMNSTORE_CONFIG; then
+            warn "MDB Server has thread_stack settings on storage/columnstore/columnstore/build/my.cnf.in check it's compatibility with ASAN"
         else
-            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SOURCE_PATH/support-files/mariadb.service.in
+            echo "[mysqld]" >> $COLUMNSTORE_CONFIG
+            echo "thread_stack = 2M" >> $COLUMNSTORE_CONFIG
+        fi
+
+        MDB_SERVICE_FILE=$MDB_SOURCE_PATH/support-files/mariadb.service.in
+        if grep -q ASAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has ASAN options in support-files/mariadb.service.in, check it's compatibility"
+
+        else
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SERVICE_FILE
             message "ASAN options were added to support-files/mariadb.service.in"
+
         fi
     fi
 
