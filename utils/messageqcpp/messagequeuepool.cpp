@@ -164,13 +164,15 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
 
   if (client == NULL)
     return;
+  std::cout << "Going to lock the mutex....\n";
+
   try
   {
     boost::mutex::scoped_lock lock(queueMutex);
   }
   catch (const std::exception &exc)
   {
-    std::cout << exc.what();
+    std::cout << "Exception thrown:" << exc.what() << '\n';
   }
   std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
