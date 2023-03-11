@@ -114,7 +114,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   {
     Message::Args args;
     Message message(9);
-    args.add("Unknown error occured while getting unique number.");
+    args.add("Unknown error occurred while getting unique number.");
     message.format(args);
     result.result = DROP_ERROR;
     result.message = message;
@@ -818,7 +818,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   {
     Message::Args args;
     Message message(9);
-    args.add("Unknown error occured while getting unique number.");
+    args.add("Unknown error occurred while getting unique number.");
     message.format(args);
     result.result = DROP_ERROR;
     result.message = message;

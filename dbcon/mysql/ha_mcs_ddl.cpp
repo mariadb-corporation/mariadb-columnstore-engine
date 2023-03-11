@@ -2174,7 +2174,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     {
       rc = 0;
       string errmsg(
-          "Error occured during file deletion. Restart DDLProc or use command tool ddlcleanup to clean up. ");
+          "Error occurred during file deletion. Restart DDLProc or use command tool ddlcleanup to clean up. ");
       push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
     }
 

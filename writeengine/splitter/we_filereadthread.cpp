@@ -204,7 +204,7 @@ void WEFileReadThread::setup(std::string FileName)
   catch (std::exception& ex)
   {
     // cout << ex.what() << endl;
-    // throw runtime_error("Exception occured in WEFileReadThread\n");
+    // throw runtime_error("Exception occurred in WEFileReadThread\n");
     throw runtime_error(ex.what());
   }
 
