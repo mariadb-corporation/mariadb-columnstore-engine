@@ -1,8 +1,8 @@
 local events = ['pull_request', 'cron'];
 
 local servers = {
-  develop: ['10.6-MENT-1667'],
-  'develop-22.08': ['10.6-MENT-1667'],
+  develop: ['10.6-enterprise'],
+  'develop-22.08': ['10.6-enterprise'],
 };
 
 local platforms = {
@@ -31,8 +31,8 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
 
-local clang_version = '13';
-local gcc_version = '10';
+local clang_version = '14';
+local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
 
@@ -108,7 +108,7 @@ local testPreparation(platform) =
   platform_map[platform];
 
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -125,7 +125,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
-  local server_remote = if (std.endsWith(server, 'enterprise') || std.endsWith(server, '10.6-MENT-1667')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
   local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
@@ -693,8 +693,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-MENT-1667']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-MENT-1667']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
 
@@ -719,10 +719,10 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-MENT-1667')
+  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
   for p in platforms_custom
 ] +
 [
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-MENT-1667')
+  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
   for p in platforms_arm_custom
 ]
