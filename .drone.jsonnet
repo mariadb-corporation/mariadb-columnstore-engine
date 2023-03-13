@@ -2,17 +2,17 @@ local events = ['pull_request', 'cron'];
 
 local servers = {
   develop: ['10.6-enterprise'],
-  'develop-22.08': ['10.6-enterprise'],
+  'develop-23.02': ['10.6-enterprise'],
 };
 
 local platforms = {
   develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
   develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local any_branch = '**';
