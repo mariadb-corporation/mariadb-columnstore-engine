@@ -89,7 +89,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
   fErrorCodes[ERR_STRUCT_VALUE_NOT_MATCH] =
       " the number of structs does not match with the number of value sets";
   fErrorCodes[ERR_ROWID_VALUE_NOT_MATCH] = " the number of rowids does not match with the number of values";
-  fErrorCodes[ERR_TBL_SYSCAT_ERROR] = "Error occured when querying systemcatalog.";
+  fErrorCodes[ERR_TBL_SYSCAT_ERROR] = "Error occurred when querying systemcatalog.";
 
   // index error
   fErrorCodes[ERR_IDX_TREE_MOVE_ENTRY] = " an error in moving part of an index tree to a new subblock";

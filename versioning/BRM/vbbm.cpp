@@ -664,7 +664,7 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
         {
           ostringstream msg;
           msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
-                 "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
+                 "occurred in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
               << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
               << storage[i].lbid << endl;
           log(msg.str(), logging::LOG_TYPE_CRITICAL);

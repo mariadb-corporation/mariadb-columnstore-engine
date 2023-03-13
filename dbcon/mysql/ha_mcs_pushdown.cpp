@@ -846,7 +846,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
     {
       if (!thd->is_error())
       {
-        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in select_lex::handle_derived()");
+        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occurred in select_lex::handle_derived()");
       }
 
       return handler;
@@ -910,7 +910,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         // error out
         if (!thd->is_error())
         {
-          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in handler->prepare()");
+          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occurred in handler->prepare()");
         }
 
         return handler;
@@ -972,7 +972,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       {
         if (!thd->is_error())
         {
-          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in get_schema_tables_result()");
+          my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occurred in get_schema_tables_result()");
         }
 
         return handler;
@@ -1015,7 +1015,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
 
       if (!thd->is_error())
       {
-        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occured in ha_mcs_impl_pushdown_init()");
+        my_printf_error(ER_INTERNAL_ERROR, "%s", MYF(0), "Error occurred in ha_mcs_impl_pushdown_init()");
       }
 
       // We had an error in `ha_mcs_impl_pushdown_init`, no need to continue execution of this query.

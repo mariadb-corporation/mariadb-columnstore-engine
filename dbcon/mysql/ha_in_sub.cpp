@@ -188,7 +188,7 @@ execplan::ParseTree* InSub::transform()
     if (gwi.fatalParseError && !gwi.parseErrorText.empty())
       fGwip.parseErrorText = gwi.parseErrorText;
     else
-      fGwip.parseErrorText = "Error occured in InSub::transform()";
+      fGwip.parseErrorText = "Error occurred in InSub::transform()";
 
     return NULL;
   }

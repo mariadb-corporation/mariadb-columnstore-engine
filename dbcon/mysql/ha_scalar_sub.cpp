@@ -262,7 +262,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
     if (!gwi.fatalParseError)
     {
       fGwip.fatalParseError = true;
-      fGwip.parseErrorText = "Error occured in ScalarSub::transform()";
+      fGwip.parseErrorText = "Error occurred in ScalarSub::transform()";
     }
     else
     {

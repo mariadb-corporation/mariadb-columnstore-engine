@@ -438,7 +438,7 @@ SCSEP FromSubQuery::transform()
     if (!gwi.parseErrorText.empty())
       fGwip.parseErrorText = gwi.parseErrorText;
     else
-      fGwip.parseErrorText = "Error occured in FromSubQuery::transform()";
+      fGwip.parseErrorText = "Error occurred in FromSubQuery::transform()";
 
     csep.reset();
     return csep;

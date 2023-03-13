@@ -122,7 +122,7 @@ execplan::ParseTree* ExistsSub::transform()
     if (gwi.fatalParseError && !gwi.parseErrorText.empty())
       fGwip.parseErrorText = gwi.parseErrorText;
     else
-      fGwip.parseErrorText = "Error occured in ExistsSub::transform()";
+      fGwip.parseErrorText = "Error occurred in ExistsSub::transform()";
 
     return NULL;
   }

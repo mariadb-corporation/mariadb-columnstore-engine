@@ -131,7 +131,7 @@ int ServiceWorkerNode::Child()
   catch (exception& e)
   {
     ostringstream os;
-    os << "An error occured: " << e.what();
+    os << "An error occurred: " << e.what();
     cerr << os.str() << endl;
     log(os.str());
     NotifyServiceInitializationFailed();

@@ -32,7 +32,7 @@
  * This class must implement a high degree of correctness.  However, it
  * also requires file IO.  Most functions throw an exception if a hard IO error
  * occurs more than MaxRetries times in a row.  Right now the code makes
- * no attempt to back out changes that occured before the error although it
+ * no attempt to back out changes that occurred before the error although it
  * may be possible to do so for certain errors.  Probably the best course of
  * action would be to halt the system if an exception is thrown here
  * to prevent database corruption resulting allocation of OIDs from a

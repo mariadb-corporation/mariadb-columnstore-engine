@@ -84,7 +84,7 @@ SCSEP SelectSubQuery::transform()
     if (!gwi.fatalParseError)
     {
       fGwip.fatalParseError = true;
-      fGwip.parseErrorText = "Error occured in SelectSubQuery::transform()";
+      fGwip.parseErrorText = "Error occurred in SelectSubQuery::transform()";
     }
     else
     {

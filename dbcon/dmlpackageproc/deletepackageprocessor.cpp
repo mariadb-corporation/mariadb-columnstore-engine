@@ -93,7 +93,7 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
   {
     logging::Message::Args args;
     logging::Message message(9);
-    args.add("Unknown error occured while getting unique number.");
+    args.add("Unknown error occurred while getting unique number.");
     message.format(args);
     result.result = DELETE_ERROR;
     result.message = message;

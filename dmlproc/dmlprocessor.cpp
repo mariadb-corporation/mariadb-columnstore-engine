@@ -839,7 +839,7 @@ void PackageHandler::run()
             }
             else
             {
-              // error occured. Receive all outstanding messages before erroring out.
+              // error occurred. Receive all outstanding messages before erroring out.
               batchProcessor->receiveOutstandingMsg();
               batchProcessor->sendlastBatch();  // needs to flush files
               batchProcessor->receiveAllMsg();

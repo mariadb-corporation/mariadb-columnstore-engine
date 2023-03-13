@@ -367,7 +367,7 @@ int SessionManager::start()
               //Doing this to work with cloudio_component_test
               len = ::read(fds[socketIncr].fd, out, recvMsgLength);
               logger->log(LOG_DEBUG,"Read %d bytes.",len);
-              //Debug test lets send a reponse back
+              //Debug test lets send a response back
               uint32_t response[4] = { storagemanager::SM_MSG_START, 8, (uint32_t ) -1, EINVAL };
               len = ::send(fds[socketIncr].fd, response, 16, 0);
               */

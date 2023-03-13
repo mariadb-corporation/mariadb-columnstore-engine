@@ -958,7 +958,7 @@ void WEDataLoader::onReceiveEod(ByteStream& Ibs)
   aLock.unlock();
 
   // if(( 1 == getMode())||( 2 == getMode()))
-  if (1 == getMode())  // BUG 4370 - seperated mode 1 & 2
+  if (1 == getMode())  // BUG 4370 - separated mode 1 & 2
   {
     // if(getChPid()) teardownCpimport(false); // @bug 4267
     if (getChPid())

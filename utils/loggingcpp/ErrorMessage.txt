@@ -92,7 +92,7 @@
 
 # disk-based join runtime errors from supported queries
 2048	ERR_DBJ_FILE_IO_ERROR	There was an IO error doing a disk-based join.
-2049	ERR_DBJ_UNKNOWN_ERROR	An unknown error error occured doing a disk-based join.  Check the error log & contact support.
+2049	ERR_DBJ_UNKNOWN_ERROR	An unknown error error occurred doing a disk-based join.  Check the error log & contact support.
 2050	ERR_DBJ_DISK_USAGE_LIMIT	This query exceeded the temp disk usage limit.  Raise columnstore_diskjoin_smallsidelimit if possible and try again.
 2051	ERR_DBJ_DATA_DISTRIBUTION	The data distribution in this query overflowed a disk-based join bucket.  If possible, raise columnstore_diskjoin_bucketsize and try again.
 2052	INFO_SWITCHING_TO_DJS	Out of UM memory, switching to disk-based join.

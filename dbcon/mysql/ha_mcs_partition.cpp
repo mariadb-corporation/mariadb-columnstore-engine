@@ -286,7 +286,7 @@ int processPartition(SqlStatement* stmt)
   {
     rc = 0;
     string errmsg(
-        "Error occured during partitioning operation. Restart DMLProc or use command tool ddlcleanup to "
+        "Error occurred during partitioning operation. Restart DMLProc or use command tool ddlcleanup to "
         "clean up. ");
     push_warnings(thd, errmsg);
   }
@@ -462,7 +462,7 @@ void partitionByValue_common(UDF_ARGS* args,                              // inp
   }
   catch (...)
   {
-    errMsg = string("Error occured when calling ") + functionName;
+    errMsg = string("Error occurred when calling ") + functionName;
     return;
   }
 
@@ -655,7 +655,7 @@ extern "C"
     catch (...)
     {
       current_thd->get_stmt_da()->set_overwrite_status(true);
-      current_thd->raise_error_printf(ER_INTERNAL_ERROR, "Error occured when calling CALSHOWPARTITIONS");
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, "Error occurred when calling CALSHOWPARTITIONS");
       return result;
     }
 
@@ -1287,7 +1287,7 @@ extern "C"
     catch (...)
     {
       current_thd->get_stmt_da()->set_overwrite_status(true);
-      current_thd->raise_error_printf(ER_INTERNAL_ERROR, "Error occured when calling CALSHOWPARTITIONS");
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, "Error occurred when calling CALSHOWPARTITIONS");
       return result;
     }
 
