@@ -24,6 +24,8 @@ ExternalProject_Add(external_thrift
     -DCMAKE_CXX_FLAGS:STRING="-fPIC"
     -DBOOST_INCLUDEDIR=${Boost_INCLUDE_DIRS}
     -DBOOST_LIBRARYDIR=${Boost_LIBRARY_DIRS}
+    BUILD_BYPRODUCTS "${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    EXCLUDE_FROM_ALL TRUE
 )
 
 add_dependencies(external_thrift external_boost)
