@@ -32,7 +32,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DWITH_COREDUMPS=OFF -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON ' +
                    '-DWITH_COLUMNSTORE_REPORT_PATH=/core -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON';
 
-local clang_version = '14';
+local clang_version = '13';
 local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
