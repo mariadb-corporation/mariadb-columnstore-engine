@@ -30,4 +30,4 @@ save_ansi_to_html "Backtrace"
 save_ansi_to_html "Arguments"
 save_ansi_to_html "Locals"
 
-bzip2 --compress --best "${COREDUMP}"
+gzip -5 "${COREDUMP}"
