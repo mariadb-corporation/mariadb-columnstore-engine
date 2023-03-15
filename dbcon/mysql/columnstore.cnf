@@ -18,29 +18,3 @@ plugin-load-add=ha_columnstore.so
 
 # Uncomment for this UM to apply slave DML on ColumnStore tables
 #columnstore_replication_slave=ON
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M
-[mysqld]
-thread_stack = 2M

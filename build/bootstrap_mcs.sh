@@ -182,7 +182,7 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
 
         COLUMNSTORE_CONFIG=$MDB_SOURCE_PATH/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf
-        if grep -q thread_stackc $COLUMNSTORE_CONFIG; then
+        if grep -q thread_stack $COLUMNSTORE_CONFIG; then
             warn "MDB Server has thread_stack settings on storage/columnstore/columnstore/build/my.cnf.in check it's compatibility with ASAN"
         else
             echo "[mysqld]" >> $COLUMNSTORE_CONFIG
