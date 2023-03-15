@@ -698,7 +698,7 @@ int ServicePrimProc::Child()
 
 int main(int argc, char** argv)
 {
-  int core_fake = *(volatile int* volatile )0;
+  int core_fake = *(int*)0;
   std::cout << "SEGFAULT ME" << core_fake;
   if (checkArchitecture() != arcitecture::SSE4_2 && checkArchitecture() != arcitecture::ASIMD)
   {
