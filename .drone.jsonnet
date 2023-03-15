@@ -2,17 +2,17 @@ local events = ['pull_request', 'cron'];
 
 local servers = {
   develop: ['10.6-enterprise'],
-  'develop-22.08': ['10.6-enterprise'],
+  'develop-23.02': ['10.6-enterprise'],
 };
 
 local platforms = {
   develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
   develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local any_branch = '**';
@@ -73,11 +73,6 @@ local deb_build_deps = "apt update --yes && apt install --yes --no-install-recom
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
 local bootstrap_deps = 'apt-get -y update && apt-get -y install libasan6 build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
 
-local core_dump_format = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_format.sh';
-local core_dump_check = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_check.sh';
-local core_dump_drop = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_drop.sh';
-local ansi2html = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/ansi2html.sh';
-local logs = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/with_service_logs/core_dumps/logs.sh';
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
 
@@ -243,16 +238,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_smoke_core_dump.%p"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_format + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
-      'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
+      'docker cp core_dumps/. smoke$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y gdb gawk epel-release which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname && apt install -y -f /' + result + '/*.' + pkg_format + '"',
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
@@ -285,29 +271,21 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_mtr_core_dump.%p"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_format + '"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
       if (platform == 'centos:7') then 'docker exec -t  mtr$${DRONE_BUILD_NUMBER} bash -c "'  + centos7_build_deps + '"'  else '',
       if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '' ,
       if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y ' + rockylinux8_asan  + '"' else '' ,
       if (platform == 'rockylinux:9') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y libasan"' else '' ,
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '' ,
+      'docker cp core_dumps/. mtr$${DRONE_BUILD_NUMBER}:/',
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch libasan6 && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       "docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'",
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"character_set_server=latin1\" >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"character_set_server=latin1\" >> /etc/my.cnf.d/columnstore.cnf"',
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"collation_server=latin1_swedish_ci\" >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo \"collation_server=latin1_swedish_ci\" >> /etc/my.cnf.d/columnstore.cnf"',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo character_set_server=latin1 >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo character_set_server=latin1 >> /etc/my.cnf.d/columnstore.cnf"',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo collation_server=latin1_swedish_ci >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo collation_server=latin1_swedish_ci >> /etc/my.cnf.d/columnstore.cnf"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
@@ -321,7 +299,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
       if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
       if (event == 'custom' || event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
-      if (event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=' + std.join(",", std.map(function(x) "columnstore/" + x, std.split(mtr_full_set, ","))) + '"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
+      if (event == 'cron') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=' + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))) + '"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
     ],
   },
   mtrlog:: {
@@ -379,16 +357,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t regression$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_regression_core_dump.%p"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_format + '"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_check + '"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + core_dump_drop + '"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + ansi2html + '"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget ' + logs + '"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_format.sh"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_check.sh"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
-      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
+      'docker cp core_dumps/. regression$${DRONE_BUILD_NUMBER}:/',
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
       // list storage manager binary
       'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',

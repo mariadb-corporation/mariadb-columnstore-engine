@@ -830,11 +830,11 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
  *    dmFilePathArgs* INPUT/OUTPUT -- Points to a buffer structure
  *
  * RETURN:
- *    return 0 if everything went OK.  -1 if an error occured.  Two
+ *    return 0 if everything went OK.  -1 if an error occurred.  Two
  *    kinds of errors are possible:
  *
  *        - a null pointer was passed in
- *        - truncation occured.
+ *        - truncation occurred.
  *
  *    If a null buffer pointer is passed in, a return code
  *    of -1 will be returned FOR THAT BUFFER.
@@ -908,7 +908,7 @@ int Convertor::dmOid2FPath(uint32_t oid, uint32_t partition, uint32_t segment, d
  *    segment   OUTPUT -- segment for the given filename.
  *
  * RETURN:
- *    return 0 if everything went OK.  -1 if an error occured.
+ *    return 0 if everything went OK.  -1 if an error occurred.
  ******************************************************************************/
 int32_t Convertor::dmFPath2Oid(const dmFilePathArgs_t& pArgs, uint32_t& oid, uint32_t& partition,
                                uint32_t& segment)

@@ -363,7 +363,7 @@ int DMLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
   catch (std::exception& e)
   {
     rc = NETWORK_ERROR;
-    errorMsg = "Network error occured when rolling back blocks";
+    errorMsg = "Network error occurred when rolling back blocks";
     errorMsg += e.what();
     fWEClient->removeQueue(uniqueId);
     cout << "erroring out remove queue id " << uniqueId << endl;

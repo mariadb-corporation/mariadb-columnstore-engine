@@ -805,7 +805,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
         getSysData_FE(csep, sysDataList, sysTableName);
         break;
       }
-      catch (IDBExcept&)  // error already occured. this is not a broken pipe
+      catch (IDBExcept&)  // error already occurred. this is not a broken pipe
       {
         throw;
       }
@@ -827,7 +827,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
     }
 
     if (tryCnt >= 5)
-      // throw runtime_error("Error occured when calling system catalog. ExeMgr is not functioning.");
+      // throw runtime_error("Error occurred when calling system catalog. ExeMgr is not functioning.");
       throw IDBExcept(ERR_SYSTEM_CATALOG);
   }
 
@@ -856,7 +856,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   while (jl->status() != 0)
   {
     if (retryNum >= 6)
-      throw runtime_error("Error occured when calling makeJobList");
+      throw runtime_error("Error occurred when calling makeJobList");
 
     sleep(1);
     jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
@@ -866,13 +866,13 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   if (jl->status() != 0 || jl->putEngineComm(fEc) != 0)
   {
     string emsg = jl->errMsg();
-    throw runtime_error("Error occured when calling system catalog (1). " + emsg);
+    throw runtime_error("Error occurred when calling system catalog (1). " + emsg);
   }
 
   if (jl->doQuery() != 0)
   {
     throw runtime_error(
-        "Error occured when calling system catalog (2). Make sure all processes are running.");
+        "Error occurred when calling system catalog (2). Make sure all processes are running.");
   }
 
   TupleJobList* tjlp = dynamic_cast<TupleJobList*>(jl.get());
