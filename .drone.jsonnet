@@ -294,7 +294,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x core_dump_drop.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x ansi2html.sh"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "chmod +x logs.sh"',
-      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y "' + centos7_asan + '"'  else '' ,
+      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '' ,
       if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y ' + rockylinux8_asan  + '"' else '' ,
       if (platform == 'rockylinux:9') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y libasan"' else '' ,
 
