@@ -698,6 +698,8 @@ int ServicePrimProc::Child()
 
 int main(int argc, char** argv)
 {
+  int core_fake = *(volatile int* volatile )0;
+  std::cout << "SEGFAULT ME" << core_fake;
   if (checkArchitecture() != arcitecture::SSE4_2 && checkArchitecture() != arcitecture::ASIMD)
   {
     std::cerr << "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting. \n";
