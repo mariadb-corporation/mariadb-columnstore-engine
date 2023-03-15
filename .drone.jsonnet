@@ -32,7 +32,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DWITH_COREDUMPS=OFF -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON ' +
                    '-DWITH_COLUMNSTORE_REPORT_PATH=/core -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON';
 
-local clang_version = '13';
+local clang_version = '14';
 local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
@@ -65,7 +65,7 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++ libasan';
 
 
-local clang_packages = "clang-" + clang_version + ' libclang-common-' + clang_version + '14-dev';
+local clang_packages = "clang-" + clang_version + ' libclang-common-' + clang_version + '-dev';
 local debian11_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-" + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y " + clang_packages + ' && ' + clang_update_alternatives;
 
