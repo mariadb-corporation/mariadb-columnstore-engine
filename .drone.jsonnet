@@ -65,7 +65,7 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++ libasan';
 
 
-local clang_packages = "clang-" + clang_version + ' libclang-common-' + clang_version + '-dev';
+local clang_packages = "clang-%(clang_version) libclang-common-%(clang_version)-dev llvm-%(clang_version) llvm-%(clang_version)-dev llvm-%(clang_version)-runtime" % {"clang_version" : 14};
 local debian11_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-" + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y " + clang_packages + ' && ' + clang_update_alternatives;
 
