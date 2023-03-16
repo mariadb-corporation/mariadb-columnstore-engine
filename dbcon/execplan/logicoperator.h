@@ -26,10 +26,12 @@
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
+#include <unordered_set>
 
 //#include "expressionparser.h"
 #include "operator.h"
 #include "parsetree.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -168,6 +170,15 @@ class LogicOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
     fResult.boolVal = getBoolVal(row, isNull, lop, rop);
+  }
+
+  inline virtual std::string toCppCode(includeSet& includes) const
+  {
+    includes.insert("logicoperator.h");
+    std::stringstream ss;
+    ss << "LogicOperator(" << data() << ")";
+
+    return ss.str();
   }
 
  private:

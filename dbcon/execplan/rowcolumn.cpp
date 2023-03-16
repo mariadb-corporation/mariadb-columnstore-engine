@@ -190,4 +190,17 @@ const string SubSelect::toString() const
   return string(">SubSelect<");
 }
 
+string RowColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("rowcloumn.h");
+  stringstream ss;
+
+  ss << "RowColumn({";
+  for (size_t i = 0; i < fColumnVec.size() - 1; i++)
+    ss << "boost::make_shared(" << fColumnVec.at(i)->toCppCode(includes) << "), ";
+  ss << "boost::make_shared(" << fColumnVec.back()->toCppCode(includes) << ")})";
+
+  return ss.str();
+}
+
 }  // namespace execplan

@@ -28,9 +28,11 @@
 #include <iosfwd>
 #include <cmath>
 #include <sstream>
+#include <unordered_set>
 
 #include "operator.h"
 #include "parsetree.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -201,6 +203,15 @@ class ArithmeticOperator : public Operator
   inline void setOverflowCheck(bool check)
   {
     fDecimalOverflowCheck = check;
+  }
+
+  inline virtual std::string toCppCode(includeSet& includes) const
+  {
+    includes.insert("arithmeticoperator.h");
+    std::stringstream ss;
+    ss << "ArithmeticOperator(" << data() << ")";
+
+    return ss.str();
   }
 
  private:

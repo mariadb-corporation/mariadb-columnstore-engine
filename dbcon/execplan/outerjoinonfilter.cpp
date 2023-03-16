@@ -66,6 +66,17 @@ const string OuterJoinOnFilter::toString() const
   return oss.str();
 }
 
+string OuterJoinOnFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("outerjoinonfilter.h");
+  stringstream ss;
+
+  ss << "OuterJoinOnFilter(boost::make_shared(" << fPt->toCppCode(includes) << "))";
+
+  return ss.str();
+
+}
+
 ostream& operator<<(ostream& output, const OuterJoinOnFilter& rhs)
 {
   output << rhs.toString();

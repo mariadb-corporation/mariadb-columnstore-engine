@@ -24,12 +24,14 @@
 /** @file */
 
 #pragma once
+#include <cstdint>
 #include <string>
 #include <iosfwd>
 #include <vector>
 
 #include "returnedcolumn.h"
 #include "functor.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -173,6 +175,8 @@ class FunctionColumn : public ReturnedColumn
    *         false, if multiple tables are involved in the function
    */
   virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   /**

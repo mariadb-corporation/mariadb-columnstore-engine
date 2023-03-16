@@ -275,6 +275,17 @@ const string SimpleColumn::toString() const
   return output.str();
 }
 
+string SimpleColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplecolumn.h");
+  stringstream ss;
+
+  ss << "SimpleColumn(" << fSchemaName << ", " << fTableName << ", " << fColumnName << ", " << sessionID()
+     << ", " << fisColumnStore << ")";
+
+  return ss.str();
+}
+
 void SimpleColumn::parse(const string& token)
 {
   // get schema name, table name and column name for token.
@@ -378,7 +389,6 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint32_t&)fSequence;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fisColumnStore);
 }
-
 
 bool SimpleColumn::operator==(const SimpleColumn& t) const
 {

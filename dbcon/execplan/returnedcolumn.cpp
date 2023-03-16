@@ -22,6 +22,7 @@
  ***********************************************************************/
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "bytestream.h"
@@ -240,6 +241,16 @@ const string ReturnedColumn::toString() const
   ostringstream oss;
   oss << ">ReturnedColumn " << fJoinInfo << "<" << endl;
   return oss.str();
+}
+
+string ReturnedColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("returnedcolumn.h");
+  stringstream ss;
+
+  ss << "ReturnedColumn(" << fData << ")";
+
+  return ss.str();
 }
 
 // All columns that may have simple column added to the list need to implement

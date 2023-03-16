@@ -27,6 +27,8 @@
 
 #include <string>
 #include <sstream>
+#include <unordered_set>
+#include "treenode.h"
 #if   defined(__FreeBSD__)
 #include <cstdlib>
 #else
@@ -109,6 +111,15 @@ class PredicateOperator : public Operator
   using Operator::getBoolVal;
   virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop);
   void setOpType(Type& l, Type& r);
+
+  inline virtual std::string toCppCode(includeSet& includes) const
+  {
+    includes.insert("predicateoperator.h");
+    std::stringstream ss;
+    ss << "PredicateOperator(" << data() << ")";
+
+    return ss.str();
+  }
 
  private:
   inline bool numericCompare(const IDB_Decimal& op1, const IDB_Decimal& op2);

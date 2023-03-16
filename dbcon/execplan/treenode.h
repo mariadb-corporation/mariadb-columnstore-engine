@@ -22,10 +22,13 @@
 
 #pragma once
 
+#include <ostream>
 #include <string>
 #include <iostream>
 #include <cmath>
 #include <boost/shared_ptr.hpp>
+#include <vector>
+#include <unordered_set>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,6 +59,7 @@ namespace execplan
 typedef execplan::CalpontSystemCatalog::ColType Type;
 typedef datatypes::Decimal IDB_Decimal;
 
+using includeSet = std::unordered_set<std::string>;
 /**
  * @brief IDB_Regex struct
  *
@@ -209,6 +213,7 @@ class TreeNode
    */
   virtual bool operator!=(const TreeNode* t) const = 0;
 
+  virtual std::string toCppCode(includeSet& includes) const = 0;
   // derivedTable mutator and accessor
   virtual const std::string& derivedTable() const
   {

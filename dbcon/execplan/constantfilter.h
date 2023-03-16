@@ -113,7 +113,7 @@ class ConstantFilter : public Filter
 
   // virtual const std::string data() const;
   virtual const std::string toString() const;
-
+  virtual std::string toCppCode(includeSet& includes) const override;
   /**
    * The serialization interface
    */

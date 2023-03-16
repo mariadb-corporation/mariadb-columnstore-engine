@@ -19,10 +19,12 @@
 
 #pragma once
 #include <string>
+#include <unordered_set>
 
 #include "calpontselectexecutionplan.h"
 #include "aggregatecolumn.h"
 #include "mcsv1_udaf.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -118,6 +120,8 @@ class UDAFColumn : public AggregateColumn
    */
   using AggregateColumn::operator!=;
   virtual bool operator!=(const UDAFColumn& t) const;
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   mcsv1sdk::mcsv1Context context;

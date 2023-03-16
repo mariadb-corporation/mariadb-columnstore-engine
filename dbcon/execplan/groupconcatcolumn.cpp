@@ -80,6 +80,15 @@ const string GroupConcatColumn::toString() const
   return output.str();
 }
 
+string GroupConcatColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("groupconcatcolumn.h");
+  stringstream ss;
+  ss << "GroupConcatColumn(" << sessionID() << ")";
+
+  return ss.str();
+}
+
 ostream& operator<<(ostream& output, const GroupConcatColumn& rhs)
 {
   output << rhs.toString();

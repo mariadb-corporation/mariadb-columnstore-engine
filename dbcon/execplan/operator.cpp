@@ -22,10 +22,12 @@
  ***********************************************************************/
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include "bytestream.h"
 #include "operator.h"
 #include "objectreader.h"
+#include "treenode.h"
 
 using namespace std;
 
@@ -175,6 +177,15 @@ const string Operator::toString() const
   oss << " "
       << "opType=" << fOperationType.colDataType;
   return oss.str();
+}
+
+string Operator::toCppCode(includeSet& includes) const
+{
+  includes.insert("operator.h");
+  stringstream ss;
+  ss << "Operator(" << fData << ")";
+
+  return ss.str();
 }
 
 Operator* Operator::opposite() const

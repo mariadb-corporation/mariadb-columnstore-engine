@@ -25,13 +25,16 @@
 
 #pragma once
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include "simplecolumn.h"
 #include "objectreader.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
 #include "mcs_decimal.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -82,9 +85,22 @@ class SimpleColumn_UINT : public SimpleColumn
   virtual void unserialize(messageqcpp::ByteStream&);
   uint64_t fNullVal;
 
+  virtual std::string toCppCode(includeSet& includes) const override;
+
  private:
   void setNullVal();
 };
+
+template <int len>
+std::string SimpleColumn_UINT<len>::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplecolumn_uint.h");
+  std::stringstream ss;
+  ss << "SimpleColumn_UINT<" << len << ">(" << fSchemaName << ", " << fTableName << ", " <<
+    fColumnName << ", " << fisColumnStore << ", " << sessionID() << ")";
+
+  return ss.str();
+}
 
 template <int len>
 SimpleColumn_UINT<len>::SimpleColumn_UINT() : SimpleColumn()

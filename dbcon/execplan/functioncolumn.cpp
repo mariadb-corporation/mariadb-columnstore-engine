@@ -134,6 +134,18 @@ const string FunctionColumn::toString() const
   return output.str();
 }
 
+string FunctionColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("functioncolumn.h");
+  stringstream ss;
+
+  auto fFuncParmsInString = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
+
+  ss << "FunctionColumn(" << fFunctionName << ", " << fFuncParmsInString << ", " << sessionID() << ")";
+
+  return ss.str();
+}
+
 const string FunctionColumn::data() const
 {
   return fData;

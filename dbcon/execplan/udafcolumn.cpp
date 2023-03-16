@@ -74,6 +74,15 @@ const string UDAFColumn::toString() const
   return output.str();
 }
 
+string UDAFColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("udafcolumn.h");
+  stringstream ss;
+  ss << "UDAFColumn(" << sessionID() << ")";
+
+  return ss.str();
+}
+
 ostream& operator<<(ostream& output, const UDAFColumn& rhs)
 {
   output << rhs.toString();

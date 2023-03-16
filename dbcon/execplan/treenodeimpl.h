@@ -119,6 +119,7 @@ class TreeNodeImpl : public TreeNode
    */
   bool operator!=(const TreeNodeImpl& t) const;
 
+  virtual std::string toCppCode(includeSet& includes) const override;
  private:
   // default okay
   // TreeNodeImpl& operator=(const TreeNodeImpl& rhs);

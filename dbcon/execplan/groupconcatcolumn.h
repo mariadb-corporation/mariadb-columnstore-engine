@@ -24,9 +24,11 @@
 
 #pragma once
 #include <string>
+#include <unordered_set>
 
 #include "calpontselectexecutionplan.h"
 #include "aggregatecolumn.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -134,6 +136,8 @@ class GroupConcatColumn : public AggregateColumn
    */
   using AggregateColumn::operator!=;
   virtual bool operator!=(const GroupConcatColumn& t) const;
+
+  virtual string toCppCode(includeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;

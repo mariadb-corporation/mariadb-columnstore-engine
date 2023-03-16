@@ -25,13 +25,16 @@
 /** @file */
 
 #pragma once
+#include <cstdint>
 #include <string>
 #include <iosfwd>
+#include <unordered_set>
 #include <vector>
 
 #include "returnedcolumn.h"
 #include "functor.h"
 #include "mcsv1_udaf.h"
+#include "treenode.h"
 #include "wf_frame.h"
 
 namespace messageqcpp
@@ -55,6 +58,9 @@ class WindowFunctionColumn : public ReturnedColumn
  public:
   WindowFunctionColumn();
   WindowFunctionColumn(const std::string& functionName, const uint32_t sessionID = 0);
+  WindowFunctionColumn(const std::string& functionName, const std::vector<SRCP>& functionParms,
+                       const std::vector<SRCP>& partitions, WF_OrderBy& orderby,
+                       const uint32_t sessionID = 0);
   WindowFunctionColumn(const WindowFunctionColumn& rhs, const uint32_t sessionID = 0);
   virtual ~WindowFunctionColumn()
   {
@@ -119,6 +125,7 @@ class WindowFunctionColumn : public ReturnedColumn
   /** output the function for debug purpose */
   const std::string toString() const;
 
+  virtual std::string toCppCode(includeSet& includes) const override;
   /**
    * The serialization interface
    */

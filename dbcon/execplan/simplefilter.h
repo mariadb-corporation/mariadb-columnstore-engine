@@ -31,6 +31,7 @@
 #include "filter.h"
 #include "predicateoperator.h"
 #include "returnedcolumn.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -220,6 +221,8 @@ class SimpleFilter : public Filter
   virtual void replaceRealCol(std::vector<SRCP>&);
 
   static std::string escapeString(const std::string& input);
+
+  virtual string toCppCode(includeSet& includes) const override;
 
  private:
   SOP fOp;               /// operator

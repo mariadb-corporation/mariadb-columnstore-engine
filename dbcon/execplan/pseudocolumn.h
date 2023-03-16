@@ -25,6 +25,7 @@
 #pragma once
 #include <string>
 #include "simplecolumn.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -140,6 +141,8 @@ class PseudoColumn : public SimpleColumn
   bool operator!=(const PseudoColumn& t) const;
 
   static uint32_t pseudoNameToType(std::string& name);
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   /**

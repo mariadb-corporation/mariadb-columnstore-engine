@@ -33,6 +33,7 @@
 #include "joblisttypes.h"
 #include "rowgroup.h"
 #include "dataconvert.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -82,9 +83,22 @@ class SimpleColumn_Decimal : public SimpleColumn
   virtual void unserialize(messageqcpp::ByteStream&);
   uint64_t fNullVal;
 
+  virtual std::string toCppCode(includeSet& includes) const override;
+
  private:
   void setNullVal();
 };
+
+template <int len>
+std::string SimpleColumn_Decimal<len>::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplecolumn_decimal.h");
+  std::stringstream ss;
+  ss << "SimpleColumn_Decimal<" << len << ">(" << fSchemaName << ", " << fTableName << ", " <<
+    fColumnName << ", " << fisColumnStore << ", " << sessionID() << ")";
+
+  return ss.str();
+}
 
 template <int len>
 SimpleColumn_Decimal<len>::SimpleColumn_Decimal() : SimpleColumn()

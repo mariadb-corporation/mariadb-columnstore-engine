@@ -65,6 +65,12 @@ const string SimpleScalarFilter::toString() const
   return oss.str();
 }
 
+string SimpleScalarFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplescalarfilter.h");
+  return "SimpleScalarFilter()";
+}
+
 ostream& operator<<(ostream& output, const SimpleScalarFilter& rhs)
 {
   output << rhs.toString();

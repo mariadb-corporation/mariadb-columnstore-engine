@@ -29,6 +29,7 @@
 #include "returnedcolumn.h"
 #include "operator.h"
 #include "calpontselectexecutionplan.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -108,7 +109,7 @@ class SelectFilter : public Filter
   }
 
   virtual const std::string toString() const;
-
+  virtual std::string toCppCode(includeSet& includes) const override;
   virtual inline const std::string data() const
   {
     return fData;

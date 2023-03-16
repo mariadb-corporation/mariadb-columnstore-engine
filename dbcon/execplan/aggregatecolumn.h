@@ -28,6 +28,7 @@
 
 #include "calpontselectexecutionplan.h"
 #include "returnedcolumn.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -221,6 +222,7 @@ class AggregateColumn : public ReturnedColumn
    * Overloaded stream operator
    */
   virtual const std::string toString() const;
+  virtual std::string toCppCode(includeSet& includes) const override;
 
   /**
    * Serialize interface

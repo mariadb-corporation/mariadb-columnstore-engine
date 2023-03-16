@@ -22,7 +22,9 @@
 /** @file */
 
 #pragma once
+#include <cstdint>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -58,7 +60,7 @@ class RowColumn : public ReturnedColumn
    */
   RowColumn(const uint32_t sessionID = 0);
   RowColumn(const RowColumn& rhs, const uint32_t sessionID = 0);
-
+  RowColumn(std::vector<SRCP> columnVec, const uint32_t sessionID = 0);
   /**
    * Destructor
    */
@@ -139,6 +141,8 @@ class RowColumn : public ReturnedColumn
   {
     return false;
   }
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   /**

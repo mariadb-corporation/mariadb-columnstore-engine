@@ -30,6 +30,7 @@
 
 #include "returnedcolumn.h"
 #include "expressionparser.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -182,6 +183,8 @@ class ArithmeticColumn : public ReturnedColumn
    *         empty string "", if multiple tables are involved in this func
    */
   virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   std::string fTableAlias;  // table alias for this column

@@ -25,6 +25,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 using namespace std;
 
 #include "returnedcolumn.h"
@@ -248,6 +249,16 @@ const string SimpleFilter::toString() const
   output << "  " << *fOp;
   output << "  " << *fRhs;
   return output.str();
+}
+
+string SimpleFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplefilter.h");
+  stringstream ss;
+
+  ss << "SimpleFilter(" << data() << ")";
+
+  return ss.str();
 }
 
 void SimpleFilter::parse(string sql, std::optional<ForTestPurposesWithoutColumnsOIDS> testFlag)

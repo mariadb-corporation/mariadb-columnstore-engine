@@ -30,6 +30,7 @@
 
 #include "returnedcolumn.h"
 #include "functor.h"
+#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -113,6 +114,8 @@ class IntervalColumn : public ReturnedColumn
   {
     return false;
   }
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
  private:
   /**

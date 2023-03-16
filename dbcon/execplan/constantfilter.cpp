@@ -122,6 +122,12 @@ const string ConstantFilter::toString() const
   return output.str();
 }
 
+string ConstantFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("constantfilter.h");
+  return "ConstantFilter()"; // There should be a better way
+}
+
 ostream& operator<<(ostream& output, const ConstantFilter& rhs)
 {
   output << rhs.toString();

@@ -168,4 +168,13 @@ bool JsonArrayAggColumn::operator!=(const TreeNode* t) const
   return !(*this == t);
 }
 
+string JsonArrayAggColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("jsonarrayaggcolumn.h");
+  stringstream ss;
+  ss << "JsonArrayAggColumn(" << sessionID() << ")";
+
+  return ss.str();
+}
+
 }  // namespace execplan

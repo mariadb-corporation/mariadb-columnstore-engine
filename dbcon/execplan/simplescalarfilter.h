@@ -23,6 +23,7 @@
 /** @file */
 
 #pragma once
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <ostream>
@@ -31,6 +32,7 @@
 #include "returnedcolumn.h"
 #include "operator.h"
 #include "calpontselectexecutionplan.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -153,6 +155,8 @@ class SimpleScalarFilter : public Filter
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
   bool operator!=(const SimpleScalarFilter& t) const;
+
+  virtual string toCppCode(includeSet& includes) const override;
 
  private:
   // default okay?

@@ -72,6 +72,12 @@ const string SelectFilter::toString() const
   return oss.str();
 }
 
+string SelectFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("selectfilter.h");
+  return "SelectFilter()";
+}
+
 ostream& operator<<(ostream& output, const SelectFilter& rhs)
 {
   output << rhs.toString();

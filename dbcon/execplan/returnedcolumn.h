@@ -23,6 +23,7 @@
 /** @file */
 
 #pragma once
+#include <cstdint>
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -240,7 +241,7 @@ class ReturnedColumn : public TreeNode
   virtual void unserialize(messageqcpp::ByteStream&);
 
   virtual const std::string toString() const;
-
+  virtual std::string toCppCode(includeSet& includes) const override;
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.

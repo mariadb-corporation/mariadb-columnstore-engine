@@ -29,6 +29,7 @@
 #include "objectreader.h"
 
 #include "liboamcpp.h"
+#include "treenode.h"
 
 using namespace oam;
 

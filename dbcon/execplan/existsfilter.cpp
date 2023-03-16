@@ -61,6 +61,12 @@ const string ExistsFilter::toString() const
   return oss.str();
 }
 
+string ExistsFilter::toCppCode(includeSet& includes) const
+{
+  includes.insert("existsfilter.h");
+  return "ExistsFilter()";
+}
+
 ostream& operator<<(ostream& output, const ExistsFilter& rhs)
 {
   output << rhs.toString();

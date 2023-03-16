@@ -22,9 +22,14 @@
  *
  ***********************************************************************/
 
+#include <cstddef>
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
+#include "returnedcolumn.h"
+#include "treenode.h"
+#include "wf_frame.h"
 using namespace std;
 
 #include <boost/tokenizer.hpp>
@@ -51,7 +56,6 @@ using namespace rowgroup;
 
 #include "joblisttypes.h"
 using namespace joblist;
-
 
 namespace execplan
 {
@@ -233,7 +237,17 @@ WindowFunctionColumn::WindowFunctionColumn(const WindowFunctionColumn& rhs, cons
  , fTimeZone(rhs.timeZone())
 {
 }
-
+WindowFunctionColumn::WindowFunctionColumn(const std::string& functionName,
+                                           const std::vector<SRCP>& functionParms,
+                                           const std::vector<SRCP>& partitions, WF_OrderBy& orderby,
+                                           const uint32_t sessionID)
+ : ReturnedColumn(sessionID)
+ , fFunctionName(functionName)
+ , fFunctionParms(functionParms)
+ , fPartitions(partitions)
+ , fOrderBy(orderby)
+{
+}
 const string WindowFunctionColumn::toString() const
 {
   ostringstream output;
@@ -266,6 +280,26 @@ const string WindowFunctionColumn::toString() const
 
   return output.str();
 }
+
+string WindowFunctionColumn::toCppCode(includeSet& includes) const
+{
+  includes.insert("windowfunctioncolumn.h");
+  stringstream ss;
+  ss << "WindowFunctionColumn(" << fFunctionName << ", {";
+  for (size_t i = 0; i < fFunctionParms.size() - 1; i++)
+    ss << "boost::make_shared(" << fFunctionParms.at(i)->toCppCode(includes) << "), ";
+  ss << "boost::make_shared(" << fFunctionParms.back()->toCppCode(includes) << ")}, {";
+  for (size_t i = 0; i < fPartitions.size() - 1; i++)
+    ss << "boost::make_shared(" << fPartitions.at(i)->toCppCode(includes) << "), ";
+  ss << "boost::make_shared(" << fPartitions.back()->toCppCode(includes) << ")}, ";
+  ss << "WF_OrderBy({";
+  for (size_t i = 0; i < fOrderBy.fOrders.size() - 1; i++)
+    ss << "boost::make_shared(" << fOrderBy.fOrders.at(i)->toCppCode(includes) << "), ";
+  ss << "boost::make_shared(" << fOrderBy.fOrders.back()->toCppCode(includes) << ")}))";
+
+  return ss.str();
+}
+
 
 void WindowFunctionColumn::serialize(messageqcpp::ByteStream& b) const
 {

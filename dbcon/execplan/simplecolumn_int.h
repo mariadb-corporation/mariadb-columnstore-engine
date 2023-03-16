@@ -32,6 +32,7 @@
 #include "joblisttypes.h"
 #include "rowgroup.h"
 #include "mcs_decimal.h"
+#include "treenode.h"
 
 /**
  * Namespace
@@ -82,9 +83,22 @@ class SimpleColumn_INT : public SimpleColumn
   virtual void unserialize(messageqcpp::ByteStream&);
   uint64_t fNullVal;
 
+  virtual std::string toCppCode(includeSet& includes) const override;
+
  private:
   void setNullVal();
 };
+
+template <int len>
+std::string SimpleColumn_INT<len>::toCppCode(includeSet& includes) const
+{
+  includes.insert("simplecolumn_int.h");
+  std::stringstream ss;
+  ss << "SimpleColumn_INT<" << len << ">(" << fSchemaName << ", " << fTableName << ", " <<
+    fColumnName << ", " << fisColumnStore << ", " << sessionID() << ")";
+
+  return ss.str();
+}
 
 template <int len>
 SimpleColumn_INT<len>::SimpleColumn_INT() : SimpleColumn()

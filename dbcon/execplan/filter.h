@@ -25,6 +25,7 @@
 #pragma once
 #include <string>
 #include <iosfwd>
+#include <unordered_set>
 
 #include "treenode.h"
 
@@ -76,6 +77,8 @@ class Filter : public TreeNode
    * Operations
    */
   virtual const std::string toString() const;
+
+  virtual std::string toCppCode(includeSet& includes) const override;
 
   virtual const std::string data() const
   {
