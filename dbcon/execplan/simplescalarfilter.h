@@ -28,6 +28,7 @@
 #include <vector>
 #include <ostream>
 
+#include "boost/smart_ptr/make_shared_array.hpp"
 #include "filter.h"
 #include "returnedcolumn.h"
 #include "operator.h"
@@ -62,7 +63,7 @@ class SimpleScalarFilter : public Filter
    * pass all parts in ctor
    * @note SimpleFilter takes ownership of all these pointers
    */
-  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, SCSEP& sub);
+  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, const SCSEP& sub = boost::make_shared<CalpontSelectExecutionPlan>());
 
   /**
    * Destructors
@@ -156,7 +157,7 @@ class SimpleScalarFilter : public Filter
    */
   bool operator!=(const SimpleScalarFilter& t) const;
 
-  virtual string toCppCode(includeSet& includes) const override;
+  virtual string toCppCode(IncludeSet& includes) const override;
 
  private:
   // default okay?

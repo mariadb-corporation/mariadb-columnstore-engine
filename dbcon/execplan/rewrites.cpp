@@ -357,10 +357,11 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name, std::s
     dumpfolder = startup::StartUp::tmpDir();
   }
 
-  std::ofstream before(dumpfolder + "filters." + name + ".data");
+  std::ofstream before(dumpfolder + "filters" + name + ".data");
   before << beforetree;
-  std::string dotname = dumpfolder + "filters." + name + ".dot";
+  std::string dotname = dumpfolder + "filters" + name + ".dot";
   filters->drawTree(dotname);
+  filters->codeToFile(dumpfolder + "filters" + name + ".h");
   std::string dotInvoke = "dot -Tpng ";
   std::string convert = dotInvoke + dotname + " -o " + dotname + ".png";
   [[maybe_unused]] auto _ = std::system(convert.c_str());

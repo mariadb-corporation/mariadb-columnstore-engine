@@ -59,7 +59,7 @@ class SelectFilter : public Filter
    * pass all parts in ctor
    * @note SimpleFilter takes ownership of all these pointers
    */
-  SelectFilter(const std::vector<SRCP>& cols, const SOP& op, SCSEP& sub, bool correlated = false);
+  SelectFilter(const std::vector<SRCP>& cols, const SOP& op, const SCSEP& sub, bool correlated = false);
 
   /**
    * Destructors
@@ -109,7 +109,7 @@ class SelectFilter : public Filter
   }
 
   virtual const std::string toString() const;
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   virtual inline const std::string data() const
   {
     return fData;

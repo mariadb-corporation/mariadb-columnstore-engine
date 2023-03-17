@@ -115,7 +115,7 @@ class IntervalColumn : public ReturnedColumn
     return false;
   }
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**

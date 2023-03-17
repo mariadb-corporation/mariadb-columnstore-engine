@@ -59,7 +59,7 @@ namespace execplan
 typedef execplan::CalpontSystemCatalog::ColType Type;
 typedef datatypes::Decimal IDB_Decimal;
 
-using includeSet = std::unordered_set<std::string>;
+using IncludeSet = std::unordered_set<std::string>;
 /**
  * @brief IDB_Regex struct
  *
@@ -213,7 +213,7 @@ class TreeNode
    */
   virtual bool operator!=(const TreeNode* t) const = 0;
 
-  virtual std::string toCppCode(includeSet& includes) const = 0;
+  virtual std::string toCppCode(IncludeSet& includes) const = 0;
   // derivedTable mutator and accessor
   virtual const std::string& derivedTable() const
   {

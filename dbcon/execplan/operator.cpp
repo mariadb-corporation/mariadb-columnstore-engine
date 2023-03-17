@@ -179,11 +179,11 @@ const string Operator::toString() const
   return oss.str();
 }
 
-string Operator::toCppCode(includeSet& includes) const
+string Operator::toCppCode(IncludeSet& includes) const
 {
   includes.insert("operator.h");
   stringstream ss;
-  ss << "Operator(" << fData << ")";
+  ss << "Operator(" << std::quoted(fData) << ")";
 
   return ss.str();
 }

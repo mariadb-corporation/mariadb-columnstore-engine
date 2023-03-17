@@ -78,7 +78,7 @@ class Filter : public TreeNode
    */
   virtual const std::string toString() const;
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
   virtual const std::string data() const
   {
@@ -153,11 +153,6 @@ class Filter : public TreeNode
 
  protected:
   uint64_t fCardinality;
-
- private:
-  // default okay
-  // Filter& operator=(const Filter& rhs);
-
   std::string fData;
 };
 

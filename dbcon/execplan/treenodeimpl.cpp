@@ -64,12 +64,12 @@ const string TreeNodeImpl::toString() const
   return string(">TreeNodeImpl<");
 }
 
-std::string TreeNodeImpl::toCppCode(includeSet& includes) const
+std::string TreeNodeImpl::toCppCode(IncludeSet& includes) const
 {
  includes.insert("treenodeimpl.h");
  stringstream ss;
 
- ss << "TreeNodeImpl(" << fData << ")";
+ ss << "TreeNodeImpl(" << std::quoted(fData) << ")";
 
  return ss.str();
 }

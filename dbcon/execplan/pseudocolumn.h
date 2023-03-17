@@ -142,7 +142,7 @@ class PseudoColumn : public SimpleColumn
 
   static uint32_t pseudoNameToType(std::string& name);
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**

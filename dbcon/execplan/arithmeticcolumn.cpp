@@ -309,11 +309,11 @@ const string ArithmeticColumn::toString() const
   return oss.str();
 }
 
-string ArithmeticColumn::toCppCode(includeSet& includes) const
+string ArithmeticColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("arithmeticcolumn.h");
   stringstream ss;
-  ss << "ArithmeticColumn(" << fData << ", " << sessionID() << ")";
+  ss << "ArithmeticColumn(" << std::quoted(fData) << ", " << sessionID() << ")";
 
   return ss.str();
 }

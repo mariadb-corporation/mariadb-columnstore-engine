@@ -151,13 +151,13 @@ const string AggregateColumn::toString() const
   return output.str();
 }
 
-string AggregateColumn::toCppCode(includeSet& includes) const
+string AggregateColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("aggregatecolumn.h");
   stringstream ss;
   auto fContent = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
 
-  ss << "AggregateColumn(" << fFunctionName << ", " << fContent << ", " << sessionID() << ")";
+  ss << "AggregateColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fContent) << ", " << sessionID() << ")";
 
   return ss.str();
 }

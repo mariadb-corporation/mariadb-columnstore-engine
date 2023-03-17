@@ -275,12 +275,12 @@ const string SimpleColumn::toString() const
   return output.str();
 }
 
-string SimpleColumn::toCppCode(includeSet& includes) const
+string SimpleColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplecolumn.h");
   stringstream ss;
 
-  ss << "SimpleColumn(" << fSchemaName << ", " << fTableName << ", " << fColumnName << ", " << sessionID()
+  ss << "SimpleColumn(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " << std::quoted(fColumnName) << ", " << sessionID()
      << ", " << fisColumnStore << ")";
 
   return ss.str();

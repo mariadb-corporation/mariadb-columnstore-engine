@@ -222,7 +222,7 @@ class AggregateColumn : public ReturnedColumn
    * Overloaded stream operator
    */
   virtual const std::string toString() const;
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
   /**
    * Serialize interface

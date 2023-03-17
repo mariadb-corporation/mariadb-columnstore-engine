@@ -83,19 +83,19 @@ class SimpleColumn_INT : public SimpleColumn
   virtual void unserialize(messageqcpp::ByteStream&);
   uint64_t fNullVal;
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   void setNullVal();
 };
 
 template <int len>
-std::string SimpleColumn_INT<len>::toCppCode(includeSet& includes) const
+std::string SimpleColumn_INT<len>::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplecolumn_int.h");
   std::stringstream ss;
-  ss << "SimpleColumn_INT<" << len << ">(" << fSchemaName << ", " << fTableName << ", " <<
-    fColumnName << ", " << fisColumnStore << ", " << sessionID() << ")";
+  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " <<
+    std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
 
   return ss.str();
 }

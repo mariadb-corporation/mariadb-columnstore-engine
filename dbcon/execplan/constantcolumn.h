@@ -144,7 +144,7 @@ class ConstantColumn : public ReturnedColumn
    */
   virtual const std::string toString() const;
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy

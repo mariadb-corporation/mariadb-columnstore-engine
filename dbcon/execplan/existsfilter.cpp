@@ -61,10 +61,14 @@ const string ExistsFilter::toString() const
   return oss.str();
 }
 
-string ExistsFilter::toCppCode(includeSet& includes) const
+string ExistsFilter::toCppCode(IncludeSet& includes) const
 {
   includes.insert("existsfilter.h");
-  return "ExistsFilter()";
+  stringstream ss;
+  ss << "ExistsFilter(boost::shared_ptr<CalpontSelectExecutionPlan>(), " << fNotExists << ", " << fCorrelated
+     << ")";
+
+  return ss.str();
 }
 
 ostream& operator<<(ostream& output, const ExistsFilter& rhs)

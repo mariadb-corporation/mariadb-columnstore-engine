@@ -133,11 +133,11 @@ const string PseudoColumn::toString() const
   return output.str();
 }
 
-string PseudoColumn::toCppCode(includeSet& includes) const
+string PseudoColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("pseudocolumn.h");
   stringstream ss;
-  ss << "PseudoColumn(" << fSchemaName << ", " << fTableName << ", " << fisColumnStore << ", " << fColumnName
+  ss << "PseudoColumn(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " << fisColumnStore << ", " << std::quoted(fColumnName)
      << ", " << fPseudoType << ", " << sessionID() << ")";
 
   return ss.str();

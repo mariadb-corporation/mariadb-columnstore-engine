@@ -38,7 +38,7 @@ SimpleScalarFilter::SimpleScalarFilter()
 {
 }
 
-SimpleScalarFilter::SimpleScalarFilter(const vector<SRCP>& cols, const SOP& op, SCSEP& sub)
+SimpleScalarFilter::SimpleScalarFilter(const vector<SRCP>& cols, const SOP& op, const SCSEP& sub)
  : fCols(cols), fOp(op), fSub(sub), fData("simple scalar")
 {
 }
@@ -65,10 +65,20 @@ const string SimpleScalarFilter::toString() const
   return oss.str();
 }
 
-string SimpleScalarFilter::toCppCode(includeSet& includes) const
+string SimpleScalarFilter::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplescalarfilter.h");
-  return "SimpleScalarFilter()";
+  stringstream ss;
+  ss << "SimpleScalarFilter(std::vector<SRCP>{";
+  if (!fCols.empty())
+  {
+    for (size_t i = 0; i < fCols.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fCols.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fCols.back()->toCppCode(includes) << ")";
+  }
+  ss << "}, ";
+  ss << "boost::shared_ptr<Operator>(new " << fOp->toCppCode(includes) << "))";
+  return ss.str();
 }
 
 ostream& operator<<(ostream& output, const SimpleScalarFilter& rhs)

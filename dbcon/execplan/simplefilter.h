@@ -222,7 +222,7 @@ class SimpleFilter : public Filter
 
   static std::string escapeString(const std::string& input);
 
-  virtual string toCppCode(includeSet& includes) const override;
+  virtual string toCppCode(IncludeSet& includes) const override;
 
  private:
   SOP fOp;               /// operator

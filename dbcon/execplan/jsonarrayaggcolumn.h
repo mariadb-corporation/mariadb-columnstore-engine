@@ -132,7 +132,7 @@ class JsonArrayAggColumn : public AggregateColumn
   using AggregateColumn::operator!=;
   virtual bool operator!=(const JsonArrayAggColumn& t) const;
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;

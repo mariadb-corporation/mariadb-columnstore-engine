@@ -172,11 +172,11 @@ class LogicOperator : public Operator
     fResult.boolVal = getBoolVal(row, isNull, lop, rop);
   }
 
-  inline virtual std::string toCppCode(includeSet& includes) const
+  inline virtual std::string toCppCode(IncludeSet& includes) const
   {
     includes.insert("logicoperator.h");
     std::stringstream ss;
-    ss << "LogicOperator(" << data() << ")";
+    ss << "LogicOperator(" << std::quoted(fData) << ")";
 
     return ss.str();
   }

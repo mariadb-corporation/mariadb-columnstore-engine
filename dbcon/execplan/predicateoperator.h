@@ -112,11 +112,11 @@ class PredicateOperator : public Operator
   virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop);
   void setOpType(Type& l, Type& r);
 
-  inline virtual std::string toCppCode(includeSet& includes) const
+  inline virtual std::string toCppCode(IncludeSet& includes) const
   {
     includes.insert("predicateoperator.h");
     std::stringstream ss;
-    ss << "PredicateOperator(" << data() << ")";
+    ss << "PredicateOperator(" << std::quoted(fData) << ")";
 
     return ss.str();
   }

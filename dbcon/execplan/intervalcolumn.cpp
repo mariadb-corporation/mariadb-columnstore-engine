@@ -67,12 +67,12 @@ const string IntervalColumn::toString() const
   return output.str();
 }
 
-string IntervalColumn::toCppCode(includeSet& includes) const
+string IntervalColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("intervalcolumn.h");
   stringstream ss;
 
-  ss << "IntervalColumn(boost::make_shared(" << fVal->toCppCode(includes) << "), " << fIntervalType << ")";
+  ss << "IntervalColumn(boost::shared_ptr<ReturnedColumn>(new " << fVal->toCppCode(includes) << "), " << fIntervalType << ")";
 
   return ss.str();
 }

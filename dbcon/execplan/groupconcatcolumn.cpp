@@ -80,7 +80,7 @@ const string GroupConcatColumn::toString() const
   return output.str();
 }
 
-string GroupConcatColumn::toCppCode(includeSet& includes) const
+string GroupConcatColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("groupconcatcolumn.h");
   stringstream ss;

@@ -190,16 +190,19 @@ const string SubSelect::toString() const
   return string(">SubSelect<");
 }
 
-string RowColumn::toCppCode(includeSet& includes) const
+string RowColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("rowcloumn.h");
   stringstream ss;
 
-  ss << "RowColumn({";
-  for (size_t i = 0; i < fColumnVec.size() - 1; i++)
-    ss << "boost::make_shared(" << fColumnVec.at(i)->toCppCode(includes) << "), ";
-  ss << "boost::make_shared(" << fColumnVec.back()->toCppCode(includes) << ")})";
-
+  ss << "RowColumn(std::vector<SRCP>{";
+  if (!fColumnVec.empty())
+  {
+    for (size_t i = 0; i < fColumnVec.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fColumnVec.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fColumnVec.back()->toCppCode(includes) << ")";
+  }
+  ss << "})";
   return ss.str();
 }
 

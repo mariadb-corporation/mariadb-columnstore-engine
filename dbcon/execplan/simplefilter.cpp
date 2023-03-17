@@ -251,12 +251,12 @@ const string SimpleFilter::toString() const
   return output.str();
 }
 
-string SimpleFilter::toCppCode(includeSet& includes) const
+string SimpleFilter::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplefilter.h");
   stringstream ss;
 
-  ss << "SimpleFilter(" << data() << ")";
+  ss << "SimpleFilter(" << std::quoted(data()) << ")";
 
   return ss.str();
 }

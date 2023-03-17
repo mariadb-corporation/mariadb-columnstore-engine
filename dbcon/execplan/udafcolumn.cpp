@@ -74,7 +74,7 @@ const string UDAFColumn::toString() const
   return output.str();
 }
 
-string UDAFColumn::toCppCode(includeSet& includes) const
+string UDAFColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("udafcolumn.h");
   stringstream ss;

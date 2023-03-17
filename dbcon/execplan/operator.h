@@ -139,7 +139,7 @@ class Operator : public TreeNode
    */
   virtual void reverseOp();
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  protected:
   std::string fData;

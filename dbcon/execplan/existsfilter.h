@@ -88,7 +88,7 @@ class ExistsFilter : public Filter
    */
   // virtual std::ostream& operator<< (std::ostream& output);
   virtual const std::string toString() const;
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */

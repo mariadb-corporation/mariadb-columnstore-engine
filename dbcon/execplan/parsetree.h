@@ -549,11 +549,13 @@ inline void ParseTree::drawTree(std::string filename)
   dotFile.close();
 }
 
-inline string ParseTree::toCppCode(unordered_set<string>& includes) const
+inline string ParseTree::toCppCode(IncludeSet& includes) const
 {
+  includes.insert("parsetree.h");
   std::stringstream ss;
-  ss << "ParseTree(" << data()->toCppCode(includes) << ", " << left()->toCppCode(includes) << ", "
-     << right()->toCppCode(includes) << ")";
+  ss << "ParseTree(" << (data() ? ("new " + data()->toCppCode(includes)) : "nullptr") << ", "
+     << (left() ? ("new " + left()->toCppCode(includes)) : "nullptr") << ", "
+     << (right() ? ("new " + right()->toCppCode(includes)) : "nullptr") << ")";
 
   return ss.str();
 }
@@ -561,12 +563,12 @@ inline string ParseTree::toCppCode(unordered_set<string>& includes) const
 inline void ParseTree::codeToFile(std::string filename) const
 {
   ofstream hFile(filename.c_str(), std::ios::out);
-  unordered_set<string> includes;
+  IncludeSet includes;
   auto result = toCppCode(includes);
   for (const auto& inc : includes)
-    hFile << inc << "\n";
-
-  hFile << "namespace execplan \n{" << result << "\n}";
+    hFile << "#include \"" << inc << "\"\n";
+  hFile << "\n";
+  hFile << "namespace execplan \n{ auto tree = " << result << ";\n}";
 
   hFile.close();
 }

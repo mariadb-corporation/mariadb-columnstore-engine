@@ -176,7 +176,7 @@ class FunctionColumn : public ReturnedColumn
    */
   virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**

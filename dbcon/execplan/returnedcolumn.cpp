@@ -21,6 +21,7 @@
  *
  ***********************************************************************/
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -243,12 +244,12 @@ const string ReturnedColumn::toString() const
   return oss.str();
 }
 
-string ReturnedColumn::toCppCode(includeSet& includes) const
+string ReturnedColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("returnedcolumn.h");
   stringstream ss;
 
-  ss << "ReturnedColumn(" << fData << ")";
+  ss << "ReturnedColumn(" << std::quoted(fData) << ")";
 
   return ss.str();
 }

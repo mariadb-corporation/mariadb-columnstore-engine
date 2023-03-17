@@ -125,7 +125,7 @@ class WindowFunctionColumn : public ReturnedColumn
   /** output the function for debug purpose */
   const std::string toString() const;
 
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */

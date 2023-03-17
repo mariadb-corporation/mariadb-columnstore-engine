@@ -168,7 +168,7 @@ bool JsonArrayAggColumn::operator!=(const TreeNode* t) const
   return !(*this == t);
 }
 
-string JsonArrayAggColumn::toCppCode(includeSet& includes) const
+string JsonArrayAggColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("jsonarrayaggcolumn.h");
   stringstream ss;

@@ -229,11 +229,11 @@ const string ConstantColumn::toString() const
   return oss.str();
 }
 
-std::string ConstantColumn::toCppCode(includeSet& includes) const
+std::string ConstantColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("constantcolumn.h");
   std::stringstream ss;
-  ss << "ConstantColumn(" << fConstval << ", " << fType << ", " << fData << ")";
+  ss << "ConstantColumn(" << std::quoted(fConstval) << ", " << fType << ", " << std::quoted(fData) << ")";
 
   return ss.str();
 }

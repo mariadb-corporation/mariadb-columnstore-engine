@@ -70,11 +70,11 @@ const string Filter::toString() const
   return string(">Filter<");
 }
 
-string Filter::toCppCode(includeSet& includes) const
+string Filter::toCppCode(IncludeSet& includes) const
 {
   includes.insert("filter.h");
   stringstream ss;
-  ss << "Filter(" << fData << ")";
+  ss << "Filter(" << std::quoted(fData) << ")";
 
   return ss.str();
 }

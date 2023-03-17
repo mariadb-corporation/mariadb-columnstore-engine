@@ -64,6 +64,8 @@ class ConstantFilter : public Filter
    */
   ConstantFilter();
   ConstantFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs);
+  ConstantFilter(const SOP& op, const FilterList& filterList, const SRCP& col,
+                 const std::string& functionName);
   ConstantFilter(SimpleFilter* sf);
 
   // not needed yet
@@ -113,7 +115,7 @@ class ConstantFilter : public Filter
 
   // virtual const std::string data() const;
   virtual const std::string toString() const;
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */

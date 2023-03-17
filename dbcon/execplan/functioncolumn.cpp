@@ -134,14 +134,14 @@ const string FunctionColumn::toString() const
   return output.str();
 }
 
-string FunctionColumn::toCppCode(includeSet& includes) const
+string FunctionColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("functioncolumn.h");
   stringstream ss;
 
   auto fFuncParmsInString = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
 
-  ss << "FunctionColumn(" << fFunctionName << ", " << fFuncParmsInString << ", " << sessionID() << ")";
+  ss << "FunctionColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fFuncParmsInString) << ", " << sessionID() << ")";
 
   return ss.str();
 }

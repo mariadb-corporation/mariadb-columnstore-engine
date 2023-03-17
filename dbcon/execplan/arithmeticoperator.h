@@ -205,11 +205,11 @@ class ArithmeticOperator : public Operator
     fDecimalOverflowCheck = check;
   }
 
-  inline virtual std::string toCppCode(includeSet& includes) const
+  inline virtual std::string toCppCode(IncludeSet& includes) const
   {
     includes.insert("arithmeticoperator.h");
     std::stringstream ss;
-    ss << "ArithmeticOperator(" << data() << ")";
+    ss << "ArithmeticOperator(" << std::quoted(fData) << ")";
 
     return ss.str();
   }

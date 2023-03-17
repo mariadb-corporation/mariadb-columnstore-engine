@@ -94,6 +94,12 @@ ConstantFilter::ConstantFilter(const ConstantFilter& rhs) : Filter(rhs), fOp(rhs
   }
 }
 
+ConstantFilter::ConstantFilter(const SOP& op, const FilterList& filterList, const SRCP& col,
+                               const std::string& functionName)
+ : fOp(op), fFilterList(filterList), fCol(col), fFunctionName(functionName)
+{
+}
+
 ConstantFilter::~ConstantFilter()
 {
 }
@@ -122,10 +128,22 @@ const string ConstantFilter::toString() const
   return output.str();
 }
 
-string ConstantFilter::toCppCode(includeSet& includes) const
+string ConstantFilter::toCppCode(IncludeSet& includes) const
 {
   includes.insert("constantfilter.h");
-  return "ConstantFilter()"; // There should be a better way
+  stringstream ss;
+  ss << "ConstantFilter(boost::shared_ptr<Operator>(new " << fOp->toCppCode(includes) << "), ConstantFilter::FilterList{";
+  if (!fFilterList.empty())
+  {
+    for (size_t i = 0; i < fFilterList.size() - 1; i++)
+      ss << "boost::shared_ptr<SimpleFilter>(new " << fFilterList.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<SimpleFilter>(new " << fFilterList.back()->toCppCode(includes) << ")";
+  }
+  ss << "}, ";
+  ss << "boost::shared_ptr<ReturnedColumn>(new " << fCol->toCppCode(includes) << "), " << std::quoted(fFunctionName)
+     << ")";
+
+  return ss.str();
 }
 
 ostream& operator<<(ostream& output, const ConstantFilter& rhs)

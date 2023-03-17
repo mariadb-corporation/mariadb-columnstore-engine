@@ -114,7 +114,7 @@ class OuterJoinOnFilter : public Filter
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
   bool operator!=(const OuterJoinOnFilter& t) const;
-  virtual std::string toCppCode(includeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
  private:
   // default okay?
   // OuterJoinOnFilter& operator=(const OuterJoinOnFilter& rhs);
