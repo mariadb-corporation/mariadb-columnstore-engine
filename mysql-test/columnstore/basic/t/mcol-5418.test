@@ -1,0 +1,21 @@
+# This test tests the (NOT) LIKE test in filters that is added
+# to a FilterCommand in primproc.
+# This is a very rare situation, yet somehow I managed to trigger it.
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5418;
+--enable_warnings
+
+CREATE DATABASE mcol5418;
+
+USE mcol5418;
+
+CREATE TABLE tcs(d1 CHAR(6), d2 CHAR(6)) ENGINE=columnstore;
+
+INSERT INTO tcs(d1, d2) VALUES ('a','a'), ('a', 'b');
+
+SELECT 'columnstore like', d1, d2 FROM tcs WHERE (d1 LIKE d2);
+
+SELECT 'columnstore not like', d1, d2 FROM tcs WHERE (d1 NOT LIKE d2);
+
+DROP DATABASE mcol5418;

@@ -488,6 +488,10 @@ void StrFilterCmd::setCompareFunc(uint32_t columns)
 static inline bool compareString(const datatypes::Charset& cs, const utils::ConstString& s0,
                                  const utils::ConstString& s1, uint8_t fBOP)
 {
+  if (fBOP == COMPARE_LIKE || fBOP == COMPARE_NLIKE)
+  {
+    return cs.like(fBOP == COMPARE_NLIKE, s0, s1);
+  }
   int cmp = cs.strnncollsp(s0, s1);
   switch (fBOP)
   {
