@@ -2,17 +2,17 @@ local events = ['pull_request', 'cron'];
 
 local servers = {
   develop: ['10.6-enterprise'],
-  'develop-22.08': ['10.6-enterprise'],
+  'develop-23.02': ['10.6-enterprise'],
 };
 
 local platforms = {
   develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
   develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-22.08': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local any_branch = '**';
@@ -31,8 +31,8 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
 
-local clang_version = '13';
-local gcc_version = '10';
+local clang_version = '14';
+local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
 

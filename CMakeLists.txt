@@ -358,6 +358,13 @@ IF(NOT TARGET columnstore)
   RETURN()
 ENDIF()
 
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+ExternalProject_Add(mpark_patterns
+    GIT_REPOSITORY https://github.com/mpark/patterns
+    GIT_TAG v0.3.0
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+)
+
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)
 ADD_SUBDIRECTORY(dbcon/execplan)

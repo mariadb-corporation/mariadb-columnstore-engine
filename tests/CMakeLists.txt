@@ -4,17 +4,11 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fsanitize-address-use-after-
 
 if (WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
-    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external)
+    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     ExternalProject_Add(googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.0
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
-    )
-
-    ExternalProject_Add(mpark_patterns
-        GIT_REPOSITORY https://github.com/mpark/patterns
-        GIT_TAG v0.3.0
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
     )
 
     # this is a workaround for gtest's bug still not closed
