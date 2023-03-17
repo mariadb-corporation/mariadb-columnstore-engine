@@ -11,12 +11,6 @@ if (WITH_UNITTESTS)
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
     )
 
-    ExternalProject_Add(mpark_patterns
-        GIT_REPOSITORY https://github.com/mpark/patterns
-        GIT_TAG v0.3.0
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-    )
-
     # this is a workaround for gtest's bug still not closed
     # https://github.com/google/googletest/issues/3659
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
