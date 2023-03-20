@@ -95,8 +95,8 @@ ConstantFilter::ConstantFilter(const ConstantFilter& rhs) : Filter(rhs), fOp(rhs
 }
 
 ConstantFilter::ConstantFilter(const SOP& op, const FilterList& filterList, const SRCP& col,
-                               const std::string& functionName)
- : fOp(op), fFilterList(filterList), fCol(col), fFunctionName(functionName)
+                               const std::string& functionName, const std::string& data)
+ : fOp(op), fFilterList(filterList), fCol(col), fFunctionName(functionName), fData(data)
 {
 }
 
@@ -141,7 +141,7 @@ string ConstantFilter::toCppCode(IncludeSet& includes) const
   }
   ss << "}, ";
   ss << "boost::shared_ptr<ReturnedColumn>(new " << fCol->toCppCode(includes) << "), " << std::quoted(fFunctionName)
-     << ")";
+     << ", " << std::quoted(fData) << ")";
 
   return ss.str();
 }

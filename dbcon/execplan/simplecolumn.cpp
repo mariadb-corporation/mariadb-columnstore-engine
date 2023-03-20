@@ -156,14 +156,15 @@ SimpleColumn::SimpleColumn(const string& token, const uint32_t sessionID)
 }
 
 SimpleColumn::SimpleColumn(const string& schemaName, const string& tableName, const string& columnName,
-                           const uint32_t sessionID, const int lower_case_table_names)
+                           const uint32_t sessionID, const int lower_case_table_names, const bool withOIDs)
  : ReturnedColumn(sessionID)
  , fSchemaName(schemaName)
  , fTableName(tableName)
  , fColumnName(columnName)
  , fisColumnStore(true)
 {
-  setOID();
+  if (withOIDs)
+    setOID();
   fDistinct = false;
   if (lower_case_table_names)
   {
@@ -281,7 +282,7 @@ string SimpleColumn::toCppCode(IncludeSet& includes) const
   stringstream ss;
 
   ss << "SimpleColumn(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " << std::quoted(fColumnName) << ", " << sessionID()
-     << ", " << fisColumnStore << ")";
+     << ", " << fisColumnStore << ", false)";
 
   return ss.str();
 }

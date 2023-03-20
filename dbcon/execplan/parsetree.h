@@ -568,7 +568,7 @@ inline void ParseTree::codeToFile(std::string filename, std::string varname) con
   for (const auto& inc : includes)
     hFile << "#include \"" << inc << "\"\n";
   hFile << "\n";
-  hFile << "namespace execplan \n{ auto " << varname << " = " << result << ";\n}\n\n";
+  hFile << "namespace execplan \n{ auto " << varname << " = new " << result << ";\n}\n\n";
 
   hFile.close();
 }

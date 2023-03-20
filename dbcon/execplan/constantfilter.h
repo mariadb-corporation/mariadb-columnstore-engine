@@ -65,7 +65,7 @@ class ConstantFilter : public Filter
   ConstantFilter();
   ConstantFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs);
   ConstantFilter(const SOP& op, const FilterList& filterList, const SRCP& col,
-                 const std::string& functionName);
+                 const std::string& functionName, const std::string& data);
   ConstantFilter(SimpleFilter* sf);
 
   // not needed yet
