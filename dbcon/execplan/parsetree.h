@@ -166,7 +166,7 @@ class ParseTree
 
   inline std::string toCppCode(std::unordered_set<std::string>& includes) const;
 
-  inline void codeToFile(std::string filename) const;
+  inline void codeToFile(std::string filename, std::string varname) const;
   /** assignment operator
    *
    */
@@ -560,15 +560,15 @@ inline string ParseTree::toCppCode(IncludeSet& includes) const
   return ss.str();
 }
 
-inline void ParseTree::codeToFile(std::string filename) const
+inline void ParseTree::codeToFile(std::string filename, std::string varname) const
 {
-  ofstream hFile(filename.c_str(), std::ios::out);
+  ofstream hFile(filename.c_str(), std::ios::app);
   IncludeSet includes;
   auto result = toCppCode(includes);
   for (const auto& inc : includes)
     hFile << "#include \"" << inc << "\"\n";
   hFile << "\n";
-  hFile << "namespace execplan \n{ auto tree = " << result << ";\n}";
+  hFile << "namespace execplan \n{ auto " << varname << " = " << result << ";\n}\n\n";
 
   hFile.close();
 }

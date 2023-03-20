@@ -17,7 +17,8 @@
 #include "unitqueries_after.h"
 #include "query19_init.h"
 #include "query19_fixed.h"
-
+#include "unitqueries_tree_before.h"
+#include "unitqueries_tree_after.h"
 
 using TreePtr = std::unique_ptr<execplan::ParseTree>;
 
@@ -62,8 +63,8 @@ void printTree(const std::string& queryName, execplan::ParseTree* tree, const st
 struct ParseTreeTestParam
 {
   std::string queryName;
-  std::vector<unsigned char>* query = nullptr;
-  std::vector<unsigned char>* manually_rewritten_query = nullptr;
+  execplan::ParseTree* query = nullptr;
+  execplan::ParseTree* manually_rewritten_query = nullptr;
 
   friend std::ostream& operator<<(std::ostream& os, const ParseTreeTestParam& bar)
   {
@@ -75,20 +76,19 @@ class ParseTreeTest : public testing::TestWithParam<::ParseTreeTestParam> {};
 
 TEST_P(ParseTreeTest, Rewrite)
 {
-  messageqcpp::ByteStream stream;
-  stream.load(GetParam().query->data(), GetParam().query->size());
-  execplan::ParseTree* initialTree = execplan::ObjectReader::createParseTree(stream);
+  execplan::ParseTree* initialTree = GetParam().query;
+  //initialTree->codeToFile("/tmp/filters.initial.h", "initial_" + GetParam().queryName);
   printTree(GetParam().queryName, initialTree, "initial");
 
   TreePtr rewrittenTree;
   rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot<true>(initialTree));
-
+  //rewrittenTree.get()->codeToFile("/tmp/filters.rewritten.h", "rewritten_" + GetParam().queryName);
 
   if (GetParam().manually_rewritten_query)
   {
-    stream.load(GetParam().manually_rewritten_query->data(), GetParam().manually_rewritten_query->size());
     TreePtr manuallyRewrittenTree;
-    manuallyRewrittenTree.reset(execplan::ObjectReader::createParseTree(stream));
+    manuallyRewrittenTree.reset(GetParam().manually_rewritten_query);
+    //manuallyRewrittenTree.get()->codeToFile("/tmp/filters.reference.h", "reference_" + GetParam().queryName);
     bool result = treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get());
     printTree(GetParam().queryName, rewrittenTree.get(), "rewritten");
     printTree(GetParam().queryName, manuallyRewrittenTree.get(), "reference");
@@ -119,7 +119,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   );
   */
 
-  ParseTreeTestParam{"Query_1", &__test_query_before_1, &__test_query_after_1},
+  ParseTreeTestParam{"Query_1", &execplan::initial_Query_1, &execplan::reference_Query_1},
 
   /*
   select t1.posname, t2.posname
@@ -128,7 +128,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   t1.id = t2.id
   and (t1.pos + t2.pos < 1000);
   */
-  ParseTreeTestParam{"Query_2", &__test_query_before_2},
+  ParseTreeTestParam{"Query_2", &execplan::initial_Query_2},
 
  /*
   select t1.posname, t2.posname
@@ -141,7 +141,7 @@ INSTANTIATE_TEST_SUITE_P(TreeRewrites, ParseTreeTest, testing::Values(
   (t1.posname < dcba);
 
   */
-  ParseTreeTestParam{"Query_3", &__test_query_before_3},
+  ParseTreeTestParam{"Query_3", &execplan::initial_Query_3},
 
   /*
   select t1.posname, t2.posname
@@ -153,7 +153,7 @@ or
    */
 
 
-  ParseTreeTestParam{"Query_4", &__test_query_before_4},
+  ParseTreeTestParam{"Query_4", &execplan::initial_Query_4},
 
 /*select t1.posname, t2.posname from t1,t2
 where
@@ -167,7 +167,7 @@ t1.id = t2.id
 or t1.pos + t2.pos > 15000
 );
 */
-  ParseTreeTestParam{"Query_5", &__test_query_before_5},
+  ParseTreeTestParam{"Query_5", &execplan::initial_Query_5},
 
 /*select t1.posname, t2.posname from t1,t2
 where
@@ -181,7 +181,7 @@ t1.id = t2.id
 or t1.pos + t2.pos > 15000
 );
 */
-  ParseTreeTestParam{"Query_6", &__test_query_before_6},
+  ParseTreeTestParam{"Query_6", &execplan::initial_Query_6},
 
 /*
  select t1.posname
@@ -197,7 +197,7 @@ id < 30
 );
 
  */
-  ParseTreeTestParam{"Query_7", &__test_query_before_7},
+  ParseTreeTestParam{"Query_7", &execplan::initial_Query_7},
 
 /*select t1.posname, t2.posname
 from t1,t2
@@ -210,7 +210,7 @@ and id < 30
 )
 and t1.id = t2.id;
 */
-  ParseTreeTestParam{"Query_8", &__test_query_before_8},
+  ParseTreeTestParam{"Query_8", &execplan::initial_Query_8},
 
 /*select t1.posname, t2.posname
 from t1,t2
@@ -226,7 +226,7 @@ t1.id = t2.id
 and t1.id = t2.rid
 );
 */
-  ParseTreeTestParam{"Query_9", &__test_query_before_9},
+  ParseTreeTestParam{"Query_9", &execplan::initial_Query_9},
 
 /*select * from t1
 where
@@ -240,7 +240,7 @@ pos > 5000
 and place > 'abcdefghij'
 );
 */
-  ParseTreeTestParam{"Query_10", &__test_query_before_10},
+  ParseTreeTestParam{"Query_10", &execplan::initial_Query_10},
 
 /*select *
 from t1
@@ -255,7 +255,7 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_11", &__test_query_before_11, &__test_query_after_11},
+  ParseTreeTestParam{"Query_11", &execplan::initial_Query_11, &execplan::reference_Query_11},
 
 /*select *
 from t1
@@ -270,7 +270,7 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_12", &__test_query_before_12},
+  ParseTreeTestParam{"Query_12", &execplan::initial_Query_12},
 
 /*select *
 from t1
@@ -285,7 +285,7 @@ pos > 5000
 or id < 30
 );
 */
-  ParseTreeTestParam{"Query_13", &__test_query_before_13},
+  ParseTreeTestParam{"Query_13", &execplan::initial_Query_13},
 
 /*select *
 from t1
@@ -305,7 +305,7 @@ pos > 5000
 or id < 30
 );
 */
-  ParseTreeTestParam{"Query_14", &__test_query_before_14},
+  ParseTreeTestParam{"Query_14", &execplan::initial_Query_14},
 
 /*select *
 from t1
@@ -332,7 +332,7 @@ and
 pos > 5000
 or id < 30);
 */
-  ParseTreeTestParam{"Query_15", &__test_query_before_15, &__test_query_after_15},
+  ParseTreeTestParam{"Query_15", &execplan::initial_Query_15, &execplan::reference_Query_15},
 /*
 select *
 from t1
@@ -352,7 +352,7 @@ pos > 5000
 and id < 30
 );
 */
-  ParseTreeTestParam{"Query_16", &__test_query_before_16, &__test_query_after_16},
+  ParseTreeTestParam{"Query_16", &execplan::initial_Query_16, &execplan::reference_Query_16},
 /*
 select *
 from t1
@@ -377,7 +377,7 @@ pos > 5000
 and id < 30
 );
  */
-  ParseTreeTestParam{"Query_17", &__test_query_before_17, &__test_query_after_17},
+  ParseTreeTestParam{"Query_17", &execplan::initial_Query_17, &execplan::reference_Query_17},
 /*
 select *
 from t1
@@ -407,7 +407,7 @@ pos > 5000
 and id < 30
 );
  */
-  ParseTreeTestParam{"Query_18", &__test_query_before_18, &__test_query_after_18},
+  ParseTreeTestParam{"Query_18", &execplan::initial_Query_18, &execplan::reference_Query_18},
 /*
  select *
 from t1
@@ -453,7 +453,7 @@ and id < 30
 );
 
  */
-  ParseTreeTestParam{"Query_19", &__test_query_before_19, &__test_query_after_19},
+  ParseTreeTestParam{"Query_19", &execplan::initial_Query_19, &execplan::reference_Query_19},
 /*
 select *
 from t1
@@ -472,7 +472,7 @@ place > 'abcdefghij'
 );
 
  */
-  ParseTreeTestParam{"Query_20", &__test_query_before_20, &__test_query_after_20},
+  ParseTreeTestParam{"Query_20", &execplan::initial_Query_20, &execplan::reference_Query_20},
 /*
 select *
 from t1
@@ -497,7 +497,7 @@ place < 'zyxqwertyu'
 );
 
  */
-  ParseTreeTestParam{"Query_21", &__test_query_before_21, &__test_query_after_21},
+  ParseTreeTestParam{"Query_21", &execplan::initial_Query_21, &execplan::reference_Query_21},
 /*
 select *
 from t1
@@ -511,7 +511,7 @@ or
 (pos > 5000 and id < 30);
 
  */
-  ParseTreeTestParam{"Query_22", &__test_query_before_22, &__test_query_after_22},
+  ParseTreeTestParam{"Query_22", &execplan::initial_Query_22, &execplan::reference_Query_22},
 
 /*
   select *
@@ -526,7 +526,7 @@ or
 (pos > 5000 and id < 30);
  */
 
-  ParseTreeTestParam{"Query_23", &__test_query_before_23, &__test_query_after_23},
+  ParseTreeTestParam{"Query_23", &execplan::initial_Query_23, &execplan::reference_Query_23},
 /*
 select *
 from t1
@@ -542,7 +542,7 @@ or
 (pos > 5000 and id < 30 and place < 'zyxqwertyu' and rid > 20);
  */
 
-  ParseTreeTestParam{"Query_27", &__test_query_before_27, &__test_query_after_27},
+  ParseTreeTestParam{"Query_27", &execplan::initial_Query_27, &execplan::reference_Query_27},
 /*
 select *
 from t1
@@ -556,8 +556,8 @@ or
 (pos > 5000 and id < 30 and rid > 20 and place < 'zyxqwertyu' and place < 'zyxqwertyu');
  */
 
-  ParseTreeTestParam{"Query_28", &__test_query_before_28, &__test_query_after_28},
-  ParseTreeTestParam{"TPCH_19", &__query19_tree_init, &__query19_tree_fixed}
+  ParseTreeTestParam{"Query_28", &execplan::initial_Query_28, &execplan::reference_Query_28},
+  ParseTreeTestParam{"TPCH_19", &execplan::initial_TPCH_19, &execplan::reference_TPCH_19}
 ),
   [](const ::testing::TestParamInfo<ParseTreeTest::ParamType>& info) {
       return info.param.queryName;
