@@ -613,3 +613,10 @@ INSTANTIATE_TEST_SUITE_P(
                     ComparatorTestParam{"SimpleNotContains", "a<b", {"a<b1", "a=b", "acb=bdd"}, false}),
     [](const ::testing::TestParamInfo<ParseTreeComparatorTest::ParamType>& info)
     { return info.param.queryName; });
+
+TEST(FUCKTHIS, SHIT)
+{
+ auto thing = execplan::SimpleFilter("30 > `test`.`t1`.`id`",
+                                               execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{});
+ std::cerr << thing.data();
+}

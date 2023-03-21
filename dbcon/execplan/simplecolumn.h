@@ -66,7 +66,7 @@ class SimpleColumn : public ReturnedColumn
   SimpleColumn(const std::string& token, const uint32_t sessionID = 0);
 
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
-               const uint32_t sessionID = 0, const int lower_case_table_names = 0, const bool withOIDs = true);
+               const uint32_t sessionID = 0, const int lower_case_table_names = 0);
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
                const bool isColumnStore, const uint32_t sessionID = 0, const int lower_case_table_names = 0);
   SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID = 0);

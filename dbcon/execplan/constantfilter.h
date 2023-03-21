@@ -103,7 +103,6 @@ class ConstantFilter : public Filter
   {
     fCol = col;
   }
-
   /**
    * Operations
    */
@@ -188,7 +187,6 @@ class ConstantFilter : public Filter
   FilterList fFilterList;     /// vector of simple filters
   SRCP fCol;                  /// the common column
   std::string fFunctionName;  /// function name
-
   /***********************************************************
    *                  F&E framework                          *
    ***********************************************************/
