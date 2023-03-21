@@ -186,24 +186,6 @@ build()
     if [[ $ASAN = true ]] ; then
         warn "Building with ASAN"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
-
-        COLUMNSTORE_CONFIG=$MDB_SOURCE_PATH/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf
-        if grep -q thread_stack $COLUMNSTORE_CONFIG; then
-            warn "MDB Server has thread_stack settings on storage/columnstore/columnstore/build/my.cnf.in check it's compatibility with ASAN"
-        else
-            echo "[mysqld]" >> $COLUMNSTORE_CONFIG
-            echo "thread_stack = 2M" >> $COLUMNSTORE_CONFIG
-        fi
-
-        MDB_SERVICE_FILE=$MDB_SOURCE_PATH/support-files/mariadb.service.in
-        if grep -q ASAN $MDB_SERVICE_FILE; then
-            warn "MDB Server has ASAN options in support-files/mariadb.service.in, check it's compatibility"
-
-        else
-            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SERVICE_FILE
-            message "ASAN options were added to support-files/mariadb.service.in"
-
-        fi
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
@@ -321,12 +303,35 @@ disable_plugins_for_bootstrap()
     find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
 }
 
-
 enable_columnstore_back()
 {
     echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
 }
 
+fix_config_files()
+{
+    message Fixing config files
+
+    SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
+    if [[ $ASAN = true ]] ; then
+        COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+        if grep -q thread_stack $COLUMNSTORE_CONFIG; then
+            warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
+        else
+            echo "thread_stack = 2M" >> $COLUMNSTORE_CONFIG
+            message "thread_stack was set to 2M in $COLUMNSTORE_CONFIG"
+        fi
+
+        MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+        if grep -q ASAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
+        else
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SERVICE_FILE
+            message "ASAN options were added to $MDB_SERVICE_FILE"
+        fi
+    fi
+    systemctl daemon-reload
+}
 
 install()
 {
@@ -369,7 +374,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
         > /etc/mysql/debian.cnf
     fi
 
-    systemctl daemon-reload
+    fix_config_files
 
     if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
         message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
