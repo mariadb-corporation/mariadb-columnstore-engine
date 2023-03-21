@@ -19,12 +19,10 @@
 
 #pragma once
 #include <string>
-#include <unordered_set>
 
 #include "calpontselectexecutionplan.h"
 #include "aggregatecolumn.h"
 #include "mcsv1_udaf.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

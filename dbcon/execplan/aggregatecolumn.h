@@ -28,7 +28,6 @@
 
 #include "calpontselectexecutionplan.h"
 #include "returnedcolumn.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

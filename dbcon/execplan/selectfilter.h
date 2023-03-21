@@ -29,7 +29,6 @@
 #include "returnedcolumn.h"
 #include "operator.h"
 #include "calpontselectexecutionplan.h"
-#include "treenode.h"
 
 /**
  * Namespace

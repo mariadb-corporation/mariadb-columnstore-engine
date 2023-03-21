@@ -24,7 +24,7 @@
 namespace execplan
 {
 
-#define debug_rewrites true
+#define debug_rewrites false
 
 execplan::OpType oppositeOperator(execplan::OpType op);
 

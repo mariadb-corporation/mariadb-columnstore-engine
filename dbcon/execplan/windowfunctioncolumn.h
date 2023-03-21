@@ -25,16 +25,13 @@
 /** @file */
 
 #pragma once
-#include <cstdint>
 #include <string>
 #include <iosfwd>
-#include <unordered_set>
 #include <vector>
 
 #include "returnedcolumn.h"
 #include "functor.h"
 #include "mcsv1_udaf.h"
-#include "treenode.h"
 #include "wf_frame.h"
 
 namespace messageqcpp

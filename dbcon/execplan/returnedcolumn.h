@@ -23,7 +23,6 @@
 /** @file */
 
 #pragma once
-#include <cstdint>
 #include <string>
 #include <iosfwd>
 #include <vector>

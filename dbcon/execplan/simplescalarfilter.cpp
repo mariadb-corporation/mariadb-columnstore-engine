@@ -77,7 +77,8 @@ string SimpleScalarFilter::toCppCode(IncludeSet& includes) const
     ss << "boost::shared_ptr<ReturnedColumn>(new " << fCols.back()->toCppCode(includes) << ")";
   }
   ss << "}, ";
-  ss << "boost::shared_ptr<Operator>(new " << fOp->toCppCode(includes) << "))";
+  ss << "boost::shared_ptr<Operator>(new " << fOp->toCppCode(includes)
+     << "), boost::make_shared<CalpontSelectExecutionPlan>())";
   return ss.str();
 }
 

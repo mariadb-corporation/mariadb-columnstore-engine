@@ -25,10 +25,8 @@
 
 #pragma once
 #include <string>
-#include <unordered_map>
 
 #include "returnedcolumn.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {
@@ -75,7 +73,6 @@ class ConstantColumn : public ReturnedColumn
    */
   ConstantColumn(const uint64_t val, TYPE type = NUM, int8_t scale = 0, uint8_t precision = 0);  // deprecate
 
-  ConstantColumn(const string& constval, int tyoe, const string& data);
   // There are more ctors below...
 
   /**

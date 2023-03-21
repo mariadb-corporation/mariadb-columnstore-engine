@@ -24,14 +24,12 @@
 /** @file */
 
 #pragma once
-#include <cstdint>
 #include <string>
 #include <iosfwd>
 #include <vector>
 
 #include "returnedcolumn.h"
 #include "functor.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

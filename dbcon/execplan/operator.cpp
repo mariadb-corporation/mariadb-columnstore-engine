@@ -22,12 +22,10 @@
  ***********************************************************************/
 #include <iostream>
 #include <sstream>
-#include <string>
 
 #include "bytestream.h"
 #include "operator.h"
 #include "objectreader.h"
-#include "treenode.h"
 
 using namespace std;
 

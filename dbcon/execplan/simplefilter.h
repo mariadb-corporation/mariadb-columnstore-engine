@@ -31,7 +31,6 @@
 #include "filter.h"
 #include "predicateoperator.h"
 #include "returnedcolumn.h"
-#include "treenode.h"
 
 /**
  * Namespace

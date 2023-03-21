@@ -198,11 +198,6 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
   fResultType.colWidth = 8;
 }
 
-ConstantColumn::ConstantColumn(const string& constval, int type, const string& data)
- : ReturnedColumn(), fConstval(constval), fType(type), fData(data)
-{
-}
-
 ConstantColumn::~ConstantColumn()
 {
 }
@@ -233,7 +228,7 @@ std::string ConstantColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("constantcolumn.h");
   std::stringstream ss;
-  ss << "ConstantColumn(" << std::quoted(fConstval) << ", " << fType << ", " << std::quoted(fData) << ")";
+  ss << "ConstantColumn(" << std::quoted(fData) << ", " << fConstval << ")";
 
   return ss.str();
 }

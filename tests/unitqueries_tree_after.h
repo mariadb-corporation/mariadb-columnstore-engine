@@ -20,10 +20,6 @@ auto reference_Query_1 = new ParseTree(
                   nullptr, nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_11 = new ParseTree(
@@ -35,11 +31,6 @@ auto reference_Query_11 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`pos` > 5000", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}),
         nullptr, nullptr));
 }
-
-#include "existsfilter.h"
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {
@@ -55,10 +46,6 @@ auto reference_Query_15 = new ParseTree(
     new ParseTree(new ExistsFilter(boost::shared_ptr<CalpontSelectExecutionPlan>(), 0, 1), nullptr, nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_16 = new ParseTree(
@@ -70,10 +57,6 @@ auto reference_Query_16 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`pos` > 5000", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}),
         nullptr, nullptr));
 }
-
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {
@@ -87,10 +70,6 @@ auto reference_Query_17 = new ParseTree(
         nullptr, nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_18 = new ParseTree(
@@ -103,10 +82,6 @@ auto reference_Query_18 = new ParseTree(
         nullptr, nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_19 = new ParseTree(
@@ -118,10 +93,6 @@ auto reference_Query_19 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`pos` > 5000", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}),
         nullptr, nullptr));
 }
-
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {
@@ -143,10 +114,6 @@ auto reference_Query_20 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`id` < 30", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}), nullptr,
         nullptr));
 }
-
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {
@@ -174,10 +141,6 @@ auto reference_Query_21 = new ParseTree(
         nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_22 = new ParseTree(
@@ -204,10 +167,6 @@ auto reference_Query_22 = new ParseTree(
         nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_23 = new ParseTree(
@@ -233,10 +192,6 @@ auto reference_Query_23 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`id` < 30", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}), nullptr,
         nullptr));
 }
-
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {
@@ -275,10 +230,6 @@ auto reference_Query_27 = new ParseTree(
         nullptr));
 }
 
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
-
 namespace execplan
 {
 auto reference_Query_28 = new ParseTree(
@@ -310,12 +261,6 @@ auto reference_Query_28 = new ParseTree(
         new SimpleFilter("`test`.`t1`.`id` < 30", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}), nullptr,
         nullptr));
 }
-
-#include "simplecolumn.h"
-#include "constantfilter.h"
-#include "simplefilter.h"
-#include "logicoperator.h"
-#include "parsetree.h"
 
 namespace execplan
 {

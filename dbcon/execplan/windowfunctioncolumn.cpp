@@ -26,10 +26,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#include <unordered_set>
-#include "returnedcolumn.h"
-#include "treenode.h"
-#include "wf_frame.h"
 using namespace std;
 
 #include <boost/tokenizer.hpp>

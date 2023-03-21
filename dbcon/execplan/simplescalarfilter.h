@@ -23,17 +23,14 @@
 /** @file */
 
 #pragma once
-#include <cstddef>
 #include <string>
 #include <vector>
 #include <ostream>
 
-#include "boost/smart_ptr/make_shared_array.hpp"
 #include "filter.h"
 #include "returnedcolumn.h"
 #include "operator.h"
 #include "calpontselectexecutionplan.h"
-#include "treenode.h"
 
 /**
  * Namespace
@@ -63,7 +60,7 @@ class SimpleScalarFilter : public Filter
    * pass all parts in ctor
    * @note SimpleFilter takes ownership of all these pointers
    */
-  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, const SCSEP& sub = boost::make_shared<CalpontSelectExecutionPlan>());
+  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, const SCSEP& sub);
 
   /**
    * Destructors

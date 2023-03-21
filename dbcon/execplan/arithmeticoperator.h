@@ -28,11 +28,9 @@
 #include <iosfwd>
 #include <cmath>
 #include <sstream>
-#include <unordered_set>
 
 #include "operator.h"
 #include "parsetree.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

@@ -27,8 +27,6 @@
 
 #include <string>
 #include <sstream>
-#include <unordered_set>
-#include "treenode.h"
 #if   defined(__FreeBSD__)
 #include <cstdlib>
 #else

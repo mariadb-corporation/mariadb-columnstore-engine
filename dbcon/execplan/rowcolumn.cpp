@@ -59,6 +59,12 @@ RowColumn::RowColumn(const uint32_t sessionID) : ReturnedColumn(sessionID)
 {
 }
 
+// For code geneartion purposes
+RowColumn::RowColumn(const std::vector<SRCP>& columnVec, const uint32_t sessionID)
+ : ReturnedColumn(sessionID), fColumnVec(columnVec)
+{
+}
+
 RowColumn::RowColumn(const RowColumn& rhs, const uint32_t sessionID) : ReturnedColumn(rhs, sessionID)
 {
   fColumnVec.clear();

@@ -30,7 +30,6 @@
 
 #include "returnedcolumn.h"
 #include "functor.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

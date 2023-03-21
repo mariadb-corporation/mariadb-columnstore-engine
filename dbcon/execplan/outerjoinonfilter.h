@@ -27,7 +27,6 @@
 
 #include "filter.h"
 #include "calpontselectexecutionplan.h"
-#include "treenode.h"
 
 /**
  * Namespace

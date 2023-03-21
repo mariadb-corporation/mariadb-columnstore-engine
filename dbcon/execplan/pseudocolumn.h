@@ -25,7 +25,6 @@
 #pragma once
 #include <string>
 #include "simplecolumn.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

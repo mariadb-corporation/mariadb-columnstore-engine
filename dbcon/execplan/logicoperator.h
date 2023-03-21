@@ -26,12 +26,10 @@
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
-#include <unordered_set>
 
 //#include "expressionparser.h"
 #include "operator.h"
 #include "parsetree.h"
-#include "treenode.h"
 
 namespace messageqcpp
 {

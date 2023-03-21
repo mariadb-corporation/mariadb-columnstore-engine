@@ -25,16 +25,13 @@
 
 #pragma once
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <vector>
 
 #include "simplecolumn.h"
 #include "objectreader.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
 #include "mcs_decimal.h"
-#include "treenode.h"
 
 /**
  * Namespace

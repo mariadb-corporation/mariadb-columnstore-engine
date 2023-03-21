@@ -13,10 +13,6 @@
 #include "rewrites.h"
 #include "bytestream.h"
 #include "objectreader.h"
-#include "unitqueries_before.h"
-#include "unitqueries_after.h"
-#include "query19_init.h"
-#include "query19_fixed.h"
 #include "unitqueries_tree_before.h"
 #include "unitqueries_tree_after.h"
 
@@ -42,7 +38,7 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0
          (treeEqual(fst->left(), snd->right(), depth + 1) && treeEqual(fst->right(), snd->left(), depth + 1));
 }
 
-#define REWRITE_TREE_TEST_DEBUG true
+#define REWRITE_TREE_TEST_DEBUG false
 
 
 void printTree(const std::string& queryName, execplan::ParseTree* tree, const std::string& treeName)
@@ -77,18 +73,15 @@ class ParseTreeTest : public testing::TestWithParam<::ParseTreeTestParam> {};
 TEST_P(ParseTreeTest, Rewrite)
 {
   execplan::ParseTree* initialTree = GetParam().query;
-  //initialTree->codeToFile("/tmp/filters.initial.h", "initial_" + GetParam().queryName);
   printTree(GetParam().queryName, initialTree, "initial");
 
   TreePtr rewrittenTree;
   rewrittenTree.reset(execplan::extractCommonLeafConjunctionsToRoot<true>(initialTree));
-  //rewrittenTree.get()->codeToFile("/tmp/filters.rewritten.h", "rewritten_" + GetParam().queryName);
 
   if (GetParam().manually_rewritten_query)
   {
     TreePtr manuallyRewrittenTree;
     manuallyRewrittenTree.reset(GetParam().manually_rewritten_query);
-    //manuallyRewrittenTree.get()->codeToFile("/tmp/filters.reference.h", "reference_" + GetParam().queryName);
     bool result = treeEqual(manuallyRewrittenTree.get(), rewrittenTree.get());
     printTree(GetParam().queryName, rewrittenTree.get(), "rewritten");
     printTree(GetParam().queryName, manuallyRewrittenTree.get(), "reference");
@@ -613,10 +606,3 @@ INSTANTIATE_TEST_SUITE_P(
                     ComparatorTestParam{"SimpleNotContains", "a<b", {"a<b1", "a=b", "acb=bdd"}, false}),
     [](const ::testing::TestParamInfo<ParseTreeComparatorTest::ParamType>& info)
     { return info.param.queryName; });
-
-TEST(FUCKTHIS, SHIT)
-{
- auto thing = execplan::SimpleFilter("30 > `test`.`t1`.`id`",
-                                               execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{});
- std::cerr << thing.data();
-}

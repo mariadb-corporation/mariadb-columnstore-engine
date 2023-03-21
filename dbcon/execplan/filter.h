@@ -25,7 +25,6 @@
 #pragma once
 #include <string>
 #include <iosfwd>
-#include <unordered_set>
 
 #include "treenode.h"
 
