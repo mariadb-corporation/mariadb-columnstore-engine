@@ -18,7 +18,12 @@ message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
+
+cd $SCRIPT_LOCATION
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
+cd -
+
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
@@ -27,7 +32,7 @@ optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure"
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
-optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
+optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
@@ -57,15 +62,18 @@ fi
 
 select_branch()
 {
+    cd $SCRIPT_LOCATION
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
     if [[ ! " ${BRANCHES[*]} " =~ " ${BRANCH} " ]]; then
-        if [[ $BRANCH = 'none' ]]; then
+        if [[ $BRANCH = "" ]]; then
             getChoice -q "Select your branch" -o BRANCHES
             BRANCH=$selectedChoice
         fi
-        cd $SCRIPT_LOCATION
-        message "Selecting $BRANCH branch for Columnstore"
-        git checkout $BRANCH
-        cd -
+        if [[ $BRANCH != $CURRENT_BRANCH ]]; then
+            message "Selecting $BRANCH branch for Columnstore"
+            git checkout $BRANCH
+        fi
 
         message "Turning off Columnstore submodule auto update via gitconfig"
         cd $MDB_SOURCE_PATH
@@ -73,8 +81,6 @@ select_branch()
         cd -
     fi
 
-    cd $SCRIPT_LOCATION
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     cd -
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
