@@ -48,6 +48,12 @@ INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
+CONFIG_DIR="/etc/my.cnf.d"
+
+if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
+    CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+fi
+
 
 select_branch()
 {
@@ -309,9 +315,23 @@ run_microbenchmarks_tests()
     fi
 }
 
+disable_plugins_for_bootstrap()
+{
+    find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
+    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
+}
+
+
+enable_columnstore_back()
+{
+    echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
+}
+
+
 install()
 {
     message "Installing MariaDB"
+    disable_plugins_for_bootstrap
 
     mkdir -p $REPORT_PATH
     chmod 777 $REPORT_PATH
@@ -330,6 +350,8 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     message "Running mysql_install_db"
     sudo -u mysql mysql_install_db --rpm --user=mysql
     mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
+
+    enable_columnstore_back
 
     mkdir -p /etc/columnstore
 
