@@ -717,12 +717,12 @@ my_hooks_alloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
   main_arena_free += size;
 
   if (*zero)
-    memset((void*)ret, size, 0);
+    memset((void*)ret, 0, size);
 
   return (void*)ret;
 }
 
-static extent_hooks_t hooks = {
+extent_hooks_t hooks = {
   my_hooks_alloc,
   NULL,
   NULL,
