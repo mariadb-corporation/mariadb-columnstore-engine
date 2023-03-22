@@ -46,6 +46,8 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
+#include <jemalloc/jemalloc.h>
+
 #include "configcpp.h"
 using namespace config;
 
@@ -695,6 +697,46 @@ int ServicePrimProc::Child()
 
   return 1;
 }
+
+/******************************************************************************
+ * jemalloc-specific part.
+ */
+static char main_arena[1 << 30];
+static char* main_arena_free = main_arena;
+static char* main_arena_end = main_arena + sizeof(main_arena);
+static void*
+my_hooks_alloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
+				size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
+{
+  char* ret = main_arena_free;
+
+  if (ret >= main_arena_end) {
+    return nullptr;
+  }
+
+  main_arena_free += size;
+
+  if (*zero)
+    memset((void*)ret, size, 0);
+
+  return (void*)ret;
+}
+
+static extent_hooks_t hooks = {
+  my_hooks_alloc,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+/******************************************************************************
+ * the MAIN.
+ */
 
 int main(int argc, char** argv)
 {
