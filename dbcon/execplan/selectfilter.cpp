@@ -38,7 +38,7 @@ SelectFilter::SelectFilter()
 {
 }
 
-SelectFilter::SelectFilter(const vector<SRCP>& cols, const SOP& op, SCSEP& sub, bool correlated)
+SelectFilter::SelectFilter(const vector<SRCP>& cols, const SOP& op, const SCSEP& sub, bool correlated)
  : fCols(cols), fOp(op), fSub(sub), fCorrelated(correlated), fData("subselect"), fReturnedColPos(0)
 {
 }
@@ -70,6 +70,23 @@ const string SelectFilter::toString() const
   oss << fOp->toString() << endl;
   oss << *(fSub.get());
   return oss.str();
+}
+
+string SelectFilter::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("selectfilter.h");
+  stringstream ss;
+  ss << "SelectFilter(std::vector<SRCP>{";
+  if (!fCols.empty()) {
+    for (size_t i = 0; i < fCols.size() - 1 ;i++ )
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fCols.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fCols.back()->toCppCode(includes) << ")";
+  }
+  ss << "}, ";
+  ss << "boost::shared_ptr<Operator>(new " << fOp->toCppCode(includes) << "), ";
+  ss <<"boost::make_shared<CalpontSelectExecutionPlan>(), ";
+  ss << fCorrelated << ")";
+  return ss.str();
 }
 
 ostream& operator<<(ostream& output, const SelectFilter& rhs)

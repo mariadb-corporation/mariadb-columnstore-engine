@@ -123,8 +123,8 @@ class SimpleColumn : public ReturnedColumn
     fOid = oid;
   }
 
-  virtual const std::string data() const;
-  virtual void data(const std::string data)
+  virtual const std::string data() const override;
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
@@ -178,7 +178,7 @@ class SimpleColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual SimpleColumn* clone() const
+  inline virtual SimpleColumn* clone() const override
   {
     return new SimpleColumn(*this);
   }
@@ -190,17 +190,17 @@ class SimpleColumn : public ReturnedColumn
   /**
    * The serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
-  virtual const std::string toString() const;
-
+  virtual const std::string toString() const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -216,7 +216,7 @@ class SimpleColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -226,7 +226,7 @@ class SimpleColumn : public ReturnedColumn
   bool operator!=(const SimpleColumn& t) const;
 
   /** @brief check if this column is the same as the argument */
-  virtual bool sameColumn(const ReturnedColumn* rc) const;
+  virtual bool sameColumn(const ReturnedColumn* rc) const override;
 
   /** @brief return column type of this column (could be of any engine type) */
   const CalpontSystemCatalog::ColType& colType() const
@@ -237,12 +237,12 @@ class SimpleColumn : public ReturnedColumn
   /** @brief set the column's OID from the syscat */
   void setOID();
 
-  virtual bool hasWindowFunc()
+  virtual bool hasWindowFunc() override
   {
     return false;
   }
 
-  void setDerivedTable();
+  void setDerivedTable() override;
 
   /**
    * Return the tableAlias name of the table that the column arguments belong to.
@@ -251,7 +251,7 @@ class SimpleColumn : public ReturnedColumn
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
 
  protected:
   /**
@@ -281,49 +281,49 @@ class SimpleColumn : public ReturnedColumn
    *                  F&E framework                          *
    ***********************************************************/
  public:
-  virtual void evaluate(rowgroup::Row& row, bool& isNull);
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  virtual void evaluate(rowgroup::Row& row, bool& isNull) override;
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getBoolVal();
   }
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getStrVal(fTimeZone);
   }
 
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getIntVal();
   }
 
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getUintVal();
   }
 
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getFloatVal();
   }
 
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDoubleVal();
   }
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getLongDoubleVal();
   }
 
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
 
@@ -348,25 +348,25 @@ class SimpleColumn : public ReturnedColumn
     return TreeNode::getDecimalVal();
   }
 
-  inline int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  inline int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDateIntVal();
   }
 
-  inline int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  inline int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDatetimeIntVal(fTimeZone);
   }
 
-  inline int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  inline int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimestampIntVal();
   }
 
-  inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();

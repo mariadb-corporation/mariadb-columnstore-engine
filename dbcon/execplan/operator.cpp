@@ -177,6 +177,15 @@ const string Operator::toString() const
   return oss.str();
 }
 
+string Operator::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("operator.h");
+  stringstream ss;
+  ss << "Operator(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
 Operator* Operator::opposite() const
 {
   if (fData.compare(">") == 0)

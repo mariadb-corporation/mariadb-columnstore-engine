@@ -250,6 +250,16 @@ const string SimpleFilter::toString() const
   return output.str();
 }
 
+string SimpleFilter::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("simplefilter.h");
+  stringstream ss;
+
+  ss << "SimpleFilter(" << std::quoted(data()) << ", SimpleFilter::ForTestPurposesWithoutColumnsOIDS{})";
+
+  return ss.str();
+}
+
 void SimpleFilter::parse(string sql, std::optional<ForTestPurposesWithoutColumnsOIDS> testFlag)
 {
   fLhs = 0;
@@ -282,10 +292,10 @@ void SimpleFilter::parse(string sql, std::optional<ForTestPurposesWithoutColumns
     string rhs = sql.substr(pos, sql.length());
 
     if (rhs.at(0) == ' ')
-      rhs = rhs.substr(1, pos);
+      rhs = rhs.substr(1, rhs.length());
 
     if (rhs.at(rhs.length() - 1) == ' ')
-      rhs = rhs.substr(0, pos - 1);
+      rhs = rhs.substr(0, rhs.length() - 1);
 
     if (testFlag)
       fRhs = new SimpleColumn(rhs, SimpleColumn::ForTestPurposeWithoutOID{});

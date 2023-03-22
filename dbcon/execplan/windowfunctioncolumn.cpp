@@ -22,6 +22,7 @@
  *
  ***********************************************************************/
 
+#include <cstddef>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -51,7 +52,6 @@ using namespace rowgroup;
 
 #include "joblisttypes.h"
 using namespace joblist;
-
 
 namespace execplan
 {
@@ -233,7 +233,17 @@ WindowFunctionColumn::WindowFunctionColumn(const WindowFunctionColumn& rhs, cons
  , fTimeZone(rhs.timeZone())
 {
 }
-
+WindowFunctionColumn::WindowFunctionColumn(const std::string& functionName,
+                                           const std::vector<SRCP>& functionParms,
+                                           const std::vector<SRCP>& partitions, WF_OrderBy& orderby,
+                                           const uint32_t sessionID)
+ : ReturnedColumn(sessionID)
+ , fFunctionName(functionName)
+ , fFunctionParms(functionParms)
+ , fPartitions(partitions)
+ , fOrderBy(orderby)
+{
+}
 const string WindowFunctionColumn::toString() const
 {
   ostringstream output;
@@ -265,6 +275,35 @@ const string WindowFunctionColumn::toString() const
     output << colList[i]->toString() << endl;
 
   return output.str();
+}
+
+string WindowFunctionColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("windowfunctioncolumn.h");
+  stringstream ss;
+  ss << "WindowFunctionColumn(" << std::quoted(fFunctionName) << ", std::vector<SRCP>{";
+  if (!fFunctionParms.empty())
+  {
+    for (size_t i = 0; i < fFunctionParms.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fFunctionParms.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fFunctionParms.back()->toCppCode(includes) << ")";
+  }
+  ss << "}, std::vector<SRCP>{";
+  if (!fPartitions.empty())
+  {
+    for (size_t i = 0; i < fPartitions.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fPartitions.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fPartitions.back()->toCppCode(includes) << ")";
+  }
+  ss << "}, WF_OrderBy(std::vector<SRCP>{";
+  if (!fOrderBy.fOrders.empty())
+  {
+    for (size_t i = 0; i < fOrderBy.fOrders.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fOrderBy.fOrders.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fOrderBy.fOrders.back()->toCppCode(includes) << ")}))";
+  }
+
+  return ss.str();
 }
 
 void WindowFunctionColumn::serialize(messageqcpp::ByteStream& b) const

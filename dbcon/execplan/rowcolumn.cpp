@@ -59,6 +59,12 @@ RowColumn::RowColumn(const uint32_t sessionID) : ReturnedColumn(sessionID)
 {
 }
 
+// For code geneartion purposes
+RowColumn::RowColumn(const std::vector<SRCP>& columnVec, const uint32_t sessionID)
+ : ReturnedColumn(sessionID), fColumnVec(columnVec)
+{
+}
+
 RowColumn::RowColumn(const RowColumn& rhs, const uint32_t sessionID) : ReturnedColumn(rhs, sessionID)
 {
   fColumnVec.clear();
@@ -188,6 +194,22 @@ ostream& operator<<(ostream& output, const SubSelect& ss)
 const string SubSelect::toString() const
 {
   return string(">SubSelect<");
+}
+
+string RowColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("rowcloumn.h");
+  stringstream ss;
+
+  ss << "RowColumn(std::vector<SRCP>{";
+  if (!fColumnVec.empty())
+  {
+    for (size_t i = 0; i < fColumnVec.size() - 1; i++)
+      ss << "boost::shared_ptr<ReturnedColumn>(new " << fColumnVec.at(i)->toCppCode(includes) << "), ";
+    ss << "boost::shared_ptr<ReturnedColumn>(new " << fColumnVec.back()->toCppCode(includes) << ")";
+  }
+  ss << "})";
+  return ss.str();
 }
 
 }  // namespace execplan

@@ -70,6 +70,15 @@ const string Filter::toString() const
   return string(">Filter<");
 }
 
+string Filter::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("filter.h");
+  stringstream ss;
+  ss << "Filter(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
 bool Filter::operator==(const Filter& t) const
 {
   if (data() == t.data())

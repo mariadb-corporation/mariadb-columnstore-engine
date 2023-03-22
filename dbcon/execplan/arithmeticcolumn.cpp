@@ -309,6 +309,15 @@ const string ArithmeticColumn::toString() const
   return oss.str();
 }
 
+string ArithmeticColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("arithmeticcolumn.h");
+  stringstream ss;
+  ss << "ArithmeticColumn(" << std::quoted(fData) << ", " << sessionID() << ")";
+
+  return ss.str();
+}
+
 void ArithmeticColumn::serialize(messageqcpp::ByteStream& b) const
 {
   b << static_cast<ObjectReader::id_t>(ObjectReader::ARITHMETICCOLUMN);

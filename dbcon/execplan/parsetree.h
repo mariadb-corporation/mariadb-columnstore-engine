@@ -31,7 +31,9 @@
 #include "operator.h"
 #include "mcs_decimal.h"
 #include <boost/core/demangle.hpp>
-
+#include <sstream>
+#include <string>
+#include <unordered_set>
 
 namespace rowgroup
 {
@@ -58,6 +60,7 @@ class ParseTree
    */
   inline ParseTree();
   inline ParseTree(TreeNode* data);
+  inline ParseTree(TreeNode* data, ParseTree* left, ParseTree* right);
   inline ParseTree(const ParseTree& rhs);
   inline virtual ~ParseTree();
 
@@ -161,6 +164,9 @@ class ParseTree
    */
   inline std::string toString() const;
 
+  inline std::string toCppCode(std::unordered_set<std::string>& includes) const;
+
+  inline void codeToFile(std::string filename, std::string varname) const;
   /** assignment operator
    *
    */
@@ -359,6 +365,13 @@ inline ParseTree::ParseTree(TreeNode* data) : fData(data), fLeft(0), fRight(0)
     fDerivedTable = data->derivedTable();
 }
 
+inline ParseTree::ParseTree(TreeNode* data, ParseTree* left, ParseTree* right)
+ : fData(data), fLeft(left), fRight(right)
+{
+  if (data)
+    fDerivedTable = data->derivedTable();
+}
+
 inline ParseTree::ParseTree(const ParseTree& rhs)
  : fData(0), fLeft(0), fRight(0), fDerivedTable(rhs.fDerivedTable)
 {
@@ -521,10 +534,8 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
             << "n" << (void*)r << std::endl;
 
   auto& node = *(n->data());
-  dotFile << "n" << (void*)n << " [label=\"" <<
-           n->data()->data() << " (" <<
-           n << ") " <<
-           boost::core::demangle(typeid(node).name()) << "\"]" << std::endl;
+  dotFile << "n" << (void*)n << " [label=\"" << n->data()->data() << " (" << n << ") "
+          << boost::core::demangle(typeid(node).name()) << "\"]" << std::endl;
 }
 
 inline void ParseTree::drawTree(std::string filename)
@@ -536,6 +547,30 @@ inline void ParseTree::drawTree(std::string filename)
   dotFile << "}" << std::endl;
 
   dotFile.close();
+}
+
+inline string ParseTree::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("parsetree.h");
+  std::stringstream ss;
+  ss << "ParseTree(" << (data() ? ("new " + data()->toCppCode(includes)) : "nullptr") << ", "
+     << (left() ? ("new " + left()->toCppCode(includes)) : "nullptr") << ", "
+     << (right() ? ("new " + right()->toCppCode(includes)) : "nullptr") << ")";
+
+  return ss.str();
+}
+
+inline void ParseTree::codeToFile(std::string filename, std::string varname) const
+{
+  ofstream hFile(filename.c_str(), std::ios::app);
+  IncludeSet includes;
+  auto result = toCppCode(includes);
+  for (const auto& inc : includes)
+    hFile << "#include \"" << inc << "\"\n";
+  hFile << "\n";
+  hFile << "namespace execplan \n{ auto " << varname << " = new " << result << ";\n}\n\n";
+
+  hFile.close();
 }
 
 inline void ParseTree::evaluate(rowgroup::Row& row, bool& isNull)
