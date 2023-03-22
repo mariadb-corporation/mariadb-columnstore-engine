@@ -75,7 +75,7 @@ class SimpleFilter : public Filter
 
   virtual ~SimpleFilter();
 
-  inline virtual SimpleFilter* clone() const
+  inline virtual SimpleFilter* clone() const override
   {
     return new SimpleFilter(*this);
   }
