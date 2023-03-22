@@ -74,7 +74,6 @@ string OuterJoinOnFilter::toCppCode(IncludeSet& includes) const
   ss << "OuterJoinOnFilter(boost::shared_ptr<ParseTree>(new " << fPt->toCppCode(includes) << "))";
 
   return ss.str();
-
 }
 
 ostream& operator<<(ostream& output, const OuterJoinOnFilter& rhs)

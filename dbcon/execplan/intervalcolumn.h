@@ -98,18 +98,18 @@ class IntervalColumn : public ReturnedColumn
   {
     fIntervalType = intervalType;
   }
-  const std::string toString() const;
-  inline virtual IntervalColumn* clone() const
+  const std::string toString() const override;
+  inline virtual IntervalColumn* clone() const override
   {
     return new IntervalColumn(*this);
   }
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate()
+  virtual bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc()
+  virtual bool hasWindowFunc() override
   {
     return false;
   }
@@ -124,12 +124,12 @@ class IntervalColumn : public ReturnedColumn
   int fIntervalType;
 
   // okay to be private for now.
-  virtual bool operator==(const TreeNode* t) const
+  virtual bool operator==(const TreeNode* t) const override
   {
     return false;
   }
   bool operator==(const IntervalColumn& t) const;
-  virtual bool operator!=(const TreeNode* t) const
+  virtual bool operator!=(const TreeNode* t) const override
   {
     return false;
   }

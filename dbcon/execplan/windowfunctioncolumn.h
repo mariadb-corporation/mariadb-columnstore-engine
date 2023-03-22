@@ -112,7 +112,7 @@ class WindowFunctionColumn : public ReturnedColumn
   }
 
   /** make a clone of this window function */
-  inline virtual WindowFunctionColumn* clone() const
+  inline virtual WindowFunctionColumn* clone() const override
   {
     return new WindowFunctionColumn(*this);
   }
@@ -120,24 +120,24 @@ class WindowFunctionColumn : public ReturnedColumn
   std::vector<SRCP> getColumnList() const;
 
   /** output the function for debug purpose */
-  const std::string toString() const;
+  const std::string toString() const override;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   // util function for connector to use.
   void addToPartition(std::vector<SRCP>& groupByList);
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate()
+  virtual bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc();
+  virtual bool hasWindowFunc() override;
   void adjustResultType();
 
   // UDAnF support
@@ -170,12 +170,12 @@ class WindowFunctionColumn : public ReturnedColumn
   WF_OrderBy fOrderBy;               /// order by clause
 
   // not support for window functions for now.
-  virtual bool operator==(const TreeNode* t) const
+  virtual bool operator==(const TreeNode* t) const override
   {
     return false;
   }
   bool operator==(const WindowFunctionColumn& t) const;
-  virtual bool operator!=(const TreeNode* t) const
+  virtual bool operator!=(const TreeNode* t) const override
   {
     return false;
   }
@@ -189,70 +189,70 @@ class WindowFunctionColumn : public ReturnedColumn
    *                 F&E framework                           *
    ***********************************************************/
  public:
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getStrVal(fTimeZone);
   }
 
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getIntVal();
   }
 
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getUintVal();
   }
 
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getFloatVal();
   }
 
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDoubleVal();
   }
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getLongDoubleVal();
   }
 
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDecimalVal();
   }
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDateIntVal();
   }
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDatetimeIntVal();
   }
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimestampIntVal();
   }
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();
   }
 
  private:
-  void evaluate(rowgroup::Row& row, bool& isNull);
+  void evaluate(rowgroup::Row& row, bool& isNull) override;
 };
 
 /**

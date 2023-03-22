@@ -128,25 +128,25 @@ class ConstantColumn : public ReturnedColumn
   /**
    * accessor
    */
-  virtual const std::string data() const;
+  virtual const std::string data() const override;
   /**
    * accessor
    */
-  virtual void data(const std::string data)
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
   /**
    * accessor
    */
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual ConstantColumn* clone() const
+  inline virtual ConstantColumn* clone() const override
   {
     return new ConstantColumn(*this);
   }
@@ -157,18 +157,18 @@ class ConstantColumn : public ReturnedColumn
   /**
    * serialize
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void serialize(messageqcpp::ByteStream&) const override;
   /**
    * unserialize
    */
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -182,7 +182,7 @@ class ConstantColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -191,13 +191,13 @@ class ConstantColumn : public ReturnedColumn
    */
   bool operator!=(const ConstantColumn& t) const;
 
-  virtual bool hasWindowFunc()
+  virtual bool hasWindowFunc() override
   {
     return false;
   }
 
   /** Constant column on the filte can always be moved into derived table */
-  virtual void setDerivedTable()
+  virtual void setDerivedTable() override
   {
     fDerivedTable = std::string("*");
   }
@@ -246,7 +246,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return TreeNode::getBoolVal();
@@ -254,7 +254,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.strVal;
@@ -262,7 +262,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.intVal;
@@ -270,7 +270,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.uintVal;
@@ -278,7 +278,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.floatVal;
@@ -286,7 +286,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.doubleVal;
@@ -294,7 +294,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.decimalVal;
@@ -302,7 +302,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -317,7 +317,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -332,7 +332,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -347,7 +347,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 

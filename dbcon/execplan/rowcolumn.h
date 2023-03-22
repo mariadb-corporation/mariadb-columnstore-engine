@@ -80,7 +80,7 @@ class RowColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual RowColumn* clone() const
+  inline virtual RowColumn* clone() const override
   {
     return new RowColumn(*this);
   }
@@ -95,20 +95,20 @@ class RowColumn : public ReturnedColumn
   // virtual void serialize(messageqcpp::ByteStream&) const;
   // virtual void unserialize(messageqcpp::ByteStream&);
 
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
   /**
    * Serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -122,7 +122,7 @@ class RowColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -131,11 +131,11 @@ class RowColumn : public ReturnedColumn
    */
   bool operator!=(const RowColumn& t) const;
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate()
+  virtual bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc()
+  virtual bool hasWindowFunc() override
   {
     return false;
   }
@@ -159,20 +159,20 @@ class SubSelect : public ReturnedColumn
   ~SubSelect()
   {
   }
-  SubSelect* clone() const
+  SubSelect* clone() const override
   {
     return new SubSelect();
   }
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate()
+  virtual bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc()
+  virtual bool hasWindowFunc() override
   {
     return false;
   }
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 };
 
 /**

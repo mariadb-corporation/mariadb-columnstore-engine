@@ -63,7 +63,7 @@ class SimpleColumn_INT : public SimpleColumn
   {
   }
 
-  inline virtual SimpleColumn_INT* clone() const
+  inline virtual SimpleColumn_INT* clone() const override
   {
     return new SimpleColumn_INT<len>(*this);
   }
@@ -78,8 +78,8 @@ class SimpleColumn_INT : public SimpleColumn
   virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
 
   /** The serialize interface */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
   uint64_t fNullVal;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;

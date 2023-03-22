@@ -54,7 +54,7 @@ class ArithmeticOperator : public Operator
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual ArithmeticOperator* clone() const
+  inline virtual ArithmeticOperator* clone() const override
   {
     return new ArithmeticOperator(*this);
   }
@@ -71,15 +71,15 @@ class ArithmeticOperator : public Operator
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -93,7 +93,7 @@ class ArithmeticOperator : public Operator
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -106,46 +106,46 @@ class ArithmeticOperator : public Operator
    *                 F&E framework                           *
    ***********************************************************/
   using Operator::evaluate;
-  inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
+  inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override;
 
   using Operator::getStrVal;
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getStrVal(fTimeZone);
   }
   using Operator::getIntVal;
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getIntVal();
   }
   using Operator::getUintVal;
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getUintVal();
   }
   using Operator::getFloatVal;
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getFloatVal();
   }
   using Operator::getDoubleVal;
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getDoubleVal();
   }
   using Operator::getLongDoubleVal;
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getLongDoubleVal();
   }
   using Operator::getDecimalVal;
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
 
@@ -164,31 +164,31 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDecimalVal();
   }
   using Operator::getDateIntVal;
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getDateIntVal();
   }
   using Operator::getDatetimeIntVal;
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getDatetimeIntVal();
   }
   using Operator::getTimestampIntVal;
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getTimestampIntVal();
   }
   using Operator::getTimeIntVal;
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getTimeIntVal();
   }
   using Operator::getBoolVal;
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getBoolVal();
@@ -203,7 +203,7 @@ class ArithmeticOperator : public Operator
     fDecimalOverflowCheck = check;
   }
 
-  inline virtual std::string toCppCode(IncludeSet& includes) const
+  inline virtual std::string toCppCode(IncludeSet& includes) const override
   {
     includes.insert("arithmeticoperator.h");
     std::stringstream ss;
