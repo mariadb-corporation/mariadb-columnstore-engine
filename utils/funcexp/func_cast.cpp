@@ -1024,7 +1024,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-
         int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         decimal.s128Value = parm[0]->data()->getIntVal(row, isNull);
         decimal.scale = 0;
@@ -1072,7 +1071,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-
         int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         uint128_t uval = parm[0]->data()->getUintVal(row, isNull);
 
@@ -1124,7 +1122,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-
         int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         float128_t value = parm[0]->data()->getDoubleVal(row, isNull);
 
@@ -1172,7 +1169,6 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
     {
       if (decimal.isTSInt128ByPrecision())
       {
-
         int128_t max_number_decimal = datatypes::ConversionRangeMaxValue[max_length - 19];
         float128_t value = parm[0]->data()->getLongDoubleVal(row, isNull);
 

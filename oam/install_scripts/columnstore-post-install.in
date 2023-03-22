@@ -4,9 +4,6 @@
 #
 # Post-install steps for columnstore install
 
-
-export ALLOC_CONFIG
-
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
        echo 0
