@@ -69,13 +69,13 @@ class SimpleColumn_INT : public SimpleColumn
   }
 
   /** Evaluate methods */
-  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
-  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
-  virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
-  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
-  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
+  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override;
 
   /** The serialize interface */
   virtual void serialize(messageqcpp::ByteStream&) const override;
