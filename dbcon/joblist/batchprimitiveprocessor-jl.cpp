@@ -772,6 +772,8 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in, vecto
   }
 }
 
+#pragma gcc diagnostics ignore -Wuse-after-free // Ubuntu 22.04 wrongly complains here.
+
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out, bool* validCPData,
                                                 uint64_t* lbid, bool* fromDictScan, int128_t* min,
                                                 int128_t* max, uint32_t* cachedIO, uint32_t* physIO,
