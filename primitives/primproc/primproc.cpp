@@ -745,6 +745,16 @@ int main(int argc, char** argv)
     std::cerr << "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting. \n";
     return 1;
   }
+
+  int32_t arena_ind = -1;
+  size_t sz = sizeof(arena_ind);
+  extent_hooks_t* new_hooks = &hooks;
+
+  bool ret = mallctl("arenas.create", (void*)(&arena_ind), &sz, (void*)(&new_hooks), sizeof(new_hooks));
+  if (!ret) {
+    std::cerr << "unable to create arenas\n";
+    return 1;
+  }
   Opt opt(argc, argv);
   // Set locale language
   setlocale(LC_ALL, "");
