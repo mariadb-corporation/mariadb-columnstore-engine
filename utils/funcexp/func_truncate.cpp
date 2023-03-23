@@ -527,139 +527,61 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
     }
     break;
 
+    case execplan::CalpontSystemCatalog::TIME:
     case execplan::CalpontSystemCatalog::DATETIME:
-    {
-      int32_t s = 0;
-      int64_t x = 0;
-
-      string value = DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
-
-      s = parm[1]->data()->getIntVal(row, isNull);
-
-      if (!isNull)
-      {
-        // strip off micro seconds
-        value = value.substr(0, 14);
-        x = atoll(value.c_str());
-
-        if (s > 5)
-          s = 0;
-
-        if (s > 0)
-        {
-          x *= helpers::powerOf10_c[s];
-        }
-        else if (s < 0)
-        {
-          s = -s;
-
-          if (s >= (int32_t)value.size())
-          {
-            x = 0;
-          }
-          else
-          {
-            x /= helpers::powerOf10_c[s];
-            x *= helpers::powerOf10_c[s];
-          }
-
-          s = 0;
-        }
-      }
-
-      decimal.value = x;
-      decimal.scale = s;
-    }
-    break;
-
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
       int32_t s = 0;
-      int64_t x = 0;
 
-      string value =
-          DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
+      string value;
+      if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+        value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
+                                                             op_ct.getTimeZone());
+      else
+        value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
 
-      s = parm[1]->data()->getIntVal(row, isNull);
+      // strip off micro seconds
+      value = value.substr(0, 14);
 
-      if (!isNull)
+      if (parm.size() > 1)  // truncate(X, D)
       {
-        // strip off micro seconds
-        value = value.substr(0, 14);
-        x = atoll(value.c_str());
+        s = parm[1]->data()->getIntVal(row, isNull);
 
         if (s > 5)
           s = 0;
 
         if (s > 0)
         {
-          x *= helpers::powerOf10_c[s];
-        }
-        else if (s < 0)
-        {
-          s = -s;
-
-          if (s >= (int32_t)value.size())
+          for (int i = 0; i < s; i++)
           {
-            x = 0;
+            value = value + "0";
           }
+        }
+        else
+        {
+          if (-s >= (int32_t)value.size())
+            value = "0";
           else
           {
-            x /= helpers::powerOf10_c[s];
-            x *= helpers::powerOf10_c[s];
+            value = value.substr(0, value.size() + s);
+            s = -s;
+            for (int i = 0; i < s; i++)
+            {
+              value = value + "0";
+            }
           }
 
           s = 0;
         }
       }
 
-      decimal.value = x;
-      decimal.scale = s;
-    }
-    break;
-
-    case execplan::CalpontSystemCatalog::TIME:
-    {
-      int32_t s = 0;
-      int64_t x = 0;
-
-      string value = DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
-
-      s = parm[1]->data()->getIntVal(row, isNull);
+      int64_t x = atoll(value.c_str());
 
       if (!isNull)
       {
-        // strip off micro seconds
-        value = value.substr(0, 14);
-        x = atoll(value.c_str());
-
-        if (s > 5)
-          s = 0;
-
-        if (s > 0)
-        {
-          x *= helpers::powerOf10_c[s];
-        }
-        else if (s < 0)
-        {
-          s = -s;
-
-          if (s >= (int32_t)value.size())
-          {
-            x = 0;
-          }
-          else
-          {
-            x /= helpers::powerOf10_c[s];
-            x *= helpers::powerOf10_c[s];
-          }
-
-          s = 0;
-        }
+        decimal.value = x;
+        decimal.scale = s;
       }
-
-      decimal.value = x;
-      decimal.scale = s;
     }
     break;
 
@@ -735,7 +657,50 @@ string Func_truncate::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                           execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  return parm[0]->data()->getTimestampIntVal(row, isNull);
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
+  if (s < 0) 
+  {
+    s = 0;
+  }
+  int64_t x = parm[0]->data()->getTimestampIntVal(row, isNull);
+  int32_t m_x = x & 0xfffff;
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
+
+int64_t Func_truncate::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
+                                      CalpontSystemCatalog::ColType& op_ct)
+{
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
+  if (s < 0) 
+  {
+    s = 0;
+  }
+  int64_t x = parm[0]->data()->getDatetimeIntVal(row, isNull);
+  int32_t m_x = x & 0xfffff;
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+}
+
+int64_t Func_truncate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
+  if (s < 0) 
+  {
+    s = 0;
+  }
+  int64_t x = parm[0]->data()->getTimeIntVal(row, isNull);
+  int32_t m_x = x & 0xffffff;
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+}
+
 
 }  // namespace funcexp

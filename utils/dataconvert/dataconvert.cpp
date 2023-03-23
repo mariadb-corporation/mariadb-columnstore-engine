@@ -2312,16 +2312,16 @@ std::string DataConvert::timestampToString1(long long timestampvalue, long timez
   return buf;
 }
 
-std::string DataConvert::timeToString1(long long datetimevalue)
+std::string DataConvert::timeToString1(long long timevalue)
 {
   // @bug 4703 abandon multiple ostringstream's for conversion
-  DateTime dt(datetimevalue);
-  const int TIMETOSTRING1_LEN = 14;  // HHMMSSmmmmmm\0
+  Time t(timevalue);
+  const int TIMETOSTRING1_LEN = 22;  // HHMMSSmmmmmm\0
   char buf[TIMETOSTRING1_LEN];
 
   char* outbuf = buf;
 
-  sprintf(outbuf, "%02d%02d%02d%06d", dt.hour, dt.minute, dt.second, dt.msecond);
+  sprintf(outbuf, "%02d%02d%02d%06d", t.hour, t.minute, t.second, t.msecond);
   return buf;
 }
 

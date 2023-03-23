@@ -53,6 +53,8 @@ namespace funcexp
 // typedef std::vector<execplan::STNP> FunctionParm;
 typedef std::vector<execplan::SPTP> FunctionParm;
 
+constexpr const int32_t MAX_MICROSECOND_PRECISION = 6;
+
 /** @brief Func class
  */
 class Func

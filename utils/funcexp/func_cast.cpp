@@ -1372,7 +1372,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row, FunctionParm& parm, bool&
       string value = dataconvert::DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
 
       // strip off micro seconds
-      string date = value.substr(0, 14);
+      string date = value.substr(0, 6);
 
       int64_t x = atoll(date.c_str());
 

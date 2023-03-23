@@ -50,6 +50,22 @@ CalpontSystemCatalog::ColType Func_ceil::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
+inline int64_t ceilDateTime(Row& row, FunctionParm& parm, bool& isNull)
+{
+  // the following is to handle the case of ceil(datetime), the last 20 bits are the miliseconds, the -1 is to make sure it could round up
+  return parm[0]->data()->getDatetimeIntVal(row, isNull) + 0xffffe;
+}
+inline int64_t ceilTimeStamp(Row& row, FunctionParm& parm, bool& isNull)
+{
+  // the following is to handle the case of ceil(timestamp), the last 20 bits are the miliseconds, the -1 is to make sure it could round up
+  return parm[0]->data()->getTimestampIntVal(row, isNull) + 0xffffe;
+}
+inline int64_t ceilTime(Row& row, FunctionParm& parm, bool& isNull)
+{
+  // the following is to handle the case of ceil(time), the last 24 bits are the miliseconds, the -1 is to make sure it could round up
+  return parm[0]->data()->getTimeIntVal(row, isNull) + 0xfffffe;
+}
+
 int64_t Func_ceil::getIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
   int64_t ret = 0;
@@ -147,19 +163,19 @@ int64_t Func_ceil::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 
     case CalpontSystemCatalog::DATETIME:
     {
-      ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      ret = ceilDateTime(row, parm, isNull);
     }
     break;
 
     case CalpontSystemCatalog::TIMESTAMP:
     {
-      ret = parm[0]->data()->getTimestampIntVal(row, isNull);
+      ret = ceilTimeStamp(row, parm, isNull);
     }
     break;
 
     case CalpontSystemCatalog::TIME:
     {
-      ret = parm[0]->data()->getTimeIntVal(row, isNull);
+      ret = ceilTime(row, parm, isNull);
     }
     break;
 
@@ -272,19 +288,19 @@ uint64_t Func_ceil::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 
     case CalpontSystemCatalog::DATETIME:
     {
-      ret = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      ret = ceilDateTime(row, parm, isNull);
     }
     break;
 
     case CalpontSystemCatalog::TIMESTAMP:
     {
-      ret = parm[0]->data()->getTimestampIntVal(row, isNull);
+      ret = ceilTimeStamp(row, parm, isNull);
     }
     break;
 
     case CalpontSystemCatalog::TIME:
     {
-      ret = parm[0]->data()->getTimeIntVal(row, isNull);
+      ret = ceilTime(row, parm, isNull);
     }
     break;
 
@@ -559,7 +575,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
 
     case CalpontSystemCatalog::DATETIME:
     {
-      DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
+      DateTime dt(ceilDateTime(row, parm, isNull));
 
       if (!isNull)
         ret.value = dt.convertToMySQLint();
@@ -568,7 +584,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
 
     case CalpontSystemCatalog::TIMESTAMP:
     {
-      TimeStamp dt(parm[0]->data()->getTimestampIntVal(row, isNull));
+      TimeStamp dt(ceilTimeStamp(row, parm, isNull));
 
       if (!isNull)
         ret.value = dt.convertToMySQLint(op_ct.getTimeZone());
@@ -577,7 +593,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
 
     case CalpontSystemCatalog::TIME:
     {
-      Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
+      Time dt(ceilTime(row, parm, isNull));
 
       if (!isNull)
         ret.value = dt.convertToMySQLint();
