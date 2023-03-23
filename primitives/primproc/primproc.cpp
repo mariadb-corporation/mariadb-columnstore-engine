@@ -734,6 +734,11 @@ extent_hooks_t hooks = {
   NULL
 };
 
+static void print_stat_part(void*, const char* msg)
+{
+  cout << "jemalloc stats line: " << msg;
+}
+
 /******************************************************************************
  * the MAIN.
  */
@@ -750,6 +755,7 @@ int main(int argc, char** argv)
   size_t sz = sizeof(arena_ind);
   extent_hooks_t* new_hooks = &hooks;
 
+  malloc_stats_print(print_stat_part, NULL, "");
   bool ret = mallctl("arenas.create", (void*)(&arena_ind), &sz, (void*)(&new_hooks), sizeof(new_hooks));
   if (ret) {
     std::cerr << "unable to create arenas\n";
