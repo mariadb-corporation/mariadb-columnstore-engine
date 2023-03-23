@@ -736,7 +736,7 @@ extent_hooks_t hooks = {
 
 static void print_stat_part(void*, const char* msg)
 {
-  cout << "jemalloc stats line: " << msg;
+  cout << "jemalloc stats line: " << msg << std::endl; cout.flush();
 }
 
 /******************************************************************************
