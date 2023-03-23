@@ -2284,16 +2284,16 @@ std::string DataConvert::dateToString1(int datevalue)
   return buf;
 }
 
-std::string DataConvert::datetimeToString1(long long datetimevalue)
+std::string DataConvert::timeToString1(long long timevalue)
 {
   // @bug 4703 abandon multiple ostringstream's for conversion
-  DateTime dt(datetimevalue);
-  // Interesting, gcc 7 says the sprintf below generates between 21 and 23 bytes of output.
-  const int DATETIMETOSTRING1_LEN = 23;  // YYYYMMDDHHMMSSmmmmmm\0
-  char buf[DATETIMETOSTRING1_LEN];
+  Time t(timevalue);
+  const int TIMETOSTRING1_LEN = 14;  // HHMMSSmmmmmm\0
+  char buf[TIMETOSTRING1_LEN];
 
-  sprintf(buf, "%04d%02d%02d%02d%02d%02d%06d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
-          dt.msecond);
+  char* outbuf = buf;
+
+  sprintf(outbuf, "%02d%02d%02d%06d", t.hour, t.minute, t.second, t.msecond);
   return buf;
 }
 

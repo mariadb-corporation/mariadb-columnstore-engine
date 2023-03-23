@@ -62,7 +62,7 @@ std::string Func_ucase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   CHARSET_INFO* cs = colType.getCharset();
   uint64_t inLen = tstr.length();
-  uint64_t bufLen = inLen * cs->caseup_multiply;
+  uint64_t bufLen = inLen * cs->caseup_multiply();
   char* outBuf = new char[bufLen];
 
   uint64_t outLen = cs->caseup(tstr.c_str(), inLen, outBuf, bufLen);

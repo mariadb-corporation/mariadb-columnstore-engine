@@ -588,76 +588,6 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     }
     break;
 
-    case execplan::CalpontSystemCatalog::TIME:
-    case execplan::CalpontSystemCatalog::DATETIME:
-    case execplan::CalpontSystemCatalog::TIMESTAMP:
-    {
-      int32_t s = 0;
-
-      string value;
-      if (op_ct.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
-        value = dataconvert::DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
-                                                             op_ct.getTimeZone());
-      else
-        value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
-
-      // strip off micro seconds
-      value = value.substr(0, 14);
-
-      if (parm.size() > 1)  // round(X, D)
-      {
-        s = parm[1]->data()->getIntVal(row, isNull);
-
-        if (s > 5)
-          s = 0;
-
-        if (s > 0)
-        {
-          for (int i = 0; i < s; i++)
-          {
-            value = value + "0";
-          }
-        }
-        else
-        {
-          if (-s >= (int32_t)value.size())
-            value = "0";
-          else
-          {
-            // check to see if last digit needs to be rounded up
-            int firstcutdigit = atoi(value.substr(value.size() + s, 1).c_str());
-            value = value.substr(0, value.size() + s);
-            int lastdigit = atoi(value.substr(value.size() - 1, 1).c_str());
-
-            if (firstcutdigit > 5)
-            {
-              lastdigit++;
-              string lastStr = intToString(lastdigit);
-              value = value.substr(0, value.size() - 1) + lastStr;
-            }
-
-            s = -s;
-
-            for (int i = 0; i < s; i++)
-            {
-              value = value + "0";
-            }
-          }
-
-          s = 0;
-        }
-      }
-
-      int64_t x = atoll(value.c_str());
-
-      if (!isNull)
-      {
-        decimal.value = x;
-        decimal.scale = s;
-      }
-    }
-    break;
-
     default:
     {
       std::ostringstream oss;
@@ -734,13 +664,106 @@ string Func_round::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 int64_t Func_round::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
                                       CalpontSystemCatalog::ColType& op_ct)
 {
-  return parm[0]->data()->getIntVal(row, isNull);
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > 6) ? 6 : s;
+  if (s < 0) 
+  {
+    int64_t x = parm[0]->data()->getDatetimeIntVal(row, isNull);
+    string value = dataconvert::DataConvert::datetimeToString1(x);
+    value = value.substr(0, 14);
+    x = atoll(value.c_str());
+    s = -s;
+    if (s >= (int32_t)value.size())
+    {
+      x = 0;
+    }
+    else
+    {
+      x /= helpers::powerOf10_c[s];
+      if (x % 10 >= 5)
+        x += 10;
+      x *= helpers::powerOf10_c[s];
+    }
+    return dataconvert::DataConvert::intToDatetime(x);
+  }
+  else 
+  {
+    int64_t x = parm[0]->data()->getDatetimeIntVal(row, isNull) + (s <= 5 ? 5 * helpers::powerOf10_c[5 - s] : 0) + (s == 0 ? 48576 : 0); // 48576 = 0xfffff - 1000000;
+    int32_t m_x = x & 0xfffff;
+    return (x ^ m_x) | (m_x / helpers::powerOf10_c[6 - s] * helpers::powerOf10_c[6 - s]);
+  }
 }
 
 int64_t Func_round::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  return parm[0]->data()->getTimestampIntVal(row, isNull);
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > 6) ? 6 : s;
+  if (s < 0) 
+  {
+    int64_t x = parm[0]->data()->getTimestampIntVal(row, isNull);
+    string value = dataconvert::DataConvert::timestampToString1(x, op_ct.getTimeZone());
+    value = value.substr(0, 14);
+    x = atoll(value.c_str());
+    s = -s;
+    if (s >= (int32_t)value.size())
+    {
+      x = 0;
+    }
+    else
+    {
+      x /= helpers::powerOf10_c[s];
+      if (x % 10 >= 5)
+        x += 10;
+      x *= helpers::powerOf10_c[s];
+    }
+    return dataconvert::DataConvert::stringToTimestamp(to_string(x), op_ct.getTimeZone());
+  }
+  else
+  {
+    int64_t x = parm[0]->data()->getTimestampIntVal(row, isNull) + (s <= 5 ? 5 * helpers::powerOf10_c[5 - s] : 0) + (s == 0 ? 48576 : 0); // 48576 = 0xfffff - 1000000;
+    int32_t m_x = x & 0xfffff;
+    return (x ^ m_x) | (m_x / helpers::powerOf10_c[6 - s] * helpers::powerOf10_c[6 - s]);
+  }
+}
+
+int64_t Func_round::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
+  if (isNull)
+    return 0;
+  s = (s > 6) ? 6 : s;
+  if (s < 0) 
+  {
+    int64_t x = parm[0]->data()->getTimeIntVal(row, isNull);
+    string value = dataconvert::DataConvert::timeToString1(x);
+    value = value.substr(0, 6);
+    x = atoll(value.c_str());
+    s = -s;
+    if (s >= (int32_t)value.size())
+    {
+      x = 0;
+    }
+    else
+    {
+      x /= helpers::powerOf10_c[s];
+      if (x % 10 >= 5)
+        x += 10;
+      x *= helpers::powerOf10_c[s];
+    }
+    return dataconvert::DataConvert::intToTime(x);  
+  }
+  else 
+  {
+    int64_t x = parm[0]->data()->getTimeIntVal(row, isNull) + (s <= 5 ? 5 * helpers::powerOf10_c[5 - s] : 0) + (s == 0 ? 15777215 : 0); // 15777215 = 0xffffff - 1000000;
+    int32_t m_x = x & 0xffffff;
+    return (x ^ m_x) | (m_x / helpers::powerOf10_c[6 - s] * helpers::powerOf10_c[6 - s]);
+  }
 }
 
 }  // namespace funcexp

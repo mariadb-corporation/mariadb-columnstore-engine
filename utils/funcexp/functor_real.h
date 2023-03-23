@@ -183,6 +183,9 @@ class Func_round : public Func_Real
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                              execplan::CalpontSystemCatalog::ColType& op_ct);
+                             
+  int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_truncate class
@@ -219,6 +222,12 @@ class Func_truncate : public Func_Real
                                       execplan::CalpontSystemCatalog::ColType& op_ct);
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                             execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                             execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                              execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 

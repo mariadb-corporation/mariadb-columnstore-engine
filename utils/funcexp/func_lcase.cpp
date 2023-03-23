@@ -53,7 +53,7 @@ std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   CHARSET_INFO* cs = colType.getCharset();
   uint64_t inLen = tstr.length();
-  uint64_t bufLen = inLen * cs->casedn_multiply;
+  uint64_t bufLen = inLen * cs->casedn_multiply();
   char* outBuf = new char[bufLen];
 
   uint64_t outLen = cs->casedn(tstr.c_str(), inLen, outBuf, bufLen);
