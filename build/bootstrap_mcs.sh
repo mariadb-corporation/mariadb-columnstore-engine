@@ -161,7 +161,8 @@ build()
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+                     -DWITH_CUSTOM_JEMALLOC=ON"
 
 
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
