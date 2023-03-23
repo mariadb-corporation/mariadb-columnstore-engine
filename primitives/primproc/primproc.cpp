@@ -746,12 +746,12 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  int32_t arena_ind = -1;
+  unsigned arena_ind = 0x900df00d;
   size_t sz = sizeof(arena_ind);
   extent_hooks_t* new_hooks = &hooks;
 
   bool ret = mallctl("arenas.create", (void*)(&arena_ind), &sz, (void*)(&new_hooks), sizeof(new_hooks));
-  if (!ret) {
+  if (ret) {
     std::cerr << "unable to create arenas\n";
     return 1;
   }
