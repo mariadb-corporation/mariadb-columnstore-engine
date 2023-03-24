@@ -744,7 +744,9 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
     allocatedMemSize -= size;
     checkMemSizeGuard.unlock();
   }
+  return ret;
 }
+
 bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
