@@ -801,7 +801,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  for (uinsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
+  for (unsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
   {
     ppOldArenasHooks[i] = nullptr;
   }
