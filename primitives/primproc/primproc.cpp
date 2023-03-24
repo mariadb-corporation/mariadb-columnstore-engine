@@ -763,7 +763,7 @@ bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
   return ret;
 }
 
-extent_hooks_t hooks = {
+extent_hooks_t ppHooks = {
   ppHooksExtentAlloc,
   ppHooksExtentDalloc,
   NULL,
@@ -792,16 +792,33 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  unsigned arena_ind = 0x900df00d;
-  size_t sz = sizeof(arena_ind);
-  extent_hooks_t* new_hooks = &hooks;
+  unsigned narenas = 0x900df00d;
+  size_t sz = sizeof(narenas);
 
-  malloc_stats_print(print_stat_part, NULL, "");
-  bool ret = mallctl("arenas.create", (void*)(&arena_ind), &sz, (void*)(&new_hooks), sizeof(new_hooks));
+  bool ret = mallctl("arenas.narenas", (void*)(&arena_ind), &sz);
   if (ret) {
-    std::cerr << "unable to create arenas\n";
+    std::cerr << "unable to get number of arenas\n";
     return 1;
   }
+
+  for (uinsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
+  {
+    ppOldArenasHooks[i] = nullptr;
+  }
+
+  for (uinsigned i = 0;i < narenas;i++) {
+    ostringstream tmp;
+    tmp << "arena." << i << ".extent_hooks";
+    extent_hooks_t* newHooks = &ppHooks;
+    size_t szNew = sizeof(newHooks);
+    size_t szOld = sizeof(ppOldArenasHooks[i]);
+    if (mallctl(tmp.str().c_str(),&szOld, &ppOldArenasHooks[i], &szNew, &newHooks))
+    {
+      std::cerr << "unable to set hooks for arena #" << i;
+      return 1;
+    } 
+  }
+
   Opt opt(argc, argv);
   // Set locale language
   setlocale(LC_ALL, "");
