@@ -700,31 +700,70 @@ int ServicePrimProc::Child()
 
 /******************************************************************************
  * jemalloc-specific part.
+ *
+ * Please be assured that MALLCTL_ARENAS_ALL is rerally an index one above
+ * maximal number of arenas. Right now it is 4096 and there is an actual limit
+ * definition, the MALLOCX_ARENA_LIMIT value that is (1<<12) - 1, take a
+ * look at jemalloc_internal_types.h.
+ *
+ * The number 12 in the definition of MALLOCX_ARENA_LIMIT is bolted quite strongly.
+ *
+ * Thus, despite the fact that MALLCTL_ARENAS_ALL and MALLOCX_ARENA_LIMIT are
+ * not directly linked, they indeed are.
+ *
+ * It does not appear that jemalloc creates arenas by itself outside of
+ * initial bunch of arenas.narenas.
  */
-static char main_arena[1 << 30];
-static char* main_arena_free = main_arena;
-static char* main_arena_end = main_arena + sizeof(main_arena);
-static void*
-my_hooks_alloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
-				size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
-{
-  char* ret = main_arena_free;
 
-  if (ret >= main_arena_end) {
+static size_t allowedMemSize = 0;        // zero means value is not set. it can be set at any time.
+static size_t allocatedMemSize = 0;      // this value will always reflect actual memory size.
+static std::mutex checkMemSizeGuard;     // we will work under guard, as logic can be not expressible with atomics.
+static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've got for existing arenas.
+static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
+                        size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
+{
+  bool fail = false;
+  checkMemSizeGuard.lock();
+  if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
+    fail = true;
+  } else {
+    allocatedMemSize += size;
+  }
+  checkMemSizeGuard.unlock();
+  if (fail)
+  {
     return nullptr;
   }
-
-  main_arena_free += size;
-
-  if (*zero)
-    memset((void*)ret, 0, size);
-
-  return (void*)ret;
+  extent_hooks_t oldHooks = ppOldArenasHooks[arena_ind];
+  idbassert(oldHooks);
+  void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
+  if (ret == nullptr)
+  {
+    // handle the failure to allocate.
+    checkMemSizeGuard.lock();
+    allocatedMemSize -= size;
+    checkMemSizeGuard.unlock();
+  }
+}
+bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
+                         size_t size, bool committed, unsigned arena_ind)
+{
+  extent_hooks_t oldHooks = ppOldArenasHooks[arena_ind];
+  idbassert(oldHooks);
+  bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
+  if (!ret)
+  {
+    // successful deallocation.
+    checkMemSizeGuard.lock();
+    allocatedMemSize -= size;
+    checkMemSizeGuard.unlock();
+  }
+  return ret;
 }
 
 extent_hooks_t hooks = {
-  my_hooks_alloc,
-  NULL,
+  ppHooksExtentAlloc,
+  ppHooksExtentDalloc,
   NULL,
   NULL,
   NULL,
