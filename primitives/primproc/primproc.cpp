@@ -795,7 +795,7 @@ int main(int argc, char** argv)
   unsigned narenas = 0x900df00d;
   size_t sz = sizeof(narenas);
 
-  bool ret = mallctl("arenas.narenas", (void*)(&arena_ind), &sz);
+  bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz);
   if (ret) {
     std::cerr << "unable to get number of arenas\n";
     return 1;
@@ -812,7 +812,7 @@ int main(int argc, char** argv)
     extent_hooks_t* newHooks = &ppHooks;
     size_t szNew = sizeof(newHooks);
     size_t szOld = sizeof(ppOldArenasHooks[i]);
-    if (mallctl(tmp.str().c_str(),&szOld, &ppOldArenasHooks[i], &szNew, &newHooks))
+    if (mallctl(tmp.str().c_str(), &ppOldArenasHooks[i], &szOld, &newHooks, &szNew))
     {
       std::cerr << "unable to set hooks for arena #" << i;
       return 1;
