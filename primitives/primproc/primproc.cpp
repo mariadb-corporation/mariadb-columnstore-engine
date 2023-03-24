@@ -795,7 +795,7 @@ int main(int argc, char** argv)
   unsigned narenas = 0x900df00d;
   size_t sz = sizeof(narenas);
 
-  bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz);
+  bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz, nullptr, nullptr);
   if (ret) {
     std::cerr << "unable to get number of arenas\n";
     return 1;
