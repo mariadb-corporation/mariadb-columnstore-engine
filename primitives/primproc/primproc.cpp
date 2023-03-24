@@ -734,7 +734,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
   {
     return nullptr;
   }
-  extent_hooks_t oldHooks = ppOldArenasHooks[arena_ind];
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
   idbassert(oldHooks);
   void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
   if (ret == nullptr)
@@ -748,7 +748,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
 bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
-  extent_hooks_t oldHooks = ppOldArenasHooks[arena_ind];
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
   idbassert(oldHooks);
   bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
   if (!ret)
