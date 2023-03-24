@@ -80,7 +80,7 @@ class PseudoColumn : public SimpleColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual PseudoColumn* clone() const
+  inline virtual PseudoColumn* clone() const override
   {
     return new PseudoColumn(*this);
   }
@@ -106,17 +106,17 @@ class PseudoColumn : public SimpleColumn
   /**
    * The serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -130,7 +130,7 @@ class PseudoColumn : public SimpleColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -140,6 +140,8 @@ class PseudoColumn : public SimpleColumn
   bool operator!=(const PseudoColumn& t) const;
 
   static uint32_t pseudoNameToType(std::string& name);
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**

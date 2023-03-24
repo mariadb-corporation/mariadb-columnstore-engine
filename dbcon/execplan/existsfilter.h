@@ -87,19 +87,19 @@ class ExistsFilter : public Filter
    * Overloaded stream operator
    */
   // virtual std::ostream& operator<< (std::ostream& output);
-  virtual const std::string toString() const;
-
+  virtual const std::string toString() const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual ExistsFilter* clone() const
+  inline virtual ExistsFilter* clone() const override
   {
     return new ExistsFilter(*this);
   }
@@ -109,7 +109,7 @@ class ExistsFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -123,7 +123,7 @@ class ExistsFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *

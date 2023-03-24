@@ -242,6 +242,16 @@ const string ReturnedColumn::toString() const
   return oss.str();
 }
 
+string ReturnedColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("returnedcolumn.h");
+  stringstream ss;
+
+  ss << "ReturnedColumn(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
 // All columns that may have simple column added to the list need to implement
 // this function. Default behavior is to have no SC added to the list so
 // fSimpleColumnList will be cleared.

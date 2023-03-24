@@ -75,18 +75,18 @@ class Operator : public TreeNode
 
   virtual ~Operator();
 
-  virtual const std::string toString() const;
-  virtual const std::string data() const
+  virtual const std::string toString() const override;
+  virtual const std::string data() const override
   {
     return fData;
   }
-  virtual void data(const std::string data);
+  virtual void data(const std::string data) override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual Operator* clone() const
+  inline virtual Operator* clone() const override
   {
     return new Operator(*this);
   }
@@ -101,15 +101,15 @@ class Operator : public TreeNode
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -123,7 +123,7 @@ class Operator : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -138,6 +138,8 @@ class Operator : public TreeNode
    * is applied before the operator
    */
   virtual void reverseOp();
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  protected:
   std::string fData;
@@ -228,11 +230,11 @@ class Operator : public TreeNode
   virtual void setOpType(Type& l, Type& r)
   {
   }
-  virtual void operationType(const Type& ot)
+  virtual void operationType(const Type& ot) override
   {
     fOperationType = ot;
   }
-  virtual const Type& operationType() const
+  virtual const Type& operationType() const override
   {
     return fOperationType;
   }

@@ -60,7 +60,7 @@ class SimpleScalarFilter : public Filter
    * pass all parts in ctor
    * @note SimpleFilter takes ownership of all these pointers
    */
-  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, SCSEP& sub);
+  SimpleScalarFilter(const std::vector<SRCP>& cols, const SOP& op, const SCSEP& sub);
 
   /**
    * Destructors
@@ -100,13 +100,13 @@ class SimpleScalarFilter : public Filter
     fSub = sub;
   }
 
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
-  virtual inline const std::string data() const
+  virtual inline const std::string data() const override
   {
     return fData;
   }
-  virtual inline void data(const std::string data)
+  virtual inline void data(const std::string data) override
   {
     fData = data;
   }
@@ -114,14 +114,14 @@ class SimpleScalarFilter : public Filter
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual SimpleScalarFilter* clone() const
+  inline virtual SimpleScalarFilter* clone() const override
   {
     return new SimpleScalarFilter(*this);
   }
@@ -131,7 +131,7 @@ class SimpleScalarFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -145,7 +145,7 @@ class SimpleScalarFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -153,6 +153,8 @@ class SimpleScalarFilter : public Filter
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
   bool operator!=(const SimpleScalarFilter& t) const;
+
+  virtual string toCppCode(IncludeSet& includes) const override;
 
  private:
   // default okay?

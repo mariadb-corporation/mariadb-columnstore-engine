@@ -60,7 +60,7 @@ class PredicateOperator : public Operator
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual PredicateOperator* clone() const
+  inline virtual PredicateOperator* clone() const override
   {
     return new PredicateOperator(*this);
   }
@@ -68,15 +68,15 @@ class PredicateOperator : public Operator
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -90,7 +90,7 @@ class PredicateOperator : public Operator
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -107,8 +107,17 @@ class PredicateOperator : public Operator
    *                  F&E framework                          *
    ***********************************************************/
   using Operator::getBoolVal;
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop);
-  void setOpType(Type& l, Type& r);
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop) override;
+  void setOpType(Type& l, Type& r) override;
+
+  inline virtual std::string toCppCode(IncludeSet& includes) const override
+  {
+    includes.insert("predicateoperator.h");
+    std::stringstream ss;
+    ss << "PredicateOperator(" << std::quoted(fData) << ")";
+
+    return ss.str();
+  }
 
  private:
   inline bool numericCompare(const IDB_Decimal& op1, const IDB_Decimal& op2);

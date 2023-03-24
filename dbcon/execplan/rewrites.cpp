@@ -153,8 +153,7 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
 // this utility function creates new and node
 execplan::ParseTree* newAndNode()
 {
-  execplan::Operator* op = new execplan::Operator();
-  op->data("and");
+  execplan::Operator* op = new execplan::LogicOperator("and");
   return new execplan::ParseTree(op);
 }
 
@@ -357,9 +356,9 @@ void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name, std::s
     dumpfolder = startup::StartUp::tmpDir();
   }
 
-  std::ofstream before(dumpfolder + "filters." + name + ".data");
+  std::ofstream before(dumpfolder + "filters" + name + ".data");
   before << beforetree;
-  std::string dotname = dumpfolder + "filters." + name + ".dot";
+  std::string dotname = dumpfolder + "filters" + name + ".dot";
   filters->drawTree(dotname);
   std::string dotInvoke = "dot -Tpng ";
   std::string convert = dotInvoke + dotname + " -o " + dotname + ".png";

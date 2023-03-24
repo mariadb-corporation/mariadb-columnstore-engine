@@ -131,19 +131,19 @@ class FunctionColumn : public ReturnedColumn
     fTimeZone = timeZone;
   }
 
-  virtual const std::string data() const;
-  virtual void data(const std::string data)
+  virtual const std::string data() const override;
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
 
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual FunctionColumn* clone() const
+  inline virtual FunctionColumn* clone() const override
   {
     return new FunctionColumn(*this);
   }
@@ -151,20 +151,20 @@ class FunctionColumn : public ReturnedColumn
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate();
-  virtual bool hasWindowFunc();
-  virtual void setDerivedTable();
-  virtual void replaceRealCol(std::vector<SRCP>&);
-  virtual const std::vector<SimpleColumn*>& simpleColumnList() const
+  virtual bool hasAggregate() override;
+  virtual bool hasWindowFunc() override;
+  virtual void setDerivedTable() override;
+  virtual void replaceRealCol(std::vector<SRCP>&) override;
+  virtual const std::vector<SimpleColumn*>& simpleColumnList() const override
   {
     return fSimpleColumnList;
   }
 
-  virtual void setSimpleColumnList();
+  virtual void setSimpleColumnList() override;
   /**
    * Return the tableAlias name of the table that the column arguments belong to.
    *
@@ -172,7 +172,9 @@ class FunctionColumn : public ReturnedColumn
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**
@@ -188,7 +190,7 @@ class FunctionColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -202,7 +204,7 @@ class FunctionColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -215,38 +217,38 @@ class FunctionColumn : public ReturnedColumn
    *				  F&E framework						  *
    ***********************************************************/
  public:
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
     return fResult.strVal;
   }
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getIntVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getUintVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getFloatVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDoubleVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getLongDoubleVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     IDB_Decimal decimal = fFunctor->getDecimalVal(row, fFunctionParms, isNull, fOperationType);
@@ -292,27 +294,27 @@ class FunctionColumn : public ReturnedColumn
     decimal.precision = std::max(fResultType.precision, static_cast<int32_t>(decimal.precision));
     return decimal;
   }
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getBoolVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDateIntVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getTimestampIntVal(row, fFunctionParms, isNull, fOperationType);
   }
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
     return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
