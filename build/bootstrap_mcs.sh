@@ -320,14 +320,16 @@ fix_config_files()
 {
     message Fixing config files
 
+    THREAD_STACK_SIZE="20M"
+
     SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
     if [[ $ASAN = true ]] ; then
         COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
             warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
         else
-            echo "thread_stack = 2M" >> $COLUMNSTORE_CONFIG
-            message "thread_stack was set to 2M in $COLUMNSTORE_CONFIG"
+            echo "thread_stack = ${THREAD_STACK_SIZE}" >> $COLUMNSTORE_CONFIG
+            message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
         fi
 
         MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
