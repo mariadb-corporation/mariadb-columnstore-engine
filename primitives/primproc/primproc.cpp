@@ -806,7 +806,7 @@ int main(int argc, char** argv)
     ppOldArenasHooks[i] = nullptr;
   }
 
-  for (uinsigned i = 0;i < narenas;i++) {
+  for (unsigned i = 0;i < narenas;i++) {
     ostringstream tmp;
     tmp << "arena." << i << ".extent_hooks";
     extent_hooks_t* newHooks = &ppHooks;
