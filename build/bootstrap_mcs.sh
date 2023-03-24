@@ -178,7 +178,8 @@ build()
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+                     "
 
 
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
@@ -198,6 +199,7 @@ build()
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+        echo '$REPORT_PATH/core_%e.%p' | sudo tee /proc/sys/kernel/core_pattern
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
@@ -253,7 +255,7 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \ |
     make -j $CPUS
     message "Installing silently"
     make -j $CPUS install > /dev/null
@@ -286,7 +288,7 @@ run_unit_tests()
     else
         message "Running unittests"
         cd $MDB_SOURCE_PATH
-        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc)
+        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
         cd -
     fi
 }
@@ -298,7 +300,7 @@ run_microbenchmarks_tests()
     else
         message "Runnning microbenchmarks"
         cd $MDB_SOURCE_PATH
-        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc)
+        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
         cd -
     fi
 }
@@ -359,7 +361,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     chown mysql:mysql /var/lib/mysql
 
     message "Running mysql_install_db"
-    sudo -u mysql mysql_install_db --rpm --user=mysql
+    sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
     mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
 
     enable_columnstore_back
