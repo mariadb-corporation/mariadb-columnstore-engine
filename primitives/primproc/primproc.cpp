@@ -775,7 +775,7 @@ extent_hooks_t ppHooks = {
   NULL
 };
 
-static void print_stat_part(void*, const char* msg)
+void print_stat_part(void*, const char* msg)
 {
   cout << "jemalloc stats line: " << msg << std::endl; cout.flush();
 }
