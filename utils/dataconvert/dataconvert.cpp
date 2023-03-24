@@ -475,25 +475,16 @@ void number_int_value(const string& data, cscDataType typeCode,
   if ((typeCode == datatypes::SystemCatalog::DECIMAL) || (typeCode == datatypes::SystemCatalog::UDECIMAL) ||
       (ct.scale > 0))
   {
-    T rangeUp, rangeLow;
-
-    if (ct.precision < 19)
+    auto precision =
+        ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
+    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
     {
-      rangeUp = (T)columnstore_precision[ct.precision];
-    }
-    else
-    {
-      auto precision =
-          ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
-      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
-      {
-        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
-                              dataTypeErr);
-      }
-      rangeUp = datatypes::ConversionRangeMaxValue[ct.precision - 19];
+      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                            dataTypeErr);
     }
 
-    rangeLow = -rangeUp;
+    T rangeUp = dataconvert::decimalRangeUp<T>(precision);
+    T rangeLow = -rangeUp;
 
     if (intVal > rangeUp)
     {
