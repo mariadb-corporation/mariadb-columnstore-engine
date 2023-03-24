@@ -199,7 +199,7 @@ build()
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-        echo '$REPORT_PATH/core_%e.%p' | sudo tee /proc/sys/kernel/core_pattern
+        echo "${REPORT_PATH}/core_%e.%p" | sudo tee /proc/sys/kernel/core_pattern
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
