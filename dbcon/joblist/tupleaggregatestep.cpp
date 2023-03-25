@@ -5786,7 +5786,32 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
               // for "group by without distinct" case
               else
               {
-                fAggregator->append(fAggregators[i].get());
+                // fAggregator->append(fAggregators[i].get());
+                while (fAggregators[i]->nextRowGroup_() && !cancelled())
+                {
+                  fAggregators[i]->finalize();
+                  rowCount = fAggregators[i]->fRowGroupOut->getRowCount();
+                  fRowsReturned += rowCount;
+                  fRowGroupDelivered.setData(fAggregators[i]->fRowGroupOut->getRGData());
+
+                  if (rowCount != 0)
+                  {
+                    if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+                      pruneAuxColumns();
+
+                    if (dlp)
+                    {
+                      rgData = fRowGroupDelivered.duplicate();
+                      dlp->insert(rgData);
+                    }
+                    else
+                    {
+                      bs.restart();
+                      fRowGroupDelivered.serializeRGData(bs);
+                      break;
+                    }
+                  }
+                }
               }
             }
           }
@@ -5798,34 +5823,34 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       bool done = true;
 
       //@bug4459
-      while (fAggregator->nextRowGroup() && !cancelled())
-      {
-        done = false;
-        fAggregator->finalize();
-        rowCount = fRowGroupOut.getRowCount();
-        fRowsReturned += rowCount;
-        fRowGroupDelivered.setData(fRowGroupOut.getRGData());
+      // while (fAggregator->nextRowGroup() && !cancelled())
+      // {
+      //   done = false;
+      //   fAggregator->finalize();
+      //   rowCount = fRowGroupOut.getRowCount();
+      //   fRowsReturned += rowCount;
+      //   fRowGroupDelivered.setData(fRowGroupOut.getRGData());
 
-        if (rowCount != 0)
-        {
-          if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-            pruneAuxColumns();
+      //   if (rowCount != 0)
+      //   {
+      //     if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+      //       pruneAuxColumns();
 
-          if (dlp)
-          {
-            rgData = fRowGroupDelivered.duplicate();
-            dlp->insert(rgData);
-          }
-          else
-          {
-            bs.restart();
-            fRowGroupDelivered.serializeRGData(bs);
-            break;
-          }
-        }
+      //     if (dlp)
+      //     {
+      //       rgData = fRowGroupDelivered.duplicate();
+      //       dlp->insert(rgData);
+      //     }
+      //     else
+      //     {
+      //       bs.restart();
+      //       fRowGroupDelivered.serializeRGData(bs);
+      //       break;
+      //     }
+      //   }
 
-        done = true;
-      }
+      //   done = true;
+      // }
 
       if (done)
       {

@@ -96,6 +96,7 @@ class RowAggStorage
    * @returns pointer to the next RGData or nullptr if empty
    */
   std::unique_ptr<RGData> getNextRGData();
+  std::unique_ptr<RGData> getNextRGData_();
 
   /** @brief TODO
    *

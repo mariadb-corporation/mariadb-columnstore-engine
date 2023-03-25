@@ -226,4 +226,3 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-

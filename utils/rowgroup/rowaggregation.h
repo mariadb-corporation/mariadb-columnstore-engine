@@ -524,6 +524,8 @@ class RowAggregation : public messageqcpp::Serializeable
   {
     return std::move(fCurRGData);
   }
+  // WIP
+  RowGroup* fRowGroupOut;
 
  protected:
   virtual void initialize();
@@ -568,7 +570,6 @@ class RowAggregation : public messageqcpp::Serializeable
   std::vector<SP_ROWAGG_FUNC_t> fFunctionCols;
   uint32_t fAggMapKeyCount;  // the number of columns that make up the key
   RowGroup fRowGroupIn;
-  RowGroup* fRowGroupOut;
 
   // for when the group by & distinct keys are not stored in the output rows
   rowgroup::RowGroup fKeyRG;
@@ -664,6 +665,7 @@ class RowAggregationUM : public RowAggregation
    * @returns true if more data, else false if no more data.
    */
   bool nextRowGroup();
+  bool nextRowGroup_();
 
   /** @brief Add an aggregator for DISTINCT aggregation
    */

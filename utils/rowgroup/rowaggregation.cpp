@@ -4051,6 +4051,20 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextRowGroup_()
+{
+  fCurRGData = fRowAggStorage->getNextRGData_();
+  bool more = static_cast<bool>(fCurRGData);
+
+  if (more)
+  {
+    // load the top result set
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG

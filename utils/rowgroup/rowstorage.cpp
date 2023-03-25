@@ -553,6 +553,7 @@ class RowGroupStorage
 {
  public:
   using RGDataStorage = std::vector<std::unique_ptr<RGData>>;
+  using RGDatasMask = std::vector<bool>;
 
  public:
   /** @brief Default constructor
@@ -689,6 +690,27 @@ class RowGroupStorage
       if (fRowGroupOut->getRowCount() == 0)
         continue;
       return rgdata;
+    }
+
+    return {};
+  }
+
+  std::unique_ptr<RGData> getNextRGData_()
+  {
+    std::unique_ptr<RGData> rgd;
+    std::string fname;
+    // std::optional ?
+    if (getNextRGData(rgd, fname))
+    {
+      if (rgd)
+      {
+        fRowGroupOut->setData(rgd.get());
+      }
+      else
+      {
+        loadRG(fname, rgd);
+      }
+      return rgd;
     }
 
     return {};
@@ -972,6 +994,27 @@ class RowGroupStorage
       dumpFinalizedInfo();
   }
 
+  void dumpSomeWithMask(const RGDatasMask& mask, bool dumpFin = true) const
+  {
+#ifdef DISK_AGG_DEBUG
+    dumpMeta();
+#endif
+    // std::cout << "dump s " << fRGDatas.size() << std::endl;
+    for (uint64_t i = 0; i < fRGDatas.size(); ++i)
+    {
+      if (mask[i] && fRGDatas[i])
+        saveRG(i, fRGDatas[i].get());
+      // else
+      // {
+      //   auto fname = makeRGFilename(i);
+      //   if (access(fname.c_str(), F_OK) != 0)
+      //     ::abort();
+      // }
+    }
+    if (dumpFin)
+      dumpFinalizedInfo();
+  }
+
   /** @brief Create new RowGroupStorage with the save LRU, MemManager & uniq ID */
   RowGroupStorage* clone(uint16_t gen) const
   {
@@ -1008,6 +1051,11 @@ class RowGroupStorage
       return false;
 
     return fFinalizedRows[gid] & (1ULL << rid);
+  }
+
+  uint64_t getRGDataIdx(const uint64_t idx) const
+  {
+    return idx / 64;
   }
 
   void getTmpFilePrefixes(std::vector<std::string>& prefixes) const
@@ -1187,6 +1235,34 @@ class RowGroupStorage
 
     if (unlinkDump)
       unlink(fname.c_str());
+    rgdata.reset(new RGData());
+    rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
+
+    fRowGroupOut->setData(rgdata.get());
+    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+
+    if (!fMM->acquire(memSz))
+    {
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_AGGREGATION_TOO_BIG),
+                               logging::ERR_AGGREGATION_TOO_BIG);
+    }
+  }
+
+  void loadRG(std::string& fname, std::unique_ptr<RGData>& rgdata)
+  {
+    std::vector<char> data;
+    int errNo;
+    if ((errNo = fDumper->read(fname, data)) != 0)
+    {
+      unlink(fname.c_str());
+      throw logging::IDBExcept(
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::ERR_DISKAGG_FILEIO_ERROR);
+    }
+
+    messageqcpp::ByteStream bs(reinterpret_cast<uint8_t*>(data.data()), data.size());
+
+    unlink(fname.c_str());
     rgdata.reset(new RGData());
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
 
@@ -1750,6 +1826,28 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
   return fStorage->getNextRGData();
 }
 
+std::unique_ptr<RGData> RowAggStorage::getNextRGData_()
+{
+  if (!fStorage)
+  {
+    return {};
+  }
+  cleanup();
+  freeData();
+  auto gen = fGeneration;
+  auto rgd = fStorage->getNextRGData_();
+  bool hasRgdToReturn = static_cast<bool>(rgd);
+  if (!hasRgdToReturn && gen)
+  {
+    // take a prev gen and re-try
+    --gen;
+    fGeneration = gen;
+    fStorage.reset(fStorage->clone(gen));
+    return fStorage->getNextRGData_();
+  }
+  return rgd;
+}
+
 void RowAggStorage::freeData()
 {
   for (auto& data : fGens)
@@ -2078,6 +2176,11 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     uint32_t prevInfoInc;
     uint32_t prevInfoHashShift;
     std::unique_ptr<uint8_t[]> prevInfo;
+    // std::vector<bool> rgDatasToFlush((fExtKeys) ? fKeysStorage->fRGDatas.size() :
+    // fStorage->fRGDatas.size(),
+    //                                  false);
+    // WIP
+    std::vector<bool> rgDatasToFlush(1000000, false);
 
     std::unique_ptr<RowGroupStorage> prevRowStorage;
     std::unique_ptr<RowGroupStorage> prevRealKeyRowStorage;
@@ -2200,6 +2303,9 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         mergeFunc(tmpRow);
         genUpdated = true;
         prevKeyRowStorage->markFinalized(ppos.idx);
+        // std::cout << "s " << fStorage->fRGDatas.size() << " i " << fStorage->getRGDataIdx(pos.idx)
+        //           << std::endl;
+        rgDatasToFlush[fStorage->getRGDataIdx(pos.idx)] = true;
         if (fExtKeys)
         {
           prevRowStorage->markFinalized(ppos.idx);
@@ -2218,11 +2324,16 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       fKeysStorage->dumpFinalizedInfo();
     if (genUpdated)
     {
+      // std::cout << "flush count " << std::count(rgDatasToFlush.begin(), rgDatasToFlush.end(), true)
+      //           << std::endl;
       // we have to save current generation data to disk 'cause we update some rows
       // TODO: to reduce disk IO we can dump only affected rowgroups
-      fStorage->dumpAll(false);
+      fStorage->dumpSomeWithMask(rgDatasToFlush, false);
       if (fExtKeys)
-        fKeysStorage->dumpAll(false);
+        fKeysStorage->dumpSomeWithMask(rgDatasToFlush, false);
+      // fStorage->dumpAll(false);
+      // if (fExtKeys)
+      //   fKeysStorage->dumpAll(false);
     }
 
     // swap current generation N with the prev generation N-1
