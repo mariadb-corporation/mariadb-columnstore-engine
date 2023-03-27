@@ -71,7 +71,7 @@ target_link_libraries(StorageManager storagemanager)
 
 if (WITH_CUSTOM_JEMALLOC)
     target_link_libraries(StorageManager custom_jemalloc_lib)
-else
+else()
     target_link_libraries(StorageManager libjemalloc)
 endif()
 
