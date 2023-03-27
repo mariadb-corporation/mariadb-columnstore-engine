@@ -69,12 +69,6 @@ target_link_libraries(storagemanager boost_chrono boost_system boost_thread boos
 add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
 
-if (WITH_CUSTOM_JEMALLOC)
-    target_link_libraries(StorageManager custom_jemalloc_lib)
-else()
-    target_link_libraries(StorageManager libjemalloc)
-endif()
-
 set_property(TARGET StorageManager PROPERTY CXX_STANDARD 20)
 
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
