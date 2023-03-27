@@ -2254,6 +2254,7 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
 
         bool found = false;
         auto& keyRow = fExtKeys ? fKeyRow : rowOut;
+        auto& tmpRowRef = fExtKeys ? tmpKeyRow : tmpRow;
         fKeysStorage->getRow(pos.idx, keyRow);
         while (!found && prevInfo[pidx] == pinfo)
         {
@@ -2267,8 +2268,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
             continue;
           }
 
-          prevKeyRowStorage->getRow(ppos.idx, fExtKeys ? tmpKeyRow : tmpRow);
-          if (!keyRow.equals(fExtKeys ? tmpKeyRow : tmpRow, fLastKeyCol))
+          prevKeyRowStorage->getRow(ppos.idx, tmpRowRef);
+          if (!keyRow.equals(tmpRowRef, fLastKeyCol))
           {
             ++pidx;
             pinfo += prevInfoInc;
@@ -2303,8 +2304,6 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         mergeFunc(tmpRow);
         genUpdated = true;
         prevKeyRowStorage->markFinalized(ppos.idx);
-        // std::cout << "s " << fStorage->fRGDatas.size() << " i " << fStorage->getRGDataIdx(pos.idx)
-        //           << std::endl;
         rgDatasToFlush[fStorage->getRGDataIdx(pos.idx)] = true;
         if (fExtKeys)
         {
@@ -2324,16 +2323,11 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       fKeysStorage->dumpFinalizedInfo();
     if (genUpdated)
     {
-      // std::cout << "flush count " << std::count(rgDatasToFlush.begin(), rgDatasToFlush.end(), true)
-      //           << std::endl;
       // we have to save current generation data to disk 'cause we update some rows
       // TODO: to reduce disk IO we can dump only affected rowgroups
       fStorage->dumpSomeWithMask(rgDatasToFlush, false);
       if (fExtKeys)
         fKeysStorage->dumpSomeWithMask(rgDatasToFlush, false);
-      // fStorage->dumpAll(false);
-      // if (fExtKeys)
-      //   fKeysStorage->dumpAll(false);
     }
 
     // swap current generation N with the prev generation N-1

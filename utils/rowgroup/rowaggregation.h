@@ -868,6 +868,7 @@ class RowAggregationDistinct : public RowAggregationUMP2
   void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut) override;
 
   virtual void doDistinctAggregation();
+  virtual void doDistinctAggregation_();
   virtual void doDistinctAggregation_rowVec(std::vector<std::pair<Row::Pointer, uint64_t>>& inRows);
   void addRowGroup(const RowGroup* pRowGroupIn) override;
   void addRowGroup(const RowGroup* pRowGroupIn,

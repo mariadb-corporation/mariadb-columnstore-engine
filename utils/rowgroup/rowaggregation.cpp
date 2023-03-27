@@ -4536,6 +4536,23 @@ void RowAggregationDistinct::doDistinctAggregation()
   }
 }
 
+void RowAggregationDistinct::doDistinctAggregation_()
+{
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup_())
+  {
+    fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+    Row rowIn;
+    fRowGroupIn.initRow(&rowIn);
+    fRowGroupIn.getRow(0, &rowIn);
+
+    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+    {
+      aggregateRow(rowIn);
+    }
+  }
+}
+
 void RowAggregationDistinct::doDistinctAggregation_rowVec(vector<std::pair<Row::Pointer, uint64_t>>& inRows)
 {
   Row rowIn;
