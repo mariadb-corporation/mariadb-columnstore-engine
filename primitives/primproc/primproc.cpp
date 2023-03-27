@@ -753,7 +753,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
   return ret;
 }
 
-bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
+extern "C" bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
   std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
