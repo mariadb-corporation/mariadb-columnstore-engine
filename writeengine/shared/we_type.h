@@ -399,8 +399,8 @@ struct JobColumn /** @brief Job Column Structure */
   int compressionType;             /** @brief compression type */
   bool autoIncFlag;                /** @brief auto increment flag */
   DctnryStruct dctnry;             /** @brief dictionary structure */
-  int64_t fMinIntSat;              /** @brief For integer type, the min saturation value */
-  uint64_t fMaxIntSat;             /** @brief For integer type, the max saturation value */
+  int128_t fMinIntSat;              /** @brief For integer type, the min saturation value */
+  uint128_t fMaxIntSat;             /** @brief For integer type, the max saturation value */
   double fMinDblSat;               /** @brief for float/double, the min saturation value */
   double fMaxDblSat;               /** @brief for float/double, the max saturation value */
   bool fWithDefault;               /** @brief With default */

@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <cstdio>
 #include <ctime>
+#include <memory>
 
 #include "messagequeue.h"
 #include "bytestream.h"
@@ -57,21 +58,18 @@ void timespec_sub(const struct timespec& tv1, const struct timespec& tv2, double
 
 namespace BRM
 {
-SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
- : slave(s)
- , currentSaveFile(NULL)
- , journalh(NULL)
+SlaveComm::SlaveComm(string hostname)
 {
   config::Config* config = config::Config::makeConfig();
   string tmp;
-
+  slave = std::make_unique<SlaveDBRMNode>();
   bool tellUser = true;
 
   for (;;)
   {
     try
     {
-      server = new MessageQueueServer(hostname);
+      server = std::make_unique<MessageQueueServer>(hostname);
       break;
     }
     catch (runtime_error& re)
@@ -133,8 +131,8 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
     journalName = savefile + "_journal";
     const char* filename = journalName.c_str();
 
-    journalh = IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0);
-    if (journalh == NULL)
+    journalh.reset(IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "a", 0));
+    if (journalh == nullptr)
       throw runtime_error("Could not open the BRM journal for writing!");
   }
   else
@@ -162,8 +160,6 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s)
 }
 
 SlaveComm::SlaveComm()
- : currentSaveFile(NULL)
- , journalh(NULL)
 {
   config::Config* config = config::Config::makeConfig();
 
@@ -192,23 +188,9 @@ SlaveComm::SlaveComm()
   server = NULL;
   standalone = true;
   printOnly = false;
-  slave = new SlaveDBRMNode();
+  slave = std::make_unique<SlaveDBRMNode>();
 }
 
-SlaveComm::~SlaveComm()
-{
-  delete server;
-  server = NULL;
-
-  if (firstSlave)
-  {
-    delete currentSaveFile;
-    currentSaveFile = NULL;
-  }
-
-  delete journalh;
-  journalh = NULL;
-}
 
 void SlaveComm::stop()
 {
@@ -1946,8 +1928,7 @@ void SlaveComm::do_confirm()
   {
     if (!currentSaveFile)
     {
-      currentSaveFile =
-          IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0);
+      currentSaveFile.reset(IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0));
     }
 
     if (currentSaveFile == NULL)
@@ -1970,7 +1951,7 @@ void SlaveComm::do_confirm()
     if (err < (int)relative.length())
     {
       ostringstream os;
-      os << "WorkerComm: currentfile write() returned " << err << " file pointer is " << currentSaveFile;
+      os << "WorkerComm: currentfile write() returned " << err << " file pointer is " << currentSaveFile.get();
 
       if (err < 0)
         os << " errno: " << strerror(errno);
@@ -1979,13 +1960,13 @@ void SlaveComm::do_confirm()
     }
 
     currentSaveFile->flush();
-    delete currentSaveFile;
-    currentSaveFile = NULL;
+
+    currentSaveFile = nullptr;
     saveFileToggle = !saveFileToggle;
 
-    delete journalh;
-    journalh = IDBDataFile::open(IDBPolicy::getType(journalName.c_str(), IDBPolicy::WRITEENG),
-                                 journalName.c_str(), "w+b", 0);
+    ;
+    journalh.reset(IDBDataFile::open(IDBPolicy::getType(journalName.c_str(), IDBPolicy::WRITEENG),
+                                 journalName.c_str(), "w+b", 0));
 
     if (!journalh)
       throw runtime_error("Could not open the BRM journal for writing!");
@@ -2245,7 +2226,6 @@ void SlaveComm::do_ownerCheck(ByteStream& msg)
   master.write(reply);
 }
 
-// FIXME: needs to be refactored along with SessionManagerServer::lookupProcessStatus()
 bool SlaveComm::processExists(const uint32_t pid, const string& pname)
 {
   string stat;
@@ -2277,7 +2257,6 @@ bool SlaveComm::processExists(const uint32_t pid, const string& pname)
 
   return true;
 }
-
 
 void SlaveComm::do_dmlLockLBIDRanges(ByteStream& msg)
 {

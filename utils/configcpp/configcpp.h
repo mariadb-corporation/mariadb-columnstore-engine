@@ -56,6 +56,11 @@ namespace config
 class Config
 {
  public:
+  struct ConfigDeleter
+  {
+    void operator()(Config* config);
+  };
+
   /** @brief Config factory method
    *
    * Creates a singleton Config object
@@ -249,7 +254,13 @@ class Config
    *
    */
   void checkAndReloadConfig();
+
 };
+
+
+
+using ConfigUniqPtr = std::unique_ptr<Config, Config::ConfigDeleter>;
+
 
 }  // namespace config
 
