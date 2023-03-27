@@ -741,6 +741,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
   idbassert(oldHooks);
   std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
   void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
+  std::cerr << "returned from old alloc" << std::endl; std::cerr.flush();
   if (ret == nullptr)
   {
     // handle the failure to allocate.
@@ -748,6 +749,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
     allocatedMemSize -= size;
     checkMemSizeGuard.unlock();
   }
+  std::cerr << "returning" << std::endl; std::cerr.flush();
   return ret;
 }
 
