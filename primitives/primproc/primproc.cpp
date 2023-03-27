@@ -827,6 +827,7 @@ int main(int argc, char** argv)
       std::cerr << "unable to set hooks for arena #" << i << std::endl;
       return 1;
     } 
+    std::cerr << "hooks set, arena " << i << std::endl; std::cerr.flush();
   }
 
   Opt opt(argc, argv);
