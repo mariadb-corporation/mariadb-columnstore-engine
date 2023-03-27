@@ -801,14 +801,14 @@ int main(int argc, char** argv)
 
   unsigned narenas = 0x900df00d;
   size_t sz = sizeof(narenas);
-  std::cerr << "about to get number of arenas" << std::endl; std::cerr.flush();
+  fprintf(stderr, "about to get number of arenas\n"); fflush(stderr);
 
   bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz, nullptr, 0);
   if (ret) {
     std::cerr << "unable to get number of arenas\n";
     return 1;
   }
-  std::cerr << "got " << narenas << " arenas to process" << std::endl; std::cerr.flush();
+  fprintf(stderr, "got %u to process\n", narenas); fflush(stderr);
 
   for (unsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
   {
@@ -816,18 +816,18 @@ int main(int argc, char** argv)
   }
 
   for (unsigned i = 0;i < narenas;i++) {
-    ostringstream tmp;
-    tmp << "arena." << i << ".extent_hooks";
+    char tmp[100];
+    sprintf(tmp, "arena.%u.extent_hooks", i);
     extent_hooks_t* newHooks = &ppHooks;
     size_t szNew = sizeof(newHooks);
     size_t szOld = sizeof(ppOldArenasHooks[i]);
-    std::cerr << "about to set hooks for arena " << i << std::endl; std::cerr.flush();
+    fprintf(stderr, "about to set hooks for arena %u\n", i); fflush(stderr);
     if (mallctl(tmp.str().c_str(), &ppOldArenasHooks[i], &szOld, &newHooks, szNew))
     {
       std::cerr << "unable to set hooks for arena #" << i << std::endl;
       return 1;
     } 
-    std::cerr << "hooks set, arena " << i << std::endl; std::cerr.flush();
+    fprintf(stderr, "hooks are set for arena %u\n", i); fflush(stderr);
   }
 
   Opt opt(argc, argv);
