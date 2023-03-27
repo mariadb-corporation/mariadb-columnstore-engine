@@ -722,6 +722,7 @@ static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've 
 static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
                         size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
 {
+  std::cerr << "extent alloc for arena " << arena_ind << std::endl; std::cerr.flush();
   bool fail = false;
   checkMemSizeGuard.lock();
   if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
@@ -794,12 +795,14 @@ int main(int argc, char** argv)
 
   unsigned narenas = 0x900df00d;
   size_t sz = sizeof(narenas);
+  std::cerr << "about to get number of arenas" << std::endl; std::cerr.flush();
 
   bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz, nullptr, 0);
   if (ret) {
     std::cerr << "unable to get number of arenas\n";
     return 1;
   }
+  std::cerr << "got " << narenas << " arenas to process" << std::endl; std::cerr.flush();
 
   for (unsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
   {
@@ -812,9 +815,10 @@ int main(int argc, char** argv)
     extent_hooks_t* newHooks = &ppHooks;
     size_t szNew = sizeof(newHooks);
     size_t szOld = sizeof(ppOldArenasHooks[i]);
+    std::cerr << "about to set hooks for arena " << i << std::endl; std::cerr.flush();
     if (mallctl(tmp.str().c_str(), &ppOldArenasHooks[i], &szOld, &newHooks, szNew))
     {
-      std::cerr << "unable to set hooks for arena #" << i;
+      std::cerr << "unable to set hooks for arena #" << i << std::endl;
       return 1;
     } 
   }
