@@ -733,10 +733,13 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
   checkMemSizeGuard.unlock();
   if (fail)
   {
+    std::cerr << "failing" << std::endl;
     return nullptr;
   }
   extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  std::cerr << "old hooks is nullptr " << ((int)(oldHooks == nullptr)) << std::endl; std::cerr.flush();
   idbassert(oldHooks);
+  std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
   void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
   if (ret == nullptr)
   {
@@ -751,6 +754,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
 bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
+  std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
   extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
   idbassert(oldHooks);
   bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
