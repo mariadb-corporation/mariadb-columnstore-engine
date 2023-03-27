@@ -821,7 +821,7 @@ int main(int argc, char** argv)
     extent_hooks_t* newHooks = &ppHooks;
     size_t szNew = sizeof(newHooks);
     size_t szOld = sizeof(ppOldArenasHooks[i]);
-    fprintf(stderr, "about to set hooks  for arena %u\n", i); fflush(stderr);
+    fprintf(stderr, "about to set hooks for arena %u\n", i); fflush(stderr);
     if (mallctl(tmp, &ppOldArenasHooks[i], &szOld, &newHooks, szNew))
     {
       std::cerr << "unable to set hooks for arena #" << i << std::endl;
