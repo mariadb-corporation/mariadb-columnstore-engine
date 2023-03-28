@@ -803,7 +803,7 @@ int main(int argc, char** argv)
   size_t sz = sizeof(narenas);
   fprintf(stderr, "about to get number of arenas\n"); fflush(stderr);
 
-  bool ret = mallctl("arenas.narenas", (void*)(&narenas), &sz, nullptr, 0);
+  bool ret = mallctl("opt.narenas", (void*)(&narenas), &sz, nullptr, 0);
   if (ret) {
     std::cerr << "unable to get number of arenas\n";
     return 1;
@@ -815,7 +815,8 @@ int main(int argc, char** argv)
     ppOldArenasHooks[i] = nullptr;
   }
 
-  for (unsigned i = 0;i < narenas;i++) {
+  // jemalloc reports one more arenas than there actually are.
+  for (unsigned i = 0;i < narenas-1;i++) {
     char tmp[100];
     sprintf(tmp, "arena.%u.extent_hooks", i);
     extent_hooks_t* newHooks = &ppHooks;
