@@ -722,51 +722,51 @@ static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've 
 static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
                         size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
 {
-  std::cerr << "extent alloc for arena " << arena_ind << std::endl; std::cerr.flush();
-  bool fail = false;
-  checkMemSizeGuard.lock();
-  if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
-    fail = true;
-  } else {
-    allocatedMemSize += size;
-  }
-  checkMemSizeGuard.unlock();
-  if (fail)
-  {
-    std::cerr << "failing" << std::endl;
-    return nullptr;
-  }
-  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
-  std::cerr << "old hooks is nullptr " << ((int)(oldHooks == nullptr)) << std::endl; std::cerr.flush();
-  idbassert(oldHooks);
-  std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
+  //std::cerr << "extent alloc for arena " << arena_ind << std::endl; std::cerr.flush();
+  //bool fail = false;
+  //checkMemSizeGuard.lock();
+  //if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
+  //  fail = true;
+  //} else {
+  //  allocatedMemSize += size;
+  //}
+  //checkMemSizeGuard.unlock();
+  //if (fail)
+  //{
+  //  std::cerr << "failing" << std::endl;
+  //  return nullptr;
+  //}
+  //extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  //std::cerr << "old hooks is nullptr " << ((int)(oldHooks == nullptr)) << std::endl; std::cerr.flush();
+  //idbassert(oldHooks);
+  //std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
   void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
-  std::cerr << "returned from old alloc" << std::endl; std::cerr.flush();
-  if (ret == nullptr)
-  {
-    // handle the failure to allocate.
-    checkMemSizeGuard.lock();
-    allocatedMemSize -= size;
-    checkMemSizeGuard.unlock();
-  }
-  std::cerr << "returning" << std::endl; std::cerr.flush();
+  //std::cerr << "returned from old alloc" << std::endl; std::cerr.flush();
+  //if (ret == nullptr)
+  //{
+  //  // handle the failure to allocate.
+  //  checkMemSizeGuard.lock();
+  //  allocatedMemSize -= size;
+  //  checkMemSizeGuard.unlock();
+  //}
+  //std::cerr << "returning" << std::endl; std::cerr.flush();
   return ret;
 }
 
 extern "C" bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
-  std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
-  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
-  idbassert(oldHooks);
+  //std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
+  //extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  //idbassert(oldHooks);
   bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
-  if (!ret)
-  {
-    // successful deallocation.
-    checkMemSizeGuard.lock();
-    allocatedMemSize -= size;
-    checkMemSizeGuard.unlock();
-  }
+  //if (!ret)
+  //{
+  //  // successful deallocation.
+  //  checkMemSizeGuard.lock();
+  //  allocatedMemSize -= size;
+  //  checkMemSizeGuard.unlock();
+  //}
   return ret;
 }
 
