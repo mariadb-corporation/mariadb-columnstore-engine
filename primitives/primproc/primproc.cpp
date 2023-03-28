@@ -725,6 +725,7 @@ extern "C" void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr
   //std::cerr << "extent alloc for arena " << arena_ind << std::endl; std::cerr.flush();
   bool fail = false;
   checkMemSizeGuard.lock();
+  fprintf(stderr, "alloc hook: requested %zu bytes, arena %u\n", size, arena_ind); fflush(stderr);
   if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
     fail = true;
   } else {
@@ -746,6 +747,7 @@ extern "C" void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr
   {
     // handle the failure to allocate.
     checkMemSizeGuard.lock();
+    fprintf(stderr, "alloc hook: retuning failed %zu bytes, arena %u\n", size, arena_ind); fflush(stderr);
     allocatedMemSize -= size;
     checkMemSizeGuard.unlock();
   }
@@ -764,6 +766,7 @@ extern "C" bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
   {
     // successful deallocation.
     checkMemSizeGuard.lock();
+    fprintf(stderr, "alloc hook: freed %zu bytes, arena %u\n", size, arena_ind); fflush(stderr);
     allocatedMemSize -= size;
     checkMemSizeGuard.unlock();
   }
