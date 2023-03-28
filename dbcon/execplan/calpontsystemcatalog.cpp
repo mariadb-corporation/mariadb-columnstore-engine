@@ -178,7 +178,6 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
 namespace execplan
 {
 typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
-
 boost::shared_ptr<SessionManager> fSessionManager;
 CalpontSystemCatalog::NJLSysDataList::~NJLSysDataList()
 {
