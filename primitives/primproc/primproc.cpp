@@ -816,7 +816,7 @@ int main(int argc, char** argv)
   }
 
   // jemalloc reports one more arenas than there actually are.
-  for (unsigned i = 0;i < narenas-1;i++) {
+  for (unsigned i = 0;i < narenas;i++) {
     char tmp[100];
     sprintf(tmp, "arena.%u.extent_hooks", i);
     extent_hooks_t* newHooks = &ppHooks;
