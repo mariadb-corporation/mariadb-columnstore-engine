@@ -715,7 +715,7 @@ int ServicePrimProc::Child()
  * initial bunch of arenas.narenas.
  */
 
-size_t allowedMemSize = 10000000000;        // zero means value is not set. it can be set at any time.
+size_t allowedMemSize = 100000000;        // zero means value is not set. it can be set at any time.
 size_t allocatedMemSize = 0;      // this value will always reflect actual memory size.
 std::mutex checkMemSizeGuard;     // we will work under guard, as logic can be not expressible with atomics.
 static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've got for existing arenas.
