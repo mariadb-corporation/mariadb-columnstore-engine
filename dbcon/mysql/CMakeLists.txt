@@ -45,9 +45,11 @@ if (COMMAND mysql_add_plugin)
   IF(NOT(RPM OR DEB))
     SET(disabled DISABLED)
   ENDIF()
+  list(REMOVE_DUPLICATES PLUGIN_EXEC_LIBS)
+  list(REMOVE_ITEM PLUGIN_EXEC_LIBS messageqcpp)
 
   mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY ${disabled}
-      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${PLUGIN_EXEC_LIBS} ${PLUGIN_WRITE_LIBS} joblist_server ${NETSNMP_LIBRARIES} ${S3API_DEPS} threadpool
+      LINK_LIBRARIES ${ENGINE_LDFLAGS} messageqcpp ${PLUGIN_EXEC_LIBS} ${PLUGIN_WRITE_LIBS} joblist_server ${NETSNMP_LIBRARIES} ${S3API_DEPS} threadpool
       VERSION ${PACKAGE_VERSION}
       COMPONENT columnstore-engine CONFIG columnstore.cnf)
 else ()
