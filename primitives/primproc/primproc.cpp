@@ -757,7 +757,7 @@ extern "C" bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
                          size_t size, bool committed, unsigned arena_ind)
 {
   //std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
-  //extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
   //idbassert(oldHooks);
   bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
   //if (!ret)
