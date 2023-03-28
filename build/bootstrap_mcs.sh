@@ -96,7 +96,7 @@ install_deps()
         yum -y install epel-release \
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
-        && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel install lzo-devel xz-devel lz4-devel bzip2-devel \
+        && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
         && yum -y install pcre2-devel
     fi
 }
