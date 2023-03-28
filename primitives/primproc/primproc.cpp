@@ -736,7 +736,7 @@ static void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, si
   //  std::cerr << "failing" << std::endl;
   //  return nullptr;
   //}
-  //extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
   //std::cerr << "old hooks is nullptr " << ((int)(oldHooks == nullptr)) << std::endl; std::cerr.flush();
   //idbassert(oldHooks);
   //std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
