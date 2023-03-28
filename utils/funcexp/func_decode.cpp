@@ -54,12 +54,12 @@ CalpontSystemCatalog::ColType Func_decode::operationType(FunctionParm& fp,
 string Func_decode::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               CalpontSystemCatalog::ColType&)
 {
-  const string& str = parm[0]->data()->getStrVal(row, isNull);
+  const auto& str = parm[0]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return "";
   }
-  const string& password = parm[1]->data()->getStrVal(row, isNull);
+  const auto& password = parm[1]->data()->getStrVal(row, isNull);
   if (isNull)
   {
     return "";
@@ -72,12 +72,12 @@ string Func_decode::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 
   if (!fSeeded)
   {
-    hash_password(fSeeds, password.c_str(), nPassLen);
+    hash_password(fSeeds, password.str(), nPassLen);
     sql_crypt.init(fSeeds);
     fSeeded = true;
   }
 
-  memcpy(res.data(), str.c_str(), nStrLen);
+  memcpy(res.data(), str.str(), nStrLen);
   sql_crypt.decode(res.data(), nStrLen);
   sql_crypt.reinit();
 

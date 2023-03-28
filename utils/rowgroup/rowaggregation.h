@@ -50,6 +50,7 @@
 
 #include "resourcemanager.h"
 #include "rowstorage.h"
+#include "nullstring.h"
 
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist
@@ -298,22 +299,25 @@ inline void RowUDAFFunctionCol::deserialize(messageqcpp::ByteStream& bs)
 
 struct ConstantAggData
 {
-  std::string fConstValue;
+  utils::NullString fConstValue;
   std::string fUDAFName;  // If a UDAF is called with constant.
   RowAggFunctionType fOp;
-  bool fIsNull;
 
-  ConstantAggData() : fOp(ROWAGG_FUNCT_UNDEFINE), fIsNull(false)
+  ConstantAggData() : fOp(ROWAGG_FUNCT_UNDEFINE)
   {
   }
 
-  ConstantAggData(std::string v, RowAggFunctionType f, bool n) : fConstValue(std::move(v)), fOp(f), fIsNull(n)
+  ConstantAggData(utils::NullString v, RowAggFunctionType f, bool n) : fConstValue(v), fOp(f)
   {
   }
 
-  ConstantAggData(std::string v, std::string u, RowAggFunctionType f, bool n)
-   : fConstValue(std::move(v)), fUDAFName(std::move(u)), fOp(f), fIsNull(n)
+  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f, bool n)
+   : fConstValue(v), fUDAFName(u), fOp(f)
   {
+  }
+  bool isNull() const
+  {
+    return fConstValue.isNull();
   }
 };
 
@@ -326,7 +330,7 @@ struct GroupConcat
   std::vector<std::pair<uint32_t, uint32_t>> fGroupCols;  // columns to concatenate, and position
   std::vector<std::pair<uint32_t, bool>> fOrderCols;      // columns to order by [asc/desc]
   std::string fSeparator;
-  std::vector<std::pair<std::string, uint32_t>> fConstCols;  // constant columns in group
+  std::vector<std::pair<utils::NullString, uint32_t>> fConstCols;  // constant columns in group
   bool fDistinct;
   uint64_t fSize;
 
@@ -354,7 +358,6 @@ class GroupConcatAg
   virtual void processRow(const rowgroup::Row&){};
   virtual void merge(const rowgroup::Row&, uint64_t){};
 
-  void getResult(uint8_t*){};
   uint8_t* getResult()
   {
     return nullptr;
@@ -563,7 +566,7 @@ class RowAggregation : public messageqcpp::Serializeable
   inline void updateDoubleMinMax(double val1, double val2, int64_t col, int func);
   inline void updateLongDoubleMinMax(long double val1, long double val2, int64_t col, int func);
   inline void updateFloatMinMax(float val1, float val2, int64_t col, int func);
-  inline void updateStringMinMax(std::string val1, std::string val2, int64_t col, int func);
+  inline void updateStringMinMax(utils::NullString val1, utils::NullString val2, int64_t col, int func);
   std::vector<SP_ROWAGG_GRPBY_t> fGroupByCols;
   std::vector<SP_ROWAGG_FUNC_t> fFunctionCols;
   uint32_t fAggMapKeyCount;  // the number of columns that make up the key
