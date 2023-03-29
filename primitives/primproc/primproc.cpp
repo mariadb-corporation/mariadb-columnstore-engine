@@ -715,7 +715,7 @@ int ServicePrimProc::Child()
  * initial bunch of arenas.narenas.
  */
 
-size_t allowedMemSize = 100000000;        // zero means value is not set. it can be set at any time.
+size_t allowedMemSize = 1000000000;        // zero means value is not set. it can be set at any time.
 size_t allocatedMemSize = 0;      // this value will always reflect actual memory size.
 std::mutex checkMemSizeGuard;     // we will work under guard, as logic can be not expressible with atomics.
 static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've got for existing arenas.
@@ -785,9 +785,10 @@ extent_hooks_t ppHooks = {
   NULL
 };
 
-void print_stat_part(void*, const char* msg)
+void print_stat_part(void* _file, const char* msg)
 {
-  cout << "jemalloc stats line: " << msg << std::endl; cout.flush();
+  FILE* file = (FILE*) _file;
+  fprintf(file, "%s\n", msg); fflush(file)
 }
 
 /******************************************************************************
@@ -801,6 +802,10 @@ int main(int argc, char** argv)
     std::cerr << "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting. \n";
     return 1;
   }
+
+  FILE* f = fopen("jemalloc-log", "w");
+  malloc_print_stats(print_stat_part, (void*)f, "");
+  fclose(f);
 
   unsigned narenas = 0x900df00d;
   size_t sz = sizeof(narenas);
