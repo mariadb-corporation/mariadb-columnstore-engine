@@ -788,7 +788,7 @@ extent_hooks_t ppHooks = {
 void print_stat_part(void* _file, const char* msg)
 {
   FILE* file = (FILE*) _file;
-  fprintf(file, "%s\n", msg); fflush(file)
+  fprintf(file, "%s\n", msg); fflush(file);
 }
 
 /******************************************************************************
