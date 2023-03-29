@@ -768,9 +768,18 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // Disable processing of select_result_interceptor classes
   // which intercept and transform result set rows. E.g.:
   // select a,b into @a1, @a2 from t1;
-  if (((thd->lex)->result && !((select_dumpvar*)(thd->lex)->result)->var_list.is_empty()) && (!isPS))
+  auto res = thd->lex->result;
+  if (res)
   {
-    return nullptr;
+    auto dumpvar_res = dynamic_cast<select_dumpvar*>(res);
+    if (dumpvar_res != nullptr)
+    {
+      auto& var_list = dumpvar_res->var_list;
+      if (!(var_list.is_empty()) && (!isPS))
+      {
+        return nullptr;
+      }
+    }
   }
 
   // Select_handler couldn't properly process UPSERT..SELECT
