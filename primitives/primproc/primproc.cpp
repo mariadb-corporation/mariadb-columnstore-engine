@@ -715,6 +715,7 @@ int ServicePrimProc::Child()
  * initial bunch of arenas.narenas.
  */
 
+int reported = 0;
 size_t allowedMemSize = 1000000000;        // zero means value is not set. it can be set at any time.
 size_t allocatedMemSize = 0;      // this value will always reflect actual memory size.
 std::mutex checkMemSizeGuard;     // we will work under guard, as logic can be not expressible with atomics.
@@ -726,7 +727,8 @@ extern "C" void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr
   bool fail = false;
   checkMemSizeGuard.lock();
 //  fprintf(stderr, "alloc hook: requested %zu bytes, allocated so far %zu, allowed %zu, arena %u\n", size, allocatedMemSize, allowedMemSize, arena_ind); fflush(stderr);
-  if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize) {
+  if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize && !reported) {
+    reported = 1;
     fail = true;
   } else {
     allocatedMemSize += size;
@@ -788,7 +790,7 @@ extent_hooks_t ppHooks = {
 void print_stat_part(void* _file, const char* msg)
 {
   FILE* file = (FILE*) _file;
-  fprintf(file, "%s\n", msg); fflush(file);
+  fprintf(file, "%s", msg); fflush(file);
 }
 
 /******************************************************************************
