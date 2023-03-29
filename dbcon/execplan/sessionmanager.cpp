@@ -54,7 +54,7 @@ SessionManager::SessionManager()
 
 SessionManager::SessionManager(bool nolock)
 {
-  std::cerr << "Session manager CREATING " << this << std::endl;
+  std::cerr << "Session manager CREATING: " << this << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
   config::Config* conf;
   string stmp;
 
@@ -69,7 +69,7 @@ SessionManager::SessionManager(const SessionManager& sm)
 
 SessionManager::~SessionManager()
 {
-  std::cerr << "Session manager DESTROYING " << this << std::endl;
+  std::cerr << "Session manager DESTROYING: " << this<< "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
 }
 
 const QueryContext SessionManager::verID()

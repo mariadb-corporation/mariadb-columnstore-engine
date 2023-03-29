@@ -24,6 +24,7 @@
 
 #include <new>         // placement new
 #include <type_traits> // aligned_storage
+#include <boost/stacktrace.hpp>
 
 
 namespace messageqcpp
@@ -35,11 +36,11 @@ struct LockedClientMap
 {
   LockedClientMap()
   {
-    std::cerr << "LockedMAP CREATING " << this << std::endl;
+    std::cerr << "LockedMAP CREATING " << this << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
   }
   ~LockedClientMap()
   {
-    std::cerr << "LockedMAP DESTROYING " << this << std::endl;
+    std::cerr << "LockedMAP DESTROYING " << this << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
   }
   ClientMapType clientMap;
   std::mutex queueMutex;
@@ -54,12 +55,12 @@ auto& lockedMap = reinterpret_cast<LockedClientMap&>(clientMapBuf);
 
 LockedClientMapInitilizer::LockedClientMapInitilizer ()
 {
-  std::cerr << "LockedMAP Initilizer CREATING: " << this << "counter is " << clientMapNiftyCounter << std::endl;
+  std::cerr << "LockedMAP Initilizer CREATING: " << this << "counter is " << clientMapNiftyCounter << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
   if (clientMapNiftyCounter++ == 0) new (&lockedMap) LockedClientMap (); // placement new
 }
 LockedClientMapInitilizer::~LockedClientMapInitilizer ()
 {
-  std::cerr << "LockedMAP Initilizer DESTROYING: " << this << "counter is " << clientMapNiftyCounter << std::endl;
+  std::cerr << "LockedMAP Initilizer DESTROYING: " << this << "counter is " << clientMapNiftyCounter << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
   if (--clientMapNiftyCounter == 0) (&lockedMap)->~LockedClientMap();
 }
 
@@ -194,7 +195,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   // Scan pool for pointer and release
   // Set the last used and mark as not in use
 
-  std::cerr << "MessageQueueClientPool::releaseInstance started" << std::endl;
+  std::cerr << "MessageQueueClientPool::releaseInstance started" << "\n backtrace \n" << boost::stacktrace::stacktrace() << std::endl;
 
   if (client == NULL)
     return;
