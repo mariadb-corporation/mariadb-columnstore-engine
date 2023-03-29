@@ -35,6 +35,9 @@
 #include "configcpp.h"
 #include "messagelog.h"
 #include "dbrm.h"
+#include "messagequeuepool.h"
+
+
 
 using namespace std;
 using namespace BRM;
