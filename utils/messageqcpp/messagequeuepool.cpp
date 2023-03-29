@@ -54,10 +54,12 @@ auto& lockedMap = reinterpret_cast<LockedClientMap&>(clientMapBuf);
 
 LockedClientMapInitilizer::LockedClientMapInitilizer ()
 {
+  std::cerr << "LockedMAP Initilizer CREATING: " << this << "counter is " << clientMapNiftyCounter << std::endl;
   if (clientMapNiftyCounter++ == 0) new (&lockedMap) LockedClientMap (); // placement new
 }
 LockedClientMapInitilizer::~LockedClientMapInitilizer ()
 {
+  std::cerr << "LockedMAP Initilizer DESTROYING: " << this << "counter is " << clientMapNiftyCounter << std::endl;
   if (--clientMapNiftyCounter == 0) (&lockedMap)->~LockedClientMap();
 }
 
