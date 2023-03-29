@@ -51,6 +51,7 @@ SessionManager::SessionManager()
 
 SessionManager::SessionManager(bool nolock)
 {
+  std::cerr << "Session manager CREATING " << this << std::endl;
   config::Config* conf;
   string stmp;
 
@@ -65,6 +66,7 @@ SessionManager::SessionManager(const SessionManager& sm)
 
 SessionManager::~SessionManager()
 {
+  std::cerr << "Session manager DESTROYING " << this << std::endl;
 }
 
 const QueryContext SessionManager::verID()

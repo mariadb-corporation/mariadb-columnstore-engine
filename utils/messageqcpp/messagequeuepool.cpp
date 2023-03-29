@@ -33,6 +33,14 @@ using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
 
 struct LockedClientMap
 {
+  LockedClientMap()
+  {
+    std::cerr << "LockedMAP CREATING " << this << std::endl;
+  }
+  ~LockedClientMap()
+  {
+    std::cerr << "LockedMAP DESTROYING " << this << std::endl;
+  }
   ClientMapType clientMap;
   std::mutex queueMutex;
 };
@@ -184,6 +192,8 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   // Scan pool for pointer and release
   // Set the last used and mark as not in use
 
+  std::cerr << "MessageQueueClientPool::releaseInstance started" << std::endl;
+
   if (client == NULL)
     return;
 
@@ -206,6 +216,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
 
     it++;
   }
+  std::cerr << "MessageQueueClientPool::releaseInstance finished" << std::endl;
 }
 
 // WriteEngine needs this as it forces connections closed and can't reuse. Also good for connection errors
