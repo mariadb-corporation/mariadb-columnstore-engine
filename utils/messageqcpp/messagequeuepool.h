@@ -26,11 +26,10 @@
 namespace messageqcpp
 {
 
-
-static struct LockedClientMapInitilizer {
+struct LockedClientMapInitilizer {
   LockedClientMapInitilizer ();
   ~LockedClientMapInitilizer ();
-} clientMapInitilizer; // static initializer for every translation unit
+};
 
 struct ClientObject
 {
