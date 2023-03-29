@@ -804,7 +804,7 @@ int main(int argc, char** argv)
   }
 
   FILE* f = fopen("jemalloc-log", "w");
-  malloc_print_stats(print_stat_part, (void*)f, "");
+  malloc_stats_print(print_stat_part, (void*)f, "");
   fclose(f);
 
   unsigned narenas = 0x900df00d;
