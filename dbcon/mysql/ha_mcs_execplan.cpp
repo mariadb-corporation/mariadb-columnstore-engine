@@ -2963,7 +2963,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
 
         CalpontSelectExecutionPlan::ReturnedColumnList::const_iterator iter;
 
-        ReturnedColumn* rc;
+        ReturnedColumn* rc = nullptr;
 
         for (iter = cols.begin(); iter != cols.end(); iter++)
         {

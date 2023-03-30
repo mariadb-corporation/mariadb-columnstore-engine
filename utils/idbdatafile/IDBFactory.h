@@ -31,21 +31,31 @@ class IDBFileSystem;
 
 struct FileFactoryEnt
 {
-  FileFactoryEnt() : type(IDBDataFile::UNKNOWN), name("unknown"), factory(0), filesystem(0)
-  {
-    ;
-  }
-
   FileFactoryEnt(IDBDataFile::Types t, const std::string& n, FileFactoryBase* f, IDBFileSystem* fs)
    : type(t), name(n), factory(f), filesystem(fs)
   {
     ;
   }
 
-  IDBDataFile::Types type;
-  std::string name;
-  FileFactoryBase* factory;
-  IDBFileSystem* filesystem;
+  FileFactoryEnt(const FileFactoryEnt&) = delete;
+  FileFactoryEnt& operator=(const FileFactoryEnt&) = delete;
+  FileFactoryEnt& operator=(FileFactoryEnt&&) = delete;
+  FileFactoryEnt(FileFactoryEnt&& temporary)
+    : factory(temporary.factory)
+    , filesystem(temporary.filesystem)
+  {
+    temporary.factory = nullptr;
+    temporary.filesystem = nullptr;
+  }
+
+
+
+  ~FileFactoryEnt();
+
+  IDBDataFile::Types type = IDBDataFile::UNKNOWN;
+  std::string name = "unknown";
+  FileFactoryBase* factory = nullptr;
+  IDBFileSystem* filesystem = nullptr;
 };
 
 typedef FileFactoryEnt (*FileFactoryEntryFunc)();
@@ -101,8 +111,8 @@ class IDBFactory
 
   static FactoryMap s_plugins;
 
-  IDBFactory();
-  virtual ~IDBFactory();
+  IDBFactory() = delete;
+  ~IDBFactory() = delete;
 };
 
 inline const std::string& IDBFactory::name(IDBDataFile::Types type)
@@ -112,7 +122,7 @@ inline const std::string& IDBFactory::name(IDBDataFile::Types type)
     throw std::runtime_error("unknown plugin type in IDBFactory::name");
   }
 
-  return s_plugins[type].name;
+  return s_plugins.at(type).name;
 }
 
 }  // namespace idbdatafile

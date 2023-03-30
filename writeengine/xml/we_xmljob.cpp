@@ -21,6 +21,7 @@
  *******************************************************************************/
 /** @file */
 
+#include "mcs_basic_types.h"
 #define WRITEENGINEXMLJOB_DLLEXPORT
 #include "we_xmljob.h"
 #undef WRITEENGINEXMLJOB_DLLEXPORT
@@ -46,28 +47,6 @@ using namespace execplan;
 
 namespace WriteEngine
 {
-// Maximum saturation value for DECIMAL types based on precision
-// TODO MCOL-641 add support here. see dataconvert.cpp
-const long long columnstore_precision[19] = {0,
-                                             9,
-                                             99,
-                                             999,
-                                             9999,
-                                             99999,
-                                             999999,
-                                             9999999,
-                                             99999999,
-                                             999999999,
-                                             9999999999LL,
-                                             99999999999LL,
-                                             999999999999LL,
-                                             9999999999999LL,
-                                             99999999999999LL,
-                                             999999999999999LL,
-                                             9999999999999999LL,
-                                             99999999999999999LL,
-                                             999999999999999999LL};
-
 //------------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------------
@@ -695,13 +674,14 @@ void XMLJob::initSatLimits(JobColumn& curColumn) const
   }
   else if (curColumn.typeName == ColDataTypeStr[CalpontSystemCatalog::DECIMAL])
   {
-    curColumn.fMinIntSat = -columnstore_precision[curColumn.precision];
-    curColumn.fMaxIntSat = columnstore_precision[curColumn.precision];
+    curColumn.fMaxIntSat = dataconvert::decimalRangeUp<int128_t>(curColumn.precision);
+    curColumn.fMinIntSat = -curColumn.fMaxIntSat;
+
   }
   else if (curColumn.typeName == ColDataTypeStr[CalpontSystemCatalog::UDECIMAL])
   {
     curColumn.fMinIntSat = 0;
-    curColumn.fMaxIntSat = columnstore_precision[curColumn.precision];
+    curColumn.fMaxIntSat = dataconvert::decimalRangeUp<int128_t>(curColumn.precision);
   }
   else if (curColumn.typeName == ColDataTypeStr[CalpontSystemCatalog::FLOAT])
   {

@@ -47,15 +47,10 @@ bool IDBFactory::installDefaultPlugins()
   // protect these methods since we are changing our static data structure
   boost::mutex::scoped_lock lock(fac_guard);
 
-  s_plugins[IDBDataFile::BUFFERED] =
-      FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(), new PosixFileSystem());
-  s_plugins[IDBDataFile::UNBUFFERED] = FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered",
-                                                      new UnbufferedFileFactory(), new PosixFileSystem());
-
-  // TODO: use the installPlugin fcn below instead of declaring this statically, then remove the dependency
-  // IDBDatafile -> cloudio
-  // s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new
-  // SMFileSystem());
+  s_plugins.emplace(IDBDataFile::BUFFERED, FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(),
+                                             new PosixFileSystem()));
+  s_plugins.emplace(IDBDataFile::UNBUFFERED, FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered",
+                                             new UnbufferedFileFactory(), new PosixFileSystem()));
 
   return false;
 }
@@ -86,7 +81,7 @@ bool IDBFactory::installPlugin(const std::string& plugin)
   }
 
   FileFactoryEnt ent = (*(FileFactoryEntryFunc)functor)();
-  s_plugins[ent.type] = ent;
+  s_plugins.emplace(ent.type, std::move(ent));
 
   std::ostringstream oss;
   oss << "IDBFactory::installPlugin: installed filesystem plugin " << plugin;
@@ -112,7 +107,7 @@ IDBDataFile* IDBFactory::open(IDBDataFile::Types type, const char* fname, const 
     throw std::runtime_error(oss.str());
   }
 
-  return s_plugins[type].factory->open(fname, mode, opts, colWidth);
+  return s_plugins.at(type).factory->open(fname, mode, opts, colWidth);
 }
 
 IDBFileSystem& IDBFactory::getFs(IDBDataFile::Types type)
@@ -124,7 +119,14 @@ IDBFileSystem& IDBFactory::getFs(IDBDataFile::Types type)
     throw std::runtime_error(oss.str());
   }
 
-  return *(s_plugins[type].filesystem);
+  return *(s_plugins.at(type).filesystem);
 }
+
+FileFactoryEnt::~FileFactoryEnt()
+{
+  delete filesystem;
+  delete factory;
+}
+
 
 }  // namespace idbdatafile

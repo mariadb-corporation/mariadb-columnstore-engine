@@ -69,14 +69,16 @@ const fs::path defaultConfigFilePath(configDefaultFileName);
 
 namespace config
 {
-Config* globConfigInstancePtr = nullptr;
-Config::configMap_t Config::fInstanceMap;
 boost::mutex Config::fInstanceMapMutex;
+Config::configMap_t Config::fInstanceMap;
 // duplicate to that in the Config class
 boost::mutex Config::fXmlLock;
 // duplicate to that in the Config class
 boost::mutex Config::fWriteXmlLock;
 std::atomic_bool globHasConfig;
+
+ConfigUniqPtr globConfigInstancePtr;
+
 
 void Config::checkAndReloadConfig()
 {
@@ -105,20 +107,20 @@ Config* Config::makeConfig(const string& cf)
       if (globConfigInstancePtr)
       {
         globConfigInstancePtr->checkAndReloadConfig();
-        return globConfigInstancePtr;
+        return globConfigInstancePtr.get();
       }
 
       // Make this configurable at least at compile-time.
       std::string configFilePath =
           std::string(MCSSYSCONFDIR) + std::string("/columnstore/") + configDefaultFileName;
-      globConfigInstancePtr = new Config(configFilePath);
+      globConfigInstancePtr.reset(new Config(configFilePath));
       globHasConfig.store(true, std::memory_order_relaxed);
-      return globConfigInstancePtr;
+      return globConfigInstancePtr.get();
     }
 
     boost::mutex::scoped_lock lk(fInstanceMapMutex);
     globConfigInstancePtr->checkAndReloadConfig();
-    return globConfigInstancePtr;
+    return globConfigInstancePtr.get();
   }
 
   boost::mutex::scoped_lock lk(fInstanceMapMutex);
@@ -526,21 +528,6 @@ void Config::writeConfigFile(messageqcpp::ByteStream msg) const
 /* static */
 void Config::deleteInstanceMap()
 {
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
-
-  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
-  {
-    Config* instance = iter->second;
-    delete instance;
-  }
-
-  fInstanceMap.clear();
-
-  if (globConfigInstancePtr)
-  {
-    delete globConfigInstancePtr;
-    globConfigInstancePtr = nullptr;
-  }
 }
 
 /* static */
@@ -641,6 +628,20 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
   }
   // NOTREACHED
   return {};
+}
+
+void Config::ConfigDeleter::operator()(Config* config)
+{
+  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+
+  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
+  {
+    Config* instance = iter->second;
+    delete instance;
+  }
+
+  fInstanceMap.clear();
+  delete config;
 }
 
 }  // namespace config
