@@ -160,8 +160,8 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                     CalpontSystemCatalog::ColType& type)
 {
   bool isNullJS = false, isNullVal = false;
-  const string_view js = fp[0]->data()->getStrVal(row, isNullJS);
-  const string_view val = fp[1]->data()->getStrVal(row, isNullVal);
+  const auto& js = fp[0]->data()->getStrVal(row, isNullJS);
+  const auto& val = fp[1]->data()->getStrVal(row, isNullVal);
   if (isNullJS || isNullVal)
   {
     isNull = true;

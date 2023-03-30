@@ -23,7 +23,8 @@ CalpontSystemCatalog::ColType Func_json_remove::operationType(FunctionParm& fp,
 string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+
   if (isNull)
     return "";
 
@@ -37,11 +38,11 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   initJSPaths(paths, fp, 1, 1);
 
   string retJS;
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i++, j++)
   {
-    const char* rawJS = tmpJS.data();
-    const size_t jsLen = tmpJS.size();
+    const char* rawJS = tmpJS.str();
+    const size_t jsLen = tmpJS.length();
 
     JSONPath& path = paths[j];
     const json_path_step_t* lastStep;
@@ -61,7 +62,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       }
     }
 
-    initJSEngine(jsEg, cs, rawJS);
+    initJSEngine(jsEg, cs, tmpJS);
 
     if (path.p.last_step < path.p.steps)
       goto v_found;
@@ -145,7 +146,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       retJS.append(",");
     retJS.append(remEnd, rawJS + jsLen - remEnd);
 
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 

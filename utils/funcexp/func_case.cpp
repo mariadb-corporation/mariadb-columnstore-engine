@@ -175,7 +175,7 @@ inline uint64_t simple_case_cmp(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::VARCHAR:
     {
-      const string& ev = parm[n]->data()->getStrVal(row, isNull);
+      const string& ev = parm[n]->data()->getStrVal(row, isNull).safeString("");
       if (isNull)
         break;
       CHARSET_INFO* cs = parm[n]->data()->resultType().getCharset();
@@ -183,7 +183,7 @@ inline uint64_t simple_case_cmp(Row& row, FunctionParm& parm, bool& isNull,
       for (i = 1; i <= whereCount; i++)
       {
         // BUG 5362
-        const string& p1 = parm[i]->data()->getStrVal(row, isNull);
+        const string& p1 = parm[i]->data()->getStrVal(row, isNull).safeString("");
         if (isNull)
           break;
         if (cs->strnncoll(ev.c_str(), ev.length(), p1.c_str(), p1.length()) == 0)
@@ -503,7 +503,7 @@ string Func_simple_case::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
   if (isNull)
     return string("");
 
-  return parm[i]->data()->getStrVal(row, isNull);
+  return parm[i]->data()->getStrVal(row, isNull).safeString("");
 }
 
 IDB_Decimal Func_simple_case::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
@@ -642,7 +642,7 @@ string Func_searched_case::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
   if (isNull)
     return string("");
 
-  return parm[i]->data()->getStrVal(row, isNull);
+  return parm[i]->data()->getStrVal(row, isNull).safeString("");
 }
 
 IDB_Decimal Func_searched_case::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,

@@ -32,6 +32,7 @@
 #include "windowframe.h"
 #include "constantcolumn.h"
 #include "mcs_decimal.h"
+#include "nullstring.h"
 
 namespace ordering
 {

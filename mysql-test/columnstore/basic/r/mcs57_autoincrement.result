@@ -15,7 +15,7 @@ INSERT INTO t2(t2_varchar) VALUES('bb'),('ccc'),('dddd'),('eeeee');
 SELECT * FROM t2;
 t2_int	t2_varchar
 1	a
-2	a
+2	
 3	bb
 4	ccc
 5	dddd

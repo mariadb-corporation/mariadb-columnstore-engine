@@ -51,7 +51,12 @@ int64_t Func_length::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNul
       (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::BLOB))
     return fp[0]->data()->getStrVal(row, isNull).length();
 
-  return strlen(fp[0]->data()->getStrVal(row, isNull).c_str());
+  const auto& str = fp[0]->data()->getStrVal(row, isNull);
+  if (str.isNull())
+  {
+    return 0;
+  }
+  return strlen(str.str());
 }
 
 }  // namespace funcexp

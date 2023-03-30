@@ -63,19 +63,30 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 {
   bool isNullJS = false, isNullPath = false;
 
-  const string& js = funcParamJS->data()->getStrVal(row, isNullJS);
-  const string_view jsp = funcParamPath->data()->getStrVal(row, isNullPath);
-  
+  const string js = funcParamJS->data()->getStrVal(row, isNullJS).safeString("");
+  const string sjsp = funcParamPath->data()->getStrVal(row, isNullPath).safeString("");
+  const string_view jsp = sjsp;
   if (isNullJS || isNullPath)
     return true;
 
   int error = 0;
 
-  if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)jsp.data(),
-                                                     (const uchar*)jsp.data() + jsp.size()))
-    return true;
+  if (!parsed)
+  {
+    if (!constant)
+    {
+      ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(funcParamPath->data());
+      constant = (constCol != nullptr);
+    }
 
-  JSONEgWrapper je(getCharset(funcParamJS), (const uchar*)js.data(), (const uchar*)js.data() + js.size());
+    if (isNullPath || json_path_setup(&p, getCharset(funcParamPath), (const uchar*)jsp.data(),
+                                      (const uchar*)jsp.data() + jsp.size()))
+      return true;
+
+    parsed = constant;
+  }
+
+  JSONEgWrapper je(js, getCharset(funcParamJS));
 
   currStep = p.steps;
 
@@ -102,29 +113,11 @@ CalpontSystemCatalog::ColType Func_json_value::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-class JSONPathWrapperValue : public JSONPathWrapper
-{
- public:
-  JSONPathWrapperValue()
-  {
-  }
-  virtual ~JSONPathWrapperValue()
-  {
-  }
-
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
-  {
-    return je->checkAndGetScalar(res, error);
-  }
-
-};
-
 string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& type)
 {
   string ret;
-  JSONPathWrapperValue pw;
-  isNull = pw.extract(ret, row, fp[0], fp[1]);
+  isNull = JSONPathWrapper::extract(ret, row, fp[0], fp[1]);
   return isNull ? "" : ret;
 }
 }  // namespace funcexp

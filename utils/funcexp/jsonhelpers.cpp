@@ -5,9 +5,9 @@ namespace funcexp
 {
 namespace helpers
 {
-int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards = true)
+int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const utils::NullString& str, bool wildcards = true)
 {
-  int err = json_path_setup(path, cs, (const uchar*)str.data(), (const uchar*)str.data() + str.size());
+  int err = json_path_setup(path, cs, (const uchar*)str.str(), (const uchar*)str.end());
   if (wildcards)
     return err;
 
@@ -25,10 +25,10 @@ int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, boo
   return 1;
 }
 
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& js, const CHARSET_INFO* jsCS)
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS)
 {
-  const int jsLen = js.size();
-  const char* rawJS = js.data();
+  const int jsLen = js.length();
+  const char* rawJS = js.str();
   int strLen = jsLen * 12 * jsCS->mbmaxlen / jsCS->mbminlen;
   char* buf = (char*)alloca(strLen);
   if ((strLen = json_escape(retCS, (const uchar*)rawJS, (const uchar*)rawJS + jsLen, jsCS, (uchar*)buf,
@@ -45,7 +45,7 @@ bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& 
 bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm)
 {
   bool nullVal = false;
-  const string_view js = parm->data()->getStrVal(row, nullVal);
+  const auto& js = parm->data()->getStrVal(row, nullVal);
   if (nullVal)
   {
     ret.append("\"\": ");
@@ -62,7 +62,7 @@ bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row,
 bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm)
 {
   bool nullVal = false;
-  const string_view js = parm->data()->getStrVal(row, nullVal);
+  const auto& js = parm->data()->getStrVal(row, nullVal);
   if (nullVal)
   {
     ret.append("null");
@@ -72,7 +72,7 @@ bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, e
   datatypes::SystemCatalog::ColDataType dataType = parm->data()->resultType().colDataType;
   if (dataType == datatypes::SystemCatalog::BIGINT && (js == "true" || js == "false"))
   {
-    ret.append(js);
+    ret.append(js.safeString(""));
     return false;
   }
 
@@ -344,7 +344,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
     markConstFlag(path, parm);
 
   bool isNull = false;
-  const string_view jsp = parm->data()->getStrVal(row, isNull);
+  const auto& jsp = parm->data()->getStrVal(row, isNull);
 
   if (isNull || setupJSPath(&path.p, getCharset(parm), jsp, wildcards))
     return 1;
@@ -372,3 +372,4 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 }
 }  // namespace helpers
 }  // namespace funcexp
+

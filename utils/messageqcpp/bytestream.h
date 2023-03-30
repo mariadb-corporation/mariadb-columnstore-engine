@@ -19,7 +19,6 @@
 */
 
 #pragma once
-#include <optional>
 #include <string>
 #include <iostream>
 #include <sys/types.h>
@@ -27,7 +26,7 @@
 #include <vector>
 #include <set>
 #include <boost/shared_ptr.hpp>
-
+#include <boost/shared_array.hpp>
 #include <boost/version.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <stdint.h>
@@ -37,8 +36,7 @@
 #include "exceptclasses.h"
 #include "serializeable.h"
 #include "any.hpp"
-#include "countingallocator.h"
-#include "buffertypes.h"
+#include "nullstring.h"
 
 class ByteStreamTestSuite;
 
@@ -47,7 +45,7 @@ class ByteStreamTestSuite;
 namespace messageqcpp
 {
 typedef boost::shared_ptr<ByteStream> SBS;
-using BSBufType = uint8_t;
+
 /**
  * @brief A class to marshall bytes as a stream
  *
@@ -79,7 +77,6 @@ class ByteStream : public Serializeable
    *	default ctor
    */
   EXPORT explicit ByteStream(uint32_t initSize = 8192);  // multiples of pagesize are best
-  explicit ByteStream(allocators::CountingAllocator<BSBufType>& alloc, uint32_t initSize = 8192);
   /**
    *	ctor with a uint8_t array and len initializer
    */
@@ -163,6 +160,10 @@ class ByteStream : public Serializeable
    */
   EXPORT ByteStream& operator<<(const std::string& s);
   /**
+   * push a NullString onto the end of the stream.
+   */
+  EXPORT ByteStream& operator<<(const utils::NullString& s);
+  /**
    * push an arbitrary class onto the end of the stream.
    */
   inline ByteStream& operator<<(const Serializeable& s);
@@ -235,6 +236,10 @@ class ByteStream : public Serializeable
    * extract a std::string from the front of the stream.
    */
   EXPORT ByteStream& operator>>(std::string& s);
+  /**
+   * extract a NullString from the front of the stream.
+   */
+  EXPORT ByteStream& operator>>(utils::NullString& s);
   /**
    *	write the current stream into b. The ByteStream will be empty after this operation.
    * @warning the caller is responsible for making sure b is big enough to hold all the data (perhaps by
@@ -439,9 +444,9 @@ class ByteStream : public Serializeable
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
   // Methods to get and set `long strings`.
-  EXPORT std::vector<rowgroup::StringStoreBufSPType>& getLongStrings();
-  EXPORT const std::vector<rowgroup::StringStoreBufSPType>& getLongStrings() const;
-  EXPORT void setLongStrings(const std::vector<rowgroup::StringStoreBufSPType>& other);
+  EXPORT std::vector<boost::shared_array<uint8_t>>& getLongStrings();
+  EXPORT const std::vector<boost::shared_array<uint8_t>>& getLongStrings() const;
+  EXPORT void setLongStrings(const std::vector<boost::shared_array<uint8_t>>& other);
 
   friend class ::ByteStreamTestSuite;
 
@@ -460,9 +465,6 @@ class ByteStream : public Serializeable
   void doCopy(const ByteStream& rhs);
 
  private:
-  BSBufType* allocate(const size_t size);
-  void deallocate(BSBufType* ptr);
-
   // Put struct `MemChunk` declaration here, to avoid circular dependency.
   struct MemChunk
   {
@@ -471,13 +473,12 @@ class ByteStream : public Serializeable
     uint8_t data[];
   };
 
-  BSBufType* fBuf;        /// the start of the allocated buffer
-  BSBufType* fCurInPtr;   // the point in fBuf where data is inserted next
-  BSBufType* fCurOutPtr;  // the point in fBuf where data is extracted from next
+  uint8_t* fBuf;        /// the start of the allocated buffer
+  uint8_t* fCurInPtr;   // the point in fBuf where data is inserted next
+  uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
   uint32_t fMaxLen;     // how big fBuf is currently
   // Stores `long strings`.
-  std::vector<rowgroup::StringStoreBufSPType> longStrings;
-  std::optional<allocators::CountingAllocator<BSBufType>> allocator = {};
+  std::vector<boost::shared_array<uint8_t>> longStrings;
 };
 
 template <int W, typename T = void>
@@ -532,7 +533,7 @@ inline ByteStream::ByteStream(const uint8_t* bp, const uint32_t len) : fBuf(0), 
 }
 inline ByteStream::~ByteStream()
 {
-  deallocate(fBuf);
+  delete[] fBuf;
 }
 
 inline const uint8_t* ByteStream::buf() const
@@ -557,7 +558,7 @@ inline uint32_t ByteStream::lengthWithHdrOverhead() const
 }
 inline void ByteStream::reset()
 {
-  deallocate(fBuf);
+  delete[] fBuf;
   fMaxLen = 0;
   fCurInPtr = fCurOutPtr = fBuf = 0;
 }

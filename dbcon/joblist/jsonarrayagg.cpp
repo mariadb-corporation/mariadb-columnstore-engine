@@ -353,11 +353,6 @@ void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
   fConcator->merge(gccAg->concator().get());
 }
 
-void JsonArrayAggregatAgUM::getResult(uint8_t* buff)
-{
-  fConcator->getResultImpl(fGroupConcat->fSeparator);
-}
-
 uint8_t* JsonArrayAggregatAgUM::getResult()
 {
   return fConcator->getResult(fGroupConcat->fSeparator);
@@ -418,14 +413,14 @@ void JsonArrayAggregator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fConstantLen = strlen(gcc->fSeparator.c_str());
 
   for (uint64_t i = 0; i < fConstCols.size(); i++)
-    fConstantLen += strlen(fConstCols[i].first.c_str());
+    fConstantLen += fConstCols[i].first.length();
 }
 
 void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 {
   const CalpontSystemCatalog::ColDataType* types = row.getColTypes();
   vector<uint32_t>::iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::iterator j = fConstCols.begin();
+  vector<pair<utils::NullString, uint32_t> >::iterator j = fConstCols.begin();
 
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
@@ -433,7 +428,7 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
   {
     if (j != fConstCols.end() && k == j->second)
     {
-      oss << j->first;
+      oss << j->first.safeString(""); // XXX: NULLs???
       j++;
       continue;
     }
@@ -487,7 +482,7 @@ void JsonArrayAggregator::outputRow(std::ostringstream& oss, const rowgroup::Row
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        std::string maybeJson = row.getStringField(*i);
+        std::string maybeJson = row.getStringField(*i).safeString(""); // XXX: NULL??? it is not checked anywhere.
         [[maybe_unused]] const auto j = json::parse(maybeJson, nullptr, false);
         if (j.is_discarded())
         {
@@ -697,7 +692,7 @@ const string JsonArrayAggregator::toString() const
   oss << "JsonArray size-" << fGroupConcatLen;
   oss << "Concat   cols: ";
   vector<uint32_t>::const_iterator i = fConcatColumns.begin();
-  vector<pair<string, uint32_t> >::const_iterator j = fConstCols.begin();
+  auto j = fConstCols.begin();
   uint64_t groupColCount = fConcatColumns.size() + fConstCols.size();
 
   for (uint64_t k = 0; k < groupColCount; k++)
@@ -919,7 +914,7 @@ uint8_t* JsonArrayAggOrderBy::getResultImpl(const string&)
     oss << ']';
   }
 
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, false);
 }
 
 const string JsonArrayAggOrderBy::toString() const
@@ -1062,7 +1057,7 @@ uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
     }
     oss << ']';
   }
-  return swapStreamWithStringAndReturnBuf(oss);
+  return swapStreamWithStringAndReturnBuf(oss, false);
 }
 
 const string JsonArrayAggNoOrder::toString() const

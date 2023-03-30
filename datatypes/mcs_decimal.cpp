@@ -607,26 +607,45 @@ std::string Decimal::toStringTSInt64() const
 // Dispatcher method for toString() implementations
 std::string Decimal::toString(bool hasTSInt128) const
 {
-  // There must be no empty at this point though
-  if (isNull())
+  utils::NullString result = toNullString(hasTSInt128);
+  if (result.isNull())
   {
     return std::string("NULL");
   }
+  return result.unsafeStringRef();
+}
 
+utils::NullString Decimal::toNullString(bool hasTSInt128) const
+{
+  // There must be no empty at this point though
+  utils::NullString result;
+  if (isNull())
+  {
+    return result;
+  }
+
+  std::string v;
   if (LIKELY(hasTSInt128 || isTSInt128ByPrecision()))
   {
     if (scale)
     {
-      return toStringTSInt128WithScale();
+      v = toStringTSInt128WithScale();
     }
-    return TSInt128::toString();
+    else
+    {
+      v = TSInt128::toString();
+    }
   }
-  // TSInt64 Decimal
-  if (scale)
+  else if (scale) // TSInt64 Decimal
   {
-    return toStringTSInt64();
+    v = toStringTSInt64();
   }
-  return std::to_string(value);
+  else
+  {
+    v = std::to_string(value);
+  }
+  result.assign(v);
+  return result;
 }
 
 std::ostream& operator<<(std::ostream& os, const Decimal& dec)

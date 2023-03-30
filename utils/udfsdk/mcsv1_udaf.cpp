@@ -254,7 +254,7 @@ void UserData::unserialize(messageqcpp::ByteStream& bs)
   bs.advance(size);
 }
 
-const std::string typeStr("");
+const utils::NullString typeStr("");
 const static_any::any& mcsv1_UDAF::charTypeId((char)1);
 const static_any::any& mcsv1_UDAF::scharTypeId((signed char)1);
 const static_any::any& mcsv1_UDAF::shortTypeId((short)1);

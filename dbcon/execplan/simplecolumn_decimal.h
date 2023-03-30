@@ -64,27 +64,40 @@ class SimpleColumn_Decimal : public SimpleColumn
   {
   }
 
-  inline virtual SimpleColumn_Decimal* clone() const
+  inline virtual SimpleColumn_Decimal* clone() const override
   {
     return new SimpleColumn_Decimal<len>(*this);
   }
 
   /** Evaluate methods */
-  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
-  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
-  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
-  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
+  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override;
 
   /** The serialize interface */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
   uint64_t fNullVal;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   void setNullVal();
 };
+
+template <int len>
+std::string SimpleColumn_Decimal<len>::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("simplecolumn_decimal.h");
+  std::stringstream ss;
+  ss << "SimpleColumn_Decimal<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName)
+     << ", " << std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
+
+  return ss.str();
+}
 
 template <int len>
 SimpleColumn_Decimal<len>::SimpleColumn_Decimal() : SimpleColumn()
@@ -135,11 +148,19 @@ void SimpleColumn_Decimal<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_Decimal<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_Decimal<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
-  datatypes::Decimal dec((int64_t)row.getIntField<len>(fInputIndex), fResultType.scale,
-                         fResultType.precision);
-  fResult.strVal = dec.toString();
+  if (row.equals<len>(fNullVal, fInputIndex))
+  {
+    isNull = true;
+    fResult.strVal.dropString();
+  }
+  else
+  {
+    datatypes::Decimal dec((int64_t)row.getIntField<len>(fInputIndex), fResultType.scale,
+                           fResultType.precision);
+    fResult.strVal.assign(dec.toString());
+  }
   return fResult.strVal;
 }
 

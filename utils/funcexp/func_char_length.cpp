@@ -75,11 +75,11 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      const string& tstr = parm[0]->data()->getStrVal(row, isNull);
+      const auto& tstr = parm[0]->data()->getStrVal(row, isNull);
       if (isNull)
         return 0;
-      const char* b = tstr.c_str();
-      const char* e = tstr.c_str() + tstr.length();
+      const char* b = tstr.str();
+      const char* e = tstr.str() + tstr.length();
       return (int64_t)parm[0]->data()->resultType().getCharset()->numchars(b, e);
     }
 

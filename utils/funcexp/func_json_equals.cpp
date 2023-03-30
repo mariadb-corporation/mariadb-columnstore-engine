@@ -44,14 +44,17 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
     return true;
   }
 
-  const string_view js1 = fp[0]->data()->getStrVal(row, isNull);
+  const auto js1_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
-  const string_view js2 = fp[1]->data()->getStrVal(row, isNull);
+  const auto js2_ns = fp[1]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
+  const string_view js1 = js1_ns.unsafeStringRef();
+  const string_view js2 = js2_ns.unsafeStringRef();
+  
   bool result = false;
   if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0])))
   {

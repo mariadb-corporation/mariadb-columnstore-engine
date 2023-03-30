@@ -36,7 +36,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
 
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
 
 SELECT * FROM t1;
 SELECT b, SUM(a) FROM t1 GROUP BY b ORDER BY b;

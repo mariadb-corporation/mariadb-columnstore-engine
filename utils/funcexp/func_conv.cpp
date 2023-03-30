@@ -277,7 +277,7 @@ CalpontSystemCatalog::ColType Func_conv::operationType(FunctionParm& fp,
 string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& op_ct)
 {
-  const string& res = parm[0]->data()->getStrVal(row, isNull);
+  const auto& res = parm[0]->data()->getStrVal(row, isNull);
   string str;
   char ans[65];
   int64_t dec;
@@ -285,20 +285,18 @@ string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   int64_t to_base = parm[2]->data()->getIntVal(row, isNull);
 
   if (isNull || abs(static_cast<int>(to_base)) > 36 || abs(static_cast<int>(to_base)) < 2 ||
-      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || !(res.length()))
+      abs(static_cast<int>(from_base)) > 36 || abs(static_cast<int>(from_base)) < 2 || res.length() < 1)
   {
     isNull = true;
     return "";
   }
 
   if (from_base < 0)
-    dec = convStrToNum(res, -from_base, false);
+    dec = convStrToNum(res.safeString(""), -from_base, false);
   else
-    dec = (int64_t)convStrToNum(res, from_base, true);
+    dec = (int64_t)convStrToNum(res.safeString(""), from_base, true);
 
   str = helpers::convNumToStr(dec, ans, to_base);
-
-  isNull = str.empty();
 
   return str;
 }

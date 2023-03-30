@@ -326,6 +326,16 @@ ByteStream& ByteStream::operator<<(const string& s)
 
   return *this;
 }
+ByteStream& ByteStream::operator<<(const utils::NullString& s)
+{
+  uint8_t isNull = s.isNull();
+  (*this) << isNull;
+  if (!isNull)
+  {
+    (*this) << s.unsafeStringRef();
+  }
+  return *this;
+}
 
 ByteStream& ByteStream::operator>>(int8_t& b)
 {
@@ -403,6 +413,24 @@ ByteStream& ByteStream::operator>>(string& s)
   fCurOutPtr += 4 + s.length();
   return *this;
 }
+
+ByteStream& ByteStream::operator>>(utils::NullString& s)
+{
+  uint8_t isNull;
+  (*this) >> isNull;
+  if (isNull)
+  {
+    s = utils::NullString();
+  }
+  else
+  {
+    string t;
+    (*this) >> t;
+    s = utils::NullString(t);
+  }
+  return *this;
+}
+
 
 ByteStream& ByteStream::operator>>(uint8_t*& bpr)
 {

@@ -217,7 +217,7 @@ CalpontSystemCatalog::ColType Func_json_merge::operationType(FunctionParm& fp,
 string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
@@ -225,12 +225,12 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   json_engine_t jsEg1, jsEg2;
 
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   string retJS;
 
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const string_view js2 = fp[i]->data()->getStrVal(row, isNull);
+    const auto js2 = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
       goto error;
 
@@ -241,7 +241,7 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
       goto error;
 
     // tmpJS save the merge result for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 

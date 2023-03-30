@@ -100,9 +100,9 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
     {
-      std::string strVal = parm[0]->data()->getStrVal(row, isNull);
+      std::string strVal = parm[0]->data()->getStrVal(row, isNull).safeString("");
 
-      if (strVal[0] == '-')
+      if (strVal.length() > 0 && strVal[0] == '-')
       {
         bIsNegative = true;
         strVal.replace(0, 1, 1, ' ');

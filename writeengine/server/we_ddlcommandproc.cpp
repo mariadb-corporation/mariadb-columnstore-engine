@@ -171,24 +171,26 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
     getColumnsForTable(sessionID, tableName.schema, tableName.table, columns);
 
     column_iterator = columns.begin();
-    std::string tmpStr("");
+    NullString tmpStr;
 
     while (column_iterator != columns.end())
     {
       column = *column_iterator;
       boost::to_lower(column.tableColName.column);
 
+      tmpStr.dropString();
+
       if (TABLENAME_COL == column.tableColName.column)
       {
         std::string tablename = tableDef.fQualifiedName->fName;
         colTuple.data = tablename;
-        tmpStr = tablename;
+        tmpStr.assign(tablename);
       }
       else if (SCHEMA_COL == column.tableColName.column)
       {
         std::string schema = tableDef.fQualifiedName->fSchema;
         colTuple.data = schema;
-        tmpStr = schema;
+        tmpStr.assign(schema);
       }
       else if (OBJECTID_COL == column.tableColName.column)
       {
@@ -433,7 +435,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
   ddlpackage::QualifiedName qualifiedName = *(tableDef.fQualifiedName);
   iter = tableDefCols.begin();
   // colpos = 0;
-  std::string tmpStr("");
+  NullString tmpStr;
 
   for (unsigned int ii = 0; ii < numCols; ii++)
   {
@@ -517,18 +519,18 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         if (SCHEMA_COL == column.tableColName.column)
         {
           colTuple.data = qualifiedName.fSchema;
-          tmpStr = qualifiedName.fSchema;
+          tmpStr.assign(qualifiedName.fSchema);
         }
         else if (TABLENAME_COL == column.tableColName.column)
         {
           colTuple.data = qualifiedName.fName;
-          tmpStr = qualifiedName.fName;
+          tmpStr.assign(qualifiedName.fName);
         }
         else if (COLNAME_COL == column.tableColName.column)
         {
           boost::to_lower(colDefPtr->fName);
           colTuple.data = colDefPtr->fName;
-          tmpStr = colDefPtr->fName;
+          tmpStr.assign(colDefPtr->fName);
         }
         else if (OBJECTID_COL == column.tableColName.column)
         {
@@ -564,16 +566,15 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         }
         else if (DEFAULTVAL_COL == column.tableColName.column)
         {
-          if (colDefPtr->fDefaultValue)
+          if (colDefPtr->fDefaultValue && !colDefPtr->fDefaultValue->fNull)
           {
-            colTuple.data = colDefPtr->fDefaultValue->fValue;
-            tmpStr = colDefPtr->fDefaultValue->fValue;
+            tmpStr.assign(colDefPtr->fDefaultValue->fValue);
           }
           else
           {
-            tmpStr = "";
-            // colTuple.data = column.colType.getNullValueForType();
+            tmpStr.dropString();
           }
+          colTuple.data = tmpStr;
         }
         else if (NULLABLE_COL == column.tableColName.column)
         {
@@ -625,11 +626,11 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         }
         else if (MINVAL_COL == column.tableColName.column)
         {
-          tmpStr = "";
+          tmpStr.dropString();
         }
         else if (MAXVAL_COL == column.tableColName.column)
         {
-          tmpStr = "";
+          tmpStr.dropString();
         }
         else if (COMPRESSIONTYPE_COL == column.tableColName.column)
         {
@@ -834,7 +835,6 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
   std::map<uint32_t, uint32_t> oids;
   std::vector<BRM::OID_t> oidsToFlush;
   // colpos = 0;
-  std::string tmpStr("");
 
   for (unsigned int ii = 0; ii < numCols; ii++)
   {
@@ -900,24 +900,25 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
 
     while (column_iterator != columns.end())
     {
+      NullString tmpStr;
       column = *column_iterator;
       boost::to_lower(column.tableColName.column);
 
       if (SCHEMA_COL == column.tableColName.column)
       {
         colTuple.data = schema;
-        tmpStr = schema;
+        tmpStr.assign(schema);
       }
       else if (TABLENAME_COL == column.tableColName.column)
       {
         colTuple.data = tablename;
-        tmpStr = tablename;
+        tmpStr.assign(tablename);
       }
       else if (COLNAME_COL == column.tableColName.column)
       {
         boost::to_lower(colDefPtr->fName);
         colTuple.data = colDefPtr->fName;
-        tmpStr = colDefPtr->fName;
+        tmpStr.assign(colDefPtr->fName);
       }
       else if (OBJECTID_COL == column.tableColName.column)
       {
@@ -950,16 +951,16 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       }
       else if (DEFAULTVAL_COL == column.tableColName.column)
       {
-        if (colDefPtr->fDefaultValue)
+        if (colDefPtr->fDefaultValue && !colDefPtr->fDefaultValue->fNull)
         {
-          colTuple.data = colDefPtr->fDefaultValue->fValue;
-          tmpStr = colDefPtr->fDefaultValue->fValue;
+          tmpStr.assign(colDefPtr->fDefaultValue->fValue);
         }
         else
         {
-          tmpStr = "";
+          tmpStr.dropString();
           // colTuple.data = column.colType.getNullValueForType();
         }
+        colTuple.data = tmpStr;
       }
       else if (NULLABLE_COL == column.tableColName.column)
       {
@@ -1011,11 +1012,11 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       }
       else if (MINVAL_COL == column.tableColName.column)
       {
-        tmpStr = "";
+        tmpStr.dropString();
       }
       else if (MAXVAL_COL == column.tableColName.column)
       {
-        tmpStr = "";
+        tmpStr.dropString();
       }
       else if (COMPRESSIONTYPE_COL == column.tableColName.column)
       {

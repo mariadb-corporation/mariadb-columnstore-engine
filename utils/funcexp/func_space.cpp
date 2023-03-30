@@ -49,7 +49,10 @@ std::string Func_space::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   int64_t count = fp[0]->data()->getIntVal(row, isNull);
 
   if (isNull || count < 1)
+  {
+    isNull = true;
     return "";
+  }
 
   string result(count, ' ');
 

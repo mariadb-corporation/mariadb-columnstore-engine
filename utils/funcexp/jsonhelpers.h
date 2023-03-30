@@ -2,14 +2,13 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #define PREFER_MY_CONFIG_H
 #include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
-#include <json_lib.h>
+//#include <json_lib.h>
 
 #include "collation.h"
 #include "functor_json.h"
@@ -19,6 +18,8 @@
 #include "treenode.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+
+#include "json_lib.h"
 
 namespace funcexp
 {
@@ -34,7 +35,7 @@ static const int NO_WILDCARD_ALLOWED = 1;
 int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards);
 
 // Return true if err occur, let the outer function handle the exception
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const string_view& js, const CHARSET_INFO* jsCS);
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS);
 bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 
@@ -87,9 +88,9 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
   return parm->data()->resultType().getCharset();
 }
 
-inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const string_view& js)
+inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const utils::NullString& js)
 {
-  json_scan_start(&jsEg, jsCS, (const uchar*)js.data(), (const uchar*)js.data() + js.size());
+  json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end());
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);

@@ -23,7 +23,7 @@ CalpontSystemCatalog::ColType Func_json_insert::operationType(FunctionParm& fp,
 string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                    execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto& js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
@@ -41,11 +41,11 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   // Save the result of each merge and the result of the final merge separately
   string retJS;
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
-    const char* rawJS = tmpJS.data();
-    const size_t jsLen = tmpJS.size();
+    const char* rawJS = tmpJS.str();
+    const size_t jsLen = tmpJS.length();
 
     JSONPath& path = paths[j];
     const json_path_step_t* lastStep;
@@ -226,7 +226,7 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   continue_point:
     // tmpJS save the json string for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
 

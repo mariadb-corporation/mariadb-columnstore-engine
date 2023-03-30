@@ -52,10 +52,11 @@ int64_t Func_strcmp::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNul
                                execplan::CalpontSystemCatalog::ColType& type)
 {
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
-  const string& str = fp[0]->data()->getStrVal(row, isNull);
-  const string& str1 = fp[1]->data()->getStrVal(row, isNull);
+  const auto& str = fp[0]->data()->getStrVal(row, isNull);
+  const auto& str1 = fp[1]->data()->getStrVal(row, isNull);
 
-  int ret = cs->strnncollsp(str.c_str(), str.length(), str1.c_str(), str1.length());
+  // XXX: str() results may be nullptrs.
+  int ret = cs->strnncollsp(str.str(), str.length(), str1.str(), str1.length());
   // mysql's strcmp returns only -1, 0, and 1
   return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
 }
