@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <memory>
+#include "columnwidth.h"
 #include "command.h"
 #include "calpontsystemcatalog.h"
 
@@ -164,7 +166,7 @@ class ColumnCommand : public Command
 
   bool _isScan;
 
-  boost::scoped_array<uint8_t> inputMsg;
+  std::unique_ptr<uint8_t[], utils::AlignedDeleter> inputMsg;
   NewColRequestHeader* primMsg;
   ColResultHeader* outMsg;
 

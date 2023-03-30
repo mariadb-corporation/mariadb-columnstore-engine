@@ -150,6 +150,7 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
           {
             xmlAddChild(cur2, xmlNewText((const xmlChar*)"\t"));
             cur3 = cur2->xmlChildrenNode;
+            xmlFree(cur3->content);
           }
           else
           {
