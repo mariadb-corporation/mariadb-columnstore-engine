@@ -587,31 +587,32 @@ class Row
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
 
- private:
-  uint32_t columnCount;
-  uint64_t baseRid;
+private:
+ inline bool inStringTable(uint32_t col) const;
+
+private:
+  uint32_t columnCount = 0;
+  uint64_t baseRid = 0;
 
   // Note, the mem behind these pointer fields is owned by RowGroup not Row
-  uint32_t* oldOffsets;
-  uint32_t* stOffsets;
-  uint32_t* offsets;
-  uint32_t* colWidths;
-  execplan::CalpontSystemCatalog::ColDataType* types;
-  uint32_t* charsetNumbers;
-  CHARSET_INFO** charsets;
-  uint8_t* data;
-  uint32_t* scale;
-  uint32_t* precision;
+  uint32_t* oldOffsets = nullptr;
+  uint32_t* stOffsets = nullptr;
+  uint32_t* offsets = nullptr;
+  uint32_t* colWidths = nullptr;
+  execplan::CalpontSystemCatalog::ColDataType* types = nullptr;
+  uint32_t* charsetNumbers = nullptr;
+  CHARSET_INFO** charsets = nullptr;
+  uint8_t* data = nullptr;
+  uint32_t* scale = nullptr;
+  uint32_t* precision = nullptr;
 
-  StringStore* strings;
-  bool useStringTable;
-  bool hasCollation;
-  bool hasLongStringField;
-  uint32_t sTableThreshold;
+  StringStore* strings = nullptr;
+  bool useStringTable = true;
+  bool hasCollation = false;
+  bool hasLongStringField = false;
+  uint32_t sTableThreshold = 20;
   boost::shared_array<bool> forceInline;
-  inline bool inStringTable(uint32_t col) const;
-
-  UserDataStore* userDataStore;  // For UDAF
+  UserDataStore* userDataStore = nullptr;  // For UDAF
 
   friend class RowGroup;
 };

@@ -931,7 +931,7 @@ void BatchPrimitiveProcessor::initProcessor()
     strValues.reset(new string[LOGICAL_BLOCK_RIDS]);
 
   outMsgSize = defaultBufferSize;
-  outputMsg.reset(new uint8_t[outMsgSize]);
+  outputMsg.reset(new(std::align_val_t(MAXCOLUMNWIDTH)) uint8_t[outMsgSize]);
 
   if (ot == ROW_GROUP)
   {

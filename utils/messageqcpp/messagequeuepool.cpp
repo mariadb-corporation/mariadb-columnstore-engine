@@ -19,6 +19,7 @@
 #include <sstream>
 #include <map>
 #include <time.h>
+#include <mutex>
 #include "messagequeuepool.h"
 #include "messagequeue.h"
 
