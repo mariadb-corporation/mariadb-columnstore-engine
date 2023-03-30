@@ -117,6 +117,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
+  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
+
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
 
@@ -632,7 +634,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'publish pkg url',
              image: 'alpine/git',
              commands: [
-               "echo -e '\\e]8;;https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/\\e\\\\https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "\\e]8;;\\e\\\\'"
+               "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'"
              ]
            }
         ] +
