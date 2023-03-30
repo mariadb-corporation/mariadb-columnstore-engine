@@ -464,7 +464,7 @@ bool WECmdArgs::str2PmList(std::string& PmList, VecInts& V)
 
   if (aLen > 0)
   {
-    strncpy(aBuff, PmList.c_str(), BUFLEN);
+    strncpy(aBuff, PmList.c_str(), BUFLEN - 1);
     aBuff[BUFLEN - 1] = 0;
   }
   else

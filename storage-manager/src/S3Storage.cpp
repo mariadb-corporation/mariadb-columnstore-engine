@@ -27,7 +27,16 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #define BOOST_SPIRIT_THREADSAFE
+#ifndef __clang__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 #include <boost/property_tree/ptree.hpp>
+
+#ifndef __clang__
+  #pragma GCC diagnostic pop
+#endif
 #include <boost/property_tree/json_parser.hpp>
 #include "Utilities.h"
 

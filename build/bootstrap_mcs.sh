@@ -18,17 +18,25 @@ message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
+
+cd $SCRIPT_LOCATION
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
+cd -
+
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
-optparse.define short=s long=skip-deps desc="Skip install dependences" variable=SKIP_DEPS default=false value=true
+optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
-optparse.define short=b long=branch desc="Choouse git branch ('none' for menu)" variable=BRANCH
+optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 
 source $( optparse.build )
 
@@ -45,18 +53,27 @@ INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
+CONFIG_DIR="/etc/my.cnf.d"
+
+if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
+    CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+fi
+
 
 select_branch()
 {
+    cd $SCRIPT_LOCATION
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
     if [[ ! " ${BRANCHES[*]} " =~ " ${BRANCH} " ]]; then
-        if [[ $BRANCH = 'none' ]]; then
+        if [[ $BRANCH = "" ]]; then
             getChoice -q "Select your branch" -o BRANCHES
             BRANCH=$selectedChoice
         fi
-        cd $SCRIPT_LOCATION
-        message "Selecting $BRANCH branch for Columnstore"
-        git checkout $BRANCH
-        cd -
+        if [[ $BRANCH != $CURRENT_BRANCH ]]; then
+            message "Selecting $BRANCH branch for Columnstore"
+            git checkout $BRANCH
+        fi
 
         message "Turning off Columnstore submodule auto update via gitconfig"
         cd $MDB_SOURCE_PATH
@@ -64,8 +81,6 @@ select_branch()
         cd -
     fi
 
-    cd $SCRIPT_LOCATION
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     cd -
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
@@ -136,7 +151,9 @@ clean_old_installation()
     rm -rf /var/lib/columnstore/local/
     rm -f /var/lib/columnstore/storagemanager/storagemanager-lock
     rm -f /var/lib/columnstore/storagemanager/cs-initialized
+    rm -rf /var/log/mariadb/columnstore/*
     rm -rf /tmp/*
+    rm -rf $REPORT_PATH
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
@@ -161,7 +178,8 @@ build()
                      -DWITH_WSREP=OFF
                      -DWITH_SSL=system
                      -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+                     -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+                     "
 
 
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
@@ -172,11 +190,21 @@ build()
         message "Buiding with unittests"
     fi
 
+    if [[ $ASAN = true ]] ; then
+        warn "Building with ASAN"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+    fi
+
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
         warn "Cores are not dumped"
-
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+        echo "${REPORT_PATH}/core_%e.%p" | sudo tee /proc/sys/kernel/core_pattern
+    fi
+
+    if [[ $MAKEFILE_VERBOSE = true ]] ; then
+        warn "Verbosing Makefile Commands"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
     fi
 
     if [[ $RUN_BENCHMARKS = true ]] ; then
@@ -196,7 +224,6 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
         message "Buiding without microbenchmarks"
     fi
-
 
     cd $MDB_SOURCE_PATH
 
@@ -228,11 +255,13 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    ${CMAKE_BIN_NAME} . -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \
-    make -j $CPUS install
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \ |
+    make -j $CPUS
+    message "Installing silently"
+    make -j $CPUS install > /dev/null
 
     if [ $? -ne 0 ]; then
-        error "!!!! BUILD FAILED"
+        error "!!!! BUILD FAILED !!!!"
         exit 1
     fi
     cd -
@@ -259,7 +288,7 @@ run_unit_tests()
     else
         message "Running unittests"
         cd $MDB_SOURCE_PATH
-        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc)
+        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
         cd -
     fi
 }
@@ -271,14 +300,56 @@ run_microbenchmarks_tests()
     else
         message "Runnning microbenchmarks"
         cd $MDB_SOURCE_PATH
-        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc)
+        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
         cd -
     fi
+}
+
+disable_plugins_for_bootstrap()
+{
+    find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
+    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
+}
+
+enable_columnstore_back()
+{
+    echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
+}
+
+fix_config_files()
+{
+    message Fixing config files
+
+    THREAD_STACK_SIZE="20M"
+
+    SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
+    if [[ $ASAN = true ]] ; then
+        COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+        if grep -q thread_stack $COLUMNSTORE_CONFIG; then
+            warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
+        else
+            echo "thread_stack = ${THREAD_STACK_SIZE}" >> $COLUMNSTORE_CONFIG
+            message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
+        fi
+
+        MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+        if grep -q ASAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
+        else
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SERVICE_FILE
+            message "ASAN options were added to $MDB_SERVICE_FILE"
+        fi
+    fi
+    systemctl daemon-reload
 }
 
 install()
 {
     message "Installing MariaDB"
+    disable_plugins_for_bootstrap
+
+    mkdir -p $REPORT_PATH
+    chmod 777 $REPORT_PATH
 
     check_user_and_group
 
@@ -288,9 +359,14 @@ install()
 socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
+    mkdir -p /var/lib/mysql
+    chown mysql:mysql /var/lib/mysql
+
     message "Running mysql_install_db"
-    mysql_install_db --rpm --user=mysql
+    sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
     mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
+
+    enable_columnstore_back
 
     mkdir -p /etc/columnstore
 
@@ -308,7 +384,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
         > /etc/mysql/debian.cnf
     fi
 
-    systemctl daemon-reload
+    fix_config_files
 
     if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
         message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
@@ -345,9 +421,23 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     chmod 777 /var/log/mariadb/columnstore
 }
 
+
+smoke()
+{
+    message "Creating test database"
+    mariadb -e "create database if not exists test;"
+    message "Selecting magic numbers"
+    MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
+    if [[ $MAGIC == '42' ]] ; then
+        message "Great answer correct"
+    else
+        warn "Smoke failed, answer is '$MAGIC'"
+    fi
+}
+
 select_branch
 
-if [[ $SKIP_DEPS = false ]] ; then
+if [[ $INSTALL_DEPS = true ]] ; then
     install_deps
 fi
 
@@ -358,4 +448,6 @@ run_unit_tests
 run_microbenchmarks_tests
 install
 start_service
+smoke
+
 message "$color_green FINISHED $color_normal"

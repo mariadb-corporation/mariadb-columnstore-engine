@@ -19,22 +19,20 @@
 
 #include <map>
 #include "messagequeue.h"
+#include <memory>
 
 namespace messageqcpp
 {
 struct ClientObject
 {
-  MessageQueueClient* client;
-  uint64_t lastUsed;
-  bool inUse;
-
-  ClientObject() : client(NULL), lastUsed(0), inUse(false)
-  {
-  }
+  std::unique_ptr<MessageQueueClient> client;
+  uint64_t lastUsed = 0;
+  bool inUse = false;
 };
 
 class MessageQueueClientPool
 {
+  using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
  public:
   static MessageQueueClient* getInstance(const std::string& module);
   static MessageQueueClient* getInstance(const std::string& dnOrIp, uint64_t port);
@@ -46,7 +44,7 @@ class MessageQueueClientPool
   MessageQueueClientPool(){};
   ~MessageQueueClientPool(){};
 
-  static std::multimap<std::string, ClientObject*> clientMap;
+  static ClientMapType clientMap;
 };
 
 }  // namespace messageqcpp

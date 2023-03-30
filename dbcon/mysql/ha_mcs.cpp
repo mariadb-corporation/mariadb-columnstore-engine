@@ -1941,7 +1941,7 @@ int ha_mcs_cache::flush_insert_cache()
   int error, error2;
   ha_maria* from = cache_handler;
   uchar* record = table->record[0];
-  ulonglong copied_rows = 0;
+  [[maybe_unused]] ulonglong copied_rows = 0;
   DBUG_ENTER("flush_insert_cache");
 
   DBUG_ASSERT(from->file->state->records == share->cached_rows);

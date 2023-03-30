@@ -48,26 +48,6 @@ using namespace logging;
 
 namespace
 {
-const int64_t columnstore_precision[19] = {0,
-                                           9,
-                                           99,
-                                           999,
-                                           9999,
-                                           99999,
-                                           999999,
-                                           9999999,
-                                           99999999,
-                                           999999999,
-                                           9999999999LL,
-                                           99999999999LL,
-                                           999999999999LL,
-                                           9999999999999LL,
-                                           99999999999999LL,
-                                           999999999999999LL,
-                                           9999999999999999LL,
-                                           99999999999999999LL,
-                                           999999999999999999LL};
-
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
 {
@@ -475,25 +455,16 @@ void number_int_value(const string& data, cscDataType typeCode,
   if ((typeCode == datatypes::SystemCatalog::DECIMAL) || (typeCode == datatypes::SystemCatalog::UDECIMAL) ||
       (ct.scale > 0))
   {
-    T rangeUp, rangeLow;
-
-    if (ct.precision < 19)
+    auto precision =
+        ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
+    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
     {
-      rangeUp = (T)columnstore_precision[ct.precision];
-    }
-    else
-    {
-      auto precision =
-          ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
-      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
-      {
-        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
-                              dataTypeErr);
-      }
-      rangeUp = datatypes::ConversionRangeMaxValue[ct.precision - 19];
+      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                            dataTypeErr);
     }
 
-    rangeLow = -rangeUp;
+    T rangeUp = dataconvert::decimalRangeUp<T>(precision);
+    T rangeLow = -rangeUp;
 
     if (intVal > rangeUp)
     {
@@ -2802,7 +2773,8 @@ int64_t DataConvert::stringToTime(const string& data)
   {
     if (!hasDate)
     {
-      day = strtol(data.substr(0, pos).c_str(), &end, 10);
+      std::string tmpDataSegment = data.substr(0, pos);
+      day = strtol(tmpDataSegment.c_str(), &end, 10);
 
       if (*end != '\0')
         return -1;
