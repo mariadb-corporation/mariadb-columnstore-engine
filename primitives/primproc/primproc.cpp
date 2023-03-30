@@ -46,6 +46,8 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
+#include <jemalloc/jemalloc.h>
+
 #include "configcpp.h"
 using namespace config;
 
@@ -696,6 +698,105 @@ int ServicePrimProc::Child()
   return 1;
 }
 
+/******************************************************************************
+ * jemalloc-specific part.
+ *
+ * Please be assured that MALLCTL_ARENAS_ALL is rerally an index one above
+ * maximal number of arenas. Right now it is 4096 and there is an actual limit
+ * definition, the MALLOCX_ARENA_LIMIT value that is (1<<12) - 1, take a
+ * look at jemalloc_internal_types.h.
+ *
+ * The number 12 in the definition of MALLOCX_ARENA_LIMIT is bolted quite strongly.
+ *
+ * Thus, despite the fact that MALLCTL_ARENAS_ALL and MALLOCX_ARENA_LIMIT are
+ * not directly linked, they indeed are.
+ *
+ * It does not appear that jemalloc creates arenas by itself outside of
+ * initial bunch of arenas.narenas.
+ */
+
+int reported = 0;
+size_t allowedMemSize = 1000000000;        // zero means value is not set. it can be set at any time.
+size_t allocatedMemSize = 0;      // this value will always reflect actual memory size.
+std::mutex checkMemSizeGuard;     // we will work under guard, as logic can be not expressible with atomics.
+static extent_hooks_t* ppOldArenasHooks[MALLCTL_ARENAS_ALL]; // old hooks we've got for existing arenas.
+extern "C" void* ppHooksExtentAlloc(extent_hooks_t *extent_hooks, void *new_addr, size_t size,
+                        size_t alignment, bool *zero, bool *commit, unsigned arena_ind)
+{
+  //std::cerr << "extent alloc for arena " << arena_ind << std::endl; std::cerr.flush();
+  bool fail = false;
+  checkMemSizeGuard.lock();
+//  fprintf(stderr, "alloc hook: requested %zu bytes, allocated so far %zu, allowed %zu, arena %u\n", size, allocatedMemSize, allowedMemSize, arena_ind); fflush(stderr);
+  if (allowedMemSize > 0 && allowedMemSize < allocatedMemSize && !reported) {
+    reported = 1;
+    fail = true;
+  } else {
+    allocatedMemSize += size;
+  }
+  checkMemSizeGuard.unlock();
+  if (fail)
+  {
+    std::cerr << "failing" << std::endl;
+    return nullptr;
+  }
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  //std::cerr << "old hooks is nullptr " << ((int)(oldHooks == nullptr)) << std::endl; std::cerr.flush();
+  //idbassert(oldHooks);
+  //std::cerr << "old hooks alloc is nullptr " << ((int)(oldHooks->alloc == nullptr)) << std::endl; std::cerr.flush();
+  void* ret = oldHooks->alloc(oldHooks, new_addr, size, alignment, zero, commit, arena_ind);
+  //std::cerr << "returned from old alloc" << std::endl; std::cerr.flush();
+  if (ret == nullptr)
+  {
+    // handle the failure to allocate.
+    checkMemSizeGuard.lock();
+//    fprintf(stderr, "alloc hook: retuning failed %zu bytes, arena %u\n", size, arena_ind); fflush(stderr);
+    allocatedMemSize -= size;
+    checkMemSizeGuard.unlock();
+  }
+  //std::cerr << "returning" << std::endl; std::cerr.flush();
+  return ret;
+}
+
+extern "C" bool ppHooksExtentDalloc(extent_hooks_t *extent_hooks, void *addr,
+                         size_t size, bool committed, unsigned arena_ind)
+{
+  //std::cerr << "extent dalloc for arena " << arena_ind << std::endl; std::cerr.flush();
+  extent_hooks_t *oldHooks = ppOldArenasHooks[arena_ind];
+  //idbassert(oldHooks);
+  bool ret = oldHooks->dalloc(oldHooks, addr, size, committed, arena_ind);
+  if (!ret)
+  {
+    // successful deallocation.
+    checkMemSizeGuard.lock();
+    fprintf(stderr, "alloc hook: freed %zu bytes, arena %u\n", size, arena_ind); fflush(stderr);
+    allocatedMemSize -= size;
+    checkMemSizeGuard.unlock();
+  }
+  return ret;
+}
+
+extent_hooks_t ppHooks = {
+  ppHooksExtentAlloc,
+  ppHooksExtentDalloc,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+void print_stat_part(void* _file, const char* msg)
+{
+  FILE* file = (FILE*) _file;
+  fprintf(file, "%s", msg); fflush(file);
+}
+
+/******************************************************************************
+ * the MAIN.
+ */
+
 int main(int argc, char** argv)
 {
   if (checkArchitecture() != arcitecture::SSE4_2 && checkArchitecture() != arcitecture::ASIMD)
@@ -703,6 +804,43 @@ int main(int argc, char** argv)
     std::cerr << "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting. \n";
     return 1;
   }
+
+  FILE* f = fopen("jemalloc-log", "w");
+  malloc_stats_print(print_stat_part, (void*)f, "");
+  fclose(f);
+
+  unsigned narenas = 0x900df00d;
+  size_t sz = sizeof(narenas);
+  fprintf(stderr, "about to get number of arenas\n"); fflush(stderr);
+
+  bool ret = mallctl("opt.narenas", (void*)(&narenas), &sz, nullptr, 0);
+  if (ret) {
+    std::cerr << "unable to get number of arenas\n";
+    return 1;
+  }
+  fprintf(stderr, "got %u to process\n", narenas); fflush(stderr);
+
+  for (unsigned i = 0;i < MALLCTL_ARENAS_ALL;i++)
+  {
+    ppOldArenasHooks[i] = nullptr;
+  }
+
+  // jemalloc reports one more arenas than there actually are.
+  for (unsigned i = 0;i < narenas;i++) {
+    char tmp[100];
+    sprintf(tmp, "arena.%u.extent_hooks", i);
+    extent_hooks_t* newHooks = &ppHooks;
+    size_t szNew = sizeof(newHooks);
+    size_t szOld = sizeof(ppOldArenasHooks[i]);
+    fprintf(stderr, "about to set hooks for arena %u\n", i); fflush(stderr);
+    if (mallctl(tmp, &ppOldArenasHooks[i], &szOld, &newHooks, szNew))
+    {
+      //std::cerr << "unable to set hooks for arena #" << i << std::endl;
+      return 1;
+    } 
+    fprintf(stderr, "hooks are set for arena %u\n", i); fflush(stderr);
+  }
+
   Opt opt(argc, argv);
   // Set locale language
   setlocale(LC_ALL, "");
