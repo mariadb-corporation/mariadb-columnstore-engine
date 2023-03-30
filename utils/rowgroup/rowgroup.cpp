@@ -50,19 +50,7 @@ namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
-StringStore::StringStore() : empty(true), fUseStoreStringMutex(false)
-{
-}
 
-StringStore::StringStore(const StringStore&)
-{
-  throw logic_error("Don't call StringStore copy ctor");
-}
-
-StringStore& StringStore::operator=(const StringStore&)
-{
-  throw logic_error("Don't call StringStore operator=");
-}
 
 StringStore::~StringStore()
 {
@@ -86,10 +74,10 @@ StringStore::~StringStore()
 
 uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 {
-  MemChunk* lastMC = NULL;
+  MemChunk* lastMC = nullptr;
   uint64_t ret = 0;
 
-  empty = false;  // At least a NULL is being stored.
+  empty = false;  // At least a nullptr is being stored.
 
   // Sometimes the caller actually wants "" to be returned.......   argggghhhh......
   // if (len == 0)
@@ -121,7 +109,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   }
   else
   {
-    if ((lastMC == NULL) || (lastMC->capacity - lastMC->currentSize < (len + 4)))
+    if ((lastMC == nullptr) || (lastMC->capacity - lastMC->currentSize < (len + 4)))
     {
       // mem usage debugging
       // if (lastMC)
@@ -215,20 +203,12 @@ void StringStore::clear()
   empty = true;
 }
 
-UserDataStore::UserDataStore() : fUseUserDataMutex(false)
-{
-}
-
-UserDataStore::~UserDataStore()
-{
-}
-
 uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
                                       boost::shared_ptr<mcsv1sdk::UserData> data, uint32_t len)
 {
   uint32_t ret = 0;
 
-  if (len == 0 || data == NULL)
+  if (len == 0 || data == nullptr)
   {
     return numeric_limits<uint32_t>::max();
   }
@@ -305,7 +285,7 @@ void UserDataStore::deserialize(ByteStream& bs)
     }
 
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    mcsv1sdk::UserData* userData = NULL;
+    mcsv1sdk::UserData* userData = nullptr;
     rc = funcIter->second->createUserData(userData, vStoreData[i].length);
 
     if (rc != mcsv1sdk::mcsv1_UDAF::SUCCESS)
@@ -323,10 +303,6 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-RGData::RGData()
-{
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-}
 
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
@@ -335,6 +311,9 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 
   if (rg.usesStringTable() && rowCount > 0)
     strings.reset(new StringStore());
+
+  userDataStore.reset();
+
 
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
@@ -354,6 +333,8 @@ RGData::RGData(const RowGroup& rg)
   if (rg.usesStringTable())
     strings.reset(new StringStore());
 
+  userDataStore.reset();
+
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
    * filled in yet.  Need to look into that.  Valgrind complains that
@@ -366,6 +347,7 @@ RGData::RGData(const RowGroup& rg)
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  userDataStore.reset();
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -384,16 +366,6 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 void RGData::reinit(const RowGroup& rg)
 {
   reinit(rg, 8192);
-}
-
-RGData::RGData(const RGData& r) : rowData(r.rowData), strings(r.strings), userDataStore(r.userDataStore)
-{
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-}
-
-RGData::~RGData()
-{
-  // cout << "rgdata-- = " << __sync_sub_and_fetch(&rgDataCount, 1) << endl;
 }
 
 void RGData::serialize(ByteStream& bs, uint32_t amount) const
@@ -464,6 +436,7 @@ void RGData::clear()
 {
   rowData.reset();
   strings.reset();
+  userDataStore.reset();
 }
 
 // UserDataStore is only used for UDAF.
@@ -476,10 +449,6 @@ UserDataStore* RGData::getUserDataStore()
   }
 
   return userDataStore.get();
-}
-
-Row::Row() : data(NULL), strings(NULL), userDataStore(NULL)
-{
 }
 
 Row::Row(const Row& r)
@@ -501,11 +470,7 @@ Row::Row(const Row& r)
  , hasLongStringField(r.hasLongStringField)
  , sTableThreshold(r.sTableThreshold)
  , forceInline(r.forceInline)
- , userDataStore(NULL)
-{
-}
-
-Row::~Row()
+ , userDataStore(nullptr)
 {
 }
 
@@ -1023,7 +988,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
 
 const CHARSET_INFO* Row::getCharset(uint32_t col) const
 {
-  if (charsets[col] == NULL)
+  if (charsets[col] == nullptr)
   {
     const_cast<CHARSET_INFO**>(charsets)[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
@@ -1031,14 +996,6 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
 }
 
 RowGroup::RowGroup()
- : columnCount(0)
- , data(NULL)
- , rgData(NULL)
- , strings(NULL)
- , useStringTable(true)
- , hasCollation(false)
- , hasLongStringField(false)
- , sTableThreshold(20)
 {
   // 1024 is too generous to waste.
   oldOffsets.reserve(10);
@@ -1057,7 +1014,7 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
                    const vector<uint32_t>& cprecision, uint32_t stringTableThreshold, bool stringTable,
                    const vector<bool>& forceInlineData)
  : columnCount(colCount)
- , data(NULL)
+ , data(nullptr)
  , oldOffsets(positions)
  , oids(roids)
  , keys(tkeys)
@@ -1065,8 +1022,8 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
  , charsetNumbers(csNumbers)
  , scale(cscale)
  , precision(cprecision)
- , rgData(NULL)
- , strings(NULL)
+ , rgData(nullptr)
+ , strings(nullptr)
  , sTableThreshold(stringTableThreshold)
 {
   uint32_t i;
@@ -1107,8 +1064,8 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   useStringTable = (stringTable && hasLongStringField);
   offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
 
-  // Set all the charsets to NULL for jit initialization.
-  charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  // Set all the charsets to nullptr for jit initialization.
+  charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1176,14 +1133,6 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
 }
 
 RowGroup::RowGroup(ByteStream& bs)
- : columnCount(0)
- , data(nullptr)
- , rgData(nullptr)
- , strings(nullptr)
- , useStringTable(true)
- , hasCollation(false)
- , hasLongStringField(false)
- , sTableThreshold(20)
 {
   this->deserialize(bs);
 }
@@ -1254,22 +1203,13 @@ void RowGroup::deserialize(ByteStream& bs)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  // Set all the charsets to NULL for jit initialization.
-  charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  // Set all the charsets to nullptr for jit initialization.
+  charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const
 {
-  // cout << "****** serializing\n" << toString() << en
-  //	if (useStringTable || !hasLongStringField)
   rgData->serialize(bs, getDataSize());
-  //	else {
-  //		uint64_t size;
-  //		RGData *compressed = convertToStringTable(&size);
-  //		compressed->serialize(bs, size);
-  //		if (compressed != rgData)
-  //			delete compressed;
-  //	}
 }
 
 uint32_t RowGroup::getDataSize() const
@@ -1354,7 +1294,7 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
 
   // os << "strings = " << hex << (int64_t) strings << "\n";
   // os << "data = " << (int64_t) data << "\n" << dec;
-  if (data != NULL)
+  if (data != nullptr)
   {
     Row r;
     initRow(&r);
@@ -1580,7 +1520,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
 const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
 {
-  if (charsets[col] == NULL)
+  if (charsets[col] == nullptr)
   {
     charsets[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }

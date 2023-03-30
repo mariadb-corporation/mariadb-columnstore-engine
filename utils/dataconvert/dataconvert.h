@@ -104,6 +104,7 @@ const int64_t IDB_pow[19] = {1,
                              100000000000000000LL,
                              1000000000000000000LL};
 
+
 const int32_t SECS_PER_MIN = 60;
 const int32_t MINS_PER_HOUR = 60;
 const int32_t HOURS_PER_DAY = 24;
@@ -1551,6 +1552,20 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
     *ep = (char*)data;
 
   return res;
+}
+
+
+template <class T>
+T decimalRangeUp(int32_t precision)
+{
+  if (precision < 19)
+  {
+    return (T)datatypes::columnstore_precision[precision];
+  }
+  else
+  {
+    return datatypes::ConversionRangeMaxValue[precision - 19];
+  }
 }
 
 template <>

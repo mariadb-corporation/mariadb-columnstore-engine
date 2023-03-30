@@ -118,6 +118,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   rowgroup::RowGroup fRowGroupIn;
   rowgroup::RowGroup fRowGroupOut;
   rowgroup::RowGroup fRowGroupDeliver;
+  rowgroup::RGData fRgDataOut;
   rowgroup::Row fRowIn;
   rowgroup::Row fRowOut;
 

@@ -29,6 +29,7 @@
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 #include "joblisttypes.h"
+#include <columnwidth.h>
 
 #include <vector>
 
@@ -711,7 +712,7 @@ const uint8_t ROUND_POS = 0x01;  // actual value larger/longer than the stored v
 const uint8_t ROUND_NEG = 0x80;  // actual value less than the stored value
 
 // Tied to ColByScanRequestHeader and ColByScanRangeRequestHeader.  Check other headers if modifying.
-struct NewColRequestHeader
+struct /*alignas(utils::MAXCOLUMNWIDTH)*/ NewColRequestHeader
 {
   ISMPacketHeader ism;
   PrimitiveHeader hdr;

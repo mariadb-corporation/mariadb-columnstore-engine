@@ -232,7 +232,7 @@ class BatchPrimitiveProcessor
   /* Common space for primitive data */
   alignas(utils::MAXCOLUMNWIDTH) uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
   uint8_t blockDataAux[BLOCK_SIZE * execplan::AUX_COL_WIDTH];
-  boost::scoped_array<uint8_t> outputMsg;
+  std::unique_ptr<uint8_t[], utils::AlignedDeleter>  outputMsg;
   uint32_t outMsgSize;
 
   std::vector<SCommand> filterSteps;

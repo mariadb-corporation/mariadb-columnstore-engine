@@ -65,6 +65,7 @@ using namespace idbdatafile;
 #include "dataconvert.h"
 #include "string_prefixes.h"
 
+#include "mcs_decimal.h"
 
 namespace WriteEngine
 //#define PROFILE 1
@@ -919,7 +920,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   Column refCol;
   ColType newColType;
   ColType refColType;
-  boost::scoped_array<char> defVal(new char[MAX_COLUMN_BOUNDARY]);
+  boost::scoped_array<char> defVal(new char[datatypes::MAXDECIMALWIDTH]);
   ColumnOp* colOpNewCol = m_colOp[op(compressionType)];
   ColumnOp* refColOp = m_colOp[op(refCompressionType)];
   Dctnry* dctnry = m_dctnry[op(compressionType)];
@@ -994,6 +995,29 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   return rc;
 }
 
+// TODO: Get rid of this
+void emptyValueToAny(boost::any* any, const uint8_t* emptyValue, int colWidth)
+{
+  switch (colWidth)
+  {
+    case 16:
+      *any = *(uint128_t*)emptyValue;
+      break;
+    case 8:
+      *any = *(uint64_t*)emptyValue;
+      break;
+    case 4:
+      *any = *(uint32_t*)emptyValue;
+      break;
+    case 2:
+      *any = *(uint16_t*)emptyValue;
+      break;
+    default:
+      *any = *emptyValue;
+  }
+}
+
+
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
                                   vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol)
@@ -1034,10 +1058,7 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
       const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->getEmptyRowValue(
           curColStruct.colDataType, curColStruct.colWidth);
 
-      if (curColStruct.colWidth == datatypes::MAXDECIMALWIDTH)
-        curTuple.data = *(int128_t*)emptyVal;
-      else
-        curTuple.data = *(int64_t*)emptyVal;
+      emptyValueToAny(&curTuple.data, emptyVal, curColStruct.colWidth);
 
       curTupleList.push_back(curTuple);
       colValueList.push_back(curTupleList);
