@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs259_db;
 CREATE DATABASE mcs259_db;
 USE mcs259_db;
 CREATE TABLE t1 (a INT, b VARCHAR(30))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'mariadb columnstore');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'mariadb'),(2, 'columnstore'),(3, 'mariadb columnstore');
 SELECT INSTR('abcdefghi', 'i') FROM t1 LIMIT 1;
 INSTR('abcdefghi', 'i')
 9

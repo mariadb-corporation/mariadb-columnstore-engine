@@ -527,37 +527,33 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
 
 bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
 {
-  if (bpp->fFiltStrValues[0][i] == "" || bpp->fFiltStrValues[1][j] == "" ||
-      bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK ||
-      bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
+  if (bpp->fFiltStrValues[0][i].isNull() || bpp->fFiltStrValues[1][j].isNull())
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
-  utils::ConstString s0(utils::ConstString(bpp->fFiltStrValues[0][i]));
-  utils::ConstString s1(utils::ConstString(bpp->fFiltStrValues[1][j]));
+  utils::ConstString s0 = bpp->fFiltStrValues[0][i].toConstString();
+  utils::ConstString s1 = bpp->fFiltStrValues[1][j].toConstString();
   return compareString(cs, s0, s1, fBOP);
 }
 
 bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
 {
-  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][j] == "" ||
-      bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
+  if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) || bpp->fFiltStrValues[1][j].isNull())
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
   datatypes::TCharShort s0(bpp->fFiltCmdValues[0][i]);
-  utils::ConstString s1(bpp->fFiltStrValues[1][j]);
+  utils::ConstString s1 = bpp->fFiltStrValues[1][j].toConstString();
   return compareString(cs, s0.toConstString(leftColType.colWidth), s1, fBOP);
 }
 
 bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
 {
-  if (bpp->fFiltStrValues[0][i] == "" || bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK ||
-      execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+  if (bpp->fFiltStrValues[0][i].isNull() || execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
     return false;
 
   datatypes::Charset cs(leftColType.getCharset());
-  utils::ConstString s0(bpp->fFiltStrValues[0][i]);
+  utils::ConstString s0 = bpp->fFiltStrValues[0][i].toConstString();
   datatypes::TCharShort s1(bpp->fFiltCmdValues[1][j]);
   return compareString(cs, s0, s1.toConstString(rightColType.colWidth), fBOP);
 }

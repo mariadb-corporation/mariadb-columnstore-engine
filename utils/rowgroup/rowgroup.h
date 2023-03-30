@@ -54,6 +54,9 @@
 #include "collation.h"
 #include "common/hashfamily.h"
 
+#include "stdlib.h"
+#include "execinfo.h"
+
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
 
 namespace rowgroup
@@ -132,8 +135,11 @@ class StringStore
   StringStore();
   virtual ~StringStore();
 
-  inline std::string getString(uint64_t offset) const;
-  uint64_t storeString(const uint8_t* data, uint32_t length);  // returns the offset
+  inline utils::NullString getString(uint64_t offset) const;
+  // returns the offset.
+  // it may receive nullptr as data and it is proper way to store NULL values.
+  uint64_t storeString(const uint8_t* data, uint32_t length);
+  //please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
   inline utils::ConstString getConstString(uint64_t offset) const
@@ -356,6 +362,7 @@ class Row
   inline void nextRow();
   inline uint32_t getColumnWidth(uint32_t colIndex) const;
   inline uint32_t getColumnCount() const;
+  inline uint32_t getInternalSize() const;  // this is only accurate if there is no string table
   inline uint32_t getSize() const;  // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
@@ -475,14 +482,16 @@ class Row
   inline void setRid(uint64_t rid);
 
   // TODO: remove this (string is not efficient for this), use getConstString() instead
-  inline std::string getStringField(uint32_t colIndex) const
+  inline utils::NullString getStringField(uint32_t colIndex) const
   {
-    return getConstString(colIndex).toString();
+    utils::ConstString x = getConstString(colIndex);
+    return utils::NullString(x);
   }
 
   inline utils::ConstString getConstString(uint32_t colIndex) const;
   inline utils::ConstString getShortConstString(uint32_t colIndex) const;
-  void setStringField(const std::string& val, uint32_t colIndex);
+  void setStringField(const utils::NullString& val, uint32_t colIndex);
+  void setStringField(const uint8_t* val, uint32_t length, uint32_t colIndex);
   inline void setStringField(const utils::ConstString& str, uint32_t colIndex);
   template <typename T>
   inline void setBinaryField(const T* value, uint32_t width, uint32_t colIndex);
@@ -493,8 +502,7 @@ class Row
   // support VARBINARY
   // Add 2-byte length at the CHARSET_INFO*beginning of the field.  NULL and zero length field are
   // treated the same, could use one of the length bit to distinguish these two cases.
-  inline std::string getVarBinaryStringField(uint32_t colIndex) const;
-  inline void setVarBinaryField(const std::string& val, uint32_t colIndex);
+  inline void setVarBinaryField(const utils::NullString& val, uint32_t colIndex);
   // No string construction is necessary for better performance.
   inline uint32_t getVarBinaryLength(uint32_t colIndex) const;
   inline const uint8_t* getVarBinaryField(uint32_t colIndex) const;
@@ -534,6 +542,7 @@ class Row
   inline void markRow();
   inline void zeroRid();
   inline bool isMarked();
+  void setToNull(uint32_t colIndex);
   void initToNull();
 
   inline void usesStringTable(bool b)
@@ -575,6 +584,16 @@ class Row
   inline void setUserDataStore(UserDataStore* u)
   {
     userDataStore = u;
+  }
+
+  bool getNullMark(uint32_t col) const
+  {
+    return data[getInternalSize() + col];
+  }
+
+  void setNullMark(uint32_t col, bool isNull) const
+  {
+    data[getInternalSize() + col] = isNull;
   }
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
@@ -639,7 +658,7 @@ inline void Row::setData(const Pointer& p)
 
 inline void Row::nextRow()
 {
-  data += offsets[columnCount];
+  data += getSize();
 }
 
 inline uint32_t Row::getColumnCount() const
@@ -652,9 +671,14 @@ inline uint32_t Row::getColumnWidth(uint32_t col) const
   return colWidths[col];
 }
 
-inline uint32_t Row::getSize() const
+inline uint32_t Row::getInternalSize() const
 {
   return offsets[columnCount];
+}
+
+inline uint32_t Row::getSize() const
+{
+  return getInternalSize() + columnCount;
 }
 
 inline uint32_t Row::getRealSize() const
@@ -662,7 +686,7 @@ inline uint32_t Row::getRealSize() const
   if (!useStringTable)
     return getSize();
 
-  uint32_t ret = 2;
+  uint32_t ret = columnCount; // account for NULL flags.
 
   for (uint32_t i = 0; i < columnCount; i++)
   {
@@ -829,7 +853,8 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
 
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
-    default: idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
+    default:
+      idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
 
@@ -872,8 +897,16 @@ inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t
 
 inline utils::ConstString Row::getShortConstString(uint32_t colIndex) const
 {
-  const char* src = (const char*)&data[offsets[colIndex]];
-  return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+  uint32_t offset = offsets[colIndex];
+  const char* src = (const char*)&data[offset];
+  if (!isNullValue(colIndex))
+  {
+    return utils::ConstString(src, strnlen(src, getColumnWidth(colIndex)));
+  }
+  else
+  {
+    return utils::ConstString(nullptr, 0);
+  }
 }
 
 inline utils::ConstString Row::getConstString(uint32_t colIndex) const
@@ -969,14 +1002,28 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
   }
 }
 
+inline void Row::setStringField(const uint8_t* str, uint32_t length, uint32_t colIndex)
+{
+  utils::ConstString temp((const char*)str, length);
+  setStringField(temp, colIndex);
+}
+inline void Row::setStringField(const utils::NullString& val, uint32_t colIndex)
+{
+  utils::ConstString temp(val.str(), val.length());
+  setStringField(temp, colIndex);
+}
 inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex)
 {
   uint64_t offset;
 
   // TODO: add multi-byte safe truncation here
   uint32_t length = str.length();
-  if (length > getColumnWidth(colIndex))
-    length = getColumnWidth(colIndex);
+  uint32_t colWidth = getColumnWidth(colIndex);
+
+  setNullMark(colIndex, !str.str());
+
+  if (length > colWidth)
+    length = colWidth;
 
   if (inStringTable(colIndex))
   {
@@ -988,24 +1035,28 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
-    memcpy(&data[offsets[colIndex]], str.str(), length);
-    memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
+    uint8_t* buf = &data[offsets[colIndex]];
+    memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length)); // needed for memcmp in equals().
+    if (str.str())
+    {
+      memcpy(buf, str.str(), length);
+    }
+    else if (colWidth <= 8) // special magic value.
+    {
+      setToNull(colIndex);
+    }
   }
-}
-
-inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
-{
-  if (inStringTable(colIndex))
-    return getConstString(colIndex).toString();
-
-  return std::string((char*)&data[offsets[colIndex] + 2], *((uint16_t*)&data[offsets[colIndex]]));
 }
 
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 {
   if (inStringTable(colIndex))
     return strings->getStringLength(*((uint64_t*)&data[offsets[colIndex]]));
-  ;
+
+  if (getNullMark(colIndex))
+  {
+    return 0;
+  }
 
   return *((uint16_t*)&data[offsets[colIndex]]);
 }
@@ -1014,6 +1065,11 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
 {
   if (inStringTable(colIndex))
     return strings->getPointer(*((uint64_t*)&data[offsets[colIndex]]));
+
+  if (getNullMark(colIndex))
+  {
+    return nullptr;
+  }
 
   return &data[offsets[colIndex] + 2];
 }
@@ -1027,6 +1083,11 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
   }
   else
   {
+    if (getNullMark(colIndex))
+    {
+      len = 0;
+      return nullptr;
+    }
     len = *((uint16_t*)&data[offsets[colIndex]]);
     return &data[offsets[colIndex] + 2];
   }
@@ -1238,29 +1299,28 @@ inline void Row::setInt128Field(const int128_t& val, uint32_t colIndex)
   setBinaryField<int128_t>(&val, colIndex);
 }
 
-inline void Row::setVarBinaryField(const std::string& val, uint32_t colIndex)
+inline void Row::setVarBinaryField(const utils::NullString& val, uint32_t colIndex)
 {
-  if (inStringTable(colIndex))
-    setStringField(val, colIndex);
-  else
-  {
-    *((uint16_t*)&data[offsets[colIndex]]) = static_cast<uint16_t>(val.length());
-    memcpy(&data[offsets[colIndex] + 2], val.data(), val.length());
-  }
+  setVarBinaryField((uint8_t*)val.str(), val.length(), colIndex);
 }
 
 inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex)
 {
-  if (len > getColumnWidth(colIndex))
-    len = getColumnWidth(colIndex);
+  setNullMark(colIndex, !val);
 
   if (inStringTable(colIndex))
   {
+    if (len > getColumnWidth(colIndex))
+      len = getColumnWidth(colIndex);
+
     uint64_t offset = strings->storeString(val, len);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
   }
   else
   {
+    if (len > getColumnWidth(colIndex))
+      len = getColumnWidth(colIndex);
+
     *((uint16_t*)&data[offsets[colIndex]]) = len;
     memcpy(&data[offsets[colIndex] + 2], val, len);
   }
@@ -1283,6 +1343,7 @@ inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 {
   uint32_t n = offsets[destIndex + 1] - offsets[destIndex];
   memmove(&data[offsets[destIndex]], &data[offsets[srcIndex]], n);
+  setNullMark(destIndex, getNullMark(srcIndex));
 }
 
 inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
@@ -1291,7 +1352,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
                types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
                types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
   {
-    out.setVarBinaryField(getVarBinaryStringField(srcIndex), destIndex);
+    out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
   else if (UNLIKELY(isLongString(srcIndex)))
   {
@@ -1388,7 +1449,6 @@ class RowGroup : public messageqcpp::Serializeable
   @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
   @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
   */
-
   RowGroup(uint32_t colCount, const std::vector<uint32_t>& positions, const std::vector<uint32_t>& cOids,
            const std::vector<uint32_t>& tkeys,
            const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
@@ -1609,7 +1669,7 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
     initRow(r);
 
   r->baseRid = getBaseRid();
-  r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
+  r->data = &(data[headerSize + (rowNum * r->getSize())]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
 }
@@ -1702,12 +1762,12 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
 
 inline uint32_t RowGroup::getRowSize() const
 {
-  return offsets[columnCount];
+  return offsets[columnCount] + columnCount;
 }
 
 inline uint32_t RowGroup::getRowSizeWithStrings() const
 {
-  return oldOffsets[columnCount];
+  return oldOffsets[columnCount] + columnCount;
 }
 
 inline uint64_t RowGroup::getSizeWithStrings(uint64_t n) const
@@ -1900,6 +1960,10 @@ inline void Row::getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* exten
     *rowNum = getRelRid();
 }
 
+// This routine can be slow for your purposes. Please inspect copyRowInline below,
+// in some cases it can be faster.
+// Please be sure that copyRowInline does indeed copy rows of the same structure of
+// fields.
 inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 {
   if (&in == out)
@@ -1909,7 +1973,12 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 
   if (!in.usesStringTable() && !out->usesStringTable())
   {
-    memcpy(out->getData(), in.getData(), std::min(in.getOffset(colCount), out->getOffset(colCount)));
+    memcpy(out->getData(), in.getData(), std::min(in.getSize(), out->getSize()));
+
+    for (uint32_t i = 0; i < colCount; i++)
+    {
+      out->setNullMark(i, in.getNullMark(i));
+    }
     return;
   }
 
@@ -1920,7 +1989,7 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
                  in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
     {
-      out->setVarBinaryField(in.getVarBinaryStringField(i), i);
+      out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
     }
     else if (UNLIKELY(in.isLongString(i)))
     {
@@ -1929,6 +1998,10 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     else if (UNLIKELY(in.isShortString(i)))
     {
       out->setUintField(in.getUintField(i), i);
+    }
+    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DOUBLE))
+    {
+      out->setDoubleField(in.getDoubleField(i), i);
     }
     else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
     {
@@ -1950,12 +2023,34 @@ inline void copyRow(const Row& in, Row* out)
   copyRow(in, out, std::min(in.getColumnCount(), out->getColumnCount()));
 }
 
-inline std::string StringStore::getString(uint64_t off) const
+// This routine can be substantially faster than copyRow above, but there are caveats.
+// The speedy part with memcpy should only be invoked when structures of the rows are the same.
+// Otherwise information about NULLs for inline strings can be lost or garbled.
+inline void copyRowInline(const Row& in, Row* out, uint32_t colCount)
+{
+  if (&in == out)
+    return;
+
+  // XXX: this code still may copy data incorrectly if sizes of columns differ.
+  if (!in.usesStringTable() && !out->usesStringTable() && in.getSize() == out->getSize())
+  {
+    out->setRid(in.getRelRid());
+
+    memcpy(out->getData(), in.getData(), in.getSize());
+    return;
+  }
+
+  copyRow(in, out, colCount);
+}
+
+
+inline utils::NullString StringStore::getString(uint64_t off) const
 {
   uint32_t length;
+  utils::NullString nStr;
 
   if (off == std::numeric_limits<uint64_t>::max())
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
   MemChunk* mc;
 
@@ -1965,11 +2060,12 @@ inline std::string StringStore::getString(uint64_t off) const
     off &= ~0x8000000000000000;
 
     if (longStrings.size() <= off)
-      return joblist::CPNULLSTRMARK;
+      return nStr;
 
     mc = (MemChunk*)longStrings[off].get();
     memcpy(&length, mc->data, 4);
-    return std::string((char*)mc->data + 4, length);
+    nStr.assign(std::string((char*)mc->data + 4, length));
+    return nStr;
   }
 
   uint64_t chunk = off / CHUNK_SIZE;
@@ -1978,22 +2074,23 @@ inline std::string StringStore::getString(uint64_t off) const
   // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
   // what gets returned, it just can't go out of bounds.
   if (mem.size() <= chunk)
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
   mc = (MemChunk*)mem[chunk].get();
 
   memcpy(&length, &mc->data[offset], 4);
 
   if ((offset + length) > mc->currentSize)
-    return joblist::CPNULLSTRMARK;
+    return nStr;
 
-  return std::string((char*)&(mc->data[offset]) + 4, length);
+  nStr.assign(std::string((char*)&(mc->data[offset]) + 4, length));
+  return nStr;
 }
 
 inline const uint8_t* StringStore::getPointer(uint64_t off) const
 {
   if (off == std::numeric_limits<uint64_t>::max())
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   uint64_t chunk = off / CHUNK_SIZE;
   uint64_t offset = off % CHUNK_SIZE;
@@ -2005,7 +2102,7 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
     off &= ~0x8000000000000000;
 
     if (longStrings.size() <= off)
-      return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+      return nullptr;
 
     mc = (MemChunk*)longStrings[off].get();
     return mc->data + 4;
@@ -2014,49 +2111,21 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
   // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
   // what gets returned, it just can't go out of bounds.
   if (UNLIKELY(mem.size() <= chunk))
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   mc = (MemChunk*)mem[chunk].get();
 
   if (offset > mc->currentSize)
-    return (const uint8_t*)joblist::CPNULLSTRMARK.c_str();
+    return nullptr;
 
   return &(mc->data[offset]) + 4;
 }
 
 inline bool StringStore::isNullValue(uint64_t off) const
 {
-  uint32_t length;
-
   if (off == std::numeric_limits<uint64_t>::max())
     return true;
-
-  // Long strings won't be NULL
-  if (off & 0x8000000000000000)
-    return false;
-
-  uint32_t chunk = off / CHUNK_SIZE;
-  uint32_t offset = off % CHUNK_SIZE;
-  MemChunk* mc;
-
-  if (mem.size() <= chunk)
-    return true;
-
-  mc = (MemChunk*)mem[chunk].get();
-  memcpy(&length, &mc->data[offset], 4);
-
-  if (length == 0)
-    return true;
-
-  if (length < 8)
-    return false;
-
-  if ((offset + length) > mc->currentSize)
-    return true;
-
-  if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
-    return true;
-  return (memcmp(&mc->data[offset + 4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
+  return false;
 }
 
 inline uint32_t StringStore::getStringLength(uint64_t off) const

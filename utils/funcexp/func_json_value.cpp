@@ -63,8 +63,9 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 {
   bool isNullJS = false, isNullPath = false;
 
-  const string& js = funcParamJS->data()->getStrVal(row, isNullJS);
-  const string_view jsp = funcParamPath->data()->getStrVal(row, isNullPath);
+  const string js = funcParamJS->data()->getStrVal(row, isNullJS).safeString("");
+  const string sjsp = funcParamPath->data()->getStrVal(row, isNullPath).safeString("");
+  const string_view jsp = sjsp;
   if (isNullJS || isNullPath)
     return true;
 
