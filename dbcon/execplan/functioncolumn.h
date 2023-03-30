@@ -217,10 +217,15 @@ class FunctionColumn : public ReturnedColumn
    *				  F&E framework						  *
    ***********************************************************/
  public:
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     fOperationType.setTimeZone(fTimeZone);
-    fResult.strVal = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
+    fResult.strVal.dropString();
+    std::string val = fFunctor->getStrVal(row, fFunctionParms, isNull, fOperationType);
+    if (!isNull)
+    {
+      fResult.strVal.assign(val);
+    }
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override

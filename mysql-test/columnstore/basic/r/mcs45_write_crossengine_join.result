@@ -58,7 +58,7 @@ NULL
 7	t
 SELECT * FROM t2;
 t2_int	t2_char
-NULL	NULL
+NULL	
 1	sssss
 3	sssss
 5	sssss
@@ -79,7 +79,7 @@ NULL
 7	t
 SELECT * FROM t2;
 t2_int	t2_char
-NULL	NULL
+NULL	
 1	sssss
 3	sssss
 5	sssss

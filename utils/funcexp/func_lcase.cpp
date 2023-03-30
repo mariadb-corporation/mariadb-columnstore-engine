@@ -46,7 +46,7 @@ CalpontSystemCatalog::ColType Func_lcase::operationType(FunctionParm& fp,
 std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& colType)
 {
-  const string& tstr = fp[0]->data()->getStrVal(row, isNull);
+  const auto& tstr = fp[0]->data()->getStrVal(row, isNull);
 
   if (isNull)
     return "";
@@ -56,7 +56,7 @@ std::string Func_lcase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   uint64_t bufLen = inLen * cs->casedn_multiply;
   char* outBuf = new char[bufLen];
 
-  uint64_t outLen = cs->casedn(tstr.c_str(), inLen, outBuf, bufLen);
+  uint64_t outLen = cs->casedn(tstr.str(), inLen, outBuf, bufLen);
 
   string ret = string(outBuf, outLen);
   delete[] outBuf;

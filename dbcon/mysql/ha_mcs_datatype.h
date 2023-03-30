@@ -84,6 +84,11 @@ class StoreFieldMariaDB : public StoreField
 
   int store_string(const char* str, size_t length) override
   {
+    if (!str)
+    {
+      m_field->set_null();
+      return 1;
+    }
     return m_field->store(str, length, m_field->charset());
   }
   int store_varbinary(const char* str, size_t length) override

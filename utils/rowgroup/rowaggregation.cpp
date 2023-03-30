@@ -220,16 +220,16 @@ inline long double getLongDoubleNullValue()
   return joblist::LONGDOUBLENULL;
 }
 
-inline string getStringNullValue()
+inline utils::NullString getStringNullValue()
 {
-  return joblist::CPNULLSTRMARK;
+  return utils::NullString();
 }
 
 }  // namespace
 
 namespace rowgroup
 {
-const std::string typeStr;
+const utils::NullString typeStr;
 const static_any::any& RowAggregation::charTypeId((char)1);
 const static_any::any& RowAggregation::scharTypeId((signed char)1);
 const static_any::any& RowAggregation::shortTypeId((short)1);
@@ -305,15 +305,20 @@ inline void RowAggregation::updateFloatMinMax(float val1, float val2, int64_t co
     fRow.setFloatField(val1, col);
 }
 
-void RowAggregation::updateStringMinMax(string val1, string val2, int64_t col, int func)
+void RowAggregation::updateStringMinMax(utils::NullString val1, utils::NullString val2, int64_t col, int func)
 {
   if (isNull(fRowGroupOut, fRow, col))
   {
     fRow.setStringField(val1, col);
     return;
   }
+  if (val1.isNull())
+  {
+    // as any comparison with NULL is false, it should not affect min/max ranges.
+    return ; // do nothing.
+  }
   CHARSET_INFO* cs = fRow.getCharset(col);
-  int tmp = cs->strnncoll(val1.c_str(), val1.length(), val2.c_str(), val2.length());
+  int tmp = cs->strnncoll(val1.str(), val1.length(), val2.str(), val2.length());
 
   if ((tmp < 0 && func == rowgroup::ROWAGG_MIN) || (tmp > 0 && func == rowgroup::ROWAGG_MAX))
   {
@@ -354,11 +359,13 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
     {
       int colWidth = pRowGroup->getColumnWidth(col);
 
+      // XXX: this is wrong. NullStrings now contain separate NULL values.
       // bug 1853, use token to check null
       // scale here is used to indicate token, not real string.
       if ((pRowGroup->getScale())[col] > 0)
       {
-        if (row.getIntField(col) & joblist::BIGINTNULL)
+        uint64_t uintField = row.getUintField(col);
+        if (uintField == joblist::UBIGINTNULL)
           ret = true;
 
         // break the case block
@@ -366,7 +373,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       }
 
       // real string to check null
-      if (colWidth <= 8)
+      if (colWidth <= 7 || (colWidth == 8 && colDataType == execplan::CalpontSystemCatalog::CHAR))
       {
         if (colWidth == 1)
           ret = ((uint8_t)row.getUintField(col) == joblist::CHAR1NULL);
@@ -381,7 +388,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       {
         //@bug 1821
         auto const str = row.getConstString(col);
-        ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
+        ret = str.isNull();
       }
 
       break;
@@ -480,7 +487,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
     case execplan::CalpontSystemCatalog::BLOB:
     {
       auto const str = row.getConstString(col);
-      ret = str.length() == 0 || str.eq(utils::ConstString(joblist::CPNULLSTRMARK));
+      ret = str.isNull();
       break;
     }
 
@@ -1165,8 +1172,8 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      string valIn = rowIn.getStringField(colIn);
-      string valOut = fRow.getStringField(colOut);
+      auto valIn = rowIn.getStringField(colIn);
+      auto valOut = fRow.getStringField(colOut);
       updateStringMinMax(valIn, valOut, colOut, funcType);
       break;
     }
@@ -1439,8 +1446,8 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      string str = rowIn.getStringField(colIn);
-      valIn = strtoll(str.c_str(), nullptr, 10);
+      auto str = rowIn.getStringField(colIn);
+      valIn = strtoll(str.safeString("").c_str(), nullptr, 10);
       break;
     }
 
@@ -2018,7 +2025,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
       cc = dynamic_cast<execplan::ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
     }
 
-    if ((cc && cc->type() == execplan::ConstantColumn::NULLDATA) ||
+    if ((cc && cc->isNull()) ||
         (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
     {
       if (udafContextsColl[origFuncColsIdx].getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
@@ -2255,7 +2262,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
           {
             datum.columnData = rowIn.getStringField(colIn);
           }
-
           break;
         }
 
@@ -2684,14 +2690,13 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     // Fields are initialized to NULL, which is what we want for empty;
     return;
   }
-
   int64_t intOut;
   uint64_t uintOut;
   float floatOut;
   double doubleOut;
   long double longdoubleOut;
   ostringstream oss;
-  std::string strOut;
+  utils::NullString strOut;
 
   bool bSetSuccess = false;
 
@@ -2843,10 +2848,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+      // XXX: check for empty valOut value? E.g., we can use nullptr inside any.
       if (valOut.compatible(strTypeId))
       {
-        strOut = valOut.cast<std::string>();
-        fRow.setStringField(strOut, colOut);
+        utils::NullString s = valOut.cast<utils::NullString>();
+        fRow.setStringField(s, colOut);
         bSetSuccess = true;
       }
 
@@ -2857,7 +2863,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     case execplan::CalpontSystemCatalog::BLOB:
       if (valOut.compatible(strTypeId))
       {
-        strOut = valOut.cast<std::string>();
+        strOut = valOut.cast<NullString>();
         fRow.setVarBinaryField(strOut, colOut);
         bSetSuccess = true;
       }
@@ -2909,7 +2915,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
   long double longdoubleOut = 0.0;
   int128_t int128Out = 0;
   ostringstream oss;
-  std::string strOut;
+  utils::NullString strOut;
 
   if (valOut.compatible(charTypeId))
   {
@@ -3004,17 +3010,17 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
   if (valOut.compatible(strTypeId))
   {
-    strOut = valOut.cast<std::string>();
+    strOut = valOut.cast<utils::NullString>();
     // Convert the string to numeric type, just in case.
-    intOut = atol(strOut.c_str());
-    uintOut = strtoul(strOut.c_str(), nullptr, 10);
-    doubleOut = strtod(strOut.c_str(), nullptr);
-    longdoubleOut = strtold(strOut.c_str(), nullptr);
+    intOut = atol(strOut.str());
+    uintOut = strtoul(strOut.str(), nullptr, 10);
+    doubleOut = strtod(strOut.str(), nullptr);
+    longdoubleOut = strtold(strOut.str(), nullptr);
     int128Out = longdoubleOut;
   }
   else
   {
-    strOut = oss.str();
+    strOut.assign(oss.str());
   }
 
   switch (colDataType)
@@ -3068,7 +3074,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::TEXT: fRow.setStringField(strOut, colOut); break;
+    case execplan::CalpontSystemCatalog::TEXT:    fRow.setStringField(strOut, colOut); break;
 
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::CLOB:
@@ -3280,7 +3286,7 @@ void RowAggregationUM::fixConstantAggregate()
     {
       if (fFunctionCols[k]->fAggFunction == ROWAGG_CONSTANT)
       {
-        if (j->fIsNull || rowCnt == 0)
+        if (j->isNull() || rowCnt == 0)
           doNullConstantAggregate(*j, k);
         else
           doNotNullConstantAggregate(*j, k);
@@ -3384,7 +3390,8 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
         case execplan::CalpontSystemCatalog::TEXT:
         default:
         {
-          fRow.setStringField("", colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
 
@@ -3483,7 +3490,8 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 
     default:
     {
-      fRow.setStringField("", colOut);
+      utils::NullString nullstr;
+      fRow.setStringField(nullstr, colOut);
     }
     break;
   }
@@ -3515,7 +3523,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
         {
-          fRow.setIntField(strtol(aggData.fConstValue.c_str(), nullptr, 10), colOut);
+          fRow.setIntField(strtol(aggData.fConstValue.safeString("").c_str(), nullptr, 10), colOut);
         }
         break;
 
@@ -3526,7 +3534,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::UINT:
         case execplan::CalpontSystemCatalog::UBIGINT:
         {
-          fRow.setUintField(strtoul(aggData.fConstValue.c_str(), nullptr, 10), colOut);
+          fRow.setUintField(strtoul(aggData.fConstValue.safeString("").c_str(), nullptr, 10), colOut);
         }
         break;
 
@@ -3545,7 +3553,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
           }
           else if (width <= datatypes::MAXLEGACYWIDTH)
           {
-            double dbl = strtod(aggData.fConstValue.c_str(), 0);
+            double dbl = strtod(aggData.fConstValue.safeString("").c_str(), 0);
             auto scale = datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]);
             // TODO: isn't overflow possible below:
             fRow.setIntField((int64_t)(scale * dbl), colOut);
@@ -3561,20 +3569,20 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         {
-          fRow.setDoubleField(strtod(aggData.fConstValue.c_str(), nullptr), colOut);
+          fRow.setDoubleField(strtod(aggData.fConstValue.safeString("").c_str(), nullptr), colOut);
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-          fRow.setLongDoubleField(strtold(aggData.fConstValue.c_str(), nullptr), colOut);
+          fRow.setLongDoubleField(strtold(aggData.fConstValue.safeString("").c_str(), nullptr), colOut);
         }
         break;
 
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-          fRow.setFloatField(strtof(aggData.fConstValue.c_str(), nullptr), colOut);
+          fRow.setFloatField(strtof(aggData.fConstValue.safeString("").c_str(), nullptr), colOut);
         }
         break;
 
@@ -3624,7 +3632,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
         {
-          int64_t constVal = strtol(aggData.fConstValue.c_str(), nullptr, 10);
+          int64_t constVal = strtol(aggData.fConstValue.safeString("").c_str(), nullptr, 10);
 
           if (constVal != 0)
           {
@@ -3647,7 +3655,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::UINT:
         case execplan::CalpontSystemCatalog::UBIGINT:
         {
-          uint64_t constVal = strtoul(aggData.fConstValue.c_str(), nullptr, 10);
+          uint64_t constVal = strtoul(aggData.fConstValue.safeString("").c_str(), nullptr, 10);
           fRow.setUintField(constVal * rowCnt, colOut);
         }
         break;
@@ -3672,7 +3680,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
           }
           else if (width == datatypes::MAXLEGACYWIDTH)
           {
-            double dbl = strtod(aggData.fConstValue.c_str(), 0);
+            double dbl = strtod(aggData.fConstValue.safeString("").c_str(), 0);
             // TODO: isn't precision loss possible below?
             dbl *= datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]);
             dbl *= rowCnt;
@@ -3694,14 +3702,14 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         {
-          double dbl = strtod(aggData.fConstValue.c_str(), nullptr) * rowCnt;
+          double dbl = strtod(aggData.fConstValue.safeString("").c_str(), nullptr) * rowCnt;
           fRow.setDoubleField(dbl, colOut);
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-          long double dbl = strtold(aggData.fConstValue.c_str(), nullptr) * rowCnt;
+          long double dbl = strtold(aggData.fConstValue.safeString("").c_str(), nullptr) * rowCnt;
           fRow.setLongDoubleField(dbl, colOut);
         }
         break;
@@ -3710,7 +3718,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
           double flt;
-          flt = strtof(aggData.fConstValue.c_str(), nullptr) * rowCnt;
+          flt = strtof(aggData.fConstValue.safeString("").c_str(), nullptr) * rowCnt;
           fRow.setFloatField(flt, colOut);
         }
         break;
@@ -3725,7 +3733,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         default:
         {
           // will not be here, checked in tupleaggregatestep.cpp.
-          fRow.setStringField("", colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
       }
@@ -3797,7 +3806,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::TEXT:
         default:
         {
-          fRow.setStringField(nullptr, colOut);
+          utils::NullString nullstr;
+          fRow.setStringField(nullstr, colOut);
         }
         break;
       }
@@ -3819,7 +3829,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
     case ROWAGG_BIT_AND:
     case ROWAGG_BIT_OR:
     {
-      double dbl = strtod(aggData.fConstValue.c_str(), nullptr);
+      double dbl = strtod(aggData.fConstValue.safeString("").c_str(), nullptr);
       dbl += (dbl > 0) ? 0.5 : -0.5;
       int64_t intVal = (int64_t)dbl;
       fRow.setUintField(intVal, colOut);
@@ -3867,7 +3877,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
         {
-          datum.columnData = strtol(aggData.fConstValue.c_str(), nullptr, 10);
+          datum.columnData = strtol(aggData.fConstValue.safeString("").c_str(), nullptr, 10);
         }
         break;
 
@@ -3877,14 +3887,14 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::UINT:
         case execplan::CalpontSystemCatalog::UBIGINT:
         {
-          datum.columnData = strtoul(aggData.fConstValue.c_str(), nullptr, 10);
+          datum.columnData = strtoul(aggData.fConstValue.safeString("").c_str(), nullptr, 10);
         }
         break;
 
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
-          double dbl = strtod(aggData.fConstValue.c_str(), 0);
+          double dbl = strtod(aggData.fConstValue.safeString("").c_str(), 0);
           // TODO: isn't overflow possible below?
           datum.columnData = (int64_t)(dbl * datatypes::scaleDivisor<double>(fRowGroupOut->getScale()[i]));
           datum.scale = fRowGroupOut->getScale()[i];
@@ -3895,20 +3905,20 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         {
-          datum.columnData = strtod(aggData.fConstValue.c_str(), nullptr);
+          datum.columnData = strtod(aggData.fConstValue.safeString("").c_str(), nullptr);
         }
         break;
 
         case execplan::CalpontSystemCatalog::LONGDOUBLE:
         {
-          datum.columnData = strtold(aggData.fConstValue.c_str(), nullptr);
+          datum.columnData = strtold(aggData.fConstValue.safeString("").c_str(), nullptr);
         }
         break;
 
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
         {
-          datum.columnData = strtof(aggData.fConstValue.c_str(), nullptr);
+          datum.columnData = strtof(aggData.fConstValue.safeString("").c_str(), nullptr);
         }
         break;
 
@@ -4000,7 +4010,8 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)buff);
         gcString = gccAg->getResult();
-        fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
+        utils::ConstString str((char*)gcString, gcString ? strlen((const char*)gcString) : 0);
+        fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
         // gccAg->getResult(buff);
       }
 
@@ -4010,7 +4021,8 @@ void RowAggregationUM::setGroupConcatString()
         uint8_t* gcString;
         joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
         gcString = gccAg->getResult();
-        fRow.setStringField((char*)gcString, fFunctionCols[j]->fOutputColumnIndex);
+        utils::ConstString str((char*)gcString, gcString ? strlen((char*)gcString) : 0);
+        fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
       }
     }
   }

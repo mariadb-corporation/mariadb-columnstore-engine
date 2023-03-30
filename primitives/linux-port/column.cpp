@@ -284,7 +284,7 @@ template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<COL_WIDTH == sizeof(int32_t) && KIND == KIND_FLOAT && !IS_NULL, T1>::type* =
               nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
   float dVal1 = *((float*)&columnValue);
   float dVal2 = *((float*)&filterValue);
@@ -295,7 +295,7 @@ template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<COL_WIDTH == sizeof(int64_t) && KIND == KIND_FLOAT && !IS_NULL, T1>::type* =
               nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
   double dVal1 = *((double*)&columnValue);
   double dVal2 = *((double*)&filterValue);
@@ -305,12 +305,12 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<KIND == KIND_TEXT && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
   if (cop & COMPARE_LIKE)  // LIKE and NOT LIKE
   {
-    utils::ConstString subject{reinterpret_cast<const char*>(&columnValue), COL_WIDTH};
-    utils::ConstString pattern{reinterpret_cast<const char*>(&filterValue), COL_WIDTH};
+    utils::ConstString subject((&columnValue), nullValue, COL_WIDTH);
+    utils::ConstString pattern((&filterValue), (T2)nullValue, COL_WIDTH);
     return typeHolder.like(cop & COMPARE_NOT, subject.rtrimZero(), pattern.rtrimZero());
   }
 
@@ -319,13 +319,26 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
     // A temporary hack for xxx_nopad_bin collations
     // TODO: MCOL-4534 Improve comparison performance in 8bit nopad_bin collations
     if ((typeHolder.getCharset().state & (MY_CS_BINSORT | MY_CS_NOPAD)) == (MY_CS_BINSORT | MY_CS_NOPAD))
+    {
       return colCompare_(order_swap(columnValue), order_swap(filterValue), cop);
-    utils::ConstString s1{reinterpret_cast<const char*>(&columnValue), COL_WIDTH};
-    utils::ConstString s2{reinterpret_cast<const char*>(&filterValue), COL_WIDTH};
-    return colCompareStr(typeHolder, cop, s1.rtrimZero(), s2.rtrimZero());
+    }
+    utils::ConstString s1((&columnValue), nullValue, COL_WIDTH);
+    utils::ConstString s2((&filterValue), (T2)nullValue, COL_WIDTH);
+    s1.rtrimZero();
+    s2.rtrimZero();
+    return colCompareStr(typeHolder, cop, s1, s2);
   }
   else
+  {
     return colStrCompare_(order_swap(columnValue), order_swap(filterValue), cop, rf);
+  }
+}
+
+// Check whether val is NULL (or alternative NULL bit pattern for 64-bit string types)
+template <ENUM_KIND KIND, typename T>
+inline bool isNullValue(const T val, const T NULL_VALUE)
+{
+  return val == NULL_VALUE;
 }
 
 // This template where IS_NULL = true is used only comparing filter predicate
@@ -333,8 +346,10 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
+  const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
+
   if (IS_NULL == isVal2Null || (isVal2Null && cop == COMPARE_NE))
   {
     if (KIND_UNSIGNED == KIND)
@@ -354,15 +369,16 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
       return colCompare_(tempVal1, filterValue, cop, rf);
     }
   }
-  else
-    return false;
+  return false;
 }
 
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<KIND == KIND_UNSIGNED && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
+  const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
+
   if (IS_NULL == isVal2Null || (isVal2Null && cop == COMPARE_NE))
   {
     // Ugly hack to convert all to the biggest type b/w T1 and T2.
@@ -372,15 +388,16 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
     UT2 ufilterValue = filterValue;
     return colCompare_(ucolumnValue, ufilterValue, cop, rf);
   }
-  else
-    return false;
+  return false;
 }
 
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<KIND == KIND_DEFAULT && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, bool isVal2Null)
+                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
+  const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
+
   if (IS_NULL == isVal2Null || (isVal2Null && cop == COMPARE_NE))
   {
     // Ugly hack to convert all to the biggest type b/w T1 and T2.
@@ -388,22 +405,21 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
     T2 tempVal1 = columnValue;
     return colCompare_(tempVal1, filterValue, cop, rf);
   }
-  else
-    return false;
+  return false;
 }
 
 // Compare two column values using given comparison operation,
 // taking into account all rules about NULL values, string trimming and so on
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL = false, typename T1, typename T2>
 inline bool colCompare(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                       const ColRequestHeaderDataType& typeHolder, bool isVal2Null = false)
+                       const ColRequestHeaderDataType& typeHolder, T1 nullValue)
 {
   // 	cout << "comparing " << hex << columnValue << " to " << filterValue << endl;
   if (COMPARE_NIL == cop)
     return false;
 
   return colCompareDispatcherT<KIND, COL_WIDTH, IS_NULL, T1, T2>(columnValue, filterValue, cop, rf,
-                                                                 typeHolder, isVal2Null);
+                                                                 typeHolder, nullValue);
 }
 
 /*****************************************************************************
@@ -505,13 +521,6 @@ T getEmptyValue(uint8_t type)
   }
 }
 
-// Check whether val is NULL (or alternative NULL bit pattern for 64-bit string types)
-template <ENUM_KIND KIND, typename T>
-inline bool isNullValue(const T val, const T NULL_VALUE)
-{
-  return val == NULL_VALUE;
-}
-
 //
 // FILTER A COLUMN VALUE
 //
@@ -582,7 +591,7 @@ inline bool matchingColValue(
       // This can be future optimized checking if a filterValue is NULL or not
       bool cmp =
           colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0], filterRFs[0], typeHolder,
-                                               isNullValue<KIND, T>(filterValue, NULL_VALUE));
+                                               NULL_VALUE);
       return cmp;
     }
 
@@ -596,7 +605,7 @@ inline bool matchingColValue(
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
                                                         filterRFs[argIndex], typeHolder,
-                                                        isNullValue<KIND, T>(filterValue, NULL_VALUE));
+                                                        NULL_VALUE);
 
         // Short-circuit the filter evaluation - true || ... == true
         if (cmp == true)
@@ -617,7 +626,7 @@ inline bool matchingColValue(
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
                                                         filterRFs[argIndex], typeHolder,
-                                                        isNullValue<KIND, T>(filterValue, NULL_VALUE));
+                                                        NULL_VALUE);
 
         // Short-circuit the filter evaluation - false && ... = false
         if (cmp == false)
@@ -640,7 +649,7 @@ inline bool matchingColValue(
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
                                                         filterRFs[argIndex], typeHolder,
-                                                        isNullValue<KIND, T>(filterValue, NULL_VALUE));
+                                                        NULL_VALUE);
         result ^= cmp;
       }
 
@@ -685,10 +694,11 @@ template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND == KIND_TEXT,
 inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* in)
 {
   constexpr int COL_WIDTH = sizeof(T);
-  if (colCompare<KIND_TEXT, COL_WIDTH>(Min, curValue, COMPARE_GT, false, in->colType))
+  const T DUMMY_NULL_VALUE = ~curValue; // it SHALL NOT be equal to curValue, other constraints do not matter.
+  if (colCompare<KIND_TEXT, COL_WIDTH>(Min, curValue, COMPARE_GT, false, in->colType, DUMMY_NULL_VALUE))
     Min = curValue;
 
-  if (colCompare<KIND_TEXT, COL_WIDTH>(Max, curValue, COMPARE_LT, false, in->colType))
+  if (colCompare<KIND_TEXT, COL_WIDTH>(Max, curValue, COMPARE_LT, false, in->colType, DUMMY_NULL_VALUE))
     Max = curValue;
 }
 
@@ -1129,14 +1139,18 @@ void scalarFiltering_(
       if (!(nextColValue<T, WIDTH, true, execplan::AUX_COL_EMPTYVALUE>(curValue, isEmpty, i, rid, srcArray,
                                                                        srcSize, ridArray, ridSize, outputType,
                                                                        emptyValue, blockAux)))
+      {
         break;
+      }
     }
     else
     {
       if (!(nextColValue<T, WIDTH, false, execplan::AUX_COL_EMPTYVALUE>(curValue, isEmpty, i, rid, srcArray,
                                                                         srcSize, ridArray, ridSize,
                                                                         outputType, emptyValue, blockAux)))
+      {
         break;
+      }
     }
 
     if (isEmpty)
@@ -1767,7 +1781,6 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   // applies scalar filtering.
   // Syscat queries mustn't follow vectorized processing path b/c PP must return
   // all values w/o any filter(even empty values filter) applied.
-
 #if defined(__x86_64__) || defined(__aarch64__)
   // Don't use vectorized filtering for text based data types which collation translation
   // can deliver more then 1 byte for a single input byte of an encoded string.

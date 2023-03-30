@@ -314,7 +314,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::TEXT:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString());
 
       if (val == -1)
       {
@@ -392,7 +392,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     default: isNull = true; return "";
   }
 
-  const string& format = parm[1]->data()->getStrVal(row, isNull);
+  const string& format = parm[1]->data()->getStrVal(row, isNull).safeString("");
 
   return helpers::IDB_date_format(dt, format);
 }

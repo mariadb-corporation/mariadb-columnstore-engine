@@ -168,7 +168,7 @@ inline uint64_t simple_case_cmp(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::VARCHAR:
     {
-      const string& ev = parm[n]->data()->getStrVal(row, isNull);
+      const auto& ev = parm[n]->data()->getStrVal(row, isNull);
       if (isNull)
         break;
       CHARSET_INFO* cs = parm[n]->data()->resultType().getCharset();
@@ -176,10 +176,10 @@ inline uint64_t simple_case_cmp(Row& row, FunctionParm& parm, bool& isNull,
       for (i = 1; i <= whereCount; i++)
       {
         // BUG 5362
-        const string& p1 = parm[i]->data()->getStrVal(row, isNull);
+        const auto& p1 = parm[i]->data()->getStrVal(row, isNull);
         if (isNull)
           break;
-        if (cs->strnncoll(ev.c_str(), ev.length(), p1.c_str(), p1.length()) == 0)
+        if (cs->strnncoll(ev.str(), ev.length(), p1.str(), p1.length()) == 0)
         {
           foundIt = true;
           break;
@@ -463,7 +463,7 @@ string Func_decode_oracle::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
   if (isNull)
     return string("");
 
-  return parm[i]->data()->getStrVal(row, isNull);
+  return parm[i]->data()->getStrVal(row, isNull).safeString("");
 }
 
 IDB_Decimal Func_decode_oracle::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,

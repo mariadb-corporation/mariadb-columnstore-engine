@@ -17,10 +17,10 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
                                  bool compareWhole = true)
 {
   bool isNull = false;
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 1;
-  const char* rawJS = js.data();
+  const char* rawJS = js.str();
   json_engine_t jsEg, savJSEg;
   json_path_t p;
   const uchar* value;
@@ -43,7 +43,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     JSONPath& path = paths[i - 1];
     path.p.types_used = JSON_PATH_KEY_NULL;
     if (!path.parsed && parseJSPath(path, row, fp[i]))
-      goto error;
+      return 1;
 
 #ifdef MYSQL_GE_1009
     hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
@@ -66,14 +66,14 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       retJS.append("[");
   }
 
-  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.size(), &p);
+  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.length(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #ifdef MYSQL_GE_1009
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
-      goto error;
+      return 1;
 #endif
 
 #ifdef MYSQL_GE_1009
@@ -91,7 +91,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     /* we only care about the first found value */
     if (!compareWhole)
     {
-      retJS = js;
+      retJS = js.safeString("");
       return 0;
     }
 
@@ -102,7 +102,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       if (mayMulVal)
         savJSEg = jsEg;
       if (json_skip_level(&jsEg))
-        goto error;
+        return 1;
       valLen = jsEg.s.c_str - value;
       if (mayMulVal)
         jsEg = savJSEg;
@@ -125,26 +125,25 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   }
 
   if (unlikely(jsEg.s.error))
-    goto error;
+    return 1;
 
   if (!notFirstVal)
     /* Nothing was found. */
-    goto error;
+    return 1;
 
   if (mayMulVal)
     retJS.append("]");
 
-  initJSEngine(jsEg, getCharset(fp[0]), retJS);
+  utils::NullString retJS_ns(retJS);
+  initJSEngine(jsEg, getCharset(fp[0]), retJS_ns);
   if (doFormat(&jsEg, tmp, Func_json_format::LOOSE))
-    goto error;
+    return 1;
 
   retJS.clear();
   retJS.swap(tmp);
 
   return 0;
 
-error:
-  return 1;
 }
 
 CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,

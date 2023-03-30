@@ -30,6 +30,8 @@
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
 
+#include "dmlpkg.h"
+
 struct st_ha_create_information;
 class ha_columnstore_select_handler;
 class ha_columnstore_derived_handler;
@@ -92,6 +94,8 @@ enum ClauseType
 };
 
 typedef std::vector<JoinInfo> JoinInfoVec;
+typedef dmlpackage::ColValuesList ColValuesList;
+typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
@@ -257,9 +261,7 @@ struct cal_group_info
 };
 
 typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;
-typedef std::vector<std::string> ColValuesList;
 typedef std::vector<std::string> ColNameList;
-typedef std::map<uint32_t, ColValuesList> TableValuesMap;
 typedef std::bitset<4096> NullValuesBitset;
 struct cal_connection_info
 {

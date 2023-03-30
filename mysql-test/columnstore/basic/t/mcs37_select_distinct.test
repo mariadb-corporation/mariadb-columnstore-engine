@@ -12,7 +12,7 @@ CREATE DATABASE mcs37_db;
 USE mcs37_db;
 
 CREATE TABLE t1(col1 INT, col2 CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES(NULL,''),(1,'a'),(1,'b'),(1,'c'),(2,'dd'),(3,'eee');
+INSERT INTO t1 VALUES(NULL, NULL),(1,'a'),(1,'b'),(1,'c'),(2,'dd'),(3,'eee');
 SELECT COUNT(DISTINCT col1) FROM t1;
 SELECT COUNT(DISTINCT col2) FROM t1;
 SELECT DISTINCT col1 FROM t1;

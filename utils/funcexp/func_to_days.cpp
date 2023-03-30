@@ -114,10 +114,10 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& value = parm[0]->data()->getStrVal(row, isNull);
+      const auto& value = parm[0]->data()->getStrVal(row, isNull);
       int64_t val = 0;
 
-      if (value.size() == 10)
+      if (value.length() == 10)
       {
         // date type
         val = dataconvert::DataConvert::dateToInt(value);

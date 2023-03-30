@@ -71,8 +71,14 @@ int copyValuePatch(string& retJS, json_engine_t* jsEg)
 
 int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool& isEmpty)
 {
-  if (json_read_value(jsEg1) || json_read_value(jsEg2))
+  if (json_read_value(jsEg1))
+  {
     return 1;
+  }
+  if (json_read_value(jsEg2))
+  {
+    return 1;
+  }
 
   if (jsEg1->value_type == JSON_VALUE_OBJECT && jsEg2->value_type == JSON_VALUE_OBJECT)
   {
@@ -100,7 +106,9 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       } while (json_read_keyname_chr(jsEg1) == 0);
 
       if (jsEg1->s.error)
+      {
         return 1;
+      }
 
       savLen = retJS.size();
 
@@ -122,13 +130,17 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg2, &keyName))
         {
           if (jsEg2->s.error || json_skip_key(jsEg2))
+          {
             return 2;
+          }
           continue;
         }
 
         /* Json_2 has same key as Json_1. Merge them. */
         if ((ires = doMergePatch(retJS, jsEg1, jsEg2, mrgEmpty)))
+        {
           return ires;
+        }
 
         if (mrgEmpty)
           retJS = retJS.substr(0, savLen);
@@ -144,7 +156,9 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       keyStart = jsEg1->s.c_str;
       /* Just append the Json_1 key value. */
       if (json_skip_key(jsEg1))
+      {
         return 1;
+      }
       retJS.append((const char*)keyStart, jsEg1->s.c_str - keyStart);
       firstKey = 0;
 
@@ -168,7 +182,9 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       } while (json_read_keyname_chr(jsEg2) == 0);
 
       if (jsEg2->s.error)
+      {
         return 1;
+      }
 
       *jsEg1 = savJSEg1;
       while (json_scan_next(jsEg1) == 0 && jsEg1->state != JST_OBJ_END)
@@ -178,11 +194,15 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
         if (!json_key_matches(jsEg1, &keyName))
         {
           if (jsEg1->s.error || json_skip_key(jsEg1))
+          {
             return 2;
+          }
           continue;
         }
         if (json_skip_key(jsEg2) || json_skip_level(jsEg1))
+        {
           return 1;
+        }
         goto continue_j2;
       }
 
@@ -199,14 +219,18 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
       retJS.append("\":");
 
       if (json_read_value(jsEg2))
+      {
         return 1;
+      }
 
       if (jsEg2->value_type == JSON_VALUE_NULL)
         retJS = retJS.substr(0, savLen);
       else
       {
         if (copyValuePatch(retJS, jsEg2))
+        {
           return 1;
+        }
         firstKey = 0;
       }
 
@@ -219,11 +243,15 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
   else
   {
     if (!json_value_scalar(jsEg1) && json_skip_level(jsEg1))
+    {
       return 1;
+    }
 
     isEmpty = (jsEg2->value_type == JSON_VALUE_NULL);
     if (!isEmpty && copyValuePatch(retJS, jsEg2))
+    {
       return 1;
+    }
   }
 
   return 0;
@@ -243,19 +271,18 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 {
   // JSON_MERGE_PATCH return NULL if any argument is NULL
   bool isEmpty = false, hasNullArg = false;
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
-  hasNullArg = isNull;
-  if (isNull)
-    isNull = false;
+  const auto& js = fp[0]->data()->getStrVal(row, hasNullArg);
+
+  isNull = false;
 
   json_engine_t jsEg1, jsEg2;
   jsEg1.s.error = jsEg2.s.error = 0;
 
-  string tmpJS{js};
+  utils::NullString tmpJS(js);
   string retJS;
   for (size_t i = 1; i < fp.size(); i++)
   {
-    const string_view js2 = fp[i]->data()->getStrVal(row, isNull);
+    const auto& js2 = fp[i]->data()->getStrVal(row, isNull);
     if (isNull)
     {
       hasNullArg = true;
@@ -273,23 +300,24 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
         goto next;
 
       hasNullArg = false;
-      retJS.append(js2.data());
+      retJS.append(js2.str());
       goto next;
     }
 
     initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
     if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))
+    {
       goto error;
+    }
 
     if (isEmpty)
       retJS.append("null");
 
   next:
     // tmpJS save the merge result for next loop
-    tmpJS.swap(retJS);
+    tmpJS.assign(retJS);
     retJS.clear();
   }
-
   if (hasNullArg)
     goto error;
 
@@ -297,7 +325,6 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   retJS.clear();
   if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
     goto error;
-
   isNull = false;
   return retJS;
 

@@ -403,7 +403,8 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
             colType.colDataType == CalpontSystemCatalog::VARCHAR ||
             colType.colDataType == CalpontSystemCatalog::VARBINARY)
         {
-          (*f)->store("", 0, (*f)->charset());
+          (*f)->reset();
+          (*f)->set_null();
         }
 
         continue;
@@ -418,7 +419,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
       }
       else
       {
-        // fetch and store data
         (*f)->set_notnull();
         datatypes::StoreFieldMariaDB mf(*f, colType, timeZone);
         h->storeValueToField(row, s, &mf);
@@ -739,7 +739,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
         {
           rowGroup->getRow(i, &row);
           // we are only fetching a single column
-          returnVal.push_back(row.getStringField(0));
+          returnVal.push_back(row.getStringField(0).safeString(""));
         }
       }
       else
@@ -1009,7 +1009,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
           if (constCol)
           {
-            columnAssignmentPtr->fScalarExpression = constCol->constval();
+            columnAssignmentPtr->fScalarExpression = constCol->constval().safeString("");
             isFromCol = false;
             columnAssignmentPtr->fFromCol = false;
           }

@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs97_db;
 CREATE DATABASE mcs97_db;
 USE mcs97_db;
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
 SELECT GROUP_CONCAT(a) FROM t1;
 GROUP_CONCAT(a)
 1,2,3,4,5,6,7

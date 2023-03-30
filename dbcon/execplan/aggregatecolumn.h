@@ -356,10 +356,12 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
-    evaluate(row, isNull);
-    return TreeNode::getStrVal(fTimeZone);
+    bool localIsNull = false;
+    evaluate(row, localIsNull);
+    isNull = isNull || localIsNull;
+    return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
   }
 
   /**

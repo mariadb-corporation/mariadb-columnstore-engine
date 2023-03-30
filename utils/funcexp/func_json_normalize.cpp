@@ -25,9 +25,10 @@ CalpontSystemCatalog::ColType Func_json_normalize::operationType(FunctionParm& f
 string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
+  const string_view js = js_ns.unsafeStringRef();
 
   using DynamicString = unique_ptr<DYNAMIC_STRING, decltype(&dynstr_free)>;
 

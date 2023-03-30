@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs196_db;
 CREATE DATABASE mcs196_db;
 USE mcs196_db;
 CREATE TABLE t1 (x INT, y MEDIUMINT, z CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, NULL, ''),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
+INSERT INTO t1 VALUES (NULL, NULL, NULL),(20, 1, 'aaa'),(39, 2, 'aaa'),(48, 3, 'bbb'),(57, 4, 'bbb'),(66, 5, 'aaa'),(75, 6, 'aaa'),(84, 7, 'bbb');
 SELECT REGR_SXX(y, x) FROM t1;
 REGR_SXX(y, x)
 2893.714285714286

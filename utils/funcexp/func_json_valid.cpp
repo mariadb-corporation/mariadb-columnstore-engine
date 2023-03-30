@@ -25,10 +25,10 @@ CalpontSystemCatalog::ColType Func_json_valid::operationType(FunctionParm& fp,
 bool Func_json_valid::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                  CalpontSystemCatalog::ColType& type)
 {
-  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
-  return json_valid(js.data(), js.size(), getCharset(fp[0]));
+  return json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]));
 }
 }  // namespace funcexp

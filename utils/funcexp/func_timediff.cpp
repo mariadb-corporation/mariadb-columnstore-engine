@@ -163,7 +163,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
-      text = parm[0]->data()->getStrVal(row, isNull);
+      text = parm[0]->data()->getStrVal(row, isNull).safeString("");
 
       if (text.length() >= 12)  // datetime has length at least 12 (YYMMDDHHMMSS), convert others to time
       {
@@ -181,7 +181,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::TINYINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
-      text = parm[0]->data()->getStrVal(row, isNull);
+      text = parm[0]->data()->getStrVal(row, isNull).safeString("");
       if (treatIntAsDatetime(text))
         val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);
       else
@@ -200,7 +200,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
       }
       else
       {
-        text = parm[0]->data()->getStrVal(row, isNull);
+        text = parm[0]->data()->getStrVal(row, isNull).safeString("");
         if (treatIntAsDatetime(text))
           val1 = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull), &isDate1);
         else
@@ -250,7 +250,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
-      text = parm[1]->data()->getStrVal(row, isNull);
+      text = parm[1]->data()->getStrVal(row, isNull).safeString("");
       if (text.length() >= 12)  // datetime has length at least 12 (YYMMDDHHMMSS), convert others to time
       {
         val2 = dataconvert::DataConvert::stringToDatetime(text, &isDate2);
@@ -267,7 +267,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::TINYINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
-      text = parm[1]->data()->getStrVal(row, isNull);
+      text = parm[1]->data()->getStrVal(row, isNull).safeString("");
       if (treatIntAsDatetime(text))
         val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
       else
@@ -286,7 +286,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
       }
       else
       {
-        text = parm[1]->data()->getStrVal(row, isNull);
+        text = parm[1]->data()->getStrVal(row, isNull).safeString("");
         if (treatIntAsDatetime(text))
           val2 = dataconvert::DataConvert::intToDatetime(parm[1]->data()->getIntVal(row, isNull), &isDate2);
         else

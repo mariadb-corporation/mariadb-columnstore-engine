@@ -28,6 +28,9 @@
 #include <string>
 #include <stdint.h>
 
+#include "nullstring.h"
+using namespace utils;
+
 namespace execplan
 {
 /** @file
@@ -58,15 +61,22 @@ class ColumnResult
     dcount++;
   }
 
-  const std::string& GetStringData(uint32_t index) const
+  const NullString& GetStringData(uint32_t index) const
   {
     return stringData[index];
   }
 
-  void PutStringData(const std::string& s)
+  void PutStringData(const NullString& s)
   {
     stringData.push_back(s);
     dcount++;
+  }
+
+  void PutStringData(const char*str, size_t len)
+  {
+    idbassert(str != nullptr || len == 0);
+    NullString tmp(str, len);
+    PutStringData(tmp);
   }
 
   int ColumnOID() const
@@ -106,7 +116,7 @@ class ColumnResult
   // ColumnResult& operator=(const ColumnResult& rhs);
 
   std::vector<int64_t> intData;
-  std::vector<std::string> stringData;
+  std::vector<NullString> stringData;
   std::vector<uint64_t> rids;
   int oid;
   int dcount;  // data, string, and row counters
