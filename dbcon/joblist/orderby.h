@@ -123,6 +123,20 @@ T getNullValue(uint8_t type)
     default: return joblist::TINYINTNULL;
   }
 }
+
+bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidth)
+{
+  switch (colType)
+  {
+    case execplan::CalpontSystemCatalog::CHAR: return (columnWidth > 8);
+
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::TEXT: return (columnWidth > 7);
+    default: return false;
+  }
+}
+
 }  // namespace sorting
 
 namespace joblist
@@ -131,16 +145,10 @@ namespace joblist
 struct JobInfo;
 
 template <bool TrueCheck>
-concept IsTrue = requires
-{
-  requires TrueCheck == true;
-};
+concept IsTrue = requires { requires TrueCheck == true; };
 
 template <bool FalseCheck>
-concept IsFalse = requires
-{
-  requires FalseCheck == false;
-};
+concept IsFalse = requires { requires FalseCheck == false; };
 
 // There is an important invariant that the code of this class must hold,
 // namely rg_ must be init-ed only once.
@@ -168,16 +176,17 @@ class FlatOrderBy
   bool sortByColumnCF(joblist::OrderByKeysType columns);
 
   bool getData(rowgroup::RGData& data);
+
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
-  requires IsFalse<IsFirst>
-  bool exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
-                               joblist::OrderByKeysType columns);
+    requires IsFalse<IsFirst> bool
+  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
+                          joblist::OrderByKeysType columns);
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
-  requires IsTrue<IsFirst>
-  bool exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
-                               joblist::OrderByKeysType columns);
+    requires IsTrue<IsFirst> bool
+  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
+                          joblist::OrderByKeysType columns);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
   void initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
                                    std::vector<EncodedKeyType>& keys, std::vector<PermutationType>& nulls);

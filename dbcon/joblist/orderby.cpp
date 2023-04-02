@@ -140,18 +140,65 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
   // std::cout << "sortByColumnCF columns size " << columns.size() << std::endl;
 
   const auto [columnId, sortDirection] = columns.front();
-  switch (rg_.getColType(columnId))
+  auto columnType = rg_.getColType(columnId);
+  switch (columnType)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
     {
       break;
     }
 
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::CHAR:
-    {
-      break;
-    }
+      // case execplan::CalpontSystemCatalog::VARCHAR:
+      // case execplan::CalpontSystemCatalog::CHAR:
+      // case execplan::CalpontSystemCatalog::TEXT:
+      // {
+      //   // WIP !!!!!!!!!!! There are three variants typed cols,
+      //   // inline short strings, out-of-band long strings
+      //   // inline short strings are not supported yet
+      //   auto columnWidth = rg_.getColumnWidth(columnId);
+      //   if (sorting::isDictColumn(columnType, rg_.getColumnWidth(columnId)))
+      //   {
+      //     using StorageType = utils::ConstString;
+      //     using EncodedKeyType = utils::ConstString;
+      //     // No difference b/w VARCHAR, CHAR and TEXT types yet
+      //     // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
+      //     //                                EncodedKeyType>(columnId, sortDirection, columns);
+      //   }
+      //   else
+      //   {
+      //     using EncodedKeyType = utils::ConstString;
+
+      //     switch (columnWidth)
+      //     {
+      //       case 1:
+      //       {
+      //         // using StorageType =
+      //         //     datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
+      //         // return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR,
+      //         StorageType,
+      //         //                                EncodedKeyType>(columnId, sortDirection, columns);
+      //         break;
+      //       }
+
+      //       case 2:
+      //       {
+      //         break;
+      //       };
+
+      //       case 4:
+      //       {
+      //         break;
+      //       };
+
+      //       case 8:
+      //       {
+      //         break;
+      //       };
+      //       default: idbassert(0);
+      //     }
+      //   }
+      //   break;
+      // }
 
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
@@ -255,7 +302,7 @@ void FlatOrderBy::initialPermutationKeysNulls(const uint32_t columnID, const boo
 
     for (decltype(rowCount) i = 0; i < rowCount; ++i)
     {
-      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType>(columnID, i);
+      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, i);
       PermutationType permute = {rgDataId, i, 0};
       if (value != nullValue)
       {
@@ -310,7 +357,7 @@ void FlatOrderBy::loopIterKeysNullsPerm(const uint32_t columnID, const bool null
     {
       // set rgdata
       rg_.setData(&rgDatas_[p->rgdataID]);  // WIP costly thing
-      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType>(columnID, p->rowID);
+      EncodedKeyType value = rg_.getColumnValue<ColType, StorageType, EncodedKeyType>(columnID, p->rowID);
       if (value != nullValue)
       {
         keys.push_back(value);
@@ -382,6 +429,8 @@ FlatOrderBy::Ranges2SortQueue FlatOrderBy::populateRanges(
   return ranges;
 }
 
+// template <bool isAscendingSort, datatypes::SystemCatalog::ColDataType ColType, typename EncodedKeyType>
+
 template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
   requires IsTrue<IsFirst> bool
@@ -418,16 +467,33 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     // большой логический косяк - диапазон permutation_ потенциально содержит null-ы в середине, а с краю
     // могут быть индексы не NULL ключей. Решение в лоб - копия диапазона перестановки.fg
     // sortDirection is true = ASC
-    if (sortDirection)
+
+    if constexpr (std::is_same<EncodedKeyType, utils::ConstString>::value)
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
-      // sorting::pdqsort(keys.begin(), keys.end(), std::greater<EncodedKeyType>());
+      datatypes::Charset cs(rg_.getCharset(columnID));
+      if (sortDirection)
+      {
+        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return -cs.strnncollsp(x, y); };
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
+      }
+      else
+      {
+        auto cmp = [&cs](EncodedKeyType& x, EncodedKeyType& y) { return cs.strnncollsp(x, y); };
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, cmp);
+      }
     }
     else
     {
-      sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
-      // sorting::pdqsort(keys.begin(), keys.end(), std::less<EncodedKeyType>());
+      if (sortDirection)
+      {
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::greater<EncodedKeyType>());
+      }
+      else
+      {
+        sorting::mod_pdqsort(keys.begin(), keys.end(), permBegin, permEnd, std::less<EncodedKeyType>());
+      }
     }
+
     // Use && here
     FlatOrderBy::Ranges2SortQueue ranges4Sort;
     if (columns.size() > 1)
@@ -607,13 +673,6 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
   return isFailure;
 }
 
-// template <enum datatypes::SystemCatalog::ColDataType, typename StorageType, typename EncodedKeyType>
-// bool FlatOrderBy::distributionSortByColumn_(const uint32_t columnId)
-// {
-//   bool isFailure = false;
-//   return isFailure;
-// }
-
 void FlatOrderBy::processRow(const rowgroup::Row& row)
 {
 }
@@ -633,6 +692,7 @@ void FlatOrderBy::finalize()
 }
 
 // returns false when finishes
+// WIP try the forward direction looping over permutation_.
 bool FlatOrderBy::getData(rowgroup::RGData& data)
 {
   static constexpr IterDiffT rgMaxSize = rowgroup::rgCommonSize;
