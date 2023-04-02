@@ -30,7 +30,6 @@ uint32_t calcNumberOfBuckets(ssize_t availMem, uint32_t numOfThreads, uint32_t n
                              uint32_t groupsPerThread, uint32_t inRowSize, uint32_t outRowSize,
                              bool enabledDiskAggr);
 
-class MemManager;
 class RowPosHashStorage;
 using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
@@ -339,7 +338,7 @@ class RowAggStorage
 
   Row fKeyRow;
 
-  std::unique_ptr<MemManager> fMM;
+  std::unique_ptr<joblist::MemManager> fMM;
   uint32_t fNumOfInputRGPerThread;
   bool fAggregated = true;
   bool fAllowGenerations;
