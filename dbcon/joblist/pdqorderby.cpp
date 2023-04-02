@@ -426,6 +426,7 @@ void PDQOrderBy::initialPermutationKeysNulls(const uint32_t id, const uint32_t c
     // set rgdata
     rg_.setData(&rgData);
     // Move this outside the loop    // Row iterator call seems unreasonably costly here
+    // WIP this is useless
     rg_.getRow(0, &r);  // get first row
     auto rowCount = rg_.getRowCount();
 

@@ -19,18 +19,19 @@
 
 namespace sorting
 {
-HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::JobInfo& jobInfo,
-                         const uint32_t threadId, const sorting::SortingThreads& prevPhaseSorting,
-                         const uint32_t threadNum, const sorting::ValueRangesVector& ranges,
+HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const size_t limitStart, const size_t limitCount,
+                         joblist::RMMemManager* mm, const uint32_t threadId,
+                         const sorting::SortingThreads& prevPhaseSorting, const uint32_t threadNum,
+                         const sorting::ValueRangesVector& ranges,
                          const joblist::OrderByKeysType& sortingKeyCols)
- : start_(jobInfo.limitStart)
- , count_(jobInfo.limitCount)
+ : start_(limitStart)
+ , count_(limitCount)
  , recordsLeftInRanges_(0)
  , jobListorderByRGColumnIDs_(sortingKeyCols)
  , rg_(rg)
  , rgOut_(rg)
 {
-  mm_.reset(new joblist::RMMemManager(jobInfo.rm, jobInfo.umMemLimit));
+  mm_.reset(mm);
   data_.reinit(rg_, 2);
   rg_.setData(&data_);
   rg_.resetRowGroup(0);
@@ -40,68 +41,72 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::JobInfo& j
   rg_.getRow(1, &outRow_);
 
   // Make a permutations struct
-  ranges_ = std::vector(threadNum, PermutationVec());
-  auto prevPhaseSortingThread = prevPhaseSorting.begin();
-  auto range = ranges[threadId].begin();
-  for (size_t i = 0; prevPhaseSortingThread != prevPhaseSorting.end() && range != ranges[threadId].end();
-       ++prevPhaseSortingThread, ++range, ++i)
+  // ranges_ = std::vector(threadNum, PermutationVec());
+  // auto prevPhaseSortingThread = prevPhaseSorting.begin();
+  // auto range = ranges.begin();
+  for (auto range = ranges.begin(); auto& prevPhaseSortingThread : prevPhaseSorting)
+  // prevPhaseSortingThread != prevPhaseSorting.end() && range != ranges.end();
+  //   ++prevPhaseSortingThread,
   {
     auto [rangeLeft, rangeRight] = *range;
+    ++range;
     if (rangeLeft == rangeRight)
     {
       continue;
     }
-    auto srcPermBegin = (*prevPhaseSortingThread)->getPermutation().begin() + rangeLeft;
-    auto srcPermEnd = (*prevPhaseSortingThread)->getPermutation().begin() + rangeRight;
-    ranges_[i].reserve(rangeRight - rangeLeft + 1);
-    ranges_[i].push_back(impossiblePermute);
-    ranges_[i].insert(ranges_[i].end(), srcPermBegin, srcPermEnd);
+    auto srcPermBegin = prevPhaseSortingThread->getPermutation().begin() + rangeLeft;
+    auto srcPermEnd = prevPhaseSortingThread->getPermutation().begin() + rangeRight;
+    auto rangeSize = rangeRight - rangeLeft + 1;
+    recordsLeftInRanges_ += rangeSize;
+    ranges_.push_back({});
+    ranges_.back().reserve(rangeSize);
+    ranges_.back().push_back(impossiblePermute);
+    ranges_.back().insert(ranges_.back().end(), srcPermBegin, srcPermEnd);
   }
 
   // Build a heap
   size_t heapSize = threadNum << 1;
-  heap_ = std::vector<HeapUnit>(heapSize, {KeyType(), {0, 0, 0}});
-  for (size_t i = 0; i < threadNum; ++i)
+  auto half = threadNum;
+  // heap_ = std::vector<HeapUnit>(heapSize, {KeyType(), {0, 0, 0}});
+  for (size_t i = 0; i < heapSize; ++i)
   {
-    // The last value prevents pop_back() on an empty vector.
-    assert(!ranges[i].empty());
-    auto p = ranges_[i].back();
-    rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
-    // WIP Take bigint value from the first row
-    KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
-    // WIP the simplified key inversion is ~
-    heap_[i + threadNum] = {v, p};
-    ranges_[i].pop_back();
+    heap_.push_back({KeyType(), {0, 0, i % half}});
   }
-  size_t prevHeapIdx = threadNum;
-  for (size_t heapIdx = threadNum >> 1; heapIdx >= 1; heapIdx >>= 1, prevHeapIdx >>= 1)
+
+  size_t prevHeapIdx = heap_.size();
+  for (size_t heapIdx = threadNum; heapIdx >= 1; heapIdx >>= 1, prevHeapIdx >>= 1)  // level
   {
-    for (size_t i = heapIdx; i < prevHeapIdx; ++i)
+    for (size_t i = heapIdx; i < prevHeapIdx; ++i)  // all level items
     {
-      // get min of left and right.
-      size_t bestChildIdx = idxOfMin<KeyType>(heap_, i << 1, (i << 1) + 1);
-      assert(bestChildIdx >= heapIdx && bestChildIdx < prevHeapIdx);
-      heap_[i] = heap_[bestChildIdx];
-      auto threadId = heap_[i].second.threadID;
+      size_t bestChildIdx = i;
+      size_t prevBestChildIdx = bestChildIdx;
+      for (; bestChildIdx < half; prevBestChildIdx = bestChildIdx)
+      {
+        // get min of left and right.
+        bestChildIdx = idxOfMin<KeyType>(heap_, prevBestChildIdx << 1, (prevBestChildIdx << 1) + 1);
+        assert(bestChildIdx >= heapIdx && bestChildIdx <= (prevBestChildIdx << 1) + 1 &&
+               bestChildIdx < heap_.size());
+        // swap the best and the current
+        heap_[prevBestChildIdx] = heap_[bestChildIdx];
+      }
+
+      auto threadId = heap_[bestChildIdx].second.threadID;
       auto p = ranges_[threadId].back();
-      rg_.setData(&(prevPhaseSortingThread[p.threadID]->getRGDatas()[p.rgdataID]));
+      rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
+      // WIP
       KeyType v = rg_.getColumnValue<datatypes::SystemCatalog::BIGINT, KeyType, KeyType>(0, p.rowID);
       // WIP the simplified key inversion is ~
       heap_[bestChildIdx] = {v, p};
       ranges_[threadId].pop_back();
     }
   }
-  for (auto& range : ranges)
-  {
-    recordsLeftInRanges_ += range.size();
-  }
+  recordsLeftInRanges_ -= heap_.size() - 1;
 }
 
 template <typename T>
 size_t HeapOrderBy::idxOfMin(Heap& heap, const size_t left, const size_t right)
 {
-  // WIP impossible permutation
-  if (heap[left].first < heap[right].first)
+  if (heap[right].second == impossiblePermute || heap[left].first < heap[right].first)
     return left;
   return right;
 }
@@ -110,16 +115,17 @@ template <typename T>
 PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
                                                    const SortingThreads& prevPhaseSortingThread)
 {
-  auto maxIdx = heap.size() >> 1;
+  auto half = heap.size() >> 1;
   PermutationType topPermute = heap[1].second;
   size_t bestChildIdx = 0;
-  for (size_t heapIdx = 1; heapIdx < maxIdx;)
+  for (size_t heapIdx = 1; heapIdx < half && heap[bestChildIdx].second != impossiblePermute;
+       heapIdx = bestChildIdx)
   {
     // get min of left and right.
     bestChildIdx = idxOfMin<KeyType>(heap, heapIdx << 1, (heapIdx << 1) + 1);
     heap[heapIdx] = heap[bestChildIdx];
-    heapIdx = bestChildIdx;
   }
+
   if (heap[bestChildIdx].second == impossiblePermute)
   {
     return topPermute;
