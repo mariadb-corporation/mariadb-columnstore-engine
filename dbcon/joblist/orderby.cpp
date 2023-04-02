@@ -136,6 +136,15 @@ bool FlatOrderBy::sortCF(const uint32_t id)
   return isFailure;
 }
 
+bool FlatOrderBy::sortByColumnCFNoPerm(const uint32_t id, joblist::OrderByKeysType columns,
+                                       PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,
+                                       const SortingThreads& prevPhaseThreads)
+{
+  auto perm = permutation;
+  auto ranges = ranges2Sort;
+  return sortByColumnCF<false>(id, columns, std::move(perm), std::move(ranges), prevPhaseThreads);
+}
+
 template <bool IsFirst>
 bool FlatOrderBy::sortByColumnCF(const uint32_t id, joblist::OrderByKeysType columns,
                                  PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort,

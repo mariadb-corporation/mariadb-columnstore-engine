@@ -9,6 +9,7 @@ if(WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
 
 if(WITH_UNITTESTS)
+    cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     set(cxxflags "")
     set(linkflags "")
