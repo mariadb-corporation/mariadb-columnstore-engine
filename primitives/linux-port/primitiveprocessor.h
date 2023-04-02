@@ -27,6 +27,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include "joblisttypes.h"
 #include <tr1/unordered_set>
 
 #define POSIX_REGEX
