@@ -1,6 +1,4 @@
 DROP DATABASE IF EXISTS mcol3758;
-Warnings:
-Note	1008	Can't drop database 'mcol3758'; database doesn't exist
 CREATE DATABASE mcol3758;
 USE mcol3758;
 SET columnstore_orderby_threads=1;
@@ -240,26 +238,104 @@ ch7 CHAR(7)
 INSERT INTO `sorting_chars`
 (`tcolumn`,`vcolumn`, `vc7`, `ch7`)
 VALUES
-('one','two','three', 'four'),
+('one','two','three', 'afour'),
 (' one','two ','4th ree', ' four '),
 (' one','two',NULL, NULL),
 (NULL,NULL, 'bb b', ' aaa '),
+(' one','two ','4th ree', 'five '),
 ('two','one', NULL, NULL),
+('ccccc','deac', 'ccccc ', 'haf'),
 (NULL,NULL, 'ccccc ', 'four'),
-('Two','One', 'Three', 'Four'),
-('One','Two', 'Four', 'Three'),
+('two','one', 'three', 'four'),
+('one','two', 'four', 'three'),
+(NULL,'one', 'bb b', 'zAz'),
 (NULL,NULL, NULL, NULL);
-SELECT `tcolumn` FROM `sorting_chars` ORDER BY tcolumn DESC;
+SELECT `tcolumn` FROM `sorting_chars` WHERE `tcolumn` IS NOT NULL ORDER BY `tcolumn` DESC;
 tcolumn
 two
-Two
+two
 one
-One
+one
+ccccc
  one
  one
-NULL
-NULL
-NULL
+ one
+SELECT `tcolumn` FROM `sorting_chars` WHERE `tcolumn` IS NOT NULL ORDER BY `tcolumn` ASC;
+tcolumn
+ one
+ one
+ one
+ccccc
+one
+one
+two
+two
+SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` DESC;
+vcolumn	hex(`vcolumn`)
+two	74776F
+two 	74776F20
+two	74776F
+two 	74776F20
+two	74776F
+one	6F6E65
+one	6F6E65
+one	6F6E65
+deac	64656163
+SELECT vcolumn,hex(`vcolumn`) FROM `sorting_chars` WHERE `vcolumn` IS NOT NULL ORDER BY`vcolumn` ASC;
+vcolumn	hex(`vcolumn`)
+deac	64656163
+one	6F6E65
+one	6F6E65
+one	6F6E65
+two	74776F
+two 	74776F20
+two	74776F
+two 	74776F20
+two	74776F
+SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` DESC;
+vc7	hex(vc7)
+three	7468726565
+three	7468726565
+four	666F7572
+ccccc 	636363636320
+ccccc 	636363636320
+bb b	62622062
+bb b	62622062
+4th ree	34746820726565
+4th ree	34746820726565
+SELECT `vc7`,hex(vc7) FROM `sorting_chars` WHERE `vc7` IS NOT NULL ORDER BY `vc7` ASC;
+vc7	hex(vc7)
+4th ree	34746820726565
+4th ree	34746820726565
+bb b	62622062
+bb b	62622062
+ccccc 	636363636320
+ccccc 	636363636320
+four	666F7572
+three	7468726565
+three	7468726565
+SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` DESC;
+ch7	hex(ch7)
+zAz	7A417A
+three	7468726565
+haf	686166
+four	666F7572
+four	666F7572
+five	66697665
+afour	61666F7572
+ four	20666F7572
+ aaa	20616161
+SELECT `ch7`,hex(ch7) FROM `sorting_chars` WHERE `ch7` IS NOT NULL ORDER BY `ch7` ASC;
+ch7	hex(ch7)
+ aaa	20616161
+ four	20666F7572
+afour	61666F7572
+five	66697665
+four	666F7572
+four	666F7572
+haf	686166
+three	7468726565
+zAz	7A417A
 DROP TABLE IF EXISTS `sorting_temporal`;
 CREATE TABLE `sorting_temporal`(
 `dcolumn` DATE,
@@ -277,6 +353,78 @@ VALUES
 (NULL,NULL,NULL,NULL),
 ('2005-05-21','05:05:42','2005-05-04 02:05:42.000001','2005-05-05 05:05:05.000005'),
 (NULL,NULL,NULL,NULL);
+SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` DESC;
+dcolumn
+2042-02-24
+2005-05-21
+2001-01-01
+2001-01-01
+NULL
+NULL
+NULL
+SELECT `dcolumn` FROM `sorting_temporal` ORDER BY `dcolumn` ASC;
+dcolumn
+NULL
+NULL
+NULL
+2001-01-01
+2001-01-01
+2005-05-21
+2042-02-24
+SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` DESC;
+tcolumn
+23:23:42
+05:05:42
+00:00:00
+00:00:00
+NULL
+NULL
+NULL
+SELECT `tcolumn` FROM `sorting_temporal` ORDER BY `tcolumn` ASC;
+tcolumn
+NULL
+NULL
+NULL
+00:00:00
+00:00:00
+05:05:42
+23:23:42
+SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` DESC;
+dtcolumn
+2042-02-04 02:04:42
+2005-05-04 02:05:42
+2001-01-01 00:00:00
+2001-01-01 00:00:00
+NULL
+NULL
+NULL
+SELECT `dtcolumn` FROM `sorting_temporal` ORDER BY `dtcolumn` ASC;
+dtcolumn
+NULL
+NULL
+NULL
+2001-01-01 00:00:00
+2001-01-01 00:00:00
+2005-05-04 02:05:42
+2042-02-04 02:04:42
+SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` DESC;
+dtcolumn6
+2005-05-05 05:05:05.000005
+2001-01-01 00:00:00.000002
+2001-01-01 00:00:00.000001
+2001-01-01 00:00:00.000001
+NULL
+NULL
+NULL
+SELECT `dtcolumn6` FROM `sorting_temporal` ORDER BY `dtcolumn6` ASC;
+dtcolumn6
+NULL
+NULL
+NULL
+2001-01-01 00:00:00.000001
+2001-01-01 00:00:00.000001
+2001-01-01 00:00:00.000002
+2005-05-05 05:05:05.000005
 DROP TABLE `sorting_numerics`;
 DROP TABLE `sorting_chars`;
 DROP TABLE `sorting_temporal`;

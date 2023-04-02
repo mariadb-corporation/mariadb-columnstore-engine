@@ -263,7 +263,10 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
 
     case execplan::CalpontSystemCatalog::DATE:
     {
-      break;
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DATE>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DATE, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::BIGINT:
@@ -275,12 +278,26 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
     }
     case execplan::CalpontSystemCatalog::DATETIME:
     {
-      break;
+      using StorageType =
+          datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DATETIME>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DATETIME, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
-
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TIME>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TIME, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
+    }
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
-      break;
+      using StorageType =
+          datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TIMESTAMP>::type;
+      using EncodedKeyType = StorageType;
+      return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TIMESTAMP, StorageType,
+                                     EncodedKeyType>(columnId, sortDirection, columns);
     }
 
     case execplan::CalpontSystemCatalog::UTINYINT:
