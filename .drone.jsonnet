@@ -76,7 +76,9 @@ local platformMap(platform, arch) =
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
-  platform_map[platform] + ' | tee ' + result + '/build.log';
+  "export CLICOLOR_FORCE=1; " + platform_map[platform] + " | storage/columnstore/columnstore/build/ansi2txt.sh " + result + "/build.log";
+
+
 
 
 local testRun(platform) =
