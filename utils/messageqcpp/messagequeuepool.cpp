@@ -15,23 +15,51 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#include <memory>
 #include <sstream>
 #include <map>
 #include <time.h>
+#include <mutex>
 #include "messagequeuepool.h"
 #include "messagequeue.h"
+
+#include <new>
+#include <type_traits>
+
 
 namespace messageqcpp
 {
 
-std::mutex& getQueueMutex()
+using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
+
+struct LockedClientMap
 {
-  static std::mutex queueMutex;
-  return queueMutex;
+  LockedClientMap()
+  {
+  }
+  ~LockedClientMap()
+  {
+  }
+  ClientMapType clientMap;
+  std::mutex queueMutex;
+};
+
+static int clientMapNiftyCounter;
+
+static typename std::aligned_storage<sizeof(LockedClientMap), alignof(LockedClientMap)>::type clientMapBuf;
+
+auto& lockedMap = reinterpret_cast<LockedClientMap&>(clientMapBuf);
+
+
+LockedClientMapInitilizer::LockedClientMapInitilizer ()
+{
+  if (clientMapNiftyCounter++ == 0) new (&lockedMap) LockedClientMap (); // placement new
+}
+LockedClientMapInitilizer::~LockedClientMapInitilizer ()
+{
+  if (--clientMapNiftyCounter == 0) (&lockedMap)->~LockedClientMap();
 }
 
-// Make linker happy
-std::multimap<std::string, ClientObject*> MessageQueueClientPool::clientMap;
 
 // 300 seconds idle until cleanup
 #define MAX_IDLE_TIME 300
@@ -43,7 +71,7 @@ static uint64_t TimeSpecToSeconds(struct timespec* ts)
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrIp, uint64_t port)
 {
-  std::scoped_lock lock(getQueueMutex());
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
 
   std::ostringstream oss;
   oss << dnOrIp << "_" << port;
@@ -63,16 +91,17 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrI
   clock_gettime(CLOCK_MONOTONIC, &now);
   uint64_t nowSeconds = TimeSpecToSeconds(&now);
 
-  newClientObject->client = new MessageQueueClient(dnOrIp, port);
+  newClientObject->client.reset(new MessageQueueClient(dnOrIp, port));
   newClientObject->inUse = true;
   newClientObject->lastUsed = nowSeconds;
-  clientMap.insert(std::pair<std::string, ClientObject*>(searchString, newClientObject));
-  return newClientObject->client;
+  lockedMap.clientMap.emplace(std::move(searchString), std::move(newClientObject));
+  return newClientObject->client.get();
 }
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& module)
 {
-  std::scoped_lock lock(getQueueMutex());
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
+
 
   MessageQueueClient* returnClient = MessageQueueClientPool::findInPool(module);
 
@@ -83,16 +112,19 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& modul
   }
 
   // We didn't find one, create new one
-  ClientObject* newClientObject = new ClientObject();
+  auto newClientObject = std::make_unique<ClientObject>();
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC, &now);
   uint64_t nowSeconds = TimeSpecToSeconds(&now);
 
-  newClientObject->client = new MessageQueueClient(module);
+
+
+  newClientObject->client.reset(new MessageQueueClient(module));
   newClientObject->inUse = true;
   newClientObject->lastUsed = nowSeconds;
-  clientMap.insert(std::pair<std::string, ClientObject*>(module, newClientObject));
-  return newClientObject->client;
+  auto result = newClientObject->client.get();
+  lockedMap.clientMap.emplace(std::move(module), std::move(newClientObject));
+  return result;
 }
 
 MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search)
@@ -102,40 +134,37 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
   uint64_t nowSeconds = TimeSpecToSeconds(&now);
   MessageQueueClient* returnClient = NULL;
 
-  std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
+  auto it = lockedMap.clientMap.begin();
+
 
   // Scan pool
-  while (it != clientMap.end())
+  while (it != lockedMap.clientMap.end())
   {
-    ClientObject* clientObject = it->second;
+    ClientObject* clientObject = it->second.get();
     uint64_t elapsedTime = nowSeconds - clientObject->lastUsed;
 
     // If connection hasn't been used for MAX_IDLE_TIME we probably don't need it so drop it
     // Don't drop in use connections that have been in use a long time
     if ((elapsedTime >= MAX_IDLE_TIME) && (!clientObject->inUse))
     {
-      delete clientObject->client;
-      delete clientObject;
       // Do this so we don't invalidate current interator
-      std::multimap<std::string, ClientObject*>::iterator toDelete = it;
+      auto toDelete = it;
       it++;
-      clientMap.erase(toDelete);
+      lockedMap.clientMap.erase(toDelete);
       continue;
     }
 
     if (!clientObject->inUse)
     {
-      MessageQueueClient* client = clientObject->client;
+      MessageQueueClient* client = clientObject->client.get();
 
       // If the unused socket isn't connected or has data pending read, destroy it
       if (!client->isConnected() || client->hasData())
       {
-        delete client;
-        delete clientObject;
         // Do this so we don't invalidate current interator
-        std::multimap<std::string, ClientObject*>::iterator toDelete = it;
+        auto toDelete = it;
         it++;
-        clientMap.erase(toDelete);
+        lockedMap.clientMap.erase(toDelete);
         continue;
       }
     }
@@ -145,7 +174,7 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
     {
       if ((returnClient == NULL) && (!clientObject->inUse))
       {
-        returnClient = clientObject->client;
+        returnClient = clientObject->client.get();
         clientObject->inUse = true;
         return returnClient;
       }
@@ -165,12 +194,12 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  std::scoped_lock lock(getQueueMutex());
-  std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
+  auto it = lockedMap.clientMap.begin();
 
-  while (it != clientMap.end())
+  while (it != lockedMap.clientMap.end())
   {
-    if (it->second->client == client)
+    if (it->second->client.get() == client)
     {
       struct timespec now;
       clock_gettime(CLOCK_MONOTONIC, &now);
@@ -193,16 +222,15 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  std::scoped_lock lock(getQueueMutex());
-  std::multimap<std::string, ClientObject*>::iterator it = clientMap.begin();
 
-  while (it != clientMap.end())
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
+  auto it = lockedMap.clientMap.begin();
+
+  while (it != lockedMap.clientMap.end())
   {
-    if (it->second->client == client)
+    if (it->second->client.get() == client)
     {
-      delete it->second->client;
-      delete it->second;
-      clientMap.erase(it);
+      lockedMap.clientMap.erase(it);
       return;
     }
 

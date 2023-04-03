@@ -591,6 +591,12 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
 
       if (-day < month_length[monthSave])
       {
+        if (monthSave == 0)
+        {
+          monthSave = 12;
+          tmpYear--;
+        }
+
         month--;
         monthSave--;
 
@@ -613,6 +619,12 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
         // BUG 5448 - changed from '==' to '<='
         if (day <= 0)
         {
+          if (monthSave == 0)
+          {
+            monthSave = 12;
+            tmpYear--;
+          }
+
           month--;
           monthSave--;
 
@@ -633,6 +645,17 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
         }
 
         break;
+      }
+
+      if (monthSave == 0)
+      {
+        monthSave = 12;
+        tmpYear--;
+
+        if (isLeapYear(tmpYear))
+          month_length[2] = 29;
+        else
+          month_length[2] = 28;
       }
 
       month--;

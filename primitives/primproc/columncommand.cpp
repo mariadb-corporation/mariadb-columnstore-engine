@@ -631,7 +631,8 @@ void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const 
   size_t inputMsgBufSize = baseMsgLength + (LOGICAL_BLOCK_RIDS * sizeof(primitives::RIDType));
 
   if (!inputMsg)
-    inputMsg.reset(reinterpret_cast<uint8_t*>(aligned_alloc(utils::MAXCOLUMNWIDTH, inputMsgBufSize)));
+    inputMsg.reset(new(std::align_val_t(utils::MAXCOLUMNWIDTH)) uint8_t[inputMsgBufSize]);
+
 
   primMsg = (NewColRequestHeader*)inputMsg.get();
   outMsg = (ColResultHeader*)bpp->outputMsg.get();
