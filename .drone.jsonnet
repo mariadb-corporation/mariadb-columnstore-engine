@@ -205,7 +205,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'REGRESSION_TEST_SET=$([ "$REGRESSION_CUSTOM_SET" == true ] && echo "' + std.join(",", regression_full_set) + '" || echo "$REGRESSION_TEST_SET")',
-      'docker exec --env PRESERVE_LOGS=true -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} /bin/bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}' + ' || ./regression_logs.sh ' + if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}' + '"',
+      'docker exec --env PRESERVE_LOGS=true -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} /bin/bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + (if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}') + ' || ./regression_logs.sh ' + (if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}') + '"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
     ],
   },
