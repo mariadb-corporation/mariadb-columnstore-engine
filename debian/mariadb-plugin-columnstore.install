@@ -70,7 +70,6 @@ usr/lib/*/libjoiner.so
 usr/lib/*/liblibmysql_client.so
 usr/lib/*/libloggingcpp.so
 usr/lib/*/libmarias3.so
-usr/lib/*/libmessageqcpp.so
 usr/lib/*/liboamcpp.so
 usr/lib/*/libquerystats.so
 usr/lib/*/libquerytele.so

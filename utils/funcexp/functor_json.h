@@ -434,7 +434,7 @@ class Func_json_contains : public Func_Bool
   JSONPath path;
   bool arg2Const;
   bool arg2Parsed;  // argument 2 is a constant or has been parsed
-  std::string_view arg2Val;
+  utils::NullString arg2Val;
 
  public:
   Func_json_contains() : Func_Bool("json_contains"), arg2Const(false), arg2Parsed(false), arg2Val("")
@@ -640,7 +640,7 @@ class Func_json_search : public Func_Str
                         execplan::CalpontSystemCatalog::ColType& type);
 
  private:
-  int cmpJSValWild(json_engine_t* jsEg, const string_view& cmpStr, const CHARSET_INFO* cs);
+  int cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs);
 };
 /** @brief Func_json_extract_string class
  */

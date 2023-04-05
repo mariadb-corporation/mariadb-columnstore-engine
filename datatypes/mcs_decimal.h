@@ -30,6 +30,7 @@
 #include "checks.h"
 #include "branchpred.h"
 #include "mcs_data_condition.h"
+#include "nullstring.h"
 
 namespace datatypes
 {
@@ -163,6 +164,27 @@ const int128_t mcs_pow_10_128[20] = {
     10000000000000000000000000000000000000_xxl,
     100000000000000000000000000000000000000_xxl,
 };
+
+const long long columnstore_precision[19] = {0,
+                                             9,
+                                             99,
+                                             999,
+                                             9999,
+                                             99999,
+                                             999999,
+                                             9999999,
+                                             99999999,
+                                             999999999,
+                                             9999999999LL,
+                                             99999999999LL,
+                                             999999999999LL,
+                                             9999999999999LL,
+                                             99999999999999LL,
+                                             999999999999999LL,
+                                             9999999999999999LL,
+                                             99999999999999999LL,
+                                             999999999999999999LL};
+
 
 const int128_t ConversionRangeMaxValue[20] = {9999999999999999999_xxl,
                                               99999999999999999999_xxl,
@@ -811,6 +833,7 @@ class Decimal : public TDecimal128, public TDecimal64
   // where precision can't detect decimal type properly, e.g.
   // DECIMAL(10)/DECIMAL(38)
   std::string toString(bool hasTSInt128 = false) const;
+  utils::NullString toNullString(bool hasTSInt128 = false) const;
   friend std::ostream& operator<<(std::ostream& os, const Decimal& dec);
 
   int8_t scale;       // 0~38

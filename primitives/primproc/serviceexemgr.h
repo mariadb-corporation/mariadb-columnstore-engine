@@ -370,9 +370,9 @@ namespace exemgr
     //   shared by multiple threads per session.
     ThreadCntPerSessionMap_t threadCntPerSessionMap_;
     std::mutex threadCntPerSessionMapMutex_;
-    ActiveStatementCounter* statementsRunningCount_;
-    joblist::DistributedEngineComm* dec_;
-    joblist::ResourceManager* rm_;
+    ActiveStatementCounter* statementsRunningCount_ = nullptr;
+    joblist::DistributedEngineComm* dec_ = nullptr;
+    joblist::ResourceManager* rm_ = nullptr;
     // Its attributes are set in Child()
     querytele::QueryTeleServerParms teleServerParms_;
     std::vector<struct in_addr> localNetIfaceSins_;

@@ -31,7 +31,7 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
                    '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
 
-local clang_version = '14';
+local clang_version = '16';
 local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
@@ -76,7 +76,9 @@ local platformMap(platform, arch) =
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
-  platform_map[platform] + ' | tee ' + result + '/build.log';
+  "export CLICOLOR_FORCE=1; " + platform_map[platform] + " | storage/columnstore/columnstore/build/ansi2txt.sh " + result + "/build.log";
+
+
 
 
 local testRun(platform) =
@@ -116,6 +118,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local branchp = if (branch == '**') then '' else branch + '/',
   local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+
+  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
 
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
@@ -320,9 +324,20 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker:git',
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      REGRESSION_REF: '${REGRESSION_REF:-' + regression_ref + '}',
+      REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
+      REGRESSION_REF_AUX: regression_ref,
     },
     commands: [
+      // compute branch.
+      'echo "$$REGRESSION_REF"',
+      'echo "$$REGRESSION_BRANCH_REF"',
+      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'echo "$$REGRESSION_REF"',
+      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
+      // assign what is appropriate by default.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}',
+      'echo "$$REGRESSION_REF"',
       // clone regression test repo
       'git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test',
       // where are we now?
@@ -616,6 +631,16 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
            },
          ] +
          [pipeline.publish()] +
+         [
+          {
+             name: 'publish pkg url',
+             depends_on: ['publish pkg'],
+             image: 'alpine/git',
+             commands: [
+               "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'"
+             ]
+           }
+        ] +
          (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +

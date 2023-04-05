@@ -1,5 +1,6 @@
 DROP DATABASE IF EXISTS mcs_type_string;
 CREATE DATABASE mcs_type_string;
+USE mcs_type_string;
 #
 # MCOL-4823 WHERE char_col<varchar_col returns a wrong result of a large table
 #

@@ -248,7 +248,7 @@ void SQLFrontSessionThread::analyzeTableExecute(messageqcpp::ByteStream& bs, job
   auto rowCount = jl->projectTable(dummyTableOid, bs);
   while (rowCount)
   {
-    auto outRG = (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
+    auto const& outRG = (static_cast<joblist::TupleJobList*>(jl.get()))->getOutputRowGroup();
     statisticsManager->collectSample(outRG);
     rowCount = jl->projectTable(dummyTableOid, bs);
   }
@@ -894,7 +894,7 @@ void SQLFrontSessionThread::operator()()
         std::unique_lock<std::mutex> scoped(jlMutex);
         destructing++;
         std::thread bgdtor(
-            [jl, &jlMutex, &jlCleanupDone, stmtID, &li, &destructing, &msgLog]
+            [jl, &jlMutex, &jlCleanupDone, stmtID, li, &destructing, &msgLog]
             {
               std::unique_lock<std::mutex> scoped(jlMutex);
               const_cast<joblist::SJLP&>(jl).reset();  // this happens second; does real destruction

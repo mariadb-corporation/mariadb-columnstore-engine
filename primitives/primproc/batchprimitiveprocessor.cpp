@@ -928,10 +928,10 @@ void BatchPrimitiveProcessor::initProcessor()
     absRids.reset(new uint64_t[LOGICAL_BLOCK_RIDS]);
 
   if (needStrValues)
-    strValues.reset(new string[LOGICAL_BLOCK_RIDS]);
+    strValues.reset(new utils::NullString[LOGICAL_BLOCK_RIDS]);
 
   outMsgSize = defaultBufferSize;
-  outputMsg.reset(reinterpret_cast<uint8_t*>(aligned_alloc(utils::MAXCOLUMNWIDTH, outMsgSize)));
+  outputMsg.reset(new(std::align_val_t(MAXCOLUMNWIDTH)) uint8_t[outMsgSize]);
 
   if (ot == ROW_GROUP)
   {
@@ -1080,7 +1080,7 @@ void BatchPrimitiveProcessor::initProcessor()
         fFiltCmdBinaryValues[i].reset(new int128_t[LOGICAL_BLOCK_RIDS]);
 
       if (filtOnString)
-        fFiltStrValues[i].reset(new string[LOGICAL_BLOCK_RIDS]);
+        fFiltStrValues[i].reset(new utils::NullString[LOGICAL_BLOCK_RIDS]);
     }
   }
 

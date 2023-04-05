@@ -65,6 +65,7 @@ using namespace idbdatafile;
 #include "dataconvert.h"
 #include "string_prefixes.h"
 
+#include "mcs_decimal.h"
 
 namespace WriteEngine
 //#define PROFILE 1
@@ -791,7 +792,9 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
 
       case WriteEngine::WR_ULONGLONG: ((uint64_t*)valArray)[pos] = boost::any_cast<uint64_t>(data); break;
 
-      case WriteEngine::WR_TOKEN: ((Token*)valArray)[pos] = boost::any_cast<Token>(data); break;
+      case WriteEngine::WR_TOKEN:
+        ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
+        break;
 
       case WriteEngine::WR_BINARY:
         size_t size = cscColType.colWidth;
@@ -917,7 +920,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   Column refCol;
   ColType newColType;
   ColType refColType;
-  boost::scoped_array<char> defVal(new char[MAX_COLUMN_BOUNDARY]);
+  boost::scoped_array<char> defVal(new char[datatypes::MAXDECIMALWIDTH]);
   ColumnOp* colOpNewCol = m_colOp[op(compressionType)];
   ColumnOp* refColOp = m_colOp[op(refCompressionType)];
   Dctnry* dctnry = m_dctnry[op(compressionType)];
@@ -992,6 +995,29 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
   return rc;
 }
 
+// TODO: Get rid of this
+void emptyValueToAny(boost::any* any, const uint8_t* emptyValue, int colWidth)
+{
+  switch (colWidth)
+  {
+    case 16:
+      *any = *(uint128_t*)emptyValue;
+      break;
+    case 8:
+      *any = *(uint64_t*)emptyValue;
+      break;
+    case 4:
+      *any = *(uint32_t*)emptyValue;
+      break;
+    case 2:
+      *any = *(uint16_t*)emptyValue;
+      break;
+    default:
+      *any = *emptyValue;
+  }
+}
+
+
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
                                   vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol)
@@ -1032,10 +1058,7 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
       const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->getEmptyRowValue(
           curColStruct.colDataType, curColStruct.colWidth);
 
-      if (curColStruct.colWidth == datatypes::MAXDECIMALWIDTH)
-        curTuple.data = *(int128_t*)emptyVal;
-      else
-        curTuple.data = *(int64_t*)emptyVal;
+      emptyValueToAny(&curTuple.data, emptyVal, curColStruct.colWidth);
 
       curTupleList.push_back(curTuple);
       colValueList.push_back(curTupleList);
@@ -1714,7 +1737,7 @@ int WriteEngineWrapper::insertColumnRecs(
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
         int64_t strPrefix;
 #endif
-        if (dctStr_iter->length() == 0)
+        if (dctStr_iter->isNull())
         {
           Token nullToken;
           col_iter->data = nullToken;
@@ -1728,10 +1751,10 @@ int WriteEngineWrapper::insertColumnRecs(
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
-          strPrefix = encodeStringPrefix_check_null(dctTuple.sigValue, dctTuple.sigSize,
+          strPrefix = encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize,
                                                     dctnryStructList[i].fCharsetNumber);
 #endif
           dctTuple.isNull = false;
@@ -1782,7 +1805,7 @@ int WriteEngineWrapper::insertColumnRecs(
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
           int64_t strPrefix;
 #endif
-          if (dctStr_iter->length() == 0)
+          if (dctStr_iter->isNull())
           {
             Token nullToken;
             col_iter->data = nullToken;
@@ -1796,7 +1819,7 @@ int WriteEngineWrapper::insertColumnRecs(
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
             strPrefix = encodeStringPrefix_check_null(dctTuple.sigValue, dctTuple.sigSize,
@@ -2532,7 +2555,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
       {
         colValPtr = &colValueList[(i * rowsPerColumn) + rows];
 
-        if (dctStr_iter->length() == 0)
+        if (dctStr_iter->isNull())
         {
           Token nullToken;
           memcpy(colValPtr, &nullToken, 8);
@@ -2543,7 +2566,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -2589,7 +2612,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
         {
           colValPtr = &colValueList[(i * rowsPerColumn) + rows];
 
-          if (dctStr_iter->length() == 0)
+          if (dctStr_iter->isNull())
           {
             Token nullToken;
             memcpy(colValPtr, &nullToken, 8);
@@ -2600,7 +2623,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -3107,7 +3130,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
 
       for (uint32_t rows = 0; rows < (totalRow - rowsLeft); rows++)
       {
-        if (dctStr_iter->length() == 0)
+        if (dctStr_iter->isNull())
         {
           Token nullToken;
           col_iter->data = nullToken;
@@ -3118,7 +3141,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
           timer.start("tokenize");
 #endif
           DctnryTuple dctTuple;
-          dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+          dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -3181,7 +3204,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
 
         for (uint32_t rows = 0; rows < rowsLeft; rows++)
         {
-          if (dctStr_iter->length() == 0)
+          if (dctStr_iter->isNull())
           {
             Token nullToken;
             col_iter->data = nullToken;
@@ -3192,7 +3215,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -3769,7 +3792,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
 
         for (uint32_t rows = 0; rows < (totalRow - rowsLeft); rows++)
         {
-          if (dctStr_iter->length() == 0)
+          if (dctStr_iter->isNull())
           {
             Token nullToken;
             col_iter->data = nullToken;
@@ -3780,7 +3803,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -3844,7 +3867,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
 
         for (uint32_t rows = 0; rows < rowsLeft; rows++)
         {
-          if (dctStr_iter->length() == 0)
+          if (dctStr_iter->isNull())
           {
             Token nullToken;
             col_iter->data = nullToken;
@@ -3855,7 +3878,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid, const CSCType
             timer.start("tokenize");
 #endif
             DctnryTuple dctTuple;
-            dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
+            dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -4218,7 +4241,7 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList, con
       {
         // We presume there will be a value.
         auto tokenOidIdx = oidToIdxMap[dctnryStructList[i].columnOid];
-        std::cerr << "string [" << dictStrList[i][j] << "]" << std::endl;
+        std::cerr << "string [" << dictStrList[i][j].safeString("<<null>>") << "]" << std::endl;
         bool isToken = colStructList[tokenOidIdx].colType == WriteEngine::WR_TOKEN &&
                        colStructList[tokenOidIdx].tokenFlag;
         if (isToken && !colValueList[tokenOidIdx][j].data.empty())

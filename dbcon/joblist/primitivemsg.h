@@ -29,6 +29,7 @@
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 #include "joblisttypes.h"
+#include <columnwidth.h>
 
 #include <vector>
 
@@ -71,6 +72,9 @@ class StringComparator : public datatypes::Charset
   {
     if (COP & COMPARE_LIKE)
       return like(COP & COMPARE_NOT, str1, str2);
+
+    if (COP == COMPARE_NULLEQ)
+      return str1.isNull() == str2.isNull(); // XXX: TODO: I do not know the logic here, so it is temporary solution.
 
     int cmp = strnncollsp(str1, str2);
 
@@ -576,6 +580,13 @@ struct DictTokenByIndexRequestHeader
 
 struct DataValue
 {
+  uint8_t isnull;
+  uint16_t len;
+  char data[];
+};
+
+struct NonNullDataValue
+{
   uint16_t len;
   char data[];
 };
@@ -701,7 +712,7 @@ const uint8_t ROUND_POS = 0x01;  // actual value larger/longer than the stored v
 const uint8_t ROUND_NEG = 0x80;  // actual value less than the stored value
 
 // Tied to ColByScanRequestHeader and ColByScanRangeRequestHeader.  Check other headers if modifying.
-struct NewColRequestHeader
+struct /*alignas(utils::MAXCOLUMNWIDTH)*/ NewColRequestHeader
 {
   ISMPacketHeader ism;
   PrimitiveHeader hdr;

@@ -45,15 +45,14 @@ std::string Func_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
     return "NULL";
   }
 
-  if (str.empty())
-    return "NULL";
+  size_t strSize = strlen(str.c_str());
 
   string result;
-  result.reserve((str.size() * 1.3) + 2);
+  result.reserve(((strSize + 1) * 1.3) + 2);
 
   result.push_back('\'');
 
-  for (uint64_t i = 0; i < str.size(); i++)
+  for (uint64_t i = 0; i < strSize; i++)
   {
     switch (str[i])
     {

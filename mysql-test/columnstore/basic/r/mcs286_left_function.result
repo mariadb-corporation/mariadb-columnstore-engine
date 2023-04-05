@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs286_db;
 CREATE DATABASE mcs286_db;
 USE mcs286_db;
 CREATE TABLE t1 (a INT, b CHAR(15))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, ''),(1, 'mariadb'),(2, 'columnstore'),(3, 'Innodb');
+INSERT INTO t1 VALUES (NULL, NULL),(1, 'mariadb'),(2, 'columnstore'),(3, 'Innodb');
 SELECT LEFT('mariadb cs', 7) FROM t1 LIMIT 1;
 LEFT('mariadb cs', 7)
 mariadb
@@ -15,9 +15,9 @@ mariadb c
 SELECT b, LEFT(b, 0) FROM t1 ORDER BY 1;
 b	LEFT(b, 0)
 NULL	NULL
-columnstore	NULL
-Innodb	NULL
-mariadb	NULL
+columnstore	
+Innodb	
+mariadb	
 SELECT b, LEFT(b, -1) FROM t1 ORDER BY 1;
 b	LEFT(b, -1)
 NULL	NULL

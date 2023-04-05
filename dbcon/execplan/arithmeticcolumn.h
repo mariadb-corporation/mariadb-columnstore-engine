@@ -211,7 +211,7 @@ class ArithmeticColumn : public ReturnedColumn
    *                 F&E framework                           *
    ***********************************************************/
  public:
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getStrVal(row, isNull);
   }

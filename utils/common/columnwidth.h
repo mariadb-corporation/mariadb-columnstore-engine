@@ -21,8 +21,16 @@
 
 namespace utils
 {
-const uint8_t MAXLEGACYWIDTH = 8ULL;
-const uint8_t MAXCOLUMNWIDTH = 16ULL;
+constexpr uint8_t MAXLEGACYWIDTH = 8ULL;
+constexpr uint8_t MAXCOLUMNWIDTH = 16ULL;
+
+struct AlignedDeleter
+{
+  void operator()(uint8_t* ptr)
+  {
+    operator delete[](ptr, std::align_val_t(utils::MAXCOLUMNWIDTH));
+  };
+};
 
 inline bool isWide(uint8_t width)
 {

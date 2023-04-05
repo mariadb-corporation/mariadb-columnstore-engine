@@ -39,6 +39,7 @@
 #include "calpontsystemcatalog.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
+#include "nullstring.h"
 
 #undef EXPORT
 #undef DELETE
@@ -331,7 +332,7 @@ typedef std::vector<ColTupleList> ColValueList;                            /** @
 typedef std::vector<RID> RIDList;                                          /** @brief RID list */
 typedef std::vector<execplan::CalpontSystemCatalog::ColType> CSCTypesList; /** @brief CSC column types list */
 
-typedef std::vector<std::string> dictStr;
+typedef std::vector<NullString> dictStr;
 typedef std::vector<dictStr> DictStrList;
 
 // dictionary
@@ -399,8 +400,8 @@ struct JobColumn /** @brief Job Column Structure */
   int compressionType;             /** @brief compression type */
   bool autoIncFlag;                /** @brief auto increment flag */
   DctnryStruct dctnry;             /** @brief dictionary structure */
-  int64_t fMinIntSat;              /** @brief For integer type, the min saturation value */
-  uint64_t fMaxIntSat;             /** @brief For integer type, the max saturation value */
+  int128_t fMinIntSat;              /** @brief For integer type, the min saturation value */
+  uint128_t fMaxIntSat;             /** @brief For integer type, the max saturation value */
   double fMinDblSat;               /** @brief for float/double, the min saturation value */
   double fMaxDblSat;               /** @brief for float/double, the max saturation value */
   bool fWithDefault;               /** @brief With default */
@@ -408,7 +409,7 @@ struct JobColumn /** @brief Job Column Structure */
   unsigned long long fDefaultUInt; /** @brief UnsignedInt col default*/
   double fDefaultDbl;              /** @brief Dbl/Flt column default */
   int128_t fDefaultWideDecimal;    /** @brief Wide decimal column default */
-  std::string fDefaultChr;         /** @brief Char column default */
+  utils::NullString fDefaultChr;   /** @brief Char column default */
   JobColumn()
    : mapOid(0)
    , dataType(execplan::CalpontSystemCatalog::INT)

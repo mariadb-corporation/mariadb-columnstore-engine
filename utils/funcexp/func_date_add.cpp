@@ -591,6 +591,12 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
 
       if (-day < month_length[monthSave])
       {
+        if (monthSave == 0)
+        {
+          monthSave = 12;
+          tmpYear--;
+        }
+
         month--;
         monthSave--;
 
@@ -613,6 +619,12 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
         // BUG 5448 - changed from '==' to '<='
         if (day <= 0)
         {
+          if (monthSave == 0)
+          {
+            monthSave = 12;
+            tmpYear--;
+          }
+
           month--;
           monthSave--;
 
@@ -633,6 +645,17 @@ uint64_t dateAdd(uint64_t time, const string& expr, IntervalColumn::interval_typ
         }
 
         break;
+      }
+
+      if (monthSave == 0)
+      {
+        monthSave = 12;
+        tmpYear--;
+
+        if (isLeapYear(tmpYear))
+          month_length[2] = 29;
+        else
+          month_length[2] = 28;
       }
 
       month--;
@@ -737,7 +760,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
       break;
     }
 
@@ -793,12 +816,12 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
   if ((ct3.colDataType == execplan::CalpontSystemCatalog::CHAR ||
        ct3.colDataType == execplan::CalpontSystemCatalog::TEXT ||
        ct3.colDataType == execplan::CalpontSystemCatalog::VARCHAR) &&
-      constCol != NULL && constCol->constval().compare("SUB") == 0)
+      constCol != NULL && constCol->constval().safeString().compare("SUB") == 0)
     funcType = OP_SUB;
   else
     funcType = static_cast<OpType>(parm[3]->data()->getIntVal(row, isNull));
 
-  uint64_t value = helpers::dateAdd(val, parm[1]->data()->getStrVal(row, isNull), unit, dateType, funcType);
+  uint64_t value = helpers::dateAdd(val, parm[1]->data()->getStrVal(row, isNull).safeString(""), unit, dateType, funcType);
 
   if (value == 0)
     isNull = true;

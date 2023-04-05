@@ -223,7 +223,7 @@ class BatchPrimitiveProcessor
   int64_t values[LOGICAL_BLOCK_RIDS];
   int128_t wide128Values[LOGICAL_BLOCK_RIDS];
   boost::scoped_array<uint64_t> absRids;
-  boost::scoped_array<std::string> strValues;
+  boost::scoped_array<utils::NullString> strValues;
   uint16_t origRidCount;
   uint16_t ridCount;
   bool needStrValues;
@@ -232,7 +232,7 @@ class BatchPrimitiveProcessor
   /* Common space for primitive data */
   alignas(utils::MAXCOLUMNWIDTH) uint8_t blockData[BLOCK_SIZE * utils::MAXCOLUMNWIDTH];
   uint8_t blockDataAux[BLOCK_SIZE * execplan::AUX_COL_WIDTH];
-  boost::scoped_array<uint8_t> outputMsg;
+  std::unique_ptr<uint8_t[], utils::AlignedDeleter>  outputMsg;
   uint32_t outMsgSize;
 
   std::vector<SCommand> filterSteps;
@@ -295,7 +295,7 @@ class BatchPrimitiveProcessor
   boost::scoped_array<uint16_t> fFiltCmdRids[2];
   boost::scoped_array<int64_t> fFiltCmdValues[2];
   boost::scoped_array<int128_t> fFiltCmdBinaryValues[2];
-  boost::scoped_array<std::string> fFiltStrValues[2];
+  boost::scoped_array<utils::NullString> fFiltStrValues[2];
   uint64_t fFiltRidCount[2];
 
   // query density threshold for prefetch & async loading

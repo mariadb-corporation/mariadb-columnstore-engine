@@ -48,26 +48,6 @@ using namespace logging;
 
 namespace
 {
-const int64_t columnstore_precision[19] = {0,
-                                           9,
-                                           99,
-                                           999,
-                                           9999,
-                                           99999,
-                                           999999,
-                                           9999999,
-                                           99999999,
-                                           999999999,
-                                           9999999999LL,
-                                           99999999999LL,
-                                           999999999999LL,
-                                           9999999999999LL,
-                                           99999999999999LL,
-                                           999999999999999LL,
-                                           9999999999999999LL,
-                                           99999999999999999LL,
-                                           999999999999999999LL};
-
 template <class T>
 bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
 {
@@ -475,25 +455,16 @@ void number_int_value(const string& data, cscDataType typeCode,
   if ((typeCode == datatypes::SystemCatalog::DECIMAL) || (typeCode == datatypes::SystemCatalog::UDECIMAL) ||
       (ct.scale > 0))
   {
-    T rangeUp, rangeLow;
-
-    if (ct.precision < 19)
+    auto precision =
+        ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
+    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
     {
-      rangeUp = (T)columnstore_precision[ct.precision];
-    }
-    else
-    {
-      auto precision =
-          ct.precision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : ct.precision;
-      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
-      {
-        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
-                              dataTypeErr);
-      }
-      rangeUp = datatypes::ConversionRangeMaxValue[ct.precision - 19];
+      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                            dataTypeErr);
     }
 
-    rangeLow = -rangeUp;
+    T rangeUp = dataconvert::decimalRangeUp<T>(precision);
+    T rangeLow = -rangeUp;
 
     if (intVal > rangeUp)
     {
@@ -2330,7 +2301,17 @@ int64_t DataConvert::dateToInt(const string& date)
   return stringToDate(date);
 }
 
+int64_t DataConvert::dateToInt(const utils::NullString& date)
+{
+  return stringToDate(date);
+}
+
 int64_t DataConvert::datetimeToInt(const string& datetime)
+{
+  return stringToDatetime(datetime);
+}
+
+int64_t DataConvert::datetimeToInt(const utils::NullString& datetime)
 {
   return stringToDatetime(datetime);
 }
@@ -2357,6 +2338,15 @@ int64_t DataConvert::stringToDate(const string& data)
   else
     return -1;
 }
+int64_t DataConvert::stringToDate(const utils::NullString& data)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+
+  return stringToDate(data.unsafeStringRef());
+}
 
 int64_t DataConvert::stringToDatetime(const string& data, bool* date)
 {
@@ -2368,6 +2358,20 @@ int64_t DataConvert::stringToDatetime(const string& data, bool* date)
     return -1;
 }
 
+int64_t DataConvert::stringToDatetime(const utils::NullString& data, bool* date)
+{
+  if (data.isNull())
+  {
+    if (date)
+    {
+      *date = false;
+    }
+    return -1;
+  }
+
+  return stringToDatetime(data.unsafeStringRef(), date);
+}
+
 int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
 {
   TimeStamp aTimestamp;
@@ -2376,6 +2380,15 @@ int64_t DataConvert::stringToTimestamp(const string& data, long timeZone)
     return getUInt64LE((const char*)&aTimestamp);
   else
     return -1;
+}
+
+int64_t DataConvert::stringToTimestamp(const utils::NullString& data, long timeZone)
+{
+  if (data.isNull())
+  {
+    return -1;
+  }
+  return stringToTimestamp(data.unsafeStringRef(), timeZone);
 }
 
 /* This is really painful and expensive b/c it seems the input is not normalized or
@@ -2770,6 +2783,11 @@ int64_t DataConvert::intToTime(int64_t data, bool fromString)
   return getSInt64LE((const char*)&atime);
 }
 
+int64_t DataConvert::stringToTime(const utils::NullString& data)
+{
+  return stringToTime(data.safeString(""));
+}
+
 int64_t DataConvert::stringToTime(const string& data)
 {
   // MySQL supported time value format 'D HHH:MM:SS.fraction'
@@ -2802,7 +2820,8 @@ int64_t DataConvert::stringToTime(const string& data)
   {
     if (!hasDate)
     {
-      day = strtol(data.substr(0, pos).c_str(), &end, 10);
+      std::string tmpDataSegment = data.substr(0, pos);
+      day = strtol(tmpDataSegment.c_str(), &end, 10);
 
       if (*end != '\0')
         return -1;

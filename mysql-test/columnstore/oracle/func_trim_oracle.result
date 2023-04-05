@@ -77,8 +77,8 @@ ord	'['||c1||']'	'.'||COALESCE(TRIM(TRAILING 'a' FROM c1),'NULL')||'.'
 SELECT ord,'['||c1||']','.'||COALESCE(TRIM(BOTH 'a' FROM c1),'NULL')||'.' FROM t1 ORDER BY ord;
 ord	'['||c1||']'	'.'||COALESCE(TRIM(BOTH 'a' FROM c1),'NULL')||'.'
 1	[abc]	.bc.
-2	[]	.NULL.
-3	[]	.NULL.
+2	[]	..
+3	[]	..
 4	[ ]	. .
 5	[      ]	.      .
 6	[   a     ]	.   a     .
@@ -138,8 +138,8 @@ v1	CREATE VIEW "v1" AS select "t1"."ord" AS "ord",trim_oracle('abc') AS "TRIM('a
 SELECT * FROM v1;
 ord	TRIM('abc')	RTRIM('abc')	LTRIM('abc')	'['||c1||']'	TRIM(LEADING 'a' FROM c1)	TRIM(TRAILING 'a' FROM c1)	TRIM(BOTH 'a' FROM c1)	LTRIM(c1)	RTRIM(c1)
 1	abc	abc	abc	[abc]	bc	abc	bc	abc	abc
-2	abc	abc	abc	[]	NULL	NULL	NULL	NULL	NULL
-3	abc	abc	abc	[]	NULL	NULL	NULL	NULL	NULL
+2	abc	abc	abc	[]	NULL	NULL		NULL	NULL
+3	abc	abc	abc	[]	NULL	NULL		NULL	NULL
 4	abc	abc	abc	[ ]	 	 	 	NULL	NULL
 5	abc	abc	abc	[      ]	      	      	      	NULL	NULL
 6	abc	abc	abc	[   a     ]	   a     	   a     	   a     	a     	   a

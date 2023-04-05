@@ -483,8 +483,8 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
       {
         if (column.fWithDefault)
         {
-          int defLen = column.fDefaultChr.size();
-          const char* defData = column.fDefaultChr.c_str();
+          int defLen = column.fDefaultChr.length();
+          const char* defData = column.fDefaultChr.str();
 
           if (defLen > column.definedWidth)
             memcpy(charTmpBuf, defData, column.definedWidth);
@@ -2415,12 +2415,10 @@ void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
       //------------------------------------------------------------------
       case FLD_PARSE_ENCLOSED_STATE:
       {
-        char next = *(p + 1);
-
         if ((p + 1 < pEndOfData) &&
-            (((c == ESCAPE_CHAR) && ((next == STRING_ENCLOSED_CHAR) || (next == ESCAPE_CHAR) ||
-                                     (next == LINE_FEED) || (next == CARRIAGE_RETURN))) ||
-             ((c == STRING_ENCLOSED_CHAR) && (next == STRING_ENCLOSED_CHAR))))
+            (((c == ESCAPE_CHAR) && ((*(p + 1) == STRING_ENCLOSED_CHAR) || (*(p + 1) == ESCAPE_CHAR) ||
+                                     (*(p + 1) == LINE_FEED) || (*(p + 1) == CARRIAGE_RETURN))) ||
+             ((c == STRING_ENCLOSED_CHAR) && (*(p + 1) == STRING_ENCLOSED_CHAR))))
         {
           // Create/save original data before stripping out bytes
           if (rawDataRowLength == 0)
@@ -2515,7 +2513,7 @@ void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
           // cout << "triming ... " << endl;
           char* tmp = p;
 
-          while (*(--tmp) == ' ')
+          while (tmp != lastRowHead && *(--tmp) == ' ')
           {
             // cout << "offset is " << offset <<endl;
             offset--;
