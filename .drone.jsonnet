@@ -65,7 +65,7 @@ local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential 
 
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
-local regression_full_set = ['test000.sh', 'test001.sh', 'test005.sh', 'test006.sh', 'test007.sh', 'test008.sh', 'test009.sh', 'test010.sh', 'test011.sh', 'test012.sh', 'test013.sh', 'test014.sh', 'test023.sh', 'test201.sh','test202.sh', 'test203.sh', 'test204.sh', 'test210.sh', 'test211.sh', 'test212.sh', 'test297.sh', 'test299.sh', 'test300.sh',];
+local regression_full_set = ['test001.sh', 'test005.sh', 'test006.sh', 'test007.sh', 'test008.sh', 'test009.sh', 'test010.sh', 'test011.sh', 'test012.sh', 'test013.sh', 'test014.sh', 'test023.sh', 'test201.sh','test202.sh', 'test203.sh', 'test204.sh', 'test210.sh', 'test211.sh', 'test212.sh', 'test297.sh', 'test299.sh', 'test300.sh',];
 
 local platformMap(platform, arch) =
   local platform_map = {
@@ -205,7 +205,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'REGRESSION_TEST_SET=$([ "$REGRESSION_CUSTOM_SET" == true ] && echo "' + std.join(",", regression_full_set) + '" || echo "$REGRESSION_TEST_SET")',
-      'docker exec --env PRESERVE_LOGS=true -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} /bin/bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=$${REGRESSION_TEST_SET} || ./regression_logs.sh ' + name + '"',
+      'docker exec --env PRESERVE_LOGS=true -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} /bin/bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}' + ' || ./regression_logs.sh ' + if (name == 'test000.sh') then name else '$${REGRESSION_TEST_SET}' + '"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
     ],
   },
