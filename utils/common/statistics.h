@@ -25,6 +25,7 @@
 #include <map>
 #include <unordered_set>
 #include <mutex>
+#include <random>
 
 // Represents a commands for `ExeMgr`.
 #define ANALYZE_TABLE_EXECUTE 6
@@ -67,7 +68,7 @@ struct StatisticsFileHeader
 
 using ColumnsCache = std::unordered_map<uint32_t, std::unordered_set<uint64_t>>;
 using ColumnGroup = std::unordered_map<uint32_t, std::vector<uint64_t>>;
-using KeyTypes = std::unordered_map<uint32_t, std::pair<KeyType, uint32_t>>;
+using KeyTypes = std::unordered_map<uint32_t, KeyType>;
 using MCVList = std::unordered_map<uint32_t, std::unordered_map<uint64_t, uint32_t>>;
 
 // This class is responsible for processing and storing statistics.
@@ -104,13 +105,21 @@ class StatisticsManager
   KeyType getKeyType(uint32_t oid);
 
  private:
-  StatisticsManager() : currentSampleSize(0), currentRowIndex(0), epoch(0), version(1)
+  StatisticsManager() : currentSampleSize(0), epoch(0), version(1)
   {
     // Initialize plugins.
     IDBPolicy::configIDBPolicy();
+    // Generate distibution once in range [0, UINT_MAX].
+    gen32 = std::mt19937(randomDevice());
+    uniformDistribution = std::uniform_int_distribution<uint32_t>(0, UINT_MAX);
   }
+
   std::unique_ptr<char[]> convertStatsToDataStream(uint64_t& dataStreamSize);
   void convertStatsFromDataStream(std::unique_ptr<char[]> dataStreamSmartPtr);
+
+  std::random_device randomDevice;
+  std::mt19937 gen32;
+  std::uniform_int_distribution<uint32_t> uniformDistribution;
 
   // Internal data represents a sample [OID, vector of values].
   ColumnGroup columnGroups;
@@ -122,7 +131,6 @@ class StatisticsManager
   // TODO: Think about sample size.
   const uint32_t maxSampleSize = 64000;
   uint32_t currentSampleSize;
-  uint32_t currentRowIndex;
   uint32_t epoch;
   uint32_t version;
 
