@@ -146,7 +146,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  const sorting::ValueRangesMatrix calculateStats4PDQOrderBy2ndPhase(
+  const sorting::ValueRangesMatrix calculatePivots4phase2(
       const sorting::SortingThreads& sortingGroup) const;
   // WIP replace Mattrix with vector
   void finalizePDQOrderBy(const uint32_t id, const sorting::ValueRangesMatrix ranges,
