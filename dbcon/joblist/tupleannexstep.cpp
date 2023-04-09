@@ -919,7 +919,7 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
     // WIP Replace this vector with vector of RGDatas?
     // This ref lives as long as TAS this lives.
     const sorting::SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
-    auto perThreadRangesMatrix = calculateStats4PDQOrderBy2ndPhase(firstPhaseThreads);
+    auto perThreadRangesMatrix = calculatePivots4phase2(firstPhaseThreads);
     assert(perThreadRangesMatrix.size() == fMaxThreads);
     fRunnersList.push_back(jobstepThreadPool.invoke(
         [this, perThreadRangesMatrix, &firstPhaseThreads]()
@@ -1023,8 +1023,8 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
-              << std::endl;
+    // std::cout << " calcLeftAndRight dist " << rangeVectorDist << " left " << left1 << " right " << right1
+    //           << std::endl;
     return {left1, right1};
   }
   if (!rangeVectorDist)  // first
@@ -1033,7 +1033,7 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto rightLowerBoundValue = lowerBoundValues[1];
     auto right1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, rightLowerBoundValue);
-    std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
+    // std::cout << " calcLeftAndRight first left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   if (rangeVectorDist == maxRangeSize)  // last
@@ -1042,11 +1042,42 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
     auto left1 = binSearchWithPermutation<isAscDirection, ColType, StorageType, EncodedKeyType>(
         rgDatas, rg, columnId, perm, leftLowerBoundValue);
     auto right1 = perm.size();
-    std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
+    // std::cout << " calcLeftAndRight last left " << left1 << " right " << right1 << std::endl;
     return {left1, right1};
   }
   idbassert(rangeVectorDist && false);
   return {};
+}
+
+size_t getMetric(sorting::ValueRangesMatrix& m)
+{
+  size_t metric = 0;
+  for (auto& v : m)
+  {
+    std::cout << "{ " << std::endl;
+    for (auto& p : v)
+    {
+      std::cout << "{" << p.first << "," << p.second << "} ";
+    }
+    std::cout << std::endl << " }" << std::endl;
+  }
+  std::cout << "}" << endl;
+  std::cout << endl;
+
+  // assert(!m.empty());
+  // std::vector<std::vector<size_t>> diffsMatrix(m.size(), std::vector<size_t>(m.front().size()));
+  for (auto& v : m)
+  {
+    std::vector<size_t> diffs;
+    std::transform(std::begin(v), std::end(v), std::back_inserter(diffs),
+                   [](auto& p) { return p.second - p.first; });
+    std::copy(std::begin(diffs), std::end(diffs), std::ostream_iterator<size_t>(std::cout, " "));
+    size_t localMin = std::numeric_limits<size_t>::max();
+    for_each(std::begin(diffs), std::end(diffs), [&localMin](auto e) { localMin = std::min(localMin, e); });
+    std::cout << "localMin " << localMin << std::endl;
+    for_each(std::begin(diffs), std::end(diffs), [&metric, localMin](auto e) { metric += e - localMin; });
+  }
+  return metric;
 }
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
@@ -1055,10 +1086,9 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
                                                 rowgroup::RowGroup& rg, const size_t maxThreads,
                                                 const uint32_t columnId)
 {
-  sorting::ValueRangesMatrix ranges(maxThreads);
-  sorting::ValueRangesMatrix testRanges(maxThreads);
-  vector<EncodedKeyType> lowerBoundValues;
-  // auto& sorting = sortingThreads.front();
+  using LowerBoundsVec = vector<EncodedKeyType>;
+
+  vector<LowerBoundsVec> lowerBoundsMatrix;
   for (auto& sorting : sortingThreads)
   {
     const auto& perm = sorting->getPermutation();
@@ -1069,65 +1099,95 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it)
-    {
-      auto p = perm[left];
-      rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-      lowerBoundValues.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
-      left = right + ((perm.empty()) ? 0 : 1);
-      right = std::min(right + step, perm.size());
-    }
+    LowerBoundsVec lowerBounds;
+    assert(sortingThreads.size() == maxThreads);
+    for_each(
+        sortingThreads.begin(), sortingThreads.end(),  // used as a counter only
+        [&perm, &rg, &left, &right, &sorting, &lowerBounds, columnId, step](auto& u)
+        {
+          auto p = perm[left];
+          rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+          lowerBounds.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
+          left = right + ((perm.empty()) ? 0 : 1);
+          right = std::min(right + step, perm.size());
+        });
+    lowerBoundsMatrix.push_back(lowerBounds);
   }
 
-  // std::copy(lowerBoundValues.begin(), lowerBoundValues.end(), std::ostream_iterator<int64_t>(std::cout,
-  // ","));
+  size_t bestMetric = std::numeric_limits<size_t>::max();
+  sorting::ValueRangesMatrix bestRanges;
+  sorting::ValueRangesMatrix testRanges(maxThreads);
+  for (auto lowerBounds = std::begin(lowerBoundsMatrix); lowerBounds != std::end(lowerBoundsMatrix);
+       ++lowerBounds)
+  {
+    testRanges = sorting::ValueRangesMatrix(maxThreads);
+    sorting::ValueRangesMatrix ranges(maxThreads);
+    size_t maxVectorDistance = ranges.size() - 1;
+    for (auto& sorting : sortingThreads)
+    {
+      // WIP
+      auto rg = sorting->getRG();
+      const auto& perm = sorting->getPermutation();
+      const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
+      size_t left = 0;
+      size_t right = step;
+      size_t i = lowerBounds->size() - 1;
+      auto ita = testRanges.rbegin();
+      for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
+      {
+        size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
+        assert(ranges.size() >= 1);
+        it->push_back(calcLeftAndRight<isAscDirection, ColType, StorageType, EncodedKeyType>(
+            maxVectorDistance, rangeVectorDist, *lowerBounds, sorting->getRGDatas(), perm, rg, columnId));
+        ita->push_back({left, right});
+        left = right + ((perm.empty()) ? 0 : 1);
+        right = std::min(right + step, perm.size());
+      }
+    }
+    size_t metric = getMetric(ranges);
+    // for (auto& el : ranges)
+    // {
+    //   std::cout << "{ " << std::endl;
+    //   for (auto& p : el)
+    //   {
+    //     std::cout << "{" << p.first << "," << p.second << "} ";
+    //   }
+    //   std::cout << std::endl << " }" << std::endl;
+    // }
+    // std::cout << "}" << endl;
+    // std::cout << endl;
+    if (bestMetric > metric)
+      bestRanges = std::move(ranges);
+    std::cout << " metric " << metric << std::endl;
+    // rangesVec.push_back(ranges);
+  }
+  // debug printouts
+  // for (auto& el : testRanges)
+  // {
+  //   std::cout << "{ " << std::endl;
+  //   for (auto& p : el)
+  //   {
+  //     std::cout << "{" << p.first << "," << p.second << "} ";
+  //   }
+  //   std::cout << std::endl << " }" << std::endl;
+  // }
+  // std::cout << "}" << endl;
+  // std::cout << " trivial metric " << getMetric(testRanges) << std::endl;
+
+  // std::cout << "best ranges " << std::endl;
+  // for (auto& el : bestRanges)
+  // {
+  //   std::cout << "{ " << std::endl;
+  //   for (auto& p : el)
+  //   {
+  //     std::cout << "{" << p.first << "," << p.second << "} ";
+  //   }
+  //   std::cout << std::endl << " }" << std::endl;
+  // }
+  // std::cout << "}" << endl;
   // std::cout << endl;
-  size_t maxVectorDistance = ranges.size() - 1;
-  // WIP skip the first sorting processed in the beginning
-  for (auto& sorting : sortingThreads)
-  {
-    // WIP
-    auto rg = sorting->getRG();
-    const auto& perm = sorting->getPermutation();
-    std::cout << "calculateStats perm size " << perm.size() << std::endl;
-    const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
-    size_t left = 0;
-    size_t right = step;
-    size_t i = lowerBoundValues.size() - 1;
-    auto ita = testRanges.rbegin();
-    for (auto it = ranges.rbegin(); it != ranges.rend(); ++it, --i, ++ita)
-    {
-      size_t rangeVectorDist = std::distance(ranges.rbegin(), it);
-      assert(ranges.size() >= 1);
-      it->push_back(calcLeftAndRight<isAscDirection, ColType, StorageType, EncodedKeyType>(
-          maxVectorDistance, rangeVectorDist, lowerBoundValues, sorting->getRGDatas(), perm, rg, columnId));
-      ita->push_back({left, right});
-      std::cout << "stats calc left " << left << " right " << right << std::endl;
-      left = right + ((perm.empty()) ? 0 : 1);
-      right = std::min(right + step, perm.size());
-    }
-  }
-  std::cout << "ranges " << std::endl;
-  for (auto& el : ranges)
-  {
-    for (auto& p : el)
-    {
-      std::cout << "{" << p.first << "," << p.second << "} ";
-    }
-  }
-  std::cout << endl;
-
-  std::cout << "testRanges " << std::endl;
-  for (auto& el : testRanges)
-  {
-    for (auto& p : el)
-    {
-      std::cout << "{" << p.first << "," << p.second << "} ";
-    }
-  }
-  std::cout << endl;
-
-  return ranges;
+  std::cout << " best metric " << getMetric(bestRanges) << std::endl;
+  return bestRanges;
 }
 
 template <bool isAscDirection>
@@ -1373,7 +1433,7 @@ const sorting::ValueRangesMatrix calculateStatsColumnTypeDisp(const sorting::Sor
   return {};
 }
 
-const sorting::ValueRangesMatrix TupleAnnexStep::calculateStats4PDQOrderBy2ndPhase(
+const sorting::ValueRangesMatrix TupleAnnexStep::calculatePivots4phase2(
     const sorting::SortingThreads& sortingThreads) const
 {
   utils::setThreadName("TASOrdStats");
