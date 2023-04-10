@@ -1,0 +1,21 @@
+phantom:
+    enabled: false
+
+pandora:
+    enabled: true
+    package: yandextank.plugins.Pandora
+    config_file: ./tank.yaml
+
+console:
+    enabled: true
+    package: yandextank.plugins.Console
+
+telegraf:
+  #    config: monitoring.xml
+    enabled: true
+    package: yandextank.plugins.Telegraf
+
+overload:
+  enabled: true
+  package: yandextank.plugins.DataUploader
+  token_file: "token.txt"
