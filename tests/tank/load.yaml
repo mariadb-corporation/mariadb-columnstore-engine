@@ -4,6 +4,7 @@ phantom:
 pandora:
     enabled: true
     package: yandextank.plugins.Pandora
+    pandora_cmd: tank
     config_file: ./tank.yaml
 
 console:

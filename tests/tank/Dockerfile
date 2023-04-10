@@ -66,6 +66,11 @@ RUN rm -rf /usr/lib/python3/dist-packages/OpenSSL && \
 
 COPY files/bashrc /root/.bashrc
 COPY files/inputrc /root/.inputrc
+RUN apt update && apt install -y golang-1.18
+COPY . /root/tank
+RUN bash -c 'cd /root/tank; /usr/lib/go-1.18/bin/go get && /usr/lib/go-1.18/bin/go build'
+run cp /root/tank/tank /usr/local/bin
+
 
 VOLUME ["/var/loadtest"]
 WORKDIR /var/loadtest
