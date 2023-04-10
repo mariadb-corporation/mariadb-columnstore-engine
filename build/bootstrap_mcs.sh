@@ -273,13 +273,17 @@ build()
     message "building with flags $MDB_CMAKE_FLAGS"
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \ |
-    make -j $CPUS
-    message "Installing silently"
-    make -j $CPUS install > /dev/null
+    message "Configuring cmake silently"
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS | spinner
+
+    ${CMAKE_BIN_NAME} --build . -j $CPUS && \
+    message "Installing silently" &&
+    ${CMAKE_BIN_NAME} --install . | spinner 30
 
     if [ $? -ne 0 ]; then
+        message_split
         error "!!!! BUILD FAILED !!!!"
+        message_split
         exit 1
     fi
     cd -
@@ -483,5 +487,7 @@ install
 start_service
 smoke
 generate_svgs
+
+
 
 message_splitted "FINISHED"

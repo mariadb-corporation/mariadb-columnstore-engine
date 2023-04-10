@@ -52,6 +52,42 @@ message_splitted()
 }
 
 
+colorify_array()
+{
+    PROMT=""
+    array="$@"
+    for a in "$@"
+    do
+        i=$((((i+1) % (123-106)) + 106))
+        if [[ $(tput colors) == '256' ]]; then
+                PROMT="$PROMT $(tput setaf $i)$a$color_normal"
+        else
+                PROMT="$PROMT $a"
+        fi
+    done
+    echo $PROMT
+}
+
+
+function spinner
+{
+    freq=${1:-10}
+    points=(⣾ ⣽ ⣻ ⢿ ⡿ ⣟ ⣯ ⣷)
+    colored_points=($(colorify_array ${points[@]}))
+    len=${#points[@]}
+    point_num=0
+    line_num=0
+    while read data; do
+        line_num=$((line_num+1))
+        if [[ $((line_num % freq)) = 0 ]]; then
+            point_num=$(((point_num + 1) % len ))
+            echo -ne "\r${colored_points[point_num]}"
+        fi
+    done;
+    echo
+}
+
+
 detect_distro()
 {
     if [ -f /etc/os-release ]; then
