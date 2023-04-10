@@ -18,10 +18,10 @@ color_white="$color_bold$color_gray"
 
 if [[ $(tput colors) == '256' ]]; then
      color_red=$(tput setaf 196)
-     color_yellow=$(tput setaf 220)
+     color_yellow=$(tput setaf 228)
      color_cyan=$(tput setaf 87)
-     color_green=$(tput setaf 118)
-
+     color_green=$(tput setaf 156)
+     color_darkgray=$(tput setaf 59)
 fi
 
 message()
@@ -41,7 +41,14 @@ error()
 
 message_split()
 {
-    echo $color_green ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ $color_normal
+    echo $color_darkgray ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ $color_normal
+}
+
+message_splitted()
+{
+    message_split
+    echo $color_green -- $@$color_normal
+    message_split
 }
 
 

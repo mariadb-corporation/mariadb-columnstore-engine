@@ -37,6 +37,8 @@ optparse.define short=D long=without-core-dumps desc="Do not produce core dumps"
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
+optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
+optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 
 source $( optparse.build )
 
@@ -95,7 +97,7 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
-        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
+        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev graphviz
 
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         if [[ "$OS_VERSION" == "7" ]]; then
@@ -113,7 +115,7 @@ install_deps()
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
         && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
-        && yum -y install pcre2-devel
+        && yum -y install pcre2-devel flex graphviz
     fi
 }
 
@@ -194,6 +196,17 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
         message "Buiding with unittests"
     fi
+
+    if [[ $DRAW_DEPS = true ]] ; then
+        warn "Generating dependendies graph to mariadb.dot"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} --graphviz=mariadb.dot"
+    fi
+
+    if [[ $USE_NINJA = true ]] ; then
+        warn "Using Ninja instead of Makefiles"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
+    fi
+
 
     if [[ $ASAN = true ]] ; then
         warn "Building with ASAN"
@@ -443,6 +456,18 @@ smoke()
     fi
 }
 
+
+generate_svgs()
+{
+    message_split
+    warn "Generating svgs with dependency graph to $REPORT_PATH"
+    if [[ $DRAW_DEPS = true ]] ; then
+        for f in $MDB_SOURCE_PATH/mariadb.dot.*;
+            do dot -Tsvg -o $REPORT_PATH/`basename $f`.svg $f;
+        done
+    fi
+}
+
 select_branch
 
 if [[ $INSTALL_DEPS = true ]] ; then
@@ -457,5 +482,6 @@ run_microbenchmarks_tests
 install
 start_service
 smoke
+generate_svgs
 
-message "$color_green FINISHED $color_normal"
+message_splitted "FINISHED"
