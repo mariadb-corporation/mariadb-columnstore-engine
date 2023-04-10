@@ -25,8 +25,6 @@ func customAmmoProvider() core.Ammo {
 
 type GunConfig struct {
 	Target string `validate:"required"`
-	User   string `validate:"required"`
-	Pass   string `validate:"required"`
 }
 
 type Gun struct {
@@ -42,7 +40,7 @@ func NewGun(conf GunConfig) *Gun {
 }
 
 func (g *Gun) Bind(aggr core.Aggregator, deps core.GunDeps) error {
-	db, err := sql.Open("mysql", "root:@unix(/run/mysqld/mysqld.sock)/test")
+	db, err := sql.Open("mysql", g.conf.Target)
 
 	if err != nil {
 		log.Fatalf("Error: %s", err)
@@ -60,10 +58,9 @@ func makeArgs(args ...interface{}) []interface{} {
 	return args
 }
 
-func (g *Gun) queueCall() (string, error) {
+func (g *Gun) queueCall(request string) (string, error) {
 	var version string
-	err := g.db.QueryRow("SELECT VERSION()").Scan(&version)
-	log.Printf("Version is %s", version)
+	err := g.db.QueryRow(request).Scan(&version)
 	return version, err
 
 }
@@ -75,7 +72,7 @@ func (g *Gun) Shoot(coreAmmo core.Ammo) {
 	code := 200
 	var err error
 	startTime := time.Now()
-	g.queueCall()
+	g.queueCall(ammo.Request)
 	sample.SetLatency(time.Since(startTime))
 	if err != nil {
 		log.Printf("Error %s task: %s", ammo.Tag, err)
@@ -97,8 +94,6 @@ func main() {
 	register.Gun("mariadb_gun", NewGun, func() GunConfig {
 		return GunConfig{
 			Target: "root:@unix(/run/mysqld/mysqld.sock)/test",
-			User:   "root",
-			Pass:   "",
 		}
 	})
 	cli.Run()

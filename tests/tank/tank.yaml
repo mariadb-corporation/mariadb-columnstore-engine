@@ -2,9 +2,7 @@ pools:
   - id: mariadb_gun
     gun:
         type: mariadb_gun
-        target: localhost:3301 # replace by host.docker.internal:3301 if you use mac
-        user: admin
-        pass: queue-app-cluster-cookie
+        target: "root:@unix(/run/mysqld/mysqld.sock)/test"
     ammo:
         type: mariadb_ammo
         source:
@@ -15,8 +13,8 @@ pools:
         type: log
     rps:
         type: line
-        from: 1
-        to: 5
+        from: 100
+        to: 500
         duration: 10s
     startup:
         type: once
