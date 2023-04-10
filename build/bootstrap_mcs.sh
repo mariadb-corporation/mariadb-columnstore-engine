@@ -87,6 +87,7 @@ select_branch()
 
 install_deps()
 {
+    message_split
     message "Installing deps"
     if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
         apt-get -y update
@@ -118,6 +119,7 @@ install_deps()
 
 stop_service()
 {
+    message_split
     message "Stopping MariaDB services"
     systemctl stop mariadb
     systemctl stop mariadb-columnstore
@@ -135,6 +137,7 @@ check_service()
 
 start_service()
 {
+    message_split
     message "Starting MariaDB services"
     systemctl start mariadb-columnstore
     systemctl start mariadb
@@ -145,6 +148,7 @@ start_service()
 
 clean_old_installation()
 {
+    message_split
     message "Cleaning old installation"
     rm -rf /var/lib/columnstore/data1/*
     rm -rf /var/lib/columnstore/data/
@@ -162,6 +166,7 @@ clean_old_installation()
 
 build()
 {
+    message_split
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
@@ -283,6 +288,7 @@ check_user_and_group()
 
 run_unit_tests()
 {
+    message_split
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
         warn "Skipping unittests"
     else
@@ -295,6 +301,7 @@ run_unit_tests()
 
 run_microbenchmarks_tests()
 {
+    message_split
     if [[ $RUN_BENCHMARKS = false ]] ; then
         warn "Skipping microbenchmarks"
     else
@@ -345,6 +352,7 @@ fix_config_files()
 
 install()
 {
+    message_split
     message "Installing MariaDB"
     disable_plugins_for_bootstrap
 

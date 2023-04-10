@@ -1,10 +1,11 @@
 color_normal=$(tput sgr0)
 color_bold=$(tput bold)
 color_red="$color_bold$(tput setaf 1)"
-color_green=$(tput setaf 2)
+color_green="$color_bold$(tput setaf 2)"
 color_fawn=$(tput setaf 3); color_beige="$color_fawn"
 color_yellow="$color_bold$color_fawn"
 color_darkblue=$(tput setaf 4)
+
 color_blue="$color_bold$color_darkblue"
 color_purple=$(tput setaf 5); color_magenta="$color_purple"
 color_pink="$color_bold$color_purple"
@@ -13,6 +14,15 @@ color_cyan="$color_bold$color_darkcyan"
 color_gray=$(tput setaf 7)
 color_darkgray="$color_bold"$(tput setaf 0)
 color_white="$color_bold$color_gray"
+
+
+if [[ $(tput colors) == '256' ]]; then
+     color_red=$(tput setaf 196)
+     color_yellow=$(tput setaf 220)
+     color_cyan=$(tput setaf 87)
+     color_green=$(tput setaf 118)
+
+fi
 
 message()
 {
@@ -28,6 +38,12 @@ error()
 {
     echo $color_red -- $@$color_normal
 }
+
+message_split()
+{
+    echo $color_green ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ $color_normal
+}
+
 
 detect_distro()
 {
