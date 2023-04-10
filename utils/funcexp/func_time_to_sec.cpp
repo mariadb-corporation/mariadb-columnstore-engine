@@ -46,7 +46,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
                                     CalpontSystemCatalog::ColType& op_ct)
 {
   // assume 256 is enough. assume not allowing incomplete date
-  int32_t hour = 0, min = 0, sec = 0;
+  int32_t hour = 0, min = 0, sec = 0, msec = 0;
   bool bIsNegative = false;  // Only set to true if CHAR or VARCHAR with a '-'
 
   int64_t val = 0;
@@ -62,6 +62,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
       hour = (int32_t)((val >> 32) & 0x3f);
       min = (int32_t)((val >> 26) & 0x3f);
       sec = (int32_t)((val >> 20) & 0x3f);
+      msec = (int32_t)(val & 0xfffff);
       break;
 
     case CalpontSystemCatalog::TIMESTAMP:
@@ -94,6 +95,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 
       min = (int32_t)((val >> 32) & 0xff);
       sec = (int32_t)((val >> 24) & 0xff);
+      msec = (int32_t)(val & 0xffffff);
       break;
 
     case CalpontSystemCatalog::CHAR:
@@ -142,6 +144,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
         hour = (int32_t)((val >> 32) & 0x3f);
         min = (int32_t)((val >> 26) & 0x3f);
         sec = (int32_t)((val >> 20) & 0x3f);
+        msec = (int32_t)(val & 0xfffff);
       }
 
       break;
@@ -162,6 +165,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
           hour = (int32_t)((val >> 32) & 0x3f);
           min = (int32_t)((val >> 26) & 0x3f);
           sec = (int32_t)((val >> 20) & 0x3f);
+          msec = (int32_t)(val & 0xfffff);
         }
       }
       else
@@ -180,10 +184,12 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   if (hour < 0)
   {
     rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
+    rtn = rtn * IDB_pow[6] - msec;
   }
   else
   {
     rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
+    rtn = rtn * IDB_pow[6] + msec;
   }
 
   if (bIsNegative)
@@ -192,6 +198,20 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   }
 
   return rtn;
+}
+
+IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                            CalpontSystemCatalog::ColType& op_ct)
+{
+  IDB_Decimal decimal = IDB_Decimal(getIntVal(row, parm, isNull, op_ct), 6, 0);
+  int32_t scaleDiff = decimal.scale - op_ct.scale;
+  if (scaleDiff > 0)
+  {
+    decimal.value = (int64_t)(decimal.value > 0 ? (double)decimal.value / IDB_pow[scaleDiff] + 0.5
+                                                : (double)decimal.value / IDB_pow[scaleDiff] - 0.5);
+    decimal.setScale(op_ct.scale);
+  }
+  return decimal;
 }
 
 }  // namespace funcexp
