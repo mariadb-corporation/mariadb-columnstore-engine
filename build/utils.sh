@@ -26,17 +26,17 @@ fi
 
 message()
 {
-    echo $color_cyan -- $@$color_normal
+    echo $color_cyan ・ $@$color_normal
 }
 
 warn()
 {
-    echo $color_yellow -- $@$color_normal
+    echo $color_yellow ・ $@$color_normal
 }
 
 error()
 {
-    echo $color_red -- $@$color_normal
+    echo $color_red ・ $@$color_normal
 }
 
 message_split()
@@ -47,7 +47,7 @@ message_split()
 message_splitted()
 {
     message_split
-    echo $color_green -- $@$color_normal
+    echo $color_green ・ $@$color_normal
     message_split
 }
 
@@ -55,7 +55,6 @@ message_splitted()
 colorify_array()
 {
     PROMT=""
-    array="$@"
     for a in "$@"
     do
         i=$((((i+1) % (123-106)) + 106))
@@ -66,6 +65,17 @@ colorify_array()
         fi
     done
     echo $PROMT
+}
+
+
+newline_array()
+{
+    PROMT=""
+    for a in "$@"
+    do
+        PROMT="$PROMT$a\n"
+    done
+    echo -e $PROMT
 }
 
 

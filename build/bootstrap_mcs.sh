@@ -22,7 +22,7 @@ DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
 cd $SCRIPT_LOCATION
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
-cd -
+cd - > /dev/null
 
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -80,10 +80,10 @@ select_branch()
         message "Turning off Columnstore submodule auto update via gitconfig"
         cd $MDB_SOURCE_PATH
         git config submodule.storage/columnstore/columnstore.update none
-        cd -
+        cd - > /dev/null
     fi
 
-    cd -
+    cd - > /dev/null
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
 
@@ -217,7 +217,9 @@ build()
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-        echo "${REPORT_PATH}/core_%e.%p" | sudo tee /proc/sys/kernel/core_pattern
+
+        warn Builds with boreDumps CoreDump pattern changed to ${REPORT_PATH}/core_%e.%p
+        echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
@@ -251,7 +253,7 @@ build()
 	    message "Initialization of columnstore submodules"
 	    cd storage/columnstore/columnstore
 	    git submodule update --init
-	    cd -
+	    cd - > /dev/null
     fi
 
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
@@ -270,12 +272,13 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
-    message "building with flags $MDB_CMAKE_FLAGS"
+    message "Building with flags"
+    newline_array ${MDB_CMAKE_FLAGS[@]}
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS | spinner
-
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
+    message_split
     ${CMAKE_BIN_NAME} --build . -j $CPUS && \
     message "Installing silently" &&
     ${CMAKE_BIN_NAME} --install . | spinner 30
@@ -286,7 +289,7 @@ build()
         message_split
         exit 1
     fi
-    cd -
+    cd - > /dev/null
 }
 
 check_user_and_group()
@@ -312,7 +315,7 @@ run_unit_tests()
         message "Running unittests"
         cd $MDB_SOURCE_PATH
         ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
-        cd -
+        cd - > /dev/null
     fi
 }
 
@@ -325,7 +328,7 @@ run_microbenchmarks_tests()
         message "Runnning microbenchmarks"
         cd $MDB_SOURCE_PATH
         ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
-        cd -
+        cd - > /dev/null
     fi
 }
 
@@ -463,9 +466,9 @@ smoke()
 
 generate_svgs()
 {
+    if [[ $DRAW_DEPS = true ]] ; then
     message_split
     warn "Generating svgs with dependency graph to $REPORT_PATH"
-    if [[ $DRAW_DEPS = true ]] ; then
         for f in $MDB_SOURCE_PATH/mariadb.dot.*;
             do dot -Tsvg -o $REPORT_PATH/`basename $f`.svg $f;
         done
