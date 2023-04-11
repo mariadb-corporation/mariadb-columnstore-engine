@@ -22,7 +22,7 @@ DISTRO_OPTIONS=("Ubuntu" "CentOS" "Debian" "Rocky")
 cd $SCRIPT_LOCATION
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 BRANCHES=($(git branch --list --no-color| grep "[^* ]+" -Eo))
-cd -
+cd - > /dev/null
 
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -37,6 +37,8 @@ optparse.define short=D long=without-core-dumps desc="Do not produce core dumps"
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
+optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
+optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 
 source $( optparse.build )
 
@@ -78,15 +80,16 @@ select_branch()
         message "Turning off Columnstore submodule auto update via gitconfig"
         cd $MDB_SOURCE_PATH
         git config submodule.storage/columnstore/columnstore.update none
-        cd -
+        cd - > /dev/null
     fi
 
-    cd -
+    cd - > /dev/null
     message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
 }
 
 install_deps()
 {
+    message_split
     message "Installing deps"
     if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
         apt-get -y update
@@ -94,7 +97,7 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
-        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
+        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev graphviz
 
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         if [[ "$OS_VERSION" == "7" ]]; then
@@ -112,12 +115,13 @@ install_deps()
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
         && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
-        && yum -y install pcre2-devel
+        && yum -y install pcre2-devel flex graphviz
     fi
 }
 
 stop_service()
 {
+    message_split
     message "Stopping MariaDB services"
     systemctl stop mariadb
     systemctl stop mariadb-columnstore
@@ -135,6 +139,7 @@ check_service()
 
 start_service()
 {
+    message_split
     message "Starting MariaDB services"
     systemctl start mariadb-columnstore
     systemctl start mariadb
@@ -145,6 +150,7 @@ start_service()
 
 clean_old_installation()
 {
+    message_split
     message "Cleaning old installation"
     rm -rf /var/lib/columnstore/data1/*
     rm -rf /var/lib/columnstore/data/
@@ -162,6 +168,7 @@ clean_old_installation()
 
 build()
 {
+    message_split
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
@@ -190,6 +197,17 @@ build()
         message "Buiding with unittests"
     fi
 
+    if [[ $DRAW_DEPS = true ]] ; then
+        warn "Generating dependendies graph to mariadb.dot"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} --graphviz=mariadb.dot"
+    fi
+
+    if [[ $USE_NINJA = true ]] ; then
+        warn "Using Ninja instead of Makefiles"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
+    fi
+
+
     if [[ $ASAN = true ]] ; then
         warn "Building with ASAN"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
@@ -199,7 +217,9 @@ build()
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-        echo "${REPORT_PATH}/core_%e.%p" | sudo tee /proc/sys/kernel/core_pattern
+
+        warn Builds with boreDumps CoreDump pattern changed to ${REPORT_PATH}/core_%e.%p
+        echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
@@ -233,7 +253,7 @@ build()
 	    message "Initialization of columnstore submodules"
 	    cd storage/columnstore/columnstore
 	    git submodule update --init
-	    cd -
+	    cd - > /dev/null
     fi
 
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
@@ -252,19 +272,24 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
-    message "building with flags $MDB_CMAKE_FLAGS"
+    message "Building with flags"
+    newline_array ${MDB_CMAKE_FLAGS[@]}
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
-    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS && \ |
-    make -j $CPUS
-    message "Installing silently"
-    make -j $CPUS install > /dev/null
+    message "Configuring cmake silently"
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
+    message_split
+    ${CMAKE_BIN_NAME} --build . -j $CPUS && \
+    message "Installing silently" &&
+    ${CMAKE_BIN_NAME} --install . | spinner 30
 
     if [ $? -ne 0 ]; then
+        message_split
         error "!!!! BUILD FAILED !!!!"
+        message_split
         exit 1
     fi
-    cd -
+    cd - > /dev/null
 }
 
 check_user_and_group()
@@ -283,25 +308,27 @@ check_user_and_group()
 
 run_unit_tests()
 {
+    message_split
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
         warn "Skipping unittests"
     else
         message "Running unittests"
         cd $MDB_SOURCE_PATH
         ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
-        cd -
+        cd - > /dev/null
     fi
 }
 
 run_microbenchmarks_tests()
 {
+    message_split
     if [[ $RUN_BENCHMARKS = false ]] ; then
         warn "Skipping microbenchmarks"
     else
         message "Runnning microbenchmarks"
         cd $MDB_SOURCE_PATH
         ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
-        cd -
+        cd - > /dev/null
     fi
 }
 
@@ -345,6 +372,7 @@ fix_config_files()
 
 install()
 {
+    message_split
     message "Installing MariaDB"
     disable_plugins_for_bootstrap
 
@@ -435,6 +463,18 @@ smoke()
     fi
 }
 
+
+generate_svgs()
+{
+    if [[ $DRAW_DEPS = true ]] ; then
+    message_split
+    warn "Generating svgs with dependency graph to $REPORT_PATH"
+        for f in $MDB_SOURCE_PATH/mariadb.dot.*;
+            do dot -Tsvg -o $REPORT_PATH/`basename $f`.svg $f;
+        done
+    fi
+}
+
 select_branch
 
 if [[ $INSTALL_DEPS = true ]] ; then
@@ -449,5 +489,8 @@ run_microbenchmarks_tests
 install
 start_service
 smoke
+generate_svgs
 
-message "$color_green FINISHED $color_normal"
+
+
+message_splitted "FINISHED"
