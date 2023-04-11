@@ -633,7 +633,6 @@ void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const 
   if (!inputMsg)
     inputMsg.reset(new(std::align_val_t(utils::MAXCOLUMNWIDTH)) uint8_t[inputMsgBufSize]);
 
-
   primMsg = (NewColRequestHeader*)inputMsg.get();
   outMsg = (ColResultHeader*)bpp->outputMsg.get();
   makeAbsRids = absRids;

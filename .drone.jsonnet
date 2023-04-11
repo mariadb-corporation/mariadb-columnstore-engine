@@ -27,9 +27,10 @@ local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_relea
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
                    '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES ' +
                    '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
-                   '-DPLUGIN_CONNECT=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
-                   '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
-                   '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
+                   '-DPLUGIN_CONNECT=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO ' +
+                   '-DPLUGIN_SPHINX=NO -DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO ' +
+                   '-DWITH_COREDUMPS=ON -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON ' +
+                   '-DWITH_COLUMNSTORE_REPORT_PATH=/core -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON';
 
 local clang_version = '16';
 local gcc_version = '11';
@@ -40,28 +41,37 @@ local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
                        'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
-                       'expect createrepo ';
+                       'expect createrepo';
+
+
+local centos7_asan = 'devtoolset-' + gcc_version + '-libasan-devel';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel '
+                            + centos7_asan +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
+
+local rockylinux8_asan = 'gcc-toolset-' + gcc_version + '-libasan-devel';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
-                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
+                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel '
+                                + rockylinux8_asan +
                                '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
 
 
 local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
-                               '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
+                               '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++ libasan';
 
-local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
 
-local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
+local clang_packages = "clang-%(clang_version)d libclang-common-%(clang_version)d-dev llvm-%(clang_version)d llvm-%(clang_version)d-dev llvm-%(clang_version)d-runtime libclang-rt-%(clang_version)d-dev" % {"clang_version" : 14};
+local debian11_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y " + clang_packages + ' && ' + clang_update_alternatives;
+local ubuntu20_04_deps = "apt update && apt install -y gnupg wget && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-" + clang_version + " main' >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y " + clang_packages + ' && ' + clang_update_alternatives;
+
+local deb_build_deps = "apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i ";
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
+local bootstrap_deps = 'apt-get -y update && apt-get -y install libasan6 build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
 
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
@@ -80,7 +90,6 @@ local platformMap(platform, arch) =
 
 
 
-
 local testRun(platform) =
   local platform_map = {
     'centos:7': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
@@ -95,12 +104,12 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'centos:7': 'yum -y install epel-release centos-release-scl && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel ' + centos7_asan,
+    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel ' + rockylinux8_asan,
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel libasan',
+    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libasan6',
+    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libasan6',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libasan6',
   };
   platform_map[platform];
 
@@ -224,6 +233,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp ' + result + ' smoke$${DRONE_BUILD_NUMBER}:/',
+      if (platform == 'centos:7') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "'  + centos7_build_deps + '"'  else '',
+      if (platform == 'centos:7') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget"',
@@ -263,10 +274,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_mtr_core_dump.%p"',
+      if (platform == 'centos:7') then 'docker exec -t  mtr$${DRONE_BUILD_NUMBER} bash -c "'  + centos7_build_deps + '"'  else '',
+      if (platform == 'centos:7') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '' ,
+      if (platform == 'rockylinux:8') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y ' + rockylinux8_asan  + '"' else '' ,
+      if (platform == 'rockylinux:9') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y libasan"' else '' ,
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '' ,
       'docker cp core_dumps/. mtr$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
+      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch libasan6 && apt install -y -f /' + result + '/*.' + pkg_format + '"' else '',
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
@@ -347,6 +362,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --ulimit core=-1 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
       'docker cp ' + result + ' regression$${DRONE_BUILD_NUMBER}:/',
+      if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "'  + centos7_build_deps + '"'  else '',
+      if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum -y install epel-release centos-release-scl && yum install -y ' + centos7_asan + '"' else '',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y procps-ng wget"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget"',
@@ -363,6 +380,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar lz4 wget which rsyslog hostname procps-ng && yum install -y /' + result + '/*.' + pkg_format + '"' else '',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool wget gawk gdb rsyslog hostname && apt install -y -f g++ /' + result + '/*.' + pkg_format + '"' else '',
+
+
+
       // copy test data for regression test suite
       'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"',
       // set mariadb lower_case_table_names=1 config option
@@ -537,6 +557,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'git config --global url."https://github.com/".insteadOf git@github.com:',
                'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
                'git reset --hard $$SERVER_SHA',
+               'echo Environment=' + "'ASAN_OPTIONS=print_stats=false,detect_odr_violation=0'" + '>> support-files/mariadb.service.in',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
@@ -587,7 +608,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                testPreparation(platform),
                // disable LTO for 22.04 for now
                if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
-               platformMap(platform, arch),
+               'bash -c "' + platformMap(platform, arch) + '"',
                'sccache --show-stats',
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',

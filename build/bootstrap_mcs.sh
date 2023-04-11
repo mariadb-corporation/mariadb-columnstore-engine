@@ -207,7 +207,6 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
     fi
 
-
     if [[ $ASAN = true ]] ; then
         warn "Building with ASAN"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
@@ -217,7 +216,6 @@ build()
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-
         warn Builds with boreDumps CoreDump pattern changed to ${REPORT_PATH}/core_%e.%p
         echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
     fi
@@ -489,8 +487,8 @@ run_microbenchmarks_tests
 install
 start_service
 smoke
+
+message "$color_green FINISHED $color_normal"
 generate_svgs
-
-
 
 message_splitted "FINISHED"

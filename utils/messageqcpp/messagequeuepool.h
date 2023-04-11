@@ -21,8 +21,6 @@
 #include "messagequeue.h"
 #include <memory>
 
-#include <boost/stacktrace.hpp>
-
 namespace messageqcpp
 {
 
@@ -41,6 +39,7 @@ struct ClientObject
 
 class MessageQueueClientPool
 {
+  using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
  public:
   static MessageQueueClient* getInstance(const std::string& module);
   static MessageQueueClient* getInstance(const std::string& dnOrIp, uint64_t port);

@@ -136,7 +136,6 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
 
   auto it = lockedMap.clientMap.begin();
 
-
   // Scan pool
   while (it != lockedMap.clientMap.end())
   {
@@ -221,7 +220,6 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
 
   if (client == NULL)
     return;
-
 
   auto lock = std::scoped_lock(lockedMap.queueMutex);
   auto it = lockedMap.clientMap.begin();
