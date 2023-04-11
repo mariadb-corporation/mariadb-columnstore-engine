@@ -508,9 +508,10 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
     }
   }
 
-  if (!vssCache || it == vssCache->end())
-    rc = brm->vssLookup((BRM::LBID_t)lbid, v, txn, &ver, &flg);
+  // if (!vssCache || it == vssCache->end())
+  //   rc = brm->vssLookup((BRM::LBID_t)lbid, v, txn, &ver, &flg);
 
+  ver = txn;
   v.currentScn = ver;
   // cout << "VSS l/u: l=" << lbid << " v=" << ver << " t=" << txn << " flg=" << flg << " rc: " << rc << endl;
 

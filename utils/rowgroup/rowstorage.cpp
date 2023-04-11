@@ -1495,9 +1495,9 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, R
  , fTmpDir(tmpDir)
  , fRowGroupOut(rowGroupOut)
  , fKeysRowGroup(keysRowGroup)
- , fRD()
- , fRandGen(fRD())
- , fRandDistr(0, 100)
+//  , fRD()
+//  , fRandGen(fRD())
+//  , fRandDistr(0, 100)
 {
   char suffix[PATH_MAX];
   snprintf(suffix, sizeof(suffix), "/p%u-t%p/", getpid(), this);
@@ -1683,7 +1683,7 @@ void RowAggStorage::dump()
       break;
   }
 
-  int64_t totalMem = fMM->getConfigured();
+  // int64_t totalMem = fMM->getConfigured();
   // If the generations are allowed and there are less than half of
   // rowgroups in memory, then we start a new generation
   if (fAllowGenerations && fStorage->fLRU->size() < fStorage->fRGDatas.size() / 2 &&
@@ -1691,10 +1691,10 @@ void RowAggStorage::dump()
   {
     startNewGeneration();
   }
-  else if (fAllowGenerations && freeMem < totalMem / 10 * 3 && fRandDistr(fRandGen) < 30)
-  {
-    startNewGeneration();
-  }
+  // else if (fAllowGenerations && freeMem < totalMem / 10 * 3 && fRandDistr(fRandGen) < 30)
+  // {
+  //   startNewGeneration();
+  // }
   else if (fAllowGenerations && fMM->getFree() < freeMemLimit)
   {
     startNewGeneration();
