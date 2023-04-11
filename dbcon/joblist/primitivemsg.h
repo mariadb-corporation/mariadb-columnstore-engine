@@ -73,6 +73,9 @@ class StringComparator : public datatypes::Charset
     if (COP & COMPARE_LIKE)
       return like(COP & COMPARE_NOT, str1, str2);
 
+    if (COP == COMPARE_NULLEQ)
+      return str1.isNull() == str2.isNull(); // XXX: TODO: I do not know the logic here, so it is temporary solution.
+
     int cmp = strnncollsp(str1, str2);
 
     switch (COP)
@@ -576,6 +579,13 @@ struct DictTokenByIndexRequestHeader
 //      DICT_TOKEN_BY_SCAN_COMPARE
 
 struct DataValue
+{
+  uint8_t isnull;
+  uint16_t len;
+  char data[];
+};
+
+struct NonNullDataValue
 {
   uint16_t len;
   char data[];

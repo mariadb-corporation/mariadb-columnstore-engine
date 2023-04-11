@@ -14,7 +14,7 @@ set(messageqcpp_LIB_SRCS
     bytestreampool.cpp
 )
 
-add_library(messageqcpp SHARED ${messageqcpp_LIB_SRCS})
+add_library(messageqcpp STATIC ${messageqcpp_LIB_SRCS})
 
 add_dependencies(messageqcpp loggingcpp)
 

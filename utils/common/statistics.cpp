@@ -17,15 +17,14 @@
 
 #include <iostream>
 #include <atomic>
-#include <random>
 #include <boost/filesystem.hpp>
 
-#include "statistics.h"
 #include "IDBPolicy.h"
 #include "brmtypes.h"
 #include "hasher.h"
 #include "messagequeue.h"
 #include "configcpp.h"
+#include "statistics.h"
 
 using namespace idbdatafile;
 using namespace logging;
@@ -60,17 +59,12 @@ void StatisticsManager::collectSample(const rowgroup::RowGroup& rowGroup)
   rowGroup.getRow(0, &r);
 
   // Generate a uniform distribution.
-  std::random_device randomDevice;
-  std::mt19937 gen32(randomDevice());
-  std::uniform_int_distribution<> uniformDistribution(0, currentRowIndex + rowCount - 1);
-
   for (uint32_t i = 0; i < rowCount; ++i)
   {
     if (currentSampleSize < maxSampleSize)
     {
       for (uint32_t j = 0; j < columnCount; ++j)
       {
-        // FIXME: Handle null values as well.
         if (!r.isNullValue(j))
           columnGroups[oids[j]][currentSampleSize] = r.getIntField(j);
       }
@@ -82,11 +76,11 @@ void StatisticsManager::collectSample(const rowgroup::RowGroup& rowGroup)
       if (index < maxSampleSize)
       {
         for (uint32_t j = 0; j < columnCount; ++j)
-          columnGroups[oids[j]][index] = r.getIntField(j);
+          if (!r.isNullValue(j))
+            columnGroups[oids[j]][index] = r.getIntField(j);
       }
     }
     r.nextRow();
-    ++currentRowIndex;
   }
 }
 
@@ -97,7 +91,7 @@ void StatisticsManager::analyzeSample(bool traceOn)
 
   // PK_FK statistics.
   for (const auto& [oid, sample] : columnGroups)
-    keyTypes[oid] = std::make_pair(KeyType::PK, currentRowIndex);
+    keyTypes[oid] = KeyType::PK;
 
   for (const auto& [oid, sample] : columnGroups)
   {
@@ -107,8 +101,8 @@ void StatisticsManager::analyzeSample(bool traceOn)
     {
       const auto value = sample[i];
       // PK_FK statistics.
-      if (columnsCache.count(value) && keyTypes[oid].first == KeyType::PK)
-        keyTypes[oid].first = KeyType::FK;
+      if (columnsCache.count(value) && keyTypes[oid] == KeyType::PK)
+        keyTypes[oid] = KeyType::FK;
       else
         columnsCache.insert(value);
 
@@ -137,7 +131,6 @@ void StatisticsManager::analyzeSample(bool traceOn)
   // Clear sample.
   columnGroups.clear();
   currentSampleSize = 0;
-  currentRowIndex = 0;
 }
 
 void StatisticsManager::output()
@@ -147,20 +140,20 @@ void StatisticsManager::output()
   std::cout << "Statistics type [PK_FK]:  " << std::endl;
   for (const auto& p : keyTypes)
   {
-    std::cout << "OID: " << p.first << " ";
-    if (static_cast<uint32_t>(p.second.first) == 0)
-      std::cout << "PK ";
+    std::cout << "[OID: " << p.first << ": ";
+    if (static_cast<uint32_t>(p.second) == 0)
+      std::cout << "PK] ";
     else
-      std::cout << "FK ";
-    std::cout << "row count: " << p.second.second << std::endl;
+      std::cout << "FK] ";
   }
 
-  std::cout << "Statistics type [MCV]: " << std::endl;
+  std::cout << "\nStatistics type [MCV]: " << std::endl;
   for (const auto& [oid, columnMCV] : mcv)
   {
-    std::cout << "OID: " << oid << std::endl;
+    std::cout << "[OID: " << oid << std::endl;
     for (const auto& [value, count] : columnMCV)
-      std::cout << value << ": " << count << std::endl;
+      std::cout << value << ": " << count << ", ";
+    cout << "]" << endl;
   }
 }
 
@@ -169,8 +162,8 @@ std::unique_ptr<char[]> StatisticsManager::convertStatsToDataStream(uint64_t& da
 {
   // Number of pairs.
   uint64_t count = keyTypes.size();
-  // count, [[uid, keyType, rows count], ... ]
-  dataStreamSize = sizeof(uint64_t) + count * (sizeof(uint32_t) + sizeof(KeyType) + sizeof(uint32_t));
+  // count, [[uid, keyType], ... ]
+  dataStreamSize = sizeof(uint64_t) + count * (sizeof(uint32_t) + sizeof(KeyType));
 
   // Count the size of the MCV.
   for (const auto& [oid, mcvColumn] : mcv)
@@ -188,18 +181,15 @@ std::unique_ptr<char[]> StatisticsManager::convertStatsToDataStream(uint64_t& da
   std::memcpy(dataStream, reinterpret_cast<char*>(&count), sizeof(uint64_t));
   offset += sizeof(uint64_t);
 
-  // For each pair [oid, key type, rows count].
+  // For each pair [oid, key type].
   for (const auto& p : keyTypes)
   {
     uint32_t oid = p.first;
     std::memcpy(&dataStream[offset], reinterpret_cast<char*>(&oid), sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    KeyType keyType = p.second.first;
+    KeyType keyType = p.second;
     std::memcpy(&dataStream[offset], reinterpret_cast<char*>(&keyType), sizeof(KeyType));
     offset += sizeof(KeyType);
-    uint32_t rowCount = p.second.second;
-    std::memcpy(&dataStream[offset], reinterpret_cast<char*>(&rowCount), sizeof(uint32_t));
-    offset += sizeof(uint32_t);
   }
 
   // For each [oid, list size, list [value, count]].
@@ -240,16 +230,13 @@ void StatisticsManager::convertStatsFromDataStream(std::unique_ptr<char[]> dataS
   // For each pair.
   for (uint64_t i = 0; i < count; ++i)
   {
-    uint32_t oid, rowCount;
+    uint32_t oid;
     KeyType keyType;
     std::memcpy(reinterpret_cast<char*>(&oid), &dataStream[offset], sizeof(uint32_t));
     offset += sizeof(uint32_t);
     std::memcpy(reinterpret_cast<char*>(&keyType), &dataStream[offset], sizeof(KeyType));
     offset += sizeof(KeyType);
-    std::memcpy(reinterpret_cast<char*>(&rowCount), &dataStream[offset], sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    // Insert pair.
-    keyTypes[oid] = std::make_pair(keyType, rowCount);
+    keyTypes[oid] = keyType;
   }
 
   for (uint64_t i = 0; i < count; ++i)
@@ -407,8 +394,7 @@ void StatisticsManager::serialize(messageqcpp::ByteStream& bs)
   for (const auto& keyType : keyTypes)
   {
     bs << keyType.first;
-    bs << (uint32_t)keyType.second.first;
-    bs << keyType.second.second;
+    bs << (uint32_t)keyType.second;
   }
 
   // MCV
@@ -435,11 +421,10 @@ void StatisticsManager::unserialize(messageqcpp::ByteStream& bs)
   // PK_FK
   for (uint32_t i = 0; i < count; ++i)
   {
-    uint32_t oid, keyType, rowCount;
+    uint32_t oid, keyType;
     bs >> oid;
     bs >> keyType;
-    bs >> rowCount;
-    keyTypes[oid] = std::make_pair(static_cast<KeyType>(keyType), rowCount);
+    keyTypes[oid] = static_cast<KeyType>(keyType);
   }
 
   // MCV
@@ -470,7 +455,7 @@ bool StatisticsManager::hasKey(uint32_t oid)
 
 KeyType StatisticsManager::getKeyType(uint32_t oid)
 {
-  return keyTypes[oid].first;
+  return keyTypes[oid];
 }
 
 StatisticsDistributor* StatisticsDistributor::instance()

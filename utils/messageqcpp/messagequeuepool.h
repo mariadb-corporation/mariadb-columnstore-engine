@@ -23,6 +23,13 @@
 
 namespace messageqcpp
 {
+
+
+static struct LockedClientMapInitilizer {
+  LockedClientMapInitilizer ();
+  ~LockedClientMapInitilizer ();
+} clientMapInitilizer; // static initializer for every translation unit
+
 struct ClientObject
 {
   std::unique_ptr<MessageQueueClient> client;
@@ -43,8 +50,6 @@ class MessageQueueClientPool
  private:
   MessageQueueClientPool(){};
   ~MessageQueueClientPool(){};
-
-  static ClientMapType clientMap;
 };
 
 }  // namespace messageqcpp

@@ -147,34 +147,22 @@ class RowAggStorage
    */
   void shiftUp(size_t startIdx, size_t insIdx);
 
-  /** @brief Find best position of row and save it's hash.
-   *
-   * @param row(in)   input row
-   * @param info(out) info data
-   * @param idx(out)  index computed from row hash
-   * @param hash(out) row hash value
-   */
-  void rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash) const;
-  void rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash, const Data* curData) const;
-
-  /** @brief Find best position using precomputed hash
-   *
-   * @param h(in)     row hash
-   * @param info(out) info data
-   * @param idx(out)  index
-   */
-  inline void rowHashToIdx(uint64_t h, uint32_t& info, size_t& idx, const Data* curData) const
+  using InfoIdxType = std::pair<uint32_t, size_t>;
+  inline InfoIdxType rowHashToIdx(uint64_t h, const size_t mask, const uint64_t hashMultiplier,
+                                  const uint32_t infoInc, const uint32_t infoHashShift) const
   {
     // An addition from the original robin hood HM.
-    h *= fCurData->hashMultiplier_;
+    h *= hashMultiplier;
     h ^= h >> 33U;
-    info = curData->fInfoInc + static_cast<uint32_t>((h & INFO_MASK) >> curData->fInfoHashShift);
-    idx = (h >> INIT_INFO_BITS) & curData->fMask;
+    uint32_t info = infoInc + static_cast<uint32_t>((h & INFO_MASK) >> infoHashShift);
+    size_t idx = (h >> INIT_INFO_BITS) & mask;
+    return {info, idx};
   }
 
-  inline void rowHashToIdx(uint64_t h, uint32_t& info, size_t& idx) const
+  inline InfoIdxType rowHashToIdx(uint64_t h) const
   {
-    return rowHashToIdx(h, info, idx, fCurData);
+    return rowHashToIdx(h, fCurData->fMask, fCurData->hashMultiplier_, fCurData->fInfoInc,
+                        fCurData->fInfoHashShift);
   }
 
   /** @brief Iterate over internal info until info with less-or-equal distance
@@ -235,13 +223,6 @@ class RowAggStorage
 #endif
     idx += n;
     info = fCurData->fInfo[idx];
-  }
-
-  void nextHashMultiplier()
-  {
-      // adding an *even* number, so that the multiplier will always stay odd. This is necessary
-      // so that the hash stays a mixing function (and thus doesn't have any information loss).
-      fCurData->hashMultiplier_ += 0xc4ceb9fe1a85ec54;
   }
 
   /** @brief Increase internal data size if needed
@@ -310,8 +291,8 @@ class RowAggStorage
    */
   void loadGeneration(uint16_t gen);
   /** @brief Load previously dumped data into the tmp storage */
-  void loadGeneration(uint16_t gen, size_t& size, size_t& mask, size_t& maxSize, uint32_t& infoInc,
-                      uint32_t& infoHashShift, std::unique_ptr<uint8_t[]>& info);
+  void loadGeneration(uint16_t gen, size_t& size, size_t& mask, size_t& maxSize, size_t& hashMultiplier,
+                      uint32_t& infoInc, uint32_t& infoHashShift, std::unique_ptr<uint8_t[]>& info);
 
   /** @brief Remove temporary data files */
   void cleanup();
