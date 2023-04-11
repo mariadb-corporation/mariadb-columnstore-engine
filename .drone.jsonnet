@@ -65,7 +65,6 @@ local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential 
 
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
-local regression_full_set = ['test001.sh', 'test005.sh', 'test006.sh', 'test007.sh', 'test008.sh', 'test009.sh', 'test010.sh', 'test011.sh', 'test012.sh', 'test013.sh', 'test014.sh', 'test023.sh', 'test201.sh','test202.sh', 'test203.sh', 'test204.sh', 'test210.sh', 'test211.sh', 'test212.sh', 'test297.sh', 'test299.sh', 'test300.sh',];
 
 local platformMap(platform, arch) =
   local platform_map = {
