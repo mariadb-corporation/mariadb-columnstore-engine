@@ -3856,6 +3856,30 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 
 ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
 {
+  vector<Item*> ifp_arguments; // undescore to be closer to what server does.
+
+  // here we copy arguments into vector above because otherwise we would have to deal with too many
+  // ternary operators.
+  if (ifp->type() == Item::COND_ITEM)
+  {
+    Item_cond* ifpc = (Item_cond*)ifp;
+    auto argend = ifpc->argument_list()->end();
+    auto arglist = ifpc->argument_list()->begin();
+    while (arglist != argend) {
+      ifp_arguments.push_back(&(*arglist));
+      ++arglist;
+    }
+  }
+  else
+  {
+    for (uint32_t i = 0; i < ifp->argument_count(); i++)
+    {
+      ifp_arguments.push_back(ifp->arguments()[i]);
+    }
+  }
+ 
+  size_t ifp_argument_count = ifp_arguments.size();
+
   if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
@@ -3906,10 +3930,10 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     fc = buildCaseFunction(ifp, gwi, nonSupport);
   }
 
-  else if ((funcName == "charset" || funcName == "collation") && ifp->argument_count() == 1 &&
-           ifp->arguments()[0]->type() == Item::FIELD_ITEM)
+  else if ((funcName == "charset" || funcName == "collation") && ifp_argument_count == 1 &&
+           ifp_arguments[0]->type() == Item::FIELD_ITEM)
   {
-    Item_field* item = reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+    Item_field* item = reinterpret_cast<Item_field*>(ifp_arguments[0]);
     CHARSET_INFO* info = item->charset_for_protocol();
     ReturnedColumn* rc;
     string val;
@@ -3932,19 +3956,24 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   {
     // where clause isnull still treated as predicate operator
     // MCOL-686: between also a predicate operator so that extent elimination can happen
-    if ((funcName == "isnull" || funcName == "isnotnull" || funcName == "between") &&
+    if ((funcName == "isnull" || funcName == "isnotnull" || funcName == "between" ||
+         funcName == ">" || funcName == "<" || funcName == ">=" || funcName == "<=" ||
+	 funcName == "=" || funcName == "<>" ||
+	 funcName == "and" || funcName == "or" || funcName == "xor") &&
         (gwi.clauseType == WHERE || gwi.clauseType == HAVING))
+    {
       return NULL;
+    }
 
     if (funcName == "in" || funcName == " IN " || funcName == "between")
     {
       // if F&E involved, build function. otherwise, fall to the old path.
       // @todo need more checks here
-      if (ifp->arguments()[0]->type() == Item::ROW_ITEM)
+      if (ifp_arguments[0]->type() == Item::ROW_ITEM)
       {
         return NULL;
       }
-      if (ifp->argument_count() > std::numeric_limits<uint16_t>::max())
+      if (ifp_argument_count > std::numeric_limits<uint16_t>::max())
       {
         nonSupport = true;
         gwi.fatalParseError = true;
@@ -3955,27 +3984,27 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         return NULL;
       }
 
-      if (!selectBetweenIn && (ifp->arguments()[0]->type() == Item::FIELD_ITEM ||
-                               (ifp->arguments()[0]->type() == Item::REF_ITEM &&
-                                (*(((Item_ref*)ifp->arguments()[0])->ref))->type() == Item::FIELD_ITEM)))
+      if (!selectBetweenIn && (ifp_arguments[0]->type() == Item::FIELD_ITEM ||
+                               (ifp_arguments[0]->type() == Item::REF_ITEM &&
+                                (*(((Item_ref*)ifp_arguments[0])->ref))->type() == Item::FIELD_ITEM)))
       {
         bool fe = false;
 
-        for (uint32_t i = 1; i < ifp->argument_count(); i++)
+        for (uint32_t i = 1; i < ifp_argument_count; i++)
         {
-          if (!(ifp->arguments()[i]->type() == Item::NULL_ITEM ||
-                (ifp->arguments()[i]->type() == Item::CONST_ITEM &&
-                 (ifp->arguments()[i]->cmp_type() == INT_RESULT ||
-                  ifp->arguments()[i]->cmp_type() == STRING_RESULT ||
-                  ifp->arguments()[i]->cmp_type() == REAL_RESULT ||
-                  ifp->arguments()[i]->cmp_type() == DECIMAL_RESULT))))
+          if (!(ifp_arguments[i]->type() == Item::NULL_ITEM ||
+                (ifp_arguments[i]->type() == Item::CONST_ITEM &&
+                 (ifp_arguments[i]->cmp_type() == INT_RESULT ||
+                  ifp_arguments[i]->cmp_type() == STRING_RESULT ||
+                  ifp_arguments[i]->cmp_type() == REAL_RESULT ||
+                  ifp_arguments[i]->cmp_type() == DECIMAL_RESULT))))
           {
-            if (ifp->arguments()[i]->type() == Item::FUNC_ITEM)
+            if (ifp_arguments[i]->type() == Item::FUNC_ITEM)
             {
               // try to identify const F&E. fall to primitive if parms are constant F&E.
               vector<Item_field*> tmpVec;
               uint16_t parseInfo = 0;
-              parse_item(ifp->arguments()[i], tmpVec, gwi.fatalParseError, parseInfo, &gwi);
+              parse_item(ifp_arguments[i], tmpVec, gwi.fatalParseError, parseInfo, &gwi);
 
               if (!gwi.fatalParseError && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
                 continue;
@@ -4006,16 +4035,16 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     if (gwi.clauseType == SELECT ||
         /*gwi.clauseType == HAVING || */ gwi.clauseType == GROUP_BY)  // select clause
     {
-      for (uint32_t i = 0; i < ifp->argument_count(); i++)
+      for (uint32_t i = 0; i < ifp_argument_count; i++)
       {
         // group by clause try to see if the arguments are alias
-        if (gwi.clauseType == GROUP_BY && ifp->arguments()[i]->name.length)
+        if (gwi.clauseType == GROUP_BY && ifp_arguments[i]->name.length)
         {
           uint32_t j = 0;
 
           for (; j < gwi.returnedCols.size(); j++)
           {
-            if (string(ifp->arguments()[i]->name.str) == gwi.returnedCols[j]->alias())
+            if (string(ifp_arguments[i]->name.str) == gwi.returnedCols[j]->alias())
             {
               ReturnedColumn* rc = gwi.returnedCols[j]->clone();
               rc->orderPos(j);
@@ -4035,7 +4064,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         {
           // make sure the rcWorkStack is cleaned.
           gwi.clauseType = WHERE;
-          sptp.reset(buildParseTree((Item_func*)(ifp->arguments()[i]), gwi, nonSupport));
+          sptp.reset(buildParseTree((Item_func*)(ifp_arguments[i]), gwi, nonSupport));
           gwi.clauseType = clauseType;
 
           if (!sptp)
@@ -4050,7 +4079,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
         // @bug 3039
         // if (isPredicateFunction(ifp->arguments()[i], &gwi) || ifp->arguments()[i]->with_subquery())
-        if (ifp->arguments()[i]->with_subquery())
+        if (ifp_arguments[i]->with_subquery())
         {
           nonSupport = true;
           gwi.fatalParseError = true;
@@ -4069,15 +4098,15 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
              i != 0 && i % 2 == 0) ||
             (funcName == "json_array") || (funcName == "json_object" && i % 2 == 1);
         bool isBoolType =
-            (ifp->arguments()[i]->const_item() && ifp->arguments()[i]->type_handler()->is_bool_type());
+            (ifp_arguments[i]->const_item() && ifp_arguments[i]->type_handler()->is_bool_type());
 
         if (mayHasBoolArg && isBoolType)
-          rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
+          rc = buildBooleanConstantColumn(ifp_arguments[i], gwi, nonSupport);
         else
-          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+          rc = buildReturnedColumn(ifp_arguments[i], gwi, nonSupport);
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
-        if (!rc && ifp->arguments()[i]->type() == Item::REF_ITEM)
+        if (!rc && ifp_arguments[i]->type() == Item::REF_ITEM)
         {
           gwi.fatalParseError = false;
           rc = buildAggFrmTempField(ifp->arguments()[i], gwi);
@@ -4097,15 +4126,15 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     {
       stack<SPTP> tmpPtStack;
 
-      for (int32_t i = ifp->argument_count() - 1; i >= 0; i--)
+      for (int32_t i = ifp_argument_count - 1; i >= 0; i--)
       {
-        if (isPredicateFunction((ifp->arguments()[i]), &gwi) && !gwi.ptWorkStack.empty())
+        if (isPredicateFunction((ifp_arguments[i]), &gwi) && !gwi.ptWorkStack.empty())
         {
           sptp.reset(gwi.ptWorkStack.top());
           tmpPtStack.push(sptp);
           gwi.ptWorkStack.pop();
         }
-        else if (!isPredicateFunction((ifp->arguments()[i]), &gwi) && !gwi.rcWorkStack.empty())
+        else if (!isPredicateFunction((ifp_arguments[i]), &gwi) && !gwi.rcWorkStack.empty())
         {
           sptp.reset(new ParseTree(gwi.rcWorkStack.top()));
           tmpPtStack.push(sptp);
@@ -4420,6 +4449,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
            ifp->functype() == Item_func::ISNULL_FUNC || ifp->functype() == Item_func::ISNOTNULL_FUNC ||
            ifp->functype() == Item_func::NOT_FUNC || ifp->functype() == Item_func::EQUAL_FUNC)
   {
+    // XXX: some of conditions here can be redundant, check function handling.
     return NULL;
   }
   else
@@ -7564,6 +7594,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         break;
       }
 
+      case Item::COND_ITEM:
       case Item::FUNC_ITEM:
       {
         Item_func* ifp = reinterpret_cast<Item_func*>(item);
@@ -7573,14 +7604,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         {
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        if (string(ifp->func_name()) == "xor")
-        {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
           return ER_CHECK_NOT_IMPLEMENTED;
         }
@@ -7814,14 +7837,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.returnedCols.push_back(SRCP(rc));
 
         break;
-      }
-
-      case Item::COND_ITEM:
-      {
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
       }
 
       case Item::EXPR_CACHE_ITEM:

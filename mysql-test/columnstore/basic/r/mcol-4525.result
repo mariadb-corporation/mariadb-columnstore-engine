@@ -11,7 +11,9 @@ CREATE TABLE t1 (a int, b int);
 INSERT INTO t1 VALUES (1, 1), (5, 0);
 SET columnstore_select_handler=ON;
 SELECT a xor b FROM t1;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a xor b
+0
+1
 SET columnstore_select_handler=AUTO;
 SELECT a xor b FROM t1;
 a xor b
@@ -175,7 +177,8 @@ c1 LEFT JOIN
 ON c2.a=c4.a
 )
 ON c1.a=c2.a WHERE c2.a < 100;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+col1	col2	c1.a xor c2.a
+2	2	0
 SET columnstore_select_handler=AUTO;
 SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
 c1 LEFT JOIN
@@ -197,13 +200,21 @@ INSERT INTO t1 VALUES (1), (2), (3), (4);
 SET columnstore_select_handler=ON;
 PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 EXECUTE stmt;
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 DROP PREPARE stmt;
 SET columnstore_select_handler=AUTO;
 PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
@@ -235,11 +246,17 @@ SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4;
 END
 //
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 CALL mcol4525_proc();
-ERROR 42000: The storage engine for the table doesn't support MCS-2030: Predicate and Logic operators can not be used where an expression is expected.
+a	a xor 0
+2	1
+3	1
 DROP PROCEDURE mcol4525_proc;
 SET columnstore_select_handler=AUTO;
 CREATE PROCEDURE mcol4525_proc()

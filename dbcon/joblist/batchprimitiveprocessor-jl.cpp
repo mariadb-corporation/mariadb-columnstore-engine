@@ -888,7 +888,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         /* Reuse the result space if possible */
         joinResults = tJoiners[j]->getPMJoinArrays(threadID);
 
-        if (joinResults.get() == NULL)
+        if (!joinResults)
         {
           joinResults.reset(new vector<uint32_t>[8192]);
           tJoiners[j]->setPMJoinResults(joinResults, threadID);

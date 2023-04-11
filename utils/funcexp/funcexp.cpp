@@ -64,6 +64,15 @@ FuncExp* FuncExp::instance()
 
 FuncExp::FuncExp()
 {
+  fFuncMap["="] = new Func_Compare("=", true, false, false);
+  fFuncMap["<>"] = new Func_Compare("<>", false, true, true);
+  fFuncMap["<"] = new Func_Compare("<", false, false, true);
+  fFuncMap[">"] = new Func_Compare(">", false, true, false);
+  fFuncMap["<="] = new Func_Compare("<", true, false, true);
+  fFuncMap[">="] = new Func_Compare(">", true, true, false);
+  fFuncMap["and"] = new Func_Logic_Op("and", Func_Logic_Op::AND);
+  fFuncMap["or"] = new Func_Logic_Op("or", Func_Logic_Op::OR);
+  fFuncMap["xor"] = new Func_Logic_Op("xor", Func_Logic_Op::XOR);
   fFuncMap["<<"] = new Func_leftshift();
   fFuncMap[">>"] = new Func_rightshift();
   fFuncMap["|"] = new Func_bitor();

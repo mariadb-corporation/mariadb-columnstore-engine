@@ -1,0 +1,103 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5355;
+--enable_warnings
+CREATE DATABASE MCOL5355;
+USE MCOL5355;
+CREATE TABLE t1 (a INT, b INT) ENGINE=COLUMNSTORE;
+INSERT INTO t1 VALUES (1, 0), (1, 1), (0, 1), (0, 0), (NULL, 0), (NULL, 1), (0, NULL), (1, NULL), (NULL, NULL);
+SELECT 'equal', a = b FROM t1;
+SELECT 'not equal', a != b FROM t1;
+SELECT 'less', a < b FROM t1;
+SELECT 'not greater', a <= b FROM t1;
+SELECT 'greater', a > b FROM t1;
+SELECT 'not less', a >= b FROM t1;
+SELECT 'and', a AND b FROM t1;
+SELECT 'or', a OR b FROM t1;
+SELECT 'xor', a XOR b FROM t1;
+SELECT 'or, operator', a || b FROM t1;
+SELECT 'and, operator', a && b FROM t1;
+SELECT 'and of equalities', a = 0 AND b = 0 FROM t1;
+SELECT 'or of equalities', a = 0 OR b = 0 FROM t1;
+SELECT 'xor of equalities', a = 0 XOR b = 0 FROM t1;
+
+# -------------------------------------------------------------------------------
+# int-stored char
+CREATE TABLE t_CHAR_4_ ( a CHAR(4), b CHAR(4)) ENGINE=COLUMNSTORE;
+INSERT INTO t_CHAR_4_(a,b) VALUES ('aaaa', 'aaaa'), ('aaaa', 'bbbb'), ('bbbb', 'aaaa'), ('bbbb', 'bbbb');
+SELECT 'CHAR(4): <', a < b FROM t_CHAR_4_;
+SELECT 'CHAR(4): =', a = b FROM t_CHAR_4_;
+SELECT 'CHAR(4): >', a > b FROM t_CHAR_4_;
+DROP TABLE t_CHAR_4_;
+# inline stored char
+CREATE TABLE t_VARCHAR_16_ ( a VARCHAR(16), b VARCHAR(16)) ENGINE=COLUMNSTORE;
+INSERT INTO t_VARCHAR_16_(a,b) VALUES ('aaaa', 'aaaa'), ('aaaa', 'bbbb'), ('bbbb', 'aaaa'), ('bbbb', 'bbbb');
+SELECT 'VARCHAR(16): <', a < b FROM t_VARCHAR_16_;
+SELECT 'VARCHAR(16): =', a = b FROM t_VARCHAR_16_;
+SELECT 'VARCHAR(16): >', a > b FROM t_VARCHAR_16_;
+DROP TABLE t_VARCHAR_16_;
+# doubles are not ints
+CREATE TABLE t_DOUBLE ( a DOUBLE, b DOUBLE) ENGINE=COLUMNSTORE;
+INSERT INTO t_DOUBLE(a,b) VALUES (-1.23, -1.23), (-1.23, 1.23), (1.23, -1.23), (1.23, 1.23);
+SELECT 'DOUBLE: <', a < b FROM t_DOUBLE;
+SELECT 'DOUBLE: =', a = b FROM t_DOUBLE;
+SELECT 'DOUBLE: >', a > b FROM t_DOUBLE;
+DROP TABLE t_DOUBLE;
+# floats are not ints, neither are doubles
+CREATE TABLE t_FLOAT ( a FLOAT, b FLOAT) ENGINE=COLUMNSTORE;
+INSERT INTO t_FLOAT(a,b) VALUES (-1.23, -1.23), (-1.23, 1.23), (1.23, -1.23), (1.23, 1.23);
+SELECT 'FLOAT: <', a < b FROM t_FLOAT;
+SELECT 'FLOAT: =', a = b FROM t_FLOAT;
+SELECT 'FLOAT: >', a > b FROM t_FLOAT;
+DROP TABLE t_FLOAT;
+# small decimal
+CREATE TABLE t_DECIMAL_10_2_ ( a DECIMAL(10,2), b DECIMAL(10,2)) ENGINE=COLUMNSTORE;
+INSERT INTO t_DECIMAL_10_2_(a,b) VALUES (-1.23, -1.23), (-1.23, 1.23), (1.23, -1.23), (1.23, 1.23);
+SELECT 'DECIMAL(10,2): <', a < b FROM t_DECIMAL_10_2_;
+SELECT 'DECIMAL(10,2): =', a = b FROM t_DECIMAL_10_2_;
+SELECT 'DECIMAL(10,2): >', a > b FROM t_DECIMAL_10_2_;
+DROP TABLE t_DECIMAL_10_2_;
+# wide decimal
+CREATE TABLE t_DECIMAL_38_2_ ( a DECIMAL(38,2), b DECIMAL(38,2)) ENGINE=COLUMNSTORE;
+INSERT INTO t_DECIMAL_38_2_(a,b) VALUES (-1.23, -1.23), (-1.23, 1.23), (1.23, -1.23), (1.23, 1.23);
+SELECT 'DECIMAL(38,2): <', a < b FROM t_DECIMAL_38_2_;
+SELECT 'DECIMAL(38,2): =', a = b FROM t_DECIMAL_38_2_;
+SELECT 'DECIMAL(38,2): >', a > b FROM t_DECIMAL_38_2_;
+DROP TABLE t_DECIMAL_38_2_;
+# date
+CREATE TABLE t_DATE ( a DATE, b DATE) ENGINE=COLUMNSTORE;
+INSERT INTO t_DATE(a,b) VALUES ('1999-01-01', '1999-01-01'), ('1999-01-01', '2000-02-02'), ('2000-02-02', '1999-01-01'), ('2000-02-02', '2000-02-02');
+SELECT 'DATE: <', a < b FROM t_DATE;
+SELECT 'DATE: =', a = b FROM t_DATE;
+SELECT 'DATE: >', a > b FROM t_DATE;
+DROP TABLE t_DATE;
+# datetime
+CREATE TABLE t_DATETIME ( a DATETIME, b DATETIME) ENGINE=COLUMNSTORE;
+INSERT INTO t_DATETIME(a,b) VALUES ('1999-01-01', '1999-01-01'), ('1999-01-01', '2000-02-02'), ('2000-02-02', '1999-01-01'), ('2000-02-02', '2000-02-02');
+SELECT 'DATETIME: <', a < b FROM t_DATETIME;
+SELECT 'DATETIME: =', a = b FROM t_DATETIME;
+SELECT 'DATETIME: >', a > b FROM t_DATETIME;
+DROP TABLE t_DATETIME;
+# time
+CREATE TABLE t_TIME ( a TIME, b TIME) ENGINE=COLUMNSTORE;
+INSERT INTO t_TIME(a,b) VALUES ('10:10:10', '10:10:10'), ('10:10:10', '11:11:11'), ('11:11:11', '10:10:10'), ('11:11:11', '11:11:11');
+SELECT 'TIME: <', a < b FROM t_TIME;
+SELECT 'TIME: =', a = b FROM t_TIME;
+SELECT 'TIME: >', a > b FROM t_TIME;
+DROP TABLE t_TIME;
+# timestamp
+CREATE TABLE t_TIMESTAMP ( a TIMESTAMP, b TIMESTAMP) ENGINE=COLUMNSTORE;
+INSERT INTO t_TIMESTAMP(a,b) VALUES ('10:10:10', '10:10:10'), ('10:10:10', '11:11:11'), ('11:11:11', '10:10:10'), ('11:11:11', '11:11:11');
+SELECT 'TIMESTAMP: <', a < b FROM t_TIMESTAMP;
+SELECT 'TIMESTAMP: =', a = b FROM t_TIMESTAMP;
+SELECT 'TIMESTAMP: >', a > b FROM t_TIMESTAMP;
+DROP TABLE t_TIMESTAMP;
+# unsigned integer
+CREATE TABLE t_INTEGER_UNSIGNED ( a INTEGER UNSIGNED, b INTEGER UNSIGNED) ENGINE=COLUMNSTORE;
+INSERT INTO t_INTEGER_UNSIGNED(a,b) VALUES (10, 10), (10, 20), (20, 10), (20, 20);
+SELECT 'INTEGER UNSIGNED: <', a < b FROM t_INTEGER_UNSIGNED;
+SELECT 'INTEGER UNSIGNED: =', a = b FROM t_INTEGER_UNSIGNED;
+SELECT 'INTEGER UNSIGNED: >', a > b FROM t_INTEGER_UNSIGNED;
+DROP TABLE t_INTEGER_UNSIGNED;
+
+# -------------------------------------------------------------------------------
+DROP DATABASE MCOL5355;
