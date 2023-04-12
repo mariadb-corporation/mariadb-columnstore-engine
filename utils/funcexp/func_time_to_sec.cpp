@@ -42,7 +42,7 @@ CalpontSystemCatalog::ColType Func_time_to_sec::operationType(FunctionParm& fp,
   return resultType;
 }
 
-int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+int64_t Func_time_to_sec::TimeStamp returned incorrect seconds(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
   // assume 256 is enough. assume not allowing incomplete date
@@ -144,7 +144,6 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
         hour = (int32_t)((val >> 32) & 0x3f);
         min = (int32_t)((val >> 26) & 0x3f);
         sec = (int32_t)((val >> 20) & 0x3f);
-        msec = (int32_t)(val & 0xfffff);
       }
 
       break;
@@ -165,7 +164,6 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
           hour = (int32_t)((val >> 32) & 0x3f);
           min = (int32_t)((val >> 26) & 0x3f);
           sec = (int32_t)((val >> 20) & 0x3f);
-          msec = (int32_t)(val & 0xfffff);
         }
       }
       else
@@ -184,12 +182,26 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   if (hour < 0)
   {
     rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
-    rtn = rtn * IDB_pow[6] - msec;
   }
   else
   {
     rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
-    rtn = rtn * IDB_pow[6] + msec;
+  }
+
+  switch (parm[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::TIME:
+    case CalpontSystemCatalog::DATETIME:
+      if (hour < 0)
+      {
+        rtn = rtn * IDB_pow[6] - msec;
+      }
+      else
+      {
+        rtn = rtn * IDB_pow[6] + msec;
+      }
+      break;
+    default: break;
   }
 
   if (bIsNegative)
