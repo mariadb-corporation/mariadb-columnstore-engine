@@ -144,6 +144,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
         hour = (int32_t)((val >> 32) & 0x3f);
         min = (int32_t)((val >> 26) & 0x3f);
         sec = (int32_t)((val >> 20) & 0x3f);
+        msec = (int32_t)(val & 0xfffff);
       }
 
       break;
@@ -164,6 +165,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
           hour = (int32_t)((val >> 32) & 0x3f);
           min = (int32_t)((val >> 26) & 0x3f);
           sec = (int32_t)((val >> 20) & 0x3f);
+          msec = (int32_t)(val & 0xfffff);
         }
       }
       else
@@ -188,20 +190,16 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
     rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
   }
 
-  switch (parm[0]->data()->resultType().colDataType)
+  if (op_ct.scale > 0)
   {
-    case CalpontSystemCatalog::TIME:
-    case CalpontSystemCatalog::DATETIME:
-      if (hour < 0)
-      {
-        rtn = rtn * IDB_pow[6] - msec;
-      }
-      else
-      {
-        rtn = rtn * IDB_pow[6] + msec;
-      }
-      break;
-    default: break;
+    if (hour < 0)
+    {
+      rtn = rtn * IDB_pow[6] - msec;
+    }
+    else
+    {
+      rtn = rtn * IDB_pow[6] + msec;
+    }
   }
 
   if (bIsNegative)
