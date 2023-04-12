@@ -1036,7 +1036,7 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
           smallR.setPointer(rowgroup::Row::Pointer(it->second));
 
           if (!smallR.isMarked())
-            out->push_back(rowgroup::Row::Pointer(it->second));
+            out->emplace_back(rowgroup::Row::Pointer(it->second));
         }
     }
     else
