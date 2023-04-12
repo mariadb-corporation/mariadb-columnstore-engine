@@ -696,7 +696,7 @@ void RowAggregation::initialize()
   // Keep a copy of the null row to initialize new map entries.
   fRowGroupOut->initRow(&fNullRow, true);
   fNullRowData.reset(new uint8_t[fNullRow.getSize()]);
-  fNullRow.setData(fNullRowData.get());
+  fNullRow.setData(rowgroup::Row::Pointer(fNullRowData.get()));
   copyRow(fRow, &fNullRow);
 
   // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
@@ -4685,7 +4685,7 @@ void RowAggregationSubDistinct::setInputOutput(const RowGroup& pRowGroupIn, RowG
   // initialize the aggregate row
   fRowGroupOut->initRow(&fDistRow, true);
   fDistRowData.reset(new uint8_t[fDistRow.getSize()]);
-  fDistRow.setData(fDistRowData.get());
+  fDistRow.setData(rowgroup::Row::Pointer(fDistRowData.get()));
 }
 
 //------------------------------------------------------------------------------

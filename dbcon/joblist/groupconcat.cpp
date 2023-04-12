@@ -322,7 +322,8 @@ void GroupConcatAgUM::initialize()
 
   fGroupConcat->fRowGroup.initRow(&fRow, true);
   fData.reset(new uint8_t[fRow.getSize()]);
-  fRow.setData(fData.get());
+
+  fRow.setData(rowgroup::Row::Pointer(fData.get()));
 }
 
 void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)

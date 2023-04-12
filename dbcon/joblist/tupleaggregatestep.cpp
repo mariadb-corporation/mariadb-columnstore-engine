@@ -5371,7 +5371,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
               {
                 multiDist->subAggregators()[j]->getOutputRowGroup()->initRow(&distRow[j], true);
                 distRowData[j].reset(new uint8_t[distRow[j].getSize()]);
-                distRow[j].setData(distRowData[j].get());
+                distRow[j].setData(rowgroup::Row::Pointer(distRowData[j].get()));
                 hashLens.push_back(multiDist->subAggregators()[j]->aggMapKeyLength());
               }
             }

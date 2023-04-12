@@ -996,7 +996,7 @@ void BatchPrimitiveProcessor::initProcessor()
       {
         joinFERG->initRow(&joinFERow, true);
         joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-        joinFERow.setData(joinFERowData.get());
+        joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
         joinFEMappings.reset(new shared_array<int>[joinerCount + 1]);
 
         for (i = 0; i < joinerCount; i++)
@@ -1058,7 +1058,7 @@ void BatchPrimitiveProcessor::initProcessor()
         smallSideRGs[i].initRow(&smallRows[i], true);
 
       baseJRowMem.reset(new uint8_t[baseJRow.getSize()]);
-      baseJRow.setData(baseJRowMem.get());
+      baseJRow.setData(rowgroup::Row::Pointer(baseJRowMem.get()));
       gjrgMappings.reset(new shared_array<int>[joinerCount + 1]);
 
       for (i = 0; i < joinerCount; i++)
