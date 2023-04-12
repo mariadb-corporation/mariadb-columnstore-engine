@@ -42,7 +42,7 @@ CalpontSystemCatalog::ColType Func_time_to_sec::operationType(FunctionParm& fp,
   return resultType;
 }
 
-int64_t Func_time_to_sec::TimeStamp returned incorrect seconds(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
   // assume 256 is enough. assume not allowing incomplete date
