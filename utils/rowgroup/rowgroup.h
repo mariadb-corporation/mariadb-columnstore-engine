@@ -333,7 +333,7 @@ class Row
     inline Pointer() = default;
 
     // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
-    inline Pointer(uint8_t* d) : data(d)
+    explicit inline Pointer(uint8_t* d) : data(d)
     {
     }
     inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s)
@@ -1424,7 +1424,6 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint32_t getRowSizeWithStrings() const;
   inline uint64_t getBaseRid() const;
   void setData(RGData* rgd);
-  inline void setData(uint8_t* d);
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
@@ -1618,14 +1617,6 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
   r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
-}
-
-inline void RowGroup::setData(uint8_t* d)
-{
-  data = d;
-  strings = nullptr;
-  rgData = nullptr;
-  setUseStringTable(false);
 }
 
 inline void RowGroup::setData(RGData* rgd)

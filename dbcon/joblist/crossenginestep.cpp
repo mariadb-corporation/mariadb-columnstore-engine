@@ -435,7 +435,7 @@ void CrossEngineStep::execute()
       Row rowFe1;                       // row for fe evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
-      rowFe1.setData(rgDataFe1.get());
+      rowFe1.setData(rowgroup::Row::Pointer(rgDataFe1.get()));
 
       while ((rowIn = mysql->nextRow()) && !cancelled())
       {
@@ -486,7 +486,7 @@ void CrossEngineStep::execute()
       Row rowFe3;                       // row for fe evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
-      rowFe3.setData(rgDataFe3.get());
+      rowFe3.setData(rowgroup::Row::Pointer(rgDataFe3.get()));
 
       while ((rowIn = mysql->nextRow()) && !cancelled())
       {
@@ -507,13 +507,13 @@ void CrossEngineStep::execute()
       Row rowFe1;                       // row for fe1 evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
-      rowFe1.setData(rgDataFe1.get());
+      rowFe1.setData(rowgroup::Row::Pointer(rgDataFe1.get()));
 
       shared_array<uint8_t> rgDataFe3;  // functions in select clause
       Row rowFe3;                       // row for fe3 evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
-      rowFe3.setData(rgDataFe3.get());
+      rowFe3.setData(rowgroup::Row::Pointer(rgDataFe3.get()));
 
       while ((rowIn = mysql->nextRow()) && !cancelled())
       {

@@ -199,7 +199,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
     local_primRG.initRow(&largeSideRow);
     local_outputRG.initRow(&joinedBaseRow, true);
     joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
-    joinedBaseRow.setData(joinedBaseRowData.get());
+    joinedBaseRow.setData(rowgroup::Row::Pointer(joinedBaseRowData.get()));
     joinedBaseRow.initToNull();
     largeMapping = makeMapping(local_primRG, local_outputRG);
 
@@ -222,7 +222,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
       joinFERG.initRow(&joinFERow, true);
       joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
       memset(joinFERowData.get(), 0, joinFERow.getSize());
-      joinFERow.setData(joinFERowData.get());
+      joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
       fergMappings[smallSideCount] = makeMapping(local_primRG, joinFERG);
     }
 
@@ -230,13 +230,13 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
     {
       joinerMatchesRGs[i].initRow(&(smallNulls[i]), true);
       smallNullMemory[i].reset(new uint8_t[smallNulls[i].getSize()]);
-      smallNulls[i].setData(smallNullMemory[i].get());
+      smallNulls[i].setData(rowgroup::Row::Pointer(smallNullMemory[i].get()));
       smallNulls[i].initToNull();
     }
 
     local_primRG.initRow(&largeNull, true);
     largeNullMemory.reset(new uint8_t[largeNull.getSize()]);
-    largeNull.setData(largeNullMemory.get());
+    largeNull.setData(rowgroup::Row::Pointer(largeNullMemory.get()));
     largeNull.initToNull();
   }
 }
@@ -568,7 +568,7 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       throw runtime_error(oss.str());
-    }    
+    }
 
     if (fOidAux > 3000)
     {
