@@ -338,7 +338,6 @@ class Row
   {
     inline Pointer() = default;
 
-    // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
     explicit inline Pointer(uint8_t* d) : data(d)
     {
     }
@@ -360,8 +359,7 @@ class Row
   Row& operator=(const Row&);
   bool operator==(const Row&) const;
 
-  // void setData(uint8_t *rowData, StringStore *ss);
-  inline void setData(const Pointer&);  // convenience fcn, can go away
+  inline void setData(const Pointer&);
   inline uint8_t* getData() const;
 
   inline void setPointer(const Pointer&);
