@@ -382,7 +382,7 @@ void DiskJoinStep::joinFcn()
 
   baseRowMem.reset(new uint8_t[baseRow.getSize()]);
   baseRow.setData(rowgroup::Row::Pointer(baseRowMem.get()));
-  joinMatches.push_back(vector<Row::Pointer>());
+  joinMatches.emplace_back(vector<Row::Pointer>());
   smallRG.initRow(&smallRowTemplates[0]);
   joiners.resize(1);
 
