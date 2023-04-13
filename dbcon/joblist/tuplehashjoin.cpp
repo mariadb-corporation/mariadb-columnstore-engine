@@ -1377,7 +1377,7 @@ void TupleHashJoinStep::startJoinThreads()
     Row smallRow;
     smallRGs[i].initRow(&smallRow, true);
     smallNullMemory[i].reset(new uint8_t[smallRow.getSize()]);
-    smallRow.setData(smallNullMemory[i].get());
+    smallRow.setData(rowgroup::Row::Pointer(smallNullMemory[i].get()));
     smallRow.initToNull();
   }
 
@@ -1427,12 +1427,12 @@ void TupleHashJoinStep::finishSmallOuterJoin()
   {
     smallRGs[i].initRow(&smallRowTemplates[i]);
     smallRGs[i].initRow(&smallNullRows[i], true);
-    smallNullRows[i].setData(smallNullMemory[i].get());
+    smallNullRows[i].setData(rowgroup::Row::Pointer(smallNullMemory[i].get()));
   }
 
   largeRG.initRow(&largeNullRow, true);
   largeNullMemory.reset(new uint8_t[largeNullRow.getSize()]);
-  largeNullRow.setData(largeNullMemory.get());
+  largeNullRow.setData(rowgroup::Row::Pointer(largeNullMemory.get()));
   largeNullRow.initToNull();
 
   joinedData.reinit(l_outputRG);
@@ -1529,14 +1529,14 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
   local_outputRG.initRow(&joinedRow);
   local_outputRG.initRow(&baseRow, true);
   baseRowData.reset(new uint8_t[baseRow.getSize()]);
-  baseRow.setData(baseRowData.get());
+  baseRow.setData(rowgroup::Row::Pointer(baseRowData.get()));
 
   if (hasJoinFE)
   {
     local_joinFERG = joinFilterRG;
     local_joinFERG.initRow(&joinFERow, true);
     joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-    joinFERow.setData(joinFERowData.get());
+    joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
   }
 
   if (fe2)
