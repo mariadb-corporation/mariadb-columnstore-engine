@@ -14,6 +14,7 @@ dump_log ()
     journalctl -u "$name".service > "$DIR_NAME"/"${name}_${STEP_NAME}".log
 }
 
+dump_log "mariadb"
 dump_log "mcs-ddlproc"
 dump_log "mcs-dmlproc"
 dump_log "mcs-loadbrm"
