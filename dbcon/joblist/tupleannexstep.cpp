@@ -66,6 +66,8 @@ using namespace querytele;
 
 #define QUEUE_RESERVE_SIZE 100000
 
+namespace r = std::ranges;
+
 namespace
 {
 struct TAHasher
@@ -1105,34 +1107,100 @@ sorting::ValueRange calcLeftAndRight(const size_t maxRangeSize, const size_t ran
   return {};
 }
 
-size_t getMetric(sorting::ValueRangesMatrix& m)
+size_t getMetricM2(sorting::ValueRangesMatrix& m)
 {
   size_t metric = 0;
-  for (auto& v : m)
-  {
-    std::cout << "{ " << std::endl;
-    for (auto& p : v)
-    {
-      std::cout << "{" << p.first << "," << p.second << "} ";
-    }
-    std::cout << std::endl << " }" << std::endl;
-  }
-  std::cout << "}" << endl;
-  std::cout << endl;
+  // for (auto& v : m)
+  // {
+  //   std::cout << "{ " << std::endl;
+  //   for (auto& p : v)
+  //   {
+  //     std::cout << "{" << p.first << "," << p.second << "} ";
+  //   }
+  //   std::cout << std::endl << " }" << std::endl;
+  // }
+  // std::cout << "}" << endl;
+  // std::cout << endl;
 
-  // assert(!m.empty());
-  // std::vector<std::vector<size_t>> diffsMatrix(m.size(), std::vector<size_t>(m.front().size()));
-  for (auto& v : m)
-  {
-    std::vector<size_t> diffs;
-    std::transform(std::begin(v), std::end(v), std::back_inserter(diffs),
-                   [](auto& p) { return p.second - p.first; });
-    std::copy(std::begin(diffs), std::end(diffs), std::ostream_iterator<size_t>(std::cout, " "));
-    size_t localMin = std::numeric_limits<size_t>::max();
-    for_each(std::begin(diffs), std::end(diffs), [&localMin](auto e) { localMin = std::min(localMin, e); });
-    std::cout << "localMin " << localMin << std::endl;
-    for_each(std::begin(diffs), std::end(diffs), [&metric, localMin](auto e) { metric += e - localMin; });
-  }
+  assert(!m.empty());
+  std::vector<size_t> matrixRowSums;
+  r::transform(m, std::back_inserter(matrixRowSums),
+               [](auto& v)
+               {
+                 std::vector<size_t> matrixRowdiffs;
+                 r::transform(v, std::back_inserter(matrixRowdiffs),
+                              [](auto& p) { return p.second - p.first; });
+
+                 //  std::copy(std::begin(matrixRowdiffs), std::end(matrixRowdiffs),
+                 //            std::ostream_iterator<size_t>(std::cout, " "));
+
+                 size_t matrixRowSum = 0;
+                 r::for_each(matrixRowdiffs, [&matrixRowSum](auto e) { matrixRowSum += e; });
+
+                 //  std::cout << "matrixRowSum " << matrixRowSum << std::endl;
+
+                 return matrixRowSum;
+               });
+
+  size_t matrixRowSumsMin = std::numeric_limits<size_t>::max();
+  r::for_each(matrixRowSums,
+              [&matrixRowSumsMin](auto e) { matrixRowSumsMin = std::min(matrixRowSumsMin, e); });
+  // std::cout << "matrixRowSumsMin " << matrixRowSumsMin << std::endl;
+  r::for_each(matrixRowSums, [&metric, matrixRowSumsMin](auto e) { metric += e - matrixRowSumsMin; });
+  return metric;
+}
+
+size_t getMetricM3(sorting::ValueRangesMatrix& m)
+{
+  size_t metric = 0;
+  // for (auto& v : m)
+  // {
+  //   std::cout << "{ " << std::endl;
+  //   for (auto& p : v)
+  //   {
+  //     std::cout << "{" << p.first << "," << p.second << "} ";
+  //   }
+  //   std::cout << std::endl << " }" << std::endl;
+  // }
+  // std::cout << "}" << endl;
+  // std::cout << endl;
+
+  assert(!m.empty());
+  std::vector<size_t> matrixRowSums;
+  r::transform(m, std::back_inserter(matrixRowSums),
+               [](auto& v)
+               {
+                 std::vector<size_t> matrixRowdiffs;
+                 r::transform(v, std::back_inserter(matrixRowdiffs),
+                              [](auto& p) { return p.second - p.first; });
+
+                 //  std::copy(std::begin(matrixRowdiffs), std::end(matrixRowdiffs),
+                 //            std::ostream_iterator<size_t>(std::cout, " "));
+
+                 size_t matrixRowSum = 0;
+                 r::for_each(matrixRowdiffs, [&matrixRowSum](auto e) { matrixRowSum += e; });
+
+                 //  std::cout << "matrixRowSum " << matrixRowSum << std::endl;
+
+                 return matrixRowSum;
+               });
+
+  // size_t matrixRowSumsMin = std::numeric_limits<size_t>::max();
+  // r::for_each(matrixRowSums,
+  //             [&matrixRowSumsMin](auto e) { matrixRowSumsMin = std::min(matrixRowSumsMin, e); });
+  // std::cout << "matrixRowSumsMin " << matrixRowSumsMin << std::endl;
+  r::for_each(matrixRowSums,
+              [&matrixRowSums, &metric](auto matrixRowPower1)
+              {
+                r::for_each(matrixRowSums,
+                            [&metric, matrixRowPower1](auto matrixRowPower2)
+                            {
+                              metric += matrixRowPower1 > matrixRowPower2 ? matrixRowPower1 - matrixRowPower2
+                                                                          : matrixRowPower2 - matrixRowPower1;
+                            });
+              });
+  // r::for_each(matrixRowSums, [&metric, matrixRowPower](auto e)
+  //             { metric += (matrixRowPower > e) ? matrixRowPower - e : e - matrixRowPower; });
   return metric;
 }
 
@@ -1170,7 +1238,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     lowerBoundsMatrix.push_back(lowerBounds);
   }
 
-  size_t bestMetric = std::numeric_limits<size_t>::max();
+  size_t distanceWithTheSmallestCardin = std::numeric_limits<size_t>::max();
   sorting::ValueRangesMatrix bestRanges;
   sorting::ValueRangesMatrix testRanges(maxThreads);
   for (auto lowerBounds = std::begin(lowerBoundsMatrix); lowerBounds != std::end(lowerBoundsMatrix);
@@ -1200,7 +1268,8 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
         right = std::min(right + step, perm.size());
       }
     }
-    size_t metric = getMetric(ranges);
+    size_t metric2 = getMetricM2(ranges);
+    size_t metric = getMetricM3(ranges);
     // for (auto& el : ranges)
     // {
     //   std::cout << "{ " << std::endl;
@@ -1212,9 +1281,13 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     // }
     // std::cout << "}" << endl;
     // std::cout << endl;
-    if (bestMetric > metric)
+    if (distanceWithTheSmallestCardin > metric)
+    {
+      distanceWithTheSmallestCardin = metric;
       bestRanges = std::move(ranges);
-    std::cout << " metric " << metric << std::endl;
+    }
+    // bestRanges = std::move(ranges);
+    std::cout << " metric " << metric << " metric2 " << metric2 << std::endl;
     // rangesVec.push_back(ranges);
   }
   // debug printouts
@@ -1242,7 +1315,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
   // }
   // std::cout << "}" << endl;
   // std::cout << endl;
-  std::cout << " best metric " << getMetric(bestRanges) << std::endl;
+  std::cout << " best metric " << getMetricM3(bestRanges) << std::endl;
   return bestRanges;
 }
 
