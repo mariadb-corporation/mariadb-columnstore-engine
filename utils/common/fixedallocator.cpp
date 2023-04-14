@@ -31,13 +31,13 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <memory>
 
 #define FIXEDALLOCATOR_DLLEXPORT
 #include "fixedallocator.h"
 #undef FIXEDALLOCATOR_DLLEXPORT
 
 using namespace std;
-using namespace boost;
 
 namespace utils
 {
@@ -75,7 +75,7 @@ void FixedAllocator::setAllocSize(uint allocSize)
 
 void FixedAllocator::newBlock()
 {
-  shared_array<uint8_t> next;
+  std::shared_ptr<uint8_t[]> next;
 
   capacityRemaining = elementCount * elementSize;
 

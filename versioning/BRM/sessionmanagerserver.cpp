@@ -346,10 +346,10 @@ const TxnID SessionManagerServer::getTxnID(const SID session)
   return ret;
 }
 
-shared_array<SIDTIDEntry> SessionManagerServer::SIDTIDMap(int& len)
+std::shared_ptr<SIDTIDEntry[]> SessionManagerServer::SIDTIDMap(int& len)
 {
   int j;
-  shared_array<SIDTIDEntry> ret;
+  std::shared_ptr<SIDTIDEntry[]> ret;
   boost::mutex::scoped_lock lk(mutex);
   iterator it;
 

@@ -321,8 +321,8 @@ class TupleJoiner
   void umJoinConvert(size_t begin, size_t end);
 
   void setThreadCount(uint32_t cnt);
-  void setPMJoinResults(boost::shared_array<std::vector<uint32_t> >, uint32_t threadID);
-  boost::shared_array<std::vector<uint32_t> > getPMJoinArrays(uint32_t threadID);
+  void setPMJoinResults(std::shared_ptr<std::vector<uint32_t>[]>, uint32_t threadID);
+  std::shared_ptr<std::vector<uint32_t>[]> getPMJoinArrays(uint32_t threadID);
   std::vector<rowgroup::Row::Pointer>* getSmallSide()
   {
     return &rows;
@@ -502,10 +502,10 @@ class TupleJoiner
   the logical block being processed.  There are X threads at once, so
   up to X logical blocks being processed.  For each of those there's a vector
   of matches.  Each match is an index into 'rows'. */
-  boost::shared_array<boost::shared_array<std::vector<uint32_t> > > pmJoinResults;
+  std::shared_ptr<std::shared_ptr<std::vector<uint32_t>[]>[]> pmJoinResults;
   rowgroup::RowGroup smallRG, largeRG;
   boost::scoped_array<rowgroup::Row> smallRow;
-  // boost::shared_array<uint8_t> smallNullMemory;
+
   rowgroup::Row smallNullRow;
 
   enum JoinAlg
@@ -517,7 +517,7 @@ class TupleJoiner
   };
   JoinAlg joinAlg;
   joblist::JoinType joinType;
-  boost::shared_array<boost::shared_ptr<utils::PoolAllocator> > _pool;  // pools for the table and nodes
+  std::shared_ptr<boost::shared_ptr<utils::PoolAllocator>[]> _pool;  // pools for the table and nodes
   uint32_t threadCount;
   std::string tableName;
 

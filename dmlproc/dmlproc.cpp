@@ -215,7 +215,7 @@ void rollbackAll(DBRM* dbrm)
   logging::MessageLog ml(lid);
   ml.logInfoMessage(message);
 
-  boost::shared_array<BRM::SIDTIDEntry> activeTxns;
+  std::shared_ptr<BRM::SIDTIDEntry[]> activeTxns;
   BRM::TxnID txnID;
   SessionManager sessionManager;
   int rc = 0;

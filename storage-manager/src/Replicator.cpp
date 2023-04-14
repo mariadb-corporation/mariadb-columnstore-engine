@@ -259,7 +259,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
   {
     // read the existing header and check if max_offset needs to be updated
     size_t tmp;
-    boost::shared_array<char> headertxt;
+    std::shared_ptr<char[]> headertxt;
     try
     {
       headertxt = seekToEndOfHeader1(fd, &tmp);

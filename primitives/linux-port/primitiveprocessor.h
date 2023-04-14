@@ -165,10 +165,10 @@ class ParsedColumnFilter
   static constexpr uint32_t noSetFilterThreshold = 8;
   ColumnFilterMode columnFilterMode;
   // Very unfortunately prestored_argVals can also be used to store double/float values.
-  boost::shared_array<int64_t> prestored_argVals;
-  boost::shared_array<int128_t> prestored_argVals128;
-  boost::shared_array<CopsType> prestored_cops;
-  boost::shared_array<uint8_t> prestored_rfs;
+  std::shared_ptr<int64_t[]> prestored_argVals;
+  std::shared_ptr<int128_t[]> prestored_argVals128;
+  std::shared_ptr<CopsType[]> prestored_cops;
+  std::shared_ptr<uint8_t[]> prestored_rfs;
   boost::shared_ptr<prestored_set_t> prestored_set;
   boost::shared_ptr<prestored_set_t_128> prestored_set_128;
 

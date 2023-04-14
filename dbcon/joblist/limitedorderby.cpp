@@ -23,9 +23,6 @@
 #include <string>
 using namespace std;
 
-
-using namespace boost;
-
 #include "errorids.h"
 #include "exceptclasses.h"
 using namespace logging;

@@ -50,7 +50,7 @@ class DiskJoinStep : public JobStep
   boost::shared_ptr<RowGroupDL> largeDL, outputDL;
   RowGroupDL* smallDL;
 
-  boost::shared_array<int> LOMapping, SOMapping, SjoinFEMapping, LjoinFEMapping;
+  std::shared_ptr<int[]> LOMapping, SOMapping, SjoinFEMapping, LjoinFEMapping;
   TupleHashJoinStep* thjs;
   boost::shared_ptr<funcexp::FuncExpWrapper> fe;
   bool typeless;

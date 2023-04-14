@@ -184,8 +184,7 @@ class BatchPrimitiveProcessorJL
     return status;
   }
   void runErrorBPP(messageqcpp::ByteStream&);
-  //	uint32_t getErrorTableBand(uint16_t error, messageqcpp::ByteStream *out);
-  //	boost::shared_array<uint8_t> getErrorRowGroupData(uint16_t error) const;
+
   rowgroup::RGData getErrorRowGroupData(uint16_t error) const;
 
   // @bug 1098

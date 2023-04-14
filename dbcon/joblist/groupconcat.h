@@ -63,7 +63,7 @@ class GroupConcatInfo
 
  protected:
   uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 
   std::set<uint32_t> fColumns;
   std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
@@ -88,7 +88,7 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
   EXPORT uint8_t* getResult();
 
  protected:
-  void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
+  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 
   boost::scoped_ptr<GroupConcator> fConcator;
   boost::scoped_array<uint8_t> fData;

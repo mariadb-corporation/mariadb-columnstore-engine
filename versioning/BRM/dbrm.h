@@ -757,7 +757,7 @@ class DBRM
   EXPORT void committed(BRM::TxnID& txnid);
   EXPORT void rolledback(BRM::TxnID& txnid);
   EXPORT const BRM::TxnID getTxnID(const SessionManagerServer::SID session);
-  EXPORT boost::shared_array<SIDTIDEntry> SIDTIDMap(int& len);
+  EXPORT std::shared_ptr<SIDTIDEntry[]> SIDTIDMap(int& len);
   EXPORT void sessionmanager_reset();
 
   /* Note, these pull #s from two separate sequences.  That is, they both

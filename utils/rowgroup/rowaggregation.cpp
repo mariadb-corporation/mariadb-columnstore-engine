@@ -600,7 +600,7 @@ void RowAggregation::setJoinRowGroups(vector<RowGroup>* pSmallSideRG, RowGroup* 
   fSmallSideRGs = pSmallSideRG;
   fLargeSideRG = pLargeSideRG;
   fSmallSideCount = fSmallSideRGs->size();
-  fSmallMappings.reset(new shared_array<int>[fSmallSideCount]);
+  fSmallMappings.reset(new std::shared_ptr<int[]>[fSmallSideCount]);
 
   for (uint32_t i = 0; i < fSmallSideCount; i++)
     fSmallMappings[i] = makeMapping((*fSmallSideRGs)[i], fRowGroupIn);
