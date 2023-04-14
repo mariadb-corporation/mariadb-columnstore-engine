@@ -29,6 +29,7 @@
 #include <tr1/unordered_set>
 #include <boost/thread.hpp>
 #include <deque>
+#include <mutex>
 
 #include "primitivemsg.h"
 #include "blocksize.h"
@@ -120,13 +121,13 @@ class FileBufferMgr
    * @brief return TRUE if the Disk block lbid@ver is loaded into the Disk Block Buffer cache otherwise return
    *FALSE.
    **/
-  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const;
+  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver);
 
   /**
    * @brief return TRUE if the Disk block referenced by fb is loaded into the Disk Block Buffer cache
    *otherwise return FALSE.
    **/
-  bool exists(const HashObject_t& fb) const;
+  bool exists(const HashObject_t& fb);
 
   /**
    * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
@@ -206,20 +207,30 @@ class FileBufferMgr
   std::ostream& formatLRUList(std::ostream& os) const;
 
  private:
+  static constexpr const size_t MagicNumber = 8;
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
   mutable boost::mutex fWLock;
+  std::mutex fWLocks[MagicNumber];
+
   mutable filebuffer_uset_t fbSet;
+  filebuffer_uset_t fbSets[MagicNumber];
 
-  mutable filebuffer_list_t fbList;  // rename this
+  mutable filebuffer_list_t fbList;        // rename this
+  filebuffer_list_t fbLists[MagicNumber];  // rename this
+
   uint32_t fCacheSize;
+  std::vector<size_t> fCacheSizes;
 
-  FileBufferPool_t fFBPool;  // vector<FileBuffer>
+  FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
-  emptylist_t fEmptyPoolSlots;  // keep track of FBPool slots that can be reused
+  emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
+  emptylist_t fEmptyPoolsSlots[MagicNumber];  // keep track of FBPool slots that can be reused
 
-  void depleteCache();
+  // void depleteCache();
+  void depleteCache(const size_t bucket);
+
   uint64_t fBlksLoaded;       // number of blocks inserted into cache
   uint64_t fBlksNotUsed;      // number of blocks inserted and not used
   uint64_t fReportFrequency;  // how many blocks are read between reports
@@ -231,8 +242,8 @@ class FileBufferMgr
   const FileBufferMgr& operator=(const FileBufferMgr& fbm);
 
   // used by bulkInsert
-  void updateLRU(const FBData_t& f);
-  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data);
+  void updateLRU(const FBData_t& f, const size_t bucket);
+  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data, const size_t bucket);
 };
 
 }  // namespace dbbc
