@@ -31,7 +31,7 @@
 #include <iterator>
 using namespace std;
 
-#include <boost/shared_array.hpp>
+
 #include <numeric>
 using namespace boost;
 

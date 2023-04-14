@@ -33,7 +33,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <boost/shared_array.hpp>
+
 #include <vector>
 #include <limits>
 #include <unistd.h>

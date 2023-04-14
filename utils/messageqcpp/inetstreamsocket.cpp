@@ -73,7 +73,7 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
-#include <boost/shared_array.hpp>
+
 
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"

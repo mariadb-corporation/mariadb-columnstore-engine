@@ -18,7 +18,7 @@
 #pragma once
 
 #include <string>
-#include <boost/shared_array.hpp>
+
 #include "SMLogging.h"
 
 namespace storagemanager

@@ -26,7 +26,7 @@
 #include <utility>
 #include <string>
 #include <stdexcept>
-#include <boost/shared_array.hpp>
+
 #include <stdint.h>
 #include <rowgroup.h>
 

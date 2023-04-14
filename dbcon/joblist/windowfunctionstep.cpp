@@ -26,7 +26,7 @@ using namespace std;
 
 #include <boost/algorithm/string.hpp>  //  to_upper_copy
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid_io.hpp>
 using namespace boost;

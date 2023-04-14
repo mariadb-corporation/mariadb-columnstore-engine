@@ -24,7 +24,7 @@
 #include <string>
 #include <boost/utility.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/filesystem.hpp>
 
 #include "Config.h"

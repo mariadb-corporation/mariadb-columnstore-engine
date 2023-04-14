@@ -28,7 +28,7 @@
 
 #include <map>
 
-#include <boost/shared_array.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 

@@ -35,7 +35,7 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 
