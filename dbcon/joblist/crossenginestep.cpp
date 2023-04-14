@@ -408,7 +408,6 @@ void CrossEngineStep::execute()
     int num_fields = mysql->getFieldCount();
 
     char** rowIn;  // input
-    // shared_array<uint8_t> rgDataDelivered;      // output
     RGData rgDataDelivered;
     fRowGroupAdded.initRow(&fRowDelivered);
     // use getDataSize() i/o getMaxDataSize() to make sure there are 8192 rows.
@@ -438,7 +437,7 @@ void CrossEngineStep::execute()
 
     else if (doFE1 && !doFE3)  // FE in WHERE clause only
     {
-      shared_array<uint8_t> rgDataFe1;  // functions in where clause
+      std::shared_ptr<uint8_t[]> rgDataFe1;  // functions in where clause
       Row rowFe1;                       // row for fe evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
@@ -489,7 +488,7 @@ void CrossEngineStep::execute()
 
     else if (!doFE1 && doFE3)  // FE in SELECT clause only
     {
-      shared_array<uint8_t> rgDataFe3;  // functions in select clause
+      std::shared_ptr<uint8_t[]> rgDataFe3;  // functions in select clause
       Row rowFe3;                       // row for fe evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
@@ -510,13 +509,13 @@ void CrossEngineStep::execute()
 
     else  // FE in SELECT clause, FE join and WHERE clause
     {
-      shared_array<uint8_t> rgDataFe1;  // functions in where clause
+      std::shared_ptr<uint8_t[]> rgDataFe1;  // functions in where clause
       Row rowFe1;                       // row for fe1 evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
       rowFe1.setData(rowgroup::Row::Pointer(rgDataFe1.get()));
 
-      shared_array<uint8_t> rgDataFe3;  // functions in select clause
+      std::shared_ptr<uint8_t[]> rgDataFe3;  // functions in select clause
       Row rowFe3;                       // row for fe3 evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
@@ -708,7 +707,6 @@ const RowGroup& CrossEngineStep::getDeliveredRowGroup() const
 
 uint32_t CrossEngineStep::nextBand(messageqcpp::ByteStream& bs)
 {
-  // shared_array<uint8_t> rgDataOut;
   RGData rgDataOut;
   bool more = false;
   uint32_t rowCount = 0;

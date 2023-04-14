@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include <atomic>
 
@@ -89,7 +90,7 @@ class PoolAllocator
   void* allocOOB(uint64_t size);
 
   unsigned allocSize;
-  std::vector<boost::shared_array<uint8_t> > mem;
+  std::vector<std::shared_ptr<uint8_t[]>> mem;
   bool tmpSpace;
   unsigned capacityRemaining;
   uint64_t memUsage;
@@ -99,7 +100,7 @@ class PoolAllocator
 
   struct OOBMemInfo
   {
-    boost::shared_array<uint8_t> mem;
+    std::shared_ptr<uint8_t[]> mem;
     uint64_t size;
   };
   typedef std::map<void*, OOBMemInfo> OutOfBandMap;

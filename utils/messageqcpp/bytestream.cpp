@@ -152,17 +152,17 @@ void ByteStream::growBuf(uint32_t toSize)
   }
 }
 
-std::vector<boost::shared_array<uint8_t>>& ByteStream::getLongStrings()
+std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings()
 {
   return longStrings;
 }
 
-const std::vector<boost::shared_array<uint8_t>>& ByteStream::getLongStrings() const
+const std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings() const
 {
   return longStrings;
 }
 
-void ByteStream::setLongStrings(const std::vector<boost::shared_array<uint8_t>>& other)
+void ByteStream::setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other)
 {
   longStrings = other;
 }

@@ -1200,7 +1200,7 @@ bool mergeJournalTest()
   int i;
   IOCoordinator* ioc = IOCoordinator::get();
   size_t len = 8192, tmp;
-  boost::shared_array<uint8_t> data = ioc->mergeJournal("test-object", "test-journal", 0, len, &tmp);
+  std::shared_ptr<uint8_t[]> data = ioc->mergeJournal("test-object", "test-journal", 0, len, &tmp);
   assert(data);
   int* idata = (int*)data.get();
   for (i = 0; i < 5; i++)
@@ -1767,7 +1767,7 @@ void bigMergeJournal1()
     return;
   }
   IOCoordinator* ioc = IOCoordinator::get();
-  boost::shared_array<uint8_t> buf;
+  std::shared_ptr<uint8_t[]> buf;
   size_t tmp;
   buf = ioc->mergeJournal(fNamePath.string().c_str(), jNamePath.string().c_str(), 0, 68332, &tmp);
   assert(buf);

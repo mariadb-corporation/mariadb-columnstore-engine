@@ -515,7 +515,7 @@ void TupleHashJoinStep::djsRelayFcn()
 
   RowGroup djsInputRG = largeRG + outputRG;
   RowGroup l_largeRG = (tbpsJoiners.empty() ? largeRG : largeRG + outputRG);
-  boost::shared_array<int> relayMapping = makeMapping(l_largeRG, djsInputRG);
+  std::shared_ptr<int[]> relayMapping = makeMapping(l_largeRG, djsInputRG);
   bool more;
   RGData inData, outData;
   Row l_largeRow, djsInputRow;
@@ -1350,7 +1350,7 @@ void TupleHashJoinStep::startJoinThreads()
   for (i = 0; i < smallSideCount; i++)
     smallRGs[i] = joiners[i]->getSmallRG();
 
-  columnMappings.reset(new shared_array<int>[smallSideCount + 1]);
+  columnMappings.reset(new std::shared_ptr<int[]>[smallSideCount + 1]);
 
   for (i = 0; i < smallSideCount; i++)
     columnMappings[i] = makeMapping(smallRGs[i], outputRG);
@@ -1359,7 +1359,7 @@ void TupleHashJoinStep::startJoinThreads()
 
   if (!feIndexes.empty())
   {
-    fergMappings.reset(new shared_array<int>[smallSideCount + 1]);
+    fergMappings.reset(new std::shared_ptr<int[]>[smallSideCount + 1]);
 
     for (i = 0; i < smallSideCount; i++)
       fergMappings[i] = makeMapping(smallRGs[i], joinFilterRG);
@@ -1406,11 +1406,11 @@ void TupleHashJoinStep::finishSmallOuterJoin()
   vector<Row::Pointer> unmatched;
   uint32_t smallSideCount = smallDLs.size();
   uint32_t i, j, k;
-  shared_array<uint8_t> largeNullMemory;
+  std::shared_ptr<uint8_t[]> largeNullMemory;
   RGData joinedData;
   Row joinedBaseRow, fe2InRow, fe2OutRow;
-  shared_array<Row> smallRowTemplates;
-  shared_array<Row> smallNullRows;
+  std::shared_ptr<Row[]> smallRowTemplates;
+  std::shared_ptr<Row[]> smallNullRows;
   Row largeNullRow;
   RowGroup l_outputRG = outputRG;
   RowGroup l_fe2Output = fe2Output;
@@ -1511,11 +1511,11 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
   uint32_t i;
 
   /* thread-local scratch space for join processing */
-  shared_array<uint8_t> joinFERowData;
+  std::shared_ptr<uint8_t[]> joinFERowData;
   Row largeRow, joinFERow, joinedRow, baseRow;
-  shared_array<uint8_t> baseRowData;
+  std::shared_ptr<uint8_t[]> baseRowData;
   vector<vector<Row::Pointer> > joinMatches;
-  shared_array<Row> smallRowTemplates;
+  std::shared_ptr<Row[]> smallRowTemplates;
 
   /* F & E vars */
   FuncExpWrapper local_fe;
@@ -1706,11 +1706,11 @@ void TupleHashJoinStep::grabSomeWork(vector<RGData>* work)
 void TupleHashJoinStep::joinOneRG(
     uint32_t threadID, vector<RGData>& out, RowGroup& inputRG, RowGroup& joinOutput, Row& largeSideRow,
     Row& joinFERow, Row& joinedRow, Row& baseRow, vector<vector<Row::Pointer> >& joinMatches,
-    shared_array<Row>& smallRowTemplates, RowGroupDL* outputDL,
+    std::shared_ptr<Row[]>& smallRowTemplates, RowGroupDL* outputDL,
     // disk-join support vars.  This param list is insane; refactor attempt would be nice at some point.
     vector<std::shared_ptr<joiner::TupleJoiner> >* tjoiners,
-    boost::shared_array<boost::shared_array<int> >* rgMappings,
-    boost::shared_array<boost::shared_array<int> >* feMappings,
+    std::shared_ptr<std::shared_ptr<int[]>[] >* rgMappings,
+    std::shared_ptr<std::shared_ptr<int[]>[] >* feMappings,
     boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem)
 {
   /* Disk-join support.
@@ -1841,9 +1841,9 @@ void TupleHashJoinStep::joinOneRG(
 }
 
 void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput, Row& baseRow,
-                                              const shared_array<shared_array<int> >& mappings,
+                                              const std::shared_ptr<std::shared_ptr<int[]>[] >& mappings,
                                               const uint32_t depth, RowGroup& l_outputRG, RGData& rgData,
-                                              vector<RGData>& outputData, const shared_array<Row>& smallRows,
+                                              vector<RGData>& outputData, const std::shared_ptr<Row[]>& smallRows,
                                               Row& joinedRow, RowGroupDL* dlp)
 {
   uint32_t i;

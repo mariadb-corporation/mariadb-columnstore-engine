@@ -263,7 +263,7 @@ struct CancellationThread
         // If there are any abandonded transactions without locks
         // release them.
         int len;
-        boost::shared_array<BRM::SIDTIDEntry> activeTxns = sessionManager.SIDTIDMap(len);
+        std::shared_ptr<BRM::SIDTIDEntry[]> activeTxns = sessionManager.SIDTIDMap(len);
 
         for (int i = 0; i < len; i++)
         {

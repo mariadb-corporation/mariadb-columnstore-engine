@@ -1033,7 +1033,7 @@ void WindowFunctionStep::doFunction()
 void WindowFunctionStep::doPostProcessForSelect()
 {
   FuncExp* fe = funcexp::FuncExp::instance();
-  boost::shared_array<int> mapping = makeMapping(fRowGroupIn, fRowGroupOut);
+  std::shared_ptr<int[]> mapping = makeMapping(fRowGroupIn, fRowGroupOut);
   Row rowIn, rowOut;
   fRowGroupIn.initRow(&rowIn);
   fRowGroupOut.initRow(&rowOut);
@@ -1089,7 +1089,7 @@ void WindowFunctionStep::doPostProcessForSelect()
 void WindowFunctionStep::doPostProcessForDml()
 {
   FuncExp* fe = funcexp::FuncExp::instance();
-  boost::shared_array<int> mapping = makeMapping(fRowGroupIn, fRowGroupOut);
+  std::shared_ptr<int[]> mapping = makeMapping(fRowGroupIn, fRowGroupOut);
   Row rowIn, rowOut;
   fRowGroupIn.initRow(&rowIn);
   fRowGroupOut.initRow(&rowOut);

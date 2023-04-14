@@ -913,14 +913,14 @@ void TupleJoiner::setInUM(vector<RGData>& rgs)
   }
 }
 
-void TupleJoiner::setPMJoinResults(boost::shared_array<vector<uint32_t>> jr, uint32_t threadID)
+void TupleJoiner::setPMJoinResults(std::shared_ptr<vector<uint32_t>[]> jr, uint32_t threadID)
 {
   pmJoinResults[threadID] = jr;
 }
 
 void TupleJoiner::markMatches(uint32_t threadID, uint32_t rowCount)
 {
-  boost::shared_array<vector<uint32_t>> matches = pmJoinResults[threadID];
+  std::shared_ptr<vector<uint32_t>[]> matches = pmJoinResults[threadID];
   uint32_t i, j;
 
   for (i = 0; i < rowCount; i++)
@@ -946,7 +946,7 @@ void TupleJoiner::markMatches(uint32_t threadID, const vector<Row::Pointer>& mat
   }
 }
 
-boost::shared_array<std::vector<uint32_t>> TupleJoiner::getPMJoinArrays(uint32_t threadID)
+std::shared_ptr<std::vector<uint32_t>[]> TupleJoiner::getPMJoinArrays(uint32_t threadID)
 {
   return pmJoinResults[threadID];
 }
@@ -954,7 +954,7 @@ boost::shared_array<std::vector<uint32_t>> TupleJoiner::getPMJoinArrays(uint32_t
 void TupleJoiner::setThreadCount(uint32_t cnt)
 {
   threadCount = cnt;
-  pmJoinResults.reset(new boost::shared_array<vector<uint32_t>>[cnt]);
+  pmJoinResults.reset(new std::shared_ptr<vector<uint32_t>[]>[cnt]);
   smallRow.reset(new Row[cnt]);
 
   for (uint32_t i = 0; i < cnt; i++)

@@ -127,7 +127,7 @@ int LocalStorage::getObject(const string& source, const string& dest, size_t* si
   return ret;
 }
 
-int LocalStorage::getObject(const std::string& sourceKey, boost::shared_array<uint8_t>* data, size_t* size)
+int LocalStorage::getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size)
 {
   addLatency();
 
@@ -188,7 +188,7 @@ int LocalStorage::putObject(const string& source, const string& dest)
   return ret;
 }
 
-int LocalStorage::putObject(boost::shared_array<uint8_t> data, size_t len, const string& dest)
+int LocalStorage::putObject(std::shared_ptr<uint8_t[]> data, size_t len, const string& dest)
 {
   addLatency();
 

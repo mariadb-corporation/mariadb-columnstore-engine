@@ -312,11 +312,11 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       // 			cout << "joinerCount = " << joinerCount << endl;
       joinTypes.reset(new JoinType[joinerCount]);
 
-      tJoiners.reset(new boost::shared_array<boost::shared_ptr<TJoiner> >[joinerCount]);
+      tJoiners.reset(new std::shared_ptr<boost::shared_ptr<TJoiner>[]>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
         tJoiners[j].reset(new boost::shared_ptr<TJoiner>[processorThreads]);
 
-      tlJoiners.reset(new boost::shared_array<boost::shared_ptr<TLJoiner> >[joinerCount]);
+      tlJoiners.reset(new std::shared_ptr<boost::shared_ptr<TLJoiner>[]>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
         tlJoiners[j].reset(new boost::shared_ptr<TLJoiner>[processorThreads]);
 
@@ -716,7 +716,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     }
     else
     {
-      boost::shared_array<boost::shared_ptr<TJoiner> > tJoiner = tJoiners[joinerNum];
+      std::shared_ptr<boost::shared_ptr<TJoiner>[]> tJoiner = tJoiners[joinerNum];
       uint64_t nullValue = joinNullValues[joinerNum];
       bool& l_doMatchNulls = doMatchNulls[joinerNum];
       joblist::JoinType joinType = joinTypes[joinerNum];
@@ -997,7 +997,7 @@ void BatchPrimitiveProcessor::initProcessor()
         joinFERG->initRow(&joinFERow, true);
         joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
         joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
-        joinFEMappings.reset(new shared_array<int>[joinerCount + 1]);
+        joinFEMappings.reset(new std::shared_ptr<int[]>[joinerCount + 1]);
 
         for (i = 0; i < joinerCount; i++)
           joinFEMappings[i] = makeMapping(smallSideRGs[i], *joinFERG);
@@ -1059,7 +1059,7 @@ void BatchPrimitiveProcessor::initProcessor()
 
       baseJRowMem.reset(new uint8_t[baseJRow.getSize()]);
       baseJRow.setData(rowgroup::Row::Pointer(baseJRowMem.get()));
-      gjrgMappings.reset(new shared_array<int>[joinerCount + 1]);
+      gjrgMappings.reset(new std::shared_ptr<int[]>[joinerCount + 1]);
 
       for (i = 0; i < joinerCount; i++)
         gjrgMappings[i] = makeMapping(smallSideRGs[i], joinedRG);

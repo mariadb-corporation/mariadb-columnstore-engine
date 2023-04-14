@@ -1324,7 +1324,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   /* Functions & Expressions vars */
   boost::shared_ptr<funcexp::FuncExpWrapper> fe1, fe2;
   rowgroup::RowGroup fe1Input, fe2Output;
-  boost::shared_array<int> fe2Mapping;
+  std::shared_ptr<int[]> fe2Mapping;
   bool bRunFEonPM;
 
   /* for UM F & E 2 processing */
@@ -1396,12 +1396,12 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     boost::scoped_array<rowgroup::Row> smallNulls;
     boost::scoped_array<uint8_t> joinedBaseRowData;
     boost::scoped_array<uint8_t> joinFERowData;
-    boost::shared_array<int> largeMapping;
-    vector<boost::shared_array<int>> smallMappings;
-    vector<boost::shared_array<int>> fergMappings;
+    std::shared_ptr<int[]> largeMapping;
+    vector<std::shared_ptr<int[]>> smallMappings;
+    vector<std::shared_ptr<int[]>> fergMappings;
     rowgroup::RGData joinedData;
     boost::scoped_array<uint8_t> largeNullMemory;
-    boost::scoped_array<boost::shared_array<uint8_t>> smallNullMemory;
+    boost::scoped_array<std::shared_ptr<uint8_t[]>> smallNullMemory;
     uint32_t matchCount;
 
     rowgroup::Row postJoinRow;

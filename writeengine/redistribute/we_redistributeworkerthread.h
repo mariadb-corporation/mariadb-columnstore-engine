@@ -27,7 +27,6 @@
 #include <cstdio>
 
 #include "boost/shared_ptr.hpp"
-#include "boost/shared_array.hpp"
 #include "boost/thread/mutex.hpp"
 
 #include "brmtypes.h"
@@ -126,7 +125,7 @@ class RedistributeWorkerThread
   FILE* fOldFilePtr;
   std::set<std::string> fNewDirSet;
   std::set<std::string> fOldDirSet;
-  boost::shared_array<char> fWriteBuffer;
+  std::shared_ptr<char[]> fWriteBuffer;
 
   boost::shared_ptr<BRM::DBRM> fDbrm;
 

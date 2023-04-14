@@ -183,10 +183,10 @@ class StringStore
   std::string empty_str;
   static constexpr const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
 
-  std::vector<boost::shared_array<uint8_t>> mem;
+  std::vector<std::shared_ptr<uint8_t[]>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
-  std::vector<boost::shared_array<uint8_t>> longStrings;
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
   boost::mutex fMutex;
@@ -628,7 +628,7 @@ private:
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
-  boost::shared_array<bool> forceInline;
+  std::shared_ptr<bool[]> forceInline;
   UserDataStore* userDataStore = nullptr;  // For UDAF
 
   friend class RowGroup;
@@ -1521,7 +1521,7 @@ class RowGroup : public messageqcpp::Serializeable
   inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
   inline const std::vector<uint32_t>& getCharsetNumbers() const;
   inline uint32_t getCharsetNumber(uint32_t colIndex) const;
-  inline boost::shared_array<bool>& getForceInline();
+  inline std::shared_ptr<bool[]>& getForceInline();
   static inline uint32_t getHeaderSize()
   {
     return headerSize;
@@ -1613,7 +1613,7 @@ class RowGroup : public messageqcpp::Serializeable
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
-  boost::shared_array<bool> forceInline;
+  std::shared_ptr<bool[]> forceInline;
 
   static const uint32_t headerSize = 18;
   static const uint32_t rowCountOffset = 0;
@@ -1639,8 +1639,8 @@ inline uint64_t getFileRelativeRid(uint64_t baseRid);
  */
 RowGroup operator+(const RowGroup& lhs, const RowGroup& rhs);
 
-boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2);
-void applyMapping(const boost::shared_array<int>& mapping, const Row& in, Row* out);
+std::shared_ptr<int[]> makeMapping(const RowGroup& r1, const RowGroup& r2);
+void applyMapping(const std::shared_ptr<int[]>& mapping, const Row& in, Row* out);
 void applyMapping(const std::vector<int>& mapping, const Row& in, Row* out);
 void applyMapping(const int* mapping, const Row& in, Row* out);
 
@@ -1863,7 +1863,7 @@ inline const std::vector<uint32_t>& RowGroup::getColWidths() const
   return colWidths;
 }
 
-inline boost::shared_array<bool>& RowGroup::getForceInline()
+inline std::shared_ptr<bool[]>& RowGroup::getForceInline()
 {
   return forceInline;
 }

@@ -359,9 +359,9 @@ void DiskJoinStep::joinFcn()
   Row l_largeRow;
   Row l_joinFERow, l_outputRow, baseRow;
   vector<vector<Row::Pointer> > joinMatches;
-  boost::shared_array<Row> smallRowTemplates(new Row[1]);
+  std::shared_ptr<Row[]> smallRowTemplates(new Row[1]);
   vector<std::shared_ptr<TupleJoiner>> joiners;
-  boost::shared_array<boost::shared_array<int> > colMappings, fergMappings;
+  std::shared_ptr<std::shared_ptr<int[]>[]> colMappings, fergMappings;
   boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMem;
   boost::scoped_array<uint8_t> joinFEMem;
   Row smallNullRow;
@@ -386,13 +386,13 @@ void DiskJoinStep::joinFcn()
   smallRG.initRow(&smallRowTemplates[0]);
   joiners.resize(1);
 
-  colMappings.reset(new boost::shared_array<int>[2]);
+  colMappings.reset(new std::shared_ptr<int[]>[2]);
   colMappings[0] = SOMapping;
   colMappings[1] = LOMapping;
 
   if (fe)
   {
-    fergMappings.reset(new boost::shared_array<int>[2]);
+    fergMappings.reset(new std::shared_ptr<int[]>[2]);
     fergMappings[0] = SjoinFEMapping;
     fergMappings[1] = LjoinFEMapping;
   }
