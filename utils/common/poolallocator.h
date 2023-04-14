@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
-#include <boost/shared_array.hpp>
+
 #include <atomic>
 
 namespace utils

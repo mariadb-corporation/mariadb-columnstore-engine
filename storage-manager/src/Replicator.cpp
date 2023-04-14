@@ -29,7 +29,7 @@
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/format.hpp>
 #include <iostream>
 

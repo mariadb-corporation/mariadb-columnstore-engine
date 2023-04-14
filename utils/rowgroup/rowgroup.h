@@ -33,7 +33,7 @@
 // #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <cmath>
 #include <cfloat>

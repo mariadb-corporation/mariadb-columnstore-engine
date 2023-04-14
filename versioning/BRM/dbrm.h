@@ -32,7 +32,7 @@
 #include <set>
 #include <string>
 #include <boost/thread.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_ptr.hpp>
 
 #include "brmtypes.h"

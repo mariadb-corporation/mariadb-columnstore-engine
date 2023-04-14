@@ -26,7 +26,7 @@
 #include <vector>
 #include <set>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/version.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <stdint.h>

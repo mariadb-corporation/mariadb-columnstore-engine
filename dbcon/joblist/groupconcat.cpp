@@ -24,7 +24,7 @@
 #include <string>
 using namespace std;
 
-#include <boost/shared_array.hpp>
+
 using namespace boost;
 
 #include "errorids.h"

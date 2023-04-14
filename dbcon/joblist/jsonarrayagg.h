@@ -23,7 +23,7 @@
 #include <set>
 #include <vector>
 #include <boost/scoped_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 
 #include "groupconcat.h"
 
