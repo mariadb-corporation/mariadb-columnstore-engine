@@ -123,7 +123,11 @@ bool FlatOrderBy::sortCF()
 {
   bool isFailure = false;
   constexpr const bool isFirst = true;
-  if (sortByColumnCF<isFirst>(jobListorderByRGColumnIDs_))
+  PermutationVec emptyPermutation;
+  Ranges2SortQueue emptyRanges2Sort;
+  assert(!jobListorderByRGColumnIDs_.empty());
+  if (sortByColumnCF<isFirst>(jobListorderByRGColumnIDs_, std::move(emptyPermutation),
+                              std::move(emptyRanges2Sort)))
   {
     isFailure = true;
     return isFailure;
@@ -133,7 +137,8 @@ bool FlatOrderBy::sortCF()
 }
 
 template <bool IsFirst>
-bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
+bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                                 Ranges2SortQueue&& ranges2Sort)
 {
   const bool isFailure = false;
   // std::cout << "sortByColumnCF columns size " << columns.size() << std::endl;
@@ -147,7 +152,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TINYINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
@@ -165,7 +171,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
         using EncodedKeyType = utils::ConstString;
         // No difference b/w VARCHAR, CHAR and TEXT types yet
         return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                       EncodedKeyType>(columnId, sortDirection, columns);
+                                       EncodedKeyType>(columnId, sortDirection, columns,
+                                                       std::move(permutation), std::move(ranges2Sort));
       }
       else if (sorting::isDictColumn(columnType, columnWidth) &&
                (columnWidth < rg_.getStringTableThreshold() || forceInline))
@@ -174,7 +181,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
         using StorageType = utils::ShortConstString;
         // No difference b/w VARCHAR, CHAR and TEXT types yet
         return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                       EncodedKeyType>(columnId, sortDirection, columns);
+                                       EncodedKeyType>(columnId, sortDirection, columns,
+                                                       std::move(permutation), std::move(ranges2Sort));
       }
       else if (!sorting::isDictColumn(columnType, columnWidth))
       {
@@ -187,7 +195,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
             using StorageType =
                 datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TINYINT>::type;
             return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                           EncodedKeyType>(columnId, sortDirection, columns);
+                                           EncodedKeyType>(columnId, sortDirection, columns,
+                                                           std::move(permutation), std::move(ranges2Sort));
           }
 
           case 2:
@@ -195,7 +204,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
             using StorageType =
                 datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
             return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                           EncodedKeyType>(columnId, sortDirection, columns);
+                                           EncodedKeyType>(columnId, sortDirection, columns,
+                                                           std::move(permutation), std::move(ranges2Sort));
           };
 
           case 4:
@@ -203,7 +213,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
             using StorageType =
                 datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
             return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                           EncodedKeyType>(columnId, sortDirection, columns);
+                                           EncodedKeyType>(columnId, sortDirection, columns,
+                                                           std::move(permutation), std::move(ranges2Sort));
           };
 
           case 8:
@@ -211,7 +222,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
             using StorageType =
                 datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
             return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::VARCHAR, StorageType,
-                                           EncodedKeyType>(columnId, sortDirection, columns);
+                                           EncodedKeyType>(columnId, sortDirection, columns,
+                                                           std::move(permutation), std::move(ranges2Sort));
           };
           default: idbassert(0);
         }
@@ -224,7 +236,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
           datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::SMALLINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::SMALLINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::DECIMAL:
@@ -236,14 +249,16 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
         using StorageType = datatypes::TSInt128;
         using EncodedKeyType = datatypes::TSInt128;
         return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DECIMAL, StorageType,
-                                       EncodedKeyType>(columnId, sortDirection, columns);
+                                       EncodedKeyType>(columnId, sortDirection, columns,
+                                                       std::move(permutation), std::move(ranges2Sort));
       }
       else if (columnWidth == datatypes::DECIMAL64WIDTH)
       {
         using StorageType = datatypes::WidthToSIntegralType<datatypes::DECIMAL64WIDTH>::type;
         using EncodedKeyType = StorageType;
         return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DECIMAL, StorageType,
-                                       EncodedKeyType>(columnId, sortDirection, columns);
+                                       EncodedKeyType>(columnId, sortDirection, columns,
+                                                       std::move(permutation), std::move(ranges2Sort));
       }
       else
       {
@@ -258,7 +273,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DOUBLE>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DOUBLE, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::MEDINT:
@@ -267,7 +283,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::INT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::INT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::FLOAT:
@@ -276,7 +293,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::FLOAT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::FLOAT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::DATE:
@@ -284,7 +302,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DATE>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DATE, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::BIGINT:
@@ -292,7 +311,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::BIGINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::BIGINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
     case execplan::CalpontSystemCatalog::DATETIME:
     {
@@ -300,14 +320,16 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
           datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::DATETIME>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DATETIME, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
     case execplan::CalpontSystemCatalog::TIME:
     {
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TIME>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TIME, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
@@ -315,7 +337,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
           datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::TIMESTAMP>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::TIMESTAMP, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::UTINYINT:
@@ -324,7 +347,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
           datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UTINYINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UTINYINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::USMALLINT:
@@ -333,7 +357,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
           datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::USMALLINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::USMALLINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::UMEDINT:
@@ -342,7 +367,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -350,7 +376,8 @@ bool FlatOrderBy::sortByColumnCF(joblist::OrderByKeysType columns)
       using StorageType = datatypes::ColDataTypeToIntegralType<execplan::CalpontSystemCatalog::UBIGINT>::type;
       using EncodedKeyType = StorageType;
       return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::UBIGINT, StorageType,
-                                     EncodedKeyType>(columnId, sortDirection, columns);
+                                     EncodedKeyType>(columnId, sortDirection, columns, std::move(permutation),
+                                                     std::move(ranges2Sort));
     }
 
     default: break;
@@ -508,7 +535,8 @@ template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename 
           typename EncodedKeyType>
   requires IsTrue<IsFirst> bool
 FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool isAscDirection,
-                                     joblist::OrderByKeysType columns)
+                                     joblist::OrderByKeysType columns, PermutationVec&& permutationA,
+                                     Ranges2SortQueue&& ranges2SortA)
 {
   bool isFailure = false;
   // ASC = true, DESC = false
@@ -517,10 +545,11 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool isAscDi
   const bool nullsFirst = !isAscDirection;
   auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * rgDatas_.size() *
                rowgroup::rgCommonSize;
+  Ranges2SortQueue ranges2Sort;
+  PermutationVec permutation;
   {
     std::vector<EncodedKeyType> keys;
     PermutationVec nulls;
-    PermutationVec permutation;
     // Grab RAM  keys + permutation. NULLS are counted also.
     if (!mm_->acquire(bytes))
     {
@@ -564,10 +593,9 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool isAscDi
     }
 
     // Use && here
-    FlatOrderBy::Ranges2SortQueue ranges4Sort;
     if (columns.size() > 1)
     {
-      ranges4Sort = populateRanges<EncodedKeyType>(columnID, (nullsFirst) ? nulls.size() : 0ULL, keys.begin(),
+      ranges2Sort = populateRanges<EncodedKeyType>(columnID, (nullsFirst) ? nulls.size() : 0ULL, keys.begin(),
                                                    keys.end());
 
       // Adding NULLs range into ranges
@@ -575,27 +603,29 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool isAscDi
       {
         if (isAscDirection)
         {
-          ranges4Sort.push({keys.size(), permutation.size()});
+          ranges2Sort.push({keys.size(), permutation.size()});
         }
         else
         {
-          ranges4Sort.push({0, nulls.size()});
+          ranges2Sort.push({0, nulls.size()});
         }
       }
     }
 
-    permutation_ = std::move(permutation);
-
     // Check if copy ellision works here.
     // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
-    ranges2Sort_ = std::move(ranges4Sort);
   }
   if (columns.size() > 1)
   {
     // !!! FREE RAM
     mm_->release(bytes);
     columns.erase(columns.begin());
-    return sortByColumnCF<false>(columns);
+    return sortByColumnCF<false>(columns, std::move(permutation), std::move(ranges2Sort));
+  }
+  else
+  {
+    permutation_ = std::move(permutation);
+    ranges2Sort_ = std::move(ranges2Sort);
   }
   return isFailure;
 }
@@ -604,7 +634,8 @@ template <bool IsFirst, datatypes::SystemCatalog::ColDataType ColType, typename 
           typename EncodedKeyType>
   requires IsFalse<IsFirst> bool
 FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDirection,
-                                     joblist::OrderByKeysType columns)
+                                     joblist::OrderByKeysType columns, PermutationVec&& permutationA,
+                                     Ranges2SortQueue&& ranges2SortA)
 {
   // std::cout << " sortByColumnCF_  1 columns.size() " << columns.size() << std::endl;
 
@@ -615,10 +646,13 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
   const bool isAscDirection = !sortDirection;
 
   // Add stopped check into this and other loops
-  Ranges2SortQueue ranges4Sort;
-  while (!ranges2Sort_.empty())
+  PermutationVec permutation = permutationA;
+  Ranges2SortQueue ranges2Sort = ranges2SortA;
+  Ranges2SortQueue ranges2SortNext;
+
+  while (!ranges2Sort.empty())
   {
-    const auto [sameValuesRangeBeginDist, sameValuesRangeEndDist] = ranges2Sort_.front();
+    const auto [sameValuesRangeBeginDist, sameValuesRangeEndDist] = ranges2Sort.front();
     // for (auto p : permutation_)
     // {
     //   std::cout << " permutation_ " << p.rowID << " ";
@@ -626,10 +660,10 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     // std::cout << std::endl;
     // std::cout << "The next column iter left " << sameValuesRangeBeginDist << " right "
     //           << sameValuesRangeEndDist << std::endl;
-    const auto sameValuesRangeBegin = permutation_.begin() + sameValuesRangeBeginDist;
-    const auto sameValuesRangeEnd = permutation_.begin() + sameValuesRangeEndDist;
+    const auto sameValuesRangeBegin = permutation.begin() + sameValuesRangeBeginDist;
+    const auto sameValuesRangeEnd = permutation.begin() + sameValuesRangeEndDist;
     const auto permCurRangeBeginEndDist = sameValuesRangeEndDist - sameValuesRangeBeginDist;
-    ranges2Sort_.pop();
+    ranges2Sort.pop();
     auto bytes = (sizeof(EncodedKeyType) + sizeof(FlatOrderBy::PermutationType)) * permCurRangeBeginEndDist;
     if (!mm_->acquire(bytes))
     {
@@ -690,23 +724,24 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
       {
         auto range = ranges.front();
         ranges.pop();
-        ranges4Sort.push(range);
+        ranges2SortNext.push(range);
       }
       if (nulls.size() > 1)
       {
         if (sortDirection)
         {
-          ranges4Sort.push({sameValuesRangeBeginDist + keys.size(),
-                            sameValuesRangeBeginDist + keys.size() + nulls.size()});
+          ranges2SortNext.push({sameValuesRangeBeginDist + keys.size(),
+                                sameValuesRangeBeginDist + keys.size() + nulls.size()});
         }
         else
         {
-          ranges4Sort.push({sameValuesRangeBeginDist, sameValuesRangeBeginDist + nulls.size()});
+          ranges2SortNext.push({sameValuesRangeBeginDist, sameValuesRangeBeginDist + nulls.size()});
         }
       }
     }
 
-    assert(sameValuesRangeBegin + permutation.size() + nulls.size() != permutation_.end() + 1);
+    // Copy back the sorted run into the permutation.
+    assert(sameValuesRangeBegin + permutation.size() + nulls.size() != permutation.end() + 1);
     {
       auto rangeBegin = sameValuesRangeBegin;
       if (isAscDirection)
@@ -737,14 +772,17 @@ FlatOrderBy::exchangeSortByColumnCF_(const uint32_t columnID, const bool sortDir
     // !!! FREE RAM
     mm_->release(bytes);
   }
-  // Check if copy ellision works here.
   // Set a stack of equal values ranges. Comp complexity is O(N), mem complexity is O(N)
-  ranges2Sort_ = std::move(ranges4Sort);
   // std::cout << " sortByColumnCF_  2 columns.size() " << columns.size() << std::endl;
   if (columns.size() > 1)
   {
     columns.erase(columns.begin());
-    return sortByColumnCF<false>(columns);
+    return sortByColumnCF<false>(columns, std::move(permutation), std::move(ranges2SortNext));
+  }
+  else
+  {
+    permutation_ = std::move(permutation);
+    ranges2Sort_ = std::move(ranges2SortNext);
   }
 
   return isFailure;
