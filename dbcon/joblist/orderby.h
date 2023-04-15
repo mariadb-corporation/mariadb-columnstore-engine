@@ -210,15 +210,18 @@ concept IsFalse = requires { requires FalseCheck == false; };
 // namely rg_ must be init-ed only once.
 class FlatOrderBy
 {
-  using RGDataOrRowIDType = uint32_t;
+ public:
   struct PermutationType
   {
     uint64_t rgdataID : 32 {}, rowID : 24 {}, flags : 8 {};
   };
-  using PermutationVec = std::vector<PermutationType>;
   using PermutationVecIter = std::vector<PermutationType>::iterator;
   using IterDiffT = std::iterator_traits<PermutationVecIter>::difference_type;
+  using PermutationVec = std::vector<PermutationType>;
   using Ranges2SortQueue = std::queue<std::pair<IterDiffT, IterDiffT>>;
+
+ private:
+  using RGDataOrRowIDType = uint32_t;
 
  public:
   FlatOrderBy();
@@ -229,20 +232,21 @@ class FlatOrderBy
   bool addBatch(rowgroup::RGData& rgData);
   bool sortCF();
   template <bool IsFirst>
-  bool sortByColumnCF(joblist::OrderByKeysType columns);
+  bool sortByColumnCF(joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                      Ranges2SortQueue&& ranges2Sort);
 
   bool getData(rowgroup::RGData& data);
 
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
     requires IsFalse<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
-                          joblist::OrderByKeysType columns);
+  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection, joblist::OrderByKeysType columns,
+                          PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort);
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
     requires IsTrue<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection,
-                          joblist::OrderByKeysType columns);
+  exchangeSortByColumnCF_(const uint32_t columnId, const bool sortDirection, joblist::OrderByKeysType columns,
+                          PermutationVec&& permutation, Ranges2SortQueue&& ranges2Sort);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
   void initialPermutationKeysNulls(const uint32_t columnID, const bool nullsFirst,
                                    std::vector<EncodedKeyType>& keys, PermutationVec& permutation,
@@ -268,6 +272,10 @@ class FlatOrderBy
   const PermutationVec& getPermutation() const
   {
     return permutation_;
+  }
+  joblist::OrderByKeysType getSortingColumns() const
+  {
+    return jobListorderByRGColumnIDs_;
   }
 
  private:
