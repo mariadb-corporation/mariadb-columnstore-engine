@@ -39,9 +39,7 @@
 #include <cmath>
 #include <cfloat>
 #include "conststring.h"
-#ifdef __linux__
 #include <execinfo.h>
-
 
 #include "hasher.h"
 
@@ -294,7 +292,6 @@ class UserDataStore
   bool fUseUserDataMutex = false;
   boost::mutex fMutex;
 };
-
 
 class RowGroup;
 class Row;
