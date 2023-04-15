@@ -354,84 +354,28 @@ void TupleAnnexStep::join()
 
 uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
 {
+  RGData rgDataOut;
   bool more = false;
   uint32_t rowCount = 0;
 
   try
   {
     bs.restart();
-    if (firstPhaseflatOrderBys_.empty())
+
+    more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
+    if (more && !cancelled())
     {
-      more = fOutputDL->next(fOutputIterator, &fRgDataOut);
-
-      if (more && !cancelled())
-      {
-        fRowGroupDeliver.setData(&fRgDataOut);
-        fRowGroupDeliver.serializeRGData(bs);
-        rowCount = fRowGroupDeliver.getRowCount();
-      }
-      else
-      {
-        while (more)
-          more = fOutputDL->next(fOutputIterator, &fRgDataOut);
-
-        fEndOfResult = true;
-      }
+      fRowGroupDeliver.setData(&rgDataOut);
+      fRowGroupDeliver.serializeRGData(bs);
+      rowCount = fRowGroupDeliver.getRowCount();
     }
-    else  // flat order by
+    else
     {
-      // WIP might be a costly call
-      // std::cout << " nextBand secondPhaseFlatThreadId " << secondPhaseFlatThreadId << std::endl;
-      auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-      // auto outputIterator = outputDL->getIterator();
-      if (!outputDL)
-      {
-        throw logic_error("Output is not a RowGroup data list 1.");
-      }
-      // WIP Let's presume for a moment there is one iterator for each outputDL
-      more = outputDL->next(0, &fRgDataOut);
+      while (more)
+        more = fOutputDL->next(fOutputIterator, &rgDataOut);
 
-      // WIP
-      // if (more && !cancelled())
-      if (more)
-      {
-        fRowGroupDeliver.setData(&fRgDataOut);
-        fRowGroupDeliver.serializeRGData(bs);
-        rowCount = fRowGroupDeliver.getRowCount();
-      }
-      else
-      {
-        if (cancelled())
-        {
-          while (more)
-            more = outputDL->next(0, &fRgDataOut);
-          fEndOfResult = true;
-        }
-        else  // !more
-        {
-          while (!more && secondPhaseFlatThreadId < secondPhaseflatOrderBys_.size() - 1)
-          {
-            ++secondPhaseFlatThreadId;
-            auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-            if (!outputDL)
-            {
-              throw logic_error("Output is not a RowGroup data list 2.");
-            }
-            more = outputDL->next(0, &fRgDataOut);
-            if (more)
-            {
-              fRowGroupDeliver.setData(&fRgDataOut);
-              fRowGroupDeliver.serializeRGData(bs);
-              rowCount = fRowGroupDeliver.getRowCount();
-            }
-          }
-        }
-        // Bump the id if the current id thread' DL is drained
-
-        // set the flag if all DLs are drained
-        fEndOfResult =
-            (!more && secondPhaseFlatThreadId == secondPhaseflatOrderBys_.size()) ? true : fEndOfResult;
-      }
+      fEndOfResult = true;
     }
   }
   catch (...)
@@ -439,16 +383,16 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
     handleException(std::current_exception(), logging::ERR_IN_DELIVERY, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::nextBand()");
     while (more)
-      more = fOutputDL->next(fOutputIterator, &fRgDataOut);
-    // WIP drain all DLs that are left
+      more = fOutputDL->next(fOutputIterator, &rgDataOut);
+
     fEndOfResult = true;
   }
 
   if (fEndOfResult)
   {
     // send an empty / error band
-    fRgDataOut.reinit(fRowGroupDeliver, 0);
-    fRowGroupDeliver.setData(&fRgDataOut);
+    rgDataOut.reinit(fRowGroupDeliver, 0);
+    fRowGroupDeliver.setData(&rgDataOut);
     fRowGroupDeliver.resetRowGroup(0);
     fRowGroupDeliver.setStatus(status());
     fRowGroupDeliver.serializeRGData(bs);
@@ -1185,10 +1129,6 @@ size_t getMetricM3(sorting::ValueRangesMatrix& m)
                  return matrixRowSum;
                });
 
-  // size_t matrixRowSumsMin = std::numeric_limits<size_t>::max();
-  // r::for_each(matrixRowSums,
-  //             [&matrixRowSumsMin](auto e) { matrixRowSumsMin = std::min(matrixRowSumsMin, e); });
-  // std::cout << "matrixRowSumsMin " << matrixRowSumsMin << std::endl;
   r::for_each(matrixRowSums,
               [&matrixRowSums, &metric](auto matrixRowPower1)
               {
@@ -1199,8 +1139,6 @@ size_t getMetricM3(sorting::ValueRangesMatrix& m)
                                                                           : matrixRowPower2 - matrixRowPower1;
                             });
               });
-  // r::for_each(matrixRowSums, [&metric, matrixRowPower](auto e)
-  //             { metric += (matrixRowPower > e) ? matrixRowPower - e : e - matrixRowPower; });
   return metric;
 }
 
@@ -1593,10 +1531,10 @@ void TupleAnnexStep::joinOutputDLs()
     for (; !cancelled() && secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
          ++secondPhaseFlatThreadId)
     {
-      // std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
+      std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
       bool more = true;
       auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-      // std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
+      std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
 
       if (!outputDL)
       {
@@ -1622,8 +1560,8 @@ void TupleAnnexStep::joinOutputDLs()
           fRowGroupOut.setRowCount(0);
         }
       }
-      // std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
-      //           << std::endl;
+      std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
+                << std::endl;
     }
     // auto end = std::chrono::steady_clock::now();
     // std::chrono::duration<double> elapsed_seconds = end - start;
@@ -1741,7 +1679,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     }
     perm.insert(perm.end(), srcPermBegin, srcPermEnd);
   }
-  // std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
+  std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
   // WIP clean up first phase perm vector when the last range is read from it
   sorting::PDQOrderBy::Ranges2SortQueue ranges2Sort;
   // means ranges2Sort is a pair of int64 and ::size() is uint64
@@ -1753,7 +1691,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
   // This call produces a stream of sorted data in RGData format in id-th output DL.
   // This call presumes there is an equal number of threads at the first and the second phases .
   // WIP use a unique_ptr ref here and get it as an argument ?
-  // auto start = std::chrono::steady_clock::now();
+  auto start = std::chrono::steady_clock::now();
   try
   {
     std::cout << threadName << " perm " << perm.size() << std::endl;
@@ -1800,10 +1738,9 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::executeWithOrderByPDQOrderBy()");
   }
-  // auto end = std::chrono::steady_clock::now();
-  // std::chrono::duration<double> elapsed_seconds = end - start;
-  // std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() <<
-  // std::endl;
+  auto end = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() << std::endl;
   outputDL->endOfInput();
 }
 
