@@ -1181,9 +1181,9 @@ inline void mod_pdqsort_loop(Iter begin, Iter end, PermIter perm_begin, PermIter
 
     // Partition and get results.
     auto [pivot_pos_, perm_pivot_pos_, already_partitioned] =
-        // Branchless ? mod_partition_right_branchless(begin, end, perm_begin, perm_end, comp)
-        //            : mod_partition_right(begin, end, perm_begin, perm_end, comp);
-        mod_partition_right(begin, end, perm_begin, perm_end, comp);
+        Branchless ? mod_partition_right_branchless(begin, end, perm_begin, perm_end, comp)
+                   : mod_partition_right(begin, end, perm_begin, perm_end, comp);
+    mod_partition_right(begin, end, perm_begin, perm_end, comp);
 
     Iter pivot_pos = PDQSORT_PREFER_MOVE(pivot_pos_);
     PermIter perm_pivot_pos = PDQSORT_PREFER_MOVE(perm_pivot_pos_);
