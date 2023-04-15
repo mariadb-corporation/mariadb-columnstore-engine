@@ -179,16 +179,15 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   jsa.outAdd(spdl);
   // WIP this block preserves an association from a subquery if there is par flat ORDER BY
   auto assoc = (querySteps.back())->outputAssociation();
-  if (assoc.outSize() > 1)
+  // if (assoc.outSize() > 1)
   {
     sqs->outputAssociation(assoc);
   }
-  else
-  {
-    (querySteps.back())->outputAssociation(jsa);
-    sqs->outputAssociation(assoc);
-  }
-
+  // else
+  // {
+  //   (querySteps.back())->outputAssociation(jsa);
+  //   sqs->outputAssociation(assoc);
+  // }
   // sqs->outputAssociation(jsa);
 
   fSubQueryStep.reset(sqs);
