@@ -540,17 +540,14 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeLessAsc)
   sorting::SortingThreads prevPhaseSorting;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   size_t keysNumber = this->rg_.getRowCount();
-  std::vector<uint8_t*> keyBufsVec(keysNumber);
+  std::vector<std::unique_ptr<uint8_t>> keyBufsVec;
   std::vector<KeyType> keys;
-  size_t i = 0;
-  for_each(keyBufsVec.begin(), keyBufsVec.end(),
-           [this, &keys, &i, &keyBufsVec, bufUnitSize](uint8_t* buf)
-           {
-             buf = new uint8_t[bufUnitSize];
-             std::memset(buf, 0, bufUnitSize);
-             keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, buf));
-             keyBufsVec[i] = buf;
-           });
+  for (size_t i = 0; i < keysNumber; ++i)
+  {
+    keyBufsVec.emplace_back(std::unique_ptr<uint8_t>(new uint8_t[bufUnitSize]));
+    std::memset(keyBufsVec.back().get(), 0, bufUnitSize);
+    keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i, 0}, keyBufsVec.back().get()));
+  }
   // keys[0] == NULL
   std::vector<std::vector<OutcomesT>> expectedResultsMatrix = {
       {FAL, TR, TR, TR, SKIP, TR, TR, TR, TR, TR},
@@ -602,6 +599,76 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeLessAsc)
     ASSERT_TRUE(false);
   }
 }
+
+// TYPED_TEST(KeyTypeFloatTest1, KeyTypeLessAsc1)
+// {
+//   sorting::SortingThreads prevPhaseSorting;
+//   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
+//   size_t keysNumber = this->rg_.getRowCount();
+//   std::vector<std::unique_ptr<uint8_t>> keyBufsVec;  // (keysNumber);
+//   std::vector<KeyType> keys;
+//   for (size_t i = 0; i < keysNumber; ++i)
+//   //  [this, &keys, &i, &keyBufsVec, bufUnitSize](uint8_t* buf)
+//   {
+//     keyBufsVec.emplace_back(std::unique_ptr<uint8_t>(new uint8_t[bufUnitSize]));
+//     // auto buf = std::unique_ptr<uint8_t>(new uint8_t[bufUnitSize]);
+//     std::memset(keyBufsVec.back().get(), 0, bufUnitSize);
+//     keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i++, 0}, keyBufsVec.back().get()));
+//   }
+//   //  });
+//   // keys[0] == NULL
+//   std::vector<std::vector<OutcomesT>> expectedResultsMatrix = {
+//       {FAL, TR, TR, TR, SKIP, TR, TR, TR, TR, TR},
+
+//       {FAL, FAL, TR, TR, FAL, FAL, FAL, FAL, TR, FAL},
+
+//       {FAL, FAL, FAL, TR, FAL, FAL, FAL, FAL, FAL, FAL},
+
+//       {FAL, FAL, FAL, FAL, FAL, FAL, FAL, FAL, FAL, FAL},
+
+//       {FAL, TR, TR, TR, FAL, SKIP, TR, TR, TR, TR},
+
+//       {FAL, TR, TR, TR, FAL, FAL, TR, TR, TR, TR},
+
+//       {FAL, TR, TR, TR, FAL, FAL, FAL, FAL, TR, TR},
+
+//       {FAL, TR, TR, TR, FAL, FAL, TR, FAL, TR, TR},
+
+//       {FAL, FAL, TR, TR, FAL, FAL, FAL, FAL, FAL, FAL},
+
+//       {FAL, TR, TR, TR, FAL, FAL, FAL, FAL, TR, FAL}};
+//   [[maybe_unused]] size_t x = 0;
+//   [[maybe_unused]] size_t y = 0;
+//   bool testHadFailed = false;
+//   for_each(keys.begin(), keys.end(),
+//            [this, &prevPhaseSorting, &expectedResultsMatrix, &keys, &x, &y, &testHadFailed](auto& key1)
+//            {
+//              y = 0;
+//              for_each(
+//                  keys.begin(), keys.end(),
+//                  [this, &prevPhaseSorting, &expectedResultsMatrix, &key1, &x, &y, &testHadFailed](auto&
+//                  key2)
+//                  {
+//                    OutcomesT result =
+//                        (key1.less(key2, this->rg_, this->keysCols_, {0, 42, 0}, {0, 42, 0},
+//                        prevPhaseSorting))
+//                            ? TR
+//                            : FAL;
+//                    if (expectedResultsMatrix[x][y] != SKIP && expectedResultsMatrix[x][y] != result)
+//                    {
+//                      std::cout << "Results mismatch with: left row number = " << x
+//                                << " and right row number = " << y << std::endl;
+//                      testHadFailed = true;
+//                    }
+//                    ++y;
+//                  });
+//              ++x;
+//            });
+//   if (testHadFailed)
+//   {
+//     ASSERT_TRUE(false);
+//   }
+// }
 
 TYPED_TEST(KeyTypeFloatTest, KeyTypeLessDsc)
 {

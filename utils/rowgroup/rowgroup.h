@@ -41,7 +41,6 @@
 #include <cmath>
 #include <cfloat>
 #include "conststring.h"
-#ifdef __linux__
 #include <execinfo.h>
 
 #include "countingallocator.h"
