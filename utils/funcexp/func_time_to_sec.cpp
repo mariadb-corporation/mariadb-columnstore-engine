@@ -213,14 +213,27 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                             CalpontSystemCatalog::ColType& op_ct)
 {
-  IDB_Decimal decimal = IDB_Decimal(getIntVal(row, parm, isNull, op_ct), 6, 0);
-  int32_t scaleDiff = decimal.scale - op_ct.scale;
+  int64_t value = getIntVal(row, parm, isNull, op_ct);
+  IDB_Decimal decimal;
+  int32_t scaleDiff = 6 - op_ct.scale;
+
   if (scaleDiff > 0)
   {
-    decimal.value = (int64_t)(decimal.value > 0 ? (double)decimal.value / IDB_pow[scaleDiff] + 0.5
-                                                : (double)decimal.value / IDB_pow[scaleDiff] - 0.5);
-    decimal.setScale(op_ct.scale);
+    value = (int64_t)(value > 0 ? (double)value / IDB_pow[scaleDiff] + 0.5
+                                : (double)value / IDB_pow[scaleDiff] - 0.5);
   }
+
+  if (!op_ct.isWideDecimalType())
+  {
+    decimal.value = value;
+  }
+  else
+  {
+    decimal.s128Value = value;
+  }
+
+  decimal.setScale(op_ct.scale);
+  decimal.precision = op_ct.precision;
   return decimal;
 }
 
