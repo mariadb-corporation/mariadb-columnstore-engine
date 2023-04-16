@@ -574,7 +574,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
           return;
 
         for (; range.first != range.second; ++range.first)
-          matches->push_back(range.first->second);
+          matches->emplace_back(rowgroup::Row::Pointer(range.first->second));
       }
     }
     else
@@ -615,7 +615,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
       pair<iterator, iterator> range = h[bucket]->equal_range(nullVal);
 
       for (; range.first != range.second; ++range.first)
-        matches->push_back(range.first->second);
+        matches->emplace_back(rowgroup::Row::Pointer(range.first->second));
     }
     else
     {
@@ -648,7 +648,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
         for (uint i = 0; i < bucketCount; i++)
           for (it = h[i]->begin(); it != h[i]->end(); ++it)
-            matches->push_back(it->second);
+            matches->emplace_back(rowgroup::Row::Pointer(it->second));
       }
       else
       {
@@ -747,7 +747,7 @@ void TupleJoiner::doneInserting()
       {
         while (hit == h[bucket]->end())
           hit = h[++bucket]->begin();
-        smallRow.setPointer(hit->second);
+        smallRow.setPointer(rowgroup::Row::Pointer(hit->second));
         ++hit;
       }
       else
@@ -1033,10 +1033,10 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
       for (uint i = 0; i < bucketCount; i++)
         for (it = h[i]->begin(); it != h[i]->end(); ++it)
         {
-          smallR.setPointer(it->second);
+          smallR.setPointer(rowgroup::Row::Pointer(it->second));
 
           if (!smallR.isMarked())
-            out->push_back(it->second);
+            out->emplace_back(rowgroup::Row::Pointer(it->second));
         }
     }
     else
