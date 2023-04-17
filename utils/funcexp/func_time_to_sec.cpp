@@ -217,19 +217,32 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
   IDB_Decimal decimal;
   int32_t scaleDiff = 6 - op_ct.scale;
 
-  if (scaleDiff > 0)
-  {
-    value = (int64_t)(value > 0 ? (double)value / IDB_pow[scaleDiff] + 0.5
-                                : (double)value / IDB_pow[scaleDiff] - 0.5);
-  }
-
   if (!op_ct.isWideDecimalType())
   {
+    if (scaleDiff > 0)
+    {
+      value = (int64_t)(value > 0 ? (double)value / IDB_pow[scaleDiff] + 0.5
+                                  : (double)value / IDB_pow[scaleDiff] - 0.5);
+    }
+    else if (scaleDiff < 0)
+    {
+      value = value * IDB_pow[-scaleDiff];
+    }
     decimal.value = value;
   }
   else
   {
-    decimal.s128Value = value;
+    int128_t s128Value = value;
+    if (scaleDiff > 0)
+    {
+      s128Value = (int128_t)(s128Value > 0 ? (double)s128Value / IDB_pow[scaleDiff] + 0.5
+                                  : (double)s128Value / IDB_pow[scaleDiff] - 0.5);
+    }
+    else if (scaleDiff < 0)
+    {
+      s128Value = s128Value * IDB_pow[-scaleDiff];
+    }
+    decimal.s128Value = s128Value;
   }
 
   decimal.setScale(op_ct.scale);
