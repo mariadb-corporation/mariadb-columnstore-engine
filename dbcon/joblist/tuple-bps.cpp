@@ -195,7 +195,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
     smallNulls.reset(new Row[smallSideCount]);
     smallMappings.resize(smallSideCount);
     fergMappings.resize(smallSideCount + 1);
-    smallNullMemory.reset(new shared_array<uint8_t>[smallSideCount]);
+    smallNullMemory.reset(new std::shared_ptr<uint8_t[]>[smallSideCount]);
     local_primRG.initRow(&largeSideRow);
     local_outputRG.initRow(&joinedBaseRow, true);
     joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
@@ -2719,7 +2719,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
   {
     struct timeval tvbuf;
     gettimeofday(&tvbuf, 0);
-    FIFO<boost::shared_array<uint8_t>>* pFifo = 0;
+    FIFO<std::shared_ptr<uint8_t[]>>* pFifo = 0;
     uint64_t totalBlockedReadCount = 0;
     uint64_t totalBlockedWriteCount = 0;
 
@@ -2728,7 +2728,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
     for (size_t iDataList = 0; iDataList < inDlCnt; iDataList++)
     {
-      pFifo = dynamic_cast<FIFO<boost::shared_array<uint8_t>>*>(
+      pFifo = dynamic_cast<FIFO<std::shared_ptr<uint8_t[]>>*>(
           fInputJobStepAssociation.outAt(iDataList)->rowGroupDL());
 
       if (pFifo)
@@ -2742,7 +2742,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
     for (size_t iDataList = 0; iDataList < outDlCnt; iDataList++)
     {
-      pFifo = dynamic_cast<FIFO<boost::shared_array<uint8_t>>*>(dlp);
+      pFifo = dynamic_cast<FIFO<std::shared_ptr<uint8_t[]>>*>(dlp);
 
       if (pFifo)
       {

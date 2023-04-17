@@ -26,7 +26,7 @@
 #include <vector>
 #include <set>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/version.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <stdint.h>
@@ -435,9 +435,9 @@ class ByteStream : public Serializeable
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
   // Methods to get and set `long strings`.
-  EXPORT std::vector<boost::shared_array<uint8_t>>& getLongStrings();
-  EXPORT const std::vector<boost::shared_array<uint8_t>>& getLongStrings() const;
-  EXPORT void setLongStrings(const std::vector<boost::shared_array<uint8_t>>& other);
+  EXPORT std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings();
+  EXPORT const std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings() const;
+  EXPORT void setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other);
 
   friend class ::ByteStreamTestSuite;
 
@@ -469,7 +469,7 @@ class ByteStream : public Serializeable
   uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
   uint32_t fMaxLen;     // how big fBuf is currently
   // Stores `long strings`.
-  std::vector<boost::shared_array<uint8_t>> longStrings;
+    std::vector<std::shared_ptr<uint8_t[]>> longStrings;
 };
 
 template <int W, typename T = void>

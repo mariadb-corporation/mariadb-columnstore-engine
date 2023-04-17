@@ -28,7 +28,7 @@ using namespace std;
 #include "calpontselectexecutionplan.h"
 #include "rowgroup.h"
 
-#include <boost/shared_array.hpp>
+
 using namespace boost;
 
 #include "errorids.h"

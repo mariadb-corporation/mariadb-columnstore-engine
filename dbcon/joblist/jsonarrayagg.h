@@ -23,7 +23,7 @@
 #include <set>
 #include <vector>
 #include <boost/scoped_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 
 #include "groupconcat.h"
 
@@ -45,7 +45,7 @@ class JsonArrayInfo : public GroupConcatInfo
 
  protected:
   uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  boost::shared_array<int> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 };
 
 class JsonArrayAggregatAgUM : public GroupConcatAgUM
@@ -63,7 +63,7 @@ class JsonArrayAggregatAgUM : public GroupConcatAgUM
   EXPORT uint8_t* getResult();
 
  protected:
-  void applyMapping(const boost::shared_array<int>&, const rowgroup::Row&);
+  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 };
 
 // JSON_ARRAYAGG base

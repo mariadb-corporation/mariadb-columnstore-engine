@@ -1544,7 +1544,7 @@ void MasterDBRMNode::doSIDTIDMap(ByteStream& msg, ThreadParams* p)
 {
   ByteStream reply;
   int len, i;
-  boost::shared_array<SIDTIDEntry> entries;
+  std::shared_ptr<SIDTIDEntry[]> entries;
 
   try
   {

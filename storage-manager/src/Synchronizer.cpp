@@ -645,7 +645,7 @@ void Synchronizer::synchronizeWithJournal(const string& sourceFile, list<string>
   }
 
   int err;
-  boost::shared_array<uint8_t> data;
+  std::shared_ptr<uint8_t[]> data;
   size_t count = 0, size = mdEntry.length, originalSize = 0;
 
   bool oldObjIsCached = cache->exists(prefix, cloudKey);
@@ -673,7 +673,7 @@ void Synchronizer::synchronizeWithJournal(const string& sourceFile, list<string>
     // do any add'l alloc'ing or copying
     if (size < mdEntry.length)
     {
-      boost::shared_array<uint8_t> tmp(new uint8_t[mdEntry.length]());
+      std::shared_ptr<uint8_t[]> tmp(new uint8_t[mdEntry.length]());
       memcpy(tmp.get(), data.get(), size);
       memset(&tmp[size], 0, mdEntry.length - size);
       data.swap(tmp);

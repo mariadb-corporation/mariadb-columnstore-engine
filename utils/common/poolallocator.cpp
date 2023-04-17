@@ -24,10 +24,11 @@
 //#define NDEBUG
 #include <cassert>
 
+
 #include "poolallocator.h"
 
 using namespace std;
-using namespace boost;
+
 
 namespace utils
 {
@@ -51,7 +52,7 @@ void PoolAllocator::deallocateAll()
 
 void PoolAllocator::newBlock()
 {
-  shared_array<uint8_t> next;
+  std::shared_ptr<uint8_t[]> next;
 
   capacityRemaining = allocSize;
 

@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_array.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include "boost/tuple/tuple.hpp"
@@ -5298,7 +5298,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   RGData rgData;
   scoped_array<RowBucketVec> rowBucketVecs(new RowBucketVec[fNumOfBuckets]);
   scoped_array<Row> distRow;
-  scoped_array<shared_array<uint8_t>> distRowData;
+  scoped_array<std::shared_ptr<uint8_t[]>> distRowData;
   uint32_t bucketID;
   scoped_array<bool> bucketDone(new bool[fNumOfBuckets]);
   vector<uint32_t> hashLens;
@@ -5365,7 +5365,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                 rowBucketVecs[i].resize(multiDist->subAggregators().size());
 
               distRow.reset(new Row[multiDist->subAggregators().size()]);
-              distRowData.reset(new shared_array<uint8_t>[multiDist->subAggregators().size()]);
+              distRowData.reset(new std::shared_ptr<uint8_t[]>[multiDist->subAggregators().size()]);
 
               for (uint32_t j = 0; j < multiDist->subAggregators().size(); j++)
               {

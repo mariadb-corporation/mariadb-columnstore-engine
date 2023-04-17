@@ -73,7 +73,7 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
-#include <boost/shared_array.hpp>
+
 
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"
@@ -515,7 +515,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     return SBS(new ByteStream(0));
   res->advanceInputPtr(msglen);
 
-  std::vector<boost::shared_array<uint8_t>> longStrings;
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   try
   {
     for (uint32_t i = 0; i < longStringSize; ++i)
@@ -527,7 +527,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
         return SBS(new ByteStream(0));
 
       // Allocate new memory for the `long string`.
-      boost::shared_array<uint8_t> longString(
+      std::shared_ptr<uint8_t[]> longString(
           new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
 
       uint8_t* longStringData = longString.get();

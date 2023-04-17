@@ -304,8 +304,8 @@ class BatchPrimitiveProcessor
   /* RowGroup support */
   rowgroup::RowGroup outputRG;
   boost::scoped_ptr<rowgroup::RGData> outRowGroupData;
-  boost::shared_array<int> rgMap;          // maps input cols to output cols
-  boost::shared_array<int> projectionMap;  // maps the projection steps to the output RG
+  std::shared_ptr<int[]> rgMap;          // maps input cols to output cols
+  std::shared_ptr<int[]> projectionMap;  // maps the projection steps to the output RG
   bool hasRowGroup;
 
   /* Rowgroups + join */
@@ -331,40 +331,40 @@ class BatchPrimitiveProcessor
   boost::scoped_array<uint8_t> baseJRowMem;
   boost::scoped_ptr<rowgroup::RGData> joinedRGMem;
   boost::scoped_array<rowgroup::Row> smallRows;
-  boost::shared_array<boost::shared_array<int>> gjrgMappings;
+  std::shared_ptr<std::shared_ptr<int[]>[]> gjrgMappings;
 
-  boost::shared_array<boost::shared_array<boost::shared_ptr<TJoiner>>> tJoiners;
+  std::shared_ptr<std::shared_ptr<boost::shared_ptr<TJoiner>[]>[]> tJoiners;
   typedef std::vector<uint32_t> MatchedData[LOGICAL_BLOCK_RIDS];
-  boost::shared_array<MatchedData> tSmallSideMatches;
+  std::shared_ptr<MatchedData[]> tSmallSideMatches;
   uint32_t executeTupleJoin(uint32_t startRid);
   bool getTupleJoinRowGroupData;
   std::vector<rowgroup::RowGroup> smallSideRGs;
   rowgroup::RowGroup largeSideRG;
-  boost::shared_array<rowgroup::RGData> smallSideRowData;
-  boost::shared_array<rowgroup::RGData> smallNullRowData;
-  boost::shared_array<rowgroup::Row::Pointer> smallNullPointers;
-  boost::shared_array<uint64_t> ssrdPos;  // this keeps track of position when building smallSideRowData
-  boost::shared_array<uint32_t> smallSideRowLengths;
-  boost::shared_array<joblist::JoinType> joinTypes;
+  std::shared_ptr<rowgroup::RGData[]> smallSideRowData;
+  std::shared_ptr<rowgroup::RGData[]> smallNullRowData;
+  std::shared_ptr<rowgroup::Row::Pointer[]> smallNullPointers;
+  std::shared_ptr<uint64_t[]> ssrdPos;  // this keeps track of position when building smallSideRowData
+  std::shared_ptr<uint32_t[]> smallSideRowLengths;
+  std::shared_ptr<joblist::JoinType[]> joinTypes;
   uint32_t joinerCount;
-  boost::shared_array<std::atomic<uint32_t>> tJoinerSizes;
+  std::shared_ptr<std::atomic<uint32_t>[]> tJoinerSizes;
   // LSKC[i] = the column in outputRG joiner i uses as its key column
-  boost::shared_array<uint32_t> largeSideKeyColumns;
+  std::shared_ptr<uint32_t[]> largeSideKeyColumns;
   // KCPP[i] = true means a joiner uses projection step i as a key column
-  boost::shared_array<bool> keyColumnProj;
+  std::shared_ptr<bool[]> keyColumnProj;
   rowgroup::Row oldRow, newRow;  // used by executeTupleJoin()
-  boost::shared_array<uint64_t> joinNullValues;
-  boost::shared_array<bool> doMatchNulls;
+  std::shared_ptr<uint64_t[]> joinNullValues;
+  std::shared_ptr<bool[]> doMatchNulls;
   boost::scoped_array<boost::scoped_ptr<funcexp::FuncExpWrapper>> joinFEFilters;
   bool hasJoinFEFilters;
   bool hasSmallOuterJoin;
 
   /* extra typeless join vars & fcns*/
-  boost::shared_array<bool> typelessJoin;
-  boost::shared_array<std::vector<uint32_t>> tlLargeSideKeyColumns;
+  std::shared_ptr<bool[]> typelessJoin;
+  std::shared_ptr<std::vector<uint32_t>[]> tlLargeSideKeyColumns;
   std::shared_ptr<std::vector<uint32_t>> tlSmallSideKeyColumns;
-  boost::shared_array<boost::shared_array<boost::shared_ptr<TLJoiner>>> tlJoiners;
-  boost::shared_array<uint32_t> tlSmallSideKeyLengths;
+  std::shared_ptr<std::shared_ptr<boost::shared_ptr<TLJoiner>[]>[]> tlJoiners;
+  std::shared_ptr<uint32_t[]> tlSmallSideKeyLengths;
   // True if smallSide and largeSide TypelessData key column differs,e.g BIGINT vs DECIMAL(38).
   bool mJOINHasSkewedKeyColumn;
   const rowgroup::RowGroup* mSmallSideRGPtr;
@@ -372,7 +372,7 @@ class BatchPrimitiveProcessor
 
   inline void getJoinResults(const rowgroup::Row& r, uint32_t jIndex, std::vector<uint32_t>& v);
   // these allocators hold the memory for the keys stored in tlJoiners
-  boost::shared_array<utils::PoolAllocator> storedKeyAllocators;
+  std::shared_ptr<utils::PoolAllocator[]> storedKeyAllocators;
 
   /* PM Aggregation */
   rowgroup::RowGroup joinedRG;  // if there's a join, the rows are formatted with this
@@ -393,9 +393,9 @@ class BatchPrimitiveProcessor
   boost::scoped_array<uint8_t> joinFERowData;
   boost::scoped_ptr<rowgroup::RGData> fe1Data,
       fe2Data;  // can probably make these RGDatas not pointers to RGDatas
-  boost::shared_array<int> projectForFE1;
-  boost::shared_array<int> fe1ToProjection, fe2Mapping;  // RG mappings
-  boost::scoped_array<boost::shared_array<int>> joinFEMappings;
+  std::shared_ptr<int[]> projectForFE1;
+  std::shared_ptr<int[]> fe1ToProjection, fe2Mapping;  // RG mappings
+  boost::scoped_array<std::shared_ptr<int[]>> joinFEMappings;
   rowgroup::Row fe1In, fe1Out, fe2In, fe2Out, joinFERow;
 
   bool hasDictStep;

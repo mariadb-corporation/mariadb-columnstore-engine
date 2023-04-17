@@ -119,7 +119,7 @@ const TxnID SessionManager::getTxnID(const SID session)
   return ret;
 }
 
-boost::shared_array<SIDTIDEntry> SessionManager::SIDTIDMap(int& len)
+std::shared_ptr<SIDTIDEntry[]> SessionManager::SIDTIDMap(int& len)
 {
   // is this cast valid?
   return dbrm.SIDTIDMap(len);
@@ -150,7 +150,7 @@ bool SessionManager::checkActiveTransaction(const SID sessionId, bool& bIsDbrmUp
   bIsDbrmUp = true;
   int arrayLenth = 0;
   bool ret = false;
-  boost::shared_array<SIDTIDEntry> sIDTIDMap;
+  std::shared_ptr<SIDTIDEntry[]> sIDTIDMap;
 
   sIDTIDMap = SIDTIDMap(arrayLenth);
 
@@ -178,7 +178,7 @@ bool SessionManager::isTransactionActive(const SID sessionId, bool& bIsDbrmUp)
   bIsDbrmUp = true;
   int arrayLenth = 0;
   bool ret = false;
-  boost::shared_array<SIDTIDEntry> sIDTIDMap;
+  std::shared_ptr<SIDTIDEntry[]> sIDTIDMap;
 
   sIDTIDMap = SIDTIDMap(arrayLenth);
 
