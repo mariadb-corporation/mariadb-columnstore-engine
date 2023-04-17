@@ -29,7 +29,7 @@
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/format.hpp>
 #include <iostream>
 
@@ -259,7 +259,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
   {
     // read the existing header and check if max_offset needs to be updated
     size_t tmp;
-    boost::shared_array<char> headertxt;
+    std::shared_ptr<char[]> headertxt;
     try
     {
       headertxt = seekToEndOfHeader1(fd, &tmp);

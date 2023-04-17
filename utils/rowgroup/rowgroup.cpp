@@ -31,9 +31,8 @@
 #include <iterator>
 using namespace std;
 
-#include <boost/shared_array.hpp>
+
 #include <numeric>
-using namespace boost;
 
 #include "bytestream.h"
 using namespace messageqcpp;
@@ -97,7 +96,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 
   if ((len + 4) >= CHUNK_SIZE)
   {
-    shared_array<uint8_t> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
+    std::shared_ptr<uint8_t[]> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
     longStrings.push_back(newOne);
     lastMC = (MemChunk*)longStrings.back().get();
     lastMC->capacity = lastMC->currentSize = len + 4;
@@ -114,7 +113,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
       // mem usage debugging
       // if (lastMC)
       // cout << "Memchunk efficiency = " << lastMC->currentSize << "/" << lastMC->capacity << endl;
-      shared_array<uint8_t> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
+      std::shared_ptr<uint8_t[]> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
       mem.push_back(newOne);
       lastMC = (MemChunk*)mem.back().get();
       lastMC->currentSize = 0;
@@ -196,8 +195,8 @@ void StringStore::deserialize(ByteStream& bs)
 
 void StringStore::clear()
 {
-  vector<shared_array<uint8_t> > emptyv;
-  vector<shared_array<uint8_t> > emptyv2;
+  vector<std::shared_ptr<uint8_t[]> > emptyv;
+  vector<std::shared_ptr<uint8_t[]> > emptyv2;
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
   empty = true;
@@ -1325,9 +1324,9 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
   return os.str();
 }
 
-boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2)
+std::shared_ptr<int[]> makeMapping(const RowGroup& r1, const RowGroup& r2)
 {
-  shared_array<int> ret(new int[r1.getColumnCount()]);
+  std::shared_ptr<int[]> ret(new int[r1.getColumnCount()]);
   // bool reserved[r2.getColumnCount()];
   bool* reserved = (bool*)alloca(r2.getColumnCount() * sizeof(bool));
   uint32_t i, j;
@@ -1352,7 +1351,7 @@ boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2)
   return ret;
 }
 
-void applyMapping(const boost::shared_array<int>& mapping, const Row& in, Row* out)
+void applyMapping(const std::shared_ptr<int[]>& mapping, const Row& in, Row* out)
 {
   applyMapping(mapping.get(), in, out);
 }
@@ -1397,7 +1396,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
 
 RowGroup& RowGroup::operator+=(const RowGroup& rhs)
 {
-  boost::shared_array<bool> tmp;
+  std::shared_ptr<bool[]> tmp;
   uint32_t i, j;
   // not appendable if data is set
   assert(!data);

@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 
 
 namespace joblist

@@ -29,7 +29,7 @@
 #include <stdexcept>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/uuid/uuid.hpp>
 
 #include "calpontsystemcatalog.h"

@@ -148,7 +148,7 @@ int IOCoordinator::loadObject(int fd, uint8_t* data, off_t offset, size_t length
 int IOCoordinator::loadObjectAndJournal(const char* objFilename, const char* journalFilename, uint8_t* data,
                                         off_t offset, size_t length)
 {
-  boost::shared_array<uint8_t> argh;
+  std::shared_ptr<uint8_t[]> argh;
 
   size_t tmp = 0;
   argh = mergeJournal(objFilename, journalFilename, offset, length, &tmp);
@@ -259,7 +259,7 @@ ssize_t IOCoordinator::read(const char* _filename, uint8_t* data, off_t offset, 
   // copy data from each object + journal into the returned data
   size_t count = 0;
   int err;
-  boost::shared_array<uint8_t> mergedData;
+  std::shared_ptr<uint8_t[]> mergedData;
   for (auto& object : relevants)
   {
     const auto& jit = journalFDs.find(object.key);
@@ -1168,10 +1168,10 @@ const bf::path& IOCoordinator::getMetadataPath() const
 // first byte after the header.
 // update: had to make it also return the header; the boost json parser does not stop at either
 // a null char or the end of an object.
-boost::shared_array<char> seekToEndOfHeader1(int fd, size_t* _bytesRead)
+std::shared_ptr<char[]> seekToEndOfHeader1(int fd, size_t* _bytesRead)
 {
   //::lseek(fd, 0, SEEK_SET);
-  boost::shared_array<char> ret(new char[100]);
+  std::shared_ptr<char[]> ret(new char[100]);
   int err;
 
   err = ::read(fd, ret.get(), 100);
@@ -1197,12 +1197,12 @@ int IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t* buf, off_t of
   throw runtime_error("IOCoordinator::mergeJournal(int, int, etc) is not implemented yet.");
 }
 
-boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char* object, const char* journal,
+std::shared_ptr<uint8_t[]> IOCoordinator::mergeJournal(const char* object, const char* journal,
                                                          off_t offset, size_t len,
                                                          size_t* _bytesReadOut) const
 {
   int objFD, journalFD;
-  boost::shared_array<uint8_t> ret;
+  std::shared_ptr<uint8_t[]> ret;
   size_t l_bytesRead = 0;
 
   objFD = ::open(object, O_RDONLY);
@@ -1263,7 +1263,7 @@ boost::shared_array<uint8_t> IOCoordinator::mergeJournal(const char* object, con
   }
   ScopedCloser s2(journalFD);
 
-  boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
+  std::shared_ptr<char[]> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
   boost::property_tree::ptree header;
@@ -1335,7 +1335,7 @@ out:
 
 // MergeJournalInMem is a specialized version of mergeJournal().  This is currently only used by Synchronizer
 // and mergeJournal(), and only for merging the whole object with the whole journal.
-int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t>& objData, size_t len,
+int IOCoordinator::mergeJournalInMem(std::shared_ptr<uint8_t[]>& objData, size_t len,
                                      const char* journalPath, size_t* _bytesReadOut) const
 {
   // if the journal is over some size threshold (100MB for now why not),
@@ -1350,7 +1350,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t>& objData, size
   ScopedCloser s(journalFD);
 
   // grab the journal header and make sure the version is 1
-  boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
+  std::shared_ptr<char[]> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
   boost::property_tree::ptree header;
@@ -1420,7 +1420,7 @@ int IOCoordinator::mergeJournalInMem(boost::shared_array<uint8_t>& objData, size
   return 0;
 }
 
-int IOCoordinator::mergeJournalInMem_bigJ(boost::shared_array<uint8_t>& objData, size_t len,
+int IOCoordinator::mergeJournalInMem_bigJ(std::shared_ptr<uint8_t[]>& objData, size_t len,
                                           const char* journalPath, size_t* _bytesReadOut) const
 {
   size_t l_bytesRead = 0;
@@ -1430,7 +1430,7 @@ int IOCoordinator::mergeJournalInMem_bigJ(boost::shared_array<uint8_t>& objData,
   ScopedCloser s(journalFD);
 
   // grab the journal header and make sure the version is 1
-  boost::shared_array<char> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
+  std::shared_ptr<char[]> headertxt = seekToEndOfHeader1(journalFD, &l_bytesRead);
   stringstream ss;
   ss << headertxt.get();
   boost::property_tree::ptree header;

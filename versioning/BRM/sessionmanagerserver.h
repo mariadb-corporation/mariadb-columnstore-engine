@@ -28,7 +28,7 @@
 
 #include <map>
 
-#include <boost/shared_array.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 
@@ -193,7 +193,7 @@ class SessionManagerServer
    * @return A pointer to the array.  Note: The caller is responsible for
    * deallocating it.  Use delete[].
    */
-  EXPORT boost::shared_array<SIDTIDEntry> SIDTIDMap(int& len);
+  EXPORT std::shared_ptr<SIDTIDEntry[]> SIDTIDMap(int& len);
 
   /**
    * get a unique 32-bit number

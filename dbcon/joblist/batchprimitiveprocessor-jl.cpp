@@ -873,7 +873,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
 
     if (!pmSendsFinalResult() || pmSendsMatchesAnyway)
     {
-      boost::shared_array<vector<uint32_t> > joinResults;
+      std::shared_ptr<vector<uint32_t>[]> joinResults;
       uint32_t i, j;
 
       if (pmSendsMatchesAnyway)
@@ -920,7 +920,6 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
   idbassert(in.length() == 0);
 }
 
-// boost::shared_array<uint8_t>
 RGData BatchPrimitiveProcessorJL::getErrorRowGroupData(uint16_t error) const
 {
   RGData ret;

@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 #include <sstream>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_ptr.hpp>
 
 #include <tr1/unordered_set>
