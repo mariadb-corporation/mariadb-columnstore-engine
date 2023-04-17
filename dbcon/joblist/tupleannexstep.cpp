@@ -1620,14 +1620,14 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
 
   std::cout << " first HeapMerge id " << id << std::endl;
   auto outputDL = fOutputJobStepAssociation.outAt(idA)->rowGroupDL();
-  auto start = std::chrono::steady_clock::now();
+  // auto start = std::chrono::steady_clock::now();
   try
   {
     std::cout << "try 1 id " << id << std::endl;
     size_t rows = 0;
     while ((rows = sorting.getData(rgDataOut, firstPhaseThreads)) && !cancelled())
     {
-      std::cout << "Insert rgdata with " << rows << " rows " << std::endl;
+      std::cout << "Insert rgdata with " << std::dec << rows << " rows " << std::endl;
       outputDL->insert(rgDataOut);
     }
   }
@@ -1636,10 +1636,10 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::finalizeHeapOrderBy()");
   }
-  auto end = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "Heap finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count()
-            << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::chrono::duration<double> elapsed_seconds = end - start;
+  // std::cout << "Heap finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count()
+  //           << std::endl;
   outputDL->endOfInput();
 }
 
@@ -1679,7 +1679,7 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     }
     perm.insert(perm.end(), srcPermBegin, srcPermEnd);
   }
-  std::cout << " finFlat id " << id << " perm size " << perm.size() << std::endl;
+  // std::cout << " finFlat id " << std::dec << id << " perm size " << perm.size() << std::endl;
   // WIP clean up first phase perm vector when the last range is read from it
   sorting::PDQOrderBy::Ranges2SortQueue ranges2Sort;
   // means ranges2Sort is a pair of int64 and ::size() is uint64
@@ -1691,10 +1691,10 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
   // This call produces a stream of sorted data in RGData format in id-th output DL.
   // This call presumes there is an equal number of threads at the first and the second phases .
   // WIP use a unique_ptr ref here and get it as an argument ?
-  auto start = std::chrono::steady_clock::now();
+  // auto start = std::chrono::steady_clock::now();
   try
   {
-    std::cout << threadName << " perm " << perm.size() << std::endl;
+    // std::cout << threadName << " perm " << perm.size() << std::endl;
 
     if (!cancelled())
     {
@@ -1738,9 +1738,10 @@ void TupleAnnexStep::finalizePDQOrderBy(const uint32_t idA, const sorting::Value
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
                     "TupleAnnexStep::executeWithOrderByPDQOrderBy()");
   }
-  auto end = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::chrono::duration<double> elapsed_seconds = end - start;
+  // std::cout << "finalize " + std::to_string(id) + " elapsed time: " << elapsed_seconds.count() <<
+  // std::endl;
   outputDL->endOfInput();
 }
 

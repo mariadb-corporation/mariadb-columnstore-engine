@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <tuple>
@@ -2326,23 +2327,28 @@ TEST_F(HeapOrderByTest, HeapOrderByCtorOddSourceThreadsNumber)
   }
 }
 
-TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
+TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeapLarge)
 {
-  size_t heapSizeHalf = 4;
+  size_t heapSizeHalf = 13;
   rowgroup::Row r;
   sorting::SortingThreads prevPhasThreads;
-  joblist::OrderByKeysType keysAndDirections = {{0, true}};
-  joblist::MemManager* mm = new joblist::MemManager;  //(&rm, sl, false, false);
+  const bool isAsc = true;
+  joblist::OrderByKeysType keysAndDirections = {{0, isAsc}};
+  joblist::MemManager* mm = new joblist::MemManager;
   // no NULLs yet
-  // отсортировать
-  std::vector<std::vector<int64_t>> data{{3660195432, 3377000516, 3369182711, 2874400139, 2517866456,
-                                          -517915385, -1950920917, -2522630870, -3733817126, -3891607892},
-                                         {3396035276, 2989829828, 2938792700, 2907046279, 2508452465,
-                                          873216056, 220139688, -1886091209, -2996493537, -3004747259},
-                                         {3340465022, 2029570516, 1999115580, 630267809, 149731580,
-                                          -816942484, -1665500714, -2753689374, -3087922913, -3250034565},
-                                         {4144560611, 1759584866, 1642547418, 517102532, 344540230,
-                                          -525087651, -976832186, -1379630329, -2362115756, -3558545988}};
+  const size_t perThreadNumbers = 5000;
+  std::mt19937 mt;
+  std::vector<std::vector<int64_t>> data(heapSizeHalf, std::vector<int64_t>(perThreadNumbers, 0));
+  std::vector<int64_t> examplar_data;
+  ranges::for_each(data,
+                   [&mt, &examplar_data](auto& v)
+                   {
+                     ranges::generate(v, [&mt]() { return mt() % 50000; });
+                     ranges::sort(v, std::greater<int64_t>());
+                     //  ranges::copy(v, std::ostream_iterator<int64_t>(std::cout, " "));
+                     //  std::cout << std::endl;
+                     ranges::transform(v, std::back_inserter(examplar_data), [](auto el) { return el; });
+                   });
   sorting::ValueRangesVector ranges(heapSizeHalf, {0, data.front().size()});
   for (size_t i = 0; i < heapSizeHalf; ++i)
   {
@@ -2355,15 +2361,14 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
     uint32_t rowSize = r.getSize();
     sorting::PermutationVec perm(data[i].size());
     size_t it = 0;
-    std::generate(perm.begin(), perm.end(), [i, it]() mutable { return PermutationType{0, it++, i}; });
-    std::for_each(data[i].begin(), data[i].end(),
-                  [&, rg, r, rowSize, perm](const int64_t x) mutable
-                  {
-                    r.setIntField<8>(x, 0);
-                    r.nextRow(rowSize);
-                  });
+    ranges::generate(perm, [i, it]() mutable { return PermutationType{0, it++, i}; });
+    ranges::for_each(data[i],
+                     [&, rg, r, rowSize, perm](const int64_t x) mutable
+                     {
+                       r.setIntField<8>(x, 0);
+                       r.nextRow(rowSize);
+                     });
     rg.setRowCount(data[i].size());
-    // std::cout << " i " << i << " " << rg.toString() << std::endl;
     prevPhasThreads.emplace_back(new PDQOrderBy());
     // добавить permutations вида {0,1,2...}
     prevPhasThreads.back()->getRGDatas().push_back(rgData);
@@ -2371,29 +2376,19 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
   }
   HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
                 heapSizeHalf, ranges);
-  [[maybe_unused]] auto& keys = h.heap();
-  PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
-                          PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
-                          PermutationType{0, 9, 2}, PermutationType{0, 8, 3}};
-  for (auto r = right.begin(); auto k : keys)
-  {
-    ASSERT_EQ(k.second, *r++);
-  }
-  // for (auto k : h.heap())
-  // {
-  //   std::cout << " perm {" << k.second.rgdataID << "," << k.second.rowID << "," << k.second.threadID <<
-  //   "}"
-  //             << std::endl;
-  // }
+
   PermutationType p;
   std::vector<int64_t> values;
+  [[maybe_unused]] size_t i = 0;
   while ((p = h.getTopPermuteFromHeap(h.heapMut(), prevPhasThreads)) !=
          sorting::HeapOrderBy::ImpossiblePermute)
   {
+    // std::cout << " perm threadID " << p.threadID << " rowId " << p.rowID;
     ASSERT_EQ(0UL, p.rgdataID);
     rg_.setData(&rgDatas_[p.threadID]);
     int64_t v = rg_.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0, p.rowID);
-
+    // std::cout << " i " << i++ << " v " << v << std::endl;
+    // std::cout << " heapToString " << h.heapToString(prevPhasThreads) << std::endl;
     // std::cout << "p {" << p.rgdataID << "," << p.rowID << "," << p.threadID << "}"
     //           << " v " << v << std::endl;
     // for (auto k : h.heap())
@@ -2410,5 +2405,7 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeap)
     }
     values.push_back(v);
   }
-  ASSERT_TRUE(is_sorted(values.begin(), values.end()));
+  ASSERT_EQ(values.size(), perThreadNumbers * heapSizeHalf);
+  ranges::sort(examplar_data);
+  ASSERT_THAT(values, Eq(examplar_data));
 }

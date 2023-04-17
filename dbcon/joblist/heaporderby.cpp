@@ -461,7 +461,7 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
 
 HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKeysType& sortingKeyCols,
                          const size_t limitStart, const size_t limitCount, joblist::MemManager* mm,
-                         const uint32_t threadId, const sorting::SortingThreads& prevPhaseSorting,
+                         const uint32_t threadId, const sorting::SortingThreads& prevPhaseSortingThreads,
                          const uint32_t threadNum, const sorting::ValueRangesVector& ranges)
  : start_(limitStart)
  , count_(limitCount)
@@ -492,7 +492,7 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
   keyBuf_.reset(new uint8_t[(heapSize + 1) * keyBytesSize_]);
 
   // Make a permutations struct
-  for (auto range = ranges.begin(); auto& prevPhaseSortingThread : prevPhaseSorting)
+  for (auto range = ranges.begin(); auto& prevPhaseSortingThread : prevPhaseSortingThreads)
   {
     auto [rangeLeft, rangeRight] = *range;
     ++range;
@@ -502,7 +502,6 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
     recordsLeftInRanges_ += rangeSize;
     ranges_.push_back({ImpossiblePermute});
     ranges_.back().reserve(rangeSize);
-    // ranges_.back().push_back(ImpossiblePermute);
     if (rangeSize)
     {
       ranges_.back().insert(ranges_.back().end(), srcPermBegin, srcPermEnd);
@@ -510,9 +509,9 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
   }
 
   assert(heapSize < 256);  // WIP
-  if (heapSize > prevPhaseSorting.size())
+  if (heapSize > prevPhaseSortingThreads.size())
   {
-    for (size_t i = 0; i < nextPowOf2 - prevPhaseSorting.size(); ++i)
+    for (size_t i = 0; i < nextPowOf2 - prevPhaseSortingThreads.size(); ++i)
     {
       ranges_.push_back({ImpossiblePermute});
     }
@@ -535,7 +534,7 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
       for (; bestChildIdx < heapSizeHalf;)
       {
         prevBestChildIdx = bestChildIdx;
-        bestChildIdx = findMinAndSwap(heap_, prevPhaseSorting, prevBestChildIdx);
+        bestChildIdx = findMinAndSwap(heap_, prevPhaseSortingThreads, prevBestChildIdx);
       }
       if (heap_[prevBestChildIdx].second == ImpossiblePermute)  // edge case to handle empty Sources
       {
@@ -552,7 +551,7 @@ HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKey
         heap_[bestChildIdx] = {KeyType(buf), p};
         continue;
       }
-      rg_.setData(&(prevPhaseSorting[p.threadID]->getRGDatas()[p.rgdataID]));
+      rg_.setData(&(prevPhaseSortingThreads[p.threadID]->getRGDatas()[p.rgdataID]));
       auto key = KeyType(rg_, sortingKeyCols, p, buf);
       heap_[bestChildIdx] = {key, p};
       ranges_[threadId].pop_back();
@@ -613,8 +612,10 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
   // Use the previously swapped threadId and key buffer;
   auto threadId = heap[heapIdx].second.threadID;
   auto p = ranges_[threadId].back();
-  ranges_[threadId].pop_back();
-  if (p == ImpossiblePermute)
+  // std::cout << "getTopPermuteFromHeap heapIdx " << heapIdx << " threadId " << threadId << " p " <<
+  // p.rgdataID
+  //           << " ranges_[threadId].size " << ranges_[threadId].size() << std::endl;
+  if (p == ImpossiblePermute || ranges_[threadId].empty())
   {
     *buf = 2;  // impossible key WIP
     heap_[bestChildIdx] = {KeyType(rg_, buf), ImpossiblePermute};
@@ -626,6 +627,7 @@ PermutationType HeapOrderBy::getTopPermuteFromHeap(std::vector<HeapUnit>& heap,
     rg_.setData(&(prevPhaseSortingThreads[p.threadID]->getRGDatas()[p.rgdataID]));
     heap_[bestChildIdx] = {KeyType(rg_, jobListorderByRGColumnIDs_, p, buf), p};
   }
+  ranges_[threadId].pop_back();
 
   return topPermute;
 }
@@ -674,6 +676,31 @@ const string HeapOrderBy::toString() const
   }
   oss << " offset-" << start_ << " count-" << count_;
 
+  oss << endl;
+
+  return oss.str();
+}
+
+const string HeapOrderBy::heapToString(const SortingThreads& prevPhaseThreads)
+{
+  ostringstream oss;
+  oss << std::endl;
+  for (size_t i = 1; i < heap_.size(); ++i)
+  {
+    if (!(i & (i - 1)))
+    {
+      oss << std::endl;
+    }
+    auto p = heap_[i].second;
+    if (p != ImpossiblePermute)
+    {
+      rg_.setData(&(prevPhaseThreads[p.threadID]->getRGDatas()[p.rgdataID]));
+      int64_t v = rg_.getColumnValue<execplan::CalpontSystemCatalog::BIGINT, int64_t, int64_t>(0, p.rowID);
+      oss << "v [" << v << "] ";
+    }
+
+    oss << " (" << p.threadID << "," << p.rgdataID << "," << p.rowID << ") ";
+  }
   oss << endl;
 
   return oss.str();

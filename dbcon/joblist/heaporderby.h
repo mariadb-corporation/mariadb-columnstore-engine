@@ -98,6 +98,7 @@ class HeapOrderBy
   {
     return heap_;
   }
+  const string heapToString(const SortingThreads& prevPhaseThreads);
 
  protected:
   uint64_t start_;
