@@ -76,9 +76,7 @@ local platformMap(platform, arch) =
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
-  "export CLICOLOR_FORCE=1; " + platform_map[platform] + " | storage/columnstore/columnstore/build/ansi2txt.sh " + result + "/build.log";
-
-
+  'export CLICOLOR_FORCE=1; ' + platform_map[platform] + ' | storage/columnstore/columnstore/build/ansi2txt.sh ' + result + '/build.log';
 
 
 local testRun(platform) =
@@ -119,7 +117,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
-  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
+  local publish_pkg_url = 'https://cspkg.s3.amazonaws.com/index.html?prefix=' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
 
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
@@ -226,6 +224,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'rm -f ' + result + '/*cmapi*',
       'docker cp ' + result + ' smoke$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
@@ -259,6 +258,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'rm -f ' + result + '/*cmapi*',
       'docker cp ' + result + ' mtr$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
@@ -349,6 +349,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd ..',
       'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --ulimit core=-1 --name regression$${DRONE_BUILD_NUMBER} --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       // copy packages, regresssion test suite and storage manager unit test binary to the instance
+      'rm -f ' + result + '/*cmapi*',
       'docker cp ' + result + ' regression$${DRONE_BUILD_NUMBER}:/',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y procps-ng wget elfutils"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
@@ -443,7 +444,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   dockerfile:: {
     name: 'dockerfile',
-    depends_on: ['publish pkg'],
+    depends_on: ['publish pkg', 'publish cmapi build'],
     //failure: 'ignore',
     image: 'alpine/git',
     commands: [
@@ -463,7 +464,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       // branchp has slash if not empty
       MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
-      CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/cmapi/develop/latest/' + arch + '/',
+      CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
     },
     settings: {
       repo: 'mariadb/enterprise-columnstore-dev',
@@ -478,6 +479,46 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
         from_secret: 'dockerhub_password',
       },
     },
+  },
+  cmapipython:: {
+    name: 'cmapi python',
+    image: 'rockylinux:8',
+    volumes: [pipeline._volumes.mdb],
+    environment: {
+      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20221106/cpython-3.10.8+20221106-x86_64_v4-unknown-linux-gnu-noopt-full.tar.zst',
+      PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20221106/cpython-3.10.8+20221106-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
+    },
+    commands: [
+      'cd cmapi',
+      'dnf install -y wget zstd findutils gcc',
+      if (arch == 'arm64') then 'dnf install -y python39-devel && export CC=gcc && export CFLAGS="$$(/usr/bin/python3.9-config --cflags)"',
+      'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
+      'mv python pp && mv pp/install python',
+      'chown -R root:root python',
+      'python/bin/pip3 install -t deps --only-binary :all -r requirements.txt',
+      './cleanup.sh',
+      'cp cmapi_server/cmapi_server.conf cmapi_server/cmapi_server.conf.default',
+    ],
+  },
+  cmapibuild:: {
+    name: 'cmapi build',
+    depends_on: ['cmapi python'],
+    image: img,
+    volumes: [pipeline._volumes.mdb],
+    environment: {
+      DEBIAN_FRONTEND: 'noninteractive',
+    },
+    commands: [
+      'mkdir -p ' + result,
+      'cd cmapi',
+      if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev',
+      if (platform == 'centos:7') then 'yum install -y epel-release && yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake',
+      './cleanup.sh',
+      'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
+      'mv *.' + pkg_format + ' ../' + result + '/',
+      'cd ../',
+      if (pkg_format == 'rpm') then 'createrepo ' + result else 'set -o pipefail && dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
+    ],
   },
   multi_node_mtr:: {
     name: 'mtr',
@@ -596,7 +637,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                platformMap(platform, arch),
                'sccache --show-stats',
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
-               if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
+               if (pkg_format == 'rpm') then 'createrepo ' + result else 'set -o pipefail && dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
                // list storage manager binary
                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
@@ -618,7 +659,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
            {
              name: 'pkg',
              depends_on: ['unittests'],
-             image: 'docker:git',
+             image: 'alpine/git',
              when: {
                status: ['success', 'failure'],
              },
@@ -629,24 +670,26 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
                'mv buildinfo.txt ' + result + '/',
-               'mv ' + result + ' /drone/src/',
+               'cp -r ' + result + '/* /drone/src/' + result + '/',
                'ls -l /drone/src/' + result,
                'echo "check columnstore package:"',
                'ls -l /drone/src/' + result + ' | grep columnstore',
              ],
            },
          ] +
+         [pipeline.cmapipython] + [pipeline.cmapibuild] +
+         [pipeline.publish('cmapi build')] +
          [pipeline.publish()] +
          [
-          {
+           {
              name: 'publish pkg url',
              depends_on: ['publish pkg'],
              image: 'alpine/git',
              commands: [
-               "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'"
-             ]
-           }
-        ] +
+               "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
+             ],
+           },
+         ] +
          (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
