@@ -28,14 +28,14 @@
 #include <boost/uuid/random_generator.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #ifndef __clang__
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 #include <boost/property_tree/ptree.hpp>
 
 #ifndef __clang__
-  #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 #include <boost/property_tree/json_parser.hpp>
 #include "Utilities.h"
@@ -61,8 +61,7 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* use
 inline bool retryable_error(uint8_t s3err)
 {
   return (s3err == MS3_ERR_RESPONSE_PARSE || s3err == MS3_ERR_REQUEST_ERROR || s3err == MS3_ERR_OOM ||
-          s3err == MS3_ERR_IMPOSSIBLE || s3err == MS3_ERR_SERVER ||
-          s3err == MS3_ERR_AUTH_ROLE);
+          s3err == MS3_ERR_IMPOSSIBLE || s3err == MS3_ERR_SERVER || s3err == MS3_ERR_AUTH_ROLE);
 }
 
 // Best effort to map the errors returned by the ms3 API to linux errnos
@@ -76,7 +75,7 @@ const int s3err_to_errno[] = {
     EBADMSG,       // 4 MS3_ERR_RESPONSE_PARSE
     ECOMM,         // 5 MS3_ERR_REQUEST_ERROR
     ENOMEM,        // 6 MS3_ERR_OOM
-    EINVAL,        // 7 MS3_ERR_IMPOSSIBLE.  Will have to look through the code to find out what this is exactly.
+    EINVAL,  // 7 MS3_ERR_IMPOSSIBLE.  Will have to look through the code to find out what this is exactly.
     EKEYREJECTED,  // 8 MS3_ERR_AUTH
     ENOENT,        // 9 MS3_ERR_NOT_FOUND
     EPROTO,        // 10 MS3_ERR_SERVER
@@ -210,9 +209,13 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   }
 
   endpoint = config->getValue("S3", "endpoint");
+  auto libmariaS3Debug = config->getValue("S3", "libmarias3_debug");
 
   ms3_library_init();
-  // ms3_debug();
+  if (!libmariaS3Debug.empty())
+  {
+    ms3_debug();
+  }
   testConnectivityAndPerms();
 }
 
@@ -308,7 +311,8 @@ void S3Storage::testConnectivityAndPerms()
   err = exists(testObjKey, &_exists);
   if (err)
   {
-    logger->log(LOG_CRIT, "S3Storage::exists() failed on nonexistent object. Check 'ListBucket' permissions.");
+    logger->log(LOG_CRIT,
+                "S3Storage::exists() failed on nonexistent object. Check 'ListBucket' permissions.");
     FAIL(HEAD)
   }
   logger->log(LOG_INFO, "S3Storage: S3 connectivity & permissions are OK");
@@ -518,8 +522,10 @@ int S3Storage::putObject(const std::shared_ptr<uint8_t[]> data, size_t len, cons
                   s3err_msgs[s3err], bucket.c_str(), destKey.c_str());
     errno = s3err_to_errno[s3err];
     if (s3err == MS3_ERR_ENDPOINT)
-      logger->log(LOG_ERR, "S3Storage::putObject(): Bucket location not match provided endpoint:, bucket = %s, endpoint = %s.",
-                  bucket.c_str(), endpoint.c_str());
+      logger->log(
+          LOG_ERR,
+          "S3Storage::putObject(): Bucket location not match provided endpoint:, bucket = %s, endpoint = %s.",
+          bucket.c_str(), endpoint.c_str());
     return -1;
   }
   return 0;
