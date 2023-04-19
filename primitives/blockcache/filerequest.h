@@ -253,7 +253,7 @@ class fileRequest
   /**
    * @brief condition variable. signal when request is complete
    **/
-  std::condition_variable& frCond() const
+  std::condition_variable_any& frCond() const
   {
     return fFRCond;
   }
@@ -305,7 +305,7 @@ class fileRequest
   bool fFlg;
   BRM::VER_t fTxn;
   mutable std::mutex fFRMutex;
-  mutable std::condition_variable fFRCond;
+  mutable std::condition_variable_any fFRCond;
   predicate_status_enum fFRPredicate;
   uint32_t fLength;      // lbids requested
   uint32_t fblksRead;    // lbids read

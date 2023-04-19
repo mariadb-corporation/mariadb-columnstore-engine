@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <boost/filesystem.hpp>
+#include <thread>
 
 using namespace std;
 namespace bf = boost::filesystem;

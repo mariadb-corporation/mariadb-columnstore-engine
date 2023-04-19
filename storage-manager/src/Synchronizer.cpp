@@ -866,7 +866,7 @@ void Synchronizer::PendingOps::wait(std::mutex* m)
   while (!finished)
   {
     waiters++;
-//    condvar.wait(*m); XXXXXXXXXXXXXXXXXXXXXXXXx
+    condvar.wait(*m);
     waiters--;
   }
 }

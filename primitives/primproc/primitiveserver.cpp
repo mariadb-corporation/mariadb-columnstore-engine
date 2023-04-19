@@ -155,7 +155,7 @@ const int asyncMax = 20;  // current number of asynchronous loads
 struct preFetchCond
 {
   // uint64_t lbid;
-  std::condition_variable cond;
+  std::condition_variable_any cond;
   unsigned waiters;
 
   preFetchCond(const uint64_t l)
@@ -231,7 +231,7 @@ void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
   if (iter != pfBlockMap.end())
   {
     iter->second->waiters++;
-///    iter->second->cond.wait(pfbMutex); XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    iter->second->cond.wait(pfbMutex);
     iter->second->waiters--;
     pfbMutex.unlock();
     return;

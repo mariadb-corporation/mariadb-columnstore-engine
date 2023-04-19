@@ -82,7 +82,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
     int opFlags;
     int waiters;
     bool finished;
-    std::condition_variable condvar;
+    std::condition_variable_any condvar;
     void wait(std::mutex*);
     void notify();
   };

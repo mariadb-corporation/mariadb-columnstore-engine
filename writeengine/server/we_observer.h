@@ -58,7 +58,6 @@ class Subject
 
  private:
   typedef std::list<Observer*> Observers;
-  std::mutex mutex; ////XXXXXXXXXXXXXXXXXXXXXXX;
   Observers fObs;
 };
 

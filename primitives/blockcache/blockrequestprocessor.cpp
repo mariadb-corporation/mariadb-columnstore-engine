@@ -153,8 +153,8 @@ int BlockRequestProcessor::check(fileRequest& rqstBlk)
   rqstBlk.SetPredicate(fileRequest::SENDING);
   sendRequest(rqstBlk);  // start file read request
 
-  // while (rqstBlk.frPredicate() < fileRequest::COMPLETE)
-  //   rqstBlk.frCond().wait(rqstBlk.frMutex()); ///////////////XXXXXXXXXXXXXXXXXXXxx
+  while (rqstBlk.frPredicate() < fileRequest::COMPLETE)
+    rqstBlk.frCond().wait(rqstBlk.frMutex()); ///////////////XXXXXXXXXXXXXXXXXXXxx
 
   rqstBlk.frMutex().unlock();
 

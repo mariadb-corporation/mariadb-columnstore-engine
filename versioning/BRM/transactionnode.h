@@ -55,7 +55,7 @@ class TransactionNode : public RGNode
   TransactionNode(const TransactionNode&);
   TransactionNode& operator=(const TransactionNode&);
 
-  std::condition_variable condVar;
+  std::condition_variable_any condVar;
   VER_t txnID;
   bool _die, _sleeping;
 };

@@ -401,7 +401,7 @@ void pDictionaryScan::sendPrimitiveMessages()
         while ((msgsSent - msgsRecvd) > fScanLbidReqThreshold)
         {
           sendWaiting = true;
-///          condvarWakeupProducer.wait(mutex); XXXXXXXXXXXXXXx
+          condvarWakeupProducer.wait(mutex);
           sendWaiting = false;
         }
 
@@ -571,7 +571,7 @@ void pDictionaryScan::receivePrimitiveMessages()
       while (!finishedSending && msgsSent == msgsRecvd)
       {
         recvWaiting = true;
-        /// condvar.wait(mutex); XXXXXXXXXXXXXXXXXXXXXX
+        condvar.wait(mutex);
         recvWaiting = false;
       }
 

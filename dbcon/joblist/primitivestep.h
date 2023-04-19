@@ -510,7 +510,7 @@ class pColScanStep : public JobStep
   SP_LBIDList lbidList;
 
   std::condition_variable condvar;
-  std::condition_variable condvarWakeupProducer;
+  std::condition_variable_any condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
   uint32_t recvWaiting, recvExited;
 
@@ -828,8 +828,8 @@ class pDictionaryScan : public JobStep
   DataList_t* requestList;
   // StringDataList* stringList;
   std::mutex mutex;
-  std::condition_variable condvar;
-  std::condition_variable condvarWakeupProducer;
+  std::condition_variable_any condvar;
+  std::condition_variable_any condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
   std::vector<struct BRM::EMEntry> extents;
   uint64_t extentSize;
@@ -840,7 +840,7 @@ class pDictionaryScan : public JobStep
   // consumer will tell producer to send
   bool fStopSending;
   uint64_t fPhysicalIO;   // total physical I/O count
-  uint64_t fCacheIO;      // total cache I/O count
+  uint64_t fCacheIO;      // total cache I/O countF
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
   uint32_t fMsgsToPm;     // total number of messages sent to PMs
@@ -1282,8 +1282,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   std::mutex dlMutex;
   std::mutex cpMutex;
   std::mutex serializeJoinerMutex;
-  std::mutex abortMutex; ///////////////XXXXXXXXXXXXXXXXXXXXXXx
-  std::condition_variable condvarWakeupProducer, condvar;
+  std::condition_variable_any condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   bool BPPIsAllocated;
