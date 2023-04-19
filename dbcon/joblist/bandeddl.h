@@ -26,7 +26,7 @@
 
 #include <set>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "largedatalist.h"
 //#include "bucketdl.h"
@@ -73,7 +73,7 @@ class BandedDL : public LargeDataList<std::vector<element_t>, element_t>
   BandedDL& operator=(const BandedDL&){};
 
   // vars to support the WSDL-like next() fcn
-  boost::condition nextSetLoaded;
+  std::condition_variable nextSetLoaded;
   uint64_t waitingConsumers;
 };
 

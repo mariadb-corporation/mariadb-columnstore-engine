@@ -16,7 +16,7 @@
    MA 02110-1301, USA. */
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 /* Quicky impl of a read-write lock that prioritizes writers. */
 namespace storagemanager
@@ -45,7 +45,7 @@ class RWLock
   uint writersWaiting;
   uint writersRunning;
   boost::mutex m;
-  boost::condition okToWrite;
-  boost::condition okToRead;
+  std::condition_variable okToWrite;
+  std::condition_variable okToRead;
 };
 }  // namespace storagemanager

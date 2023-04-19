@@ -27,7 +27,7 @@
 #include <string>
 #include <map>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 
 #include "bytestream.h"

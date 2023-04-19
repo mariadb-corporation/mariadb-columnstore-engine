@@ -34,7 +34,7 @@
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/foreach.hpp>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
@@ -155,7 +155,7 @@ const int asyncMax = 20;  // current number of asynchronous loads
 struct preFetchCond
 {
   // uint64_t lbid;
-  boost::condition cond;
+  std::condition_variable cond;
   unsigned waiters;
 
   preFetchCond(const uint64_t l)

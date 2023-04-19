@@ -59,7 +59,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <pthread.h>
 //#define NDEBUG
 #include <cassert>

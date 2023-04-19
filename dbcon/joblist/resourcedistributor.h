@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <list>
 #include <limits>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "logger.h"
 
@@ -136,7 +136,7 @@ class ResourceDistributor
   uint64_t fTotalResource;
   uint64_t fResourceBlock;
   boost::mutex fResourceLock;
-  boost::condition fResourceAvailable;
+  std::condition_variable fResourceAvailable;
 
   LockedSessionMap fSessionMap;
   uint32_t fTraceOn;

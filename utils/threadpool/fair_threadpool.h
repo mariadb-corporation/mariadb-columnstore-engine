@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <atomic>

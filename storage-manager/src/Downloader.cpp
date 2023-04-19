@@ -47,7 +47,7 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
                           const bf::path& prefix, boost::mutex* cache_lock)
 {
   uint counter = keys.size();
-  boost::condition condvar;
+  std::condition_variable condvar;
   DownloadListener listener(&counter, &condvar);
   vector<boost::shared_ptr<Download> > ownedDownloads(keys.size());
 
@@ -184,7 +184,7 @@ void Downloader::Download::operator()()
   lock->unlock();
 }
 
-Downloader::DownloadListener::DownloadListener(uint* _counter, boost::condition* condvar)
+Downloader::DownloadListener::DownloadListener(uint* _counter, std::condition_variable* condvar)
  : counter(_counter), cond(condvar)
 {
 }

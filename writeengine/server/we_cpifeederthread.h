@@ -77,7 +77,7 @@ class WECpiFeederThread
  private:
   WEDataLoader& fOwner;
 
-  boost::condition fFeederCond;
+  std::condition_variable fFeederCond;
   boost::mutex fMsgQMutex;
   typedef std::queue<messageqcpp::SBS> WEMsgQueue;
   WEMsgQueue fMsgQueue;

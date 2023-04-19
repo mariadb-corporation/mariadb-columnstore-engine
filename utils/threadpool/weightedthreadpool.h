@@ -31,7 +31,7 @@
 #include <stdexcept>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -222,8 +222,8 @@ class WeightedThreadPool
 
   uint32_t issued;
   boost::mutex fMutex;
-  boost::condition fThreadAvailable;  // triggered when a thread is available
-  boost::condition fNeedThread;       // triggered when a thread is needed
+  std::condition_variable fThreadAvailable;  // triggered when a thread is available
+  std::condition_variable fNeedThread;       // triggered when a thread is needed
   boost::thread_group fThreads;
 
   bool fStop;

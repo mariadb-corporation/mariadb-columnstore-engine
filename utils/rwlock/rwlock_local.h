@@ -27,7 +27,7 @@
 #pragma once
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #define EXPORT
 
@@ -152,8 +152,8 @@ class RWLock_local
     int writerswaiting, writing, readerswaiting, reading;
   } state;
   boost::mutex mutex;
-  boost::condition okToRead;
-  boost::condition okToWrite;
+  std::condition_variable okToRead;
+  std::condition_variable okToWrite;
 };
 
 enum rwlock_mode

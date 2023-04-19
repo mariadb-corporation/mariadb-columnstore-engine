@@ -31,7 +31,7 @@
 #include "dmlpackageprocessor.h"
 #include "dmltable.h"
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #define EXPORT
 

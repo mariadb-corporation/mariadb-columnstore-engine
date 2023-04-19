@@ -27,7 +27,7 @@
 #pragma once
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "brmtypes.h"
 #include "rgnode.h"
@@ -55,7 +55,7 @@ class TransactionNode : public RGNode
   TransactionNode(const TransactionNode&);
   TransactionNode& operator=(const TransactionNode&);
 
-  boost::condition condVar;
+  std::condition_variable condVar;
   VER_t txnID;
   bool _die, _sleeping;
 };

@@ -81,7 +81,7 @@ class DMLResultBuffer
 
  private:
   boost::mutex fMutex;
-  boost::condition fCond;
+  std::condition_variable fCond;
 
   typedef std::deque<ResultPair> ResultBuffer;
   ResultBuffer fResultBuffer;

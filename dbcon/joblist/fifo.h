@@ -29,7 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <stdexcept>
 #include "elementtype.h"
 #include "datalistimpl.h"
@@ -145,7 +145,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
 
  protected:
  private:
-  boost::condition finishedConsuming, moreData;
+  std::condition_variable finishedConsuming, moreData;
 
   element_t* pBuffer;
   element_t* cBuffer;

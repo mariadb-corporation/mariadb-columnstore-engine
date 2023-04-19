@@ -263,7 +263,7 @@ class WESDHandler
   uint32_t fFixedBinaryRecLen;
 
   boost::mutex fRespMutex;
-  boost::condition fRespCond;
+  std::condition_variable fRespCond;
 
   boost::mutex fSendMutex;
 

@@ -27,7 +27,7 @@
  *      Author: bpaul
  */
 
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;

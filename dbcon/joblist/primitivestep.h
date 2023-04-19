@@ -38,7 +38,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
@@ -301,8 +301,8 @@ class pColStep : public JobStep
   BRM::DBRM dbrm;
 
   boost::mutex mutex;
-  boost::condition condvar;
-  boost::condition flushed;
+  std::condition_variable condvar;
+  std::condition_variable flushed;
   SP_LBIDList lbidList;
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   uint32_t uniqueID;
@@ -509,8 +509,8 @@ class pColScanStep : public JobStep
   BRM::DBRM dbrm;
   SP_LBIDList lbidList;
 
-  boost::condition condvar;
-  boost::condition condvarWakeupProducer;
+  std::condition_variable condvar;
+  std::condition_variable condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
   uint32_t recvWaiting, recvExited;
 
@@ -649,7 +649,7 @@ class pDictionaryStep : public JobStep
   DataList_t* requestList;
   // StringDataList* stringList;
   boost::mutex mutex;
-  boost::condition condvar;
+  std::condition_variable condvar;
   uint32_t fInterval;
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
@@ -828,8 +828,8 @@ class pDictionaryScan : public JobStep
   DataList_t* requestList;
   // StringDataList* stringList;
   boost::mutex mutex;
-  boost::condition condvar;
-  boost::condition condvarWakeupProducer;
+  std::condition_variable condvar;
+  std::condition_variable condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
   std::vector<struct BRM::EMEntry> extents;
   uint64_t extentSize;
@@ -1282,7 +1282,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   boost::mutex dlMutex;
   boost::mutex cpMutex;
   boost::mutex serializeJoinerMutex;
-  boost::condition condvarWakeupProducer, condvar;
+  std::condition_variable condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   bool BPPIsAllocated;

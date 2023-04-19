@@ -641,7 +641,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   /* Threaded UM join support */
   int numCores;
   boost::mutex dlMutex, memTrackMutex, saneErrMsg;
-  boost::condition memTrackDone;
+  std::condition_variable memTrackDone;
   std::atomic<bool> rgdLock;
   bool stopMemTracking;
   void trackMem(uint index);

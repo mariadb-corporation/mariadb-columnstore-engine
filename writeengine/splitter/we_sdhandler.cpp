@@ -38,7 +38,7 @@ using namespace std;
 
 #include <sys/time.h>
 
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;

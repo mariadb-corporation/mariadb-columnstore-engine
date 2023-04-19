@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 class AutoincrementData
 {

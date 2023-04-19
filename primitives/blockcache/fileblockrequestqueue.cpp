@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "fileblockrequestqueue.h"
 

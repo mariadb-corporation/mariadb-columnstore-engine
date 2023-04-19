@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "vss.h"
 
@@ -58,7 +58,7 @@ class ActiveStatementCounter
   uint32_t upperLimit;
   uint32_t fStatementsWaiting;
   boost::mutex fMutex;
-  boost::condition condvar;
+  std::condition_variable condvar;
   BRM::VSS fVss;
 };
 

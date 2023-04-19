@@ -27,7 +27,7 @@
 #pragma once
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <list>
 #include <vector>
 
@@ -223,17 +223,17 @@ class ColumnBufferManager
 
   /** @brief Condition variable for threads waiting for resize to complete
    */
-  boost::condition fResizeInProgress;
+  std::condition_variable fResizeInProgress;
 
   /** @brief Condition variable for threads waiting for all buffer sections
    * to be released
    */
-  boost::condition fBufInUse;
+  std::condition_variable fBufInUse;
 
   /** @brief Condition variable for threads who have arrived out-of-
    * sequence with respect to their row-id
    */
-  boost::condition fOutOfSequence;
+  std::condition_variable fOutOfSequence;
 
   /** @brief Width of the column
    */

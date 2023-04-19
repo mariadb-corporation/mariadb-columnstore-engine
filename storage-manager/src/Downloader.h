@@ -29,7 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/filesystem/path.hpp>
 
 namespace storagemanager
@@ -59,12 +59,12 @@ class Downloader : public ConfigListener
   class DownloadListener
   {
    public:
-    DownloadListener(uint* counter, boost::condition* condvar);
+    DownloadListener(uint* counter, std::condition_variable* condvar);
     void downloadFinished();
 
    private:
     uint* counter;
-    boost::condition* cond;
+    std::condition_variable* cond;
   };
 
   /* Possible optimization.  Downloads used to use pointers to strings to avoid an extra copy.

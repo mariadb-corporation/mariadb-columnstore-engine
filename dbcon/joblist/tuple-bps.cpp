@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/uuid/uuid_io.hpp>
 using namespace boost;
 
