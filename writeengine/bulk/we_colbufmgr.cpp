@@ -679,7 +679,7 @@ int ColumnBufferManager::flush()
 //------------------------------------------------------------------------------
 int ColumnBufferManager::intermediateFlush()
 {
-  std::chrono::duration::seconds wait_seconds(COND_WAIT_SECONDS);
+  std::chrono::seconds wait_seconds(COND_WAIT_SECONDS);
   std::unique_lock lock(fColInfo->colMutex());
 
   // Wait for all other threads which are currently parsing rows,

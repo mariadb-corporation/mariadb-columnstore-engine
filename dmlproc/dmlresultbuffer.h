@@ -36,8 +36,6 @@ namespace dmlprocessor
 class DMLResultBuffer
 {
  public:
-  typedef std::unique_lock scoped_lock;
-
   /** @brief the type of a <DMLResult, sessionID> pair
    *
    */

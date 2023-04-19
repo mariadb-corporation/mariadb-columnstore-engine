@@ -231,7 +231,7 @@ void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
   if (iter != pfBlockMap.end())
   {
     iter->second->waiters++;
-    iter->second->cond.wait(pfbMutex);
+///    iter->second->cond.wait(pfbMutex); XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     iter->second->waiters--;
     pfbMutex.unlock();
     return;

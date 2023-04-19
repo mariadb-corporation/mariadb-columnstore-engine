@@ -136,7 +136,7 @@ void Config::reloadThreadFcn()
         for (auto& listener : configListeners)
           listener->configListener();
       }
-      std::this_thread::sleep(reloadInterval);
+      boost::this_thread::sleep(reloadInterval);
     }
     catch (boost::property_tree::ini_parser_error& e)
     {

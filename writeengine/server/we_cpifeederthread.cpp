@@ -106,7 +106,7 @@ void WECpiFeederThread::feedData2Cpi()
 
     if (fMsgQueue.empty())
     {
-      bool aTimedOut = fFeederCond.wait_for(aLock, std::chrono::duration::milliseconds(3000));
+      bool aTimedOut = (fFeederCond.wait_for(aLock, std::chrono::milliseconds(3000)) == std::cv_status::timeout);
 
       if (!isContinue())
       {

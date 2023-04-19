@@ -63,7 +63,7 @@ Subject::~Subject()
 
 void Subject::attach(Observer* Obs)
 {
-  std::unique_lock aLstLock;
+  std::unique_lock aLstLock(mutex);
   fObs.push_back(Obs);
 }
 
@@ -71,7 +71,7 @@ void Subject::attach(Observer* Obs)
 
 void Subject::detach(Observer* Obs)
 {
-  std::unique_lock aLstLock;
+  std::unique_lock aLstLock(mutex);
   Observers::iterator aIt = fObs.begin();
 
   while (aIt != fObs.end())
@@ -88,7 +88,7 @@ void Subject::detach(Observer* Obs)
 
 void Subject::notify()
 {
-  std::unique_lock aLstLock;
+  std::unique_lock aLstLock(mutex);
   Observers::iterator aIt = fObs.begin();
 
   while (aIt != fObs.end())

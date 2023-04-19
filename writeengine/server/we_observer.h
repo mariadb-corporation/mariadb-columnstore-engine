@@ -30,6 +30,7 @@
 #pragma once
 
 #include <list>
+#include <mutex>
 
 namespace WriteEngine
 {
@@ -57,6 +58,7 @@ class Subject
 
  private:
   typedef std::list<Observer*> Observers;
+  std::mutex mutex; ////XXXXXXXXXXXXXXXXXXXXXXX;
   Observers fObs;
 };
 

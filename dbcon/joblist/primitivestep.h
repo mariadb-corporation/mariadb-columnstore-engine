@@ -1282,6 +1282,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   std::mutex dlMutex;
   std::mutex cpMutex;
   std::mutex serializeJoinerMutex;
+  std::mutex abortMutex; ///////////////XXXXXXXXXXXXXXXXXXXXXXx
   std::condition_variable condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step

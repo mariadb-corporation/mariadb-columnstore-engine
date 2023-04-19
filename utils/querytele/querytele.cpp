@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <ctime>
+#include <sys/time.h>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -40,7 +41,7 @@ namespace querytele
 /*static*/
 uuids::uuid QueryTeleClient::genUUID()
 {
-  std::scoped_lock lk(uuidgenMtx);
+  std::unique_lock lk(uuidgenMtx);
   return uuidgen();
 }
 

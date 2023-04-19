@@ -60,6 +60,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 #include <condition_variable>
+#include <shared_mutex>
+
 #include <pthread.h>
 //#define NDEBUG
 #include <cassert>
@@ -256,6 +258,8 @@ typedef multiset<FdCountEntry_t, fdCountCompare> FdCacheCountType_t;
 
 FdCacheType_t fdcache;
 std::mutex fdMapMutex;
+std::shared_mutex localLock;
+
 
 char* alignTo(const char* in, int av)
 {
@@ -457,13 +461,13 @@ void* thr_popper(ioManager* arg)
 
     if (locked)
     {
-      localLock.read_unlock();
+      localLock.unlock_shared();
       locked = false;
     }
 
     fr = iom->getNextRequest();
 
-    localLock.read_lock();
+    localLock.lock_shared();
     locked = true;
 
     if (iom->IOTrace())
@@ -1199,23 +1203,22 @@ namespace dbbc
 {
 void setReadLock()
 {
-  localLock.read_lock();
+  localLock.lock_shared();
 }
 
 void releaseReadLock()
 {
-  localLock.read_unlock();
+  localLock.unlock_shared();
 }
 
 void dropFDCache()
 {
-  localLock.write_lock();
+  std::unique_lock lock(localLock);
   fdcache.clear();
-  localLock.write_unlock();
 }
 void purgeFDCache(std::vector<BRM::FileInfo>& files)
 {
-  localLock.write_lock();
+  std::unique_lock lock(localLock);
 
   FdCacheType_t::iterator fdit;
 
@@ -1228,8 +1231,6 @@ void purgeFDCache(std::vector<BRM::FileInfo>& files)
     if (fdit != fdcache.end())
       fdcache.erase(fdit);
   }
-
-  localLock.write_unlock();
 }
 
 ioManager::ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount, int bsPerRead)

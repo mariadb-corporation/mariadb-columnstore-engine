@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <map>
 #include <mutex>
-using namespace boost;
 
 #include "activestatementcounter.h"
 

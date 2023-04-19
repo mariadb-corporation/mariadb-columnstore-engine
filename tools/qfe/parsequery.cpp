@@ -45,7 +45,7 @@ CalpontSelectExecutionPlan* parseQuery(const string& query, const uint32_t sid)
   // We're going to make parsing the query single-threaded for now. This makes it a lot
   // easier to interface with the parser and doesn;t materially affect overall query
   // performance (I think)
-  mutex::scoped_lock lk(ParserMutex);
+  std::unique_lock lk(ParserMutex);
 
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sid);
   CalpontSelectExecutionPlan* csep = 0;

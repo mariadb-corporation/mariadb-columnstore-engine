@@ -3393,7 +3393,7 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
-  std::unique_lock scoped(std::mutex);
+  std::unique_lock scoped(abortMutex);
   abort_nolock();
 }
 
