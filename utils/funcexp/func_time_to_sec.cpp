@@ -221,7 +221,7 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
   {
     if (scaleDiff > 0)
     {
-      value = (int64_t)round(value / IDB_pow[scaleDiff]);
+      value = (int64_t)round((double)value / IDB_pow[scaleDiff]);
     }
     else if (scaleDiff < 0)
     {
