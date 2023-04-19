@@ -39,6 +39,7 @@ optparse.define short=v long=verbose desc="Verbose makefile commands" variable=M
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=m long=run-smoke desc="Trigger to run smoke test" variable=RUN_SMOKE default=false
 
 source $( optparse.build )
 
@@ -488,7 +489,9 @@ run_unit_tests
 run_microbenchmarks_tests
 install
 start_service
-smoke
+if [[ $RUN_SMOKE = true ]] ; then
+    smoke
+fi
 generate_svgs
 
 
