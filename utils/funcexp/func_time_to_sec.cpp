@@ -221,8 +221,7 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
   {
     if (scaleDiff > 0)
     {
-      value = (int64_t)(value > 0 ? (double)value / IDB_pow[scaleDiff] + 0.5
-                                  : (double)value / IDB_pow[scaleDiff] - 0.5);
+      value = (int64_t)round(value / IDB_pow[scaleDiff]);
     }
     else if (scaleDiff < 0)
     {
@@ -235,8 +234,7 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
     int128_t s128Value = value;
     if (scaleDiff > 0)
     {
-      s128Value = (int128_t)(s128Value > 0 ? (double)s128Value / IDB_pow[scaleDiff] + 0.5
-                                  : (double)s128Value / IDB_pow[scaleDiff] - 0.5);
+      s128Value = (int128_t)round((long double)s128Value / IDB_pow[scaleDiff]);
     }
     else if (scaleDiff < 0)
     {
