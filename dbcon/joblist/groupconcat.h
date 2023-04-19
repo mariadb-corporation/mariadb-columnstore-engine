@@ -93,6 +93,8 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
   boost::scoped_ptr<GroupConcator> fConcator;
   boost::scoped_array<uint8_t> fData;
   rowgroup::Row fRow;
+  rowgroup::RGData fRowRGData;
+  rowgroup::RowGroup fRowGroup;
   bool fNoOrder;
 };
 
