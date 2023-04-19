@@ -793,7 +793,7 @@ void* BucketReUseDriver::reuseThread(void* arg)
 
   if (entry->fileStatus() == BucketReuseControlEntry::progress_c)
   {
-    boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
+    std::scoped_lock lock(BucketReuseManager::instance()->getMutex());
     dl->reuseControl()->stateChange().wait(lock);
   }
   else
@@ -838,7 +838,7 @@ void* BucketReUseDriver::raceThread(void* arg)
   ResourceManager rm;
   BucketReuseControlEntry* entry = NULL;
   {
-    boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
+    std::scoped_lock lock(BucketReuseManager::instance()->getMutex());
     boost::shared_ptr<execplan::CalpontSystemCatalog> c =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0x80000000);
     execplan::CalpontSystemCatalog::TableColName tcn = c->colName(a->oid);
@@ -879,7 +879,7 @@ void* BucketReUseDriver::raceThread(void* arg)
 
     if (entry->fileStatus() == BucketReuseControlEntry::progress_c)
     {
-      boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
+      std::scoped_lock lock(BucketReuseManager::instance()->getMutex());
       dl->reuseControl()->stateChange().wait(lock);
     }
     else

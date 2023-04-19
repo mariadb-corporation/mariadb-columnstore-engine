@@ -116,7 +116,7 @@ void FileOp::closeFile(IDBDataFile* pFile) const
  ***********************************************************/
 int FileOp::createDir(const char* dirName, mode_t mode) const
 {
-  boost::mutex::scoped_lock lk(m_mkdirMutex);
+  std::scoped_lock lk(m_mkdirMutex);
   int rc = IDBPolicy::mkdir(dirName);
 
   if (rc != 0)
@@ -993,7 +993,7 @@ int FileOp::initColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, c
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 
 #endif
-    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    std::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
 
     if (bExpandExtent)
@@ -1714,7 +1714,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
 
-    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    std::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 
 #ifdef PROFILE
     if (bExpandExtent)
@@ -1800,7 +1800,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
 /* static */
 void FileOp::initDbRootExtentMutexes()
 {
-  boost::mutex::scoped_lock lk(m_createDbRootMutexes);
+  std::scoped_lock lk(m_createDbRootMutexes);
 
   if (m_DbRootAddExtentMutexes.size() == 0)
   {

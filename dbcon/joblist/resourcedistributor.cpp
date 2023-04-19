@@ -45,7 +45,7 @@ uint64_t ResourceDistributor::requestResource(uint32_t sessionID, uint64_t resou
   if (fTraceOn)
     logMessage(logging::LOG_TYPE_DEBUG, LogRDRequest, resource, sessionID);
 
-  boost::mutex::scoped_lock lk(fResourceLock);
+  std::scoped_lock lk(fResourceLock);
 
   while (fTotalResource < resource)
   {
@@ -68,7 +68,7 @@ void ResourceDistributor::returnResource(uint64_t resource)
   if (fTraceOn)
     logMessage(logging::LOG_TYPE_DEBUG, LogRDReturn, resource);
 
-  boost::mutex::scoped_lock lk(fResourceLock);
+  std::scoped_lock lk(fResourceLock);
   fTotalResource += resource;
 
   fResourceAvailable.notify_all();
@@ -91,7 +91,7 @@ void ResourceDistributor::logMessage(logging::LOG_TYPE logLevel, logging::Messag
 
 void LockedSessionMap::updateAging(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(fSessionLock);
+  std::scoped_lock lock(fSessionLock);
   SessionList::iterator pos = find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID);
 
   if (fSessionAgingList.end() != pos)
@@ -124,13 +124,13 @@ bool LockedSessionMap::addSession(uint32_t sessionID, uint64_t resource, uint64_
     ret = false;
   }
 
-  boost::mutex::scoped_lock maplock(fMapLock);
+  std::scoped_lock maplock(fMapLock);
   fSessionMap[sessionID] = resource;
   updateAging(sessionID);
 
   if (fMaxSessions < fSessionMap.size())
   {
-    boost::mutex::scoped_lock lock(fSessionLock);
+    std::scoped_lock lock(fSessionLock);
     uint32_t oldsession = fSessionAgingList.front();
     fSessionMap.erase(oldsession);
     fSessionAgingList.erase(fSessionAgingList.begin());
@@ -141,9 +141,9 @@ bool LockedSessionMap::addSession(uint32_t sessionID, uint64_t resource, uint64_
 
 void LockedSessionMap::removeSession(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock maplock(fMapLock);
+  std::scoped_lock maplock(fMapLock);
   fSessionMap.erase(sessionID);
-  boost::mutex::scoped_lock listlock(fSessionLock);
+  std::scoped_lock listlock(fSessionLock);
   fSessionAgingList.erase(find(fSessionAgingList.begin(), fSessionAgingList.end(), sessionID));
 }
 

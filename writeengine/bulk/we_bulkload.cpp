@@ -1584,7 +1584,7 @@ int BulkLoad::updateNextValue(OID columnOid, uint64_t nextAutoIncVal)
   // job for 2 tables; so we put a mutex here just in case the DDLClient code
   // won't work well with 2 competing WE_DDLCommandClient objects in the same
   // process (ex: if there is any static data in WE_DDLCommandClient).
-  boost::mutex::scoped_lock lock(*fDDLMutex);
+  std::scoped_lock lock(*fDDLMutex);
   WE_DDLCommandClient ddlCommandClt;
   unsigned int rc = ddlCommandClt.UpdateSyscolumnNextval(columnOid, nextAutoIncVal);
 

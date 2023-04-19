@@ -103,7 +103,7 @@ Config* Config::makeConfig(const string& cf)
     {
       // To save against the moment zero race when multiple threads hits
       // this scope.
-      boost::mutex::scoped_lock lk(fInstanceMapMutex);
+      std::scoped_lock lk(fInstanceMapMutex);
       if (globConfigInstancePtr)
       {
         globConfigInstancePtr->checkAndReloadConfig();
@@ -118,12 +118,12 @@ Config* Config::makeConfig(const string& cf)
       return globConfigInstancePtr.get();
     }
 
-    boost::mutex::scoped_lock lk(fInstanceMapMutex);
+    std::scoped_lock lk(fInstanceMapMutex);
     globConfigInstancePtr->checkAndReloadConfig();
     return globConfigInstancePtr.get();
   }
 
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+  std::scoped_lock lk(fInstanceMapMutex);
 
   if (fInstanceMap.find(cf) == fInstanceMap.end())
   {
@@ -439,7 +439,7 @@ void Config::writeConfig(const string& configFile) const
 
 void Config::write(void) const
 {
-  boost::mutex::scoped_lock lk(fWriteXmlLock);
+  std::scoped_lock lk(fWriteXmlLock);
   write(fConfigFile);
 }
 
@@ -632,7 +632,7 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
 
 void Config::ConfigDeleter::operator()(Config* config)
 {
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+  std::scoped_lock lk(fInstanceMapMutex);
 
   for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
   {

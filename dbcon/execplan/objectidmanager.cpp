@@ -95,7 +95,7 @@ namespace execplan
 {
 ObjectIDManager::ObjectIDManager()
 {
-  boost::mutex::scoped_lock lk(CtorMutex);
+  std::scoped_lock lk(CtorMutex);
 
   config::Config* conf;
   string tmp;

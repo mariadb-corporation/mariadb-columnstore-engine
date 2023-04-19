@@ -300,7 +300,7 @@ BRMWrapper* BRMWrapper::getInstance()
 {
   if (m_instance == 0)
   {
-    boost::mutex::scoped_lock lock(m_instanceCreateMutex);
+    std::scoped_lock lock(m_instanceCreateMutex);
 
     if (m_instance == 0)
     {
@@ -1638,7 +1638,7 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
   fileInfo.fSegment = 0;
   //    fileInfo.fDbRoot = (freeList[0].vbOID % rootCnt) + 1;
   fileInfo.fDbRoot = dbRoot;
-  boost::mutex::scoped_lock lk(vbFileLock);
+  std::scoped_lock lk(vbFileLock);
   pTargetFile = openFile(fileInfo, "r+b", true);
 
   if (pTargetFile == NULL)

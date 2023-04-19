@@ -46,7 +46,7 @@ boost::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {
-  boost::mutex::scoped_lock lk(mx);
+  std::scoped_lock lk(mx);
 
   if (!fInstance)
     fInstance = new ResourceManager(runningInExeMgr, aConfig);

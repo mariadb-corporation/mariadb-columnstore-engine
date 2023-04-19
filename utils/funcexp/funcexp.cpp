@@ -54,7 +54,7 @@ boost::mutex FuncExp::fInstanceMutex;
 
 FuncExp* FuncExp::instance()
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::scoped_lock lk(fInstanceMutex);
 
   if (!fInstance)
     fInstance = new FuncExp();

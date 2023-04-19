@@ -830,7 +830,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
       // TODO: write an RGData fcn to let it interpret data within a ByteStream to avoid
       // the extra copying.
       offTheWire.deserialize(bs);
-      boost::mutex::scoped_lock lk(smallSideDataLocks[joinerNum]);
+      std::scoped_lock lk(smallSideDataLocks[joinerNum]);
       smallSide.setData(&smallSideRowData[joinerNum]);
       smallSide.append(offTheWire, startPos);
 
@@ -868,7 +868,7 @@ int BatchPrimitiveProcessor::endOfJoiner()
   uint32_t i;
   size_t currentSize;
   // it should be safe to run this without grabbing this lock
-  // boost::mutex::scoped_lock scoped(addToJoinerLock);
+  // std::scoped_lock scoped(addToJoinerLock);
 
   if (endOfJoinerRan)
     return 0;
@@ -2183,7 +2183,7 @@ void BatchPrimitiveProcessor::sendResponse()
   }
   else
   {
-    boost::mutex::scoped_lock lk(*writelock);
+    std::scoped_lock lk(*writelock);
     sock->write(*serialized);
   }
 

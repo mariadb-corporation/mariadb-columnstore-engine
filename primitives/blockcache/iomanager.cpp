@@ -524,7 +524,7 @@ void* thr_popper(ioManager* arg)
 
 #ifdef IDB_COMP_POC_DEBUG
     {
-      boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+      std::scoped_lock lk(primitiveprocessor::compDebugMutex);
 
       if (compType != 0)
         cout << boldStart;
@@ -857,7 +857,7 @@ void* thr_popper(ioManager* arg)
           i = fp->pread(&alignedbuff[0], fdit->second->ptrList[idx].first, fdit->second->ptrList[idx].second);
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::scoped_lock lk(primitiveprocessor::compDebugMutex);
             cout << boldStart << "pread1.1(" << fp << ", 0x" << hex << (ptrdiff_t)&alignedbuff[0] << dec
                  << ", " << fdit->second->ptrList[idx].second << ", " << fdit->second->ptrList[idx].first
                  << ") = " << i << ' ' << cmpOffFact.quot << ' ' << cmpOffFact.rem << boldStop << endl;
@@ -904,7 +904,7 @@ void* thr_popper(ioManager* arg)
           i = fp->pread(&alignedbuff[acc], longSeekOffset, readSize - acc);
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::scoped_lock lk(primitiveprocessor::compDebugMutex);
             cout << "pread1.2(" << fp << ", 0x" << hex << (ptrdiff_t)&alignedbuff[acc] << dec << ", "
                  << (readSize - acc) << ", " << longSeekOffset << ") = " << i << ' ' << cmpOffFact.quot << ' '
                  << cmpOffFact.rem << endl;
@@ -992,7 +992,7 @@ void* thr_popper(ioManager* arg)
           size_t blen = 4 * 1024 * 1024 + 4;
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::scoped_lock lk(primitiveprocessor::compDebugMutex);
             cout << "decompress(0x" << hex << (ptrdiff_t)&alignedbuff[0] << dec << ", "
                  << fdit->second->ptrList[cmpOffFact.quot].second << ", 0x" << hex << (ptrdiff_t)uCmpBuf
                  << dec << ", " << blen << ")" << endl;
@@ -1013,7 +1013,7 @@ void* thr_popper(ioManager* arg)
           if (dcrc != 0)
           {
 #ifdef IDB_COMP_POC_DEBUG
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::scoped_lock lk(primitiveprocessor::compDebugMutex);
 #endif
 
             if (++decompRetryCount < 30)
@@ -1082,7 +1082,7 @@ void* thr_popper(ioManager* arg)
             {
               if (debugWrite)
               {
-                boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+                std::scoped_lock lk(primitiveprocessor::compDebugMutex);
                 cout << boldStart << "i = " << i << ", ptr = 0x" << hex << (ptrdiff_t)&ptr[i * BLOCK_SIZE]
                      << dec << boldStop << endl;
                 cout << boldStart;

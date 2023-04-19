@@ -50,7 +50,7 @@ OamCache* OamCache::makeOamCache()
 {
   if (!hasOAMCache.load(std::memory_order_relaxed))
   {
-    boost::mutex::scoped_lock lk(cacheLock);
+    std::scoped_lock lk(cacheLock);
 
     if (oamCache == nullptr)
     {

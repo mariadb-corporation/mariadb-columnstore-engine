@@ -474,7 +474,7 @@ void DBRootExtentTracker::logFirstDBRootSelection() const
 bool DBRootExtentTracker::nextSegFile(uint16_t& dbRoot, uint32_t& partition, uint16_t& segment, HWM& localHwm,
                                       BRM::LBID_t& startLbid)
 {
-  boost::mutex::scoped_lock lock(fDBRootExtTrkMutex);
+  std::scoped_lock lock(fDBRootExtTrkMutex);
 
   fCurrentDBRootIdx++;
 
@@ -515,7 +515,7 @@ bool DBRootExtentTracker::nextSegFile(uint16_t& dbRoot, uint32_t& partition, uin
 
 const std::vector<DBRootExtentInfo>& DBRootExtentTracker::getDBRootExtentList()
 {
-  boost::mutex::scoped_lock lock(fDBRootExtTrkMutex);
+  std::scoped_lock lock(fDBRootExtTrkMutex);
   return fDBRootExtentList;
 }
 

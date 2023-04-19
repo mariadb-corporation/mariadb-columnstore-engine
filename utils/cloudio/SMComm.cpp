@@ -34,7 +34,7 @@ SMComm* SMComm::get()
   if (instance)
     return instance;
 
-  boost::mutex::scoped_lock sl(m);
+  std::scoped_lock sl(m);
 
   if (instance)
     return instance;

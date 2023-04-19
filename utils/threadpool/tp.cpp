@@ -68,7 +68,7 @@ struct foo
       // simulate some work
       fData++;
 
-    boost::mutex::scoped_lock lock(mutex);
+    std::scoped_lock lock(mutex);
     std::cout << "foo thd = " << fThd << " start " << start << " fin " << timeNow() << std::endl;
   }
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
       }
     }
 
-    boost::mutex::scoped_lock lock(mutex);
+    std::scoped_lock lock(mutex);
   }
 
   // Wait until all of the queued up and in-progress work has finished

@@ -46,7 +46,7 @@ SMLogging* SMLogging::get()
 {
   if (smLog)
     return smLog;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (smLog)
     return smLog;
   smLog = new SMLogging();

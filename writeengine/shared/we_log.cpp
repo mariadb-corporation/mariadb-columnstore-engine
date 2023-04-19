@@ -108,7 +108,7 @@ void Log::logMsg(const char* msg, int code, MsgLevel level)
     {
       // log to log file and error log file within scope of mutex lock.
       // logSyslog uses SimpleSyslog which has it's own lock.
-      boost::mutex::scoped_lock lk(m_WriteLockMutex);
+      std::scoped_lock lk(m_WriteLockMutex);
 
       m_errLogFile << oss.str() << std::endl;
       m_logFile << oss.str() << std::endl;
@@ -128,7 +128,7 @@ void Log::logMsg(const char* msg, int code, MsgLevel level)
     if ((level != MSGLVL_INFO2) || (m_bConsoleOutput))
       formatMsg(msg, level, oss2);
 
-    boost::mutex::scoped_lock lk(m_WriteLockMutex);
+    std::scoped_lock lk(m_WriteLockMutex);
 
     m_logFile << oss.str() << std::endl;
 

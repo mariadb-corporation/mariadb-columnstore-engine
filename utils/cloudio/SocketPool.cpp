@@ -68,7 +68,7 @@ SocketPool::SocketPool()
 
 SocketPool::~SocketPool()
 {
-  boost::mutex::scoped_lock lock(mutex);
+  std::scoped_lock lock(mutex);
 
   for (uint i = 0; i < allSockets.size(); i++)
     ::close(allSockets[i]);
@@ -213,7 +213,7 @@ retry:
 
 int SocketPool::getSocket()
 {
-  boost::mutex::scoped_lock lock(mutex);
+  std::scoped_lock lock(mutex);
   int clientSocket;
 
   if (freeSockets.size() == 0 && allSockets.size() < maxSockets)
@@ -253,7 +253,7 @@ int SocketPool::getSocket()
 
 void SocketPool::returnSocket(const int sock)
 {
-  boost::mutex::scoped_lock lock(mutex);
+  std::scoped_lock lock(mutex);
   // cout << "returning socket " << sock << endl;
   freeSockets.push_back(sock);
   socketAvailable.notify_one();
@@ -261,7 +261,7 @@ void SocketPool::returnSocket(const int sock)
 
 void SocketPool::remoteClosed(const int sock)
 {
-  boost::mutex::scoped_lock lock(mutex);
+  std::scoped_lock lock(mutex);
   // cout << "closing socket " << sock << endl;
   ::close(sock);
   for (vector<int>::iterator i = allSockets.begin(); i != allSockets.end(); ++i)

@@ -788,7 +788,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
     bool alterFlag = true;
 
     // MCOL-66 The DBRM can't handle concurrent DDL
-    boost::mutex::scoped_lock lk(dbrmMutex);
+    std::scoped_lock lk(dbrmMutex);
 
     if (inTableName.fSchema != CALPONT_SCHEMA)
     {
@@ -1262,7 +1262,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
   pmNum = (*dbRootPMMap)[dbRoot];
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  boost::mutex::scoped_lock lk(dbrmMutex);
+  std::scoped_lock lk(dbrmMutex);
 
   try
   {

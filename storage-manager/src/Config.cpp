@@ -49,7 +49,7 @@ Config* Config::get()
 {
   if (inst)
     return inst;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (inst)
     return inst;
   inst = new Config();
@@ -60,7 +60,7 @@ Config* Config::get(const string& configFile)
 {
   if (inst)
     return inst;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (inst)
     return inst;
   inst = new Config(configFile);

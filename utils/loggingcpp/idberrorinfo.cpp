@@ -51,7 +51,7 @@ boost::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-  boost::mutex::scoped_lock lk(mx);
+  std::scoped_lock lk(mx);
 
   if (!fInstance)
     fInstance = new IDBErrorInfo();

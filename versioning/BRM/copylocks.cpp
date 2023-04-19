@@ -84,7 +84,7 @@ CopyLocksImpl* CopyLocksImpl::fInstance = 0;
 /*static*/
 CopyLocksImpl* CopyLocksImpl::makeCopyLocksImpl(unsigned key, off_t size, bool readOnly)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::scoped_lock lk(fInstanceMutex);
 
   if (fInstance)
   {
@@ -128,7 +128,7 @@ void CopyLocks::setReadOnly()
 /* always returns holding the specified lock type, and with the EM seg mapped */
 void CopyLocks::lock(OPS op)
 {
-  boost::mutex::scoped_lock lk(mutex);
+  std::scoped_lock lk(mutex);
 
   if (op == READ)
     shminfo = mst.getTable_read(MasterSegmentTable::CLSegment);

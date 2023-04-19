@@ -52,7 +52,7 @@ CloudStorage* CloudStorage::get()
   SMLogging* logger = SMLogging::get();
   Config* conf = Config::get();
   string type = tolower(conf->getValue("ObjectStorage", "service"));
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (inst)
     return inst;
   if (type == "s3")

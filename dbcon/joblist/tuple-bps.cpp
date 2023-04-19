@@ -1160,7 +1160,7 @@ void TupleBPS::serializeJoiner()
   {
     {
       // code block to release the lock immediatly
-      boost::mutex::scoped_lock lk(serializeJoinerMutex);
+      std::scoped_lock lk(serializeJoinerMutex);
       more = fBPP->nextTupleJoinerMsg(*sbs);
     }
 #ifdef JLF_DEBUG
@@ -1175,7 +1175,7 @@ void TupleBPS::serializeJoiner()
 void TupleBPS::serializeJoiner(uint32_t conn)
 {
   // We need this lock for TupleBPS::serializeJoiner()
-  boost::mutex::scoped_lock lk(serializeJoinerMutex);
+  std::scoped_lock lk(serializeJoinerMutex);
 
   ByteStream bs;
   bool more = true;
@@ -1195,7 +1195,7 @@ void TupleBPS::prepCasualPartitioning()
   uint32_t i;
   int64_t min, max, seq;
   int128_t bigMin, bigMax;
-  boost::mutex::scoped_lock lk(cpMutex);
+  std::scoped_lock lk(cpMutex);
 
   for (i = 0; i < scannedExtents.size(); i++)
   {
@@ -1405,7 +1405,7 @@ void TupleBPS::reloadExtentLists()
 void TupleBPS::run()
 {
   uint32_t i;
-  boost::mutex::scoped_lock lk(jlLock);
+  std::scoped_lock lk(jlLock);
   uint32_t retryCounter = 0;
   const uint32_t retryMax = 1000;       // 50s max; we've seen a 15s window so 50s should be 'safe'
   const uint32_t waitInterval = 50000;  // in us
@@ -1500,7 +1500,7 @@ void TupleBPS::run()
 
 void TupleBPS::join()
 {
-  boost::mutex::scoped_lock lk(jlLock);
+  std::scoped_lock lk(jlLock);
 
   if (joinRan)
     return;
@@ -3393,7 +3393,7 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
-  boost::mutex::scoped_lock scoped(boost::mutex);
+  std::scoped_lock scoped(boost::mutex);
   abort_nolock();
 }
 

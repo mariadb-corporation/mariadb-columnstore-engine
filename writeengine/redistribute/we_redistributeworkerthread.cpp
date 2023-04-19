@@ -85,7 +85,7 @@ RedistributeWorkerThread::RedistributeWorkerThread(ByteStream& bs, IOSocket& ios
 
 RedistributeWorkerThread::~RedistributeWorkerThread()
 {
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::scoped_lock lock(fActionMutex);
 
   if (fNewFilePtr)
     closeFile(fNewFilePtr);
@@ -124,7 +124,7 @@ void RedistributeWorkerThread::handleRequest()
   {
     // clear stop flag if ever set.
     {
-      boost::mutex::scoped_lock lock(fActionMutex);
+      std::scoped_lock lock(fActionMutex);
       fStopAction = false;
       fCommitted = false;
     }
@@ -172,7 +172,7 @@ void RedistributeWorkerThread::handleRequest()
 
   sendResponse(RED_ACTN_REQUEST);
 
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::scoped_lock lock(fActionMutex);
   fWesInUse.clear();
   fMsgQueueClient.reset();
 
@@ -865,7 +865,7 @@ int RedistributeWorkerThread::updateDbrm()
 {
   int rc1 = BRM::ERR_OK;
   int rc2 = BRM::ERR_OK;
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::scoped_lock lock(fActionMutex);
 
   // cannot stop after extent map is updated.
   if (!fStopAction)
@@ -1061,7 +1061,7 @@ void RedistributeWorkerThread::addToDirSet(const char* fileName, bool isSource)
 
 void RedistributeWorkerThread::handleStop()
 {
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::scoped_lock lock(fActionMutex);
 
   // cannot stop after extent map is updated.
   if (!fCommitted)

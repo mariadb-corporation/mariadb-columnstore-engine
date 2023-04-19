@@ -37,7 +37,7 @@ AutoincrementData::AutoincDataMap AutoincrementData::fAutoincDataMap;
 /* static */
 AutoincrementData* AutoincrementData::makeAutoincrementData(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::scoped_lock lock(map_mutex);
   AutoincrementData* instance;
   AutoincDataMap::const_iterator it = fAutoincDataMap.find(sessionID);
 
@@ -54,7 +54,7 @@ AutoincrementData* AutoincrementData::makeAutoincrementData(uint32_t sessionID)
 /* static */
 void AutoincrementData::removeAutoincrementData(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::scoped_lock lock(map_mutex);
   AutoincDataMap::iterator it = fAutoincDataMap.find(sessionID);
 
   if (it != fAutoincDataMap.end())
@@ -73,13 +73,13 @@ AutoincrementData::~AutoincrementData()
 
 void AutoincrementData::setNextValue(uint32_t columnOid, long long nextValue)
 {
-  boost::mutex::scoped_lock lk(fOIDnextvalLock);
+  std::scoped_lock lk(fOIDnextvalLock);
   fOidNextValueMap[columnOid] = nextValue;
 }
 
 long long AutoincrementData::getNextValue(uint32_t columnOid)
 {
-  boost::mutex::scoped_lock lk(fOIDnextvalLock);
+  std::scoped_lock lk(fOIDnextvalLock);
   long long nextValue = 0;
   OIDNextValue::iterator it = fOidNextValueMap.find(columnOid);
 
@@ -93,7 +93,7 @@ long long AutoincrementData::getNextValue(uint32_t columnOid)
 
 AutoincrementData::OIDNextValue& AutoincrementData::getOidNextValueMap()
 {
-  boost::mutex::scoped_lock lk(fOIDnextvalLock);
+  std::scoped_lock lk(fOIDnextvalLock);
 
   return fOidNextValueMap;
 }

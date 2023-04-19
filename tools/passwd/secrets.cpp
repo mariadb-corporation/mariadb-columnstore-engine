@@ -70,7 +70,7 @@ CSPasswdLogging* CSPasswdLogging::get()
 {
   if (passwdLog)
     return passwdLog;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (passwdLog)
     return passwdLog;
   passwdLog = new CSPasswdLogging();

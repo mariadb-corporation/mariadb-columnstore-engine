@@ -90,7 +90,7 @@ class ThreadSafeQueue
         if (fPimplLock == 0 || fPimplCond == 0)
             throw std::runtime_error("TSQ: front() const: no sync!");
 
-        boost::mutex::scoped_lock lk(*fPimplLock);
+        std::scoped_lock lk(*fPimplLock);
 
         if (fImpl.empty())
         {
@@ -116,7 +116,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0 || fPimplCond == 0)
       throw std::runtime_error("TSQ: front(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
 
     if (fImpl.empty())
     {
@@ -146,7 +146,7 @@ class ThreadSafeQueue
     if (fShutdown)
       return ret;
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
     fImpl.push(v);
     bytes += v->lengthWithHdrOverhead();
     fPimplCond->notify_one();
@@ -170,7 +170,7 @@ class ThreadSafeQueue
       return ret;
     }
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
 
     if (out != NULL)
     {
@@ -221,7 +221,7 @@ class ThreadSafeQueue
     if (fShutdown)
       return ret;
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
     curSize = fImpl.size();
 
     if (curSize < min)
@@ -271,7 +271,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: empty(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
     return fImpl.empty();
   }
   /** @brief how many items are in the queue
@@ -284,7 +284,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: size(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
     ret.size = bytes;
     ret.count = fImpl.size();
     return ret;
@@ -309,7 +309,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: clear(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::scoped_lock lk(*fPimplLock);
 
     while (!fImpl.empty())
       fImpl.pop();

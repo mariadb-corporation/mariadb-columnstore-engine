@@ -1068,7 +1068,7 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
   // Remove tableLockID out of the active cleartableLock command list
   if (lockGrabbed)
   {
-    boost::mutex::scoped_lock lock(fActiveClearTableLockCmdMutex);
+    std::scoped_lock lock(fActiveClearTableLockCmdMutex);
     fActiveClearTableLockCmds.erase(tableLockID);
   }
 
@@ -1107,7 +1107,7 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
 //------------------------------------------------------------------------------
 void CommandPackageProcessor::establishTableLockToClear(uint64_t tableLockID, BRM::TableLockInfo& lockInfo)
 {
-  boost::mutex::scoped_lock lock(fActiveClearTableLockCmdMutex);
+  std::scoped_lock lock(fActiveClearTableLockCmdMutex);
 
   // Get current table lock info
   bool getLockInfo = fDbrm->getTableLockInfo(tableLockID, &lockInfo);

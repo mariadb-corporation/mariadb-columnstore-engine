@@ -118,7 +118,7 @@ int ColumnAutoInc::init(const std::string& fullTableName, ColumnInfo* colInfo)
 //------------------------------------------------------------------------------
 void ColumnAutoInc::initNextAutoInc(uint64_t nextValue)
 {
-  boost::mutex::scoped_lock lock(fAutoIncMutex);
+  std::scoped_lock lock(fAutoIncMutex);
 
   // nextValue is unusable if < 1; probably means we already reached max value
   if (nextValue < 1)
@@ -227,7 +227,7 @@ uint64_t ColumnAutoInc::getNextAutoIncToSave()
 {
   uint64_t nextValue = AUTOINCR_SATURATED;
 
-  boost::mutex::scoped_lock lock(fAutoIncMutex);
+  std::scoped_lock lock(fAutoIncMutex);
 
   // nextValue is returned as -1 if we reached max value
   if (fAutoIncLastValue < fMaxIntSat)
@@ -314,7 +314,7 @@ ColumnAutoIncJob::~ColumnAutoIncJob()
 /* virtual */
 int ColumnAutoIncJob::reserveNextRange(uint32_t autoIncCount, uint64_t& nextValue)
 {
-  boost::mutex::scoped_lock lock(fAutoIncMutex);
+  std::scoped_lock lock(fAutoIncMutex);
 
   if ((fMaxIntSat - autoIncCount) < fAutoIncLastValue)
   {
@@ -376,7 +376,7 @@ int ColumnAutoIncIncremental::reserveNextRange(uint32_t autoIncCount, uint64_t& 
   // processing AI ranges out of order, so we don't arbitrarily
   // update fAutoIncLastValue.  We only update it if the range in question
   // exceeds the current value for fAutoIncLastValue.
-  boost::mutex::scoped_lock lock(fAutoIncMutex);
+  std::scoped_lock lock(fAutoIncMutex);
 
   if (autoIncLastValue > fAutoIncLastValue)
     fAutoIncLastValue = autoIncLastValue;

@@ -113,7 +113,7 @@ namespace rwlock
 /*static*/
 RWLockShmImpl* RWLockShmImpl::makeRWLockShmImpl(int key, bool* excl)
 {
-  boost::mutex::scoped_lock lk(instanceMapMutex);
+  std::scoped_lock lk(instanceMapMutex);
   LockMap_t::iterator iter;
 
   if (!lockMapPtr)

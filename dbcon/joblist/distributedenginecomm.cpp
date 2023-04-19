@@ -224,7 +224,7 @@ DistributedEngineComm::~DistributedEngineComm()
 int32_t DistributedEngineComm::Setup()
 {
   // This is here to ensure that this function does not get invoked multiple times simultaneously.
-  boost::mutex::scoped_lock setupLock(fSetupMutex);
+  std::scoped_lock setupLock(fSetupMutex);
 
   makeBusy(true);
 
@@ -329,7 +329,7 @@ int32_t DistributedEngineComm::Setup()
   // for every entry in newClients up to newPmCount, scan for the same ip in the
   // first pmCount.  If there is no match, it's a new node,
   //    call the event listeners' newPMOnline() callbacks.
-  boost::mutex::scoped_lock lock(eventListenerLock);
+  std::scoped_lock lock(eventListenerLock);
 
   for (uint32_t i = 0; i < newPmCount; i++)
   {
@@ -437,7 +437,7 @@ Error:
     /*
             // reset the pmconnection vector
             ClientList tempConns;
-            boost::mutex::scoped_lock onErrLock(fOnErrMutex);
+            std::scoped_lock onErrLock(fOnErrMutex);
             string moduleName = client->moduleName();
             //cout << "moduleName=" << moduleName << endl;
             for ( uint32_t i = 0; i < fPmConnections.size(); i++)
@@ -1194,7 +1194,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
                     ClientList tempConns;
                     {
                             //cout << "WARNING: DEC WRITE BROKEN PIPE " <<
-    fPmConnections[index]->otherEnd()<< endl; boost::mutex::scoped_lock onErrLock(fOnErrMutex); string
+    fPmConnections[index]->otherEnd()<< endl; std::scoped_lock onErrLock(fOnErrMutex); string
     moduleName = fPmConnections[index]->moduleName();
                             //cout << "module name = " << moduleName << endl;
                             if (index >= fPmConnections.size()) return 0;
@@ -1240,13 +1240,13 @@ uint32_t DistributedEngineComm::size(uint32_t key)
 
 void DistributedEngineComm::addDECEventListener(DECEventListener* l)
 {
-  boost::mutex::scoped_lock lk(eventListenerLock);
+  std::scoped_lock lk(eventListenerLock);
   eventListeners.push_back(l);
 }
 
 void DistributedEngineComm::removeDECEventListener(DECEventListener* l)
 {
-  boost::mutex::scoped_lock lk(eventListenerLock);
+  std::scoped_lock lk(eventListenerLock);
   std::vector<DECEventListener*> newListeners;
   uint32_t s = eventListeners.size();
 

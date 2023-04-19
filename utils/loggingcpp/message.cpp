@@ -152,7 +152,7 @@ const string Message::lookupMessage(const MessageID& msgid)
 {
   if (!catalogLoaded)
   {
-    boost::mutex::scoped_lock lock(mx);
+    std::scoped_lock lock(mx);
 
     if (!catalogLoaded)
     {

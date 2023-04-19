@@ -39,7 +39,7 @@ TablelockData::TablelockDataMap TablelockData::fTablelockDataMap;
 /* static */
 TablelockData* TablelockData::makeTablelockData(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::scoped_lock lock(map_mutex);
   TablelockData* instance;
   TablelockDataMap::const_iterator it = fTablelockDataMap.find(sessionID);
 
@@ -56,7 +56,7 @@ TablelockData* TablelockData::makeTablelockData(uint32_t sessionID)
 /* static */
 void TablelockData::removeTablelockData(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::scoped_lock lock(map_mutex);
   TablelockDataMap::iterator it = fTablelockDataMap.find(sessionID);
 
   if (it != fTablelockDataMap.end())
@@ -75,13 +75,13 @@ TablelockData::~TablelockData()
 
 void TablelockData::setTablelock(uint32_t tableOid, uint64_t tablelockId)
 {
-  boost::mutex::scoped_lock lk(fOIDTablelock);
+  std::scoped_lock lk(fOIDTablelock);
   fOIDTablelockMap[tableOid] = tablelockId;
 }
 
 uint64_t TablelockData::getTablelockId(uint32_t tableOid)
 {
-  boost::mutex::scoped_lock lk(fOIDTablelock);
+  std::scoped_lock lk(fOIDTablelock);
   uint64_t tablelockId = 0;
   OIDTablelock::iterator it = fOIDTablelockMap.find(tableOid);
 
@@ -95,7 +95,7 @@ uint64_t TablelockData::getTablelockId(uint32_t tableOid)
 
 TablelockData::OIDTablelock& TablelockData::getOidTablelockMap()
 {
-  boost::mutex::scoped_lock lk(fOIDTablelock);
+  std::scoped_lock lk(fOIDTablelock);
 
   return fOIDTablelockMap;
 }

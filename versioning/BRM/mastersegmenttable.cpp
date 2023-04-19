@@ -60,7 +60,7 @@ MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, int size)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::scoped_lock lk(fInstanceMutex);
 
   if (fInstance)
     return fInstance;

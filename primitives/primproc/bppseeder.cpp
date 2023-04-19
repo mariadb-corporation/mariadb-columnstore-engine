@@ -133,7 +133,7 @@ int BPPSeeder::operator()()
   PTLogs_t* logFD = NULL;
   int ret = 0;
   pthread_t tid = 0;
-  boost::mutex::scoped_lock scoped(bppLock, boost::defer_lock_t());
+  std::scoped_lock scoped(bppLock, boost::defer_lock_t());
 
   try
   {
@@ -370,7 +370,7 @@ void BPPSeeder::sendErrorMsg(uint32_t id, uint16_t status, uint32_t step)
   msg.append((uint8_t*)&ism, sizeof(ism));
   msg.append((uint8_t*)&ph, sizeof(ph));
 
-  boost::mutex::scoped_lock lk(*writelock);
+  std::scoped_lock lk(*writelock);
   sock->write(msg);
 }
 

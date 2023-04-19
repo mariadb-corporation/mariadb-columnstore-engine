@@ -39,7 +39,7 @@ ClientRequestProcessor* ClientRequestProcessor::get()
 {
   if (crp)
     return crp;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (crp)
     return crp;
   crp = new ClientRequestProcessor();

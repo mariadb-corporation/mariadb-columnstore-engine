@@ -540,7 +540,7 @@ inline bool TableInfo::isTableLocked()
 
 inline void TableInfo::markTableComplete()
 {
-  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+  std::scoped_lock lock(fSyncUpdatesTI);
   fStatusTI = WriteEngine::PARSE_COMPLETE;
 }
 

@@ -166,7 +166,7 @@ void BulkLoad::read(int id)
 //------------------------------------------------------------------------------
 int BulkLoad::lockTableForRead(int id)
 {
-  boost::mutex::scoped_lock lock(fReadMutex);
+  std::scoped_lock lock(fReadMutex);
 
   for (unsigned i = 0; i < fTableInfo.size(); ++i)
   {
@@ -315,7 +315,7 @@ void BulkLoad::parse(int id)
 #ifdef PROFILE
         Stats::startParseEvent(WE_STATS_WAIT_TO_COMPLETE_PARSE);
 #endif
-        boost::mutex::scoped_lock lock(fParseMutex);
+        std::scoped_lock lock(fParseMutex);
 #ifdef PROFILE
         Stats::stopParseEvent(WE_STATS_WAIT_TO_COMPLETE_PARSE);
         Stats::startParseEvent(WE_STATS_COMPLETING_PARSE);
@@ -417,7 +417,7 @@ bool BulkLoad::lockColumnForParse(int thrdId, int& tableId, int& columnId, int& 
   // Check if the currentParseBuffer is available for parsing
   // If yes, put the locker and fill the tableId and columnId
   // else, go to the next table for checking if a column is available
-  boost::mutex::scoped_lock lock(fParseMutex);
+  std::scoped_lock lock(fParseMutex);
 
   for (unsigned i = 0; i < fTableInfo.size(); ++i)
   {
@@ -498,7 +498,7 @@ void BulkLoad::setParseErrorOnTable(int tableId, bool lockParseMutex)
 {
   if (lockParseMutex)
   {
-    boost::mutex::scoped_lock lock(fParseMutex);
+    std::scoped_lock lock(fParseMutex);
     fTableInfo[tableId].setParseError();
   }
   else

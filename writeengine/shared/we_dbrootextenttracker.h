@@ -184,7 +184,7 @@ class DBRootExtentTracker
    */
   inline int getCurrentDBRootIdx()
   {
-    boost::mutex::scoped_lock lock(fDBRootExtTrkMutex);
+    std::scoped_lock lock(fDBRootExtTrkMutex);
     return fCurrentDBRootIdx;
   }
 

@@ -95,7 +95,7 @@ IOCoordinator* IOCoordinator::get()
 {
   if (ioc)
     return ioc;
-  boost::mutex::scoped_lock s(m);
+  std::scoped_lock s(m);
   if (ioc)
     return ioc;
   ioc = new IOCoordinator();
