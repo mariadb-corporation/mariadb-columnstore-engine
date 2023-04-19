@@ -42,7 +42,7 @@ struct foo
       // simulate some work
       fData++;
 
-    // std::scoped_lock lock(mutex);
+    // std::unique_lock lock(mutex);
     // std::cout << "foo count = " << ++thecount << " " << fData << std::endl;
   }
 
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
       pool.invoke(bar, 25);
     }
 
-    std::scoped_lock lock(mutex);
+    std::unique_lock lock(mutex);
     std::cout << "count = " << ++thecount << std::endl;
 
     // Wait until all of the queued up and in-progress work has finished

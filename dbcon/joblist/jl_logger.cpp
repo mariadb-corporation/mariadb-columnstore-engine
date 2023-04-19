@@ -57,7 +57,7 @@ Logger::Logger() : fLogId(5), fImpl(new logging::Logger(5))
 
 void catchHandler(const string& ex, int c, SErrorInfo& ei, unsigned sid, logging::LOG_TYPE level)
 {
-  std::scoped_lock lk(logMutex);
+  std::unique_lock lk(logMutex);
 
   if (ei->errCode == 0)
   {

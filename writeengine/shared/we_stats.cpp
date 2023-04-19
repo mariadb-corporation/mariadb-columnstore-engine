@@ -111,7 +111,7 @@ void Stats::enableProfiling(int nReadThreads, int nParseThreads)
  ***********************************************************/
 void Stats::registerReadProfThread()
 {
-  std::scoped_lock lk(fRegisterReaderMutex);
+  std::unique_lock lk(fRegisterReaderMutex);
 
   fReadProfThreads.push_back(pthread_self());
   logging::StopWatch readStopWatch;
@@ -128,7 +128,7 @@ void Stats::registerReadProfThread()
  ***********************************************************/
 void Stats::registerParseProfThread()
 {
-  std::scoped_lock lk(fRegisterParseMutex);
+  std::unique_lock lk(fRegisterParseMutex);
 
   fParseProfThreads.push_back(pthread_self());
   logging::StopWatch parseStopWatch;

@@ -67,7 +67,7 @@ ExtentStripeAlloc::~ExtentStripeAlloc()
 //------------------------------------------------------------------------------
 void ExtentStripeAlloc::addColumn(OID colOID, int colWidth)
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   fColOIDs.push_back(colOID);
   fColWidths.push_back(colWidth);
@@ -108,7 +108,7 @@ int ExtentStripeAlloc::allocateExtent(OID oid, uint16_t dbRoot,
 
   std::pair<AllocExtMapIter, AllocExtMapIter> iters;
 
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   // Search for an extent matching the requested OID and DBRoot.
   // We also filter by selecting the lowest stripe number.  See
@@ -257,7 +257,7 @@ int ExtentStripeAlloc::allocateExtent(OID oid, uint16_t dbRoot,
 //------------------------------------------------------------------------------
 void ExtentStripeAlloc::print()
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   std::ostringstream oss;
   oss << "Current Pending Extents for table " << fTableOID << ":";

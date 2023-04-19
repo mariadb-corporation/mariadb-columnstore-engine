@@ -46,7 +46,7 @@ std::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {
-  std::scoped_lock lk(mx);
+  std::unique_lock lk(mx);
 
   if (!fInstance)
     fInstance = new ResourceManager(runningInExeMgr, aConfig);

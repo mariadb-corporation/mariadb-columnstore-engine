@@ -54,7 +54,7 @@ std::mutex FuncExp::fInstanceMutex;
 
 FuncExp* FuncExp::instance()
 {
-  std::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (!fInstance)
     fInstance = new FuncExp();

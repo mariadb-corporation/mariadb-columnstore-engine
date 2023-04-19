@@ -40,7 +40,7 @@ ThreadPool::ThreadPool(uint num_threads, bool _processQueueOnExit)
 
 ThreadPool::~ThreadPool()
 {
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
   die = true;
   if (!processQueueOnExit)
     jobs.clear();
@@ -60,7 +60,7 @@ void ThreadPool::setName(const string& _name)
 
 void ThreadPool::addJob(const boost::shared_ptr<Job>& j)
 {
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
   if (die)
     return;
 
@@ -81,7 +81,7 @@ void ThreadPool::addJob(const boost::shared_ptr<Job>& j)
 void ThreadPool::prune()
 {
   set<ID_Thread>::iterator it;
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
 
   while (1)
   {
@@ -105,19 +105,19 @@ void ThreadPool::prune()
 
 void ThreadPool::setMaxThreads(uint newMax)
 {
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
   maxThreads = newMax;
 }
 
 int ThreadPool::currentQueueSize() const
 {
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
   return jobs.size();
 }
 
 void ThreadPool::processingLoop()
 {
-  boost::unique_lock<std::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
   try
   {
     _processingLoop(s);
@@ -134,7 +134,7 @@ void ThreadPool::processingLoop()
   //      " live thread count = " << threads.size() - pruneable.size() << endl;
 }
 
-void ThreadPool::_processingLoop(boost::unique_lock<std::mutex>& s)
+void ThreadPool::_processingLoop(std::unique_lock<std::mutex>& s)
 {
   // cout << "Thread started" << endl;
   while (threads.size() - pruneable.size() <=

@@ -152,7 +152,7 @@ const string Message::lookupMessage(const MessageID& msgid)
 {
   if (!catalogLoaded)
   {
-    std::scoped_lock lock(mx);
+    std::unique_lock lock(mx);
 
     if (!catalogLoaded)
     {

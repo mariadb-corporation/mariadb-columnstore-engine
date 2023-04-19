@@ -245,7 +245,7 @@ void TableInfo::closeOpenDbFiles()
 //------------------------------------------------------------------------------
 bool TableInfo::lockForRead(const int& locker)
 {
-  std::scoped_lock lock(fSyncUpdatesTI);
+  std::unique_lock lock(fSyncUpdatesTI);
 
   if (fLocker == -1)
   {
@@ -278,7 +278,7 @@ int TableInfo::readTableData()
     if (rc != NO_ERROR)
     {
       // Mark the table status as error and exit.
-      std::scoped_lock lock(fSyncUpdatesTI);
+      std::unique_lock lock(fSyncUpdatesTI);
       fStatusTI = WriteEngine::ERR;
       return rc;
     }
@@ -314,7 +314,7 @@ int TableInfo::readTableData()
     // See if JobStatus has been set to terminate by another thread
     if (BulkStatus::getJobStatus() == EXIT_FAILURE)
     {
-      std::scoped_lock lock(fSyncUpdatesTI);
+      std::unique_lock lock(fSyncUpdatesTI);
       fStartTime = readStart;
       fStatusTI = WriteEngine::ERR;
       its.msg_type = ImportTeleStats::IT_TERM;
@@ -350,7 +350,7 @@ int TableInfo::readTableData()
       // See if JobStatus has been set to terminate by another thread
       if (BulkStatus::getJobStatus() == EXIT_FAILURE)
       {
-        std::scoped_lock lock(fSyncUpdatesTI);
+        std::unique_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         its.msg_type = ImportTeleStats::IT_TERM;
@@ -437,7 +437,7 @@ int TableInfo::readTableData()
       // need to exit.
       // mark the table status as error and exit.
       {
-        std::scoped_lock lock(fSyncUpdatesTI);
+        std::unique_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         fBuffers[readBufNo].setStatusBLB(WriteEngine::ERR);
@@ -491,7 +491,7 @@ int TableInfo::readTableData()
 
       // number of errors > maximum allowed. hence return error.
       {
-        std::scoped_lock lock(fSyncUpdatesTI);
+        std::unique_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         fBuffers[readBufNo].setStatusBLB(WriteEngine::ERR);
@@ -518,7 +518,7 @@ int TableInfo::readTableData()
 #ifdef PROFILE
       Stats::startReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
 #endif
-      std::scoped_lock lock(fSyncUpdatesTI);
+      std::unique_lock lock(fSyncUpdatesTI);
 #ifdef PROFILE
       Stats::stopReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
       Stats::startReadEvent(WE_STATS_COMPLETING_READ);
@@ -629,7 +629,7 @@ void TableInfo::writeErrorList(const std::vector<std::pair<RID, std::string> >* 
 
   if ((errorRowsCount > 0) || (errorDatRowsCount > 0) || (bCloseFile))
   {
-    std::scoped_lock lock(fErrorRptInfoMutex);
+    std::unique_lock lock(fErrorRptInfoMutex);
 
     if ((errorRowsCount > 0) || (bCloseFile))
       writeErrReason(errorRows, bCloseFile);
@@ -674,7 +674,7 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
 //------------------------------------------------------------------------------
 int TableInfo::setParseComplete(const int& columnId, const int& bufferId, double processingTime)
 {
-  std::scoped_lock lock(fSyncUpdatesTI);
+  std::unique_lock lock(fSyncUpdatesTI);
 
   // Check table status in case race condition results in this function
   // being called after fStatusTI was set to ERR by another thread.
@@ -1051,7 +1051,7 @@ int TableInfo::finishBRM()
   std::vector<std::string>* errFiles = 0;
   std::vector<std::string>* badFiles = 0;
   {
-    std::scoped_lock lock(fErrorRptInfoMutex);
+    std::unique_lock lock(fErrorRptInfoMutex);
     errFiles = &fErrFiles;
     badFiles = &fBadFiles;
   }
@@ -1071,7 +1071,7 @@ int TableInfo::finishBRM()
 //------------------------------------------------------------------------------
 void TableInfo::setParseError()
 {
-  std::scoped_lock lock(fSyncUpdatesTI);
+  std::unique_lock lock(fSyncUpdatesTI);
   fStatusTI = WriteEngine::ERR;
 }
 
@@ -1084,7 +1084,7 @@ void TableInfo::setParseError()
 // Added report parm and couts below.
 int TableInfo::getColumnForParse(const int& id, const int& bufferId, bool report)
 {
-  std::scoped_lock lock(fSyncUpdatesTI);
+  std::unique_lock lock(fSyncUpdatesTI);
   double maxTime = 0;
   int columnId = -1;
 
@@ -1360,7 +1360,7 @@ void TableInfo::closeTableFile()
 // Added report parm and couts below.
 bool TableInfo::isBufferAvailable(bool report)
 {
-  std::scoped_lock lock(fSyncUpdatesTI);
+  std::unique_lock lock(fSyncUpdatesTI);
   Status bufferStatus = fBuffers[fCurrentReadBuffer].getStatusBLB();
 
   if ((bufferStatus == WriteEngine::PARSE_COMPLETE) || (bufferStatus == WriteEngine::NEW))

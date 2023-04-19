@@ -46,7 +46,7 @@ string* StartUp::fTmpDirp = 0;
 /* static */
 const string StartUp::tmpDir()
 {
-  std::scoped_lock lk(fTmpDirLock);
+  std::unique_lock lk(fTmpDirLock);
 
   if (fTmpDirp)
     return *fTmpDirp;

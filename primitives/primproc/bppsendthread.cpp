@@ -258,7 +258,7 @@ void BPPSendThread::mainLoop()
 
         try
         {
-          std::scoped_lock sl2(*lock);
+          std::unique_lock sl2(*lock);
           sock->write(*msg[msgsSent].msg);
           // cout << "sent 1 msg\n";
         }

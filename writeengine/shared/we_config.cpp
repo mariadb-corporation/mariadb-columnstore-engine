@@ -86,7 +86,7 @@ string Config::m_VersionBufferDir;
  ******************************************************************************/
 void Config::initConfigCache()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 }
 
@@ -330,7 +330,7 @@ void Config::checkReload()
  ******************************************************************************/
 size_t Config::DBRootCount()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_dbRootCount;
@@ -346,7 +346,7 @@ size_t Config::DBRootCount()
  ******************************************************************************/
 std::string Config::getDBRootByIdx(unsigned idx)
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   if (idx >= m_dbRootPath.size())
@@ -368,7 +368,7 @@ std::string Config::getDBRootByIdx(unsigned idx)
  ******************************************************************************/
 void Config::getDBRootPathList(std::vector<std::string>& dbRootPathList)
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   dbRootPathList.clear();
@@ -385,7 +385,7 @@ void Config::getDBRootPathList(std::vector<std::string>& dbRootPathList)
  ******************************************************************************/
 std::string Config::getDBRootByNum(unsigned num)
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   Config::intstrmap_t::const_iterator iter = m_dbRootPathMap.find(num);
@@ -409,7 +409,7 @@ std::string Config::getDBRootByNum(unsigned num)
  ******************************************************************************/
 void Config::getRootIdList(std::vector<uint16_t>& rootIds)
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   rootIds = m_dbRootId;
@@ -425,7 +425,7 @@ void Config::getRootIdList(std::vector<uint16_t>& rootIds)
  ******************************************************************************/
 std::string Config::getBulkRoot()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_bulkRoot;
@@ -435,7 +435,7 @@ std::string Config::getBulkRoot()
 void Config::getSharedNothingRoot(char* ret)
 {
   string root;
-  std::scoped_lock lk(m_bulkRoot_lk);
+  std::unique_lock lk(m_bulkRoot_lk);
 
   root = config::Config::makeConfig()->getConfig("WriteEngine", "SharedNothingRoot");
   strncpy(ret, root.c_str(), FILE_NAME_SIZE);
@@ -452,7 +452,7 @@ void Config::getSharedNothingRoot(char* ret)
  ******************************************************************************/
 int Config::getWaitPeriod()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_WaitPeriod;
@@ -468,7 +468,7 @@ int Config::getWaitPeriod()
  ******************************************************************************/
 unsigned Config::getFilesPerColumnPartition()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_FilesPerColumnPartition;
@@ -484,7 +484,7 @@ unsigned Config::getFilesPerColumnPartition()
  ******************************************************************************/
 unsigned Config::getExtentsPerSegmentFile()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_ExtentsPerSegmentFile;
@@ -507,7 +507,7 @@ unsigned Config::getExtentsPerSegmentFile()
  ******************************************************************************/
 int Config::getBulkProcessPriority()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_BulkProcessPriority;
@@ -521,7 +521,7 @@ int Config::getBulkProcessPriority()
  ******************************************************************************/
 std::string Config::getBulkRollbackDir()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_BulkRollbackDir;
@@ -535,7 +535,7 @@ std::string Config::getBulkRollbackDir()
  ******************************************************************************/
 bool Config::getFastDelete()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_FastDelete;
@@ -549,7 +549,7 @@ bool Config::getFastDelete()
  ******************************************************************************/
 unsigned Config::getMaxFileSystemDiskUsage()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_MaxFileSystemDiskUsage;
@@ -564,7 +564,7 @@ unsigned Config::getMaxFileSystemDiskUsage()
  ******************************************************************************/
 unsigned Config::getNumCompressedPadBlks()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_NumCompressedPadBlks;
@@ -578,7 +578,7 @@ unsigned Config::getNumCompressedPadBlks()
  ******************************************************************************/
 bool Config::getParentOAMModuleFlag()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_ParentOAMModuleFlag;
@@ -592,7 +592,7 @@ bool Config::getParentOAMModuleFlag()
  ******************************************************************************/
 std::string Config::getLocalModuleType()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_LocalModuleType;
@@ -606,7 +606,7 @@ std::string Config::getLocalModuleType()
  ******************************************************************************/
 uint16_t Config::getLocalModuleID()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_LocalModuleID;
@@ -622,7 +622,7 @@ uint16_t Config::getLocalModuleID()
  ******************************************************************************/
 std::string Config::getVBRoot()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
   checkReload();
 
   return m_VersionBufferDir;
@@ -639,7 +639,7 @@ std::string Config::getVBRoot()
  ******************************************************************************/
 bool Config::hasLocalDBRootListChanged()
 {
-  std::scoped_lock lk(fCacheLock);
+  std::unique_lock lk(fCacheLock);
 
   if (fDBRootChangeCount > 0)
   {

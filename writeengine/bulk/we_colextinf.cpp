@@ -53,7 +53,7 @@ namespace WriteEngine
 // @bug 4806: Added bIsNewExtent; Set CP min/max for very first extent on a PM
 void ColExtInf::addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent)
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   ColExtInfEntry entry(lbid, bIsNewExtent);
   fMap[lastInputRow] = entry;
@@ -70,7 +70,7 @@ template <typename T>
 void ColExtInf::addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, ColDataType colDataType,
                                          int width)
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   RowExtMap::iterator iter = fMap.find(lastInputRow);
 
@@ -152,7 +152,7 @@ void ColExtInf::addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, C
 //------------------------------------------------------------------------------
 int ColExtInf::updateEntryLbid(BRM::LBID_t startLbid)
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   // fPendingExtentRows is a Set carrying a sorted list of the last Row
   // number in each extent.  We should be allocating/assigning LBIDs in
@@ -190,7 +190,7 @@ void ColExtInf::getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
 {
   bool bIsChar = ((column.weType == WriteEngine::WR_CHAR) && (column.colType != COL_TYPE_DICT));
 
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
 
   RowExtMap::const_iterator iter = fMap.begin();
 
@@ -280,7 +280,7 @@ void ColExtInf::getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
 //------------------------------------------------------------------------------
 void ColExtInf::print(const JobColumn& column)
 {
-  std::scoped_lock lock(fMapMutex);
+  std::unique_lock lock(fMapMutex);
   bool bIsChar = ((column.weType == WriteEngine::WR_CHAR) && (column.colType != COL_TYPE_DICT));
   std::ostringstream oss;
   oss << "ColExtInf Map for OID: " << fColOid;

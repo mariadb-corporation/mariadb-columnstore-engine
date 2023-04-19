@@ -42,7 +42,7 @@ namespace joblist
 /* static */
 UniqueNumberGenerator* UniqueNumberGenerator::instance()
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
 
   if (!fUnique32Generator)
   {
@@ -60,7 +60,7 @@ UniqueNumberGenerator* UniqueNumberGenerator::instance()
 /* static */
 void UniqueNumberGenerator::deleteInstance()
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
 
   if (fUnique32Generator)
   {

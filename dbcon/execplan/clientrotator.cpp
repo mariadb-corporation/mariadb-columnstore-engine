@@ -222,7 +222,7 @@ void ClientRotator::write(const ByteStream& msg)
 
 ByteStream ClientRotator::read()
 {
-  std::scoped_lock lk(fClientLock);
+  std::unique_lock lk(fClientLock);
 
   ByteStream bs;
 

@@ -56,7 +56,7 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
       if it is not already being downloaded, make a new Download instance.
       wait for the listener to tell us that it's done.
   */
-  boost::unique_lock<std::mutex> s(lock);
+  std::unique_lock<std::mutex> s(lock);
   for (uint i = 0; i < keys.size(); i++)
   {
     boost::shared_ptr<Download> newDL(new Download(*keys[i], prefix, cache_lock, this));
@@ -122,7 +122,7 @@ void Downloader::printKPIs() const
 bool Downloader::inProgress(const string& key)
 {
   boost::shared_ptr<Download> tmp(new Download(key));
-  boost::unique_lock<std::mutex> s(lock);
+  std::unique_lock<std::mutex> s(lock);
 
   auto it = downloads.find(tmp);
   if (it != downloads.end())

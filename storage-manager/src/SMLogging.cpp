@@ -46,7 +46,7 @@ SMLogging* SMLogging::get()
 {
   if (smLog)
     return smLog;
-  std::scoped_lock s(m);
+  std::unique_lock s(m);
   if (smLog)
     return smLog;
   smLog = new SMLogging();

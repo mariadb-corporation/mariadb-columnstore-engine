@@ -29,11 +29,11 @@ class RWLock
 
   void readLock();
   // this version will release the lock in the parameter after locking this instance
-  void readLock(boost::unique_lock<std::mutex>&);
+  void readLock(std::unique_lock<std::mutex>&);
   void readUnlock();
   void writeLock();
   // this version will release the lock in the parameter after locking this instance
-  void writeLock(boost::unique_lock<std::mutex>&);
+  void writeLock(std::unique_lock<std::mutex>&);
   void writeUnlock();
 
   // returns true if anything is blocked on or owns this lock instance.

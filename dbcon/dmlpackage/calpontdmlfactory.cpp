@@ -51,7 +51,7 @@ dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(
   {
     std::string dmlStatement = vpackage.get_DMLStatement();
     //@Bug 2680. DMLParser is not thread safe.
-    std::scoped_lock lk(fParserLock);
+    std::unique_lock lk(fParserLock);
     DMLParser parser;
 
     if (defaultSchema.size())

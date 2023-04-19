@@ -1486,7 +1486,7 @@ bool TestRunner::doBlock(unsigned int blocknum, unsigned char tag, unsigned int 
 
 void TestRunner::logMsg(LogLevel level, const string& msg, bool bold)
 {
-  std::scoped_lock lock(m_guard);
+  std::unique_lock lock(m_guard);
 
   if (bold)
     cout << "\033[0;1m";

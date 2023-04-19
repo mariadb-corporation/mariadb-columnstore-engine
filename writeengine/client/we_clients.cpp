@@ -355,7 +355,7 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
 Error:
   // error condition! push 0 length bs to messagequeuemap and
   // eventually let jobstep error out.
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
 
   MessageQueueMap::iterator map_tok;
   sbs.reset(new ByteStream(0));
@@ -371,7 +371,7 @@ Error:
 
   // reset the pmconnection map
   {
-    std::scoped_lock onErrLock(fOnErrMutex);
+    std::unique_lock onErrLock(fOnErrMutex);
     string moduleName = client->moduleName();
     ClientList::iterator itor = fPmConnections.begin();
 
@@ -402,7 +402,7 @@ void WEClients::addQueue(uint32_t key)
 
   mqe->queue = WESMsgQueue(lock, cond);
 
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   b = fSessionMessages.insert(pair<uint32_t, boost::shared_ptr<MQE> >(key, mqe)).second;
 
   if (!b)
@@ -415,7 +415,7 @@ void WEClients::addQueue(uint32_t key)
 
 void WEClients::removeQueue(uint32_t key)
 {
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -428,7 +428,7 @@ void WEClients::removeQueue(uint32_t key)
 
 void WEClients::shutdownQueue(uint32_t key)
 {
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -443,7 +443,7 @@ void WEClients::read(uint32_t key, SBS& bs)
   boost::shared_ptr<MQE> mqe;
 
   // Find the StepMsgQueueList for this session
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -521,7 +521,7 @@ void WEClients::addDataToOutput(SBS sbs, uint32_t connIndex)
   *sbs >> uniqueId;
   boost::shared_ptr<MQE> mqe;
 
-  std::scoped_lock lk(fMlock);
+  std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
 
   if (map_tok == fSessionMessages.end())

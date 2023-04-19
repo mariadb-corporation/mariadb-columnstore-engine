@@ -95,7 +95,7 @@ Replicator* Replicator::get()
 {
   if (rep)
     return rep;
-  std::scoped_lock s(m);
+  std::unique_lock s(m);
   if (rep)
     return rep;
   rep = new Replicator();

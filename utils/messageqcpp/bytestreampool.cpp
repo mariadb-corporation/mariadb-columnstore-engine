@@ -49,7 +49,7 @@ ByteStreamPool::~ByteStreamPool()
 
 ByteStream* ByteStreamPool::getByteStream()
 {
-  std::scoped_lock s(mutex);
+  std::unique_lock s(mutex);
   ByteStream* ret;
 
   if (!freeByteStreams.empty())
@@ -69,7 +69,7 @@ void ByteStreamPool::returnByteStream(ByteStream* bs)
     delete bs;
   else
   {
-    std::scoped_lock s(mutex);
+    std::unique_lock s(mutex);
     if (freeByteStreams.size() > maxFreeBuffers)
       delete bs;
     else

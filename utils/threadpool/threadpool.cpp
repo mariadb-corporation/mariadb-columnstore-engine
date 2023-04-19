@@ -52,7 +52,7 @@ ThreadPool::~ThreadPool() throw()
 {
   try
   {
-    std::scoped_lock initLock(fInitMutex);
+    std::unique_lock initLock(fInitMutex);
     stop();
   }
   catch (...)
@@ -62,7 +62,7 @@ ThreadPool::~ThreadPool() throw()
 
 void ThreadPool::init()
 {
-  std::scoped_lock initLock(fInitMutex);
+  std::unique_lock initLock(fInitMutex);
   fThreadCount = 0;
   fGeneralErrors = 0;
   fFunctorErrors = 0;
@@ -77,14 +77,14 @@ void ThreadPool::init()
 
 void ThreadPool::setQueueSize(size_t queueSize)
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fQueueSize = queueSize;
 }
 
 void ThreadPool::pruneThread()
 {
   utils::setThreadName("pruneThread");
-  boost::unique_lock<std::mutex> lock2(fPruneMutex);
+  std::unique_lock<std::mutex> lock2(fPruneMutex);
 
   while (true)
   {
@@ -119,13 +119,13 @@ void ThreadPool::pruneThread()
 
 void ThreadPool::setMaxThreads(size_t maxThreads)
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fMaxThreads = maxThreads;
 }
 
 void ThreadPool::stop()
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   if (fStop)
     return;  // Was stopped earlier
   fStop = true;
@@ -140,7 +140,7 @@ void ThreadPool::stop()
 
 void ThreadPool::wait()
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -151,7 +151,7 @@ void ThreadPool::wait()
 
 void ThreadPool::join(uint64_t thrHandle)
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -181,7 +181,7 @@ void ThreadPool::join(uint64_t thrHandle)
 
 void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -222,7 +222,7 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 
 uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
-  std::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   uint64_t thrHandle = 0;
 
   for (;;)
@@ -319,7 +319,7 @@ void ThreadPool::beginThread() throw()
   utils::setThreadName("Idle");
   try
   {
-    boost::unique_lock<std::mutex> lock1(fMutex);
+    std::unique_lock<std::mutex> lock1(fMutex);
 
     for (;;)
     {
@@ -342,7 +342,7 @@ void ThreadPool::beginThread() throw()
           {
             if (fThreadCount > fMaxThreads)
             {
-              std::scoped_lock lock2(fPruneMutex);
+              std::unique_lock lock2(fPruneMutex);
               fPruneThreads.push(boost::this_thread::get_id());
               --fThreadCount;
               return;

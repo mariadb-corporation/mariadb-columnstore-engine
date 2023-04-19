@@ -1462,7 +1462,7 @@ void TupleUnion::readInput(uint32_t which)
 
         l_tmpRG.getRow(0, &tmpRow);
         {
-          std::scoped_lock lk(uniquerMutex);
+          std::unique_lock lk(uniquerMutex);
           getOutput(&l_outputRG, &outRow, &outRGData);
           memUsageBefore = allocator.getMemUsage();
 
@@ -1541,8 +1541,8 @@ void TupleUnion::readInput(uint32_t which)
       more = dl->next(it, &inRGData);
 
   {
-    std::scoped_lock lock1(uniquerMutex);
-    std::scoped_lock lock2(sMutex);
+    std::unique_lock lock1(uniquerMutex);
+    std::unique_lock lock2(sMutex);
 
     if (!distinct && l_outputRG.getRowCount() > 0)
       output->insert(outRGData);
@@ -1640,7 +1640,7 @@ void TupleUnion::addToOutput(Row* r, RowGroup* rg, bool keepit, RGData& data, ui
   {
     rg->setRowCount(8192);
     {
-      std::scoped_lock lock(sMutex);
+      std::unique_lock lock(sMutex);
       output->insert(data);
     }
     data = RGData(*rg);
@@ -1677,7 +1677,7 @@ void TupleUnion::run()
 {
   uint32_t i;
 
-  std::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
 
   if (runRan)
     return;
@@ -1720,7 +1720,7 @@ void TupleUnion::run()
 
 void TupleUnion::join()
 {
-  std::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
 
   if (joinRan)
     return;

@@ -184,7 +184,7 @@ class DBRootExtentTracker
    */
   inline int getCurrentDBRootIdx()
   {
-    std::scoped_lock lock(fDBRootExtTrkMutex);
+    std::unique_lock lock(fDBRootExtTrkMutex);
     return fCurrentDBRootIdx;
   }
 

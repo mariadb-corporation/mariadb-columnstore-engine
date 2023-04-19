@@ -83,7 +83,7 @@ VBBMImpl* VBBMImpl::fInstance = 0;
 /*static*/
 VBBMImpl* VBBMImpl::makeVBBMImpl(unsigned key, off_t size, bool readOnly)
 {
-  std::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {

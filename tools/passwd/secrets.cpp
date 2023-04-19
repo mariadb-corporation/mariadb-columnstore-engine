@@ -70,7 +70,7 @@ CSPasswdLogging* CSPasswdLogging::get()
 {
   if (passwdLog)
     return passwdLog;
-  std::scoped_lock s(m);
+  std::unique_lock s(m);
   if (passwdLog)
     return passwdLog;
   passwdLog = new CSPasswdLogging();

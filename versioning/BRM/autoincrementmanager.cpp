@@ -44,7 +44,7 @@ AutoincrementManager::~AutoincrementManager()
 void AutoincrementManager::startSequence(uint32_t oid, uint64_t firstNum, uint32_t colWidth,
                                          execplan::CalpontSystemCatalog::ColDataType colDataType)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
   sequence s;
 
@@ -69,7 +69,7 @@ void AutoincrementManager::startSequence(uint32_t oid, uint64_t firstNum, uint32
 
 bool AutoincrementManager::getAIRange(uint32_t oid, uint64_t count, uint64_t* firstNum)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
 
   it = sequences.find(oid);
@@ -89,7 +89,7 @@ bool AutoincrementManager::getAIRange(uint32_t oid, uint64_t count, uint64_t* fi
 
 void AutoincrementManager::resetSequence(uint32_t oid, uint64_t value)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
 
   it = sequences.find(oid);
@@ -104,7 +104,7 @@ const uint32_t AutoincrementManager::lockTime = 30;
 
 void AutoincrementManager::getLock(uint32_t oid)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
   ptime stealTime = microsec_clock::local_time() + seconds(lockTime);
 
@@ -130,7 +130,7 @@ void AutoincrementManager::getLock(uint32_t oid)
 
 void AutoincrementManager::releaseLock(uint32_t oid)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
 
   it = sequences.find(oid);
@@ -145,7 +145,7 @@ void AutoincrementManager::releaseLock(uint32_t oid)
 
 void AutoincrementManager::deleteSequence(uint32_t oid)
 {
-  std::scoped_lock lk(lock);
+  std::unique_lock lk(lock);
   map<uint64_t, sequence>::iterator it;
 
   it = sequences.find(oid);

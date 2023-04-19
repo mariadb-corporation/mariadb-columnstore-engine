@@ -145,7 +145,7 @@ struct CancellationThread
         // Tell any active processors to stop working and return an error
         // The front end will respond with a ROLLBACK command.
         // Mark all active processors to rollback
-        std::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
+        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
 
         for (phIter = DMLProcessor::packageHandlerMap.begin();
              phIter != DMLProcessor::packageHandlerMap.end(); ++phIter)
@@ -365,7 +365,7 @@ int PackageHandler::synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage)
 {
   // MCOL-140 Wait for any other DML using this table.
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::unique_lock<std::mutex> lock(tableOidMutex);
+  std::unique_lock<std::mutex> lock(tableOidMutex);
   BRM::TxnID txnid;
 
   if (fPackageType != dmlpackage::DML_COMMAND)
@@ -603,7 +603,7 @@ void PackageHandler::run()
           // cout << "This is batch insert " << endl;
           BatchInsertProc* batchProcessor = NULL;
           {
-            std::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+            std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
 
             std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                 DMLProcessor::batchinsertProcessorMap.find(fSessionID);
@@ -750,7 +750,7 @@ void PackageHandler::run()
 
             // remove the batch insert object
             {
-              std::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+              std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
 
               std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                   DMLProcessor::batchinsertProcessorMap.find(fSessionID);
@@ -866,7 +866,7 @@ void PackageHandler::run()
 
             // remove from map
             {
-              std::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+              std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
               std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                   DMLProcessor::batchinsertProcessorMap.find(fSessionID);
 
@@ -911,7 +911,7 @@ void PackageHandler::run()
               logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
               // remove from map
               {
-                std::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+                std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
                 std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                     DMLProcessor::batchinsertProcessorMap.find(fSessionID);
 
@@ -1163,7 +1163,7 @@ void PackageHandler::run()
   // If we remove it after sending the results, it's possible for a commit
   // or rollback be sent and get processed before it is removed, and that
   // will fail.
-  std::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
+  std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
   DMLProcessor::packageHandlerMap.erase(getSessionID());
   lk2.unlock();
 
@@ -1452,7 +1452,7 @@ void DMLProcessor::operator()()
               if (insertPkg.get_isBatchInsert() && insertPkg.get_Logending())
               {
                 {
-                  std::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+                  std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
                   std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                       DMLProcessor::batchinsertProcessorMap.find(sessionID);
 
@@ -1502,7 +1502,7 @@ void DMLProcessor::operator()()
       // This mechanism may prove useful for other things, so the above
       // comment may change.
       {
-        std::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
+        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
         DMLProcessor::PackageHandlerMap_t::iterator phIter = packageHandlerMap.find(sessionID);
 
         if (phIter != packageHandlerMap.end())
@@ -1740,7 +1740,7 @@ void DMLProcessor::operator()()
                                                                    sessionID, txnid.id, fDbrm, fQtc, csc));
           // We put the packageHandler into a map so that if we receive a
           // message to affect the previous command, we can find it.
-          std::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
+          std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
           lk2.lock();
           packageHandlerMap[sessionID] = php;
@@ -1782,7 +1782,7 @@ void DMLProcessor::operator()()
             fIos, bs1, packageType, fEC, fConcurrentSupport, maxDeleteRows, sessionID, 0, fDbrm, fQtc, csc));
         // We put the packageHandler into a map so that if we receive a
         // message to affect the previous command, we can find it.
-        std::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
+        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
         lk2.lock();
         packageHandlerMap[sessionID] = php;

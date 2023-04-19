@@ -51,7 +51,7 @@ std::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-  std::scoped_lock lk(mx);
+  std::unique_lock lk(mx);
 
   if (!fInstance)
     fInstance = new IDBErrorInfo();

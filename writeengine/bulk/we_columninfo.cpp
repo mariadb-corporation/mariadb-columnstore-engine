@@ -301,7 +301,7 @@ int ColumnInfo::createDelayedFileIfNeeded(const std::string& tableName)
   // No sense in waiting for a fColMutex lock, when 99.99% of the time,
   // all we need to do is check fDelayedFileCreation, see that it's value
   // is INITIAL_DBFILE_STAT_FILE_EXISTS, and exit the function.
-  std::scoped_lock lock(fDelayedFileCreateMutex);
+  std::unique_lock lock(fDelayedFileCreateMutex);
 
   if (fDelayedFileCreation == INITIAL_DBFILE_STAT_FILE_EXISTS)
     return NO_ERROR;
@@ -323,7 +323,7 @@ int ColumnInfo::createDelayedFileIfNeeded(const std::string& tableName)
   // fDelayedFileCreateMutex lock might suffice, but better to explicitly
   // lock fColMutex since we are modifying attributes that we typically
   // change within the scope of a fColMutex lock.
-  std::scoped_lock lock2(fColMutex);
+  std::unique_lock lock2(fColMutex);
 
   uint16_t dbRoot = curCol.dataFile.fDbRoot;
   uint32_t partition = curCol.dataFile.fPartition;
@@ -1116,7 +1116,7 @@ int ColumnInfo::finishParsing()
   // thread working on this column.  But, we use the mutex to insure that
   // we see the latest state that may have been set by another parsing thread
   // working with the same column.
-  std::scoped_lock lock(fColMutex);
+  std::unique_lock lock(fColMutex);
 
   // Force the flushing of remaining data in the output buffer
   if (fColBufferMgr)
@@ -1165,7 +1165,7 @@ int ColumnInfo::finishParsing()
 //------------------------------------------------------------------------------
 void ColumnInfo::getBRMUpdateInfo(BRMReporter& brmReporter)
 {
-  std::scoped_lock lock(fColMutex);
+  std::unique_lock lock(fColMutex);
   // Useful for debugging
   // printCPInfo(column);
 
@@ -1495,7 +1495,7 @@ int ColumnInfo::finishAutoInc()
 //------------------------------------------------------------------------------
 void ColumnInfo::getSegFileInfo(DBRootExtentInfo& fileInfo)
 {
-  std::scoped_lock lock(fColMutex);
+  std::unique_lock lock(fColMutex);
   fileInfo.fDbRoot = curCol.dataFile.fDbRoot;
   fileInfo.fPartition = curCol.dataFile.fPartition;
   fileInfo.fSegment = curCol.dataFile.fSegment;
@@ -1692,7 +1692,7 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif
-  std::scoped_lock lock(fDictionaryMutex);
+  std::unique_lock lock(fDictionaryMutex);
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif

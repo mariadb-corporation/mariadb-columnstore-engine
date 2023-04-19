@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 using namespace boost;
 
 #define RWLOCK_LOCAL_DLLEXPORT

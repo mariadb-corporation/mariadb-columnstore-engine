@@ -125,7 +125,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
   *cbs = 0;
   boost::posix_time::seconds wait_seconds(COND_WAIT_SECONDS);
 
-  std::scoped_lock lock(fColInfo->colMutex());
+  std::unique_lock lock(fColInfo->colMutex());
 
   //..Ensure that ColumnBufferSection allocations are made in input row order
   bool bWaitedForInSequence = false;
@@ -330,7 +330,7 @@ int ColumnBufferManager::releaseSection(ColumnBufferSection* cbs)
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_WAIT_TO_RELEASE_OUT_BUF);
 #endif
-  std::scoped_lock lock(fColInfo->colMutex());
+  std::unique_lock lock(fColInfo->colMutex());
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_WAIT_TO_RELEASE_OUT_BUF);
 #endif
@@ -676,7 +676,7 @@ int ColumnBufferManager::flush()
 int ColumnBufferManager::intermediateFlush()
 {
   boost::posix_time::seconds wait_seconds(COND_WAIT_SECONDS);
-  std::scoped_lock lock(fColInfo->colMutex());
+  std::unique_lock lock(fColInfo->colMutex());
 
   // Wait for all other threads which are currently parsing rows,
   // to finish parsing the data in those sections.
@@ -729,7 +729,7 @@ int ColumnBufferManager::rowsExtentCheck(int nRows, int& nRows2)
 //------------------------------------------------------------------------------
 int ColumnBufferManager::extendTokenColumn()
 {
-  std::scoped_lock lock(fColInfo->colMutex());
+  std::unique_lock lock(fColInfo->colMutex());
 
   return fColInfo->extendColumn(false);
 }

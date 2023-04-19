@@ -600,7 +600,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         memcpy(bufferPtr, readBufferPtr, i);
 #ifdef IDB_COMP_POC_DEBUG
         {
-          std::scoped_lock lk(primitiveprocessor::compDebugMutex);
+          std::unique_lock lk(primitiveprocessor::compDebugMutex);
           cout << "pread2(" << fd << ", 0x" << hex << (ptrdiff_t)readBufferPtr << dec << ", "
                << DATA_BLOCK_SIZE << ", " << offset << ") = " << i << endl;
         }
@@ -965,7 +965,7 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
 
   (void)atomicops::atomicInc(&asyncCounter);
 
-  std::scoped_lock sl(*m);
+  std::unique_lock sl(*m);
 
   try
   {
@@ -1061,7 +1061,7 @@ void DictScanJob::write(const SBS& sbs)
     exeMgrDecPtr->addDataToOutput(sbs);
     return;
   }
-  std::scoped_lock lk(*fWriteLock);
+  std::unique_lock lk(*fWriteLock);
   fIos->write(*sbs);
 }
 
@@ -1103,7 +1103,7 @@ int DictScanJob::operator()()
     /* Grab the equality filter if one is specified */
     if (cmd->flags & HAS_EQ_FILTER)
     {
-      std::scoped_lock sl(eqFilterMutex);
+      std::unique_lock sl(eqFilterMutex);
       map<uint32_t, boost::shared_ptr<DictEqualityFilter> >::iterator it;
       it = dictEqualityFilters.find(uniqueId);
 
@@ -1202,7 +1202,7 @@ struct BPPHandler
 
   ~BPPHandler()
   {
-    std::scoped_lock scoped(bppLock);
+    std::unique_lock scoped(bppLock);
 
     for (bppKeysIt = bppKeys.begin(); bppKeysIt != bppKeys.end(); ++bppKeysIt)
     {
@@ -1314,7 +1314,7 @@ struct BPPHandler
       return -1;
     }
 
-    std::scoped_lock scoped(bppLock);
+    std::unique_lock scoped(bppLock);
     bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
 
     if (bppKeysIt != bppKeys.end())
@@ -1406,7 +1406,7 @@ struct BPPHandler
       }
     }
 
-    std::scoped_lock scoped(bppLock);
+    std::unique_lock scoped(bppLock);
     key = bpp->getUniqueID();
     bppKeys.push_back(key);
     bool newInsert;
@@ -1435,7 +1435,7 @@ struct BPPHandler
     */
     SBPPV ret;
 
-    std::scoped_lock scoped(bppLock);
+    std::unique_lock scoped(bppLock);
     it = bppMap.find(uniqueID);
 
     if (it != bppMap.end())
@@ -1464,7 +1464,7 @@ struct BPPHandler
 
   inline shared_mutex& getDJLock(uint32_t uniqueID)
   {
-    std::scoped_lock lk(djMutex);
+    std::unique_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
     if (it != djLock.end())
       return *it->second;
@@ -1477,7 +1477,7 @@ struct BPPHandler
 
   inline void deleteDJLock(uint32_t uniqueID)
   {
-    std::scoped_lock lk(djMutex);
+    std::unique_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
     if (it != djLock.end())
     {
@@ -1538,7 +1538,7 @@ struct BPPHandler
         return -1;
     }
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    std::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
 
     for (i = 0; i < bppv->get().size(); i++)
     {
@@ -1579,8 +1579,8 @@ struct BPPHandler
     bs >> stepID;
     bs >> uniqueID;
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-    std::scoped_lock scoped(bppLock);
+    std::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    std::unique_lock scoped(bppLock);
 
     bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
 
@@ -1750,7 +1750,7 @@ class CreateEqualityFilter : public DictionaryOp
       filter->insert(str);
     }
 
-    std::scoped_lock sl(eqFilterMutex);
+    std::unique_lock sl(eqFilterMutex);
     dictEqualityFilters[uniqueID] = filter;
   }
 };
@@ -1774,7 +1774,7 @@ class DestroyEqualityFilter : public DictionaryOp
     bs->advance(sizeof(ISMPacketHeader));
     *bs >> uniqueID;
 
-    std::scoped_lock sl(eqFilterMutex);
+    std::unique_lock sl(eqFilterMutex);
     it = dictEqualityFilters.find(uniqueID);
 
     if (it != dictEqualityFilters.end())

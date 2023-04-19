@@ -73,7 +73,7 @@ VSSImpl* VSSImpl::fInstance = 0;
 /*static*/
 VSSImpl* VSSImpl::makeVSSImpl(unsigned key, off_t size, bool readOnly)
 {
-  std::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {

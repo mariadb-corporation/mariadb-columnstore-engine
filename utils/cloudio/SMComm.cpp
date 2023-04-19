@@ -34,7 +34,7 @@ SMComm* SMComm::get()
   if (instance)
     return instance;
 
-  std::scoped_lock sl(m);
+  std::unique_lock sl(m);
 
   if (instance)
     return instance;

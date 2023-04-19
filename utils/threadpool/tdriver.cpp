@@ -56,7 +56,7 @@ class ThreadPoolTestSuite : public CppUnit::TestFixture
         fData++;
       }
 
-      std::scoped_lock lock(mutex);
+      std::unique_lock lock(mutex);
 
       std::cout << "count = " << ++thecount << ' ' << fData << std::endl;
     }

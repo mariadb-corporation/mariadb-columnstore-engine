@@ -663,7 +663,7 @@ bool RBMetaWriter::backupDctnryHWMChunk(OID dctnryOID, uint16_t dbRoot, uint32_t
 
     {
       // Use scoped lock to perform "find"
-      std::scoped_lock lock(fRBChunkDctnryMutex);
+      std::unique_lock lock(fRBChunkDctnryMutex);
 
       if ((fLog) && (fLog->isDebug(DEBUG_1)))
         printDctnryChunkList(chunkInfo, "when searching ");
@@ -705,7 +705,7 @@ bool RBMetaWriter::backupDctnryHWMChunk(OID dctnryOID, uint16_t dbRoot, uint32_t
 
       {
         // Use scoped lock to perform "erase"
-        std::scoped_lock lock(fRBChunkDctnryMutex);
+        std::unique_lock lock(fRBChunkDctnryMutex);
         fRBChunkDctnrySet.erase(chunkInfoFound);
 
         if ((fLog) && (fLog->isDebug(DEBUG_1)))

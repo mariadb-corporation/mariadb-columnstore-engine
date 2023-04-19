@@ -307,7 +307,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
     pmNum = (*dbRootPMMap)[dbRoot];
     // MCOL-66 The DBRM can't handle concurrent DDL
-    std::scoped_lock lk(dbrmMutex);
+    std::unique_lock lk(dbrmMutex);
 
     try
     {

@@ -307,7 +307,7 @@ const std::string UmSocketSelector::toString() const
 //------------------------------------------------------------------------------
 void UmModuleIPs::addIP(in_addr_t ip)
 {
-  std::scoped_lock lock(fUmModuleMutex);
+  std::unique_lock lock(fUmModuleMutex);
 
 #ifdef MOD_CONN_DEBUG
   std::ostringstream oss;
@@ -331,7 +331,7 @@ bool UmModuleIPs::addSocketConn(const SP_UM_IOSOCK& ioSock, const SP_UM_MUTEX& w
 {
   bool bConnAdded = false;
 
-  std::scoped_lock lock(fUmModuleMutex);
+  std::unique_lock lock(fUmModuleMutex);
 
   for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
   {
@@ -367,7 +367,7 @@ bool UmModuleIPs::addSocketConn(const SP_UM_IOSOCK& ioSock, const SP_UM_MUTEX& w
 //------------------------------------------------------------------------------
 void UmModuleIPs::delSocketConn(const messageqcpp::IOSocket& ioSock)
 {
-  std::scoped_lock lock(fUmModuleMutex);
+  std::unique_lock lock(fUmModuleMutex);
 
   for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)
   {
@@ -408,7 +408,7 @@ bool UmModuleIPs::nextIOSocket(SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock)
 {
   bool found = false;
 
-  std::scoped_lock lock(fUmModuleMutex);
+  std::unique_lock lock(fUmModuleMutex);
 
   if ((fUmIPSocketConns.size() > 0) && (fNextUmIPSocketIdx != NEXT_IP_SOCKET_UNASSIGNED))
   {
@@ -468,7 +468,7 @@ const std::string UmModuleIPs::toString()
 {
   std::ostringstream oss;
 
-  std::scoped_lock lock(fUmModuleMutex);
+  std::unique_lock lock(fUmModuleMutex);
   oss << "UM module name: " << fUmModuleName << "; nextUmIPIdx: " << fNextUmIPSocketIdx << std::endl;
 
   for (unsigned int i = 0; i < fUmIPSocketConns.size(); ++i)

@@ -30,7 +30,7 @@ void ActiveStatementCounter::incr(bool& counted)
     return;
 
   counted = true;
-  std::scoped_lock lk(fMutex);
+  std::unique_lock lk(fMutex);
 
   if (upperLimit > 0)
     while (fStatementCount >= upperLimit)
@@ -49,7 +49,7 @@ void ActiveStatementCounter::decr(bool& counted)
     return;
 
   counted = false;
-  std::scoped_lock lk(fMutex);
+  std::unique_lock lk(fMutex);
 
   if (fStatementCount == 0)
     return;

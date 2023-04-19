@@ -239,7 +239,7 @@ void OIDServer::initializeBitmap() const
 
   firstOID = static_cast<int>(ltmp);
 
-  std::scoped_lock lk(fMutex);
+  std::unique_lock lk(fMutex);
   h1 = reinterpret_cast<struct FEntry*>(buf);
   // write the initial header
   h1[0].begin = firstOID;
@@ -269,7 +269,7 @@ void OIDServer::initializeBitmap() const
 
 OIDServer::OIDServer() : fFp(NULL), fFd(-1)
 {
-  std::scoped_lock lk(CtorMutex);
+  std::unique_lock lk(CtorMutex);
 
   config::Config* conf;
   string tmp;
@@ -634,7 +634,7 @@ int OIDServer::allocVBOID(uint16_t dbroot)
   try
   {
     uint16_t size = vbOidDBRootMap.size();
-    std::scoped_lock lk(fMutex);
+    std::unique_lock lk(fMutex);
     writeData((uint8_t*)&size, StartOfVBOidSection, 2);
     writeData((uint8_t*)&dbroot, offset, 2);
   }
@@ -679,7 +679,7 @@ int OIDServer::allocOIDs(int num)
   struct FEntry freelist[FreeListEntries];
   int i, size, bestMatchIndex, bestMatchSize, bestMatchBegin = 0;
 
-  std::scoped_lock lk(fMutex);
+  std::unique_lock lk(fMutex);
   readData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
 
   // scan freelist using best fit strategy (an attempt to maximize hits on
@@ -800,7 +800,7 @@ int OIDServer::size() const
   int ret = 0, offset = 0, bytenum = 0;
   uint8_t buf[4096], mask = 0;
 
-  std::scoped_lock lk(fMutex);
+  std::unique_lock lk(fMutex);
 
   for (offset = HeaderSize; offset < StartOfVBOidSection; offset += 4096)
   {

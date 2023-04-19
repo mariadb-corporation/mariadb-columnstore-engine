@@ -177,7 +177,7 @@ uint64_t BatchInsertProc::grabTableLock(int32_t sessionId)
 
 BatchInsertProc::SP_PKG BatchInsertProc::getInsertQueue()
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
   return fInsertPkgQueue;
 }
 
@@ -187,14 +187,14 @@ void BatchInsertProc::setLastPkg(bool lastPkg)
 }
 void BatchInsertProc::addPkg(messageqcpp::ByteStream& insertBs)
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
   fInsertPkgQueue->push(insertBs);
 }
 
 messageqcpp::ByteStream BatchInsertProc::getPkg()
 {
   messageqcpp::ByteStream bs;
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
   bs = fInsertPkgQueue->front();
   fInsertPkgQueue->pop();
   return bs;
@@ -532,13 +532,13 @@ void BatchInsertProc::setHwm()
 
 void BatchInsertProc::setError(int errorCode, std::string errMsg)
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
   fErrorCode = errorCode;
   fErrMsg = errMsg;
 }
 void BatchInsertProc::getError(int& errorCode, std::string& errMsg)
 {
-  std::scoped_lock lk(fLock);
+  std::unique_lock lk(fLock);
   errorCode = fErrorCode;
   errMsg = fErrMsg;
 }

@@ -279,7 +279,7 @@ void WEFileReadThread::add2InputDataFileList(std::string& FileName)
 void WEFileReadThread::shutdown()
 {
   this->setContinue(false);
-  std::scoped_lock aLock(fFileMutex);  // wait till readDataFile() finish
+  std::unique_lock aLock(fFileMutex);  // wait till readDataFile() finish
 
   // if(fInFile.is_open()) fInFile.close(); //@BUG 4326
   if (fIfFile.is_open())
@@ -323,7 +323,7 @@ void WEFileReadThread::feedData()
 
         // cout << "Length " << aSbs->length() <<endl;    - for debug
         fSdh.updateRowTx(aRowCnt, TgtPmId);
-        std::scoped_lock aLock(fSdh.fSendMutex);
+        std::unique_lock aLock(fSdh.fSendMutex);
         fSdh.send2Pm(aSbs, TgtPmId);
         aLock.unlock();
         setTgtPmId(0);  // reset PmId. Send the data to next least data
@@ -367,7 +367,7 @@ void WEFileReadThread::feedData()
 //------------------------------------------------------------------------------
 unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 {
-  std::scoped_lock aLock(fFileMutex);
+  std::unique_lock aLock(fFileMutex);
 
   // For now we are going to send KEEPALIVES
   //*Sbs << (ByteStream::byte)(WE_CLT_SRV_KEEPALIVE);
@@ -431,7 +431,7 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 //------------------------------------------------------------------------------
 unsigned int WEFileReadThread::readBinaryDataFile(messageqcpp::SBS& Sbs, unsigned int recLen)
 {
-  std::scoped_lock aLock(fFileMutex);
+  std::unique_lock aLock(fFileMutex);
 
   if ((fInFile.good()) && (!fInFile.eof()))
   {

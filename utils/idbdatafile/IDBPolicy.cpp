@@ -175,7 +175,7 @@ IDBFileSystem& IDBPolicy::getFs(const std::string& path)
 void IDBPolicy::configIDBPolicy()
 {
   // make sure this is done once.
-  std::scoped_lock lk(s_mutex);
+  std::unique_lock lk(s_mutex);
 
   if (s_configed)
     return;
