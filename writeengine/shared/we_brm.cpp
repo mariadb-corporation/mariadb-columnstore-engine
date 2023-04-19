@@ -58,13 +58,13 @@ namespace WriteEngine
 {
 BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
-boost::mutex BRMWrapper::m_instanceCreateMutex;
+std::mutex BRMWrapper::m_instanceCreateMutex;
 
 
     bool BRMWrapper::m_useVb = true;
 OID BRMWrapper::m_curVBOid = INVALID_NUM;
 IDBDataFile* BRMWrapper::m_curVBFile = NULL;
-boost::mutex vbFileLock;
+std::mutex vbFileLock;
 struct fileInfoCompare  // lt operator
 {
   bool operator()(const File& lhs, const File& rhs) const

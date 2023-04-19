@@ -345,7 +345,7 @@ class ThreadPool
   Container_T::iterator fNextFunctor;
 
   uint32_t fIssued;
-  boost::mutex fMutex;
+  std::mutex fMutex;
   boost::condition_variable fThreadAvailable;  // triggered when a thread is available
   boost::condition_variable fNeedThread;       // triggered when a thread is needed
   ThreadPoolGroup fThreads;
@@ -358,8 +358,8 @@ class ThreadPool
 
   std::string fName;  // Optional to add a name to the pool for debugging.
   bool fDebug;
-  boost::mutex fInitMutex;
-  boost::mutex fPruneMutex;
+  std::mutex fInitMutex;
+  std::mutex fPruneMutex;
   boost::condition_variable fPruneThreadEnd;
   boost::thread* fPruneThread;
   std::stack<boost::thread::id> fPruneThreads;  // A list of stale thread IDs to be joined

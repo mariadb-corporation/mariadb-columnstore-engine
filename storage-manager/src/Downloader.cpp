@@ -44,7 +44,7 @@ Downloader::~Downloader()
 }
 
 void Downloader::download(const vector<const string*>& keys, vector<int>* errnos, vector<size_t>* sizes,
-                          const bf::path& prefix, boost::mutex* cache_lock)
+                          const bf::path& prefix, std::mutex* cache_lock)
 {
   uint counter = keys.size();
   std::condition_variable condvar;
@@ -56,7 +56,7 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
       if it is not already being downloaded, make a new Download instance.
       wait for the listener to tell us that it's done.
   */
-  boost::unique_lock<boost::mutex> s(lock);
+  boost::unique_lock<std::mutex> s(lock);
   for (uint i = 0; i < keys.size(); i++)
   {
     boost::shared_ptr<Download> newDL(new Download(*keys[i], prefix, cache_lock, this));
@@ -122,7 +122,7 @@ void Downloader::printKPIs() const
 bool Downloader::inProgress(const string& key)
 {
   boost::shared_ptr<Download> tmp(new Download(key));
-  boost::unique_lock<boost::mutex> s(lock);
+  boost::unique_lock<std::mutex> s(lock);
 
   auto it = downloads.find(tmp);
   if (it != downloads.end())
@@ -135,7 +135,7 @@ const bf::path& Downloader::getTmpPath() const
   return tmpPath;
 }
 /* The helper fcns */
-Downloader::Download::Download(const string& source, const bf::path& _dlPath, boost::mutex* _lock,
+Downloader::Download::Download(const string& source, const bf::path& _dlPath, std::mutex* _lock,
                                Downloader* _dl)
  : dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false), dl(_dl)
 {

@@ -159,10 +159,10 @@ class Stats
   static bool fProfiling;  // Is profiling enabled
 
   // Protect concurrent addition of Readers
-  static boost::mutex fRegisterReaderMutex;
+  static std::mutex fRegisterReaderMutex;
 
   // Protect concurrent addition of Parsers
-  static boost::mutex fRegisterParseMutex;
+  static std::mutex fRegisterParseMutex;
 
   // Read threads to be profiled
   static std::vector<pthread_t> fReadProfThreads;

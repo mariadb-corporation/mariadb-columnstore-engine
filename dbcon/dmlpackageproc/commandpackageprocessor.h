@@ -61,7 +61,7 @@ class CommandPackageProcessor : public DMLPackageProcessor
 
   // Tracks active cleartablelock commands by storing set of table lock IDs
   static std::set<uint64_t> fActiveClearTableLockCmds;
-  static boost::mutex fActiveClearTableLockCmdMutex;
+  static std::mutex fActiveClearTableLockCmdMutex;
 };
 
 }  // namespace dmlpackageprocessor

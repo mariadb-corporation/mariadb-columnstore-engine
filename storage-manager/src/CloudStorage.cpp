@@ -29,7 +29,7 @@ using namespace std;
 
 namespace
 {
-boost::mutex m;
+std::mutex m;
 storagemanager::CloudStorage* inst = NULL;
 
 string tolower(const string& s)

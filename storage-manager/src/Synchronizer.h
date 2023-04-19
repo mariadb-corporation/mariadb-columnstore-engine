@@ -83,7 +83,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
     int waiters;
     bool finished;
     std::condition_variable condvar;
-    void wait(boost::mutex*);
+    void wait(std::mutex*);
     void notify();
   };
 
@@ -132,7 +132,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
 
   boost::filesystem::path cachePath;
   boost::filesystem::path journalPath;
-  boost::mutex mutex;
+  std::mutex mutex;
 };
 
 }  // namespace storagemanager

@@ -48,7 +48,7 @@ class ThreadPool : public boost::noncopyable
 
  private:
   void processingLoop();                                    // the fcn run by each thread
-  void _processingLoop(boost::unique_lock<boost::mutex>&);  // processingLoop() wraps _processingLoop() with
+  void _processingLoop(boost::unique_lock<std::mutex>&);  // processingLoop() wraps _processingLoop() with
                                                             // thread management stuff.
 
   SMLogging* logger;
@@ -77,7 +77,7 @@ class ThreadPool : public boost::noncopyable
 
   std::condition_variable jobAvailable;
   std::deque<boost::shared_ptr<Job> > jobs;
-  mutable boost::mutex mutex;
+  mutable std::mutex mutex;
 
   const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
   boost::thread pruner;

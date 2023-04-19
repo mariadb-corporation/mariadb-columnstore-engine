@@ -29,8 +29,8 @@ namespace WriteEngine
 {
 #ifdef PROFILE
 /* static */ bool Stats::fProfiling = false;
-/* static */ boost::mutex Stats::fRegisterReaderMutex;
-/* static */ boost::mutex Stats::fRegisterParseMutex;
+/* static */ std::mutex Stats::fRegisterReaderMutex;
+/* static */ std::mutex Stats::fRegisterParseMutex;
 /* static */ std::vector<pthread_t> Stats::fReadProfThreads;
 /* static */ std::vector<pthread_t> Stats::fParseProfThreads;
 /* static */ std::vector<logging::StopWatch> Stats::fReadStopWatch;

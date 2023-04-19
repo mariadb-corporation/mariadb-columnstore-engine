@@ -370,11 +370,11 @@ class WESplClient
   int fRollbackRslt;
   int fCleanupRslt;
 
-  boost::mutex fTxMutex;  // mutex for TxBytes
-  boost::mutex fDataRqstMutex;
-  boost::mutex fWriteMutex;
-  boost::mutex fSentQMutex;
-  boost::mutex fLastInMutex;
+  std::mutex fTxMutex;  // mutex for TxBytes
+  std::mutex fDataRqstMutex;
+  std::mutex fWriteMutex;
+  std::mutex fSentQMutex;
+  std::mutex fLastInMutex;
   typedef std::queue<messageqcpp::SBS> WESendQueue;
   WESendQueue fSendQueue;
 

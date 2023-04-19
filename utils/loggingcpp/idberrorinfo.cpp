@@ -47,7 +47,7 @@ using namespace config;
 namespace logging
 {
 IDBErrorInfo* IDBErrorInfo::fInstance = 0;
-boost::mutex mx;
+std::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {

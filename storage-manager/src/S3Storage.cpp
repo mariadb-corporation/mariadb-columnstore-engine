@@ -718,7 +718,7 @@ int S3Storage::exists(const string& _key, bool* out)
 
 ms3_st* S3Storage::getConnection()
 {
-  boost::unique_lock<boost::mutex> s(connMutex);
+  boost::unique_lock<std::mutex> s(connMutex);
 
   // prune the list.  Most-idle connections are at the back.
   timespec now;
@@ -810,7 +810,7 @@ void S3Storage::returnConnection(ms3_st* ms3)
   conn.conn = ms3;
   clock_gettime(CLOCK_MONOTONIC_COARSE, &conn.idleSince);
 
-  boost::unique_lock<boost::mutex> s(connMutex);
+  boost::unique_lock<std::mutex> s(connMutex);
   freeConns.push_front(conn);
   // connMutexes[ms3].unlock();
 }

@@ -35,7 +35,7 @@
 using namespace std;
 namespace
 {
-boost::mutex fac_guard;
+std::mutex fac_guard;
 }
 
 namespace idbdatafile

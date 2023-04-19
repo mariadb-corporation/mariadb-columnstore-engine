@@ -31,7 +31,7 @@ using namespace boost;
 #include "autoincrementdata.h"
 
 /*static*/
-boost::mutex AutoincrementData::map_mutex;
+std::mutex AutoincrementData::map_mutex;
 /*static*/
 AutoincrementData::AutoincDataMap AutoincrementData::fAutoincDataMap;
 /* static */

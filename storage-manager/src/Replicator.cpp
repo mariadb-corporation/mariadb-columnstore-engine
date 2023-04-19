@@ -38,7 +38,7 @@ using namespace std;
 namespace
 {
 storagemanager::Replicator* rep = NULL;
-boost::mutex m;
+std::mutex m;
 }  // namespace
 namespace storagemanager
 {

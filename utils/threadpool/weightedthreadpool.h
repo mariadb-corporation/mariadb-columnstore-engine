@@ -221,7 +221,7 @@ class WeightedThreadPool
   Container_T::iterator fNextFunctor;
 
   uint32_t issued;
-  boost::mutex fMutex;
+  std::mutex fMutex;
   std::condition_variable fThreadAvailable;  // triggered when a thread is available
   std::condition_variable fNeedThread;       // triggered when a thread is needed
   boost::thread_group fThreads;

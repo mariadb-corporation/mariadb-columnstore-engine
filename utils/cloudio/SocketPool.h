@@ -46,7 +46,7 @@ class SocketPool : public boost::noncopyable
 
   std::vector<int> allSockets;
   std::deque<int> freeSockets;
-  boost::mutex mutex;
+  std::mutex mutex;
   boost::condition_variable socketAvailable;
   uint maxSockets;
   static const uint defaultSockets = 20;

@@ -50,7 +50,7 @@ namespace funcexp
 FuncExp* FuncExp::fInstance = 0;
 
 /* static */
-boost::mutex FuncExp::fInstanceMutex;
+std::mutex FuncExp::fInstanceMutex;
 
 FuncExp* FuncExp::instance()
 {

@@ -176,7 +176,7 @@ class FileBufferMgr
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
-  mutable boost::mutex fWLock;
+  mutable std::mutex fWLock;
   mutable filebuffer_uset_t fbSet;
 
   mutable filebuffer_list_t fbList;  // rename this

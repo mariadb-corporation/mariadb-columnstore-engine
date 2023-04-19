@@ -111,7 +111,7 @@ const int MAX_BUFFER_SIZE = 32768 * 2;
 // const logging::LoggingID lid1(28);
 // extern logging::Message msg16;
 // extern logging::MessageLog ml1;
-// extern boost::mutex logLock;
+// extern std::mutex logLock;
 extern Logger* mlp;
 
 }  // namespace primitiveprocessor

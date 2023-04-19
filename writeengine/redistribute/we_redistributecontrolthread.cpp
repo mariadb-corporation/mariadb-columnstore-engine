@@ -65,7 +65,7 @@ using namespace execplan;
 namespace redistribute
 {
 // static variables
-boost::mutex RedistributeControlThread::fActionMutex;
+std::mutex RedistributeControlThread::fActionMutex;
 volatile bool RedistributeControlThread::fStopAction = false;
 string RedistributeControlThread::fWesInUse;
 

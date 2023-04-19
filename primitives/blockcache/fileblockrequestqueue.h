@@ -88,7 +88,7 @@ class fileBlockRequestQueue
   void stop();
 
  protected:
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable notEmpty;
   fileBlockRequestQueue_t fbQueue;
   uint32_t queueSize;

@@ -69,12 +69,12 @@ const fs::path defaultConfigFilePath(configDefaultFileName);
 
 namespace config
 {
-boost::mutex Config::fInstanceMapMutex;
+std::mutex Config::fInstanceMapMutex;
 Config::configMap_t Config::fInstanceMap;
 // duplicate to that in the Config class
-boost::mutex Config::fXmlLock;
+std::mutex Config::fXmlLock;
 // duplicate to that in the Config class
-boost::mutex Config::fWriteXmlLock;
+std::mutex Config::fWriteXmlLock;
 std::atomic_bool globHasConfig;
 
 ConfigUniqPtr globConfigInstancePtr;

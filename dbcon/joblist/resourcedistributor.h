@@ -72,10 +72,10 @@ class LockedSessionMap
 
  private:
   void updateAging(uint32_t sessionID);
-  boost::mutex fMapLock;
+  std::mutex fMapLock;
   SessionMap fSessionMap;
   uint64_t fResourceBlock;
-  boost::mutex fSessionLock;
+  std::mutex fSessionLock;
   SessionList fSessionAgingList;
   const unsigned fMaxSessions;
 };
@@ -135,7 +135,7 @@ class ResourceDistributor
   std::string fIdentity;
   uint64_t fTotalResource;
   uint64_t fResourceBlock;
-  boost::mutex fResourceLock;
+  std::mutex fResourceLock;
   std::condition_variable fResourceAvailable;
 
   LockedSessionMap fSessionMap;

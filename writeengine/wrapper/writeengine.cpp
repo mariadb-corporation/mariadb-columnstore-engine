@@ -3408,7 +3408,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid, const CSCTypesLi
   if (rc == NO_ERROR)
   {
     // MCOL-66 The DBRM can't handle concurrent transactions to sys tables
-    static boost::mutex dbrmMutex;
+    static std::mutex dbrmMutex;
     std::scoped_lock lk(dbrmMutex);
 
     if (newExtent)

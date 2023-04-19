@@ -105,9 +105,9 @@ class TableInfo : public WeUIDGID
    * getting/setting the status of the BulkLoadBuffer objects, so
    * fSyncUpdatesTI is also used to set/get the BulkLoadBuffer status.
    */
-  boost::mutex fSyncUpdatesTI;
+  std::mutex fSyncUpdatesTI;
 
-  boost::mutex fErrorRptInfoMutex;  // Used to synhronize access to
+  std::mutex fErrorRptInfoMutex;  // Used to synhronize access to
   //   fRejectDataFile & fRejectErrFile
   int fLocker;                             // Read thread id reading this table
   std::vector<std::string> fLoadFileList;  // Load files

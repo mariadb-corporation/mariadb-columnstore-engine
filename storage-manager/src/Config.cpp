@@ -39,7 +39,7 @@ using namespace std;
 
 namespace
 {
-boost::mutex m;
+std::mutex m;
 storagemanager::Config* inst = NULL;
 }  // namespace
 
@@ -159,7 +159,7 @@ bool Config::reload()
     return rtn;
   last_mtime = statbuf.st_mtim;
   rtn = true;
-  boost::unique_lock<boost::mutex> s(mutex);
+  boost::unique_lock<std::mutex> s(mutex);
   contents.clear();
   boost::property_tree::ini_parser::read_ini(filename, contents);
   return rtn;
@@ -191,7 +191,7 @@ string Config::getValue(const string& section, const string& key) const
 {
   // if we care, move this envvar substition stuff to where the file is loaded
   string ret;
-  boost::unique_lock<boost::mutex> s(mutex);
+  boost::unique_lock<std::mutex> s(mutex);
   try
   {
     ret = contents.get<string>(section + "." + key);

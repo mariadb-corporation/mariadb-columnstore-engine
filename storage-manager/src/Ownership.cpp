@@ -159,7 +159,7 @@ void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushin
 void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
 {
   logger->log(LOG_DEBUG, "Ownership: releasing ownership of %s", p.string().c_str());
-  boost::unique_lock<boost::mutex> s(mutex);
+  boost::unique_lock<std::mutex> s(mutex);
 
   auto it = ownedPrefixes.find(p);
   if (it == ownedPrefixes.end())
@@ -217,7 +217,7 @@ void Ownership::takeOwnership(const bf::path& p)
   if (!bf::is_directory(metadataPrefix / p))
     return;
 
-  boost::unique_lock<boost::mutex> s(mutex);
+  boost::unique_lock<std::mutex> s(mutex);
 
   auto it = ownedPrefixes.find(p);
   if (it != ownedPrefixes.end())
@@ -294,7 +294,7 @@ void Ownership::Monitor::watchForInterlopers()
   while (!stop)
   {
     releaseList.clear();
-    boost::unique_lock<boost::mutex> s(owner->mutex);
+    boost::unique_lock<std::mutex> s(owner->mutex);
 
     for (auto& prefix : owner->ownedPrefixes)
     {

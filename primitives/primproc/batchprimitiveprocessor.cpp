@@ -320,11 +320,11 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       for (uint j = 0; j < joinerCount; ++j)
         tlJoiners[j].reset(new boost::shared_ptr<TLJoiner>[processorThreads]);
 
-      addToJoinerLocks.reset(new boost::scoped_array<boost::mutex>[joinerCount]);
+      addToJoinerLocks.reset(new boost::scoped_array<std::mutex>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
-        addToJoinerLocks[j].reset(new boost::mutex[processorThreads]);
+        addToJoinerLocks[j].reset(new std::mutex[processorThreads]);
 
-      smallSideDataLocks.reset(new boost::mutex[joinerCount]);
+      smallSideDataLocks.reset(new std::mutex[joinerCount]);
       tJoinerSizes.reset(new std::atomic<uint32_t>[joinerCount]);
       largeSideKeyColumns.reset(new uint32_t[joinerCount]);
       tlLargeSideKeyColumns.reset(new vector<uint32_t>[joinerCount]);

@@ -45,7 +45,7 @@ class TransactionNode : public RGNode
   EXPORT void setTxnID(VER_t);
   EXPORT int getTxnID() const;
 
-  EXPORT void sleep(boost::mutex& mutex);
+  EXPORT void sleep(std::mutex& mutex);
   EXPORT void wake();
   EXPORT void die();
   EXPORT bool dead();

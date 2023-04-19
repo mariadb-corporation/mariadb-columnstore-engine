@@ -80,7 +80,7 @@ class DMLResultBuffer
   ResultPair get();
 
  private:
-  boost::mutex fMutex;
+  std::mutex fMutex;
   std::condition_variable fCond;
 
   typedef std::deque<ResultPair> ResultBuffer;

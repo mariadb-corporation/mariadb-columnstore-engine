@@ -189,7 +189,7 @@ class StringStore
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
-  boost::mutex fMutex;
+  std::mutex fMutex;
 };
 
 // Where we store user data for UDA(n)F
@@ -247,7 +247,7 @@ class UserDataStore
   std::vector<StoreData> vStoreData;
 
   bool fUseUserDataMutex = false;
-  boost::mutex fMutex;
+  std::mutex fMutex;
 };
 
 

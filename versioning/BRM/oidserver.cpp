@@ -104,7 +104,7 @@ using namespace idbdatafile;
 
 namespace
 {
-boost::mutex CtorMutex;
+std::mutex CtorMutex;
 
 class EOFException : public exception
 {
@@ -113,7 +113,7 @@ class EOFException : public exception
 
 namespace BRM
 {
-boost::mutex OIDServer::fMutex;
+std::mutex OIDServer::fMutex;
 
 void OIDServer::writeData(uint8_t* buf, off_t offset, int size) const
 {

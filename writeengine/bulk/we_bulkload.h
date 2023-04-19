@@ -199,9 +199,9 @@ class BulkLoad : public FileOp
   int fNoOfReadThreads;                            // Number of read threads
   boost::thread_group fReadThreads;                // Read thread group
   boost::thread_group fParseThreads;               // Parse thread group
-  boost::mutex fReadMutex;                         // Manages table selection by each
+  std::mutex fReadMutex;                         // Manages table selection by each
   //   read thread
-  boost::mutex fParseMutex;  // Manages table/buffer/column
+  std::mutex fParseMutex;  // Manages table/buffer/column
   //   selection by each parsing thread
   BRM::TxnID fTxnID;                             // TransID acquired from SessionMgr
   bool fKeepRbMetaFiles;                         // Keep/delete bulkRB metadata files
@@ -218,7 +218,7 @@ class BulkLoad : public FileOp
   ImportDataMode fImportDataMode;                // Importing text or binary data
   bool fbContinue;                               // true when read and parse r running
   //
-  static boost::mutex* fDDLMutex;  // Insure only 1 DDL op at a time
+  static std::mutex* fDDLMutex;  // Insure only 1 DDL op at a time
 
   EXPORT static const std::string DIR_BULK_JOB;       // Bulk job directory
   EXPORT static const std::string DIR_BULK_TEMP_JOB;  // Dir for tmp job files

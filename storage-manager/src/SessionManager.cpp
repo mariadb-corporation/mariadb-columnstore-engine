@@ -41,7 +41,7 @@ using namespace std;
 namespace
 {
 storagemanager::SessionManager* sm = NULL;
-boost::mutex m;
+std::mutex m;
 }  // namespace
 
 namespace storagemanager

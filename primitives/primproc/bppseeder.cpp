@@ -70,7 +70,7 @@ typedef std::tr1::unordered_map<pthread_t, SPPTLogs_t> PTLogsMap_t;
 
 PTLogsMap_t gFDList;
 SPPTLogs_t gLogFD;
-boost::mutex gFDMutex;  // pthread_mutex_t gFDMutex=PTHREAD_MUTEX_INITIALIZER;
+std::mutex gFDMutex;  // pthread_mutex_t gFDMutex=PTHREAD_MUTEX_INITIALIZER;
 int gThdCnt = 0;
 
 extern dbbc::BlockRequestProcessor** BRPp;

@@ -153,7 +153,7 @@ class IDBPolicy
   static std::string s_hdfsRdwrScratch;
   static int64_t s_hdfsRdwrBufferMaxSize;
   static bool s_configed;
-  static boost::mutex s_mutex;
+  static std::mutex s_mutex;
 };
 
 inline const std::string& IDBPolicy::hdfsRdwrScratch()

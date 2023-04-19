@@ -47,7 +47,7 @@ int TransactionNode::getTxnID() const
   return txnID;
 }
 
-void TransactionNode::sleep(boost::mutex& mutex)
+void TransactionNode::sleep(std::mutex& mutex)
 {
   _sleeping = true;
   condVar.wait(mutex);

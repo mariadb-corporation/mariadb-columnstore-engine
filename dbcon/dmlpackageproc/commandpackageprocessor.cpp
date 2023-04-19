@@ -51,7 +51,7 @@ namespace dmlpackageprocessor
 {
 // Tracks active cleartablelock commands by storing set of table lock IDs
 /*static*/ std::set<uint64_t> CommandPackageProcessor::fActiveClearTableLockCmds;
-/*static*/ boost::mutex CommandPackageProcessor::fActiveClearTableLockCmdMutex;
+/*static*/ std::mutex CommandPackageProcessor::fActiveClearTableLockCmdMutex;
 
 DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
     dmlpackage::CalpontDMLPackage& cpackage)

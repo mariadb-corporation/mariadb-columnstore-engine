@@ -40,7 +40,7 @@
 using namespace std;
 namespace dmlpackage
 {
-boost::mutex CalpontDMLFactory::fParserLock;
+std::mutex CalpontDMLFactory::fParserLock;
 
 dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(
     dmlpackage::VendorDMLStatement& vpackage, std::string defaultSchema /*= ""*/)

@@ -72,7 +72,7 @@ using namespace idbdatafile;
 namespace redistribute
 {
 // static variables
-boost::mutex RedistributeWorkerThread::fActionMutex;
+std::mutex RedistributeWorkerThread::fActionMutex;
 volatile bool RedistributeWorkerThread::fStopAction = false;
 volatile bool RedistributeWorkerThread::fCommitted = false;
 string RedistributeWorkerThread::fWesInUse;

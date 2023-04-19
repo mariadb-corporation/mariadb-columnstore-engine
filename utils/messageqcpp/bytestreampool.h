@@ -43,7 +43,7 @@ class ByteStreamPool
 
  private:
   std::deque<ByteStream*> freeByteStreams;
-  boost::mutex mutex;
+  std::mutex mutex;
   uint maxBufferSize;
   uint maxFreeBuffers;
 };

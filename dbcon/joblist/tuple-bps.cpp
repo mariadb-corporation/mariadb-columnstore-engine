@@ -79,7 +79,7 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
-extern boost::mutex fileLock_g;
+extern std::mutex fileLock_g;
 
 namespace
 {
@@ -1512,7 +1512,7 @@ void TupleBPS::join()
     if (msgsRecvd < msgsSent)
     {
       // wake up the sending thread, it should drain the input dl and exit
-      boost::unique_lock<boost::mutex> tplLock(tplMutex);
+      boost::unique_lock<std::mutex> tplLock(tplMutex);
       condvarWakeupProducer.notify_all();
       tplLock.unlock();
     }
@@ -1669,7 +1669,7 @@ void TupleBPS::interleaveJobs(vector<Job>* jobs) const
 void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
-  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+  boost::unique_lock<std::mutex> tplLock(tplMutex, boost::defer_lock);
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
@@ -2142,7 +2142,7 @@ void TupleBPS::sendPrimitiveMessages()
   }
 
 abort:
-  boost::unique_lock<boost::mutex> tplLock(tplMutex);
+  boost::unique_lock<std::mutex> tplLock(tplMutex);
   finishedSending = true;
   condvar.notify_all();
   tplLock.unlock();
@@ -2402,7 +2402,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     initializeJoinLocalDataPool(1);
 
   vector<boost::shared_ptr<messageqcpp::ByteStream>> bsv;
-  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+  boost::unique_lock<std::mutex> tplLock(tplMutex, boost::defer_lock);
 
   try
   {
@@ -3393,7 +3393,7 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
-  std::scoped_lock scoped(boost::mutex);
+  std::scoped_lock scoped(std::mutex);
   abort_nolock();
 }
 

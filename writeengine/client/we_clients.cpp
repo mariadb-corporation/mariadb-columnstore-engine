@@ -225,7 +225,7 @@ void WEClients::Setup()
     string fServer(buff);
 
     boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(fServer, rm->getConfig()));
-    boost::shared_ptr<boost::mutex> nl(new boost::mutex());
+    boost::shared_ptr<std::mutex> nl(new std::mutex());
 
     // Bug 5224. Take out the retrys. If connection fails, we assume the server is down.
     try
@@ -396,7 +396,7 @@ void WEClients::addQueue(uint32_t key)
 {
   bool b;
 
-  boost::mutex* lock = new boost::mutex();
+  std::mutex* lock = new std::mutex();
   condition* cond = new condition();
   boost::shared_ptr<MQE> mqe(new MQE(pmCount));
 

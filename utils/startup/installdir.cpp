@@ -39,7 +39,7 @@ using namespace std;
 namespace startup
 {
 /* static */
-boost::mutex StartUp::fTmpDirLock;
+std::mutex StartUp::fTmpDirLock;
 /* static */
 string* StartUp::fTmpDirp = 0;
 

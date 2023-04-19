@@ -59,9 +59,9 @@ string Config::m_bulkRoot;
 
 unsigned long Config::fDBRootChangeCount = 0;
 time_t Config::fCacheTime = 0;
-boost::mutex Config::fCacheLock;
+std::mutex Config::fCacheLock;
 #ifdef SHARED_NOTHING_DEMO_2
-boost::mutex Config::m_bulkRoot_lk;
+std::mutex Config::m_bulkRoot_lk;
 #endif
 int Config::m_WaitPeriod = DEFAULT_WAIT_PERIOD;
 unsigned Config::m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;

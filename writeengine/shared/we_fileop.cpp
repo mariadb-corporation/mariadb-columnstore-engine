@@ -58,9 +58,9 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-/*static*/ boost::mutex FileOp::m_createDbRootMutexes;
-/*static*/ boost::mutex FileOp::m_mkdirMutex;
-/*static*/ std::map<int, boost::mutex> FileOp::m_DbRootAddExtentMutexes;
+/*static*/ std::mutex FileOp::m_createDbRootMutexes;
+/*static*/ std::mutex FileOp::m_mkdirMutex;
+/*static*/ std::map<int, std::mutex> FileOp::m_DbRootAddExtentMutexes;
 // in 1 call to fwrite(), during initialization
 
 // StopWatch timer;

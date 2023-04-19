@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <sstream>
 
-/*static*/ boost::mutex ClearTableLockThread::fStdOutLock;
+/*static*/ std::mutex ClearTableLockThread::fStdOutLock;
 
 //------------------------------------------------------------------------------
 // ClearTableLockThread constructor

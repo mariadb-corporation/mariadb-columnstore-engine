@@ -74,7 +74,7 @@ class ColumnAutoInc
   int getNextValueFromSysCat(uint64_t& nextValue);
 
   Log* fLog;                   // import log file
-  boost::mutex fAutoIncMutex;  // Mutex to manage fAutoIncLastValue
+  std::mutex fAutoIncMutex;  // Mutex to manage fAutoIncLastValue
   uint64_t fAutoIncLastValue;  // Tracks latest autoincrement value used
   uint64_t fMaxIntSat;         // Maximum saturation value
   std::string fTableName;      // Full table name (schema.table) for AI column

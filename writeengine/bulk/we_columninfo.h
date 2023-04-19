@@ -377,7 +377,7 @@ class ColumnInfo : public WeUIDGID
    * This was formerly the fMgrMutex in ColumnBufferManager.  See comments
    * that precede this class definition for more information.
    */
-  boost::mutex& colMutex();
+  std::mutex& colMutex();
 
   /** @brief Get number of rows per extent
    */
@@ -424,10 +424,10 @@ class ColumnInfo : public WeUIDGID
   // Protected Data Members
   //--------------------------------------------------------------------------
 
-  boost::mutex fDictionaryMutex;         // Mutex for dicionary updates
-  boost::mutex fColMutex;                // Mutex for column changes
-  boost::mutex fAutoIncMutex;            // Mutex to manage fAutoIncLastValue
-  boost::mutex fDelayedFileCreateMutex;  // Manage delayed file check/create
+  std::mutex fDictionaryMutex;         // Mutex for dicionary updates
+  std::mutex fColMutex;                // Mutex for column changes
+  std::mutex fAutoIncMutex;            // Mutex to manage fAutoIncLastValue
+  std::mutex fDelayedFileCreateMutex;  // Manage delayed file check/create
   Log* fLog;                             // Object used for logging
 
   // Blocks to skip at start of bulk load, if starting file has to be created
@@ -500,7 +500,7 @@ inline void ColumnInfo::setUIDGID(const uid_t p_uid, const gid_t p_gid)
     colOp->setUIDGID(this);
 }
 
-inline boost::mutex& ColumnInfo::colMutex()
+inline std::mutex& ColumnInfo::colMutex()
 {
   return fColMutex;
 }

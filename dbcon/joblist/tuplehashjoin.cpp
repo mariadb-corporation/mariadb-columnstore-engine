@@ -81,7 +81,7 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
  , isExeMgr(jobInfo.isExeMgr)
  , lastSmallOuterJoiner(-1)
  , fTokenJoin(-1)
- , fStatsMutexPtr(new boost::mutex())
+ , fStatsMutexPtr(new std::mutex())
  , fFunctionJoinKeys(jobInfo.keyInfo->functionJoinKeys)
  , sessionMemLimit(jobInfo.umMemLimit)
  , rgdLock(false)
@@ -218,7 +218,7 @@ void TupleHashJoinStep::trackMem(uint index)
   ssize_t memBefore = 0, memAfter = 0;
   bool gotMem;
 
-  boost::unique_lock<boost::mutex> scoped(memTrackMutex);
+  boost::unique_lock<std::mutex> scoped(memTrackMutex);
   while (!stopMemTracking)
   {
     memAfter = joiner->getMemUsage();
@@ -427,7 +427,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
             if disk join is enabled, use it.
             else abort.
         */
-        boost::unique_lock<boost::mutex> sl(saneErrMsg);
+        boost::unique_lock<std::mutex> sl(saneErrMsg);
         if (cancelled())
           return;
         if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))

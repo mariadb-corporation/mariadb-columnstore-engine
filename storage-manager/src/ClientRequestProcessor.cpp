@@ -22,7 +22,7 @@
 namespace
 {
 storagemanager::ClientRequestProcessor* crp = NULL;
-boost::mutex m;
+std::mutex m;
 };  // namespace
 
 namespace storagemanager

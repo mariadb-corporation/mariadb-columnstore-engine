@@ -47,7 +47,7 @@ class LBIDResourceGraph
   EXPORT LBIDResourceGraph();
   EXPORT ~LBIDResourceGraph();
 
-  EXPORT int reserveRange(LBID_t start, LBID_t end, VER_t txn, boost::mutex& mutex);
+  EXPORT int reserveRange(LBID_t start, LBID_t end, VER_t txn, std::mutex& mutex);
 
   /// releases all resources held by txn
   EXPORT void releaseResources(VER_t txn);

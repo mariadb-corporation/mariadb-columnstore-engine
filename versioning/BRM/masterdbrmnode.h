@@ -208,7 +208,7 @@ class MasterDBRMNode
 
   /* OID Manager interface */
   OIDServer oids;
-  boost::mutex oidsMutex;
+  std::mutex oidsMutex;
   void doAllocOIDs(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doReturnOIDs(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doOidmSize(messageqcpp::ByteStream& msg, ThreadParams* p);
@@ -243,10 +243,10 @@ class MasterDBRMNode
 
   LBIDResourceGraph* rg;
 
-  boost::mutex mutex;
-  boost::mutex mutex2;      // protects params and the hand-off  TODO: simplify
-  boost::mutex slaveLock;   // syncs communication with the slaves
-  boost::mutex serverLock;  // kludge to synchronize reloading
+  std::mutex mutex;
+  std::mutex mutex2;      // protects params and the hand-off  TODO: simplify
+  std::mutex slaveLock;   // syncs communication with the slaves
+  std::mutex serverLock;  // kludge to synchronize reloading
   int runners, NumWorkers;
   ThreadParams* params;
   volatile bool die, halting;

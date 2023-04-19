@@ -242,7 +242,7 @@ class ColExtInf : public ColExtInfBase
  private:
   OID fColOid;                       // Column OID for the relevant extents
   Log* fLog;                         // Log used for debug logging
-  boost::mutex fMapMutex;            // protects unordered map access
+  std::mutex fMapMutex;            // protects unordered map access
   std::set<RID> fPendingExtentRows;  // list of lastInputRow entries that
   // are awaiting an LBID assignment.
 

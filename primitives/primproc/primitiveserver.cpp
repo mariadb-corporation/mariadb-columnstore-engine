@@ -142,11 +142,11 @@ int directIOFlag = O_DIRECT;
 int noVB = 0;
 
 BPPMap bppMap;
-boost::mutex bppLock;
+std::mutex bppLock;
 
 #define DJLOCK_READ 0
 #define DJLOCK_WRITE 1
-boost::mutex djMutex;                      // lock for djLock, lol.
+std::mutex djMutex;                      // lock for djLock, lol.
 std::map<uint64_t, shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
 volatile int32_t asyncCounter;
@@ -173,13 +173,13 @@ typedef std::tr1::unordered_map<uint64_t, preFetchBlock_t*> pfBlockMap_t;
 typedef std::tr1::unordered_map<uint64_t, preFetchBlock_t*>::iterator pfBlockMapIter_t;
 
 pfBlockMap_t pfBlockMap;
-boost::mutex pfbMutex;  // = PTHREAD_MUTEX_INITIALIZER;
+std::mutex pfbMutex;  // = PTHREAD_MUTEX_INITIALIZER;
 
 pfBlockMap_t pfExtentMap;
-boost::mutex pfMutex;  // = PTHREAD_MUTEX_INITIALIZER;
+std::mutex pfMutex;  // = PTHREAD_MUTEX_INITIALIZER;
 
 map<uint32_t, boost::shared_ptr<DictEqualityFilter> > dictEqualityFilters;
-boost::mutex eqFilterMutex;
+std::mutex eqFilterMutex;
 
 uint32_t cacheNum(uint64_t lbid)
 {
@@ -838,7 +838,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
 struct AsynchLoader
 {
   AsynchLoader(uint64_t l, const QueryContext& v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount,
-               bool trace, uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
+               bool trace, uint32_t sesID, std::mutex* m, uint32_t* loaderCount,
                boost::shared_ptr<BPPSendThread> st,  // sendThread for abort upon exception.
                VSSCache* vCache)
    : lbid(l)
@@ -922,13 +922,13 @@ struct AsynchLoader
   uint32_t* cacheCount;
   uint32_t* readCount;
   uint32_t* busyLoaders;
-  boost::mutex* mutex;
+  std::mutex* mutex;
   boost::shared_ptr<BPPSendThread> sendThread;
   VSSCache* vssCache;
 };
 
 void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int compType, uint32_t* cCount,
-                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, boost::mutex* m,
+                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, std::mutex* m,
                     uint32_t* busyLoaders,
                     boost::shared_ptr<BPPSendThread> sendThread,  // sendThread for abort upon exception.
                     VSSCache* vssCache)
@@ -2053,7 +2053,7 @@ struct ReadThread
     // IOSocket. If we end up rotating through multiple output sockets
     // for the same UM, we will use UmSocketSelector to select output.
     SP_UM_IOSOCK outIosDefault(new IOSocket(fIos));
-    SP_UM_MUTEX writeLockDefault(new boost::mutex());
+    SP_UM_MUTEX writeLockDefault(new std::mutex());
 
     bool bRotateDest = fPrimitiveServerPtr->rotatingDestination();
 

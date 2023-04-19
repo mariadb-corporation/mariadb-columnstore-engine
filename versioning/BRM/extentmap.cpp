@@ -212,10 +212,10 @@ bool EMEntry::operator<(const EMEntry& e) const
 }
 
 /*static*/
-boost::mutex ExtentMap::mutex;
-boost::mutex ExtentMap::emIndexMutex;
+std::mutex ExtentMap::mutex;
+std::mutex ExtentMap::emIndexMutex;
 
-boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
+std::mutex ExtentMapRBTreeImpl::fInstanceMutex;
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
@@ -243,7 +243,7 @@ ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly
 }
 
 /*static*/
-boost::mutex FreeListImpl::fInstanceMutex;
+std::mutex FreeListImpl::fInstanceMutex;
 
 /*static*/
 FreeListImpl* FreeListImpl::fInstance = 0;

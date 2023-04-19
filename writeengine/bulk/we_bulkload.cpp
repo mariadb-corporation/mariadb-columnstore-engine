@@ -71,7 +71,7 @@ const std::string ERR_LOG_SUFFIX = ".err";  // Job err log file suffix
 namespace WriteEngine
 {
 /* static */ boost::ptr_vector<TableInfo> BulkLoad::fTableInfo;
-/* static */ boost::mutex* BulkLoad::fDDLMutex = 0;
+/* static */ std::mutex* BulkLoad::fDDLMutex = 0;
 
 /* static */ const std::string BulkLoad::DIR_BULK_JOB("job");
 /* static */ const std::string BulkLoad::DIR_BULK_TEMP_JOB("tmpjob");
@@ -165,7 +165,7 @@ BulkLoad::BulkLoad()
   fTableInfo.clear();
   setDebugLevel(DEBUG_0);
 
-  fDDLMutex = new boost::mutex();
+  fDDLMutex = new std::mutex();
   memset(&fStartTime, 0, sizeof(timeval));
   memset(&fEndTime, 0, sizeof(timeval));
 }

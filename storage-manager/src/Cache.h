@@ -113,7 +113,7 @@ class Cache : public boost::noncopyable, public ConfigListener
   PrefixCache& getPCache(const boost::filesystem::path& prefix);
 
   std::map<boost::filesystem::path, PrefixCache*> prefixCaches;
-  mutable boost::mutex lru_mutex;  // protects the prefixCaches
+  mutable std::mutex lru_mutex;  // protects the prefixCaches
 };
 
 }  // namespace storagemanager

@@ -32,7 +32,7 @@ namespace bf = boost::filesystem;
 
 namespace
 {
-boost::mutex m;
+std::mutex m;
 storagemanager::Cache* inst = NULL;
 }  // namespace
 
@@ -42,7 +42,7 @@ Cache* Cache::get()
 {
   if (inst)
     return inst;
-  boost::unique_lock<boost::mutex> s(m);
+  boost::unique_lock<std::mutex> s(m);
   if (inst)
     return inst;
   inst = new Cache();
@@ -122,7 +122,7 @@ Cache::~Cache()
 // be careful using this!  SM should be idle.  No ongoing reads or writes.
 void Cache::validateCacheSize()
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
     it->second->validateCacheSize();
@@ -196,7 +196,7 @@ void Cache::deletedObject(const bf::path& prefix, const string& key, size_t size
 
 void Cache::setMaxCacheSize(size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   maxCacheSize = size;
   for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
@@ -231,7 +231,7 @@ size_t Cache::getCurrentCacheSize()
 {
   size_t totalSize = 0;
 
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
     totalSize += it->second->getCurrentCacheSize();
@@ -259,7 +259,7 @@ size_t Cache::getCurrentCacheElementCount(const bf::path& prefix)
 
 void Cache::reset()
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   for (auto it = prefixCaches.begin(); it != prefixCaches.end(); ++it)
     it->second->reset();
@@ -267,7 +267,7 @@ void Cache::reset()
 
 void Cache::newPrefix(const bf::path& prefix)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   // cerr << "Cache: making new prefix " << prefix.string() << endl;
   assert(prefixCaches.find(prefix) == prefixCaches.end());
@@ -280,7 +280,7 @@ void Cache::newPrefix(const bf::path& prefix)
 
 void Cache::dropPrefix(const bf::path& prefix)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   auto* pCache = prefixCaches[prefix];
   prefixCaches.erase(prefix);
@@ -290,7 +290,7 @@ void Cache::dropPrefix(const bf::path& prefix)
 
 inline PrefixCache& Cache::getPCache(const bf::path& prefix)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
 
   // cerr << "Getting pcache for " << prefix.string() << endl;
   PrefixCache* ret;
@@ -316,7 +316,7 @@ Downloader* Cache::getDownloader() const
 
 void Cache::shutdown()
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  boost::unique_lock<std::mutex> s(lru_mutex);
   downloader.reset();
 }
 

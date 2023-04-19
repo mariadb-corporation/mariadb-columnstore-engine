@@ -33,7 +33,7 @@ using namespace boost;
 namespace dmlpackageprocessor
 {
 /*static*/
-boost::mutex TablelockData::map_mutex;
+std::mutex TablelockData::map_mutex;
 /*static*/
 TablelockData::TablelockDataMap TablelockData::fTablelockDataMap;
 /* static */

@@ -151,7 +151,7 @@ class RWLock_local
   {
     int writerswaiting, writing, readerswaiting, reading;
   } state;
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable okToRead;
   std::condition_variable okToWrite;
 };

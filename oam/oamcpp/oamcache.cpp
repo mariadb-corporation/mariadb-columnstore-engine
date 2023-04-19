@@ -39,7 +39,7 @@ using namespace boost;
 namespace
 {
 oam::OamCache* oamCache = nullptr;
-boost::mutex cacheLock;
+std::mutex cacheLock;
 }  // namespace
 
 namespace oam

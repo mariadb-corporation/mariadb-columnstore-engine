@@ -79,7 +79,7 @@ using namespace ddlpackage;
 
 namespace ddlpackageprocessor
 {
-boost::mutex DDLPackageProcessor::dbrmMutex;
+std::mutex DDLPackageProcessor::dbrmMutex;
 
 DDLPackageProcessor::~DDLPackageProcessor()
 {

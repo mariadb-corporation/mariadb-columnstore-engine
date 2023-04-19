@@ -75,8 +75,8 @@ CopyLockEntry::CopyLockEntry()
 }
 
 /*static*/
-boost::mutex CopyLocksImpl::fInstanceMutex;
-boost::mutex CopyLocks::mutex;
+std::mutex CopyLocksImpl::fInstanceMutex;
+std::mutex CopyLocks::mutex;
 
 /*static*/
 CopyLocksImpl* CopyLocksImpl::fInstance = 0;

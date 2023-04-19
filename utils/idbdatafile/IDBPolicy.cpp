@@ -45,7 +45,7 @@ bool IDBPolicy::s_bUseRdwrMemBuffer = false;
 int64_t IDBPolicy::s_hdfsRdwrBufferMaxSize = 0;
 std::string IDBPolicy::s_hdfsRdwrScratch;
 bool IDBPolicy::s_configed = false;
-boost::mutex IDBPolicy::s_mutex;
+std::mutex IDBPolicy::s_mutex;
 std::vector<uint16_t> IDBPolicy::s_PreallocSpace;
 
 void IDBPolicy::init(bool bEnableLogging, bool bUseRdwrMemBuffer, const string& hdfsRdwrScratch,

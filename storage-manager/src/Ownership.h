@@ -65,7 +65,7 @@ class Ownership : public boost::noncopyable
   // for use.
   std::map<boost::filesystem::path, bool> ownedPrefixes;
   Monitor* monitor;
-  boost::mutex mutex;
+  std::mutex mutex;
 };
 
 inline bool Ownership::sharedFS()

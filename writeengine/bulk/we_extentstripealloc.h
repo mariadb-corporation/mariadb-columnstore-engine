@@ -156,7 +156,7 @@ class ExtentStripeAlloc
   OID fTableOID;                // Table extents to be allocated
   Log* fLog;                    // Log used for debug logging
   unsigned int fStripeCount;    // Extent "stripe" counter
-  boost::mutex fMapMutex;       // protects unordered map access
+  std::mutex fMapMutex;       // protects unordered map access
   std::vector<OID> fColOIDs;    // Vector of column OIDs
   std::vector<int> fColWidths;  // Widths associated with fColOIDs
 

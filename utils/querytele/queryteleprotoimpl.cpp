@@ -48,7 +48,7 @@ struct TsTeleQueue
   typedef std::queue<T> TeleQueue;
 
   TeleQueue queue;
-  boost::mutex queueMtx;
+  std::mutex queueMtx;
 };
 
 TsTeleQueue<querytele::StepTele> stQueue;
@@ -56,7 +56,7 @@ TsTeleQueue<querytele::QueryTele> qtQueue;
 TsTeleQueue<querytele::ImportTele> itQueue;
 
 volatile bool isInited = false;
-boost::mutex initMux;
+std::mutex initMux;
 
 std::shared_ptr<att::TSocket> fSocket;
 std::shared_ptr<att::TBufferedTransport> fTransport;

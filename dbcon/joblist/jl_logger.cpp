@@ -33,7 +33,7 @@ using namespace logging;
 
 namespace
 {
-boost::mutex logMutex;
+std::mutex logMutex;
 };
 
 namespace joblist

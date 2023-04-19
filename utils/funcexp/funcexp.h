@@ -95,7 +95,7 @@ class FuncExp
 
  private:
   static FuncExp* fInstance;
-  static boost::mutex fInstanceMutex;
+  static std::mutex fInstanceMutex;
   FuncMap fFuncMap;
   FuncExp();
 };

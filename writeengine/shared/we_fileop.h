@@ -453,13 +453,13 @@ class FileOp : public BlockOp, public WeUIDGID
   bool m_isFix;
 
   // protect creation of m_DbRootAddExtentMutexes
-  static boost::mutex m_createDbRootMutexes;
+  static std::mutex m_createDbRootMutexes;
 
   // Mutexes used to serialize extent creation within each DBRoot
-  static std::map<int, boost::mutex> m_DbRootAddExtentMutexes;
+  static std::map<int, std::mutex> m_DbRootAddExtentMutexes;
 
   // protect race condition in creating directories
-  static boost::mutex m_mkdirMutex;
+  static std::mutex m_mkdirMutex;
 
   char* m_buffer;  // buffer used with setvbuf()
 };

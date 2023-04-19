@@ -468,7 +468,7 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 {
   bool b;
 
-  boost::mutex* lock = new boost::mutex();
+  std::mutex* lock = new std::mutex();
   condition* cond = new condition();
   uint32_t firstPMInterleavedConnectionId =
       key % (fPmConnections.size() / pmCount) * fDECConnectionsPerQuery * pmCount % fPmConnections.size();

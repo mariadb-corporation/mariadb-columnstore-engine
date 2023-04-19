@@ -175,10 +175,10 @@ class TestRunner
   IDBDataFile* m_file;
   unsigned m_open_opts;
   int m_id;
-  static boost::mutex m_guard;
+  static std::mutex m_guard;
 };
 
-boost::mutex TestRunner::m_guard;
+std::mutex TestRunner::m_guard;
 
 void thread_func2(TestRunner& trun)
 {

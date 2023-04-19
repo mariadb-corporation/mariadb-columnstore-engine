@@ -56,7 +56,7 @@ class ThreadSafeQueue
    *
    * @warning this class takes ownership of the passed-in pointers.
    */
-  ThreadSafeQueue(boost::mutex* pimplLock = 0, std::condition_variable* pimplCond = 0)
+  ThreadSafeQueue(std::mutex* pimplLock = 0, std::condition_variable* pimplCond = 0)
    : fShutdown(false), bytes(0), zeroCount(0)
   {
     fPimplLock.reset(pimplLock);
@@ -320,7 +320,7 @@ class ThreadSafeQueue
 
  private:
   typedef std::queue<T> impl_type;
-  typedef boost::shared_ptr<boost::mutex> SPBM;
+  typedef boost::shared_ptr<std::mutex> SPBM;
   typedef boost::shared_ptr<std::condition_variable> SPBC;
 
   // defaults okay

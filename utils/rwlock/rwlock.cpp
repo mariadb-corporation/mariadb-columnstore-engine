@@ -58,7 +58,7 @@ using namespace rwlock;
 
 // This mutex needs to be fully instantiated by the runtime static object
 // init mechanism or the lock in makeRWLockShmImpl() will fail
-boost::mutex instanceMapMutex;
+std::mutex instanceMapMutex;
 typedef std::tr1::unordered_map<int, RWLockShmImpl*> LockMap_t;
 // Windows doesn't init static objects the same as Linux, so make this a ptr
 LockMap_t* lockMapPtr = 0;

@@ -145,7 +145,7 @@ class VBBMImpl
 
   BRMShmImpl fVBBM;
 
-  static boost::mutex fInstanceMutex;
+  static std::mutex fInstanceMutex;
   static VBBMImpl* fInstance;
 };
 
@@ -225,7 +225,7 @@ class VBBM : public Undoable
   bool r_only;
   MSTEntry* vbbmShminfo;
   MasterSegmentTable mst;
-  static boost::mutex mutex;  // @bug5355 - made mutex static
+  static std::mutex mutex;  // @bug5355 - made mutex static
   static const int MAX_IO_RETRIES = 10;
 
   key_t chooseShmkey() const;

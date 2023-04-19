@@ -61,7 +61,7 @@ class SessionManager
   ClientRequestProcessor* crp;
   struct pollfd fds[MAX_SM_SOCKETS];
   int socketCtrl[2];
-  boost::mutex ctrlMutex;
+  std::mutex ctrlMutex;
 
   // These map a socket fd to its state between read iterations if a message header could not be found in the
   // data available at the time.

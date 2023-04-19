@@ -50,7 +50,7 @@ const char* const SECRETS_FILENAME = ".secrets";
 namespace
 {
 CSPasswdLogging* passwdLog = NULL;
-boost::mutex m;
+std::mutex m;
 }  // namespace
 
 CSPasswdLogging::CSPasswdLogging()

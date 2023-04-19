@@ -64,7 +64,7 @@ typedef std::vector<FileInfo> Files;
 typedef std::map<uint32_t, Files> columnMap;
 typedef std::map<int, columnMap*> allColumnMap;
 allColumnMap wholeMap;
-boost::mutex columnMapLock;
+std::mutex columnMapLock;
 ActiveThreadCounter* activeThreadCounter;
 
 size_t readFillBuffer(idbdatafile::IDBDataFile* pFile, char* buffer, size_t bytesReq)

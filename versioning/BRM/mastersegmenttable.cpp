@@ -52,7 +52,7 @@ using namespace BRM;
 namespace BRM
 {
 /*static*/
-boost::mutex MasterSegmentTableImpl::fInstanceMutex;
+std::mutex MasterSegmentTableImpl::fInstanceMutex;
 
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;

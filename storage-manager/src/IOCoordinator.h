@@ -104,7 +104,7 @@ class IOCoordinator : public boost::noncopyable
   boost::filesystem::path metaPath;
 
   std::map<std::string, RWLock*> locks;
-  boost::mutex lockMutex;  // lol
+  std::mutex lockMutex;  // lol
 
   void remove(const boost::filesystem::path& path);
   void deleteMetaFile(const boost::filesystem::path& file);

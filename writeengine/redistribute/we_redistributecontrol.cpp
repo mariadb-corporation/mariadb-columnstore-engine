@@ -66,7 +66,7 @@ using namespace execplan;
 namespace redistribute
 {
 RedistributeControl* RedistributeControl::fInstance = NULL;
-boost::mutex instanceMutex;
+std::mutex instanceMutex;
 
 const string RedistributeDir("/data1/systemFiles/redistribute");
 const string InfoFileName("/redistribute.info");

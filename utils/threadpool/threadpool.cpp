@@ -84,7 +84,7 @@ void ThreadPool::setQueueSize(size_t queueSize)
 void ThreadPool::pruneThread()
 {
   utils::setThreadName("pruneThread");
-  boost::unique_lock<boost::mutex> lock2(fPruneMutex);
+  boost::unique_lock<std::mutex> lock2(fPruneMutex);
 
   while (true)
   {
@@ -319,7 +319,7 @@ void ThreadPool::beginThread() throw()
   utils::setThreadName("Idle");
   try
   {
-    boost::unique_lock<boost::mutex> lock1(fMutex);
+    boost::unique_lock<std::mutex> lock1(fMutex);
 
     for (;;)
     {

@@ -24,7 +24,7 @@ using namespace messageqcpp;
 namespace
 {
 idbdatafile::SMComm* instance = NULL;
-boost::mutex m;
+std::mutex m;
 };  // namespace
 
 namespace idbdatafile

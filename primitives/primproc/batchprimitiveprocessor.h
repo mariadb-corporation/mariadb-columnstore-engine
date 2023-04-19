@@ -264,7 +264,7 @@ class BatchPrimitiveProcessor
   bool hasWideColumnOut;
   uint8_t wideColumnWidthOut;
   // IO counters
-  boost::mutex counterLock;
+  std::mutex counterLock;
   uint32_t busyLoaderCount;
 
   uint32_t physIO, cachedIO, touchedBlocks;
@@ -284,8 +284,8 @@ class BatchPrimitiveProcessor
 
   /* Join support TODO: Make join ops a seperate Command class. */
   bool doJoin;
-  boost::scoped_array<boost::scoped_array<boost::mutex>> addToJoinerLocks;
-  boost::scoped_array<boost::mutex> smallSideDataLocks;
+  boost::scoped_array<boost::scoped_array<std::mutex>> addToJoinerLocks;
+  boost::scoped_array<std::mutex> smallSideDataLocks;
 
   // 		uint32_t ridsIn, ridsOut;
 

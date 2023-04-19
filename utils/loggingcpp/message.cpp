@@ -44,7 +44,7 @@ using namespace config;
 #include "format.h"
 namespace
 {
-boost::mutex mx;
+std::mutex mx;
 bool catalogLoaded = false;
 
 typedef map<int, string> CatMap;

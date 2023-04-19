@@ -31,7 +31,7 @@ using namespace std;
 #include "weightedthreadpool.h"
 
 int thecount = 0;
-boost::mutex mutex;
+std::mutex mutex;
 
 // Functor class
 struct foo

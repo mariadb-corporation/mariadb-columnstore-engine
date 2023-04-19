@@ -126,5 +126,5 @@ class ClearTableLockThread
   std::string fTblName;                   // Name of relevant table
   CLRTBLLOCK_MSGTYPE fMsgType;            // Msg type to process
   ClearTableLockStatus* fStatus;          // Status object used to track request
-  static boost::mutex fStdOutLock;        // Synchronize logging to stdout
+  static std::mutex fStdOutLock;        // Synchronize logging to stdout
 };

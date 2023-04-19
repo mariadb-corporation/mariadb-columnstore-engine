@@ -42,7 +42,7 @@ using namespace config;
 namespace joblist
 {
 ResourceManager* ResourceManager::fInstance = NULL;
-boost::mutex mx;
+std::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {

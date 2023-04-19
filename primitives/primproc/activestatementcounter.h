@@ -57,7 +57,7 @@ class ActiveStatementCounter
   uint32_t fStatementCount;
   uint32_t upperLimit;
   uint32_t fStatementsWaiting;
-  boost::mutex fMutex;
+  std::mutex fMutex;
   std::condition_variable condvar;
   BRM::VSS fVss;
 };

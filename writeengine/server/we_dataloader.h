@@ -189,7 +189,7 @@ class WEDataLoader : public Observer
   // CPI Feeder Thread
   WECpiFeederThread* fpCfThread;
 
-  boost::mutex fClntMsgMutex;  // mutex in sending messages to client.
+  std::mutex fClntMsgMutex;  // mutex in sending messages to client.
 
   // static bool fTearDownCpimport; // @bug 4267
   bool fTearDownCpimport;  // @bug 4267

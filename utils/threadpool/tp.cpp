@@ -30,7 +30,7 @@ using namespace std;
 #include "threadpool.h"
 
 int64_t thecount = 0;
-boost::mutex mutex;
+std::mutex mutex;
 
 const string timeNow()
 {

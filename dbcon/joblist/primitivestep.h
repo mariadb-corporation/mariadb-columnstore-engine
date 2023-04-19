@@ -300,7 +300,7 @@ class pColStep : public JobStep
 
   BRM::DBRM dbrm;
 
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable condvar;
   std::condition_variable flushed;
   SP_LBIDList lbidList;
@@ -648,7 +648,7 @@ class pDictionaryStep : public JobStep
 
   DataList_t* requestList;
   // StringDataList* stringList;
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable condvar;
   uint32_t fInterval;
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
@@ -827,7 +827,7 @@ class pDictionaryScan : public JobStep
   uint64_t cThread;  // consumer thread. thread pool handle
   DataList_t* requestList;
   // StringDataList* stringList;
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable condvar;
   std::condition_variable condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
@@ -1278,10 +1278,10 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fExtentsPerSegFile;       // config num of Extents Per Segment File
   // uint64_t cThread;  //consumer thread. thread handle from thread pool
   uint64_t pThread;  // producer thread. thread handle from thread pool
-  boost::mutex tplMutex;
-  boost::mutex dlMutex;
-  boost::mutex cpMutex;
-  boost::mutex serializeJoinerMutex;
+  std::mutex tplMutex;
+  std::mutex dlMutex;
+  std::mutex cpMutex;
+  std::mutex serializeJoinerMutex;
   std::condition_variable condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
@@ -1314,7 +1314,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint8_t bop;  // BOP_AND or BOP_OR
 
   // temporary hack to make sure JobList only calls run and join once
-  boost::mutex jlLock;
+  std::mutex jlLock;
   bool runRan;
   bool joinRan;
 

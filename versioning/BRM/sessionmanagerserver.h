@@ -274,7 +274,7 @@ class SessionManagerServer
   std::map<SID, execplan::CalpontSystemCatalog::SCN> activeTxns;
   typedef std::map<SID, execplan::CalpontSystemCatalog::SCN>::iterator iterator;
 
-  boost::mutex mutex;
+  std::mutex mutex;
   boost::condition_variable condvar;  // used to synthesize a semaphore
   uint32_t semValue;
 };

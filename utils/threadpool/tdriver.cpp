@@ -34,7 +34,7 @@ using namespace std;
 #include "threadpool.h"
 
 int thecount = 0;
-boost::mutex mutex;
+std::mutex mutex;
 
 class ThreadPoolTestSuite : public CppUnit::TestFixture
 {

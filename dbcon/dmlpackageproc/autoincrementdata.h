@@ -43,9 +43,9 @@ class AutoincrementData
   explicit AutoincrementData(const AutoincrementData& rhs);
   ~AutoincrementData();
 
-  static boost::mutex map_mutex;
+  static std::mutex map_mutex;
   static AutoincDataMap fAutoincDataMap;
   OIDNextValue fOidNextValueMap;
-  boost::mutex fOIDnextvalLock;
+  std::mutex fOIDnextvalLock;
 };
 

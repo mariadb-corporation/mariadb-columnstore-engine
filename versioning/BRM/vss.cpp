@@ -64,8 +64,8 @@ VSSEntry::VSSEntry()
 }
 
 /*static*/
-boost::mutex VSSImpl::fInstanceMutex;
-boost::mutex VSS::mutex;
+std::mutex VSSImpl::fInstanceMutex;
+std::mutex VSS::mutex;
 
 /*static*/
 VSSImpl* VSSImpl::fInstance = 0;

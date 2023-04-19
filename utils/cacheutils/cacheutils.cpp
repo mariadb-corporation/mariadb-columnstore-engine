@@ -51,7 +51,7 @@ using namespace BRM;
 namespace
 {
 // Only one of the cacheutils fcns can run at a time
-boost::mutex CacheOpsMutex;
+std::mutex CacheOpsMutex;
 
 // This global is updated only w/ atomic ops
 volatile uint32_t MultiReturnCode;

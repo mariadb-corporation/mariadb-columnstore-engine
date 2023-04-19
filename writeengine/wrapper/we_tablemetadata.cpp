@@ -31,7 +31,7 @@ using namespace std;
 namespace WriteEngine
 {
 /*static*/
-boost::mutex TableMetaData::map_mutex;
+std::mutex TableMetaData::map_mutex;
 /*static*/
 TableMetaData::TableMetaDataMap TableMetaData::fTableMetaDataMap;
 

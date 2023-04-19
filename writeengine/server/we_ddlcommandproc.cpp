@@ -295,7 +295,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string& err)
     {
       // MCOL-66 The DBRM can't handle concurrent transactions to sys tables
       // TODO: This may be redundant
-      static boost::mutex dbrmMutex;
+      static std::mutex dbrmMutex;
       std::scoped_lock lk(dbrmMutex);
       error = fWEWrapper.insertColumnRec_SYS(txnID, cscColTypeList, colStructs, colValuesList,
                                              dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);

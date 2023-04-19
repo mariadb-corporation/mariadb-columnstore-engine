@@ -47,10 +47,10 @@ class TablelockData
   explicit TablelockData(const TablelockData& rhs);
   ~TablelockData();
 
-  static boost::mutex map_mutex;
+  static std::mutex map_mutex;
   static TablelockDataMap fTablelockDataMap;
   OIDTablelock fOIDTablelockMap;
-  boost::mutex fOIDTablelock;
+  std::mutex fOIDTablelock;
 };
 
 }  // namespace dmlpackageprocessor

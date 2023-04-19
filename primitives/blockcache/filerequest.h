@@ -245,7 +245,7 @@ class fileRequest
   /**
    * @brief mutex to control synchronzation of request processing
    **/
-  boost::mutex& frMutex() const
+  std::mutex& frMutex() const
   {
     return fFRMutex;
   }
@@ -304,7 +304,7 @@ class fileRequest
   BRM::QueryContext fVer;
   bool fFlg;
   BRM::VER_t fTxn;
-  mutable boost::mutex fFRMutex;
+  mutable std::mutex fFRMutex;
   mutable std::condition_variable fFRCond;
   predicate_status_enum fFRPredicate;
   uint32_t fLength;      // lbids requested

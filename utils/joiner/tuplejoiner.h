@@ -549,8 +549,8 @@ class TupleJoiner
   int numCores;
   uint bucketCount;
   uint bucketMask;
-  boost::scoped_array<boost::mutex> m_bucketLocks;
-  boost::mutex m_typelessLock, m_cpValuesLock;
+  boost::scoped_array<std::mutex> m_bucketLocks;
+  std::mutex m_typelessLock, m_cpValuesLock;
   utils::Hasher_r bucketPicker;
   const uint32_t bpSeed = 0x4545e1d7;  // an arbitrary random #
   threadpool::ThreadPool* jobstepThreadPool;

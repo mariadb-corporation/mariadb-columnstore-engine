@@ -255,7 +255,7 @@ struct fdCountCompare
 typedef multiset<FdCountEntry_t, fdCountCompare> FdCacheCountType_t;
 
 FdCacheType_t fdcache;
-boost::mutex fdMapMutex;
+std::mutex fdMapMutex;
 rwlock::RWLock_local localLock;
 
 char* alignTo(const char* in, int av)

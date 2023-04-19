@@ -369,7 +369,7 @@ void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& 
 }
 
 /*static*/
-boost::mutex CalpontSystemCatalog::map_mutex;
+std::mutex CalpontSystemCatalog::map_mutex;
 /*static*/
 CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/

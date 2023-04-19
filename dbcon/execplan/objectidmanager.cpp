@@ -88,7 +88,7 @@ using namespace std;
 
 namespace
 {
-boost::mutex CtorMutex;
+std::mutex CtorMutex;
 }
 
 namespace execplan

@@ -60,7 +60,7 @@ using namespace WriteEngine;
 #include "querytele.h"
 using namespace querytele;
 
-extern boost::mutex mute;
+extern std::mutex mute;
 extern boost::condition_variable cond;
 
 #define MCOL_140  // Undefine to test VSS for out of order transactions
@@ -75,16 +75,16 @@ namespace dmlprocessor
 // Map to store the package handler objects so we can set flags during execution
 // for things like ctrl+c
 DMLProcessor::PackageHandlerMap_t DMLProcessor::packageHandlerMap;
-boost::mutex DMLProcessor::packageHandlerMapLock;
+std::mutex DMLProcessor::packageHandlerMapLock;
 
 // Map to store the BatchInsertProc object
 std::map<uint32_t, BatchInsertProc*> DMLProcessor::batchinsertProcessorMap;
-boost::mutex DMLProcessor::batchinsertProcessorMapLock;
+std::mutex DMLProcessor::batchinsertProcessorMapLock;
 
 // MCOL-140 Map to hold table oids for tables being changed.
 std::map<uint32_t, PackageHandler::tableAccessQueue_t> PackageHandler::tableOidMap;
 boost::condition_variable PackageHandler::tableOidCond;
-boost::mutex PackageHandler::tableOidMutex;
+std::mutex PackageHandler::tableOidMutex;
 
 //------------------------------------------------------------------------------
 // A thread to periodically call dbrm to see if a user is
@@ -365,7 +365,7 @@ int PackageHandler::synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage)
 {
   // MCOL-140 Wait for any other DML using this table.
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::unique_lock<boost::mutex> lock(tableOidMutex);
+  boost::unique_lock<std::mutex> lock(tableOidMutex);
   BRM::TxnID txnid;
 
   if (fPackageType != dmlpackage::DML_COMMAND)
@@ -465,7 +465,7 @@ int PackageHandler::releaseTableAccess()
 {
   // take us out of the queue
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::lock_guard<boost::mutex> lock(tableOidMutex);
+  boost::lock_guard<std::mutex> lock(tableOidMutex);
 
   if (fTableOid == 0 || (it = tableOidMap.find(fTableOid)) == tableOidMap.end())
   {
@@ -512,7 +512,7 @@ int PackageHandler::forceReleaseTableAccess()
   // By removing the txnid from the queue, the logic after the wait in
   // synchTableAccess() will release the thread and clean up if needed.
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::lock_guard<boost::mutex> lock(tableOidMutex);
+  boost::lock_guard<std::mutex> lock(tableOidMutex);
 
   if (fTableOid == 0 || (it = tableOidMap.find(fTableOid)) == tableOidMap.end())
   {

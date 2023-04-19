@@ -45,9 +45,9 @@ using namespace logging;
 #include "dbrm.h"
 using namespace BRM;
 using namespace messageqcpp;
-boost::mutex mute;
+std::mutex mute;
 boost::condition_variable cond;
-boost::mutex fLock;
+std::mutex fLock;
 
 namespace dmlprocessor
 {

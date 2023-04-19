@@ -140,7 +140,7 @@ class PriorityThreadPool
   std::list<Job> jobQueues[3];  // higher indexes = higher priority
   uint32_t threadCounts[3];
   uint32_t defaultThreadCounts[3];
-  boost::mutex mutex;
+  std::mutex mutex;
   std::condition_variable newJob;
   boost::thread_group threads;
   bool _stop;

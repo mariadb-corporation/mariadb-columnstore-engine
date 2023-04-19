@@ -74,8 +74,8 @@ VBBMEntry::VBBMEntry()
 }
 
 /*static*/
-boost::mutex VBBMImpl::fInstanceMutex;
-boost::mutex VBBM::mutex;
+std::mutex VBBMImpl::fInstanceMutex;
+std::mutex VBBM::mutex;
 
 /*static*/
 VBBMImpl* VBBMImpl::fInstance = 0;

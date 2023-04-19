@@ -199,7 +199,7 @@ class DBRootExtentTracker
   OID fOID;                         // applicable colunn OID
   long long fBlksPerExtent;         // blocks per extent for fOID
   Log* fLog;                        // logger
-  boost::mutex fDBRootExtTrkMutex;  // mutex to access fDBRootExtentList
+  std::mutex fDBRootExtTrkMutex;  // mutex to access fDBRootExtentList
   int fCurrentDBRootIdx;            // Index into fDBRootExtentList,
   //   DBRoot where current extent is
   //   being added

@@ -46,7 +46,7 @@ class StartUp
   StartUp(const StartUp& rhs);
   StartUp& operator=(const StartUp& rhs);
 
-  static boost::mutex fTmpDirLock;
+  static std::mutex fTmpDirLock;
   static std::string* fTmpDirp;
 };
 
