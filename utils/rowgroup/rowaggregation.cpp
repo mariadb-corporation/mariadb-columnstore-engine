@@ -656,7 +656,7 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 // Initilalize the data members to meaningful values, setup the hashmap.
 // The fRowGroupOut must have a valid data pointer before this.
 //------------------------------------------------------------------------------
-void RowAggregation::initialize()
+void RowAggregation::initialize(bool hasGroupConcat)
 {
   // Calculate the length of the hashmap key.
   fAggMapKeyCount = fGroupByCols.size();
@@ -694,9 +694,25 @@ void RowAggregation::initialize()
   makeAggFieldsNull(fRow);
 
   // Keep a copy of the null row to initialize new map entries.
-  fRowGroupOut->initRow(&fNullRow, true);
-  fNullRowData.reset(new uint8_t[fNullRow.getSize()]);
-  fNullRow.setData(rowgroup::Row::Pointer(fNullRowData.get()));
+  // MCOL-5429 Use stringstore if the datatype of the groupconcat
+  // field is a long string.
+  if (hasGroupConcat && fRowGroupOut->hasLongString())
+  {
+    fNullRowGroup = *fRowGroupOut;
+    fNullRowGroup.setUseStringTable(true);
+    fNullRowRGData.reinit(fNullRowGroup, 1);
+    fNullRowGroup.setData(&fNullRowRGData);
+    fNullRowGroup.resetRowGroup(0);
+    fNullRowGroup.initRow(&fNullRow);
+    fNullRowGroup.getRow(0, &fNullRow);
+  }
+  else
+  {
+    fRowGroupOut->initRow(&fNullRow, true);
+    fNullRowData.reset(new uint8_t[fNullRow.getSize()]);
+    fNullRow.setData(rowgroup::Row::Pointer(fNullRowData.get()));
+  }
+
   copyRow(fRow, &fNullRow);
 
   // Lazy approach w/o a mapping b/w fFunctionCols idx and fRGContextColl idx
@@ -2413,7 +2429,7 @@ void RowAggregationUM::endOfInput()
 //------------------------------------------------------------------------------
 // Initilalize the Group Concat data
 //------------------------------------------------------------------------------
-void RowAggregationUM::initialize()
+void RowAggregationUM::initialize(bool hasGroupConcat)
 {
   if (fGroupConcat.size() > 0)
     fFunctionColGc = fFunctionCols;
@@ -2423,7 +2439,7 @@ void RowAggregationUM::initialize()
     fKeyRG = fRowGroupIn.truncate(fGroupByCols.size());
   }
 
-  RowAggregation::initialize();
+  RowAggregation::initialize(fGroupConcat.size() > 0);
 }
 
 //------------------------------------------------------------------------------

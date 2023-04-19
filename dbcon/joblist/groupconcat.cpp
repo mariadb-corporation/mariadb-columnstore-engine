@@ -267,6 +267,14 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
     (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
                                projRG.getStringTableThreshold(), false);
+
+    // MCOL-5429 Use stringstore if the datatype of the groupconcat
+    // field is a long string.
+    if ((*k)->fRowGroup.hasLongString())
+    {
+      (*k)->fRowGroup.setUseStringTable(true);
+    }
+
     (*k)->fMapping = makeMapping(projRG, (*k)->fRowGroup);
   }
 }
@@ -318,10 +326,24 @@ void GroupConcatAgUM::initialize()
 
   fConcator->initialize(fGroupConcat);
 
-  fGroupConcat->fRowGroup.initRow(&fRow, true);
-  fData.reset(new uint8_t[fRow.getSize()]);
-
-  fRow.setData(rowgroup::Row::Pointer(fData.get()));
+  // MCOL-5429 Use stringstore if the datatype of the groupconcat
+  // field is a long string.
+  if (fGroupConcat->fRowGroup.hasLongString())
+  {
+    fRowGroup = fGroupConcat->fRowGroup;
+    fRowGroup.setUseStringTable(true);
+    fRowRGData.reinit(fRowGroup, 1);
+    fRowGroup.setData(&fRowRGData);
+    fRowGroup.resetRowGroup(0);
+    fRowGroup.initRow(&fRow);
+    fRowGroup.getRow(0, &fRow);
+  }
+  else
+  {
+    fGroupConcat->fRowGroup.initRow(&fRow, true);
+    fData.reset(new uint8_t[fRow.getSize()]);
+    fRow.setData(rowgroup::Row::Pointer(fData.get()));
+  }
 }
 
 void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
@@ -392,7 +414,7 @@ GroupConcator::~GroupConcator()
 void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
   // MCOL-901 This value comes from the Server and it is
-  // too high(3MB) to allocate it for every instance.
+  // too high(1MB or 3MB by default) to allocate it for every instance.
   fGroupConcatLen = gcc->fSize;
   size_t sepSize = gcc->fSeparator.size();
   fCurrentLength -= sepSize; // XXX Yet I have to find out why spearator has c_str() as nullptr here.

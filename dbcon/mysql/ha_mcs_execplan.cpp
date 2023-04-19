@@ -5348,7 +5348,24 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         // Item_func_group_concat* gc = (Item_func_group_concat*)isp;
         CalpontSystemCatalog::ColType ct;
         ct.colDataType = CalpontSystemCatalog::VARCHAR;
-        ct.colWidth = isp->max_length;
+
+        // MCOL-5429 CalpontSystemCatalog::ColType::colWidth is currently
+        // stored as an int32_t (see calpontsystemcatalog.h). However,
+        // Item_sum::max_length is an uint32_t. This means there will be an
+        // integer overflow when Item_sum::max_length > colWidth. This ultimately
+        // causes an array index out of bound in GroupConcator::swapStreamWithStringAndReturnBuf()
+        // in groupconcat.cpp when ExeMgr processes groupconcat. As a temporary
+        // fix, we cap off the max groupconcat length to std::numeric_limits<int32_t>::max().
+        // The proper fix would be to change colWidth type to uint32_t.
+        if (isp->max_length <= std::numeric_limits<int32_t>::max())
+        {
+          ct.colWidth = isp->max_length;
+        }
+        else
+        {
+          ct.colWidth = std::numeric_limits<int32_t>::max();
+        }
+
         ct.precision = 0;
         ac->resultType(ct);
       }
