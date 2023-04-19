@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include "RWLock.h"
+#include <cassert>
 
 namespace storagemanager
 {

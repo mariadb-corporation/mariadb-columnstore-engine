@@ -20,7 +20,10 @@
 // This one is the build system config
 #include "mcsconfig.h"
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
+#include <thread>
+
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -133,7 +136,7 @@ void Config::reloadThreadFcn()
         for (auto& listener : configListeners)
           listener->configListener();
       }
-      boost::this_thread::sleep(reloadInterval);
+      std::this_thread::sleep(reloadInterval);
     }
     catch (boost::property_tree::ini_parser_error& e)
     {

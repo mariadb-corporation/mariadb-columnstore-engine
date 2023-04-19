@@ -25,7 +25,8 @@
 #pragma once
 #include <deque>
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include "dmlpackageprocessor.h"
 
 namespace dmlprocessor

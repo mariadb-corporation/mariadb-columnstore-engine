@@ -24,7 +24,8 @@
 #pragma once
 #include <we_obj.h>
 #ifdef PROFILE
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include "stopwatch.h"
 #endif
 

@@ -3,7 +3,8 @@
 #include <memory>
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 

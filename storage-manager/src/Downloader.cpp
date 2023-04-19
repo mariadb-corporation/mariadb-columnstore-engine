@@ -86,8 +86,10 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
   }
   s.unlock();
   // wait for the downloads to finish
-  while (counter > 0)
-    condvar.wait(*cache_lock);
+
+  ////XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
+  // while (counter > 0)
+  //   condvar.wait(*cache_lock);
 
   // check success, gather sizes from downloads started by this thread
   sizes->resize(keys.size());

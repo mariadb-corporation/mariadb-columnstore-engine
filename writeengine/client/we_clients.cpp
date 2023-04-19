@@ -32,8 +32,8 @@
 #endif
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
-using namespace boost;
+#include <map>
+#include <mutex>
 
 #include "messagequeue.h"
 #include "bytestream.h"
@@ -397,7 +397,7 @@ void WEClients::addQueue(uint32_t key)
   bool b;
 
   std::mutex* lock = new std::mutex();
-  condition* cond = new condition();
+  std::condition_variable* cond = new std::condition_variable();
   boost::shared_ptr<MQE> mqe(new MQE(pmCount));
 
   mqe->queue = WESMsgQueue(lock, cond);

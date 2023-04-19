@@ -72,7 +72,7 @@ PriorityThreadPool::~PriorityThreadPool()
 void PriorityThreadPool::addJob(const Job& job, bool useLock)
 {
   boost::thread* newThread;
-  std::unique_lock lk(mutex, boost::defer_lock_t());
+  std::unique_lock lk(mutex, std::defer_lock);
 
   if (useLock)
     lk.lock();

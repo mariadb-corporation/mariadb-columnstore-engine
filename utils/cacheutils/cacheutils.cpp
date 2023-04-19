@@ -258,7 +258,7 @@ int flushOIDsFromCache(const vector<BRM::OID_t>& oids)
    *    uint32_t * - OID array
    */
 
-  std::unique_lock lk(CacheOpsMutex, boost::defer_lock_t());
+  std::unique_lock lk(CacheOpsMutex, std::defer_lock);
 
   ByteStream bs;
   ISMPacketHeader ism;
@@ -287,7 +287,7 @@ int flushPartition(const std::vector<BRM::OID_t>& oids, set<BRM::LogicalPartitio
    * 		uint32_t * - OID array
    */
 
-  std::unique_lock lk(CacheOpsMutex, boost::defer_lock_t());
+  std::unique_lock lk(CacheOpsMutex, std::defer_lock);
 
   ByteStream bs;
   ISMPacketHeader ism;

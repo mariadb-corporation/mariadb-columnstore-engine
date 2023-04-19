@@ -79,7 +79,7 @@ using namespace logging;
 
 #include "fsutils.h"
 
-#include "rwlock_local.h"
+
 
 #include "iomanager.h"
 #include "liboamcpp.h"
@@ -256,7 +256,6 @@ typedef multiset<FdCountEntry_t, fdCountCompare> FdCacheCountType_t;
 
 FdCacheType_t fdcache;
 std::mutex fdMapMutex;
-rwlock::RWLock_local localLock;
 
 char* alignTo(const char* in, int av)
 {

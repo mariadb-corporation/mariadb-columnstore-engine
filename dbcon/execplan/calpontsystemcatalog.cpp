@@ -72,7 +72,8 @@ using namespace rowgroup;
 #include "installdir.h"
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/version.hpp>
 
 
@@ -2295,7 +2296,7 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
 #if BOOST_VERSION < 104000
     std::unique_lock lk1(fColIndexListmapLock, false);
 #else
-    std::unique_lock lk1(fColIndexListmapLock, boost::defer_lock);
+    std::unique_lock lk1(fColIndexListmapLock, std::defer_lock);
 #endif
 
     if (useCache)
@@ -2970,7 +2971,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 #if BOOST_VERSION < 103800
   std::unique_lock lk2(fOIDmapLock, false);
 #else
-  std::unique_lock lk2(fOIDmapLock, boost::defer_lock);
+  std::unique_lock lk2(fOIDmapLock, std::defer_lock);
 #endif
   std::unique_lock lk3(fColinfomapLock);
 

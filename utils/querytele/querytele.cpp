@@ -21,8 +21,10 @@
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 using namespace boost;
+
 
 #include "querytele.h"
 
@@ -30,7 +32,7 @@ namespace
 {
 // It's not clear that random_generator is thread-safe, so we'll just mutex it...
 uuids::random_generator uuidgen;
-mutex uuidgenMtx;
+std::mutex uuidgenMtx;
 }  // namespace
 
 namespace querytele
@@ -38,7 +40,7 @@ namespace querytele
 /*static*/
 uuids::uuid QueryTeleClient::genUUID()
 {
-  mutex::scoped_lock lk(uuidgenMtx);
+  std::scoped_lock lk(uuidgenMtx);
   return uuidgen();
 }
 

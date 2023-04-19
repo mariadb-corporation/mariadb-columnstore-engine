@@ -31,7 +31,7 @@
 using namespace std;
 
 #include "blockrequestprocessor.h"
-#include "rwlock_local.h"
+
 #include "dbrm.h"
 #include "pp_logger.h"
 #include "mcsconfig.h"

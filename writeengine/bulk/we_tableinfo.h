@@ -26,7 +26,8 @@
 #include <utility>
 #include <vector>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 

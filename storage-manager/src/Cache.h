@@ -32,7 +32,8 @@
 #include <map>
 #include <boost/utility.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 // Setting to min possible based on
 // using 1k in config file. If wrong

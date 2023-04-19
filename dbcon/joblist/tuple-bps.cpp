@@ -1669,7 +1669,7 @@ void TupleBPS::interleaveJobs(vector<Job>* jobs) const
 void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
-  std::unique_lock<std::mutex> tplLock(tplMutex, boost::defer_lock);
+  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
@@ -2402,7 +2402,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     initializeJoinLocalDataPool(1);
 
   vector<boost::shared_ptr<messageqcpp::ByteStream>> bsv;
-  std::unique_lock<std::mutex> tplLock(tplMutex, boost::defer_lock);
+  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
 
   try
   {

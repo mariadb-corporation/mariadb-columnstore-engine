@@ -28,7 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <condition_variable>
 #include <boost/filesystem/path.hpp>
 

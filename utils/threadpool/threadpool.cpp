@@ -32,6 +32,7 @@ using namespace logging;
 #include "threadnaming.h"
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 #include "boost/date_time/posix_time/posix_time_types.hpp"
 #include "mcsconfig.h"
 
@@ -90,7 +91,7 @@ void ThreadPool::pruneThread()
   {
     if (fStop)
       return;
-    if (fPruneThreadEnd.wait_for(lock2, boost::chrono::minutes{1}) == boost::cv_status::timeout)
+    if (fPruneThreadEnd.wait_for(lock2, std::chrono::minutes{1}) == std::cv_status::timeout)
     {
       while (!fPruneThreads.empty())
       {
@@ -338,7 +339,7 @@ void ThreadPool::beginThread() throw()
         else
         {
           // Wait no more than 10 minutes
-          if (fNeedThread.wait_for(lock1, boost::chrono::minutes{10}) == boost::cv_status::timeout)
+          if (fNeedThread.wait_for(lock1, std::chrono::minutes{10}) == std::cv_status::timeout)
           {
             if (fThreadCount > fMaxThreads)
             {

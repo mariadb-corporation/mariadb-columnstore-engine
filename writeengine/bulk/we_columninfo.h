@@ -33,7 +33,8 @@
 #include "we_colextinf.h"
 #include "we_dctnrycompress.h"
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 #include <sys/time.h>
 #include <vector>

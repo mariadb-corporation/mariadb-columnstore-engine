@@ -24,7 +24,8 @@
 using namespace std;
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "we_tablemetadata.h"
 

@@ -86,7 +86,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
     return numeric_limits<uint64_t>::max();
 
   //@bug6065, make StringStore::storeString() thread safe
-  std::unique_lock lk(fMutex, boost::defer_lock);
+  std::unique_lock lk(fMutex, std::defer_lock);
 
   if (fUseStoreStringMutex)
     lk.lock();
@@ -212,7 +212,7 @@ uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
     return numeric_limits<uint32_t>::max();
   }
 
-  std::unique_lock lk(fMutex, boost::defer_lock);
+  std::unique_lock lk(fMutex, std::defer_lock);
 
   if (fUseUserDataMutex)
     lk.lock();

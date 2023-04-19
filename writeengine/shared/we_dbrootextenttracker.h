@@ -34,7 +34,8 @@
 
 #pragma once
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <vector>
 
 #include "we_type.h"

@@ -22,7 +22,8 @@
 #include <string>
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "messageobj.h"
 #include "messageids.h"

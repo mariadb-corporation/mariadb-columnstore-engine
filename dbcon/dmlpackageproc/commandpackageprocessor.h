@@ -30,7 +30,8 @@
 #include <boost/algorithm/string.hpp>
 #include "dmlpackageprocessor.h"
 #include "dmltable.h"
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <condition_variable>
 
 #define EXPORT

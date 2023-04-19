@@ -143,7 +143,7 @@ void ThreadPool::_processingLoop(std::unique_lock<std::mutex>& s)
     while (jobs.empty() && !die)
     {
       threadsWaiting++;
-      bool timedout = !jobAvailable.timed_wait<>(s, idleThreadTimeout);
+      bool timedout = (jobAvailable.wait_for(s, idleThreadTimeout) == std::cv_status::timeout);
       threadsWaiting--;
       if (timedout && jobs.empty())
       {

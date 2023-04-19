@@ -148,7 +148,7 @@ void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushin
     TOUCH(prefix, "FLUSHING");
     try
     {
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     catch (boost::thread_interrupted&)
     {
@@ -322,7 +322,7 @@ void Ownership::Monitor::watchForInterlopers()
       break;
     try
     {
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     catch (boost::thread_interrupted&)
     {

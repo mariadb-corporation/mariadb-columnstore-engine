@@ -22,7 +22,8 @@
  *
  ****************************************************************************/
 #include "functor_json.h"
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "funcexp.h"
 #include "functor_all.h"

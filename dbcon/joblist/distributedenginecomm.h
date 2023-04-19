@@ -47,7 +47,7 @@
 #include "bytestream.h"
 #include "primitivemsg.h"
 #include "threadsafequeue.h"
-#include "rwlock_local.h"
+
 #include "resourcemanager.h"
 #include "messagequeue.h"
 

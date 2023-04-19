@@ -23,7 +23,8 @@
 
 #include <string>
 #include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/uuid/uuid_io.hpp>
 
 #include "querytele.h"

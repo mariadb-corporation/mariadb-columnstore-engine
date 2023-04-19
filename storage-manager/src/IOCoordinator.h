@@ -23,7 +23,8 @@
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include <boost/filesystem.hpp>
 

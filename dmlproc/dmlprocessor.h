@@ -229,7 +229,7 @@ class PackageHandler
   int forceReleaseTableAccess();
   typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
   static std::map<uint32_t, tableAccessQueue_t> tableOidMap;
-  static boost::condition_variable tableOidCond;
+  static std::condition_variable tableOidCond;
   static std::mutex tableOidMutex;
 
  public:

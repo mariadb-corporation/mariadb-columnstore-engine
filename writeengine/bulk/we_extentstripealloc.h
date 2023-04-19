@@ -30,7 +30,8 @@
 #include <vector>
 
 #include <tr1/unordered_map>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "we_type.h"
 #include "brmtypes.h"

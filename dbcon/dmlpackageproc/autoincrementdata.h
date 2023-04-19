@@ -23,7 +23,8 @@
 
 #include <stdint.h>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <condition_variable>
 
 class AutoincrementData

@@ -40,7 +40,8 @@ using namespace std;
 #include "loggingid.h"
 using namespace logging;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 using namespace boost;
 
 #include "messagequeue.h"

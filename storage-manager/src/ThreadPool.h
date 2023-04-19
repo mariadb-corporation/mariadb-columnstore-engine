@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <deque>
 #include <set>
 #include <boost/thread.hpp>
@@ -79,7 +80,7 @@ class ThreadPool : public boost::noncopyable
   std::deque<boost::shared_ptr<Job> > jobs;
   mutable std::mutex mutex;
 
-  const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
+  const std::chrono::seconds idleThreadTimeout{60};
   boost::thread pruner;
   std::condition_variable somethingToPrune;
   std::vector<boost::thread::id> pruneable;  // when a thread is about to return it puts its id here

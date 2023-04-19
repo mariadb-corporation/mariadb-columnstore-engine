@@ -33,7 +33,7 @@
 #include "bytestream.h"
 //#include "we_message.h"
 #include "threadsafequeue.h"
-#include "rwlock_local.h"
+
 #include "resourcemanager.h"
 
 #define EXPORT

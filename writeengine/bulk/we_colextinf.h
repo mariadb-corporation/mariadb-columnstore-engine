@@ -31,7 +31,8 @@
 #include <stdint.h>
 #include <set>
 #include <tr1/unordered_map>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "brmtypes.h"
 #include "we_type.h"

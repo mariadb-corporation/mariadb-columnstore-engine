@@ -26,7 +26,8 @@
 #include <queue>
 #include <boost/shared_ptr.hpp>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <condition_variable>
 #include <boost/thread.hpp>
 #include <condition_variable>

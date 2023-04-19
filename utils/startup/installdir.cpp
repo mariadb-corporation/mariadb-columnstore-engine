@@ -24,8 +24,9 @@
 #include <string>
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
-using namespace boost;
+#include <map>
+#include <mutex>
+
 
 #include "installdir.h"
 #include "configcpp.h"

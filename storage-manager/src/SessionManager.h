@@ -21,7 +21,8 @@
 #include "messageFormat.h"
 
 #include <signal.h>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <sys/poll.h>
 #include <tr1/unordered_map>
 

@@ -26,7 +26,8 @@
 #include <ctime>
 
 //#define      SERIALIZE_DDL_DML_CPIMPORT    1
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -61,7 +62,7 @@ using namespace WriteEngine;
 using namespace querytele;
 
 extern std::mutex mute;
-extern boost::condition_variable cond;
+extern std::condition_variable cond;
 
 #define MCOL_140  // Undefine to test VSS for out of order transactions
 
@@ -83,7 +84,7 @@ std::mutex DMLProcessor::batchinsertProcessorMapLock;
 
 // MCOL-140 Map to hold table oids for tables being changed.
 std::map<uint32_t, PackageHandler::tableAccessQueue_t> PackageHandler::tableOidMap;
-boost::condition_variable PackageHandler::tableOidCond;
+std::condition_variable PackageHandler::tableOidCond;
 std::mutex PackageHandler::tableOidMutex;
 
 //------------------------------------------------------------------------------
@@ -1740,7 +1741,7 @@ void DMLProcessor::operator()()
                                                                    sessionID, txnid.id, fDbrm, fQtc, csc));
           // We put the packageHandler into a map so that if we receive a
           // message to affect the previous command, we can find it.
-          std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
+          std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, std::defer_lock);
 
           lk2.lock();
           packageHandlerMap[sessionID] = php;
@@ -1782,7 +1783,7 @@ void DMLProcessor::operator()()
             fIos, bs1, packageType, fEC, fConcurrentSupport, maxDeleteRows, sessionID, 0, fDbrm, fQtc, csc));
         // We put the packageHandler into a map so that if we receive a
         // message to affect the previous command, we can find it.
-        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
+        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, std::defer_lock);
 
         lk2.lock();
         packageHandlerMap[sessionID] = php;

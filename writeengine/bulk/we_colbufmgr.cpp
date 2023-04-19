@@ -31,6 +31,8 @@
  * ColumnBufferCompressed.
  */
 
+
+
 #include "we_colbufmgr.h"
 #include "we_colbuf.h"
 #include "we_colbufcompressed.h"
@@ -38,8 +40,10 @@
 #include "we_bulkstatus.h"
 #include "we_log.h"
 #include "blocksize.h"
+
+#include <chrono>
 #include <sstream>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+
 
 namespace
 {
@@ -123,7 +127,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
   Stats::startParseEvent(WE_STATS_WAIT_TO_RESERVE_OUT_BUF);
 #endif
   *cbs = 0;
-  boost::posix_time::seconds wait_seconds(COND_WAIT_SECONDS);
+  std::chrono::seconds wait_seconds(COND_WAIT_SECONDS);
 
   std::unique_lock lock(fColInfo->colMutex());
 
@@ -145,7 +149,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
       fLog->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
-    fOutOfSequence.timed_wait(lock, wait_seconds);
+    fOutOfSequence.wait_for(lock, wait_seconds);
 
     // See if JobStatus has been set to terminate by another thread
     if (BulkStatus::getJobStatus() == EXIT_FAILURE)
@@ -179,7 +183,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
       fLog->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
-    fResizeInProgress.timed_wait(lock, wait_seconds);
+    fResizeInProgress.wait_for(lock, wait_seconds);
 
     // See if JobStatus has been set to terminate by another thread
     if (BulkStatus::getJobStatus() == EXIT_FAILURE)
@@ -253,7 +257,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
           fLog->logMsg(oss.str(), MSGLVL_INFO2);
         }
 
-        fBufInUse.timed_wait(lock, wait_seconds);
+        fBufInUse.wait_for(lock, wait_seconds);
 
         // See if JobStatus has been set to quit by another thread
         if (BulkStatus::getJobStatus() == EXIT_FAILURE)
@@ -675,7 +679,7 @@ int ColumnBufferManager::flush()
 //------------------------------------------------------------------------------
 int ColumnBufferManager::intermediateFlush()
 {
-  boost::posix_time::seconds wait_seconds(COND_WAIT_SECONDS);
+  std::chrono::duration::seconds wait_seconds(COND_WAIT_SECONDS);
   std::unique_lock lock(fColInfo->colMutex());
 
   // Wait for all other threads which are currently parsing rows,
@@ -686,7 +690,7 @@ int ColumnBufferManager::intermediateFlush()
 
   while (fSectionsInUse.size() > 0)
   {
-    fBufInUse.timed_wait(lock, wait_seconds);
+    fBufInUse.wait_for(lock, wait_seconds);
 
     // See if JobStatus has been set to terminate by another thread
     if (BulkStatus::getJobStatus() == EXIT_FAILURE)

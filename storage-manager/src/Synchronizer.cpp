@@ -20,7 +20,8 @@
 #include "IOCoordinator.h"
 #include "MetadataFile.h"
 #include "Utilities.h"
-#include <boost/thread/mutex.hpp>
+#include <chrono>
+#include <thread>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -185,7 +186,7 @@ void Synchronizer::flushObject(const bf::path& prefix, const string& _key)
   string key = (prefix / _key).string();
 
   while (blockNewJobs)
-    boost::this_thread::sleep_for(boost::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
   std::unique_lock<std::mutex> s(mutex);
 
@@ -275,7 +276,7 @@ void Synchronizer::periodicSync()
     bool wasTriggeredBySize = false;
     try
     {
-      boost::this_thread::sleep_for(syncInterval);
+      std::this_thread::sleep_for(syncInterval);
     }
     catch (const boost::thread_interrupted)
     {
@@ -318,7 +319,7 @@ void Synchronizer::syncNow(const bf::path& prefix)
       it->second = 0;
     lock.unlock();
     while (opsInProgress.size() > 0)
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     lock.lock();
   }
   blockNewJobs = false;
@@ -342,7 +343,7 @@ void Synchronizer::syncNow()
       it->second = 0;
     lock.unlock();
     while (opsInProgress.size() > 0)
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     lock.lock();
   }
   blockNewJobs = false;
@@ -865,7 +866,7 @@ void Synchronizer::PendingOps::wait(std::mutex* m)
   while (!finished)
   {
     waiters++;
-    condvar.wait(*m);
+//    condvar.wait(*m); XXXXXXXXXXXXXXXXXXXXXXXXx
     waiters--;
   }
 }

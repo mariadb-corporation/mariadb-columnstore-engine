@@ -1961,7 +1961,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
 /* always returns holding the FL lock */
 void ExtentMap::grabFreeList(OPS op)
 {
-  std::unique_lock lk(mutex, boost::defer_lock);
+  std::unique_lock lk(mutex, std::defer_lock);
 
   if (op == READ)
   {

@@ -15,7 +15,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <condition_variable>
 
 /* Quicky impl of a read-write lock that prioritizes writers. */

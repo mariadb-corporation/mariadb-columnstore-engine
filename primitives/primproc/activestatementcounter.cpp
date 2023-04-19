@@ -19,7 +19,8 @@
 //
 
 #include <unistd.h>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 using namespace boost;
 
 #include "activestatementcounter.h"

@@ -21,7 +21,8 @@
 #include <vector>
 #include <stdint.h>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "IDBDataFile.h"
 #include "IDBFileSystem.h"

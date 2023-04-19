@@ -29,7 +29,8 @@
 #include <unistd.h>
 #include <iostream>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "brmtypes.h"
 #include "slavedbrmnode.h"

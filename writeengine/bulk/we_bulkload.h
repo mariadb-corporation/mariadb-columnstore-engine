@@ -40,7 +40,8 @@
 #include "brmtypes.h"
 #include "boost/ptr_container/ptr_vector.hpp"
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/uuid/uuid.hpp>

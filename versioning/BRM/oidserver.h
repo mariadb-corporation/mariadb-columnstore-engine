@@ -31,7 +31,8 @@
 #include <vector>
 #include <sys/types.h>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #define EXPORT
 

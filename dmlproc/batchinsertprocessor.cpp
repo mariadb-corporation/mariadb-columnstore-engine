@@ -19,7 +19,8 @@
 //
 /** @file */
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 using namespace boost;
@@ -46,7 +47,7 @@ using namespace logging;
 using namespace BRM;
 using namespace messageqcpp;
 std::mutex mute;
-boost::condition_variable cond;
+std::condition_variable cond;
 std::mutex fLock;
 
 namespace dmlprocessor

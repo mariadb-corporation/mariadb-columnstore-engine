@@ -25,7 +25,8 @@
 #pragma once
 
 #include <string>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 namespace startup
 {

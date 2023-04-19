@@ -133,7 +133,7 @@ int BPPSeeder::operator()()
   PTLogs_t* logFD = NULL;
   int ret = 0;
   pthread_t tid = 0;
-  std::unique_lock scoped(bppLock, boost::defer_lock_t());
+  std::unique_lock scoped(bppLock, std::defer_lock);
 
   try
   {

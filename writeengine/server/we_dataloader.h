@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include "rwlock_local.h"
+
 #include "resourcemanager.h"
 
 #include "we_simplesyslog.h"

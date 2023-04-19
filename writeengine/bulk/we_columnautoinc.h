@@ -26,7 +26,8 @@
 #pragma once
 
 #include <string>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 
 #include "we_type.h"

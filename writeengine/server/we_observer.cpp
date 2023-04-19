@@ -27,7 +27,8 @@
  *      Author: bpaul@calpont.com
  */
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "we_observer.h"
 

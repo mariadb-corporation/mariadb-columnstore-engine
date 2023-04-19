@@ -195,9 +195,9 @@ void log_step(const querytele::StepTele& stdata)
 void TeleConsumer()
 {
   bool didSomeWork = false;
-  std::unique_lock itlk(itQueue.queueMtx, boost::defer_lock);
-  std::unique_lock qtlk(qtQueue.queueMtx, boost::defer_lock);
-  std::unique_lock stlk(stQueue.queueMtx, boost::defer_lock);
+  std::unique_lock itlk(itQueue.queueMtx, std::defer_lock);
+  std::unique_lock qtlk(qtQueue.queueMtx, std::defer_lock);
+  std::unique_lock stlk(stQueue.queueMtx, std::defer_lock);
   querytele::QueryTeleServiceClient client(fProtocol);
 
   try

@@ -469,7 +469,8 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
   bool b;
 
   std::mutex* lock = new std::mutex();
-  condition* cond = new condition();
+  std::condition_variable* cond = new std::condition_variable();
+
   uint32_t firstPMInterleavedConnectionId =
       key % (fPmConnections.size() / pmCount) * fDECConnectionsPerQuery * pmCount % fPmConnections.size();
   boost::shared_ptr<MQE> mqe(new MQE(pmCount, firstPMInterleavedConnectionId));

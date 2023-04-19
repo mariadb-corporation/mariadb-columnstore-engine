@@ -23,7 +23,8 @@
 #include <limits>
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 using namespace boost;

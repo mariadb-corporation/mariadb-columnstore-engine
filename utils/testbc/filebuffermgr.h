@@ -26,7 +26,7 @@
 #include <pthread.h>
 #include "blocksize.h"
 #include "filebuffer.h"
-#include "rwlock_local.h"
+
 #include <tr1/unordered_set>
 #include <boost/thread.hpp>
 

@@ -20,7 +20,8 @@
 #include "S3Storage.h"
 #include "LocalStorage.h"
 #include "SMLogging.h"
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <string>
 #include <ctype.h>
 #include <iostream>

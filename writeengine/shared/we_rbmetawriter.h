@@ -34,7 +34,8 @@
 #include <set>
 #include <map>
 #include <vector>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "we_type.h"
 #include "brmtypes.h"

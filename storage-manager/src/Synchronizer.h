@@ -110,7 +110,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
   // this thread will start jobs for entries in pendingOps every 10 seconds
   bool die;
   boost::thread syncThread;
-  const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
+  const std::chrono::seconds syncInterval = std::chrono::seconds(10);
   void periodicSync();
   std::map<boost::filesystem::path, size_t> uncommittedJournalSize;
   size_t journalSizeThreshold;
