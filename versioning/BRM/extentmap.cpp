@@ -20,7 +20,7 @@
  * $Id: extentmap.cpp 1936 2013-07-09 22:10:29Z dhall $
  *
  ****************************************************************************/
-
+#include <atomic>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -6036,17 +6036,17 @@ void ExtentMap::confirmChangesRBTree()
   undoRecordsRBTree.clear();
 }
 
-const bool* ExtentMap::getEMFLLockStatus()
+const std::atomic<bool>* ExtentMap::getEMFLLockStatus()
 {
   return &flLocked;
 }
 
-const bool* ExtentMap::getEMLockStatus()
+const std::atomic<bool>* ExtentMap::getEMLockStatus()
 {
   return &emLocked;
 }
 
-const bool* ExtentMap::getEMIndexLockStatus()
+const std::atomic<bool>* ExtentMap::getEMIndexLockStatus()
 {
   return &emIndexLocked;
 }

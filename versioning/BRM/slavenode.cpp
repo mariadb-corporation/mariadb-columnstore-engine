@@ -36,12 +36,13 @@
 #include "crashtrace.h"
 #include "service.h"
 #include "jobstep.h"
+#include <atomic>
 
 using namespace BRM;
 using namespace std;
 
 std::unique_ptr<SlaveComm> comm;
-bool die = false;
+std::atomic<bool> die{false};
 boost::thread_group monitorThreads;
 
 class Opt
