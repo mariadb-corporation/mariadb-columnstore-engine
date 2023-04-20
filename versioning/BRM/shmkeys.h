@@ -49,6 +49,7 @@ struct ShmKeys
   uint32_t KEYRANGE_EMFREELIST_BASE;
   uint32_t KEYRANGE_VBBM_BASE;
   uint32_t KEYRANGE_VSS_BASE;
+  uint32_t KEYRANGE_EXTENTMAP_INDEX_BASE;
   uint32_t KEYRANGE_VSS_BASE1;
   uint32_t KEYRANGE_VSS_BASE2;
   uint32_t KEYRANGE_VSS_BASE3;
@@ -57,7 +58,6 @@ struct ShmKeys
   uint32_t KEYRANGE_VSS_BASE6;
   uint32_t KEYRANGE_VSS_BASE7;
   uint32_t KEYRANGE_VSS_BASE8;
-  uint32_t KEYRANGE_EXTENTMAP_INDEX_BASE;
 
   /****** Fixed location assignments *******/
   uint32_t MST_SYSVKEY;

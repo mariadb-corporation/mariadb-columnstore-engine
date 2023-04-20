@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <string>
 #include <mutex>
+#include <thread>
 using namespace std;
 
 #include <boost/interprocess/shared_memory_object.hpp>
@@ -41,6 +42,8 @@ using namespace boost;
 
 #include "shmkeys.h"
 using namespace BRM;
+
+namespace r = ranges;
 
 namespace
 {
@@ -102,38 +105,10 @@ void usage()
   cout << "   -n don't actually delete anything (implies -v)" << endl;
 }
 
-class ThdFunc
-{
- public:
-  ThdFunc() : fShm_key(0)
-  {
-  }
-  ThdFunc(key_t shm_key, const string& label) : fShm_key(shm_key), fLabel(label)
-  {
-  }
-
-  ~ThdFunc()
-  {
-  }
-
-  void operator()() const
-  {
-    shmDoitRange(fShm_key, fLabel);
-  }
-
- private:
-  // ThdFunc(const ThdFunc& rhs);
-  // ThdFunc& operator=(const ThdFunc& rhs);
-
-  key_t fShm_key;
-  string fLabel;
-};
-
 }  // namespace
 
 int main(int argc, char** argv)
 {
-
   int c;
   opterr = 0;
   bool cFlg = false;
@@ -161,21 +136,39 @@ int main(int argc, char** argv)
 
   ShmKeys BrmKeys;
 
-  boost::thread_group tg;
-  boost::thread* tp = 0;
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_CL_BASE, "COPYLOCK   "));
-  tg.add_thread(tp);
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EXTENTMAP_BASE, "EXTMAP     "));
-  tg.add_thread(tp);
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EMFREELIST_BASE, "EXTMAP_FREE"));
-  tg.add_thread(tp);
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_VBBM_BASE, "VBBM       "));
-  tg.add_thread(tp);
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_VSS_BASE, "VSS        "));
-  tg.add_thread(tp);
-  tp = new boost::thread(ThdFunc(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX"));
-  tg.add_thread(tp);
-  tg.join_all();
+  std::vector<std::thread> threadGroup;
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_CL_BASE, "COPYLOCK   "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_EXTENTMAP_BASE, "EXTMAP     "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_EMFREELIST_BASE, "EXTMAP_FREE"); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VBBM_BASE, "VBBM       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VBBM_BASE, "VBBM       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE, "VSS        "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX"); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE1, "VSS1       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE2, "VSS2       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE3, "VSS3       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE4, "VSS4       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE5, "VSS5       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE6, "VSS6       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE7, "VSS7       "); }));
+  threadGroup.emplace_back(
+      std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE8, "VSS8       "); }));
+
+  r::for_each(threadGroup, [](auto& t) { t.join(); });
 
   shmDoit(BrmKeys.MST_SYSVKEY, "MST        ");
 
@@ -196,6 +189,15 @@ int main(int argc, char** argv)
   semDoit(BrmKeys.KEYRANGE_VBBM_BASE, "VBBM       ");
   semDoit(BrmKeys.KEYRANGE_VSS_BASE, "VSS        ");
   semDoit(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE1, "VSS1       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE2, "VSS2       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE3, "VSS3       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE4, "VSS4       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE5, "VSS5       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE6, "VSS6       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE7, "VSS7       ");
+  semDoit(BrmKeys.KEYRANGE_VSS_BASE8, "VSS8       ");
+
   semDoit(BrmKeys.MST_SYSVKEY, "MST        ");
 
   if (!cFlg)
