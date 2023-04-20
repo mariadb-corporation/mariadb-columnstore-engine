@@ -54,7 +54,6 @@ using namespace joblist;
 
 #include "bytestream.h"
 #include "messagequeue.h"
-#include "messagequeuepool.h"
 using namespace messageqcpp;
 
 #include "configcpp.h"
