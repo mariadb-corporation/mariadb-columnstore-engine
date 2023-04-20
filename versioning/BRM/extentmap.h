@@ -1061,9 +1061,9 @@ class ExtentMap : public Undoable
   EXPORT std::vector<InlineLBIDRange> getFreeListEntries();
 
   EXPORT void dumpTo(std::ostream& os);
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
+  EXPORT const std::atomic<bool>* getEMLockStatus();
+  EXPORT const std::atomic<bool>* getEMFLLockStatus();
+  EXPORT const std::atomic<bool>* getEMIndexLockStatus();
   size_t EMIndexShmemSize();
   size_t EMIndexShmemFree();
 
@@ -1114,7 +1114,9 @@ class ExtentMap : public Undoable
   time_t fCacheTime;  // timestamp associated with config cache
 
   int numUndoRecords;
-  bool flLocked, emLocked, emIndexLocked;
+  std::atomic<bool> flLocked{false};
+  std::atomic<bool> emLocked{false};
+  std::atomic<bool> emIndexLocked{false};
 
   static boost::mutex mutex;  // @bug5355 - made mutex static
   static boost::mutex emIndexMutex;

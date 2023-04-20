@@ -455,11 +455,11 @@ class SlaveDBRMNode
   EXPORT int loadState(std::string filename) throw();
   EXPORT int saveState(std::string filename) throw();
 
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
-  EXPORT const bool* getVBBMLockStatus();
-  EXPORT const bool* getVSSLockStatus();
+  EXPORT const std::atomic<bool>* getEMFLLockStatus();
+  EXPORT const std::atomic<bool>* getEMLockStatus();
+  EXPORT const std::atomic<bool>* getEMIndexLockStatus();
+  EXPORT const std::atomic<bool>* getVBBMLockStatus();
+  EXPORT const std::atomic<bool>* getVSSLockStatus();
 
  private:
   explicit SlaveDBRMNode(const SlaveDBRMNode& brm);
@@ -471,7 +471,7 @@ class SlaveDBRMNode
   VBBM vbbm;
   VSS vss;
   CopyLocks copylocks;
-  bool locked[3];  // 0 = VBBM, 1 = VSS, 2 = CopyLocks
+  std::atomic<bool> locked[3] {false, false, false};  // 0 = VBBM, 1 = VSS, 2 = CopyLocks
 };
 
 }  // namespace BRM

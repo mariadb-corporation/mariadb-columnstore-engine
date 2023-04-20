@@ -28,6 +28,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include "rwlock.h"
+#include <atomic>
 
 #define EXPORT
 
@@ -37,7 +38,7 @@ class RWLockMonitor
 {
  public:
   // d = die, ls = lock status, k = key
-  EXPORT RWLockMonitor(const bool* d, const bool* ls, const uint32_t k);
+  EXPORT RWLockMonitor(const std::atomic<bool>* d, const std::atomic<bool>* ls, const uint32_t k);
 
   EXPORT virtual ~RWLockMonitor();
 
@@ -49,8 +50,8 @@ class RWLockMonitor
   // RWLockMonitor& operator=(const RWLockMonitor&rhs);
 
   /* Some of these vars are only useful once we implement write_lock checking. */
-  const bool* die;
-  const bool* lockStatus;
+  const std::atomic<bool>* die;
+  const std::atomic<bool>* lockStatus;
   uint32_t key;
   boost::shared_ptr<rwlock::RWLock> lock;
 
