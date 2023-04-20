@@ -23,9 +23,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <vector>
-#ifdef __linux__
 #include <values.h>
-#endif
 #include <limits>
 #include <sys/stat.h>
 
@@ -38,9 +36,7 @@
 #include "vbbm.h"
 #include "exceptclasses.h"
 #include "slavecomm.h"
-#define BLOCKRESOLUTIONMANAGER_DLLEXPORT
 #include "blockresolutionmanager.h"
-#undef BLOCKRESOLUTIONMANAGER_DLLEXPORT
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -48,16 +44,24 @@ using namespace idbdatafile;
 using namespace logging;
 using namespace std;
 
+namespace r = ranges;
+
 namespace BRM
 {
 BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
 {
+  for (int32_t i = 1; i <= VssFactor; ++i)
+  {
+    vss_.emplace_back(std::unique_ptr<VSS>(new VSS(i)));
+  }
+
   if (ronly)
   {
     em.setReadOnly();
     vss.setReadOnly();
     vbbm.setReadOnly();
     copylocks.setReadOnly();
+    r::for_each(vss_, [](auto& v) { v->setReadOnly(); });
   }
 }
 
@@ -95,6 +99,8 @@ int BlockResolutionManager::saveState(string filename) throw()
   string journalFilename = filename + "_journal";
 
   bool locked[2] = {false, false};
+  std::vector<bool> vssLocks(VssFactor, false);
+  assert(vssLocks.size() == vss_.size());
 
   try
   {
@@ -113,6 +119,16 @@ int BlockResolutionManager::saveState(string filename) throw()
     delete journal;
 
     vbbm.save(vbbmFilename);
+
+    for (int32_t i = 0; auto& v : vss_)
+    {
+      v->lock(VSS::READ);
+      vssLocks[i] = true;
+      v->save(vssFilename + std::to_string(i));
+      v->release(VSS::READ);
+      vssLocks[i] = false;
+      ++i;
+    }
     vss.save(vssFilename);
 
     vss.release(VSS::READ);
@@ -122,6 +138,15 @@ int BlockResolutionManager::saveState(string filename) throw()
   }
   catch (exception& e)
   {
+    assert(vssLocks.size() == vss_.size());
+    for (auto vl = begin(vssLocks); auto& v : vss_)
+    {
+      if (*vl)
+      {
+        v->release(VSS::READ);
+      }
+      ++vl;
+    }
     if (locked[1])
       vss.release(VSS::READ);
 
@@ -141,6 +166,8 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
+  std::vector<bool> vssLocks(VssFactor, false);
+  assert(vssLocks.size() == vss_.size());
 
   try
   {
@@ -151,15 +178,34 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
 
     loadExtentMap(emFilename, fixFL);
     vbbm.load(vbbmFilename);
-    vss.load(vssFilename);
 
+    vss.load(vssFilename);
+    for (int32_t i = 0; auto& v : vss_)
+    {
+      v->lock(VSS::WRITE);
+      vssLocks[i] = true;
+      v->load(vssFilename + std::to_string(i));
+      v->release(VSS::WRITE);
+      vssLocks[i] = false;
+      ++i;
+    }
     vss.release(VSS::WRITE);
     locked[1] = false;
+
     vbbm.release(VBBM::WRITE);
     locked[0] = false;
   }
   catch (exception& e)
   {
+    assert(vssLocks.size() == vss_.size());
+    for (auto vl = begin(vssLocks); auto& v : vss_)
+    {
+      if (*vl)
+      {
+        v->release(VSS::WRITE);
+      }
+      ++vl;
+    }
     if (locked[1])
       vss.release(VSS::WRITE);
 

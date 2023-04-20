@@ -43,8 +43,6 @@
 #include "rwlock.h"
 #include "shmkeys.h"
 
-#define EXPORT
-
 namespace BRM
 {
 struct MSTEntry
@@ -52,13 +50,13 @@ struct MSTEntry
   key_t tableShmkey;
   int allocdSize;
   int currentSize;
-  EXPORT MSTEntry();
+  MSTEntry();
 };
 
 class MasterSegmentTableImpl
 {
  public:
-  ~MasterSegmentTableImpl(){};
+  ~MasterSegmentTableImpl() = default;
   static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
 
   static void refreshShm()
@@ -92,9 +90,26 @@ class MasterSegmentTable
   /** @brief Constructor.
    * @note Throws runtime_error on a semaphore-related error.
    */
-  EXPORT MasterSegmentTable();
-  EXPORT ~MasterSegmentTable();
+  MasterSegmentTable();
+  ~MasterSegmentTable();
 
+  enum ShmemTypes
+  {
+    EMTable_ = 0,
+    EMFreeList_,
+    VBBMSegment_,
+    VSSSegment_,
+    CLSegment_,
+    EMIndex_,
+    extVSS1,
+    extVSS2,
+    extVSS3,
+    extVSS4,
+    extVSS5,
+    extVSS6,
+    extVSS7,
+    extVSS8,
+  };
   /// specifies the Extent Map table
   static const int EMTable = 0;
   /// specifies the Extent Map's Freelist table
@@ -108,7 +123,9 @@ class MasterSegmentTable
   /// specifies the EM Index segment
   static const int EMIndex = 5;
   /// the number of tables currently defined
-  static const int nTables = 6;
+  static const int nTables = 14;
+
+  // static const constexpr int
 
   /** @brief This function gets the specified table.
    *
@@ -122,7 +139,7 @@ class MasterSegmentTable
    * if block == false, it can also return NULL if it could not grab
    * the table's lock.
    */
-  EXPORT MSTEntry* getTable_read(int num, bool block = true) const;
+  MSTEntry* getTable_read(int num, bool block = true) const;
 
   /** @brief This function gets the specified table.
    *
@@ -136,7 +153,7 @@ class MasterSegmentTable
    * if block == false, it can also return NULL if it could not grab
    * the table's lock.
    */
-  EXPORT MSTEntry* getTable_write(int num, bool block = true) const;
+  MSTEntry* getTable_write(int num, bool block = true) const;
 
   /** @brief Upgrade a read lock to a write lock.
    *
@@ -144,7 +161,7 @@ class MasterSegmentTable
    * operation.
    * @param num The table the caller holds the read lock to.
    */
-  EXPORT void getTable_upgrade(int num) const;
+  void getTable_upgrade(int num) const;
 
   /** @brief Downgrade a write lock to a read lock.
    *
@@ -152,7 +169,7 @@ class MasterSegmentTable
    * operation.
    * @param num The table the caller holds the write lock to.
    */
-  EXPORT void getTable_downgrade(int num) const;
+  void getTable_downgrade(int num) const;
 
   /** @brief This function unlocks the specified table.
    *
@@ -162,7 +179,7 @@ class MasterSegmentTable
    * @note throws invalid_argument if num is outside the valid range
    * and runtime_error on a semaphore-related error.
    */
-  EXPORT void releaseTable_read(int num) const;
+  void releaseTable_read(int num) const;
 
   /** @brief This function unlocks the specified table.
    *
@@ -172,19 +189,7 @@ class MasterSegmentTable
    * @note throws invalid_argument if num is outside the valid range
    * and runtime_error on a semaphore-related error.
    */
-  EXPORT void releaseTable_write(int num) const;
-
-  /** @brief This function gets the current VSS key out of shared memory without locking
-   *
-   * This function gets the current VSS key out of shared memory without any locking. It is used
-   * (eventually) by DBRM::vssLookup() to try and correctly & efficiently short-circuit a vss
-   * lookup when there are no locked blocks in the vss. This read should be atomic. Even if it's
-   * not, we should still be okay.
-   */
-  inline key_t getVSSShmkey() const
-  {
-    return fShmDescriptors[VSSSegment].tableShmkey;
-  }
+  void releaseTable_write(int num) const;
 
  private:
   MasterSegmentTable(const MasterSegmentTable& mst);
@@ -194,7 +199,6 @@ class MasterSegmentTable
   mutable boost::scoped_ptr<rwlock::RWLock> rwlock[nTables];
 
   static const int MSTshmsize = nTables * sizeof(MSTEntry);
-  int RWLockKeys[nTables];
 
   /// indexed by EMTable, EMFreeList, and VBBMTable
   MSTEntry* fShmDescriptors;
@@ -202,9 +206,14 @@ class MasterSegmentTable
   void makeMSTSegment();
   void initMSTData();
   ShmKeys fShmKeys;
+  uint32_t RWLockKeys[14] = {fShmKeys.KEYRANGE_EXTENTMAP_BASE, fShmKeys.KEYRANGE_EMFREELIST_BASE,
+                             fShmKeys.KEYRANGE_VBBM_BASE,      fShmKeys.KEYRANGE_VSS_BASE,
+                             fShmKeys.KEYRANGE_CL_BASE,        fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE,
+                             fShmKeys.KEYRANGE_VSS_BASE1,      fShmKeys.KEYRANGE_VSS_BASE2,
+                             fShmKeys.KEYRANGE_VSS_BASE3,      fShmKeys.KEYRANGE_VSS_BASE4,
+                             fShmKeys.KEYRANGE_VSS_BASE5,      fShmKeys.KEYRANGE_VSS_BASE6,
+                             fShmKeys.KEYRANGE_VSS_BASE7,      fShmKeys.KEYRANGE_VSS_BASE8};
   MasterSegmentTableImpl* fPImpl;
 };
 
 }  // namespace BRM
-
-#undef EXPORT

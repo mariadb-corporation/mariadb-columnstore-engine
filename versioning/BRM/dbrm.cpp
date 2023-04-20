@@ -28,7 +28,7 @@
 #include <values.h>
 #endif
 #include <boost/thread.hpp>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 #include "dataconvert.h"
@@ -66,6 +66,8 @@ using namespace std;
 using namespace messageqcpp;
 using namespace oam;
 
+namespace r = ranges;
+
 #ifdef BRM_INFO
 #include "tracer.h"
 #endif
@@ -85,6 +87,12 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
     em->setReadOnly();
     vss->setReadOnly();
     vbbm->setReadOnly();
+
+    for (int32_t i = 0; i < VssFactor; ++i)
+    {
+      vss_.emplace_back(std::unique_ptr<VSS>(new VSS(i)));
+      vss_.back()->setReadOnly();
+    }
   }
 
   msgClient = NULL;
@@ -148,6 +156,8 @@ int DBRM::saveState(string filename) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[3] = {false, false, false};
+  std::vector<bool> vssLocks(VssFactor, false);
+  assert(vssLocks.size() == vss_.size());
 
   try
   {
@@ -162,6 +172,18 @@ int DBRM::saveState(string filename) throw()
     vbbm->save(vbbmFilename);
     vss->save(vssFilename);
 
+    for (int32_t i = 0; auto& v : vss_)
+    {
+      assert(i > 0 && i <= VssFactor);
+      auto idx = static_cast<size_t>(i);
+      v->lock(VSS::READ);
+      vssLocks[idx] = true;
+      v->save(vssFilename + std::to_string(idx));
+      v->release(VSS::READ);
+      vssLocks[idx] = false;
+      ++i;
+    }
+
     copylocks->release(CopyLocks::READ);
     locked[2] = false;
     vss->release(VSS::READ);
@@ -171,6 +193,15 @@ int DBRM::saveState(string filename) throw()
   }
   catch (exception& e)
   {
+    assert(vssLocks.size() == vss_.size());
+    for (auto vl = begin(vssLocks); auto& v : vss_)
+    {
+      if (*vl)
+      {
+        v->release(VSS::READ);
+      }
+      ++vl;
+    }
     if (locked[2])
       copylocks->release(CopyLocks::READ);
 

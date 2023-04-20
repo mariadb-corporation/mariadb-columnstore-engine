@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <sstream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 #include <sys/types.h>
@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
-
 
 #include "rwlock.h"
 #include "brmtypes.h"
@@ -97,19 +96,23 @@ VSSImpl::VSSImpl(unsigned key, off_t size, bool readOnly) : fVSS(key, size, read
 }
 
 VSS::VSS()
+ : vss(nullptr)
+ , hashBuckets(nullptr)
+ , storage(nullptr)
+ , r_only(false)
+ , currentVSSShmkey(-1)
+ , vssShmid(0)
+ , vssShminfo(nullptr)
+ , fPVSSImpl(nullptr)
+ , vssId_(0)
 {
-  vss = 0;
-  hashBuckets = 0;
-  storage = 0;
-  currentVSSShmkey = -1;
-  vssShmid = 0;
-  vssShminfo = NULL;
-  r_only = false;
-  fPVSSImpl = 0;
+  MSTIdx_ = vssIdx2MSTIdxMapping(0);
 }
 
-VSS::~VSS()
+VSS::VSS(const int32_t vssId) : VSS()
 {
+  MSTIdx_ = vssIdx2MSTIdxMapping(vssId);
+  vssId_ = vssId;
 }
 
 // ported from ExtentMap
@@ -119,11 +122,11 @@ void VSS::lock(OPS op)
 
   if (op == READ)
   {
-    vssShminfo = mst.getTable_read(MasterSegmentTable::VSSSegment);
+    vssShminfo = mst.getTable_read(MSTIdx_);
     mutex.lock();
   }
   else
-    vssShminfo = mst.getTable_write(MasterSegmentTable::VSSSegment);
+    vssShminfo = mst.getTable_write(MSTIdx_);
 
   // this means that either the VSS isn't attached or that it was resized
   if (!fPVSSImpl || fPVSSImpl->key() != (unsigned)vssShminfo->tableShmkey)
@@ -133,7 +136,7 @@ void VSS::lock(OPS op)
       if (op == READ)
       {
         mutex.unlock();
-        mst.getTable_upgrade(MasterSegmentTable::VSSSegment);
+        mst.getTable_upgrade(MSTIdx_);
 
         try
         {
@@ -145,7 +148,7 @@ void VSS::lock(OPS op)
           throw;
         }
 
-        mst.getTable_downgrade(MasterSegmentTable::VSSSegment);
+        mst.getTable_downgrade(MSTIdx_);
       }
       else
       {
@@ -195,9 +198,9 @@ void VSS::lock(OPS op)
 void VSS::release(OPS op)
 {
   if (op == READ)
-    mst.releaseTable_read(MasterSegmentTable::VSSSegment);
+    mst.releaseTable_read(MSTIdx_);
   else
-    mst.releaseTable_write(MasterSegmentTable::VSSSegment);
+    mst.releaseTable_write(MSTIdx_);
 }
 
 void VSS::initShmseg()
@@ -1322,19 +1325,6 @@ void VSS::save(string filename)
 // Ideally, we;d like to get in and out of this fcn as quickly as possible.
 bool VSS::isEmpty(bool useLock)
 {
-#if 0
-
-    if (fPVSSImpl == 0 || fPVSSImpl->key() != (unsigned)mst.getVSSShmkey())
-    {
-        lock(READ);
-        release(READ);
-    }
-
-    //this really should be done under a read lock. There's a small chance that between the release()
-    // above and now that the underlying SHM could be changed. This would be exacerbated during
-    // high DML/query activity.
-    return (fPVSSImpl->get()->currentSize == 0);
-#endif
   // Should be race-free, but takes along time...
   bool rc;
 
@@ -1349,8 +1339,8 @@ bool VSS::isEmpty(bool useLock)
   return rc;
 }
 
-//#include "boost/date_time/posix_time/posix_time.hpp"
-// using namespace boost::posix_time;
+// #include "boost/date_time/posix_time/posix_time.hpp"
+//  using namespace boost::posix_time;
 
 void VSS::load(string filename)
 {
