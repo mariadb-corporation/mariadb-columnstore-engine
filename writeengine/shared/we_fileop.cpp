@@ -2105,6 +2105,11 @@ int FileOp::oid2FileName(FID fid, char* fullFileName, bool bCreateDir, uint16_t 
   RETURN_ON_ERROR((Convertor::oid2FileName(fid, tempFileName, dbDir, partition, segment)));
 
   // see if file exists in specified DBRoot; return if found
+  if (fullFileName == nullptr)
+  {
+    return ERR_INTERNAL;
+  }
+
   if (dbRoot > 0)
   {
     sprintf(fullFileName, "%s/%s", Config::getDBRootByNum(dbRoot).c_str(), tempFileName);
@@ -2218,6 +2223,12 @@ int FileOp::oid2DirName(FID fid, char* oidDirName) const
 
     snprintf(oidDirName, FILE_NAME_SIZE, "%s", Config::getDBRootByNum(_dbroot).c_str());
     return NO_ERROR;
+  }
+
+
+  if (oidDirName == nullptr)
+  {
+    return ERR_INTERNAL;
   }
 
   RETURN_ON_ERROR((Convertor::oid2FileName(fid, tempFileName, dbDir, 0, 0)));

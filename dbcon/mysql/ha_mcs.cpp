@@ -1809,10 +1809,10 @@ static int columnstore_init_func(void* p)
   fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(),
           columnstore_release.c_str());
 
-  strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version));
+  strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version) - 1);
   cs_version[sizeof(cs_version) - 1] = 0;
 
-  strncpy(cs_commit_hash, columnstore_commit_hash.c_str(), sizeof(cs_commit_hash));
+  strncpy(cs_commit_hash, columnstore_commit_hash.c_str(), sizeof(cs_commit_hash) - 1);
   cs_commit_hash[sizeof(cs_commit_hash) - 1] = 0;
 
   mcs_hton = (handlerton*)p;
