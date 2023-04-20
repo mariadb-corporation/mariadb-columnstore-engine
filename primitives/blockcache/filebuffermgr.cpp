@@ -71,7 +71,7 @@ FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, cons
   fCacheSizes = std::vector<size_t>(MagicNumber, 0);
   fFBPool.reserve(numBlcks);
   fConfig = Config::makeConfig();
-  setReportingFrequency(0);
+  setReportingFrequency(1);
   fLog.open(string(MCSLOGDIR) + "/trace/bc", ios_base::app | ios_base::ate);
 }
 
@@ -96,10 +96,18 @@ void FileBufferMgr::setReportingFrequency(const uint32_t d)
   if (val.length() > 0)
     temp = static_cast<int>(Config::fromText(val));
 
-  if (temp > 0 && temp <= gReportingFrequencyMin)
+  if (!temp)
+  {
+    fReportFrequency = 0;
+  }
+  else if (temp > 0 && temp <= gReportingFrequencyMin)
+  {
     fReportFrequency = gReportingFrequencyMin;
+  }
   else
+  {
     fReportFrequency = temp;
+  }
 }
 
 void FileBufferMgr::flushCache()
