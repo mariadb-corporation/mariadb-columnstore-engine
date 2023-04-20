@@ -1006,6 +1006,7 @@ class DBRM
   boost::scoped_ptr<ExtentMap> em;
   boost::scoped_ptr<VBBM> vbbm;
   boost::scoped_ptr<VSS> vss;
+  std::vector<std::unique_ptr<VSS>> vss_;
   boost::scoped_ptr<CopyLocks> copylocks;
   messageqcpp::MessageQueueClient* msgClient;
   std::string masterName;

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <set>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
 
@@ -68,10 +68,9 @@
 #define VSS_SIZE(entries) \
   ((entries * sizeof(VSSEntry)) + (entries / 4 * sizeof(int)) + sizeof(VSSShmsegHeader))
 
-#define EXPORT
-
 namespace BRM
 {
+const constexpr static int32_t VssFactor = 8ULL;
 struct VSSEntry
 {
   LBID_t lbid;
@@ -82,7 +81,7 @@ struct VSSEntry
 #ifndef __LP64__
   uint32_t pad1;
 #endif
-  EXPORT VSSEntry();
+  VSSEntry();
 };
 
 struct VSSShmsegHeader
@@ -205,59 +204,67 @@ class VSS : public Undoable
     WRITE
   };
 
-  EXPORT VSS();
-  EXPORT ~VSS();
+  VSS();
+  VSS(const int32_t vssId);
+  ~VSS() = default;
 
-  EXPORT bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
-  EXPORT void removeEntry(LBID_t lbid, VER_t verID, std::vector<LBID_t>* flushList);
+  bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
+  void removeEntry(LBID_t lbid, VER_t verID, std::vector<LBID_t>* flushList);
 
   // Note, the use_vbbm switch should be used for unit testing the VSS only
-  EXPORT void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
-  EXPORT int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
-                    bool vbOnly = false) const;
+  void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
+  int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
+             bool vbOnly = false) const;
 
   /// Returns the version in the main DB files
-  EXPORT VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
+  VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
 
   /// Returns the highest version in the version buffer, less than max
-  EXPORT VER_t getHighestVerInVB(LBID_t lbid, VER_t max) const;
+  VER_t getHighestVerInVB(LBID_t lbid, VER_t max) const;
 
   /// returns true if that block is in the version buffer, false otherwise
-  EXPORT bool isVersioned(LBID_t lbid, VER_t version) const;
+  bool isVersioned(LBID_t lbid, VER_t version) const;
 
-  EXPORT void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
-  EXPORT void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
-  EXPORT void commit(VER_t txnID);
-  EXPORT void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
-  EXPORT void getUnlockedLBIDs(BlockList_t& lbids);
-  EXPORT void getLockedLBIDs(BlockList_t& lbids);
-  EXPORT void lock(OPS op);
-  EXPORT void release(OPS op);
-  EXPORT void setReadOnly();
+  void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
+  void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
+  void commit(VER_t txnID);
+  void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
+  void getUnlockedLBIDs(BlockList_t& lbids);
+  void getLockedLBIDs(BlockList_t& lbids);
+  void lock(OPS op);
+  void release(OPS op);
+  void setReadOnly();
 
-  EXPORT int checkConsistency(const VBBM& vbbm, ExtentMap& em) const;
-  EXPORT int size() const;
-  EXPORT bool hashEmpty() const;
-  EXPORT void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
+  int checkConsistency(const VBBM& vbbm, ExtentMap& em) const;
+  int size() const;
+  bool hashEmpty() const;
+  void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
 
-  EXPORT void clear();
-  EXPORT void load(std::string filename);
-  EXPORT void save(std::string filename);
+  void clear();
+  void load(std::string filename);
+  void save(std::string filename);
 
 #ifdef BRM_DEBUG
-  EXPORT int getShmid() const;
+  int getShmid() const;
 #endif
 
-  EXPORT bool isEmpty(bool doLock = true);
+  bool isEmpty(bool doLock = true);
 
   /* Bug 2293.  VBBM will use this fcn to determine whether a block is
    * currently in use. */
-  EXPORT bool isEntryLocked(LBID_t lbid, VER_t verID) const;
-  EXPORT bool isTooOld(LBID_t lbid, VER_t verID) const;
+  bool isEntryLocked(LBID_t lbid, VER_t verID) const;
+  bool isTooOld(LBID_t lbid, VER_t verID) const;
 
  private:
   VSS(const VSS&);
   VSS& operator=(const VSS&);
+  int32_t vssIdx2MSTIdxMapping(const int32_t vssId) const
+  {
+    if (!vssId)
+      return MasterSegmentTable::VSSSegment;
+    assert(MasterSegmentTable::EMIndex == 5);  // a clumsy guard against external changes
+    return vssId + MasterSegmentTable::EMIndex;
+  }
 
   struct VSSShmsegHeader* vss;
   int* hashBuckets;
@@ -284,8 +291,8 @@ class VSS : public Undoable
 
   VSSImpl* fPVSSImpl;
   utils::Hasher hasher;
+  int32_t vssId_;  // might be useless
+  int32_t MSTIdx_;
 };
 
 }  // namespace BRM
-
-#undef EXPORT

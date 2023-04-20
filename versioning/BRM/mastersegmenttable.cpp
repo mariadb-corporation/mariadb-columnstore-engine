@@ -55,7 +55,7 @@ namespace BRM
 boost::mutex MasterSegmentTableImpl::fInstanceMutex;
 
 /*static*/
-MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;
+MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = nullptr;
 
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, int size)
@@ -117,17 +117,8 @@ MSTEntry::MSTEntry() : tableShmkey(-1), allocdSize(0), currentSize(0)
 
 MasterSegmentTable::MasterSegmentTable()
 {
-
   int i;
   bool initializer = false;
-
-  RWLockKeys[0] = fShmKeys.KEYRANGE_EXTENTMAP_BASE;
-  RWLockKeys[1] = fShmKeys.KEYRANGE_EMFREELIST_BASE;
-  RWLockKeys[2] = fShmKeys.KEYRANGE_VBBM_BASE;
-  RWLockKeys[3] = fShmKeys.KEYRANGE_VSS_BASE;
-  RWLockKeys[4] = fShmKeys.KEYRANGE_CL_BASE;
-  RWLockKeys[5] = fShmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE;
-
   try
   {
     // if initializer is returned false, then this is not the first time for this key.
@@ -139,7 +130,7 @@ MasterSegmentTable::MasterSegmentTable()
     throw;
   }
 
-  if (rwlock[0] == NULL)
+  if (rwlock[0] == nullptr)
   {
     cerr << "ControllerSegmentTable(): RWLock() failed..?" << endl;
     throw runtime_error("ControllerSegmentTable(): RWLock() failed..?");
@@ -160,14 +151,6 @@ MasterSegmentTable::MasterSegmentTable()
     rwlock[0]->read_lock_priority();  // this is to synch with the initializer
     rwlock[0]->read_unlock();
   }
-}
-
-MasterSegmentTable::~MasterSegmentTable()
-{
-  //	int i;
-
-  //	for (i = 0; i < nTables; i++)
-  //		delete rwlock[i];
 }
 
 void MasterSegmentTable::makeMSTSegment()
@@ -194,7 +177,7 @@ MSTEntry* MasterSegmentTable::getTable_read(int num, bool block) const
     }
     catch (rwlock::wouldblock& e)
     {
-      return NULL;
+      return nullptr;
     }
   else
     rwlock[num]->read_lock();
@@ -214,7 +197,7 @@ MSTEntry* MasterSegmentTable::getTable_write(int num, bool block) const
     }
     catch (rwlock::wouldblock& e)
     {
-      return NULL;
+      return nullptr;
     }
   else
     rwlock[num]->write_lock();
