@@ -56,7 +56,7 @@ struct MSTEntry
 class MasterSegmentTableImpl
 {
  public:
-  ~MasterSegmentTableImpl() = default;
+  ~MasterSegmentTableImpl();
   static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
 
   static void refreshShm()

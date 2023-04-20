@@ -837,7 +837,6 @@ struct AsynchLoader
    , txn(t)
    , compType(ct)
    , LBIDTrace(trace)
-   , sessionID(sesID)
    , cacheCount(cCount)
    , readCount(rCount)
    , busyLoaders(loaderCount)

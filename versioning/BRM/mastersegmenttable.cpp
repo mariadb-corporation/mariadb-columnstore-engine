@@ -57,6 +57,10 @@ boost::mutex MasterSegmentTableImpl::fInstanceMutex;
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = nullptr;
 
+MasterSegmentTableImpl::~MasterSegmentTableImpl()
+{
+}
+
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, int size)
 {
@@ -151,6 +155,10 @@ MasterSegmentTable::MasterSegmentTable()
     rwlock[0]->read_lock_priority();  // this is to synch with the initializer
     rwlock[0]->read_unlock();
   }
+}
+
+MasterSegmentTable::~MasterSegmentTable()
+{
 }
 
 void MasterSegmentTable::makeMSTSegment()
