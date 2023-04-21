@@ -526,7 +526,7 @@ class RowAggregation : public messageqcpp::Serializeable
   }
 
  protected:
-  virtual void initialize();
+  virtual void initialize(bool hasGroupConcat = false);
   virtual void initMapData(const Row& row);
   virtual void attachGroupConcatAg();
 
@@ -577,6 +577,8 @@ class RowAggregation : public messageqcpp::Serializeable
   Row fNullRow;
   Row* tmpRow;  // used by the hashers & eq functors
   boost::scoped_array<uint8_t> fNullRowData;
+  rowgroup::RGData fNullRowRGData;
+  rowgroup::RowGroup fNullRowGroup;
 
   std::unique_ptr<RowAggStorage> fRowAggStorage;
 
@@ -721,7 +723,7 @@ class RowAggregationUM : public RowAggregation
 
  protected:
   // virtual methods from base
-  void initialize() override;
+  void initialize(bool hasGroupConcat = false) override;
 
   void attachGroupConcatAg() override;
   void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;

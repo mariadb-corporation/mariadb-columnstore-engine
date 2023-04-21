@@ -1484,6 +1484,11 @@ class RowGroup : public messageqcpp::Serializeable
   inline bool usesStringTable() const;
   inline void setUseStringTable(bool);
 
+  bool hasLongString() const
+  {
+    return hasLongStringField;
+  }
+
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
