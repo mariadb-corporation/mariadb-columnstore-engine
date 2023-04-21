@@ -34,11 +34,14 @@ optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
 optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
+optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 
 source $( optparse.build )
 
@@ -207,18 +210,26 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
     fi
 
-
     if [[ $ASAN = true ]] ; then
-        warn "Building with ASAN"
+        warn "Building with Address Sanitizer "
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+    fi
+
+    if [[ $TSAN = true ]] ; then
+        warn "Building with Thread Sanitizer"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+    fi
+
+    if [[ $UBSAN = true ]] ; then
+        warn "Building with UB Sanitizer"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
         warn "Cores are not dumped"
     else
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-
-        warn Builds with boreDumps CoreDump pattern changed to ${REPORT_PATH}/core_%e.%p
+        warn Building with CoreDumps: /proc/sys/kernel/core_pattern changed to ${REPORT_PATH}/core_%e.%p
         echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
     fi
 
@@ -350,8 +361,10 @@ fix_config_files()
     THREAD_STACK_SIZE="20M"
 
     SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
+    MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+    COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+
     if [[ $ASAN = true ]] ; then
-        COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
             warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
         else
@@ -359,14 +372,33 @@ fix_config_files()
             message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
         fi
 
-        MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
         if grep -q ASAN $MDB_SERVICE_FILE; then
             warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${ASAN_PATH}'" >> $MDB_SERVICE_FILE
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >> $MDB_SERVICE_FILE
             message "ASAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
+
+    if [[ $TSAN = true ]] ; then
+        if grep -q TSAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has TSAN options in $MDB_SERVICE_FILE, check it's compatibility"
+        else
+            echo Environment="'TSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/tsan.mariadb'" >> $MDB_SERVICE_FILE
+            message "TSAN options were added to $MDB_SERVICE_FILE"
+        fi
+    fi
+
+    if [[ $UBSAN = true ]] ; then
+        if grep -q UBSAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
+        else
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
+            message "UBSAN options were added to $MDB_SERVICE_FILE"
+        fi
+    fi
+
+    message Reloading systemd
     systemctl daemon-reload
 }
 
@@ -452,14 +484,17 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
 smoke()
 {
-    message "Creating test database"
-    mariadb -e "create database if not exists test;"
-    message "Selecting magic numbers"
-    MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
-    if [[ $MAGIC == '42' ]] ; then
-        message "Great answer correct"
-    else
-        warn "Smoke failed, answer is '$MAGIC'"
+    if [[ $SKIP_SMOKE = false ]] ; then
+        message_split
+        message "Creating test database"
+        mariadb -e "create database if not exists test;"
+        message "Selecting magic numbers"
+        MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
+        if [[ $MAGIC == '42' ]] ; then
+            message "Great answer correct"
+        else
+            warn "Smoke failed, answer is '$MAGIC'"
+        fi
     fi
 }
 
@@ -490,7 +525,5 @@ install
 start_service
 smoke
 generate_svgs
-
-
 
 message_splitted "FINISHED"

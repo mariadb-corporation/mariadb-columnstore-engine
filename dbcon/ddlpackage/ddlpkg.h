@@ -928,10 +928,10 @@ struct AtaRenameColumn : public AlterTableAction
 struct ColumnType
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs);
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs);
 
   /** @brief For deserialization. */
   ColumnType() : fCharset(NULL), fExplicitLength(false)
