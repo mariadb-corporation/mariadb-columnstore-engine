@@ -22,7 +22,8 @@
  *
  ****************************************************************************/
 #include "functor_json.h"
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "funcexp.h"
 #include "functor_all.h"
@@ -50,11 +51,11 @@ namespace funcexp
 FuncExp* FuncExp::fInstance = 0;
 
 /* static */
-boost::mutex FuncExp::fInstanceMutex;
+std::mutex FuncExp::fInstanceMutex;
 
 FuncExp* FuncExp::instance()
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (!fInstance)
     fInstance = new FuncExp();

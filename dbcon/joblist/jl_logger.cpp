@@ -22,7 +22,8 @@
 #include <string>
 using namespace std;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "messageobj.h"
 #include "messageids.h"
@@ -33,7 +34,7 @@ using namespace logging;
 
 namespace
 {
-boost::mutex logMutex;
+std::mutex logMutex;
 };
 
 namespace joblist
@@ -57,7 +58,7 @@ Logger::Logger() : fLogId(5), fImpl(new logging::Logger(5))
 
 void catchHandler(const string& ex, int c, SErrorInfo& ei, unsigned sid, logging::LOG_TYPE level)
 {
-  boost::mutex::scoped_lock lk(logMutex);
+  std::unique_lock lk(logMutex);
 
   if (ei->errCode == 0)
   {

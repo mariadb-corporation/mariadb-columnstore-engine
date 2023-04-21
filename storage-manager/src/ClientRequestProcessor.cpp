@@ -22,7 +22,7 @@
 namespace
 {
 storagemanager::ClientRequestProcessor* crp = NULL;
-boost::mutex m;
+std::mutex m;
 };  // namespace
 
 namespace storagemanager
@@ -39,7 +39,7 @@ ClientRequestProcessor* ClientRequestProcessor::get()
 {
   if (crp)
     return crp;
-  boost::mutex::scoped_lock s(m);
+  std::unique_lock s(m);
   if (crp)
     return crp;
   crp = new ClientRequestProcessor();

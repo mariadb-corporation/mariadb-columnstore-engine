@@ -44,7 +44,7 @@ using namespace config;
 #include "format.h"
 namespace
 {
-boost::mutex mx;
+std::mutex mx;
 bool catalogLoaded = false;
 
 typedef map<int, string> CatMap;
@@ -152,7 +152,7 @@ const string Message::lookupMessage(const MessageID& msgid)
 {
   if (!catalogLoaded)
   {
-    boost::mutex::scoped_lock lock(mx);
+    std::unique_lock lock(mx);
 
     if (!catalogLoaded)
     {

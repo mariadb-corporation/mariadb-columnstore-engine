@@ -177,7 +177,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
 
   boost::scoped_ptr<Uniquer_t> uniquer;
   std::vector<rowgroup::RGData> rowMemory;
-  boost::mutex sMutex, uniquerMutex;
+  std::mutex sMutex, uniquerMutex;
   uint64_t memUsage;
   uint32_t rowLength;
   rowgroup::Row row, row2;
@@ -193,7 +193,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
   uint64_t fRowsReturned;
 
   // temporary hack to make sure JobList only calls run, join once
-  boost::mutex jlLock;
+  std::mutex jlLock;
   bool runRan, joinRan;
 
   boost::shared_ptr<int64_t> sessionMemLimit;

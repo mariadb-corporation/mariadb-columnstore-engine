@@ -240,9 +240,9 @@ class Config
   Config(const std::string& configFile);
 
   static configMap_t fInstanceMap;
-  static boost::mutex fInstanceMapMutex;
-  static boost::mutex fXmlLock;
-  static boost::mutex fWriteXmlLock;
+  static std::mutex fInstanceMapMutex;
+  static std::mutex fXmlLock;
+  static std::mutex fWriteXmlLock;
 
   xmlDocPtr fDoc;
   const std::string fConfigFile;

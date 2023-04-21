@@ -20,8 +20,9 @@
 #include <deque>
 
 #include <boost/utility.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 
 #include "bytestream.h"
 
@@ -46,8 +47,8 @@ class SocketPool : public boost::noncopyable
 
   std::vector<int> allSockets;
   std::deque<int> freeSockets;
-  boost::mutex mutex;
-  boost::condition_variable socketAvailable;
+  std::mutex mutex;
+  std::condition_variable socketAvailable;
   uint maxSockets;
   static const uint defaultSockets = 20;
 };

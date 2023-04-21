@@ -861,7 +861,7 @@ class DDLPackageProcessor
   int commitTransaction(uint64_t uniqueId, BRM::TxnID txnID);
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  static boost::mutex dbrmMutex;
+  static std::mutex dbrmMutex;
 
  private:
   /** @brief clean beginning and ending glitches and spaces from string

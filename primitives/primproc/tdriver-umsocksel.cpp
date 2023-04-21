@@ -73,7 +73,7 @@ int main()
       sock[i][j].setSocketImpl(new InetStreamSocket());
       sa.sin_port = htons((i * 4) + j);
       sock[i][j].sa(sa);
-      sockSel->addConnection(SP_UM_IOSOCK(new IOSocket(sock[i][j])), SP_UM_MUTEX(new boost::mutex()));
+      sockSel->addConnection(SP_UM_IOSOCK(new IOSocket(sock[i][j])), SP_UM_MUTEX(new std::mutex()));
     }
   }
 
@@ -146,7 +146,7 @@ int main()
       sockUnknown[i][j].setSocketImpl(new InetStreamSocket());
       saUnknown.sin_port = htons((i * 4) + j);
       sockUnknown[i][j].sa(saUnknown);
-      sockSel->addConnection(SP_UM_IOSOCK(new IOSocket(sockUnknown[i][j])), SP_UM_MUTEX(new boost::mutex()));
+      sockSel->addConnection(SP_UM_IOSOCK(new IOSocket(sockUnknown[i][j])), SP_UM_MUTEX(new std::mutex()));
     }
   }
 

@@ -40,7 +40,7 @@
 using namespace std;
 namespace dmlpackage
 {
-boost::mutex CalpontDMLFactory::fParserLock;
+std::mutex CalpontDMLFactory::fParserLock;
 
 dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(
     dmlpackage::VendorDMLStatement& vpackage, std::string defaultSchema /*= ""*/)
@@ -51,7 +51,7 @@ dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackage(
   {
     std::string dmlStatement = vpackage.get_DMLStatement();
     //@Bug 2680. DMLParser is not thread safe.
-    boost::mutex::scoped_lock lk(fParserLock);
+    std::unique_lock lk(fParserLock);
     DMLParser parser;
 
     if (defaultSchema.size())

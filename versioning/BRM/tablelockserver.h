@@ -50,7 +50,7 @@ class TableLockServer
   void load();
   void save();
 
-  mutable boost::mutex mutex;
+  mutable std::mutex mutex;
   std::map<uint64_t, TableLockInfo> locks;
   typedef std::map<uint64_t, TableLockInfo>::iterator lit_t;
   typedef std::map<uint64_t, TableLockInfo>::const_iterator constlit_t;

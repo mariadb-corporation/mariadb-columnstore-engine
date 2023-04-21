@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <boost/filesystem.hpp>
+#include <thread>
 
 using namespace std;
 namespace bf = boost::filesystem;
@@ -148,7 +149,7 @@ void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushin
     TOUCH(prefix, "FLUSHING");
     try
     {
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     catch (boost::thread_interrupted&)
     {
@@ -159,7 +160,7 @@ void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushin
 void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
 {
   logger->log(LOG_DEBUG, "Ownership: releasing ownership of %s", p.string().c_str());
-  boost::unique_lock<boost::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
 
   auto it = ownedPrefixes.find(p);
   if (it == ownedPrefixes.end())
@@ -217,7 +218,7 @@ void Ownership::takeOwnership(const bf::path& p)
   if (!bf::is_directory(metadataPrefix / p))
     return;
 
-  boost::unique_lock<boost::mutex> s(mutex);
+  std::unique_lock<std::mutex> s(mutex);
 
   auto it = ownedPrefixes.find(p);
   if (it != ownedPrefixes.end())
@@ -294,7 +295,7 @@ void Ownership::Monitor::watchForInterlopers()
   while (!stop)
   {
     releaseList.clear();
-    boost::unique_lock<boost::mutex> s(owner->mutex);
+    std::unique_lock<std::mutex> s(owner->mutex);
 
     for (auto& prefix : owner->ownedPrefixes)
     {
@@ -322,7 +323,7 @@ void Ownership::Monitor::watchForInterlopers()
       break;
     try
     {
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     catch (boost::thread_interrupted&)
     {

@@ -59,7 +59,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
+#include <shared_mutex>
+
 #include <pthread.h>
 //#define NDEBUG
 #include <cassert>
@@ -79,7 +81,7 @@ using namespace logging;
 
 #include "fsutils.h"
 
-#include "rwlock_local.h"
+
 
 #include "iomanager.h"
 #include "liboamcpp.h"
@@ -255,8 +257,9 @@ struct fdCountCompare
 typedef multiset<FdCountEntry_t, fdCountCompare> FdCacheCountType_t;
 
 FdCacheType_t fdcache;
-boost::mutex fdMapMutex;
-rwlock::RWLock_local localLock;
+std::mutex fdMapMutex;
+std::shared_mutex localLock;
+
 
 char* alignTo(const char* in, int av)
 {
@@ -458,13 +461,13 @@ void* thr_popper(ioManager* arg)
 
     if (locked)
     {
-      localLock.read_unlock();
+      localLock.unlock_shared();
       locked = false;
     }
 
     fr = iom->getNextRequest();
 
-    localLock.read_lock();
+    localLock.lock_shared();
     locked = true;
 
     if (iom->IOTrace())
@@ -524,7 +527,7 @@ void* thr_popper(ioManager* arg)
 
 #ifdef IDB_COMP_POC_DEBUG
     {
-      boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+      std::unique_lock lk(primitiveprocessor::compDebugMutex);
 
       if (compType != 0)
         cout << boldStart;
@@ -857,7 +860,7 @@ void* thr_popper(ioManager* arg)
           i = fp->pread(&alignedbuff[0], fdit->second->ptrList[idx].first, fdit->second->ptrList[idx].second);
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::unique_lock lk(primitiveprocessor::compDebugMutex);
             cout << boldStart << "pread1.1(" << fp << ", 0x" << hex << (ptrdiff_t)&alignedbuff[0] << dec
                  << ", " << fdit->second->ptrList[idx].second << ", " << fdit->second->ptrList[idx].first
                  << ") = " << i << ' ' << cmpOffFact.quot << ' ' << cmpOffFact.rem << boldStop << endl;
@@ -904,7 +907,7 @@ void* thr_popper(ioManager* arg)
           i = fp->pread(&alignedbuff[acc], longSeekOffset, readSize - acc);
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::unique_lock lk(primitiveprocessor::compDebugMutex);
             cout << "pread1.2(" << fp << ", 0x" << hex << (ptrdiff_t)&alignedbuff[acc] << dec << ", "
                  << (readSize - acc) << ", " << longSeekOffset << ") = " << i << ' ' << cmpOffFact.quot << ' '
                  << cmpOffFact.rem << endl;
@@ -992,7 +995,7 @@ void* thr_popper(ioManager* arg)
           size_t blen = 4 * 1024 * 1024 + 4;
 #ifdef IDB_COMP_POC_DEBUG
           {
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::unique_lock lk(primitiveprocessor::compDebugMutex);
             cout << "decompress(0x" << hex << (ptrdiff_t)&alignedbuff[0] << dec << ", "
                  << fdit->second->ptrList[cmpOffFact.quot].second << ", 0x" << hex << (ptrdiff_t)uCmpBuf
                  << dec << ", " << blen << ")" << endl;
@@ -1013,7 +1016,7 @@ void* thr_popper(ioManager* arg)
           if (dcrc != 0)
           {
 #ifdef IDB_COMP_POC_DEBUG
-            boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+            std::unique_lock lk(primitiveprocessor::compDebugMutex);
 #endif
 
             if (++decompRetryCount < 30)
@@ -1082,7 +1085,7 @@ void* thr_popper(ioManager* arg)
             {
               if (debugWrite)
               {
-                boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
+                std::unique_lock lk(primitiveprocessor::compDebugMutex);
                 cout << boldStart << "i = " << i << ", ptr = 0x" << hex << (ptrdiff_t)&ptr[i * BLOCK_SIZE]
                      << dec << boldStop << endl;
                 cout << boldStart;
@@ -1200,23 +1203,22 @@ namespace dbbc
 {
 void setReadLock()
 {
-  localLock.read_lock();
+  localLock.lock_shared();
 }
 
 void releaseReadLock()
 {
-  localLock.read_unlock();
+  localLock.unlock_shared();
 }
 
 void dropFDCache()
 {
-  localLock.write_lock();
+  std::unique_lock lock(localLock);
   fdcache.clear();
-  localLock.write_unlock();
 }
 void purgeFDCache(std::vector<BRM::FileInfo>& files)
 {
-  localLock.write_lock();
+  std::unique_lock lock(localLock);
 
   FdCacheType_t::iterator fdit;
 
@@ -1229,8 +1231,6 @@ void purgeFDCache(std::vector<BRM::FileInfo>& files)
     if (fdit != fdcache.end())
       fdcache.erase(fdit);
   }
-
-  localLock.write_unlock();
 }
 
 ioManager::ioManager(FileBufferMgr& fbm, fileBlockRequestQueue& fbrq, int thrCount, int bsPerRead)

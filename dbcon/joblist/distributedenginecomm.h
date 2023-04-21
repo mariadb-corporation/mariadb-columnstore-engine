@@ -33,7 +33,7 @@
 #pragma once
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 #include <condition_variable>
 #include <ifaddrs.h>
@@ -47,7 +47,7 @@
 #include "bytestream.h"
 #include "primitivemsg.h"
 #include "threadsafequeue.h"
-#include "rwlock_local.h"
+
 #include "resourcemanager.h"
 #include "messagequeue.h"
 
@@ -284,12 +284,12 @@ class DistributedEngineComm
   std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
   bool fBusy;
   volatile uint32_t pmCount;
-  boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
-  boost::mutex fSetupMutex;
+  std::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
+  std::mutex fSetupMutex;
 
   // event listener data
   std::vector<DECEventListener*> eventListeners;
-  boost::mutex eventListenerLock;
+  std::mutex eventListenerLock;
 
   ClientList newClients;
   std::vector<std::shared_ptr<std::mutex>> newLocks;
@@ -308,7 +308,7 @@ class DistributedEngineComm
   void nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t maxAck, uint32_t* sockIndex, uint16_t* numToAck);
   void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
   void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
-  boost::mutex ackLock;
+  std::mutex ackLock;
 
   std::vector<struct in_addr> localNetIfaceSins_;
   std::mutex inMemoryEM2PPExchMutex_;

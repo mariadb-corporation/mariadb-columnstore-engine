@@ -74,8 +74,8 @@ VBBMEntry::VBBMEntry()
 }
 
 /*static*/
-boost::mutex VBBMImpl::fInstanceMutex;
-boost::mutex VBBM::mutex;
+std::mutex VBBMImpl::fInstanceMutex;
+std::mutex VBBM::mutex;
 
 /*static*/
 VBBMImpl* VBBMImpl::fInstance = 0;
@@ -83,7 +83,7 @@ VBBMImpl* VBBMImpl::fInstance = 0;
 /*static*/
 VBBMImpl* VBBMImpl::makeVBBMImpl(unsigned key, off_t size, bool readOnly)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {

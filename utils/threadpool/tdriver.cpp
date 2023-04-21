@@ -34,7 +34,7 @@ using namespace std;
 #include "threadpool.h"
 
 int thecount = 0;
-boost::mutex mutex;
+std::mutex mutex;
 
 class ThreadPoolTestSuite : public CppUnit::TestFixture
 {
@@ -56,7 +56,7 @@ class ThreadPoolTestSuite : public CppUnit::TestFixture
         fData++;
       }
 
-      boost::mutex::scoped_lock lock(mutex);
+      std::unique_lock lock(mutex);
 
       std::cout << "count = " << ++thecount << ' ' << fData << std::endl;
     }

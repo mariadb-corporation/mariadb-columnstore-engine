@@ -23,8 +23,9 @@
 
 #include <stdint.h>
 
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 
 #define EXPORT
 
@@ -47,10 +48,10 @@ class TablelockData
   explicit TablelockData(const TablelockData& rhs);
   ~TablelockData();
 
-  static boost::mutex map_mutex;
+  static std::mutex map_mutex;
   static TablelockDataMap fTablelockDataMap;
   OIDTablelock fOIDTablelockMap;
-  boost::mutex fOIDTablelock;
+  std::mutex fOIDTablelock;
 };
 
 }  // namespace dmlpackageprocessor

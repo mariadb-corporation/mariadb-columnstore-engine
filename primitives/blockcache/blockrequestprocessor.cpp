@@ -31,7 +31,7 @@
 using namespace std;
 
 #include "blockrequestprocessor.h"
-#include "rwlock_local.h"
+
 #include "dbrm.h"
 #include "pp_logger.h"
 #include "mcsconfig.h"
@@ -154,7 +154,7 @@ int BlockRequestProcessor::check(fileRequest& rqstBlk)
   sendRequest(rqstBlk);  // start file read request
 
   while (rqstBlk.frPredicate() < fileRequest::COMPLETE)
-    rqstBlk.frCond().wait(rqstBlk.frMutex());
+    rqstBlk.frCond().wait(rqstBlk.frMutex()); ///////////////XXXXXXXXXXXXXXXXXXXxx
 
   rqstBlk.frMutex().unlock();
 

@@ -60,7 +60,7 @@ class CalpontDMLFactory
 
  protected:
  private:
-  static boost::mutex fParserLock;
+  static std::mutex fParserLock;
 };
 
 }  // namespace dmlpackage

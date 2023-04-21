@@ -74,19 +74,19 @@ void WeightedThreadPool::init()
 
 void WeightedThreadPool::setQueueSize(size_t queueSize)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fQueueSize = queueSize;
 }
 
 void WeightedThreadPool::setMaxThreads(size_t maxThreads)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fMaxThreads = maxThreads;
 }
 
 void WeightedThreadPool::setMaxThreadWeight(size_t maxWeight)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fMaxThreadWeight = maxWeight;
 }
 
@@ -97,7 +97,7 @@ void WeightedThreadPool::setThreadCreatedListener(const Functor_T& f)
 
 void WeightedThreadPool::stop()
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fStop = true;
   lock1.unlock();
 
@@ -107,7 +107,7 @@ void WeightedThreadPool::stop()
 
 void WeightedThreadPool::wait()
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (fWaitingFunctorsSize > 0)
   {
@@ -119,7 +119,7 @@ void WeightedThreadPool::wait()
 
 void WeightedThreadPool::removeJobs(uint32_t id)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   Container_T::iterator it;
 
   it = fNextFunctor;
@@ -146,7 +146,7 @@ void WeightedThreadPool::removeJobs(uint32_t id)
 
 void WeightedThreadPool::invoke(const Functor_T& threadfunc, uint32_t functor_weight, uint32_t id)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   for (;;)
   {
@@ -216,7 +216,7 @@ void WeightedThreadPool::beginThread() throw()
   try
   {
     //         fThreadCreated();
-    boost::mutex::scoped_lock lock1(fMutex);
+    std::unique_lock lock1(fMutex);
 
     for (;;)
     {

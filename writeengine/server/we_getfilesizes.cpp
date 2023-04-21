@@ -64,7 +64,7 @@ typedef std::vector<FileInfo> Files;
 typedef std::map<uint32_t, Files> columnMap;
 typedef std::map<int, columnMap*> allColumnMap;
 allColumnMap wholeMap;
-boost::mutex columnMapLock;
+std::mutex columnMapLock;
 ActiveThreadCounter* activeThreadCounter;
 
 size_t readFillBuffer(idbdatafile::IDBDataFile* pFile, char* buffer, size_t bytesReq)
@@ -243,7 +243,7 @@ struct ColumnThread
       }
     }
 
-    boost::mutex::scoped_lock lk(columnMapLock);
+    std::unique_lock lk(columnMapLock);
     // cout << "Current size of columnsMap is " << columnsMap.size() << endl;
     allColumnMap::iterator colMapiter = wholeMap.find(fKey);
 
@@ -330,7 +330,7 @@ int WE_GetFileSizes::processTable(messageqcpp::ByteStream& bs, std::string& errM
 
     columnMap* columnsMap = new columnMap();
     {
-      boost::mutex::scoped_lock lk(columnMapLock);
+      std::unique_lock lk(columnMapLock);
       wholeMap[key] = columnsMap;
     }
 
@@ -378,7 +378,7 @@ int WE_GetFileSizes::processTable(messageqcpp::ByteStream& bs, std::string& errM
 
   // Build the message to send to the caller
   bs.reset();
-  boost::mutex::scoped_lock lk(columnMapLock);
+  std::unique_lock lk(columnMapLock);
   allColumnMap::iterator colMapiter = wholeMap.find(key);
 
   if (colMapiter != wholeMap.end())

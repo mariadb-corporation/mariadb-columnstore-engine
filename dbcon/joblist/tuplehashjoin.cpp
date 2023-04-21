@@ -81,7 +81,7 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
  , isExeMgr(jobInfo.isExeMgr)
  , lastSmallOuterJoiner(-1)
  , fTokenJoin(-1)
- , fStatsMutexPtr(new boost::mutex())
+ , fStatsMutexPtr(new std::mutex())
  , fFunctionJoinKeys(jobInfo.keyInfo->functionJoinKeys)
  , sessionMemLimit(jobInfo.umMemLimit)
  , rgdLock(false)
@@ -148,7 +148,7 @@ void TupleHashJoinStep::run()
 {
   uint32_t i;
 
-  boost::mutex::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
 
   if (runRan)
     return;
@@ -190,7 +190,7 @@ void TupleHashJoinStep::run()
 
 void TupleHashJoinStep::join()
 {
-  boost::mutex::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
 
   if (joinRan)
     return;
@@ -218,7 +218,7 @@ void TupleHashJoinStep::trackMem(uint index)
   ssize_t memBefore = 0, memAfter = 0;
   bool gotMem;
 
-  boost::unique_lock<boost::mutex> scoped(memTrackMutex);
+  std::unique_lock<std::mutex> scoped(memTrackMutex);
   while (!stopMemTracking)
   {
     memAfter = joiner->getMemUsage();
@@ -232,7 +232,7 @@ void TupleHashJoinStep::trackMem(uint index)
 
       memBefore = memAfter;
     }
-    memTrackDone.timed_wait(scoped, boost::posix_time::seconds(1));
+    memTrackDone.wait_for(scoped, std::chrono::seconds(1));
   }
 
   // one more iteration to capture mem usage since last poll, for this one
@@ -376,7 +376,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       joiner->doneInserting();
   }
 
-  boost::mutex::scoped_lock lk(*fStatsMutexPtr);
+  std::unique_lock lk(*fStatsMutexPtr);
   fExtendedInfo += extendedInfo;
   formatMiniStats(index);
 }
@@ -427,7 +427,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
             if disk join is enabled, use it.
             else abort.
         */
-        boost::unique_lock<boost::mutex> sl(saneErrMsg);
+        std::unique_lock<std::mutex> sl(saneErrMsg);
         if (cancelled())
           return;
         if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
@@ -739,7 +739,7 @@ void TupleHashJoinStep::hjRunner()
     for (i = 0; i <= smallSideCount; i++)
       fifos[i].reset(new RowGroupDL(1, 5));
 
-    boost::mutex::scoped_lock sl(djsLock);
+    std::unique_lock sl(djsLock);
 
     for (i = 0; i < smallSideCount; i++)
     {
@@ -1000,7 +1000,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
 
   idbassert(fDelivery);
 
-  boost::mutex::scoped_lock lk(deliverMutex);
+  std::unique_lock lk(deliverMutex);
 
   RowGroup* deliveredRG;
 
@@ -1672,7 +1672,7 @@ void TupleHashJoinStep::processFE2(RowGroup& input, RowGroup& output, Row& inRow
 
 void TupleHashJoinStep::sendResult(const vector<RGData>& res)
 {
-  boost::mutex::scoped_lock lock(outputDLLock);
+  std::unique_lock lock(outputDLLock);
 
   for (uint32_t i = 0; i < res.size(); i++)
     // INSERT_ADAPTER(outputDL, res[i]);
@@ -1681,7 +1681,7 @@ void TupleHashJoinStep::sendResult(const vector<RGData>& res)
 
 void TupleHashJoinStep::grabSomeWork(vector<RGData>* work)
 {
-  boost::mutex::scoped_lock lock(inputDLLock);
+  std::unique_lock lock(inputDLLock);
   work->clear();
 
   if (!moreInput)
@@ -1934,7 +1934,7 @@ void TupleHashJoinStep::segregateJoiners()
     }
 #endif
 
-  boost::mutex::scoped_lock sl(djsLock);
+  std::unique_lock sl(djsLock);
   /* For now if there is no largeBPS all joins need to either be DJS or not, not mixed */
   if (!largeBPS)
   {
@@ -2009,7 +2009,7 @@ void TupleHashJoinStep::segregateJoiners()
 void TupleHashJoinStep::abort()
 {
   JobStep::abort();
-  boost::mutex::scoped_lock sl(djsLock);
+  std::unique_lock sl(djsLock);
 
   if (djs)
   {

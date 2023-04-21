@@ -32,6 +32,7 @@ using namespace logging;
 #include "threadnaming.h"
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 #include "boost/date_time/posix_time/posix_time_types.hpp"
 #include "mcsconfig.h"
 
@@ -52,7 +53,7 @@ ThreadPool::~ThreadPool() throw()
 {
   try
   {
-    boost::mutex::scoped_lock initLock(fInitMutex);
+    std::unique_lock initLock(fInitMutex);
     stop();
   }
   catch (...)
@@ -62,7 +63,7 @@ ThreadPool::~ThreadPool() throw()
 
 void ThreadPool::init()
 {
-  boost::mutex::scoped_lock initLock(fInitMutex);
+  std::unique_lock initLock(fInitMutex);
   fThreadCount = 0;
   fGeneralErrors = 0;
   fFunctorErrors = 0;
@@ -77,20 +78,20 @@ void ThreadPool::init()
 
 void ThreadPool::setQueueSize(size_t queueSize)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fQueueSize = queueSize;
 }
 
 void ThreadPool::pruneThread()
 {
   utils::setThreadName("pruneThread");
-  boost::unique_lock<boost::mutex> lock2(fPruneMutex);
+  std::unique_lock<std::mutex> lock2(fPruneMutex);
 
   while (true)
   {
     if (fStop)
       return;
-    if (fPruneThreadEnd.wait_for(lock2, boost::chrono::minutes{1}) == boost::cv_status::timeout)
+    if (fPruneThreadEnd.wait_for(lock2, std::chrono::minutes{1}) == std::cv_status::timeout)
     {
       while (!fPruneThreads.empty())
       {
@@ -119,13 +120,13 @@ void ThreadPool::pruneThread()
 
 void ThreadPool::setMaxThreads(size_t maxThreads)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   fMaxThreads = maxThreads;
 }
 
 void ThreadPool::stop()
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   if (fStop)
     return;  // Was stopped earlier
   fStop = true;
@@ -140,7 +141,7 @@ void ThreadPool::stop()
 
 void ThreadPool::wait()
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -151,7 +152,7 @@ void ThreadPool::wait()
 
 void ThreadPool::join(uint64_t thrHandle)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -181,7 +182,7 @@ void ThreadPool::join(uint64_t thrHandle)
 
 void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
 
   while (waitingFunctorsSize > 0)
   {
@@ -222,7 +223,7 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 
 uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
-  boost::mutex::scoped_lock lock1(fMutex);
+  std::unique_lock lock1(fMutex);
   uint64_t thrHandle = 0;
 
   for (;;)
@@ -319,7 +320,7 @@ void ThreadPool::beginThread() throw()
   utils::setThreadName("Idle");
   try
   {
-    boost::unique_lock<boost::mutex> lock1(fMutex);
+    std::unique_lock<std::mutex> lock1(fMutex);
 
     for (;;)
     {
@@ -338,11 +339,11 @@ void ThreadPool::beginThread() throw()
         else
         {
           // Wait no more than 10 minutes
-          if (fNeedThread.wait_for(lock1, boost::chrono::minutes{10}) == boost::cv_status::timeout)
+          if (fNeedThread.wait_for(lock1, std::chrono::minutes{10}) == std::cv_status::timeout)
           {
             if (fThreadCount > fMaxThreads)
             {
-              boost::mutex::scoped_lock lock2(fPruneMutex);
+              std::unique_lock lock2(fPruneMutex);
               fPruneThreads.push(boost::this_thread::get_id());
               --fThreadCount;
               return;

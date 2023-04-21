@@ -3713,7 +3713,7 @@ bool DBRM::isDBRMReady() throw()
     TRACER_WRITENOW("isDBRMReady");
 
 #endif
-  boost::mutex::scoped_lock scoped(mutex);
+  std::unique_lock scoped(mutex);
 
   try
   {

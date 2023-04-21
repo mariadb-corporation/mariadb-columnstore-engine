@@ -35,7 +35,7 @@
 using namespace std;
 namespace
 {
-boost::mutex fac_guard;
+std::mutex fac_guard;
 }
 
 namespace idbdatafile
@@ -45,7 +45,7 @@ IDBFactory::FactoryMap IDBFactory::s_plugins;
 bool IDBFactory::installDefaultPlugins()
 {
   // protect these methods since we are changing our static data structure
-  boost::mutex::scoped_lock lock(fac_guard);
+  std::unique_lock lock(fac_guard);
 
   s_plugins.emplace(IDBDataFile::BUFFERED, FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(),
                                              new PosixFileSystem()));
@@ -58,7 +58,7 @@ bool IDBFactory::installDefaultPlugins()
 bool IDBFactory::installPlugin(const std::string& plugin)
 {
   // protect these methods since we are changing our static data structure
-  boost::mutex::scoped_lock lock(fac_guard);
+  std::unique_lock lock(fac_guard);
 
   void* handle = dlopen(plugin.c_str(), RTLD_LAZY);
 

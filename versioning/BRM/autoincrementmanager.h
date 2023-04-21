@@ -65,10 +65,10 @@ class AutoincrementManager
     }
     uint64_t value;
     uint64_t overflow;
-    boost::mutex lock;
+    std::mutex lock;
   };
 
-  boost::mutex lock;
+  std::mutex lock;
   std::map<uint64_t, sequence> sequences;
 };
 

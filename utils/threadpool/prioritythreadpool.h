@@ -30,8 +30,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <atomic>
@@ -113,7 +114,7 @@ class PriorityThreadPool
   {
     return blockedThreads;
   }
-  
+
  protected:
  private:
   struct ThreadHelper
@@ -140,8 +141,8 @@ class PriorityThreadPool
   std::list<Job> jobQueues[3];  // higher indexes = higher priority
   uint32_t threadCounts[3];
   uint32_t defaultThreadCounts[3];
-  boost::mutex mutex;
-  boost::condition newJob;
+  std::mutex mutex;
+  std::condition_variable newJob;
   boost::thread_group threads;
   bool _stop;
   uint32_t weightPerRun;

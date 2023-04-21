@@ -29,7 +29,8 @@
 #include <algorithm>
 #include <unistd.h>
 using namespace std;
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
@@ -58,13 +59,13 @@ namespace WriteEngine
 {
 BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
-boost::mutex BRMWrapper::m_instanceCreateMutex;
+std::mutex BRMWrapper::m_instanceCreateMutex;
 
 
     bool BRMWrapper::m_useVb = true;
 OID BRMWrapper::m_curVBOid = INVALID_NUM;
 IDBDataFile* BRMWrapper::m_curVBFile = NULL;
-boost::mutex vbFileLock;
+std::mutex vbFileLock;
 struct fileInfoCompare  // lt operator
 {
   bool operator()(const File& lhs, const File& rhs) const
@@ -300,7 +301,7 @@ BRMWrapper* BRMWrapper::getInstance()
 {
   if (m_instance == 0)
   {
-    boost::mutex::scoped_lock lock(m_instanceCreateMutex);
+    std::unique_lock lock(m_instanceCreateMutex);
 
     if (m_instance == 0)
     {
@@ -1638,7 +1639,7 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
   fileInfo.fSegment = 0;
   //    fileInfo.fDbRoot = (freeList[0].vbOID % rootCnt) + 1;
   fileInfo.fDbRoot = dbRoot;
-  boost::mutex::scoped_lock lk(vbFileLock);
+  std::unique_lock lk(vbFileLock);
   pTargetFile = openFile(fileInfo, "r+b", true);
 
   if (pTargetFile == NULL)

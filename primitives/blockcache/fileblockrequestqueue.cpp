@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "fileblockrequestqueue.h"
 
@@ -76,19 +76,19 @@ void fileBlockRequestQueue::stop()
 
 fileRequest* fileBlockRequestQueue::pop(void)
 {
-  mutex.lock();  // pthread_mutex_lock(&mutex);
+  std::unique_lock lock(mutex);  // pthread_mutex_lock(&mutex);
 
   while (queueSize == 0)
   {
     readersWaiting++;
-    notEmpty.wait(mutex);  // pthread_cond_wait(&notEmpty, &mutex);
+    notEmpty.wait(lock);  // pthread_cond_wait(&notEmpty, &mutex);
     readersWaiting--;
   }
 
   fileRequest* blk = fbQueue.front();
   fbQueue.pop_front();
   --queueSize;
-  mutex.unlock();  // pthread_mutex_unlock(&mutex);
+
   return blk;
 }
 

@@ -66,7 +66,7 @@ class SimpleSysLog
 
   static SimpleSysLog* fSysLogger;
   logging::LoggingID fLoggingID;
-  boost::mutex fWriteLockMutex;  // logging mutex
+  std::mutex fWriteLockMutex;  // logging mutex
 };
 
 #undef EXPORT

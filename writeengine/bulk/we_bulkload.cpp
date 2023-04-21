@@ -71,7 +71,7 @@ const std::string ERR_LOG_SUFFIX = ".err";  // Job err log file suffix
 namespace WriteEngine
 {
 /* static */ boost::ptr_vector<TableInfo> BulkLoad::fTableInfo;
-/* static */ boost::mutex* BulkLoad::fDDLMutex = 0;
+/* static */ std::mutex* BulkLoad::fDDLMutex = 0;
 
 /* static */ const std::string BulkLoad::DIR_BULK_JOB("job");
 /* static */ const std::string BulkLoad::DIR_BULK_TEMP_JOB("tmpjob");
@@ -165,7 +165,7 @@ BulkLoad::BulkLoad()
   fTableInfo.clear();
   setDebugLevel(DEBUG_0);
 
-  fDDLMutex = new boost::mutex();
+  fDDLMutex = new std::mutex();
   memset(&fStartTime, 0, sizeof(timeval));
   memset(&fEndTime, 0, sizeof(timeval));
 }
@@ -1584,7 +1584,7 @@ int BulkLoad::updateNextValue(OID columnOid, uint64_t nextAutoIncVal)
   // job for 2 tables; so we put a mutex here just in case the DDLClient code
   // won't work well with 2 competing WE_DDLCommandClient objects in the same
   // process (ex: if there is any static data in WE_DDLCommandClient).
-  boost::mutex::scoped_lock lock(*fDDLMutex);
+  std::unique_lock lock(*fDDLMutex);
   WE_DDLCommandClient ddlCommandClt;
   unsigned int rc = ddlCommandClt.UpdateSyscolumnNextval(columnOid, nextAutoIncVal);
 

@@ -175,10 +175,10 @@ class TestRunner
   IDBDataFile* m_file;
   unsigned m_open_opts;
   int m_id;
-  static boost::mutex m_guard;
+  static std::mutex m_guard;
 };
 
-boost::mutex TestRunner::m_guard;
+std::mutex TestRunner::m_guard;
 
 void thread_func2(TestRunner& trun)
 {
@@ -1486,7 +1486,7 @@ bool TestRunner::doBlock(unsigned int blocknum, unsigned char tag, unsigned int 
 
 void TestRunner::logMsg(LogLevel level, const string& msg, bool bold)
 {
-  boost::mutex::scoped_lock lock(m_guard);
+  std::unique_lock lock(m_guard);
 
   if (bold)
     cout << "\033[0;1m";

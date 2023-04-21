@@ -38,7 +38,7 @@ using namespace std;
 namespace
 {
 storagemanager::Replicator* rep = NULL;
-boost::mutex m;
+std::mutex m;
 }  // namespace
 namespace storagemanager
 {
@@ -95,7 +95,7 @@ Replicator* Replicator::get()
 {
   if (rep)
     return rep;
-  boost::mutex::scoped_lock s(m);
+  std::unique_lock s(m);
   if (rep)
     return rep;
   rep = new Replicator();

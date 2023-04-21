@@ -83,8 +83,8 @@ class RedistributeControl
 
   void logMessage(const std::string&);
 
-  boost::mutex fSessionMutex;
-  boost::mutex fInfoFileMutex;
+  std::mutex fSessionMutex;
+  std::mutex fInfoFileMutex;
 
   boost::scoped_ptr<boost::thread> fControlThread;
   boost::scoped_ptr<boost::thread> fWorkThread;
