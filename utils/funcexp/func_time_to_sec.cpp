@@ -221,11 +221,12 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
   {
     if (scaleDiff > 0)
     {
-      value = (int64_t)round((double)value / IDB_pow[scaleDiff]);
+      value =
+          (int64_t)round(static_cast<double>(value) / static_cast<double>(datatypes::mcs_pow_10[scaleDiff]));
     }
     else if (scaleDiff < 0)
     {
-      value = value * IDB_pow[-scaleDiff];
+      value = value * static_cast<int64_t>(datatypes::mcs_pow_10[-scaleDiff]);
     }
     decimal.value = value;
   }
@@ -234,11 +235,16 @@ IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& pa
     int128_t s128Value = value;
     if (scaleDiff > 0)
     {
-      s128Value = (int128_t)round((long double)s128Value / IDB_pow[scaleDiff]);
+      s128Value = scaleDiff > 19
+                      ? (int128_t)round(static_cast<long double>(s128Value) /
+                                        static_cast<long double>(datatypes::mcs_pow_10_128[scaleDiff - 19]))
+                      : (int128_t)round(static_cast<long double>(s128Value) /
+                                        static_cast<long double>(datatypes::mcs_pow_10[scaleDiff]));
     }
     else if (scaleDiff < 0)
     {
-      s128Value = s128Value * IDB_pow[-scaleDiff];
+      s128Value = scaleDiff < -19 ? s128Value * datatypes::mcs_pow_10_128[-scaleDiff - 19]
+                                  : s128Value * datatypes::mcs_pow_10[-scaleDiff];
     }
     decimal.s128Value = s128Value;
   }
