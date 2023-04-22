@@ -88,14 +88,14 @@ using namespace std;
 
 namespace
 {
-boost::mutex CtorMutex;
+std::mutex CtorMutex;
 }
 
 namespace execplan
 {
 ObjectIDManager::ObjectIDManager()
 {
-  boost::mutex::scoped_lock lk(CtorMutex);
+  std::unique_lock lk(CtorMutex);
 
   config::Config* conf;
   string tmp;

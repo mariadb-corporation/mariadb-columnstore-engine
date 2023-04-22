@@ -70,7 +70,7 @@ class WEPmList
  private:
   typedef std::list<int> WePmList;  // List to add in front
   WePmList fPmList;
-  boost::mutex fListMutex;  // mutex controls add/remove
+  std::mutex fListMutex;  // mutex controls add/remove
 };
 
 //------------------------------------------------------------------------------
@@ -262,10 +262,10 @@ class WESDHandler
   int32_t fTableOId;
   uint32_t fFixedBinaryRecLen;
 
-  boost::mutex fRespMutex;
-  boost::condition fRespCond;
+  std::mutex fRespMutex;
+  std::condition_variable fRespCond;
 
-  boost::mutex fSendMutex;
+  std::mutex fSendMutex;
 
   // It could be a queue too. Stores all the responses from PMs
   typedef std::list<messageqcpp::SBS> WESRespList;

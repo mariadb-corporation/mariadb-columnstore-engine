@@ -3184,7 +3184,7 @@ const TxnID DBRM::getTxnID(const SessionManagerServer::SID session)
   return ret;
 }
 
-boost::shared_array<SIDTIDEntry> DBRM::SIDTIDMap(int& len)
+std::shared_ptr<SIDTIDEntry[]> DBRM::SIDTIDMap(int& len)
 {
 #ifdef BRM_INFO
 
@@ -3201,7 +3201,7 @@ boost::shared_array<SIDTIDEntry> DBRM::SIDTIDMap(int& len)
   uint8_t err, tmp8;
   uint32_t tmp32;
   int i;
-  boost::shared_array<SIDTIDEntry> ret;
+  std::shared_ptr<SIDTIDEntry[]> ret;
 
   command << SID_TID_MAP;
   err = send_recv(command, response);
@@ -3713,7 +3713,7 @@ bool DBRM::isDBRMReady() throw()
     TRACER_WRITENOW("isDBRMReady");
 
 #endif
-  boost::mutex::scoped_lock scoped(mutex);
+  std::unique_lock scoped(mutex);
 
   try
   {

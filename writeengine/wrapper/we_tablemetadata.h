@@ -84,9 +84,9 @@ class TableMetaData
   explicit TableMetaData();
   explicit TableMetaData(const TableMetaData& rhs);
   ~TableMetaData();
-  static boost::mutex map_mutex;
+  static std::mutex map_mutex;
   static TableMetaDataMap fTableMetaDataMap;
-  boost::mutex fColsExtsInfoLock;
+  std::mutex fColsExtsInfoLock;
   ColsExtsInfoMap fColsExtsInfoMap;
 };
 

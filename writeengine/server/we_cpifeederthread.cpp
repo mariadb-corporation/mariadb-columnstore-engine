@@ -32,7 +32,7 @@
 #include <queue>
 using namespace std;
 
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
@@ -89,7 +89,7 @@ void WECpiFeederThread::add2MsgQueue(ByteStream& Ibs)
   // TODO creating copy is NOT good; later read from socket using a SBS
   messageqcpp::SBS aSbs(new messageqcpp::ByteStream(Ibs));
   Ibs.reset();  // forcefully clearing it
-  boost::mutex::scoped_lock aLock(fMsgQMutex);
+  std::unique_lock aLock(fMsgQMutex);
   // cout << "pushing to the MsgQueue" << endl;
   fMsgQueue.push(aSbs);
   fFeederCond.notify_one();  // as per preference of Damon
@@ -102,11 +102,11 @@ void WECpiFeederThread::feedData2Cpi()
 {
   while (isContinue())
   {
-    boost::mutex::scoped_lock aLock(fMsgQMutex);
+    std::unique_lock aLock(fMsgQMutex);
 
     if (fMsgQueue.empty())
     {
-      bool aTimedOut = fFeederCond.timed_wait(aLock, boost::posix_time::milliseconds(3000));
+      bool aTimedOut = (fFeederCond.wait_for(aLock, std::chrono::milliseconds(3000)) == std::cv_status::timeout);
 
       if (!isContinue())
       {
@@ -154,7 +154,7 @@ void WECpiFeederThread::feedData2Cpi()
 bool WECpiFeederThread::isMsgQueueEmpty()
 {
   bool aRet = false;
-  boost::mutex::scoped_lock aLock(fMsgQMutex);
+  std::unique_lock aLock(fMsgQMutex);
   aRet = fMsgQueue.empty();
   aLock.unlock();
   return aRet;
@@ -164,7 +164,7 @@ bool WECpiFeederThread::isMsgQueueEmpty()
 
 void WECpiFeederThread::stopThread()
 {
-  boost::mutex::scoped_lock aCondLock(fContMutex);
+  std::unique_lock aCondLock(fContMutex);
   fContinue = false;
   aCondLock.unlock();
   fFeederCond.notify_all();
@@ -175,7 +175,7 @@ void WECpiFeederThread::stopThread()
 
 bool WECpiFeederThread::isContinue()
 {
-  boost::mutex::scoped_lock aCondLock(fContMutex);
+  std::unique_lock aCondLock(fContMutex);
   return fContinue;
 }
 

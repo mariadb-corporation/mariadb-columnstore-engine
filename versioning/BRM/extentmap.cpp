@@ -212,16 +212,16 @@ bool EMEntry::operator<(const EMEntry& e) const
 }
 
 /*static*/
-boost::mutex ExtentMap::mutex;
-boost::mutex ExtentMap::emIndexMutex;
+std::mutex ExtentMap::mutex;
+std::mutex ExtentMap::emIndexMutex;
 
-boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
+std::mutex ExtentMapRBTreeImpl::fInstanceMutex;
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {
@@ -243,7 +243,7 @@ ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly
 }
 
 /*static*/
-boost::mutex FreeListImpl::fInstanceMutex;
+std::mutex FreeListImpl::fInstanceMutex;
 
 /*static*/
 FreeListImpl* FreeListImpl::fInstance = 0;
@@ -251,7 +251,7 @@ FreeListImpl* FreeListImpl::fInstance = 0;
 /*static*/
 FreeListImpl* FreeListImpl::makeFreeListImpl(unsigned key, off_t size, bool readOnly)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {
@@ -1904,7 +1904,7 @@ void ExtentMap::save(const string& filename)
 /* always returns holding the EM lock, and with the EM seg mapped */
 void ExtentMap::grabEMEntryTable(OPS op)
 {
-  boost::mutex::scoped_lock lk(mutex);
+  std::unique_lock lk(mutex);
 
   if (op == READ)
   {
@@ -1961,7 +1961,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
 /* always returns holding the FL lock */
 void ExtentMap::grabFreeList(OPS op)
 {
-  boost::mutex::scoped_lock lk(mutex, boost::defer_lock);
+  std::unique_lock lk(mutex, std::defer_lock);
 
   if (op == READ)
   {
@@ -2029,7 +2029,7 @@ void ExtentMap::grabFreeList(OPS op)
 
 void ExtentMap::grabEMIndex(OPS op)
 {
-  boost::mutex::scoped_lock lk(emIndexMutex);
+  std::unique_lock lk(emIndexMutex);
 
   if (op == READ)
   {
@@ -6138,7 +6138,7 @@ void ExtentMap::checkReloadConfig()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentSize()  // dmc-should deprecate
 {
-  //	boost::mutex::scoped_lock lk(fConfigCacheMutex);
+  //	std::unique_lock lk(fConfigCacheMutex);
   //	checkReloadConfig( );
 
   ExtentSize = 0x2000;
@@ -6153,7 +6153,7 @@ unsigned ExtentMap::getExtentSize()  // dmc-should deprecate
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentRows()
 {
-  //	boost::mutex::scoped_lock lk(fConfigCacheMutex);
+  //	std::unique_lock lk(fConfigCacheMutex);
   //	checkReloadConfig( );
 
   ExtentRows = 0x800000;
@@ -6166,7 +6166,7 @@ unsigned ExtentMap::getExtentRows()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getFilesPerColumnPartition()
 {
-  boost::mutex::scoped_lock lk(fConfigCacheMutex);
+  std::unique_lock lk(fConfigCacheMutex);
   checkReloadConfig();
 
   return filesPerColumnPartition;
@@ -6177,7 +6177,7 @@ unsigned ExtentMap::getFilesPerColumnPartition()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentsPerSegmentFile()
 {
-  boost::mutex::scoped_lock lk(fConfigCacheMutex);
+  std::unique_lock lk(fConfigCacheMutex);
   checkReloadConfig();
 
   return extentsPerSegmentFile;

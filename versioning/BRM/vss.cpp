@@ -64,8 +64,8 @@ VSSEntry::VSSEntry()
 }
 
 /*static*/
-boost::mutex VSSImpl::fInstanceMutex;
-boost::mutex VSS::mutex;
+std::mutex VSSImpl::fInstanceMutex;
+std::mutex VSS::mutex;
 
 /*static*/
 VSSImpl* VSSImpl::fInstance = 0;
@@ -73,7 +73,7 @@ VSSImpl* VSSImpl::fInstance = 0;
 /*static*/
 VSSImpl* VSSImpl::makeVSSImpl(unsigned key, off_t size, bool readOnly)
 {
-  boost::mutex::scoped_lock lk(fInstanceMutex);
+  std::unique_lock lk(fInstanceMutex);
 
   if (fInstance)
   {

@@ -178,7 +178,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   virtual std::string makeQuery();
   virtual void setField(int, const char*, unsigned long, MYSQL_FIELD*, rowgroup::Row&);
   inline void addRow(rowgroup::RGData&);
-  // inline  void addRow(boost::shared_array<uint8_t>&);
+
   template <typename T>
   T convertValueNum(const char*, const execplan::CalpontSystemCatalog::ColType&);
   virtual void formatMiniStats();
@@ -238,8 +238,8 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   std::map<uint32_t, uint32_t> fColumnMap;  // projected key position (k->p)
   uint64_t fColumnCount;
   boost::scoped_array<int> fFe1Column;
-  boost::shared_array<int> fFeMapping1;
-  boost::shared_array<int> fFeMapping3;
+  std::shared_ptr<int[]> fFeMapping1;
+  std::shared_ptr<int[]> fFeMapping3;
   rowgroup::RowGroup fRowGroupFe1;
   rowgroup::RowGroup fRowGroupFe3;
 

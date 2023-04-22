@@ -40,7 +40,8 @@ using namespace std;
 #include "loggingid.h"
 using namespace logging;
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 using namespace boost;
 
 #include "messagequeue.h"
@@ -204,7 +205,7 @@ void WESplClient::send()
     if (fOwner.getDebugLvl() > 2)
       cout << "DataRqstCnt [" << getPmId() << "] = " << getDataRqstCount() << endl;
 
-    boost::mutex::scoped_lock aLock(fSentQMutex);
+    std::unique_lock aLock(fSentQMutex);
     messageqcpp::SBS aSbs = fSendQueue.front();
     fSendQueue.pop();
     aLock.unlock();
@@ -212,7 +213,7 @@ void WESplClient::send()
 
     if (aLen > 0)
     {
-      boost::mutex::scoped_lock aLock(fWriteMutex);
+      std::unique_lock aLock(fWriteMutex);
       setBytesTx(getBytesTx() + aLen);
 
       try
@@ -309,7 +310,7 @@ void WESplClient::add2SendQueue(const messageqcpp::SBS& Sbs)
 
 void WESplClient::clearSendQueue()
 {
-  boost::mutex::scoped_lock aLock(fSentQMutex);
+  std::unique_lock aLock(fSentQMutex);
 
   while (!fSendQueue.empty())
     fSendQueue.pop();
@@ -320,7 +321,7 @@ void WESplClient::clearSendQueue()
 int WESplClient::getSendQSize()
 {
   int aQSize = 0;
-  boost::mutex::scoped_lock aLock(fSentQMutex);
+  std::unique_lock aLock(fSentQMutex);
   aQSize = fSendQueue.size();
   aLock.unlock();
   return aQSize;

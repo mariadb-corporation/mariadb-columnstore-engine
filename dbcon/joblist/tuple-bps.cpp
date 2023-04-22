@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/uuid/uuid_io.hpp>
 using namespace boost;
 
@@ -79,7 +79,7 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
-extern boost::mutex fileLock_g;
+extern std::mutex fileLock_g;
 
 namespace
 {
@@ -195,11 +195,11 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
     smallNulls.reset(new Row[smallSideCount]);
     smallMappings.resize(smallSideCount);
     fergMappings.resize(smallSideCount + 1);
-    smallNullMemory.reset(new shared_array<uint8_t>[smallSideCount]);
+    smallNullMemory.reset(new std::shared_ptr<uint8_t[]>[smallSideCount]);
     local_primRG.initRow(&largeSideRow);
     local_outputRG.initRow(&joinedBaseRow, true);
     joinedBaseRowData.reset(new uint8_t[joinedBaseRow.getSize()]);
-    joinedBaseRow.setData(joinedBaseRowData.get());
+    joinedBaseRow.setData(rowgroup::Row::Pointer(joinedBaseRowData.get()));
     joinedBaseRow.initToNull();
     largeMapping = makeMapping(local_primRG, local_outputRG);
 
@@ -222,7 +222,7 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
       joinFERG.initRow(&joinFERow, true);
       joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
       memset(joinFERowData.get(), 0, joinFERow.getSize());
-      joinFERow.setData(joinFERowData.get());
+      joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
       fergMappings[smallSideCount] = makeMapping(local_primRG, joinFERG);
     }
 
@@ -230,13 +230,13 @@ TupleBPS::JoinLocalData::JoinLocalData(TupleBPS* pTupleBPS, RowGroup& primRowGro
     {
       joinerMatchesRGs[i].initRow(&(smallNulls[i]), true);
       smallNullMemory[i].reset(new uint8_t[smallNulls[i].getSize()]);
-      smallNulls[i].setData(smallNullMemory[i].get());
+      smallNulls[i].setData(rowgroup::Row::Pointer(smallNullMemory[i].get()));
       smallNulls[i].initToNull();
     }
 
     local_primRG.initRow(&largeNull, true);
     largeNullMemory.reset(new uint8_t[largeNull.getSize()]);
-    largeNull.setData(largeNullMemory.get());
+    largeNull.setData(rowgroup::Row::Pointer(largeNullMemory.get()));
     largeNull.initToNull();
   }
 }
@@ -568,7 +568,7 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       throw runtime_error(oss.str());
-    }    
+    }
 
     if (fOidAux > 3000)
     {
@@ -1160,7 +1160,7 @@ void TupleBPS::serializeJoiner()
   {
     {
       // code block to release the lock immediatly
-      boost::mutex::scoped_lock lk(serializeJoinerMutex);
+      std::unique_lock lk(serializeJoinerMutex);
       more = fBPP->nextTupleJoinerMsg(*sbs);
     }
 #ifdef JLF_DEBUG
@@ -1175,7 +1175,7 @@ void TupleBPS::serializeJoiner()
 void TupleBPS::serializeJoiner(uint32_t conn)
 {
   // We need this lock for TupleBPS::serializeJoiner()
-  boost::mutex::scoped_lock lk(serializeJoinerMutex);
+  std::unique_lock lk(serializeJoinerMutex);
 
   ByteStream bs;
   bool more = true;
@@ -1195,7 +1195,7 @@ void TupleBPS::prepCasualPartitioning()
   uint32_t i;
   int64_t min, max, seq;
   int128_t bigMin, bigMax;
-  boost::mutex::scoped_lock lk(cpMutex);
+  std::unique_lock lk(cpMutex);
 
   for (i = 0; i < scannedExtents.size(); i++)
   {
@@ -1405,7 +1405,7 @@ void TupleBPS::reloadExtentLists()
 void TupleBPS::run()
 {
   uint32_t i;
-  boost::mutex::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
   uint32_t retryCounter = 0;
   const uint32_t retryMax = 1000;       // 50s max; we've seen a 15s window so 50s should be 'safe'
   const uint32_t waitInterval = 50000;  // in us
@@ -1500,7 +1500,7 @@ void TupleBPS::run()
 
 void TupleBPS::join()
 {
-  boost::mutex::scoped_lock lk(jlLock);
+  std::unique_lock lk(jlLock);
 
   if (joinRan)
     return;
@@ -1512,7 +1512,7 @@ void TupleBPS::join()
     if (msgsRecvd < msgsSent)
     {
       // wake up the sending thread, it should drain the input dl and exit
-      boost::unique_lock<boost::mutex> tplLock(tplMutex);
+      std::unique_lock<std::mutex> tplLock(tplMutex);
       condvarWakeupProducer.notify_all();
       tplLock.unlock();
     }
@@ -1669,7 +1669,7 @@ void TupleBPS::interleaveJobs(vector<Job>* jobs) const
 void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
-  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
@@ -2142,7 +2142,7 @@ void TupleBPS::sendPrimitiveMessages()
   }
 
 abort:
-  boost::unique_lock<boost::mutex> tplLock(tplMutex);
+  std::unique_lock<std::mutex> tplLock(tplMutex);
   finishedSending = true;
   condvar.notify_all();
   tplLock.unlock();
@@ -2402,7 +2402,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     initializeJoinLocalDataPool(1);
 
   vector<boost::shared_ptr<messageqcpp::ByteStream>> bsv;
-  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
 
   try
   {
@@ -2719,7 +2719,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
   {
     struct timeval tvbuf;
     gettimeofday(&tvbuf, 0);
-    FIFO<boost::shared_array<uint8_t>>* pFifo = 0;
+    FIFO<std::shared_ptr<uint8_t[]>>* pFifo = 0;
     uint64_t totalBlockedReadCount = 0;
     uint64_t totalBlockedWriteCount = 0;
 
@@ -2728,7 +2728,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
     for (size_t iDataList = 0; iDataList < inDlCnt; iDataList++)
     {
-      pFifo = dynamic_cast<FIFO<boost::shared_array<uint8_t>>*>(
+      pFifo = dynamic_cast<FIFO<std::shared_ptr<uint8_t[]>>*>(
           fInputJobStepAssociation.outAt(iDataList)->rowGroupDL());
 
       if (pFifo)
@@ -2742,7 +2742,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
     for (size_t iDataList = 0; iDataList < outDlCnt; iDataList++)
     {
-      pFifo = dynamic_cast<FIFO<boost::shared_array<uint8_t>>*>(dlp);
+      pFifo = dynamic_cast<FIFO<std::shared_ptr<uint8_t[]>>*>(dlp);
 
       if (pFifo)
       {
@@ -3393,7 +3393,6 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
-  boost::mutex::scoped_lock scoped(boost::mutex);
   abort_nolock();
 }
 

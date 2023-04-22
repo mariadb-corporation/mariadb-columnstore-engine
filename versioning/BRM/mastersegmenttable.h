@@ -78,7 +78,7 @@ class MasterSegmentTableImpl
   MasterSegmentTableImpl(const MasterSegmentTableImpl& rhs);
   MasterSegmentTableImpl& operator=(const MasterSegmentTableImpl& rhs);
 
-  static boost::mutex fInstanceMutex;
+  static std::mutex fInstanceMutex;
   static MasterSegmentTableImpl* fInstance;
 };
 

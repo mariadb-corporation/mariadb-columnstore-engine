@@ -29,7 +29,7 @@
 #include <stdexcept>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/uuid/uuid.hpp>
 
 #include "calpontsystemcatalog.h"
@@ -499,7 +499,7 @@ class JobStep
   long fTimeZone;
 
  private:
-  static boost::mutex fLogMutex;
+  static std::mutex fLogMutex;
 
   friend class CommandJL;
 };

@@ -58,9 +58,9 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-/*static*/ boost::mutex FileOp::m_createDbRootMutexes;
-/*static*/ boost::mutex FileOp::m_mkdirMutex;
-/*static*/ std::map<int, boost::mutex> FileOp::m_DbRootAddExtentMutexes;
+/*static*/ std::mutex FileOp::m_createDbRootMutexes;
+/*static*/ std::mutex FileOp::m_mkdirMutex;
+/*static*/ std::map<int, std::mutex> FileOp::m_DbRootAddExtentMutexes;
 // in 1 call to fwrite(), during initialization
 
 // StopWatch timer;
@@ -116,7 +116,7 @@ void FileOp::closeFile(IDBDataFile* pFile) const
  ***********************************************************/
 int FileOp::createDir(const char* dirName, mode_t mode) const
 {
-  boost::mutex::scoped_lock lk(m_mkdirMutex);
+  std::unique_lock lk(m_mkdirMutex);
   int rc = IDBPolicy::mkdir(dirName);
 
   if (rc != 0)
@@ -993,7 +993,7 @@ int FileOp::initColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, c
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 
 #endif
-    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    std::unique_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
 
     if (bExpandExtent)
@@ -1714,7 +1714,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
 
-    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    std::unique_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 
 #ifdef PROFILE
     if (bExpandExtent)
@@ -1800,7 +1800,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
 /* static */
 void FileOp::initDbRootExtentMutexes()
 {
-  boost::mutex::scoped_lock lk(m_createDbRootMutexes);
+  std::unique_lock lk(m_createDbRootMutexes);
 
   if (m_DbRootAddExtentMutexes.size() == 0)
   {
@@ -2105,6 +2105,11 @@ int FileOp::oid2FileName(FID fid, char* fullFileName, bool bCreateDir, uint16_t 
   RETURN_ON_ERROR((Convertor::oid2FileName(fid, tempFileName, dbDir, partition, segment)));
 
   // see if file exists in specified DBRoot; return if found
+  if (fullFileName == nullptr)
+  {
+    return ERR_INTERNAL;
+  }
+
   if (dbRoot > 0)
   {
     sprintf(fullFileName, "%s/%s", Config::getDBRootByNum(dbRoot).c_str(), tempFileName);
@@ -2218,6 +2223,12 @@ int FileOp::oid2DirName(FID fid, char* oidDirName) const
 
     snprintf(oidDirName, FILE_NAME_SIZE, "%s", Config::getDBRootByNum(_dbroot).c_str());
     return NO_ERROR;
+  }
+
+
+  if (oidDirName == nullptr)
+  {
+    return ERR_INTERNAL;
   }
 
   RETURN_ON_ERROR((Convertor::oid2FileName(fid, tempFileName, dbDir, 0, 0)));

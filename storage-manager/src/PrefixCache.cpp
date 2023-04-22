@@ -181,7 +181,7 @@ void PrefixCache::populate()
 // be careful using this!  SM should be idle.  No ongoing reads or writes.
 void PrefixCache::validateCacheSize()
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
 
   if (!doNotEvict.empty() || !toBeDeleted.empty())
   {
@@ -212,7 +212,7 @@ void PrefixCache::read(const vector<string>& keys)
   vector<int> dlErrnos;
   vector<size_t> dlSizes;
 
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
 
   M_LRU_t::iterator mit;
   for (const string& key : keys)
@@ -283,7 +283,7 @@ void PrefixCache::read(const vector<string>& keys)
 
 void PrefixCache::doneReading(const vector<string>& keys)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   for (const string& key : keys)
   {
     removeFromDNE(key);
@@ -345,20 +345,20 @@ const bf::path& PrefixCache::getJournalPath()
 void PrefixCache::exists(const vector<string>& keys, vector<bool>* out) const
 {
   out->resize(keys.size());
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   for (uint i = 0; i < keys.size(); i++)
     (*out)[i] = (m_lru.find(keys[i]) != m_lru.end());
 }
 
 bool PrefixCache::exists(const string& key) const
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   return m_lru.find(key) != m_lru.end();
 }
 
 void PrefixCache::newObject(const string& key, size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   assert(m_lru.find(key) == m_lru.end());
   if (m_lru.find(key) != m_lru.end())
   {
@@ -375,14 +375,14 @@ void PrefixCache::newObject(const string& key, size_t size)
 
 void PrefixCache::newJournalEntry(size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   //_makeSpace(size);
   currentCacheSize += size;
 }
 
 void PrefixCache::deletedJournal(size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
 
   if (currentCacheSize >= size)
     currentCacheSize -= size;
@@ -397,7 +397,7 @@ void PrefixCache::deletedJournal(size_t size)
 
 void PrefixCache::deletedObject(const string& key, size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
 
   M_LRU_t::iterator mit = m_lru.find(key);
   assert(mit != m_lru.end());
@@ -422,7 +422,7 @@ void PrefixCache::deletedObject(const string& key, size_t size)
 
 void PrefixCache::setMaxCacheSize(size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   if (size < maxCacheSize)
     _makeSpace(maxCacheSize - size);
   maxCacheSize = size;
@@ -430,7 +430,7 @@ void PrefixCache::setMaxCacheSize(size_t size)
 
 void PrefixCache::makeSpace(size_t size)
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   _makeSpace(size);
 }
 
@@ -530,7 +530,7 @@ void PrefixCache::rename(const string& oldKey, const string& newKey, ssize_t siz
   // rename it in the LRU
   // erase/insert to rehash it everywhere else
 
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   auto it = m_lru.find(oldKey);
   if (it == m_lru.end())
     return;
@@ -569,7 +569,7 @@ int PrefixCache::ifExistsThenDelete(const string& key)
   bf::path cachedPath = cachePrefix / key;
   bf::path journalPath = journalPrefix / (key + ".journal");
 
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   bool objectExists = false;
 
   auto it = m_lru.find(key);
@@ -605,14 +605,14 @@ size_t PrefixCache::getCurrentCacheSize() const
 
 size_t PrefixCache::getCurrentCacheElementCount() const
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   assert(m_lru.size() == lru.size());
   return m_lru.size();
 }
 
 void PrefixCache::reset()
 {
-  boost::unique_lock<boost::mutex> s(lru_mutex);
+  std::unique_lock<std::mutex> s(lru_mutex);
   m_lru.clear();
   lru.clear();
   toBeDeleted.clear();

@@ -44,10 +44,10 @@ Downloader::~Downloader()
 }
 
 void Downloader::download(const vector<const string*>& keys, vector<int>* errnos, vector<size_t>* sizes,
-                          const bf::path& prefix, boost::mutex* cache_lock)
+                          const bf::path& prefix, std::mutex* cache_lock)
 {
   uint counter = keys.size();
-  boost::condition condvar;
+  std::condition_variable condvar;
   DownloadListener listener(&counter, &condvar);
   vector<boost::shared_ptr<Download> > ownedDownloads(keys.size());
 
@@ -56,7 +56,7 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
       if it is not already being downloaded, make a new Download instance.
       wait for the listener to tell us that it's done.
   */
-  boost::unique_lock<boost::mutex> s(lock);
+  std::unique_lock<std::mutex> s(lock);
   for (uint i = 0; i < keys.size(); i++)
   {
     boost::shared_ptr<Download> newDL(new Download(*keys[i], prefix, cache_lock, this));
@@ -86,8 +86,10 @@ void Downloader::download(const vector<const string*>& keys, vector<int>* errnos
   }
   s.unlock();
   // wait for the downloads to finish
-  while (counter > 0)
-    condvar.wait(*cache_lock);
+
+  ////XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
+  // while (counter > 0)
+  //   condvar.wait(*cache_lock);
 
   // check success, gather sizes from downloads started by this thread
   sizes->resize(keys.size());
@@ -122,7 +124,7 @@ void Downloader::printKPIs() const
 bool Downloader::inProgress(const string& key)
 {
   boost::shared_ptr<Download> tmp(new Download(key));
-  boost::unique_lock<boost::mutex> s(lock);
+  std::unique_lock<std::mutex> s(lock);
 
   auto it = downloads.find(tmp);
   if (it != downloads.end())
@@ -135,7 +137,7 @@ const bf::path& Downloader::getTmpPath() const
   return tmpPath;
 }
 /* The helper fcns */
-Downloader::Download::Download(const string& source, const bf::path& _dlPath, boost::mutex* _lock,
+Downloader::Download::Download(const string& source, const bf::path& _dlPath, std::mutex* _lock,
                                Downloader* _dl)
  : dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false), dl(_dl)
 {
@@ -184,7 +186,7 @@ void Downloader::Download::operator()()
   lock->unlock();
 }
 
-Downloader::DownloadListener::DownloadListener(uint* _counter, boost::condition* condvar)
+Downloader::DownloadListener::DownloadListener(uint* _counter, std::condition_variable* condvar)
  : counter(_counter), cond(condvar)
 {
 }

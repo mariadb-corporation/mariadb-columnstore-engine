@@ -33,8 +33,9 @@
 // #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
-#include <boost/thread/mutex.hpp>
+
+#include <map>
+#include <mutex>
 #include <cmath>
 #include <cfloat>
 #include <execinfo.h>
@@ -183,13 +184,13 @@ class StringStore
   std::string empty_str;
   static constexpr const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
 
-  std::vector<boost::shared_array<uint8_t>> mem;
+  std::vector<std::shared_ptr<uint8_t[]>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
-  std::vector<boost::shared_array<uint8_t>> longStrings;
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
-  boost::mutex fMutex;
+  std::mutex fMutex;
 };
 
 // Where we store user data for UDA(n)F
@@ -247,7 +248,7 @@ class UserDataStore
   std::vector<StoreData> vStoreData;
 
   bool fUseUserDataMutex = false;
-  boost::mutex fMutex;
+  std::mutex fMutex;
 };
 
 
@@ -338,8 +339,7 @@ class Row
   {
     inline Pointer() = default;
 
-    // Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
-    inline Pointer(uint8_t* d) : data(d)
+    explicit inline Pointer(uint8_t* d) : data(d)
     {
     }
     inline Pointer(uint8_t* d, StringStore* s) : data(d), strings(s)
@@ -360,8 +360,7 @@ class Row
   Row& operator=(const Row&);
   bool operator==(const Row&) const;
 
-  // void setData(uint8_t *rowData, StringStore *ss);
-  inline void setData(const Pointer&);  // convenience fcn, can go away
+  inline void setData(const Pointer&);
   inline uint8_t* getData() const;
 
   inline void setPointer(const Pointer&);
@@ -630,7 +629,7 @@ private:
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
-  boost::shared_array<bool> forceInline;
+  std::shared_ptr<bool[]> forceInline;
   UserDataStore* userDataStore = nullptr;  // For UDAF
 
   friend class RowGroup;
@@ -1484,7 +1483,6 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint32_t getRowSizeWithStrings() const;
   inline uint64_t getBaseRid() const;
   void setData(RGData* rgd);
-  inline void setData(uint8_t* d);
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
@@ -1524,7 +1522,7 @@ class RowGroup : public messageqcpp::Serializeable
   inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
   inline const std::vector<uint32_t>& getCharsetNumbers() const;
   inline uint32_t getCharsetNumber(uint32_t colIndex) const;
-  inline boost::shared_array<bool>& getForceInline();
+  inline std::shared_ptr<bool[]>& getForceInline();
   static inline uint32_t getHeaderSize()
   {
     return headerSize;
@@ -1616,7 +1614,7 @@ class RowGroup : public messageqcpp::Serializeable
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
-  boost::shared_array<bool> forceInline;
+  std::shared_ptr<bool[]> forceInline;
 
   static const uint32_t headerSize = 18;
   static const uint32_t rowCountOffset = 0;
@@ -1642,8 +1640,8 @@ inline uint64_t getFileRelativeRid(uint64_t baseRid);
  */
 RowGroup operator+(const RowGroup& lhs, const RowGroup& rhs);
 
-boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2);
-void applyMapping(const boost::shared_array<int>& mapping, const Row& in, Row* out);
+std::shared_ptr<int[]> makeMapping(const RowGroup& r1, const RowGroup& r2);
+void applyMapping(const std::shared_ptr<int[]>& mapping, const Row& in, Row* out);
 void applyMapping(const std::vector<int>& mapping, const Row& in, Row* out);
 void applyMapping(const int* mapping, const Row& in, Row* out);
 
@@ -1678,14 +1676,6 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
   r->data = &(data[headerSize + (rowNum * r->getSize())]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
-}
-
-inline void RowGroup::setData(uint8_t* d)
-{
-  data = d;
-  strings = nullptr;
-  rgData = nullptr;
-  setUseStringTable(false);
 }
 
 inline void RowGroup::setData(RGData* rgd)
@@ -1874,7 +1864,7 @@ inline const std::vector<uint32_t>& RowGroup::getColWidths() const
   return colWidths;
 }
 
-inline boost::shared_array<bool>& RowGroup::getForceInline()
+inline std::shared_ptr<bool[]>& RowGroup::getForceInline()
 {
   return forceInline;
 }

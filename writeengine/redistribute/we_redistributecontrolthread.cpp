@@ -65,13 +65,13 @@ using namespace execplan;
 namespace redistribute
 {
 // static variables
-boost::mutex RedistributeControlThread::fActionMutex;
+std::mutex RedistributeControlThread::fActionMutex;
 volatile bool RedistributeControlThread::fStopAction = false;
 string RedistributeControlThread::fWesInUse;
 
 void RedistributeControlThread::setStopAction(bool s)
 {
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::unique_lock lock(fActionMutex);
   fStopAction = s;
 }
 
@@ -147,7 +147,7 @@ void RedistributeControlThread::doRedistribute()
     fControl->logMessage(fErrorMsg + " @controlThread::doRedistribute");
 
   {
-    boost::mutex::scoped_lock lock(fActionMutex);
+    std::unique_lock lock(fActionMutex);
     fWesInUse.clear();
   }
 }
@@ -766,7 +766,7 @@ int RedistributeControlThread::connectToWes(int dbroot)
 
   try
   {
-    boost::mutex::scoped_lock lock(fActionMutex);
+    std::unique_lock lock(fActionMutex);
     fWesInUse = oss.str();
     fMsgQueueClient.reset(new MessageQueueClient(fWesInUse, fConfig));
   }
@@ -783,7 +783,7 @@ int RedistributeControlThread::connectToWes(int dbroot)
 
   if (ret != 0)
   {
-    boost::mutex::scoped_lock lock(fActionMutex);
+    std::unique_lock lock(fActionMutex);
     fWesInUse.clear();
 
     fMsgQueueClient.reset();
@@ -797,7 +797,7 @@ void RedistributeControlThread::doStopAction()
   fConfig = Config::makeConfig();
   fControl = RedistributeControl::instance();
 
-  boost::mutex::scoped_lock lock(fActionMutex);
+  std::unique_lock lock(fActionMutex);
 
   if (!fWesInUse.empty())
   {

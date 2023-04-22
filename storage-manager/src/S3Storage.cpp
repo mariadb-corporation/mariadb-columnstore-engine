@@ -283,7 +283,7 @@ bool S3Storage::getCredentialsFromMetadataEC2()
 
 void S3Storage::testConnectivityAndPerms()
 {
-  boost::shared_array<uint8_t> testObj(new uint8_t[1]);
+  std::shared_ptr<uint8_t[]> testObj(new uint8_t[1]);
   testObj[0] = 0;
   boost::uuids::uuid u = boost::uuids::random_generator()();
   ostringstream oss;
@@ -317,7 +317,7 @@ void S3Storage::testConnectivityAndPerms()
 int S3Storage::getObject(const string& sourceKey, const string& destFile, size_t* size)
 {
   int fd, err;
-  boost::shared_array<uint8_t> data;
+  std::shared_ptr<uint8_t[]> data;
   size_t len, count = 0;
   char buf[80];
 
@@ -353,7 +353,7 @@ int S3Storage::getObject(const string& sourceKey, const string& destFile, size_t
   return 0;
 }
 
-int S3Storage::getObject(const string& _sourceKey, boost::shared_array<uint8_t>* data, size_t* size)
+int S3Storage::getObject(const string& _sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size)
 {
   uint8_t err;
   size_t len = 0;
@@ -418,7 +418,7 @@ int S3Storage::getObject(const string& _sourceKey, boost::shared_array<uint8_t>*
 
 int S3Storage::putObject(const string& sourceFile, const string& destKey)
 {
-  boost::shared_array<uint8_t> data;
+  std::shared_ptr<uint8_t[]> data;
   int err, fd;
   size_t len, count = 0;
   char buf[80];
@@ -466,7 +466,7 @@ int S3Storage::putObject(const string& sourceFile, const string& destKey)
   return putObject(data, len, destKey);
 }
 
-int S3Storage::putObject(const boost::shared_array<uint8_t> data, size_t len, const string& _destKey)
+int S3Storage::putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const string& _destKey)
 {
   string destKey = prefix + _destKey;
   uint8_t s3err;
@@ -648,7 +648,7 @@ int S3Storage::copyObject(const string& _sourceKey, const string& _destKey)
     // no s3-s3 copy yet.  get & put for now.
 
     int err;
-    boost::shared_array<uint8_t> data;
+    std::shared_ptr<uint8_t[]> data;
     size_t len;
     err = getObject(sourceKey, &data, &len);
     if (err)
@@ -718,7 +718,7 @@ int S3Storage::exists(const string& _key, bool* out)
 
 ms3_st* S3Storage::getConnection()
 {
-  boost::unique_lock<boost::mutex> s(connMutex);
+  std::unique_lock<std::mutex> s(connMutex);
 
   // prune the list.  Most-idle connections are at the back.
   timespec now;
@@ -810,7 +810,7 @@ void S3Storage::returnConnection(ms3_st* ms3)
   conn.conn = ms3;
   clock_gettime(CLOCK_MONOTONIC_COARSE, &conn.idleSince);
 
-  boost::unique_lock<boost::mutex> s(connMutex);
+  std::unique_lock<std::mutex> s(connMutex);
   freeConns.push_front(conn);
   // connMutexes[ms3].unlock();
 }

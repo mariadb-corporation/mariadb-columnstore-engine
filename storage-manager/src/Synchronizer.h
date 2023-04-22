@@ -82,8 +82,8 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
     int opFlags;
     int waiters;
     bool finished;
-    boost::condition condvar;
-    void wait(boost::mutex*);
+    std::condition_variable_any condvar;
+    void wait(std::mutex*);
     void notify();
   };
 
@@ -110,7 +110,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
   // this thread will start jobs for entries in pendingOps every 10 seconds
   bool die;
   boost::thread syncThread;
-  const boost::chrono::seconds syncInterval = boost::chrono::seconds(10);
+  const std::chrono::seconds syncInterval = std::chrono::seconds(10);
   void periodicSync();
   std::map<boost::filesystem::path, size_t> uncommittedJournalSize;
   size_t journalSizeThreshold;
@@ -132,7 +132,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
 
   boost::filesystem::path cachePath;
   boost::filesystem::path journalPath;
-  boost::mutex mutex;
+  std::mutex mutex;
 };
 
 }  // namespace storagemanager

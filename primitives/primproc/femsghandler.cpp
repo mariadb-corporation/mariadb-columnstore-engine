@@ -101,7 +101,7 @@ bool FEMsgHandler::aborted()
   if (sawData)
     return true;
 
-  boost::mutex::scoped_lock sl(mutex);
+  std::unique_lock sl(mutex);
   int err;
   int connectionNum = sock->getConnectionNum();
 
@@ -127,7 +127,7 @@ void FEMsgHandler::threadFcn()
    */
   while (!die && err == 0)
   {
-    boost::mutex::scoped_lock sl(mutex);
+    std::unique_lock sl(mutex);
     err = InetStreamSocket::pollConnection(connectionNum, 1000);
   }
 

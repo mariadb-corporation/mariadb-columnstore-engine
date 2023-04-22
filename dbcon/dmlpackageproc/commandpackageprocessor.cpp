@@ -51,7 +51,7 @@ namespace dmlpackageprocessor
 {
 // Tracks active cleartablelock commands by storing set of table lock IDs
 /*static*/ std::set<uint64_t> CommandPackageProcessor::fActiveClearTableLockCmds;
-/*static*/ boost::mutex CommandPackageProcessor::fActiveClearTableLockCmdMutex;
+/*static*/ std::mutex CommandPackageProcessor::fActiveClearTableLockCmdMutex;
 
 DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
     dmlpackage::CalpontDMLPackage& cpackage)
@@ -1068,7 +1068,7 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
   // Remove tableLockID out of the active cleartableLock command list
   if (lockGrabbed)
   {
-    boost::mutex::scoped_lock lock(fActiveClearTableLockCmdMutex);
+    std::unique_lock lock(fActiveClearTableLockCmdMutex);
     fActiveClearTableLockCmds.erase(tableLockID);
   }
 
@@ -1107,7 +1107,7 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
 //------------------------------------------------------------------------------
 void CommandPackageProcessor::establishTableLockToClear(uint64_t tableLockID, BRM::TableLockInfo& lockInfo)
 {
-  boost::mutex::scoped_lock lock(fActiveClearTableLockCmdMutex);
+  std::unique_lock lock(fActiveClearTableLockCmdMutex);
 
   // Get current table lock info
   bool getLockInfo = fDbrm->getTableLockInfo(tableLockID, &lockInfo);

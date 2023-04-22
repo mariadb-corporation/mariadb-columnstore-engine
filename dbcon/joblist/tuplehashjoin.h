@@ -493,7 +493,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   SJSTEP fDeliveryStep;
 
   // temporary hack to make sure JobList only calls run, join once
-  boost::mutex jlLock;
+  std::mutex jlLock;
   bool runRan, joinRan;
 
   /* Iteration 18 mods */
@@ -536,10 +536,10 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void startJoinThreads();
   void generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer> >& joinerOutput,
                              rowgroup::Row& baseRow,
-                             const boost::shared_array<boost::shared_array<int> >& mappings,
+                             const std::shared_ptr<std::shared_ptr<int[]>[] >& mappings,
                              const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
                              std::vector<rowgroup::RGData>& outputData,
-                             const boost::shared_array<rowgroup::Row>& smallRows, rowgroup::Row& joinedRow,
+                             const std::shared_ptr<rowgroup::Row[]>& smallRows, rowgroup::Row& joinedRow,
                              RowGroupDL* outputDL);
   void grabSomeWork(std::vector<rowgroup::RGData>* work);
   void sendResult(const std::vector<rowgroup::RGData>& res);
@@ -550,19 +550,19 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
                  rowgroup::RowGroup& joinOutput, rowgroup::Row& largeSideRow, rowgroup::Row& joinFERow,
                  rowgroup::Row& joinedRow, rowgroup::Row& baseRow,
                  std::vector<std::vector<rowgroup::Row::Pointer> >& joinMatches,
-                 boost::shared_array<rowgroup::Row>& smallRowTemplates, RowGroupDL* outputDL,
+                 std::shared_ptr<rowgroup::Row[]>& smallRowTemplates, RowGroupDL* outputDL,
                  std::vector<std::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
-                 boost::shared_array<boost::shared_array<int> >* rgMappings = NULL,
-                 boost::shared_array<boost::shared_array<int> >* feMappings = NULL,
-                 boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem = NULL);
+                 std::shared_ptr<std::shared_ptr<int[]>[] >* rgMappings = NULL,
+                 std::shared_ptr<std::shared_ptr<int[]>[] >* feMappings = NULL,
+                 boost::scoped_array<boost::scoped_array<uint8_t>>* smallNullMem = NULL);
   void finishSmallOuterJoin();
   void makeDupList(const rowgroup::RowGroup& rg);
   void processDupList(uint32_t threadID, rowgroup::RowGroup& ingrp, std::vector<rowgroup::RGData>* rowData);
 
   std::vector<uint64_t> joinRunners;  // thread handles from thread pool
-  boost::mutex inputDLLock, outputDLLock;
-  boost::shared_array<boost::shared_array<int> > columnMappings, fergMappings;
-  boost::shared_array<int> fe2Mapping;
+  std::mutex inputDLLock, outputDLLock;
+  std::shared_ptr<std::shared_ptr<int[]>[]> columnMappings, fergMappings;
+  std::shared_ptr<int[]> fe2Mapping;
   uint32_t joinThreadCount;
   boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMemory;
   uint64_t outputIt;
@@ -577,7 +577,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   uint32_t fTokenJoin;
 
   // moved from base class JobStep
-  boost::mutex* fStatsMutexPtr;
+  std::mutex* fStatsMutexPtr;
 
   //@bug3683 function join
   boost::shared_ptr<FunctionJoinInfo> fFunctionJoinInfo;
@@ -627,7 +627,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   // THJS configuration is settled.  Debatable whether to use a bool and poll instead;
   // once the config is settled it stays settled, technically no need to
   // keep grabbing locks after that.
-  boost::mutex deliverMutex;
+  std::mutex deliverMutex;
   bool ownsOutputDL;
 
   void segregateJoiners();
@@ -635,13 +635,13 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   std::vector<std::shared_ptr<joiner::TupleJoiner> > djsJoiners;
   std::vector<int> djsJoinerMap;
   boost::scoped_array<ssize_t> memUsedByEachJoin;
-  boost::mutex djsLock;
+  std::mutex djsLock;
   boost::shared_ptr<int64_t> sessionMemLimit;
 
   /* Threaded UM join support */
   int numCores;
-  boost::mutex dlMutex, memTrackMutex, saneErrMsg;
-  boost::condition memTrackDone;
+  std::mutex dlMutex, memTrackMutex, saneErrMsg;
+  std::condition_variable memTrackDone;
   std::atomic<bool> rgdLock;
   bool stopMemTracking;
   void trackMem(uint index);

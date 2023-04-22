@@ -29,7 +29,7 @@
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/format.hpp>
 #include <iostream>
 
@@ -38,7 +38,7 @@ using namespace std;
 namespace
 {
 storagemanager::Replicator* rep = NULL;
-boost::mutex m;
+std::mutex m;
 }  // namespace
 namespace storagemanager
 {
@@ -95,7 +95,7 @@ Replicator* Replicator::get()
 {
   if (rep)
     return rep;
-  boost::mutex::scoped_lock s(m);
+  std::unique_lock s(m);
   if (rep)
     return rep;
   rep = new Replicator();
@@ -259,7 +259,7 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
   {
     // read the existing header and check if max_offset needs to be updated
     size_t tmp;
-    boost::shared_array<char> headertxt;
+    std::shared_ptr<char[]> headertxt;
     try
     {
       headertxt = seekToEndOfHeader1(fd, &tmp);

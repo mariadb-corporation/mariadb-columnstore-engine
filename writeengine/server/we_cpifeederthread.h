@@ -77,14 +77,14 @@ class WECpiFeederThread
  private:
   WEDataLoader& fOwner;
 
-  boost::condition fFeederCond;
-  boost::mutex fMsgQMutex;
+  std::condition_variable fFeederCond;
+  std::mutex fMsgQMutex;
   typedef std::queue<messageqcpp::SBS> WEMsgQueue;
   WEMsgQueue fMsgQueue;
 
   boost::thread* fpThread;
   bool fContinue;
-  boost::mutex fContMutex;
+  std::mutex fContMutex;
   // bool fPushing;
   bool fStopped;
 

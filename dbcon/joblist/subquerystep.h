@@ -23,7 +23,7 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/thread.hpp>
 
 #include "jobstep.h"
@@ -244,7 +244,7 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
   uint64_t fRowsInput;
   uint64_t fRowsReturned;
   bool fEndOfResult;
-  boost::shared_array<int> fIndexMap;
+  std::shared_ptr<int[]> fIndexMap;
   std::vector<std::pair<uint32_t, uint32_t> > fDupColumns;
 
   RowGroupDL* fInputDL;

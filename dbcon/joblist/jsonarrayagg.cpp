@@ -21,8 +21,6 @@
 #include <string>
 using namespace std;
 
-#include <boost/shared_array.hpp>
-using namespace boost;
 
 #include "errorids.h"
 #include "exceptclasses.h"
@@ -266,10 +264,10 @@ void JsonArrayInfo::mapColumns(const RowGroup& projRG)
   }
 }
 
-shared_array<int> JsonArrayInfo::makeMapping(const RowGroup& in, const RowGroup& out)
+std::shared_ptr<int[]> JsonArrayInfo::makeMapping(const RowGroup& in, const RowGroup& out)
 {
   // For some reason using the rowgroup mapping fcns don't work completely right in this class
-  shared_array<int> mapping(new int[out.getColumnCount()]);
+  std::shared_ptr<int[]> mapping(new int[out.getColumnCount()]);
 
   for (uint64_t i = 0; i < out.getColumnCount(); i++)
   {
@@ -315,7 +313,7 @@ void JsonArrayAggregatAgUM::initialize()
 
   fGroupConcat->fRowGroup.initRow(&fRow, true);
   fData.reset(new uint8_t[fRow.getSize()]);
-  fRow.setData(fData.get());
+  fRow.setData(rowgroup::Row::Pointer(fData.get()));
 }
 
 void JsonArrayAggregatAgUM::processRow(const rowgroup::Row& inRow)
@@ -337,7 +335,7 @@ uint8_t* JsonArrayAggregatAgUM::getResult()
   return fConcator->getResult(fGroupConcat->fSeparator);
 }
 
-void JsonArrayAggregatAgUM::applyMapping(const boost::shared_array<int>& mapping, const Row& row)
+void JsonArrayAggregatAgUM::applyMapping(const std::shared_ptr<int[]>& mapping, const Row& row)
 {
   // For some reason the rowgroup mapping fcns don't work right in this class.
   for (uint64_t i = 0; i < fRow.getColumnCount(); i++)

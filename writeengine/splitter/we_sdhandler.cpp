@@ -38,7 +38,7 @@ using namespace std;
 
 #include <sys/time.h>
 
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 using namespace boost;
@@ -82,7 +82,7 @@ namespace WriteEngine
 
 void WEPmList::addPm2List(int PmId)
 {
-  boost::mutex::scoped_lock aLock(fListMutex);
+  std::unique_lock aLock(fListMutex);
   fPmList.push_back(PmId);
   aLock.unlock();
 }
@@ -91,7 +91,7 @@ void WEPmList::addPm2List(int PmId)
 
 void WEPmList::addPriorityPm2List(int PmId)
 {
-  boost::mutex::scoped_lock aLock(fListMutex);
+  std::unique_lock aLock(fListMutex);
   fPmList.push_front(PmId);
   aLock.unlock();
 }
@@ -99,7 +99,7 @@ void WEPmList::addPriorityPm2List(int PmId)
 
 int WEPmList::getNextPm()
 {
-  boost::mutex::scoped_lock aLock(fListMutex);
+  std::unique_lock aLock(fListMutex);
   int aPmId = 0;
 
   if (!fPmList.empty())
@@ -116,7 +116,7 @@ int WEPmList::getNextPm()
 // so that the sendingthreads will not keep sending data.
 void WEPmList::clearPmList()
 {
-  boost::mutex::scoped_lock aLock(fListMutex);
+  std::unique_lock aLock(fListMutex);
 
   if (!fPmList.empty())
     fPmList.clear();
@@ -128,7 +128,7 @@ void WEPmList::clearPmList()
 
 bool WEPmList::check4Pm(int PmId)
 {
-  boost::mutex::scoped_lock aLock(fListMutex);
+  std::unique_lock aLock(fListMutex);
   WePmList::iterator aIt = fPmList.begin();
   bool aFound = false;
 
@@ -273,7 +273,7 @@ void WESDHandler::send2Pm(ByteStream& Bs, unsigned int PmId)
     {
       if (fWeSplClients[aIdx] != 0)
       {
-        boost::mutex::scoped_lock aLock(fWeSplClients[aIdx]->fWriteMutex);
+        std::unique_lock aLock(fWeSplClients[aIdx]->fWriteMutex);
         fWeSplClients[aIdx]->write(Bs);
         aLock.unlock();
       }
@@ -281,7 +281,7 @@ void WESDHandler::send2Pm(ByteStream& Bs, unsigned int PmId)
   }
   else
   {
-    boost::mutex::scoped_lock aLock(fWeSplClients[PmId]->fWriteMutex);
+    std::unique_lock aLock(fWeSplClients[PmId]->fWriteMutex);
     fWeSplClients[PmId]->write(Bs);
     aLock.unlock();
   }
@@ -302,7 +302,7 @@ void WESDHandler::send2Pm(messageqcpp::SBS& Sbs, unsigned int PmId)
     {
       if (fWeSplClients[aIdx] != 0)
       {
-        boost::mutex::scoped_lock aLock(fWeSplClients[aIdx]->fSentQMutex);
+        std::unique_lock aLock(fWeSplClients[aIdx]->fSentQMutex);
         fWeSplClients[aIdx]->add2SendQueue(Sbs);
         aLock.unlock();
       }
@@ -310,7 +310,7 @@ void WESDHandler::send2Pm(messageqcpp::SBS& Sbs, unsigned int PmId)
   }
   else
   {
-    boost::mutex::scoped_lock aLock(fWeSplClients[PmId]->fSentQMutex);
+    std::unique_lock aLock(fWeSplClients[PmId]->fSentQMutex);
     fWeSplClients[PmId]->add2SendQueue(Sbs);
     aLock.unlock();
   }
@@ -353,7 +353,7 @@ void WESDHandler::checkForRespMsgs()
 
   while (isContinue())
   {
-    boost::mutex::scoped_lock aLock(fRespMutex);
+    std::unique_lock aLock(fRespMutex);
 
     // NOTE - if isContinue is not checked thread will hang on shutdown
     // 		by locking again on fRespList.empty()
@@ -418,7 +418,7 @@ void WESDHandler::checkForRespMsgs()
 
 void WESDHandler::add2RespQueue(const messageqcpp::SBS& Sbs)
 {
-  boost::mutex::scoped_lock aLock(fRespMutex);
+  std::unique_lock aLock(fRespMutex);
   fRespList.push_back(Sbs);
   aLock.unlock();
   // cout <<"Notifing from add2RespQueue" << endl;
@@ -833,7 +833,7 @@ void WESDHandler::cancelOutstandingCpimports()
 
         if (fWeSplClients[aCnt]->isConnected())
         {
-          boost::mutex::scoped_lock aLock(fWeSplClients[aCnt]->fWriteMutex);
+          std::unique_lock aLock(fWeSplClients[aCnt]->fWriteMutex);
           fWeSplClients[aCnt]->write(aBs);
           aLock.unlock();
         }
@@ -988,7 +988,7 @@ void WESDHandler::shutdown()
     }
   }
 
-  boost::mutex::scoped_lock aLock(fRespMutex);
+  std::unique_lock aLock(fRespMutex);
   this->setContinue(false);
   usleep(100000);  // so that response thread get updated.
   fRespCond.notify_all();
@@ -1935,7 +1935,7 @@ void WESDHandler::doRollback()
   aBs << (ByteStream::quadbyte)fTableOId;
   aBs << fRef.fCmdArgs.getTableName();
   aBs << aAppName;
-  boost::mutex::scoped_lock aLock(fSendMutex);
+  std::unique_lock aLock(fSendMutex);
   send2Pm(aBs);
   aLock.unlock();
 }
@@ -1951,7 +1951,7 @@ void WESDHandler::doCleanup(bool deleteHdfsTempDbFiles)
   aBs << (ByteStream::byte)WE_CLT_SRV_CLEANUP;
   aBs << (ByteStream::quadbyte)fTableOId;
   aBs << (ByteStream::byte)deleteHdfsTempDbFiles;
-  boost::mutex::scoped_lock aLock(fSendMutex);
+  std::unique_lock aLock(fSendMutex);
   send2Pm(aBs);
   aLock.unlock();
 }

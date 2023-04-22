@@ -46,7 +46,7 @@ Logger::Logger() : fMl1(LoggingID(28))
 
 void Logger::logMessage(const Message::MessageID mid, const Message::Args& args, bool critical)
 {
-  mutex::scoped_lock lk(fLogLock);
+  std::scoped_lock lk(fLogLock);
   MsgMap::iterator msgIter = fMsgMap.find(mid);
 
   if (msgIter == fMsgMap.end())
@@ -67,7 +67,7 @@ void Logger::logMessage(const Message::MessageID mid, const Message::Args& args,
 
 void Logger::logInfoMessage(const Message::MessageID mid, const Message::Args& args)
 {
-  mutex::scoped_lock lk(fLogLock);
+  std::scoped_lock lk(fLogLock);
   MsgMap::iterator msgIter = fMsgMap.find(mid);
 
   if (msgIter == fMsgMap.end())

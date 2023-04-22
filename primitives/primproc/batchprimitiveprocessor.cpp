@@ -312,19 +312,19 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       // 			cout << "joinerCount = " << joinerCount << endl;
       joinTypes.reset(new JoinType[joinerCount]);
 
-      tJoiners.reset(new boost::shared_array<boost::shared_ptr<TJoiner> >[joinerCount]);
+      tJoiners.reset(new std::shared_ptr<boost::shared_ptr<TJoiner>[]>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
         tJoiners[j].reset(new boost::shared_ptr<TJoiner>[processorThreads]);
 
-      tlJoiners.reset(new boost::shared_array<boost::shared_ptr<TLJoiner> >[joinerCount]);
+      tlJoiners.reset(new std::shared_ptr<boost::shared_ptr<TLJoiner>[]>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
         tlJoiners[j].reset(new boost::shared_ptr<TLJoiner>[processorThreads]);
 
-      addToJoinerLocks.reset(new boost::scoped_array<boost::mutex>[joinerCount]);
+      addToJoinerLocks.reset(new boost::scoped_array<std::mutex>[joinerCount]);
       for (uint j = 0; j < joinerCount; ++j)
-        addToJoinerLocks[j].reset(new boost::mutex[processorThreads]);
+        addToJoinerLocks[j].reset(new std::mutex[processorThreads]);
 
-      smallSideDataLocks.reset(new boost::mutex[joinerCount]);
+      smallSideDataLocks.reset(new std::mutex[joinerCount]);
       tJoinerSizes.reset(new std::atomic<uint32_t>[joinerCount]);
       largeSideKeyColumns.reset(new uint32_t[joinerCount]);
       tlLargeSideKeyColumns.reset(new vector<uint32_t>[joinerCount]);
@@ -716,7 +716,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     }
     else
     {
-      boost::shared_array<boost::shared_ptr<TJoiner> > tJoiner = tJoiners[joinerNum];
+      std::shared_ptr<boost::shared_ptr<TJoiner>[]> tJoiner = tJoiners[joinerNum];
       uint64_t nullValue = joinNullValues[joinerNum];
       bool& l_doMatchNulls = doMatchNulls[joinerNum];
       joblist::JoinType joinType = joinTypes[joinerNum];
@@ -830,7 +830,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
       // TODO: write an RGData fcn to let it interpret data within a ByteStream to avoid
       // the extra copying.
       offTheWire.deserialize(bs);
-      boost::mutex::scoped_lock lk(smallSideDataLocks[joinerNum]);
+      std::unique_lock lk(smallSideDataLocks[joinerNum]);
       smallSide.setData(&smallSideRowData[joinerNum]);
       smallSide.append(offTheWire, startPos);
 
@@ -868,7 +868,7 @@ int BatchPrimitiveProcessor::endOfJoiner()
   uint32_t i;
   size_t currentSize;
   // it should be safe to run this without grabbing this lock
-  // boost::mutex::scoped_lock scoped(addToJoinerLock);
+  // std::unique_lock scoped(addToJoinerLock);
 
   if (endOfJoinerRan)
     return 0;
@@ -996,8 +996,8 @@ void BatchPrimitiveProcessor::initProcessor()
       {
         joinFERG->initRow(&joinFERow, true);
         joinFERowData.reset(new uint8_t[joinFERow.getSize()]);
-        joinFERow.setData(joinFERowData.get());
-        joinFEMappings.reset(new shared_array<int>[joinerCount + 1]);
+        joinFERow.setData(rowgroup::Row::Pointer(joinFERowData.get()));
+        joinFEMappings.reset(new std::shared_ptr<int[]>[joinerCount + 1]);
 
         for (i = 0; i < joinerCount; i++)
           joinFEMappings[i] = makeMapping(smallSideRGs[i], *joinFERG);
@@ -1058,8 +1058,8 @@ void BatchPrimitiveProcessor::initProcessor()
         smallSideRGs[i].initRow(&smallRows[i], true);
 
       baseJRowMem.reset(new uint8_t[baseJRow.getSize()]);
-      baseJRow.setData(baseJRowMem.get());
-      gjrgMappings.reset(new shared_array<int>[joinerCount + 1]);
+      baseJRow.setData(rowgroup::Row::Pointer(baseJRowMem.get()));
+      gjrgMappings.reset(new std::shared_ptr<int[]>[joinerCount + 1]);
 
       for (i = 0; i < joinerCount; i++)
         gjrgMappings[i] = makeMapping(smallSideRGs[i], joinedRG);
@@ -2183,7 +2183,7 @@ void BatchPrimitiveProcessor::sendResponse()
   }
   else
   {
-    boost::mutex::scoped_lock lk(*writelock);
+    std::unique_lock lk(*writelock);
     sock->write(*serialized);
   }
 

@@ -33,7 +33,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <boost/shared_array.hpp>
+
 #include <vector>
 #include <limits>
 #include <unistd.h>
@@ -93,7 +93,7 @@ class FixedAllocator
  private:
   void newBlock();
 
-  std::vector<boost::shared_array<uint8_t> > mem;
+  std::vector<std::shared_ptr<uint8_t[]>> mem;
   unsigned long capacityRemaining;
   uint64_t elementCount;
   unsigned long elementSize;

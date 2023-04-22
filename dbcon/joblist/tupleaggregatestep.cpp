@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_array.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include "boost/tuple/tuple.hpp"
@@ -386,7 +386,7 @@ void TupleAggregateStep::initializeMultiThread()
 
   for (i = 0; i < fNumOfBuckets; i++)
   {
-    boost::mutex* lock = new boost::mutex();
+    std::mutex* lock = new std::mutex();
     fAgg_mutex.push_back(lock);
     fRowGroupOuts[i] = fRowGroupOut;
     rgData.reinit(fRowGroupOut);
@@ -5298,7 +5298,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   RGData rgData;
   scoped_array<RowBucketVec> rowBucketVecs(new RowBucketVec[fNumOfBuckets]);
   scoped_array<Row> distRow;
-  scoped_array<shared_array<uint8_t>> distRowData;
+  scoped_array<std::shared_ptr<uint8_t[]>> distRowData;
   uint32_t bucketID;
   scoped_array<bool> bucketDone(new bool[fNumOfBuckets]);
   vector<uint32_t> hashLens;
@@ -5365,13 +5365,13 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                 rowBucketVecs[i].resize(multiDist->subAggregators().size());
 
               distRow.reset(new Row[multiDist->subAggregators().size()]);
-              distRowData.reset(new shared_array<uint8_t>[multiDist->subAggregators().size()]);
+              distRowData.reset(new std::shared_ptr<uint8_t[]>[multiDist->subAggregators().size()]);
 
               for (uint32_t j = 0; j < multiDist->subAggregators().size(); j++)
               {
                 multiDist->subAggregators()[j]->getOutputRowGroup()->initRow(&distRow[j], true);
                 distRowData[j].reset(new uint8_t[distRow[j].getSize()]);
-                distRow[j].setData(distRowData[j].get());
+                distRow[j].setData(rowgroup::Row::Pointer(distRowData[j].get()));
                 hashLens.push_back(multiDist->subAggregators()[j]->aggMapKeyLength());
               }
             }

@@ -32,7 +32,8 @@
 #include <map>
 #include <boost/utility.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 // Setting to min possible based on
 // using 1k in config file. If wrong
@@ -113,7 +114,7 @@ class Cache : public boost::noncopyable, public ConfigListener
   PrefixCache& getPCache(const boost::filesystem::path& prefix);
 
   std::map<boost::filesystem::path, PrefixCache*> prefixCaches;
-  mutable boost::mutex lru_mutex;  // protects the prefixCaches
+  mutable std::mutex lru_mutex;  // protects the prefixCaches
 };
 
 }  // namespace storagemanager

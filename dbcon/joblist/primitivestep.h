@@ -36,9 +36,9 @@
 #include <tr1/memory>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
@@ -300,9 +300,9 @@ class pColStep : public JobStep
 
   BRM::DBRM dbrm;
 
-  boost::mutex mutex;
-  boost::condition condvar;
-  boost::condition flushed;
+  std::mutex mutex;
+  std::condition_variable condvar;
+  std::condition_variable flushed;
   SP_LBIDList lbidList;
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   uint32_t uniqueID;
@@ -509,8 +509,8 @@ class pColScanStep : public JobStep
   BRM::DBRM dbrm;
   SP_LBIDList lbidList;
 
-  boost::condition condvar;
-  boost::condition condvarWakeupProducer;
+  std::condition_variable condvar;
+  std::condition_variable_any condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
   uint32_t recvWaiting, recvExited;
 
@@ -648,8 +648,8 @@ class pDictionaryStep : public JobStep
 
   DataList_t* requestList;
   // StringDataList* stringList;
-  boost::mutex mutex;
-  boost::condition condvar;
+  std::mutex mutex;
+  std::condition_variable condvar;
   uint32_t fInterval;
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
@@ -827,9 +827,9 @@ class pDictionaryScan : public JobStep
   uint64_t cThread;  // consumer thread. thread pool handle
   DataList_t* requestList;
   // StringDataList* stringList;
-  boost::mutex mutex;
-  boost::condition condvar;
-  boost::condition condvarWakeupProducer;
+  std::mutex mutex;
+  std::condition_variable_any condvar;
+  std::condition_variable_any condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
   std::vector<struct BRM::EMEntry> extents;
   uint64_t extentSize;
@@ -840,7 +840,7 @@ class pDictionaryScan : public JobStep
   // consumer will tell producer to send
   bool fStopSending;
   uint64_t fPhysicalIO;   // total physical I/O count
-  uint64_t fCacheIO;      // total cache I/O count
+  uint64_t fCacheIO;      // total cache I/O countF
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
   uint32_t fMsgsToPm;     // total number of messages sent to PMs
@@ -1278,11 +1278,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fExtentsPerSegFile;       // config num of Extents Per Segment File
   // uint64_t cThread;  //consumer thread. thread handle from thread pool
   uint64_t pThread;  // producer thread. thread handle from thread pool
-  boost::mutex tplMutex;
-  boost::mutex dlMutex;
-  boost::mutex cpMutex;
-  boost::mutex serializeJoinerMutex;
-  boost::condition condvarWakeupProducer, condvar;
+  std::mutex tplMutex;
+  std::mutex dlMutex;
+  std::mutex cpMutex;
+  std::mutex serializeJoinerMutex;
+  std::condition_variable_any condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   bool BPPIsAllocated;
@@ -1314,7 +1314,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint8_t bop;  // BOP_AND or BOP_OR
 
   // temporary hack to make sure JobList only calls run and join once
-  boost::mutex jlLock;
+  std::mutex jlLock;
   bool runRan;
   bool joinRan;
 
@@ -1324,7 +1324,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   /* Functions & Expressions vars */
   boost::shared_ptr<funcexp::FuncExpWrapper> fe1, fe2;
   rowgroup::RowGroup fe1Input, fe2Output;
-  boost::shared_array<int> fe2Mapping;
+  std::shared_ptr<int[]> fe2Mapping;
   bool bRunFEonPM;
 
   /* for UM F & E 2 processing */
@@ -1396,12 +1396,12 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     boost::scoped_array<rowgroup::Row> smallNulls;
     boost::scoped_array<uint8_t> joinedBaseRowData;
     boost::scoped_array<uint8_t> joinFERowData;
-    boost::shared_array<int> largeMapping;
-    vector<boost::shared_array<int>> smallMappings;
-    vector<boost::shared_array<int>> fergMappings;
+    std::shared_ptr<int[]> largeMapping;
+    vector<std::shared_ptr<int[]>> smallMappings;
+    vector<std::shared_ptr<int[]>> fergMappings;
     rowgroup::RGData joinedData;
     boost::scoped_array<uint8_t> largeNullMemory;
-    boost::scoped_array<boost::shared_array<uint8_t>> smallNullMemory;
+    boost::scoped_array<std::shared_ptr<uint8_t[]>> smallNullMemory;
     uint32_t matchCount;
 
     rowgroup::Row postJoinRow;

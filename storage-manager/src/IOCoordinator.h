@@ -23,8 +23,9 @@
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/shared_array.hpp>
+#include <map>
+#include <mutex>
+
 #include <boost/filesystem.hpp>
 
 #include "Config.h"
@@ -37,7 +38,7 @@
 
 namespace storagemanager
 {
-boost::shared_array<char> seekToEndOfHeader1(int fd, size_t* bytesRead);
+std::shared_ptr<char[]> seekToEndOfHeader1(int fd, size_t* bytesRead);
 
 class IOCoordinator : public boost::noncopyable
 {
@@ -57,16 +58,16 @@ class IOCoordinator : public boost::noncopyable
 
   // The shared logic for merging a journal file with its base file.
   // len should be set to the length of the data requested
-  boost::shared_array<uint8_t> mergeJournal(const char* objectPath, const char* journalPath, off_t offset,
+  std::shared_ptr<uint8_t[]> mergeJournal(const char* objectPath, const char* journalPath, off_t offset,
                                             size_t len, size_t* sizeRead) const;
 
   // this version modifies object data in memory, given the journal filename.  Processes the whole object
   // and whole journal file.
-  int mergeJournalInMem(boost::shared_array<uint8_t>& objData, size_t len, const char* journalPath,
+  int mergeJournalInMem(std::shared_ptr<uint8_t[]>& objData, size_t len, const char* journalPath,
                         size_t* sizeRead) const;
 
   // this version of MJIM has a higher IOPS requirement and lower mem usage.
-  int mergeJournalInMem_bigJ(boost::shared_array<uint8_t>& objData, size_t len, const char* journalPath,
+  int mergeJournalInMem_bigJ(std::shared_ptr<uint8_t[]>& objData, size_t len, const char* journalPath,
                              size_t* sizeRead) const;
 
   // this version takes already-open file descriptors, and an already-allocated buffer as input.
@@ -104,7 +105,7 @@ class IOCoordinator : public boost::noncopyable
   boost::filesystem::path metaPath;
 
   std::map<std::string, RWLock*> locks;
-  boost::mutex lockMutex;  // lol
+  std::mutex lockMutex;  // lol
 
   void remove(const boost::filesystem::path& path);
   void deleteMetaFile(const boost::filesystem::path& file);

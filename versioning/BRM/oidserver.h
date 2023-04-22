@@ -31,7 +31,8 @@
 #include <vector>
 #include <sys/types.h>
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #define EXPORT
 
@@ -118,7 +119,7 @@ class OIDServer
   static const int HeaderSize = FreeListEntries * sizeof(FEntry);
   static const int StartOfVBOidSection = HeaderSize + 2097152;  // (2^24/8)
   static const int MaxRetries = 10;                             /// max number of retries on file operations
-  static boost::mutex fMutex;
+  static std::mutex fMutex;
   idbdatafile::IDBDataFile* fFp;
   int fFd;  /// file descriptor referencing the bitmap file
   std::vector<uint16_t> vbOidDBRootMap;

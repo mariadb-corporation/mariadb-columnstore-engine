@@ -42,11 +42,11 @@ using namespace config;
 namespace joblist
 {
 ResourceManager* ResourceManager::fInstance = NULL;
-boost::mutex mx;
+std::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {
-  boost::mutex::scoped_lock lk(mx);
+  std::unique_lock lk(mx);
 
   if (!fInstance)
     fInstance = new ResourceManager(runningInExeMgr, aConfig);

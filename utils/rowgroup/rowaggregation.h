@@ -35,7 +35,7 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -335,7 +335,7 @@ struct GroupConcat
   uint64_t fSize;
 
   RowGroup fRowGroup;
-  boost::shared_array<int> fMapping;
+  std::shared_ptr<int[]> fMapping;
   std::vector<std::pair<int, bool>> fOrderCond;  // position to order by [asc/desc]
   joblist::ResourceManager* fRm;                 // resource manager
   boost::shared_ptr<int64_t> fSessionMemLimit;
@@ -586,8 +586,8 @@ class RowAggregation : public messageqcpp::Serializeable
   // for support PM aggregation after PM hashjoin
   std::vector<RowGroup>* fSmallSideRGs;
   RowGroup* fLargeSideRG;
-  boost::shared_array<boost::shared_array<int>> fSmallMappings;
-  boost::shared_array<int> fLargeMapping;
+  std::shared_ptr<std::shared_ptr<int[]>[]> fSmallMappings;
+  std::shared_ptr<int[]> fLargeMapping;
   uint32_t fSmallSideCount;
   boost::scoped_array<Row> rowSmalls;
 

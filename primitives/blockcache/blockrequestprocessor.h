@@ -167,7 +167,7 @@ class BlockRequestProcessor
   FileBufferMgr fbMgr;
   fileBlockRequestQueue fBRPRequestQueue;
   ioManager fIOMgr;
-  boost::mutex check_mutex;
+  std::mutex check_mutex;
 
   /**
    * helper function for public check functions

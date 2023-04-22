@@ -592,7 +592,7 @@ void SimpleScalarTransformer::getScalarResult()
       fRowGroup.initRow(&row);
       fRowGroup.getRow(0, &row);
       fRowData.reset(new uint8_t[fRow.getSize()]);
-      fRow.setData(fRowData.get());
+      fRow.setData(rowgroup::Row::Pointer(fRowData.get()));
       copyRow(row, &fRow);
 
       // For exist filter, stop the query after one or more rows retrieved.

@@ -27,7 +27,8 @@
  *      Author: bpaul@calpont.com
  */
 
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 #include "we_observer.h"
 
@@ -62,7 +63,6 @@ Subject::~Subject()
 
 void Subject::attach(Observer* Obs)
 {
-  boost::mutex::scoped_lock aLstLock;
   fObs.push_back(Obs);
 }
 
@@ -70,7 +70,6 @@ void Subject::attach(Observer* Obs)
 
 void Subject::detach(Observer* Obs)
 {
-  boost::mutex::scoped_lock aLstLock;
   Observers::iterator aIt = fObs.begin();
 
   while (aIt != fObs.end())
@@ -87,7 +86,6 @@ void Subject::detach(Observer* Obs)
 
 void Subject::notify()
 {
-  boost::mutex::scoped_lock aLstLock;
   Observers::iterator aIt = fObs.begin();
 
   while (aIt != fObs.end())

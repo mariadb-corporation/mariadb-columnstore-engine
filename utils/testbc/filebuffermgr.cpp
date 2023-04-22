@@ -66,7 +66,7 @@ FileBufferMgr::~FileBufferMgr()
 
 void FileBufferMgr::flushCache()
 {
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
   fbList.clear();
   fbSet.clear();
   fFBPool.clear();
@@ -83,7 +83,7 @@ bool FileBufferMgr::exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const
 
 FileBuffer* FileBufferMgr::findPtr(const HashObject_t& keyFb)
 {
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
   filebuffer_uset_iter_t it = fbSet.find(keyFb);
 
   if (fbSet.end() != it)
@@ -101,7 +101,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, FileBuffer& fb)
 {
   bool ret = false;
 
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
   filebuffer_uset_iter_t it = fbSet.find(keyFb);
 
   if (fbSet.end() != it)
@@ -123,7 +123,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'L');
 
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
 
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'M');
@@ -150,7 +150,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
 bool FileBufferMgr::exists(const HashObject_t& fb) const
 {
   bool find_bool = false;
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
   filebuffer_uset_iter_t it = fbSet.find(fb);
 
   if (it != fbSet.end())
@@ -175,7 +175,7 @@ const int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, co
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
 
-  mutex::scoped_lock lk(fWLock);
+  std::scoped_lock lk(fWLock);
   HashObject_t fbIndex = {lbid, ver, 0};
   filebuffer_pair_t pr = fbSet.insert(fbIndex);
 

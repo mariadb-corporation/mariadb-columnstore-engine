@@ -182,9 +182,9 @@ class Config
   static std::string m_bulkRoot;            // root path for bulk operation
   static unsigned long fDBRootChangeCount;  // track recent DBRoot changes
   static time_t fCacheTime;                 // timestamp associated w/cache
-  static boost::mutex fCacheLock;           // mutex for m_dbRoot sync
+  static std::mutex fCacheLock;           // mutex for m_dbRoot sync
 #ifdef SHARED_NOTHING_DEMO_2
-  static boost::mutex m_bulkRoot_lk;  // mutex for m_bulkRoot sync
+  static std::mutex m_bulkRoot_lk;  // mutex for m_bulkRoot sync
 #endif
   static int m_WaitPeriod;                    // secs to wait for transaction
   static unsigned m_FilesPerColumnPartition;  //# seg files per partition

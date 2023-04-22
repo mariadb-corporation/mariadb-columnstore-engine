@@ -137,7 +137,7 @@ class WEFileReadThread
 
   WESDHandler& fSdh;
   boost::thread* fpThread;
-  boost::mutex fFileMutex;
+  std::mutex fFileMutex;
   bool fContinue;
   std::string fInFileName;
   std::istream fInFile;   //@BUG 4326

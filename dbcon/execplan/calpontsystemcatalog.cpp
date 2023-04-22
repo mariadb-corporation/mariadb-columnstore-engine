@@ -72,7 +72,8 @@ using namespace rowgroup;
 #include "installdir.h"
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 #include <boost/version.hpp>
 
 
@@ -369,7 +370,7 @@ void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& 
 }
 
 /*static*/
-boost::mutex CalpontSystemCatalog::map_mutex;
+std::mutex CalpontSystemCatalog::map_mutex;
 /*static*/
 CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/
@@ -501,7 +502,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     checkSysCatVer();
   }
 
-  boost::mutex::scoped_lock lk2(fOIDmapLock);
+  std::unique_lock lk2(fOIDmapLock);
 
   if (fOIDmap.size() > 0)
   {
@@ -731,7 +732,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   // delete col[9];
   ct.columnOID = coloid;
   // populate colinfomap cache and oidbitmap
-  boost::mutex::scoped_lock lk3(fColinfomapLock);
+  std::unique_lock lk3(fColinfomapLock);
   fColinfomap[coloid] = ct;
   return coloid;
 }
@@ -1036,7 +1037,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   }
 
   // check colinfomap first for system table column or cached column type
-  boost::mutex::scoped_lock lk3(fColinfomapLock);
+  std::unique_lock lk3(fColinfomapLock);
 
   if (fColinfomap.size() > 0)
   {
@@ -1245,7 +1246,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 
   // populate colinfomap cache and oidbitmap
   lk3.lock();
-  boost::mutex::scoped_lock lk2(fOIDmapLock);
+  std::unique_lock lk2(fOIDmapLock);
   fColinfomap[Oid] = ct;
   fOIDmap[tcn] = Oid;
 
@@ -1366,7 +1367,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
   }
 
   // check oidmap for system table columns and cached columns
-  boost::mutex::scoped_lock lk2(fOIDmapLock);
+  std::unique_lock lk2(fOIDmapLock);
   OIDmap::const_iterator iter = fOIDmap.begin();
 
   while (iter != fOIDmap.end())
@@ -1871,7 +1872,7 @@ const CalpontSystemCatalog::SCN CalpontSystemCatalog::scn(void) const
 /* static */
 boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemCatalog(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::unique_lock lock(map_mutex);
   boost::shared_ptr<CalpontSystemCatalog> instance;
   CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
 
@@ -1916,7 +1917,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 /* static */
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
-  boost::mutex::scoped_lock lock(map_mutex);
+  std::unique_lock lock(map_mutex);
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
   fCatalogMap.erase(sessionID);
   /*
@@ -2293,9 +2294,9 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
     boost::algorithm::to_lower(aTableColName.column);
 
 #if BOOST_VERSION < 104000
-    boost::mutex::scoped_lock lk1(fColIndexListmapLock, false);
+    std::unique_lock lk1(fColIndexListmapLock, false);
 #else
-    boost::mutex::scoped_lock lk1(fColIndexListmapLock, boost::defer_lock);
+    std::unique_lock lk1(fColIndexListmapLock, std::defer_lock);
 #endif
 
     if (useCache)
@@ -2925,7 +2926,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableCo
      tablename=tableColName.table and columnname=tableColName.column;*/
   // this function is duplicate to lookupOID() and will be deprecated soon
   rp.objnum = lookupOID(tableColName);
-  boost::mutex::scoped_lock lk2(fOIDmapLock);
+  std::unique_lock lk2(fOIDmapLock);
 
   ColRIDmap::const_iterator iter = fColRIDmap.find(aTableColName);
 
@@ -2961,18 +2962,18 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     checkSysCatVer();
   }
 
-  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
+  std::unique_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
 
   // search fOIDmap for system catalog tables
   // or if fTableInfoMap has entry for this table, column oids are cached.
   // because columnRIDs(), colType() and tableInfo() are actually binded.
 #if BOOST_VERSION < 103800
-  boost::mutex::scoped_lock lk2(fOIDmapLock, false);
+  std::unique_lock lk2(fOIDmapLock, false);
 #else
-  boost::mutex::scoped_lock lk2(fOIDmapLock, boost::defer_lock);
+  std::unique_lock lk2(fOIDmapLock, std::defer_lock);
 #endif
-  boost::mutex::scoped_lock lk3(fColinfomapLock);
+  std::unique_lock lk3(fColinfomapLock);
 
   if (aTableName.schema == CALPONT_SCHEMA || (useCache && ti_iter != fTableInfoMap.end()))
   {
@@ -3355,7 +3356,7 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
   }
 
   // check cache
-  boost::mutex::scoped_lock lk(fTableNameMapLock);
+  std::unique_lock lk(fTableNameMapLock);
 
   if (fTableNameMap.size() > 0)
   {
@@ -3477,7 +3478,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
   //     rp.rid = -1; @bug1866  use default
 
   // calpontsys only needs oid
-  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
+  std::unique_lock lk1(fTableInfoMapLock);
   Tablemap::const_iterator iter = fTablemap.find(aTableName);
 
   if (aTableName.schema.compare("calpontsys") == 0 && iter != fTablemap.end())
@@ -3634,7 +3635,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
 
   checkSysCatVer();
 
-  boost::mutex::scoped_lock lk1(fTableAUXColumnOIDMapLock);
+  std::unique_lock lk1(fTableAUXColumnOIDMapLock);
   TableOIDmap::const_iterator iter = fTableAUXColumnOIDMap.find(aTableName);
 
   if (iter != fTableAUXColumnOIDMap.end())
@@ -3747,7 +3748,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
 
   checkSysCatVer();
 
-  boost::mutex::scoped_lock lk1(fAUXColumnOIDToTableOIDMapLock);
+  std::unique_lock lk1(fAUXColumnOIDToTableOIDMapLock);
   AUXColumnOIDTableOIDmap::const_iterator iter = fAUXColumnOIDToTableOIDMap.find(oid);
 
   if (iter != fAUXColumnOIDToTableOIDMap.end())
@@ -5128,7 +5129,7 @@ const CalpontSystemCatalog::TableInfo CalpontSystemCatalog::tableInfo(const Tabl
     return ti;
   }
 
-  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
+  std::unique_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
 
   if (ti_iter != fTableInfoMap.end())
@@ -5505,7 +5506,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   // Check whether cache needs to be flushed
   checkSysCatVer();
 
-  boost::mutex::scoped_lock lk(fSchemaCacheLock);
+  std::unique_lock lk(fSchemaCacheLock);
   set<string>::iterator setIt = fSchemaCache.find(schema);
 
   if (setIt != fSchemaCache.end())
@@ -5808,7 +5809,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   }
 
   // populate colinfo cache
-  // boost::mutex::scoped_lock lk3(fColinfomapLock);
+  // std::unique_lock lk3(fColinfomapLock);
   for (uint32_t i = 0; i < ctList.size(); i++)
     fColinfomap[ctList[i].columnOID] = ctList[i];
 
@@ -5857,32 +5858,32 @@ ostream& operator<<(ostream& os, const CalpontSystemCatalog::TableColName& rhs)
 
 void CalpontSystemCatalog::flushCache()
 {
-  boost::mutex::scoped_lock lk1(fOIDmapLock);
+  std::unique_lock lk1(fOIDmapLock);
   fOIDmap.clear();
   buildSysOIDmap();
   lk1.unlock();
 
-  boost::mutex::scoped_lock lk2(fColinfomapLock);
+  std::unique_lock lk2(fColinfomapLock);
   fColinfomap.clear();
   buildSysColinfomap();
   lk2.unlock();
 
-  boost::mutex::scoped_lock lk3(fTableInfoMapLock);
+  std::unique_lock lk3(fTableInfoMapLock);
   fTableInfoMap.clear();
   fTablemap.clear();
   fTableRIDmap.clear();
   buildSysTablemap();
   lk3.unlock();
 
-  boost::mutex::scoped_lock namemaplk(fTableNameMapLock);
+  std::unique_lock namemaplk(fTableNameMapLock);
   fTableNameMap.clear();
   namemaplk.unlock();
 
-  boost::mutex::scoped_lock auxlk(fTableAUXColumnOIDMapLock);
+  std::unique_lock auxlk(fTableAUXColumnOIDMapLock);
   fTableAUXColumnOIDMap.clear();
   auxlk.unlock();
 
-  boost::mutex::scoped_lock auxtotableoidlk(fAUXColumnOIDToTableOIDMapLock);
+  std::unique_lock auxtotableoidlk(fAUXColumnOIDToTableOIDMapLock);
   fAUXColumnOIDToTableOIDMap.clear();
   auxtotableoidlk.unlock();
 
@@ -5897,7 +5898,7 @@ void CalpontSystemCatalog::flushCache()
 
 void CalpontSystemCatalog::updateColinfoCache(CalpontSystemCatalog::OIDNextvalMap& oidNextvalMap)
 {
-  boost::mutex::scoped_lock lk(fColinfomapLock);
+  std::unique_lock lk(fColinfomapLock);
   CalpontSystemCatalog::OIDNextvalMap::const_iterator iter = oidNextvalMap.begin();
   OID oid = 0;
   long long nextVal = 0;
@@ -6292,7 +6293,7 @@ void CalpontSystemCatalog::checkSysCatVer()
     newScn = fSessionManager->sysCatVerID().currentScn;
   }
 
-  boost::mutex::scoped_lock sysCatLk(fSyscatSCNLock);
+  std::unique_lock sysCatLk(fSyscatSCNLock);
 
   if (fSyscatSCN != newScn)
   {

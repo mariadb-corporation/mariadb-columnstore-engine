@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <list>
 #include <limits>
-#include <boost/thread/condition.hpp>
+#include <condition_variable>
 
 #include "logger.h"
 
@@ -72,10 +72,10 @@ class LockedSessionMap
 
  private:
   void updateAging(uint32_t sessionID);
-  boost::mutex fMapLock;
+  std::mutex fMapLock;
   SessionMap fSessionMap;
   uint64_t fResourceBlock;
-  boost::mutex fSessionLock;
+  std::mutex fSessionLock;
   SessionList fSessionAgingList;
   const unsigned fMaxSessions;
 };
@@ -135,8 +135,8 @@ class ResourceDistributor
   std::string fIdentity;
   uint64_t fTotalResource;
   uint64_t fResourceBlock;
-  boost::mutex fResourceLock;
-  boost::condition fResourceAvailable;
+  std::mutex fResourceLock;
+  std::condition_variable fResourceAvailable;
 
   LockedSessionMap fSessionMap;
   uint32_t fTraceOn;

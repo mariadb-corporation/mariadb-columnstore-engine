@@ -48,7 +48,7 @@ struct TsTeleQueue
   typedef std::queue<T> TeleQueue;
 
   TeleQueue queue;
-  boost::mutex queueMtx;
+  std::mutex queueMtx;
 };
 
 TsTeleQueue<querytele::StepTele> stQueue;
@@ -56,7 +56,7 @@ TsTeleQueue<querytele::QueryTele> qtQueue;
 TsTeleQueue<querytele::ImportTele> itQueue;
 
 volatile bool isInited = false;
-boost::mutex initMux;
+std::mutex initMux;
 
 std::shared_ptr<att::TSocket> fSocket;
 std::shared_ptr<att::TBufferedTransport> fTransport;
@@ -195,9 +195,9 @@ void log_step(const querytele::StepTele& stdata)
 void TeleConsumer()
 {
   bool didSomeWork = false;
-  boost::mutex::scoped_lock itlk(itQueue.queueMtx, boost::defer_lock);
-  boost::mutex::scoped_lock qtlk(qtQueue.queueMtx, boost::defer_lock);
-  boost::mutex::scoped_lock stlk(stQueue.queueMtx, boost::defer_lock);
+  std::unique_lock itlk(itQueue.queueMtx, std::defer_lock);
+  std::unique_lock qtlk(qtQueue.queueMtx, std::defer_lock);
+  std::unique_lock stlk(stQueue.queueMtx, std::defer_lock);
   querytele::QueryTeleServiceClient client(fProtocol);
 
   try
@@ -333,7 +333,7 @@ QueryTeleProtoImpl::QueryTeleProtoImpl(const QueryTeleServerParms& sp) : fServer
   if (fServerParms.host.empty() || fServerParms.port == 0)
     return;
 
-  boost::mutex::scoped_lock lk(initMux);
+  std::unique_lock lk(initMux);
 
   atomicops::atomicMb();
 
@@ -354,7 +354,7 @@ int QueryTeleProtoImpl::enqStepTele(const StepTele& stdata)
 {
   try
   {
-    boost::mutex::scoped_lock lk(stQueue.queueMtx);
+    std::unique_lock lk(stQueue.queueMtx);
 
     // @bug6088 - Added conditions below to always log progress SUMMARY and START messages to avoid completed
     // queries showing up with progress 0
@@ -391,7 +391,7 @@ int QueryTeleProtoImpl::enqQueryTele(const QueryTele& qtdata)
 {
   try
   {
-    boost::mutex::scoped_lock lk(qtQueue.queueMtx);
+    std::unique_lock lk(qtQueue.queueMtx);
 
     if (qtQueue.queue.size() >= MaxQueueElems)
     {
@@ -413,7 +413,7 @@ int QueryTeleProtoImpl::enqImportTele(const ImportTele& itdata)
 {
   try
   {
-    boost::mutex::scoped_lock lk(itQueue.queueMtx);
+    std::unique_lock lk(itQueue.queueMtx);
 
     if (itQueue.queue.size() >= MaxQueueElems)
     {
@@ -435,7 +435,7 @@ int QueryTeleProtoImpl::waitForQueues()
 {
   try
   {
-    boost::mutex::scoped_lock lk(itQueue.queueMtx);
+    std::unique_lock lk(itQueue.queueMtx);
 
     while (!itQueue.queue.empty())
     {

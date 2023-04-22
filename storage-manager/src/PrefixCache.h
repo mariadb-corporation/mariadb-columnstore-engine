@@ -32,7 +32,8 @@
 #include <unordered_set>
 #include <boost/utility.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/thread/mutex.hpp>
+#include <map>
+#include <mutex>
 
 namespace storagemanager
 {
@@ -159,7 +160,7 @@ class PrefixCache : public boost::noncopyable
   typedef std::set<LRU_t::iterator, TBDLess> TBD_t;
   TBD_t toBeDeleted;
 
-  mutable boost::mutex lru_mutex;  // protects the main PrefixCache structures & the do-not-evict set
+  mutable std::mutex lru_mutex;  // protects the main PrefixCache structures & the do-not-evict set
 };
 
 }  // namespace storagemanager

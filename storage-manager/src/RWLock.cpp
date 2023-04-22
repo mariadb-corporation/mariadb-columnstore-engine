@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include "RWLock.h"
+#include <cassert>
 
 namespace storagemanager
 {
@@ -33,13 +34,13 @@ RWLock::~RWLock()
 
 bool RWLock::inUse()
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
   return readersWaiting || readersRunning || writersWaiting || writersRunning;
 }
 
 void RWLock::readLock()
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
 
   ++readersWaiting;
   while (writersWaiting != 0 || writersRunning != 0)
@@ -49,9 +50,9 @@ void RWLock::readLock()
   --readersWaiting;
 }
 
-void RWLock::readLock(boost::unique_lock<boost::mutex>& l)
+void RWLock::readLock(std::unique_lock<std::mutex>& l)
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
   l.unlock();
 
   ++readersWaiting;
@@ -64,7 +65,7 @@ void RWLock::readLock(boost::unique_lock<boost::mutex>& l)
 
 void RWLock::readUnlock()
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
 
   assert(readersRunning > 0);
   --readersRunning;
@@ -74,7 +75,7 @@ void RWLock::readUnlock()
 
 void RWLock::writeLock()
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
 
   ++writersWaiting;
   while (readersRunning != 0 || writersRunning != 0)
@@ -84,9 +85,9 @@ void RWLock::writeLock()
   --writersWaiting;
 }
 
-void RWLock::writeLock(boost::unique_lock<boost::mutex>& l)
+void RWLock::writeLock(std::unique_lock<std::mutex>& l)
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
   l.unlock();
 
   ++writersWaiting;
@@ -99,7 +100,7 @@ void RWLock::writeLock(boost::unique_lock<boost::mutex>& l)
 
 void RWLock::writeUnlock()
 {
-  boost::unique_lock<boost::mutex> s(m);
+  std::unique_lock<std::mutex> s(m);
 
   assert(writersRunning > 0);
   --writersRunning;

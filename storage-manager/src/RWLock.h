@@ -15,8 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 
 /* Quicky impl of a read-write lock that prioritizes writers. */
 namespace storagemanager
@@ -29,11 +30,11 @@ class RWLock
 
   void readLock();
   // this version will release the lock in the parameter after locking this instance
-  void readLock(boost::unique_lock<boost::mutex>&);
+  void readLock(std::unique_lock<std::mutex>&);
   void readUnlock();
   void writeLock();
   // this version will release the lock in the parameter after locking this instance
-  void writeLock(boost::unique_lock<boost::mutex>&);
+  void writeLock(std::unique_lock<std::mutex>&);
   void writeUnlock();
 
   // returns true if anything is blocked on or owns this lock instance.
@@ -44,8 +45,8 @@ class RWLock
   uint readersRunning;
   uint writersWaiting;
   uint writersRunning;
-  boost::mutex m;
-  boost::condition okToWrite;
-  boost::condition okToRead;
+  std::mutex m;
+  std::condition_variable okToWrite;
+  std::condition_variable okToRead;
 };
 }  // namespace storagemanager

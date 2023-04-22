@@ -24,7 +24,7 @@ using namespace std;
 namespace
 {
 storagemanager::SMLogging* smLog = NULL;
-boost::mutex m;
+std::mutex m;
 };  // namespace
 
 namespace storagemanager
@@ -46,7 +46,7 @@ SMLogging* SMLogging::get()
 {
   if (smLog)
     return smLog;
-  boost::mutex::scoped_lock s(m);
+  std::unique_lock s(m);
   if (smLog)
     return smLog;
   smLog = new SMLogging();

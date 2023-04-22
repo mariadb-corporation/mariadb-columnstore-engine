@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 
 
 namespace joblist
@@ -56,7 +56,7 @@ class ThreadSafeQueue
    *
    * @warning this class takes ownership of the passed-in pointers.
    */
-  ThreadSafeQueue(boost::mutex* pimplLock = 0, boost::condition* pimplCond = 0)
+  ThreadSafeQueue(std::mutex* pimplLock = 0, std::condition_variable* pimplCond = 0)
    : fShutdown(false), bytes(0), zeroCount(0)
   {
     fPimplLock.reset(pimplLock);
@@ -90,7 +90,7 @@ class ThreadSafeQueue
         if (fPimplLock == 0 || fPimplCond == 0)
             throw std::runtime_error("TSQ: front() const: no sync!");
 
-        boost::mutex::scoped_lock lk(*fPimplLock);
+        std::unique_lock lk(*fPimplLock);
 
         if (fImpl.empty())
         {
@@ -116,7 +116,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0 || fPimplCond == 0)
       throw std::runtime_error("TSQ: front(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
 
     if (fImpl.empty())
     {
@@ -146,7 +146,7 @@ class ThreadSafeQueue
     if (fShutdown)
       return ret;
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
     fImpl.push(v);
     bytes += v->lengthWithHdrOverhead();
     fPimplCond->notify_one();
@@ -170,7 +170,7 @@ class ThreadSafeQueue
       return ret;
     }
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
 
     if (out != NULL)
     {
@@ -221,7 +221,7 @@ class ThreadSafeQueue
     if (fShutdown)
       return ret;
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
     curSize = fImpl.size();
 
     if (curSize < min)
@@ -271,7 +271,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: empty(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
     return fImpl.empty();
   }
   /** @brief how many items are in the queue
@@ -284,7 +284,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: size(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
     ret.size = bytes;
     ret.count = fImpl.size();
     return ret;
@@ -309,7 +309,7 @@ class ThreadSafeQueue
     if (fPimplLock == 0)
       throw std::runtime_error("TSQ: clear(): no sync!");
 
-    boost::mutex::scoped_lock lk(*fPimplLock);
+    std::unique_lock lk(*fPimplLock);
 
     while (!fImpl.empty())
       fImpl.pop();
@@ -320,8 +320,8 @@ class ThreadSafeQueue
 
  private:
   typedef std::queue<T> impl_type;
-  typedef boost::shared_ptr<boost::mutex> SPBM;
-  typedef boost::shared_ptr<boost::condition> SPBC;
+  typedef boost::shared_ptr<std::mutex> SPBM;
+  typedef boost::shared_ptr<std::condition_variable> SPBC;
 
   // defaults okay
   // ThreadSafeQueue<T>(const ThreadSafeQueue<T>& rhs);

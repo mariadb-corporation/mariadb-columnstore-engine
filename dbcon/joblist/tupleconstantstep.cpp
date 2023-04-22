@@ -25,7 +25,7 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
+
 #include <boost/uuid/uuid_io.hpp>
 using namespace boost;
 
@@ -180,7 +180,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 {
   // construct a row with only the constant values
   fConstRowData.reset(new uint8_t[fRowConst.getSize()]);
-  fRowConst.setData(fConstRowData.get());
+  fRowConst.setData(rowgroup::Row::Pointer(fConstRowData.get()));
   fRowConst.initToNull();  // make sure every col is init'd to something, because later we copy the whole row
   const vector<CalpontSystemCatalog::ColDataType>& types = fRowGroupOut.getColTypes();
 

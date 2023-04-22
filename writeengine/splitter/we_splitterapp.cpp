@@ -449,7 +449,7 @@ void WESplitterApp::processMessages()
 
       aBs.restart();
       aBs << (messageqcpp::ByteStream::byte)WE_CLT_SRV_KEEPALIVE;
-      boost::mutex::scoped_lock aLock(fDh.fSendMutex);
+      std::unique_lock aLock(fDh.fSendMutex);
       fDh.send2Pm(aBs);
       aLock.unlock();
       // fDh.sendHeartbeats();
