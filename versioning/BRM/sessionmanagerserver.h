@@ -29,9 +29,8 @@
 #include <map>
 
 
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 #include "calpontsystemcatalog.h"
 #include "brmtypes.h"
@@ -275,8 +274,8 @@ class SessionManagerServer
   std::map<SID, execplan::CalpontSystemCatalog::SCN> activeTxns;
   typedef std::map<SID, execplan::CalpontSystemCatalog::SCN>::iterator iterator;
 
-  std::mutex mutex;
-  std::condition_variable condvar;  // used to synthesize a semaphore
+  boost::mutex mutex;
+  boost::condition_variable condvar;  // used to synthesize a semaphore
   uint32_t semValue;
 };
 

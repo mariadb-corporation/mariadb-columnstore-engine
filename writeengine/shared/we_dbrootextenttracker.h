@@ -34,8 +34,7 @@
 
 #pragma once
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <vector>
 
 #include "we_type.h"
@@ -185,7 +184,7 @@ class DBRootExtentTracker
    */
   inline int getCurrentDBRootIdx()
   {
-    std::unique_lock lock(fDBRootExtTrkMutex);
+    boost::mutex::scoped_lock lock(fDBRootExtTrkMutex);
     return fCurrentDBRootIdx;
   }
 
@@ -200,7 +199,7 @@ class DBRootExtentTracker
   OID fOID;                         // applicable colunn OID
   long long fBlksPerExtent;         // blocks per extent for fOID
   Log* fLog;                        // logger
-  std::mutex fDBRootExtTrkMutex;  // mutex to access fDBRootExtentList
+  boost::mutex fDBRootExtTrkMutex;  // mutex to access fDBRootExtentList
   int fCurrentDBRootIdx;            // Index into fDBRootExtentList,
   //   DBRoot where current extent is
   //   being added

@@ -67,7 +67,7 @@ class Config : public boost::noncopyable
   void reloadThreadFcn();
   std::vector<ConfigListener*> configListeners;
   struct ::timespec last_mtime;
-  mutable std::mutex mutex;
+  mutable boost::mutex mutex;
   boost::thread reloader;
   boost::posix_time::time_duration reloadInterval;
 

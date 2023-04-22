@@ -20,8 +20,7 @@
 #include "S3Storage.h"
 #include "LocalStorage.h"
 #include "SMLogging.h"
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <string>
 #include <ctype.h>
 #include <iostream>
@@ -30,7 +29,7 @@ using namespace std;
 
 namespace
 {
-std::mutex m;
+boost::mutex m;
 storagemanager::CloudStorage* inst = NULL;
 
 string tolower(const string& s)
@@ -53,7 +52,7 @@ CloudStorage* CloudStorage::get()
   SMLogging* logger = SMLogging::get();
   Config* conf = Config::get();
   string type = tolower(conf->getValue("ObjectStorage", "service"));
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (inst)
     return inst;
   if (type == "s3")

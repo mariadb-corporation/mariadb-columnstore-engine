@@ -493,7 +493,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   SJSTEP fDeliveryStep;
 
   // temporary hack to make sure JobList only calls run, join once
-  std::mutex jlLock;
+  boost::mutex jlLock;
   bool runRan, joinRan;
 
   /* Iteration 18 mods */
@@ -560,7 +560,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void processDupList(uint32_t threadID, rowgroup::RowGroup& ingrp, std::vector<rowgroup::RGData>* rowData);
 
   std::vector<uint64_t> joinRunners;  // thread handles from thread pool
-  std::mutex inputDLLock, outputDLLock;
+  boost::mutex inputDLLock, outputDLLock;
   std::shared_ptr<std::shared_ptr<int[]>[]> columnMappings, fergMappings;
   std::shared_ptr<int[]> fe2Mapping;
   uint32_t joinThreadCount;
@@ -577,7 +577,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   uint32_t fTokenJoin;
 
   // moved from base class JobStep
-  std::mutex* fStatsMutexPtr;
+  boost::mutex* fStatsMutexPtr;
 
   //@bug3683 function join
   boost::shared_ptr<FunctionJoinInfo> fFunctionJoinInfo;
@@ -627,7 +627,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   // THJS configuration is settled.  Debatable whether to use a bool and poll instead;
   // once the config is settled it stays settled, technically no need to
   // keep grabbing locks after that.
-  std::mutex deliverMutex;
+  boost::mutex deliverMutex;
   bool ownsOutputDL;
 
   void segregateJoiners();
@@ -635,13 +635,13 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   std::vector<std::shared_ptr<joiner::TupleJoiner> > djsJoiners;
   std::vector<int> djsJoinerMap;
   boost::scoped_array<ssize_t> memUsedByEachJoin;
-  std::mutex djsLock;
+  boost::mutex djsLock;
   boost::shared_ptr<int64_t> sessionMemLimit;
 
   /* Threaded UM join support */
   int numCores;
-  std::mutex dlMutex, memTrackMutex, saneErrMsg;
-  std::condition_variable memTrackDone;
+  boost::mutex dlMutex, memTrackMutex, saneErrMsg;
+  boost::condition memTrackDone;
   std::atomic<bool> rgdLock;
   bool stopMemTracking;
   void trackMem(uint index);

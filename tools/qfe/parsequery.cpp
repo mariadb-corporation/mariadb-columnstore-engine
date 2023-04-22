@@ -3,8 +3,7 @@
 #include <memory>
 using namespace std;
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
@@ -45,7 +44,7 @@ CalpontSelectExecutionPlan* parseQuery(const string& query, const uint32_t sid)
   // We're going to make parsing the query single-threaded for now. This makes it a lot
   // easier to interface with the parser and doesn;t materially affect overall query
   // performance (I think)
-  std::unique_lock lk(ParserMutex);
+  mutex::scoped_lock lk(ParserMutex);
 
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sid);
   CalpontSelectExecutionPlan* csep = 0;

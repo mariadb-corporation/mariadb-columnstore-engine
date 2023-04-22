@@ -69,7 +69,7 @@ void SimpleSysLog::logMsg(const logging::Message::Args& msgArgs, logging::LOG_TY
   logging::Message m(msgId);
   m.format(msgArgs);
 
-  std::unique_lock lk(fWriteLockMutex);
+  boost::mutex::scoped_lock lk(fWriteLockMutex);
 
   switch (logType)
   {

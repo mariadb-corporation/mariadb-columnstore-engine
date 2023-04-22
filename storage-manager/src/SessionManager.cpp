@@ -41,7 +41,7 @@ using namespace std;
 namespace
 {
 storagemanager::SessionManager* sm = NULL;
-std::mutex m;
+boost::mutex m;
 }  // namespace
 
 namespace storagemanager
@@ -61,7 +61,7 @@ SessionManager* SessionManager::get()
 {
   if (sm)
     return sm;
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (sm)
     return sm;
   sm = new SessionManager();
@@ -438,7 +438,7 @@ int SessionManager::start()
 
 void SessionManager::returnSocket(int socket)
 {
-  std::unique_lock s(ctrlMutex);
+  boost::mutex::scoped_lock s(ctrlMutex);
   int err;
   uint8_t ctrlCode = ADDFD;
   err = ::write(socketCtrl[1], &ctrlCode, 1);
@@ -455,7 +455,7 @@ void SessionManager::returnSocket(int socket)
 
 void SessionManager::socketError(int socket)
 {
-  std::unique_lock s(ctrlMutex);
+  boost::mutex::scoped_lock s(ctrlMutex);
   SMLogging* logger = SMLogging::get();
   logger->log(LOG_CRIT, " ****** socket error!");
   int err;
@@ -474,7 +474,7 @@ void SessionManager::socketError(int socket)
 
 void SessionManager::shutdownSM(int sig)
 {
-  std::unique_lock s(ctrlMutex);
+  boost::mutex::scoped_lock s(ctrlMutex);
   SMLogging* logger = SMLogging::get();
   logger->log(LOG_DEBUG, "SessionManager Caught Signal %i", sig);
   int err;

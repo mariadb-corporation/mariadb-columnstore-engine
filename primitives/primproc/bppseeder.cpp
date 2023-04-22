@@ -70,7 +70,7 @@ typedef std::tr1::unordered_map<pthread_t, SPPTLogs_t> PTLogsMap_t;
 
 PTLogsMap_t gFDList;
 SPPTLogs_t gLogFD;
-std::mutex gFDMutex;  // pthread_mutex_t gFDMutex=PTHREAD_MUTEX_INITIALIZER;
+boost::mutex gFDMutex;  // pthread_mutex_t gFDMutex=PTHREAD_MUTEX_INITIALIZER;
 int gThdCnt = 0;
 
 extern dbbc::BlockRequestProcessor** BRPp;
@@ -133,7 +133,7 @@ int BPPSeeder::operator()()
   PTLogs_t* logFD = NULL;
   int ret = 0;
   pthread_t tid = 0;
-  std::unique_lock scoped(bppLock, std::defer_lock);
+  boost::mutex::scoped_lock scoped(bppLock, boost::defer_lock_t());
 
   try
   {
@@ -370,7 +370,7 @@ void BPPSeeder::sendErrorMsg(uint32_t id, uint16_t status, uint32_t step)
   msg.append((uint8_t*)&ism, sizeof(ism));
   msg.append((uint8_t*)&ph, sizeof(ph));
 
-  std::unique_lock lk(*writelock);
+  boost::mutex::scoped_lock lk(*writelock);
   sock->write(msg);
 }
 

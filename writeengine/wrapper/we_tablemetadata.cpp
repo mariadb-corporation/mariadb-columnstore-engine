@@ -24,21 +24,20 @@
 using namespace std;
 
 #include <boost/thread/thread.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include "we_tablemetadata.h"
 
 namespace WriteEngine
 {
 /*static*/
-std::mutex TableMetaData::map_mutex;
+boost::mutex TableMetaData::map_mutex;
 /*static*/
 TableMetaData::TableMetaDataMap TableMetaData::fTableMetaDataMap;
 
 TableMetaData* TableMetaData::makeTableMetaData(uint32_t tableOid)
 {
-  std::unique_lock lock(map_mutex);
+  boost::mutex::scoped_lock lock(map_mutex);
   TableMetaData* instance;
   TableMetaDataMap::const_iterator it = fTableMetaDataMap.find(tableOid);
 
@@ -55,7 +54,7 @@ TableMetaData* TableMetaData::makeTableMetaData(uint32_t tableOid)
 /* static */
 void TableMetaData::removeTableMetaData(uint32_t tableOid)
 {
-  std::unique_lock lock(map_mutex);
+  boost::mutex::scoped_lock lock(map_mutex);
   TableMetaDataMap::iterator it = fTableMetaDataMap.find(tableOid);
 
   if (it != fTableMetaDataMap.end())
@@ -74,7 +73,7 @@ TableMetaData::~TableMetaData()
 
 ColExtsInfo& TableMetaData::getColExtsInfo(OID columnOid)
 {
-  std::unique_lock lock(fColsExtsInfoLock);
+  boost::mutex::scoped_lock lock(fColsExtsInfoLock);
   ColsExtsInfoMap::iterator it = fColsExtsInfoMap.find(columnOid);
 
   if (it != fColsExtsInfoMap.end())
@@ -91,7 +90,7 @@ ColExtsInfo& TableMetaData::getColExtsInfo(OID columnOid)
 
 void TableMetaData::setColExtsInfo(OID columnOid, ColExtsInfo colExtsInfo)
 {
-  std::unique_lock lock(fColsExtsInfoLock);
+  boost::mutex::scoped_lock lock(fColsExtsInfoLock);
   ColsExtsInfoMap::iterator it = fColsExtsInfoMap.find(columnOid);
 
   if (it != fColsExtsInfoMap.end())
@@ -106,7 +105,7 @@ void TableMetaData::setColExtsInfo(OID columnOid, ColExtsInfo colExtsInfo)
 
 ColsExtsInfoMap& TableMetaData::getColsExtsInfoMap()
 {
-  std::unique_lock lock(fColsExtsInfoLock);
+  boost::mutex::scoped_lock lock(fColsExtsInfoLock);
   return fColsExtsInfoMap;
 }
 }  // namespace WriteEngine

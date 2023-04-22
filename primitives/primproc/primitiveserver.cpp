@@ -34,7 +34,7 @@
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/foreach.hpp>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
@@ -142,11 +142,11 @@ int directIOFlag = O_DIRECT;
 int noVB = 0;
 
 BPPMap bppMap;
-std::mutex bppLock;
+boost::mutex bppLock;
 
 #define DJLOCK_READ 0
 #define DJLOCK_WRITE 1
-std::mutex djMutex;                      // lock for djLock, lol.
+boost::mutex djMutex;                      // lock for djLock, lol.
 std::map<uint64_t, shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
 volatile int32_t asyncCounter;
@@ -155,7 +155,7 @@ const int asyncMax = 20;  // current number of asynchronous loads
 struct preFetchCond
 {
   // uint64_t lbid;
-  std::condition_variable_any cond;
+  boost::condition cond;
   unsigned waiters;
 
   preFetchCond(const uint64_t l)
@@ -173,13 +173,13 @@ typedef std::tr1::unordered_map<uint64_t, preFetchBlock_t*> pfBlockMap_t;
 typedef std::tr1::unordered_map<uint64_t, preFetchBlock_t*>::iterator pfBlockMapIter_t;
 
 pfBlockMap_t pfBlockMap;
-std::mutex pfbMutex;  // = PTHREAD_MUTEX_INITIALIZER;
+boost::mutex pfbMutex;  // = PTHREAD_MUTEX_INITIALIZER;
 
 pfBlockMap_t pfExtentMap;
-std::mutex pfMutex;  // = PTHREAD_MUTEX_INITIALIZER;
+boost::mutex pfMutex;  // = PTHREAD_MUTEX_INITIALIZER;
 
 map<uint32_t, boost::shared_ptr<DictEqualityFilter> > dictEqualityFilters;
-std::mutex eqFilterMutex;
+boost::mutex eqFilterMutex;
 
 uint32_t cacheNum(uint64_t lbid)
 {
@@ -600,7 +600,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         memcpy(bufferPtr, readBufferPtr, i);
 #ifdef IDB_COMP_POC_DEBUG
         {
-          std::unique_lock lk(primitiveprocessor::compDebugMutex);
+          boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
           cout << "pread2(" << fd << ", 0x" << hex << (ptrdiff_t)readBufferPtr << dec << ", "
                << DATA_BLOCK_SIZE << ", " << offset << ") = " << i << endl;
         }
@@ -838,7 +838,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
 struct AsynchLoader
 {
   AsynchLoader(uint64_t l, const QueryContext& v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount,
-               bool trace, uint32_t sesID, std::mutex* m, uint32_t* loaderCount,
+               bool trace, uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
                boost::shared_ptr<BPPSendThread> st,  // sendThread for abort upon exception.
                VSSCache* vCache)
    : lbid(l)
@@ -922,13 +922,13 @@ struct AsynchLoader
   uint32_t* cacheCount;
   uint32_t* readCount;
   uint32_t* busyLoaders;
-  std::mutex* mutex;
+  boost::mutex* mutex;
   boost::shared_ptr<BPPSendThread> sendThread;
   VSSCache* vssCache;
 };
 
 void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int compType, uint32_t* cCount,
-                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, std::mutex* m,
+                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, boost::mutex* m,
                     uint32_t* busyLoaders,
                     boost::shared_ptr<BPPSendThread> sendThread,  // sendThread for abort upon exception.
                     VSSCache* vssCache)
@@ -965,7 +965,7 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
 
   (void)atomicops::atomicInc(&asyncCounter);
 
-  std::unique_lock sl(*m);
+  boost::mutex::scoped_lock sl(*m);
 
   try
   {
@@ -1061,7 +1061,7 @@ void DictScanJob::write(const SBS& sbs)
     exeMgrDecPtr->addDataToOutput(sbs);
     return;
   }
-  std::unique_lock lk(*fWriteLock);
+  boost::mutex::scoped_lock lk(*fWriteLock);
   fIos->write(*sbs);
 }
 
@@ -1103,7 +1103,7 @@ int DictScanJob::operator()()
     /* Grab the equality filter if one is specified */
     if (cmd->flags & HAS_EQ_FILTER)
     {
-      std::unique_lock sl(eqFilterMutex);
+      boost::mutex::scoped_lock sl(eqFilterMutex);
       map<uint32_t, boost::shared_ptr<DictEqualityFilter> >::iterator it;
       it = dictEqualityFilters.find(uniqueId);
 
@@ -1202,7 +1202,7 @@ struct BPPHandler
 
   ~BPPHandler()
   {
-    std::unique_lock scoped(bppLock);
+    boost::mutex::scoped_lock scoped(bppLock);
 
     for (bppKeysIt = bppKeys.begin(); bppKeysIt != bppKeys.end(); ++bppKeysIt)
     {
@@ -1314,7 +1314,7 @@ struct BPPHandler
       return -1;
     }
 
-    std::unique_lock scoped(bppLock);
+    boost::mutex::scoped_lock scoped(bppLock);
     bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
 
     if (bppKeysIt != bppKeys.end())
@@ -1406,7 +1406,7 @@ struct BPPHandler
       }
     }
 
-    std::unique_lock scoped(bppLock);
+    boost::mutex::scoped_lock scoped(bppLock);
     key = bpp->getUniqueID();
     bppKeys.push_back(key);
     bool newInsert;
@@ -1435,7 +1435,7 @@ struct BPPHandler
     */
     SBPPV ret;
 
-    std::unique_lock scoped(bppLock);
+    boost::mutex::scoped_lock scoped(bppLock);
     it = bppMap.find(uniqueID);
 
     if (it != bppMap.end())
@@ -1464,7 +1464,7 @@ struct BPPHandler
 
   inline shared_mutex& getDJLock(uint32_t uniqueID)
   {
-    std::unique_lock lk(djMutex);
+    boost::mutex::scoped_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
     if (it != djLock.end())
       return *it->second;
@@ -1477,7 +1477,7 @@ struct BPPHandler
 
   inline void deleteDJLock(uint32_t uniqueID)
   {
-    std::unique_lock lk(djMutex);
+    boost::mutex::scoped_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
     if (it != djLock.end())
     {
@@ -1538,7 +1538,7 @@ struct BPPHandler
         return -1;
     }
 
-    std::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
 
     for (i = 0; i < bppv->get().size(); i++)
     {
@@ -1579,8 +1579,8 @@ struct BPPHandler
     bs >> stepID;
     bs >> uniqueID;
 
-    std::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-    std::unique_lock scoped(bppLock);
+    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    boost::mutex::scoped_lock scoped(bppLock);
 
     bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
 
@@ -1750,7 +1750,7 @@ class CreateEqualityFilter : public DictionaryOp
       filter->insert(str);
     }
 
-    std::unique_lock sl(eqFilterMutex);
+    boost::mutex::scoped_lock sl(eqFilterMutex);
     dictEqualityFilters[uniqueID] = filter;
   }
 };
@@ -1774,7 +1774,7 @@ class DestroyEqualityFilter : public DictionaryOp
     bs->advance(sizeof(ISMPacketHeader));
     *bs >> uniqueID;
 
-    std::unique_lock sl(eqFilterMutex);
+    boost::mutex::scoped_lock sl(eqFilterMutex);
     it = dictEqualityFilters.find(uniqueID);
 
     if (it != dictEqualityFilters.end())
@@ -2053,7 +2053,7 @@ struct ReadThread
     // IOSocket. If we end up rotating through multiple output sockets
     // for the same UM, we will use UmSocketSelector to select output.
     SP_UM_IOSOCK outIosDefault(new IOSocket(fIos));
-    SP_UM_MUTEX writeLockDefault(new std::mutex());
+    SP_UM_MUTEX writeLockDefault(new boost::mutex());
 
     bool bRotateDest = fPrimitiveServerPtr->rotatingDestination();
 

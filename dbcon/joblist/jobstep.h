@@ -499,7 +499,7 @@ class JobStep
   long fTimeZone;
 
  private:
-  static std::mutex fLogMutex;
+  static boost::mutex fLogMutex;
 
   friend class CommandJL;
 };

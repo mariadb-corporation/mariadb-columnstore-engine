@@ -27,13 +27,13 @@
 #include <string>
 #include <map>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 
 #include "bytestream.h"
 //#include "we_message.h"
 #include "threadsafequeue.h"
-
+#include "rwlock_local.h"
 #include "resourcemanager.h"
 
 #define EXPORT
@@ -49,7 +49,7 @@ class WEClients
   EXPORT WEClients(int PrgmID);
   EXPORT ~WEClients();
 
-  // static std::mutex map_mutex;
+  // static boost::mutex map_mutex;
   EXPORT void addQueue(uint32_t key);
   EXPORT void removeQueue(uint32_t key);
   EXPORT void shutdownQueue(uint32_t key);
@@ -153,14 +153,14 @@ class WEClients
   ReaderList fWESReader;      // all the reader threads for the pm servers
   MessageQueueMap
       fSessionMessages;  // place to put messages from the pm server to be returned by the Read method
-  std::mutex fMlock;   // sessionMessages mutex
-  std::vector<boost::shared_ptr<std::mutex> > fWlock;  // WES socket write mutexes
+  boost::mutex fMlock;   // sessionMessages mutex
+  std::vector<boost::shared_ptr<boost::mutex> > fWlock;  // WES socket write mutexes
   bool fBusy;
   volatile uint32_t closingConnection;
   uint32_t pmCount;
-  std::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
+  boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
 
-  std::mutex ackLock;
+  boost::mutex ackLock;
 
  public:
   enum

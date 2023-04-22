@@ -31,7 +31,7 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #include "distributedenginecomm.h"
 #include "elementtype.h"

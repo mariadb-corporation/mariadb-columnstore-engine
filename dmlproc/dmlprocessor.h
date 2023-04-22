@@ -229,8 +229,8 @@ class PackageHandler
   int forceReleaseTableAccess();
   typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
   static std::map<uint32_t, tableAccessQueue_t> tableOidMap;
-  static std::condition_variable tableOidCond;
-  static std::mutex tableOidMutex;
+  static boost::condition_variable tableOidCond;
+  static boost::mutex tableOidMutex;
 
  public:
   static int clearTableAccess();
@@ -295,11 +295,11 @@ class DMLProcessor
   // A map to hold pointers to all active PackageProcessors
   typedef std::map<uint32_t, boost::shared_ptr<PackageHandler> > PackageHandlerMap_t;
   static PackageHandlerMap_t packageHandlerMap;
-  static std::mutex packageHandlerMapLock;
+  static boost::mutex packageHandlerMapLock;
 
   // A map to hold pointers to all BatchInsertProc object
   static std::map<uint32_t, BatchInsertProc*> batchinsertProcessorMap;
-  static std::mutex batchinsertProcessorMapLock;
+  static boost::mutex batchinsertProcessorMapLock;
 
   friend struct CancellationThread;
   friend class PackageHandler;

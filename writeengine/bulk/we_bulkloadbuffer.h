@@ -137,7 +137,7 @@ class BulkLoadBuffer
   char fColDelim;                // Character to delimit columns in a row
   unsigned fBufferSize;          // Size of input read buffer (fData)
   unsigned fReadSize;            // Number of bytes in read buffer(fData)
-  std::mutex fSyncUpdatesBLB;  // Mutex to synchronize updates
+  boost::mutex fSyncUpdatesBLB;  // Mutex to synchronize updates
   Log* fLog;                     // Logger object
   bool fNullStringMode;          // Indicates if "NULL" string is to be
   //   treated as a NULL value or not

@@ -19,8 +19,7 @@
 //
 /** @file */
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 using namespace boost;
@@ -46,9 +45,9 @@ using namespace logging;
 #include "dbrm.h"
 using namespace BRM;
 using namespace messageqcpp;
-std::mutex mute;
-std::condition_variable cond;
-std::mutex fLock;
+boost::mutex mute;
+boost::condition_variable cond;
+boost::mutex fLock;
 
 namespace dmlprocessor
 {
@@ -178,7 +177,7 @@ uint64_t BatchInsertProc::grabTableLock(int32_t sessionId)
 
 BatchInsertProc::SP_PKG BatchInsertProc::getInsertQueue()
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
   return fInsertPkgQueue;
 }
 
@@ -188,14 +187,14 @@ void BatchInsertProc::setLastPkg(bool lastPkg)
 }
 void BatchInsertProc::addPkg(messageqcpp::ByteStream& insertBs)
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
   fInsertPkgQueue->push(insertBs);
 }
 
 messageqcpp::ByteStream BatchInsertProc::getPkg()
 {
   messageqcpp::ByteStream bs;
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
   bs = fInsertPkgQueue->front();
   fInsertPkgQueue->pop();
   return bs;
@@ -533,13 +532,13 @@ void BatchInsertProc::setHwm()
 
 void BatchInsertProc::setError(int errorCode, std::string errMsg)
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
   fErrorCode = errorCode;
   fErrMsg = errMsg;
 }
 void BatchInsertProc::getError(int& errorCode, std::string& errMsg)
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
   errorCode = fErrorCode;
   errMsg = fErrMsg;
 }

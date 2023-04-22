@@ -258,7 +258,7 @@ void BPPSendThread::mainLoop()
 
         try
         {
-          std::unique_lock sl2(*lock);
+          boost::mutex::scoped_lock sl2(*lock);
           sock->write(*msg[msgsSent].msg);
           // cout << "sent 1 msg\n";
         }

@@ -24,8 +24,7 @@
 #pragma once
 #include <we_obj.h>
 #ifdef PROFILE
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include "stopwatch.h"
 #endif
 
@@ -160,10 +159,10 @@ class Stats
   static bool fProfiling;  // Is profiling enabled
 
   // Protect concurrent addition of Readers
-  static std::mutex fRegisterReaderMutex;
+  static boost::mutex fRegisterReaderMutex;
 
   // Protect concurrent addition of Parsers
-  static std::mutex fRegisterParseMutex;
+  static boost::mutex fRegisterParseMutex;
 
   // Read threads to be profiled
   static std::vector<pthread_t> fReadProfThreads;

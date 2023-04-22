@@ -170,7 +170,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   std::vector<LimitedOrderBy*> fOrderByList;
   std::vector<uint64_t> fRunnersList;
   uint16_t fFinishedThreads;
-  std::mutex fParallelFinalizeMutex;
+  boost::mutex fParallelFinalizeMutex;
 };
 
 template <class T>

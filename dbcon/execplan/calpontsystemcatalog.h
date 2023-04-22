@@ -881,27 +881,27 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   void checkSysCatVer();
 
-  static std::mutex map_mutex;
+  static boost::mutex map_mutex;
   static CatalogMap fCatalogMap;
 
   typedef std::map<TableColName, OID> OIDmap;
   OIDmap fOIDmap;
-  std::mutex fOIDmapLock;  // Also locks fColRIDmap
+  boost::mutex fOIDmapLock;  // Also locks fColRIDmap
 
   typedef std::map<TableName, RID> Tablemap;
   Tablemap fTablemap;
 
   typedef std::map<TableName, OID> TableOIDmap;
   TableOIDmap fTableAUXColumnOIDMap;
-  std::mutex fTableAUXColumnOIDMapLock;
+  boost::mutex fTableAUXColumnOIDMapLock;
 
   typedef std::map<OID, OID> AUXColumnOIDTableOIDmap;
   AUXColumnOIDTableOIDmap fAUXColumnOIDToTableOIDMap;
-  std::mutex fAUXColumnOIDToTableOIDMapLock;
+  boost::mutex fAUXColumnOIDToTableOIDMapLock;
 
   typedef std::map<OID, ColType> Colinfomap;
   Colinfomap fColinfomap;
-  std::mutex fColinfomapLock;
+  boost::mutex fColinfomapLock;
 
   /** this structure is used by ddl only. it cache the rid for rows in syscolumn
       that match the tableColName */
@@ -916,11 +916,11 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   // this structure may combine with Tablemap, where RID is added to TalbeInfo struct
   typedef std::map<TableName, TableInfo> TableInfoMap;
   TableInfoMap fTableInfoMap;
-  std::mutex fTableInfoMapLock;
+  boost::mutex fTableInfoMapLock;
 
   typedef std::map<TableColName, IndexNameList> ColIndexListmap;
   ColIndexListmap fColIndexListmap;
-  std::mutex fColIndexListmapLock;
+  boost::mutex fColIndexListmapLock;
 
   typedef std::map<OID, OID> DctTokenMap;
   DctTokenMap fDctTokenMap;
@@ -929,16 +929,16 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   typedef std::map<OID, TableName> TableNameMap;
   TableNameMap fTableNameMap;
-  std::mutex fTableNameMapLock;
+  boost::mutex fTableNameMapLock;
 
   ClientRotator* fExeMgr;
   uint32_t fSessionID;
   uint32_t fTxn;
   int fIdentity;
   std::set<std::string> fSchemaCache;
-  std::mutex fSchemaCacheLock;
+  boost::mutex fSchemaCacheLock;
   // Cache flush
-  std::mutex fSyscatSCNLock;
+  boost::mutex fSyscatSCNLock;
   SCN fSyscatSCN;
 
   static uint32_t fModuleID;

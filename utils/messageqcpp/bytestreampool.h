@@ -24,8 +24,7 @@ Initially, 'large' is defined as 1MB.
 */
 
 #include <deque>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include "bytestream.h"
 
 namespace messageqcpp
@@ -44,7 +43,7 @@ class ByteStreamPool
 
  private:
   std::deque<ByteStream*> freeByteStreams;
-  std::mutex mutex;
+  boost::mutex mutex;
   uint maxBufferSize;
   uint maxFreeBuffers;
 };

@@ -42,6 +42,6 @@ class FEMsgHandler
   bool die, running, sawData;
   messageqcpp::IOSocket* sock;
   boost::shared_ptr<joblist::JobList> jl;
-  std::mutex mutex;
+  boost::mutex mutex;
   uint64_t thr;
 };

@@ -1009,7 +1009,7 @@ class DBRM
   boost::scoped_ptr<CopyLocks> copylocks;
   messageqcpp::MessageQueueClient* msgClient;
   std::string masterName;
-  std::mutex mutex;
+  boost::mutex mutex;
   config::Config* config;
   bool fDebug;
 };

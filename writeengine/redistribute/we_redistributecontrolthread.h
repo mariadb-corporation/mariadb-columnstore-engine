@@ -118,7 +118,7 @@ class RedistributeControlThread
 
   RedistributeControl* fControl;
 
-  static std::mutex fActionMutex;
+  static boost::mutex fActionMutex;
   static volatile bool fStopAction;
   static std::string fWesInUse;
 };

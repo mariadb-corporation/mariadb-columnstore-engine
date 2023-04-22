@@ -41,7 +41,7 @@ DMLResultBuffer::~DMLResultBuffer()
 
 void DMLResultBuffer::put(dmlpackageprocessor::DMLPackageProcessor::DMLResult result, int sessionID)
 {
-  std::unique_lock lock(fMutex);
+  scoped_lock lock(fMutex);
 
   if (fFull == fBufferSize)
   {
@@ -60,7 +60,7 @@ void DMLResultBuffer::put(dmlpackageprocessor::DMLPackageProcessor::DMLResult re
 
 DMLResultBuffer::ResultPair DMLResultBuffer::get()
 {
-  std::unique_lock  lk(fMutex);
+  scoped_lock lk(fMutex);
 
   if (fFull == 0)
   {

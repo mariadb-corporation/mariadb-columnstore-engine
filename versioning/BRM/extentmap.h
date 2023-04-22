@@ -297,7 +297,7 @@ class ExtentMapRBTreeImpl
 
   BRMManagedShmImplRBTree fManagedShm;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static ExtentMapRBTreeImpl* fInstance;
 };
 
@@ -357,7 +357,7 @@ class FreeListImpl
 
   BRMShmImpl fFreeList;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static FreeListImpl* fInstance;
 };
 
@@ -1089,9 +1089,9 @@ class ExtentMap : public Undoable
   int numUndoRecords;
   bool flLocked, emLocked, emIndexLocked;
 
-  static std::mutex mutex;  // @bug5355 - made mutex static
-  static std::mutex emIndexMutex;
-  std::mutex fConfigCacheMutex;  // protect access to Config Cache
+  static boost::mutex mutex;  // @bug5355 - made mutex static
+  static boost::mutex emIndexMutex;
+  boost::mutex fConfigCacheMutex;  // protect access to Config Cache
 
   enum OPS
   {

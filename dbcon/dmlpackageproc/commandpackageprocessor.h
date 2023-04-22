@@ -30,9 +30,8 @@
 #include <boost/algorithm/string.hpp>
 #include "dmlpackageprocessor.h"
 #include "dmltable.h"
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
 #define EXPORT
 
@@ -62,7 +61,7 @@ class CommandPackageProcessor : public DMLPackageProcessor
 
   // Tracks active cleartablelock commands by storing set of table lock IDs
   static std::set<uint64_t> fActiveClearTableLockCmds;
-  static std::mutex fActiveClearTableLockCmdMutex;
+  static boost::mutex fActiveClearTableLockCmdMutex;
 };
 
 }  // namespace dmlpackageprocessor

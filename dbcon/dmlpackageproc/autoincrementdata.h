@@ -23,9 +23,8 @@
 
 #include <stdint.h>
 
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
 class AutoincrementData
 {
@@ -44,9 +43,9 @@ class AutoincrementData
   explicit AutoincrementData(const AutoincrementData& rhs);
   ~AutoincrementData();
 
-  static std::mutex map_mutex;
+  static boost::mutex map_mutex;
   static AutoincDataMap fAutoincDataMap;
   OIDNextValue fOidNextValueMap;
-  std::mutex fOIDnextvalLock;
+  boost::mutex fOIDnextvalLock;
 };
 
