@@ -39,7 +39,7 @@ using namespace std;
 namespace
 {
 storagemanager::IOCoordinator* ioc = NULL;
-std::mutex m;
+boost::mutex m;
 }  // namespace
 
 namespace bf = boost::filesystem;
@@ -95,7 +95,7 @@ IOCoordinator* IOCoordinator::get()
 {
   if (ioc)
     return ioc;
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (ioc)
     return ioc;
   ioc = new IOCoordinator();
@@ -1495,7 +1495,7 @@ int IOCoordinator::mergeJournalInMem_bigJ(std::shared_ptr<uint8_t[]>& objData, s
 
 void IOCoordinator::readLock(const string& filename)
 {
-  std::unique_lock<std::mutex> s(lockMutex);
+  boost::unique_lock<boost::mutex> s(lockMutex);
 
   // cout << "read-locking " << filename << endl;
   assert(filename[0] != '/');
@@ -1507,7 +1507,7 @@ void IOCoordinator::readLock(const string& filename)
 
 void IOCoordinator::readUnlock(const string& filename)
 {
-  std::unique_lock<std::mutex> s(lockMutex);
+  boost::unique_lock<boost::mutex> s(lockMutex);
 
   auto it = locks.find(filename);
   it->second->readUnlock();
@@ -1520,7 +1520,7 @@ void IOCoordinator::readUnlock(const string& filename)
 
 void IOCoordinator::writeLock(const string& filename)
 {
-  std::unique_lock<std::mutex> s(lockMutex);
+  boost::unique_lock<boost::mutex> s(lockMutex);
 
   // cout << "write-locking " << filename << endl;
   assert(filename[0] != '/');
@@ -1532,7 +1532,7 @@ void IOCoordinator::writeLock(const string& filename)
 
 void IOCoordinator::writeUnlock(const string& filename)
 {
-  std::unique_lock<std::mutex> s(lockMutex);
+  boost::unique_lock<boost::mutex> s(lockMutex);
 
   auto it = locks.find(filename);
   it->second->writeUnlock();

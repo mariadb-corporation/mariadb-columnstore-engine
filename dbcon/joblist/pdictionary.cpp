@@ -25,7 +25,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 using namespace std;
 
 #include "messagequeue.h"

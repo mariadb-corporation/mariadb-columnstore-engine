@@ -561,7 +561,7 @@ void MasterDBRMNode::msgProcessor()
     {
       try
       {
-        std::unique_lock lk(oidsMutex);
+        boost::mutex::scoped_lock lk(oidsMutex);
         uint8_t* buf = msg.buf();
 
         // dbroot is currently after the cmd and transid
@@ -1957,7 +1957,7 @@ void MasterDBRMNode::doAllocOIDs(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     msg >> cmd;
     msg >> tmp32;
@@ -1994,7 +1994,7 @@ void MasterDBRMNode::doReturnOIDs(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     msg >> cmd;
     msg >> tmp32;
@@ -2030,7 +2030,7 @@ void MasterDBRMNode::doOidmSize(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     ret = oids.size();
     reply << (uint8_t)ERR_OK;
@@ -2066,7 +2066,7 @@ void MasterDBRMNode::doAllocVBOID(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     msg >> dbroot;
     ret = oids.allocVBOID(dbroot);
@@ -2103,7 +2103,7 @@ void MasterDBRMNode::doGetDBRootOfVBOID(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     msg >> vbOID;
     ret = oids.getDBRootOfVBOID(vbOID);
@@ -2138,7 +2138,7 @@ void MasterDBRMNode::doGetVBOIDToDBRootMap(ByteStream& msg, ThreadParams* p)
 
   try
   {
-    std::unique_lock lk(oidsMutex);
+    boost::mutex::scoped_lock lk(oidsMutex);
 
     const vector<uint16_t>& ret = oids.getVBOIDToDBRootMap();
     reply << (uint8_t)ERR_OK;
@@ -2327,7 +2327,7 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
     workerNodeCmd << (uint8_t)OWNER_CHECK << processName << tli.ownerPID;
     bool readErrFlag;
     {
-      std::unique_lock lk(slaveLock);
+      boost::mutex::scoped_lock lk(slaveLock);
       distribute(&workerNodeCmd);
       err = gatherResponses(OWNER_CHECK, workerNodeCmd.length(), &responses, readErrFlag);
     }
@@ -2517,7 +2517,7 @@ void MasterDBRMNode::doOwnerCheck(ByteStream& msg, ThreadParams* p)
     workerNodeCmd << (uint8_t)OWNER_CHECK << processName << tli.ownerPID;
     bool readErrFlag;
     {
-      std::unique_lock lk(slaveLock);
+      boost::mutex::scoped_lock lk(slaveLock);
       distribute(&workerNodeCmd);
       err = gatherResponses(OWNER_CHECK, workerNodeCmd.length(), &responses, readErrFlag);
     }

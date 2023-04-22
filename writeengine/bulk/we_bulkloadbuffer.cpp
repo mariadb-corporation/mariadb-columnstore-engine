@@ -1536,7 +1536,7 @@ int BulkLoadBuffer::parse(ColumnInfo& columnInfo)
   // variables).  It should be okay to reference a copy of these variables
   // as no other thread should be changing them while we are in parse().
   {
-    std::unique_lock lock(fSyncUpdatesBLB);
+    boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
     fTotalReadRowsParser = fTotalReadRows;
     fStartRowParser = fStartRow;
     fDataParser = fData;
@@ -2035,7 +2035,7 @@ int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const ch
                                    const boost::ptr_vector<ColumnInfo>& columnsInfo,
                                    unsigned int allowedErrCntThisCall)
 {
-  std::unique_lock lock(fSyncUpdatesBLB);
+  boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
   reset();
   copyOverflow(overFlowBufIn);
   size_t readSize = 0;
@@ -2138,7 +2138,7 @@ int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* hand
                                  RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
                                  unsigned int allowedErrCntThisCall)
 {
-  std::unique_lock lock(fSyncUpdatesBLB);
+  boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
   reset();
   copyOverflow(overFlowBufIn);
   size_t readSize = 0;

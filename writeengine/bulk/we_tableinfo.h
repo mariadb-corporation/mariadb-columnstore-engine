@@ -26,8 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 
@@ -106,9 +105,9 @@ class TableInfo : public WeUIDGID
    * getting/setting the status of the BulkLoadBuffer objects, so
    * fSyncUpdatesTI is also used to set/get the BulkLoadBuffer status.
    */
-  std::mutex fSyncUpdatesTI;
+  boost::mutex fSyncUpdatesTI;
 
-  std::mutex fErrorRptInfoMutex;  // Used to synhronize access to
+  boost::mutex fErrorRptInfoMutex;  // Used to synhronize access to
   //   fRejectDataFile & fRejectErrFile
   int fLocker;                             // Read thread id reading this table
   std::vector<std::string> fLoadFileList;  // Load files
@@ -541,7 +540,7 @@ inline bool TableInfo::isTableLocked()
 
 inline void TableInfo::markTableComplete()
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
   fStatusTI = WriteEngine::PARSE_COMPLETE;
 }
 

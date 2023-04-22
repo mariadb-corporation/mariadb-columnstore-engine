@@ -27,7 +27,7 @@
 
 #include <deque>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <iostream>
 #include "filerequest.h"
 
@@ -88,8 +88,8 @@ class fileBlockRequestQueue
   void stop();
 
  protected:
-  std::mutex mutex;
-  std::condition_variable notEmpty;
+  boost::mutex mutex;
+  boost::condition notEmpty;
   fileBlockRequestQueue_t fbQueue;
   uint32_t queueSize;
   uint32_t readersWaiting;

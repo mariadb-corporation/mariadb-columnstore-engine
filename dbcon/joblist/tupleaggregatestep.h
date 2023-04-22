@@ -209,8 +209,8 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   uint32_t fNumOfRowGroups;
   uint32_t fBucketNum;
 
-  std::mutex fMutex;
-  std::vector<std::mutex*> fAgg_mutex;
+  boost::mutex fMutex;
+  std::vector<boost::mutex*> fAgg_mutex;
   std::vector<rowgroup::RGData> fRowGroupDatas;
   std::vector<rowgroup::SP_ROWAGG_UM_t> fAggregators;
   std::vector<rowgroup::RowGroup> fRowGroupIns;

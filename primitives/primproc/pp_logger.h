@@ -57,7 +57,7 @@ class Logger
   typedef std::map<logging::Message::MessageID, logging::Message> MsgMap;
 
   MsgMap fMsgMap;
-  std::mutex fLogLock;
+  boost::mutex fLogLock;
   logging::MessageLog fMl1;
 };
 

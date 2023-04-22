@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <sstream>
 
-/*static*/ std::mutex ClearTableLockThread::fStdOutLock;
+/*static*/ boost::mutex ClearTableLockThread::fStdOutLock;
 
 //------------------------------------------------------------------------------
 // ClearTableLockThread constructor
@@ -77,7 +77,7 @@ void ClearTableLockThread::executeRollback()
   // Send rollback msg to the writeengine server connected to fClt.
   //--------------------------------------------------------------------------
   {
-    std::unique_lock lk(fStdOutLock);
+    boost::mutex::scoped_lock lk(fStdOutLock);
     std::cout << "Sending rollback request to PM" << fStatus->moduleID() << "..." << std::endl;
     //		std::cout << "cleartablelock rollback: tableLock-" <<fTableLockInfo.id<<
     //			": oid-"  << fTableLockInfo.tableOID <<
@@ -102,7 +102,7 @@ void ClearTableLockThread::executeRollback()
     std::string errMsg("Network error, PM rollback");
     setStatus(103, errMsg);
 
-    std::unique_lock lk(fStdOutLock);
+    boost::mutex::scoped_lock lk(fStdOutLock);
     std::cout << "No response from PM" << fStatus->moduleID() << std::endl;
     return;
   }
@@ -113,7 +113,7 @@ void ClearTableLockThread::executeRollback()
     *bsIn >> rollbackErrMsg;
 
     {
-      std::unique_lock lk(fStdOutLock);
+      boost::mutex::scoped_lock lk(fStdOutLock);
 
       if (rc == 0)
         std::cout << "Successful rollback response from PM" << fStatus->moduleID() << std::endl;
@@ -147,7 +147,7 @@ void ClearTableLockThread::executeFileCleanup()
   // Send cleanup msg (to delete rb files) to the we server connected to fClt.
   //--------------------------------------------------------------------------
   {
-    std::unique_lock lk(fStdOutLock);
+    boost::mutex::scoped_lock lk(fStdOutLock);
     std::cout << "Sending cleanup request to PM" << fStatus->moduleID() << "..." << std::endl;
     //		std::cout  << "cleartablelock cleanup: " <<
     //			"oid-" << fTableLockInfo.tableOID    << std::endl;
@@ -167,7 +167,7 @@ void ClearTableLockThread::executeFileCleanup()
     std::string errMsg("Network error; PM rollback cleanup");
     setStatus(105, errMsg);
 
-    std::unique_lock lk(fStdOutLock);
+    boost::mutex::scoped_lock lk(fStdOutLock);
     std::cout << "No response from PM" << fStatus->moduleID() << std::endl;
     return;
   }
@@ -178,7 +178,7 @@ void ClearTableLockThread::executeFileCleanup()
     *bsIn >> fileDeleteErrMsg;
 
     {
-      std::unique_lock lk(fStdOutLock);
+      boost::mutex::scoped_lock lk(fStdOutLock);
 
       if (rc == 0)
         std::cout << "Successful cleanup response from PM" << fStatus->moduleID() << std::endl;

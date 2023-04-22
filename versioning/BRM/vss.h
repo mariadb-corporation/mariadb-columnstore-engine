@@ -157,7 +157,7 @@ class VSSImpl
 
   BRMShmImpl fVSS;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static VSSImpl* fInstance;
 };
 
@@ -263,7 +263,7 @@ class VSS : public Undoable
   int* hashBuckets;
   VSSEntry* storage;
   bool r_only;
-  static std::mutex mutex;  // @bug5355 - made mutex static
+  static boost::mutex mutex;  // @bug5355 - made mutex static
 
   key_t currentVSSShmkey;
   int vssShmid;

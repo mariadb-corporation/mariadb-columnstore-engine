@@ -20,10 +20,7 @@
 // This one is the build system config
 #include "mcsconfig.h"
 
-#include <map>
-#include <mutex>
-#include <thread>
-
+#include <boost/thread/mutex.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -42,7 +39,7 @@ using namespace std;
 
 namespace
 {
-std::mutex m;
+boost::mutex m;
 storagemanager::Config* inst = NULL;
 }  // namespace
 
@@ -52,7 +49,7 @@ Config* Config::get()
 {
   if (inst)
     return inst;
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (inst)
     return inst;
   inst = new Config();
@@ -63,7 +60,7 @@ Config* Config::get(const string& configFile)
 {
   if (inst)
     return inst;
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (inst)
     return inst;
   inst = new Config(configFile);
@@ -162,7 +159,7 @@ bool Config::reload()
     return rtn;
   last_mtime = statbuf.st_mtim;
   rtn = true;
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   contents.clear();
   boost::property_tree::ini_parser::read_ini(filename, contents);
   return rtn;
@@ -194,7 +191,7 @@ string Config::getValue(const string& section, const string& key) const
 {
   // if we care, move this envvar substition stuff to where the file is loaded
   string ret;
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   try
   {
     ret = contents.get<string>(section + "." + key);

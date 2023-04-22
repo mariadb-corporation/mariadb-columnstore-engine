@@ -26,11 +26,10 @@
 #include <queue>
 #include <boost/shared_ptr.hpp>
 
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 #include "insertdmlpackage.h"
 #include "resourcemanager.h"
@@ -71,7 +70,7 @@ class BatchInsertProc
 
  private:
   SP_PKG fInsertPkgQueue;
-  std::condition_variable condvar;
+  boost::condition condvar;
   execplan::CalpontSystemCatalog::SCN fTxnid;
   int fErrorCode;
   std::string fErrMsg;

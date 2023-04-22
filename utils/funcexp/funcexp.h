@@ -27,8 +27,7 @@
 #include <string>
 #include <vector>
 #include <tr1/unordered_map>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include "rowgroup.h"
 #include "returnedcolumn.h"
@@ -96,7 +95,7 @@ class FuncExp
 
  private:
   static FuncExp* fInstance;
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   FuncMap fFuncMap;
   FuncExp();
 };

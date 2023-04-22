@@ -386,7 +386,7 @@ void TupleAggregateStep::initializeMultiThread()
 
   for (i = 0; i < fNumOfBuckets; i++)
   {
-    std::mutex* lock = new std::mutex();
+    boost::mutex* lock = new boost::mutex();
     fAgg_mutex.push_back(lock);
     fRowGroupOuts[i] = fRowGroupOut;
     rgData.reinit(fRowGroupOut);

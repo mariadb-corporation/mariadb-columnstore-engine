@@ -47,11 +47,11 @@ using namespace config;
 namespace logging
 {
 IDBErrorInfo* IDBErrorInfo::fInstance = 0;
-std::mutex mx;
+boost::mutex mx;
 
 IDBErrorInfo* IDBErrorInfo::instance()
 {
-  std::unique_lock lk(mx);
+  boost::mutex::scoped_lock lk(mx);
 
   if (!fInstance)
     fInstance = new IDBErrorInfo();

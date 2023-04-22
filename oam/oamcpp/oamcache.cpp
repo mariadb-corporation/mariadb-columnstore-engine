@@ -39,7 +39,7 @@ using namespace boost;
 namespace
 {
 oam::OamCache* oamCache = nullptr;
-std::mutex cacheLock;
+boost::mutex cacheLock;
 }  // namespace
 
 namespace oam
@@ -50,7 +50,7 @@ OamCache* OamCache::makeOamCache()
 {
   if (!hasOAMCache.load(std::memory_order_relaxed))
   {
-    std::unique_lock lk(cacheLock);
+    boost::mutex::scoped_lock lk(cacheLock);
 
     if (oamCache == nullptr)
     {

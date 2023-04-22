@@ -59,9 +59,9 @@ string Config::m_bulkRoot;
 
 unsigned long Config::fDBRootChangeCount = 0;
 time_t Config::fCacheTime = 0;
-std::mutex Config::fCacheLock;
+boost::mutex Config::fCacheLock;
 #ifdef SHARED_NOTHING_DEMO_2
-std::mutex Config::m_bulkRoot_lk;
+boost::mutex Config::m_bulkRoot_lk;
 #endif
 int Config::m_WaitPeriod = DEFAULT_WAIT_PERIOD;
 unsigned Config::m_FilesPerColumnPartition = DEFAULT_FILES_PER_COLUMN_PARTITION;
@@ -86,7 +86,7 @@ string Config::m_VersionBufferDir;
  ******************************************************************************/
 void Config::initConfigCache()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 }
 
@@ -330,7 +330,7 @@ void Config::checkReload()
  ******************************************************************************/
 size_t Config::DBRootCount()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_dbRootCount;
@@ -346,7 +346,7 @@ size_t Config::DBRootCount()
  ******************************************************************************/
 std::string Config::getDBRootByIdx(unsigned idx)
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   if (idx >= m_dbRootPath.size())
@@ -368,7 +368,7 @@ std::string Config::getDBRootByIdx(unsigned idx)
  ******************************************************************************/
 void Config::getDBRootPathList(std::vector<std::string>& dbRootPathList)
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   dbRootPathList.clear();
@@ -385,7 +385,7 @@ void Config::getDBRootPathList(std::vector<std::string>& dbRootPathList)
  ******************************************************************************/
 std::string Config::getDBRootByNum(unsigned num)
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   Config::intstrmap_t::const_iterator iter = m_dbRootPathMap.find(num);
@@ -409,7 +409,7 @@ std::string Config::getDBRootByNum(unsigned num)
  ******************************************************************************/
 void Config::getRootIdList(std::vector<uint16_t>& rootIds)
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   rootIds = m_dbRootId;
@@ -425,7 +425,7 @@ void Config::getRootIdList(std::vector<uint16_t>& rootIds)
  ******************************************************************************/
 std::string Config::getBulkRoot()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_bulkRoot;
@@ -435,7 +435,7 @@ std::string Config::getBulkRoot()
 void Config::getSharedNothingRoot(char* ret)
 {
   string root;
-  std::unique_lock lk(m_bulkRoot_lk);
+  boost::mutex::scoped_lock lk(m_bulkRoot_lk);
 
   root = config::Config::makeConfig()->getConfig("WriteEngine", "SharedNothingRoot");
   strncpy(ret, root.c_str(), FILE_NAME_SIZE);
@@ -452,7 +452,7 @@ void Config::getSharedNothingRoot(char* ret)
  ******************************************************************************/
 int Config::getWaitPeriod()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_WaitPeriod;
@@ -468,7 +468,7 @@ int Config::getWaitPeriod()
  ******************************************************************************/
 unsigned Config::getFilesPerColumnPartition()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_FilesPerColumnPartition;
@@ -484,7 +484,7 @@ unsigned Config::getFilesPerColumnPartition()
  ******************************************************************************/
 unsigned Config::getExtentsPerSegmentFile()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_ExtentsPerSegmentFile;
@@ -507,7 +507,7 @@ unsigned Config::getExtentsPerSegmentFile()
  ******************************************************************************/
 int Config::getBulkProcessPriority()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_BulkProcessPriority;
@@ -521,7 +521,7 @@ int Config::getBulkProcessPriority()
  ******************************************************************************/
 std::string Config::getBulkRollbackDir()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_BulkRollbackDir;
@@ -535,7 +535,7 @@ std::string Config::getBulkRollbackDir()
  ******************************************************************************/
 bool Config::getFastDelete()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_FastDelete;
@@ -549,7 +549,7 @@ bool Config::getFastDelete()
  ******************************************************************************/
 unsigned Config::getMaxFileSystemDiskUsage()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_MaxFileSystemDiskUsage;
@@ -564,7 +564,7 @@ unsigned Config::getMaxFileSystemDiskUsage()
  ******************************************************************************/
 unsigned Config::getNumCompressedPadBlks()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_NumCompressedPadBlks;
@@ -578,7 +578,7 @@ unsigned Config::getNumCompressedPadBlks()
  ******************************************************************************/
 bool Config::getParentOAMModuleFlag()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_ParentOAMModuleFlag;
@@ -592,7 +592,7 @@ bool Config::getParentOAMModuleFlag()
  ******************************************************************************/
 std::string Config::getLocalModuleType()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_LocalModuleType;
@@ -606,7 +606,7 @@ std::string Config::getLocalModuleType()
  ******************************************************************************/
 uint16_t Config::getLocalModuleID()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_LocalModuleID;
@@ -622,7 +622,7 @@ uint16_t Config::getLocalModuleID()
  ******************************************************************************/
 std::string Config::getVBRoot()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
   checkReload();
 
   return m_VersionBufferDir;
@@ -639,7 +639,7 @@ std::string Config::getVBRoot()
  ******************************************************************************/
 bool Config::hasLocalDBRootListChanged()
 {
-  std::unique_lock lk(fCacheLock);
+  boost::mutex::scoped_lock lk(fCacheLock);
 
   if (fDBRootChangeCount > 0)
   {

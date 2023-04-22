@@ -23,8 +23,7 @@
 #include <vector>
 #include <string>
 #include <boost/utility.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -105,7 +104,7 @@ class IOCoordinator : public boost::noncopyable
   boost::filesystem::path metaPath;
 
   std::map<std::string, RWLock*> locks;
-  std::mutex lockMutex;  // lol
+  boost::mutex lockMutex;  // lol
 
   void remove(const boost::filesystem::path& path);
   void deleteMetaFile(const boost::filesystem::path& file);

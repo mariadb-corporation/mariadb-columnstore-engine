@@ -34,8 +34,7 @@
 #include <set>
 #include <map>
 #include <vector>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include "we_type.h"
 #include "brmtypes.h"
@@ -315,7 +314,7 @@ class RBMetaWriter : public WeUIDGID
   Log* fLog;                                       // import log file
   bool fCreatedSubDir;                             // has subdir path been created
   RBChunkSet fRBChunkDctnrySet;                    // Dctnry HWM chunk info
-  std::mutex fRBChunkDctnryMutex;                // Mutex lock for RBChunkSet
+  boost::mutex fRBChunkDctnryMutex;                // Mutex lock for RBChunkSet
   OID fTableOID;                                   // OID of relevant table
   std::string fTableName;                          // Name of relevant table
 };

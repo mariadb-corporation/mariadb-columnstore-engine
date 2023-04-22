@@ -82,9 +82,9 @@ class S3Storage : public CloudStorage
   };
 
   // for sanity checking
-  // std::map<ms3_st *, std::mutex> connMutexes;
+  // std::map<ms3_st *, boost::mutex> connMutexes;
 
-  std::mutex connMutex;
+  boost::mutex connMutex;
   std::deque<Connection> freeConns;  // using this as a stack to keep lru objects together
   const time_t maxIdleSecs = 30;
 };

@@ -29,8 +29,8 @@ namespace WriteEngine
 {
 #ifdef PROFILE
 /* static */ bool Stats::fProfiling = false;
-/* static */ std::mutex Stats::fRegisterReaderMutex;
-/* static */ std::mutex Stats::fRegisterParseMutex;
+/* static */ boost::mutex Stats::fRegisterReaderMutex;
+/* static */ boost::mutex Stats::fRegisterParseMutex;
 /* static */ std::vector<pthread_t> Stats::fReadProfThreads;
 /* static */ std::vector<pthread_t> Stats::fParseProfThreads;
 /* static */ std::vector<logging::StopWatch> Stats::fReadStopWatch;
@@ -111,7 +111,7 @@ void Stats::enableProfiling(int nReadThreads, int nParseThreads)
  ***********************************************************/
 void Stats::registerReadProfThread()
 {
-  std::unique_lock lk(fRegisterReaderMutex);
+  boost::mutex::scoped_lock lk(fRegisterReaderMutex);
 
   fReadProfThreads.push_back(pthread_self());
   logging::StopWatch readStopWatch;
@@ -128,7 +128,7 @@ void Stats::registerReadProfThread()
  ***********************************************************/
 void Stats::registerParseProfThread()
 {
-  std::unique_lock lk(fRegisterParseMutex);
+  boost::mutex::scoped_lock lk(fRegisterParseMutex);
 
   fParseProfThreads.push_back(pthread_self());
   logging::StopWatch parseStopWatch;

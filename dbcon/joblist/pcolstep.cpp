@@ -26,7 +26,7 @@
 //#define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 using namespace std;
 
 #include "distributedenginecomm.h"

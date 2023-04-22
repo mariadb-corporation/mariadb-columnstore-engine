@@ -38,7 +38,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
@@ -300,9 +300,9 @@ class pColStep : public JobStep
 
   BRM::DBRM dbrm;
 
-  std::mutex mutex;
-  std::condition_variable condvar;
-  std::condition_variable flushed;
+  boost::mutex mutex;
+  boost::condition condvar;
+  boost::condition flushed;
   SP_LBIDList lbidList;
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   uint32_t uniqueID;
@@ -509,8 +509,8 @@ class pColScanStep : public JobStep
   BRM::DBRM dbrm;
   SP_LBIDList lbidList;
 
-  std::condition_variable condvar;
-  std::condition_variable_any condvarWakeupProducer;
+  boost::condition condvar;
+  boost::condition condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
   uint32_t recvWaiting, recvExited;
 
@@ -648,8 +648,8 @@ class pDictionaryStep : public JobStep
 
   DataList_t* requestList;
   // StringDataList* stringList;
-  std::mutex mutex;
-  std::condition_variable condvar;
+  boost::mutex mutex;
+  boost::condition condvar;
   uint32_t fInterval;
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
@@ -827,9 +827,9 @@ class pDictionaryScan : public JobStep
   uint64_t cThread;  // consumer thread. thread pool handle
   DataList_t* requestList;
   // StringDataList* stringList;
-  std::mutex mutex;
-  std::condition_variable_any condvar;
-  std::condition_variable_any condvarWakeupProducer;
+  boost::mutex mutex;
+  boost::condition condvar;
+  boost::condition condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
   std::vector<struct BRM::EMEntry> extents;
   uint64_t extentSize;
@@ -840,7 +840,7 @@ class pDictionaryScan : public JobStep
   // consumer will tell producer to send
   bool fStopSending;
   uint64_t fPhysicalIO;   // total physical I/O count
-  uint64_t fCacheIO;      // total cache I/O countF
+  uint64_t fCacheIO;      // total cache I/O count
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
   uint32_t fMsgsToPm;     // total number of messages sent to PMs
@@ -1278,11 +1278,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fExtentsPerSegFile;       // config num of Extents Per Segment File
   // uint64_t cThread;  //consumer thread. thread handle from thread pool
   uint64_t pThread;  // producer thread. thread handle from thread pool
-  std::mutex tplMutex;
-  std::mutex dlMutex;
-  std::mutex cpMutex;
-  std::mutex serializeJoinerMutex;
-  std::condition_variable_any condvarWakeupProducer, condvar;
+  boost::mutex tplMutex;
+  boost::mutex dlMutex;
+  boost::mutex cpMutex;
+  boost::mutex serializeJoinerMutex;
+  boost::condition condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   bool BPPIsAllocated;
@@ -1314,7 +1314,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint8_t bop;  // BOP_AND or BOP_OR
 
   // temporary hack to make sure JobList only calls run and join once
-  std::mutex jlLock;
+  boost::mutex jlLock;
   bool runRan;
   bool joinRan;
 

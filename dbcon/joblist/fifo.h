@@ -29,7 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <stdexcept>
 #include "elementtype.h"
 #include "datalistimpl.h"
@@ -145,7 +145,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
 
  protected:
  private:
-  std::condition_variable finishedConsuming, moreData;
+  boost::condition finishedConsuming, moreData;
 
   element_t* pBuffer;
   element_t* cBuffer;
@@ -243,7 +243,7 @@ bool FIFO<element_t>::swapBuffers(bool waitIfBlocked)
 {
   element_t* tmp;
 
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
 
   if (cDone < base::numConsumers)
   {
@@ -340,7 +340,7 @@ inline void FIFO<element_t>::insert(const std::vector<element_t>& e)
 template <typename element_t>
 bool FIFO<element_t>::waitForSwap(uint64_t id)
 {
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
 
 #ifdef ONE_CS
 
@@ -376,14 +376,14 @@ bool FIFO<element_t>::waitForSwap(uint64_t id)
 template <typename element_t>
 bool FIFO<element_t>::more(uint64_t id)
 {
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
   return !(cpos[id] == fMaxElements && base::noMoreInput);
 }
 
 template <typename element_t>
 void FIFO<element_t>::signalPs()
 {
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
 
   if (++cDone == base::numConsumers)
     finishedConsuming.notify_all();
@@ -423,7 +423,7 @@ void FIFO<element_t>::endOfInput()
 {
   element_t* tmp;
 
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
 
   if (ppos != 0)
   {
@@ -449,7 +449,7 @@ uint64_t FIFO<element_t>::getIterator()
 {
   uint64_t ret;
 
-  std::unique_lock scoped(base::mutex);
+  boost::mutex::scoped_lock scoped(base::mutex);
   ret = base::getIterator();
   return ret;
 }

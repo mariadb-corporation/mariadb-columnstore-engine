@@ -99,7 +99,7 @@ class Log : public WEObj
   std::ofstream m_logFile;     // log file stream
   std::ofstream m_errLogFile;  // error log file stream
 
-  std::mutex m_WriteLockMutex;  // logging mutex
+  boost::mutex m_WriteLockMutex;  // logging mutex
 };
 
 }  // namespace WriteEngine

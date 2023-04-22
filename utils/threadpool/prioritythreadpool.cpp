@@ -72,7 +72,7 @@ PriorityThreadPool::~PriorityThreadPool()
 void PriorityThreadPool::addJob(const Job& job, bool useLock)
 {
   boost::thread* newThread;
-  std::unique_lock lk(mutex, std::defer_lock);
+  boost::mutex::scoped_lock lk(mutex, boost::defer_lock_t());
 
   if (useLock)
     lk.lock();
@@ -129,7 +129,7 @@ void PriorityThreadPool::removeJobs(uint32_t id)
 {
   list<Job>::iterator it;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   for (uint32_t i = 0; i < _COUNT; i++)
     for (it = jobQueues[i].begin(); it != jobQueues[i].end();)
@@ -169,7 +169,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
   {
     while (!_stop)
     {
-      std::unique_lock lk(mutex);
+      boost::mutex::scoped_lock lk(mutex);
 
       queue = pickAQueue(preferredQueue);
 

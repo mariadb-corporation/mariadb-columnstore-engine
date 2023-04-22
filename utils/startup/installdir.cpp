@@ -24,9 +24,8 @@
 #include <string>
 using namespace std;
 
-#include <map>
-#include <mutex>
-
+#include <boost/thread/mutex.hpp>
+using namespace boost;
 
 #include "installdir.h"
 #include "configcpp.h"
@@ -40,14 +39,14 @@ using namespace std;
 namespace startup
 {
 /* static */
-std::mutex StartUp::fTmpDirLock;
+boost::mutex StartUp::fTmpDirLock;
 /* static */
 string* StartUp::fTmpDirp = 0;
 
 /* static */
 const string StartUp::tmpDir()
 {
-  std::unique_lock lk(fTmpDirLock);
+  boost::mutex::scoped_lock lk(fTmpDirLock);
 
   if (fTmpDirp)
     return *fTmpDirp;

@@ -19,8 +19,8 @@
 //
 
 #include <unistd.h>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
+using namespace boost;
 
 #include "activestatementcounter.h"
 
@@ -30,7 +30,7 @@ void ActiveStatementCounter::incr(bool& counted)
     return;
 
   counted = true;
-  std::unique_lock lk(fMutex);
+  boost::mutex::scoped_lock lk(fMutex);
 
   if (upperLimit > 0)
     while (fStatementCount >= upperLimit)
@@ -49,7 +49,7 @@ void ActiveStatementCounter::decr(bool& counted)
     return;
 
   counted = false;
-  std::unique_lock lk(fMutex);
+  boost::mutex::scoped_lock lk(fMutex);
 
   if (fStatementCount == 0)
     return;

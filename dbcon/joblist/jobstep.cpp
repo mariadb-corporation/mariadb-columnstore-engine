@@ -56,7 +56,7 @@ int toInt(const string& val)
 
 namespace joblist
 {
-std::mutex JobStep::fLogMutex;  //=PTHREAD_MUTEX_INITIALIZER;
+boost::mutex JobStep::fLogMutex;  //=PTHREAD_MUTEX_INITIALIZER;
 
 threadpool::ThreadPool JobStep::jobstepThreadPool(defaultJLThreadPoolSize, 0);
 

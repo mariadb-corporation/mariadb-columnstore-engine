@@ -48,7 +48,7 @@ namespace bf = boost::filesystem;
 
 namespace
 {
-std::mutex mdfLock;
+boost::mutex mdfLock;
 storagemanager::MetadataFile::MetadataConfig* inst = NULL;
 uint64_t metadataFilesAccessed = 0;
 }  // namespace
@@ -59,7 +59,7 @@ MetadataFile::MetadataConfig* MetadataFile::MetadataConfig::get()
 {
   if (inst)
     return inst;
-  std::unique_lock<std::mutex> s(mdfLock);
+  boost::unique_lock<boost::mutex> s(mdfLock);
   if (inst)
     return inst;
   inst = new MetadataConfig();
@@ -124,7 +124,7 @@ MetadataFile::MetadataFile(const boost::filesystem::path& filename)
 
   mFilename = mpConfig->msMetadataPath / (filename.string() + ".meta");
 
-  std::unique_lock<std::mutex> s(jsonCache.getMutex());
+  boost::unique_lock<boost::mutex> s(jsonCache.getMutex());
   jsontree = jsonCache.get(mFilename);
   if (!jsontree)
   {
@@ -165,7 +165,7 @@ MetadataFile::MetadataFile(const boost::filesystem::path& filename, no_create_t,
   if (appendExt)
     mFilename = mpConfig->msMetadataPath / (mFilename.string() + ".meta");
 
-  std::unique_lock<std::mutex> s(jsonCache.getMutex());
+  boost::unique_lock<boost::mutex> s(jsonCache.getMutex());
   jsontree = jsonCache.get(mFilename);
   if (!jsontree)
   {
@@ -325,7 +325,7 @@ int MetadataFile::writeMetadata()
   write_json(mFilename.string(), *jsontree);
   _exists = true;
 
-  std::unique_lock<std::mutex> s(jsonCache.getMutex());
+  boost::unique_lock<boost::mutex> s(jsonCache.getMutex());
   jsonCache.put(mFilename, jsontree);
 
   return 0;
@@ -367,7 +367,7 @@ void MetadataFile::removeAllEntries()
 
 void MetadataFile::deletedMeta(const bf::path& p)
 {
-  std::unique_lock<std::mutex> s(jsonCache.getMutex());
+  boost::unique_lock<boost::mutex> s(jsonCache.getMutex());
   jsonCache.erase(p);
 }
 
@@ -533,7 +533,7 @@ MetadataFile::MetadataCache::MetadataCache()
 {
 }
 
-inline std::mutex& MetadataFile::MetadataCache::getMutex()
+inline boost::mutex& MetadataFile::MetadataCache::getMutex()
 {
   return mutex;
 }

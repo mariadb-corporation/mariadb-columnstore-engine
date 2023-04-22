@@ -28,9 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <boost/filesystem/path.hpp>
 
 namespace storagemanager
@@ -44,7 +43,7 @@ class Downloader : public ConfigListener
   // caller owns the memory for the strings.
   // errors are reported through errnos
   void download(const std::vector<const std::string*>& keys, std::vector<int>* errnos,
-                std::vector<size_t>* sizes, const boost::filesystem::path& prefix, std::mutex* lock);
+                std::vector<size_t>* sizes, const boost::filesystem::path& prefix, boost::mutex* lock);
   bool inProgress(const std::string&);  // call this holding the cache's lock
   const boost::filesystem::path& getTmpPath() const;
 
@@ -55,17 +54,17 @@ class Downloader : public ConfigListener
  private:
   uint maxDownloads;
   // boost::filesystem::path downloadPath;
-  std::mutex lock;
+  boost::mutex lock;
 
   class DownloadListener
   {
    public:
-    DownloadListener(uint* counter, std::condition_variable* condvar);
+    DownloadListener(uint* counter, boost::condition* condvar);
     void downloadFinished();
 
    private:
     uint* counter;
-    std::condition_variable* cond;
+    boost::condition* cond;
   };
 
   /* Possible optimization.  Downloads used to use pointers to strings to avoid an extra copy.
@@ -74,7 +73,7 @@ class Downloader : public ConfigListener
   */
   struct Download : public ThreadPool::Job
   {
-    Download(const std::string& source, const boost::filesystem::path& _dlPath, std::mutex*, Downloader*);
+    Download(const std::string& source, const boost::filesystem::path& _dlPath, boost::mutex*, Downloader*);
     Download(const std::string& source);
     virtual ~Download();
     void operator()();
@@ -82,7 +81,7 @@ class Downloader : public ConfigListener
     const std::string key;
     int dl_errno;  // to propagate errors from the download job to the caller
     size_t size;
-    std::mutex* lock;
+    boost::mutex* lock;
     bool finished, itRan;
     Downloader* dl;
     std::vector<DownloadListener*> listeners;

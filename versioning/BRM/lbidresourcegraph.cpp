@@ -183,7 +183,7 @@ void LBIDResourceGraph::connectResources(LBID_t start, LBID_t end, TransactionNo
 
         mutex should be slavelock
 */
-int LBIDResourceGraph::reserveRange(LBID_t start, LBID_t end, VER_t txn, std::mutex& mutex)
+int LBIDResourceGraph::reserveRange(LBID_t start, LBID_t end, VER_t txn, boost::mutex& mutex)
 {
   TransactionNode* txnNode;
   map<VER_t, TransactionNode*>::iterator it;

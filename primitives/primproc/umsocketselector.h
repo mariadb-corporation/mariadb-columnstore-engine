@@ -48,7 +48,7 @@ class UmIPSocketConns;
 typedef boost::shared_ptr<UmModuleIPs> SP_UM_MODIPS;
 typedef boost::shared_ptr<UmIPSocketConns> SP_UM_IPCONNS;
 typedef boost::shared_ptr<messageqcpp::IOSocket> SP_UM_IOSOCK;
-typedef boost::shared_ptr<std::mutex> SP_UM_MUTEX;
+typedef boost::shared_ptr<boost::mutex> SP_UM_MUTEX;
 
 //------------------------------------------------------------------------------
 /** @brief Public API class used to track and select socket for outgoing msgs.
@@ -219,7 +219,7 @@ class UmModuleIPs
   static const int32_t NEXT_IP_SOCKET_UNASSIGNED;
   std::string fUmModuleName;   // UM module name
   int32_t fNextUmIPSocketIdx;  // index to "next" IP address
-  std::mutex fUmModuleMutex;
+  boost::mutex fUmModuleMutex;
 
   // collection of IP addresses and their corresponding socket/port conns
   std::vector<SP_UM_IPCONNS> fUmIPSocketConns;

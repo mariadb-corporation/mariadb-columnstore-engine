@@ -130,7 +130,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   std::vector<int> moduleIds = oamcache->getModuleIds();
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  std::unique_lock lk(dbrmMutex);
+  boost::mutex::scoped_lock lk(dbrmMutex);
 
   try
   {
@@ -1035,7 +1035,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   ByteStream::byte tmp8;
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  std::unique_lock lk(dbrmMutex);
+  boost::mutex::scoped_lock lk(dbrmMutex);
 
   try
   {

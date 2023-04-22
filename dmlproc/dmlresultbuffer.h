@@ -25,8 +25,7 @@
 #pragma once
 #include <deque>
 #include <boost/thread/thread.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include "dmlpackageprocessor.h"
 
 namespace dmlprocessor
@@ -36,6 +35,8 @@ namespace dmlprocessor
 class DMLResultBuffer
 {
  public:
+  typedef boost::mutex::scoped_lock scoped_lock;
+
   /** @brief the type of a <DMLResult, sessionID> pair
    *
    */
@@ -79,8 +80,8 @@ class DMLResultBuffer
   ResultPair get();
 
  private:
-  std::mutex fMutex;
-  std::condition_variable fCond;
+  boost::mutex fMutex;
+  boost::condition fCond;
 
   typedef std::deque<ResultPair> ResultBuffer;
   ResultBuffer fResultBuffer;

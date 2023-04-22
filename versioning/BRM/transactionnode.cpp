@@ -21,7 +21,7 @@
  ****************************************************************************/
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #define TRANSACTIONNODE_DLLEXPORT
 #include "transactionnode.h"
@@ -47,7 +47,7 @@ int TransactionNode::getTxnID() const
   return txnID;
 }
 
-void TransactionNode::sleep(std::mutex& mutex)
+void TransactionNode::sleep(boost::mutex& mutex)
 {
   _sleeping = true;
   condVar.wait(mutex);

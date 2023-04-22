@@ -130,7 +130,7 @@ class MetadataFile
     Jsontree_t get(const boost::filesystem::path&);
     void put(const boost::filesystem::path&, const Jsontree_t&);
     void erase(const boost::filesystem::path&);
-    std::mutex& getMutex();
+    boost::mutex& getMutex();
 
    private:
     // there's a more efficient way to do this, KISS for now.
@@ -139,7 +139,7 @@ class MetadataFile
     Lookup_t lookup;
     Lru_t lru;
     uint max_lru_size;
-    std::mutex mutex;
+    boost::mutex mutex;
   };
   static MetadataCache jsonCache;
 };

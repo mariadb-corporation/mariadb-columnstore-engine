@@ -21,8 +21,7 @@
 #include <vector>
 #include <stdint.h>
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include "IDBDataFile.h"
 #include "IDBFileSystem.h"
@@ -154,7 +153,7 @@ class IDBPolicy
   static std::string s_hdfsRdwrScratch;
   static int64_t s_hdfsRdwrBufferMaxSize;
   static bool s_configed;
-  static std::mutex s_mutex;
+  static boost::mutex s_mutex;
 };
 
 inline const std::string& IDBPolicy::hdfsRdwrScratch()
