@@ -47,7 +47,7 @@ if (COMMAND mysql_add_plugin)
   ENDIF()
 
   mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY ${disabled}
-      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${PLUGIN_EXEC_LIBS} ${PLUGIN_WRITE_LIBS} joblist ${NETSNMP_LIBRARIES} ${S3API_DEPS} threadpool
+      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${PLUGIN_EXEC_LIBS} ${PLUGIN_WRITE_LIBS} execution ${NETSNMP_LIBRARIES} ${S3API_DEPS} threadpool
       VERSION ${PACKAGE_VERSION}
       COMPONENT columnstore-engine CONFIG columnstore.cnf)
 else ()

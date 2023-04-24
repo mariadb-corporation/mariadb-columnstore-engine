@@ -11,7 +11,7 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 add_library(udfsdk STATIC ${udfsdk_LIB_SRCS})
 
 add_dependencies(udfsdk loggingcpp)
-target_link_libraries(udfsdk execplan)
+target_link_libraries(udfsdk execution)
 
 
 install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
@@ -19,7 +19,7 @@ install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine
 set(udf_mysql_LIB_SRCS udfmysql.cpp)
 
 add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
-target_link_libraries(udf_mysql execplan)
+target_link_libraries(udf_mysql execution)
 
 install(TARGETS udf_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
 
