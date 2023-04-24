@@ -93,7 +93,7 @@ class MasterSegmentTable
   MasterSegmentTable();
   ~MasterSegmentTable();
 
-  enum ShmemTypes
+  enum ShmemType : size_t
   {
     EMTable_ = 0,
     EMFreeList_,
@@ -109,7 +109,17 @@ class MasterSegmentTable
     extVSS6,
     extVSS7,
     extVSS8,
+    end,
   };
+
+  static constexpr std::initializer_list<enum ShmemType> ShmemTypes = {
+      EMTable_, EMFreeList_, VBBMSegment_, VSSSegment_, CLSegment_, EMIndex_, extVSS1, extVSS2,
+      extVSS3,  extVSS4,     extVSS5,      extVSS6,     extVSS7,    extVSS8,  end,
+  };
+  static constexpr std::initializer_list<enum ShmemType> VssShmemTypes = {
+      extVSS1, extVSS2, extVSS3, extVSS4, extVSS5, extVSS6, extVSS7, extVSS8,
+  };
+
   /// specifies the Extent Map table
   static const int EMTable = 0;
   /// specifies the Extent Map's Freelist table

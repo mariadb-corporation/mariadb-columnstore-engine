@@ -88,9 +88,9 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
     vss->setReadOnly();
     vbbm->setReadOnly();
 
-    for (int32_t i = 0; i < VssFactor; ++i)
+    for (auto s : MasterSegmentTable::VssShmemTypes)
     {
-      vss_.emplace_back(std::unique_ptr<VSS>(new VSS(i)));
+      vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
       vss_.back()->setReadOnly();
     }
   }
@@ -156,8 +156,8 @@ int DBRM::saveState(string filename) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[3] = {false, false, false};
-  std::vector<bool> vssLocks(VssFactor, false);
-  assert(vssLocks.size() == vss_.size());
+  std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
+  assert(vssIsLocked.size() == vss_.size());
 
   try
   {
@@ -172,15 +172,14 @@ int DBRM::saveState(string filename) throw()
     vbbm->save(vbbmFilename);
     vss->save(vssFilename);
 
-    for (int32_t i = 0; auto& v : vss_)
+    for (size_t i = 0; auto& v : vss_)
     {
-      assert(i > 0 && i <= VssFactor);
-      auto idx = static_cast<size_t>(i);
-      v->lock(VSS::READ);
-      vssLocks[idx] = true;
-      v->save(vssFilename + std::to_string(idx));
+      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::READ);
+      vssIsLocked[i] = true;
+      v->save(vssFilename + std::to_string(i + 1));
       v->release(VSS::READ);
-      vssLocks[idx] = false;
+      vssIsLocked[i] = false;
       ++i;
     }
 
@@ -193,8 +192,8 @@ int DBRM::saveState(string filename) throw()
   }
   catch (exception& e)
   {
-    assert(vssLocks.size() == vss_.size());
-    for (auto vl = begin(vssLocks); auto& v : vss_)
+    assert(vssIsLocked.size() == vss_.size());
+    for (auto vl = begin(vssIsLocked); auto& v : vss_)
     {
       if (*vl)
       {

@@ -53,13 +53,13 @@ using namespace idbdatafile;
 
 namespace BRM
 {
-VSSEntry::VSSEntry()
+VSSEntry::VSSEntry() : lbid(-1), verID(0), vbFlag(false), locked(false), next(-1)
 {
-  lbid = -1;
-  verID = 0;
-  vbFlag = false;
-  locked = false;
-  next = -1;
+}
+
+VSSEntry::VSSEntry(const LBID_t lbid, const VER_t verID, const bool vbFlag, const bool locked)
+ : lbid(lbid), verID(verID), vbFlag(vbFlag), locked(locked), next(-1)
+{
 }
 
 /*static*/
@@ -67,7 +67,7 @@ boost::mutex VSSImpl::fInstanceMutex;
 boost::mutex VSS::mutex;
 
 /*static*/
-VSSImpl* VSSImpl::fInstance = 0;
+VSSImpl* VSSImpl::fInstance = nullptr;
 
 /*static*/
 VSSImpl* VSSImpl::makeVSSImpl(unsigned key, off_t size, bool readOnly)
@@ -95,7 +95,56 @@ VSSImpl::VSSImpl(unsigned key, off_t size, bool readOnly) : fVSS(key, size, read
 {
 }
 
-VSS::VSS()
+/*static*/
+std::vector<std::mutex> VSSImplScaled::vssImplMutexes_(MasterSegmentTable::VssShmemTypes.size());
+std::vector<VSSImplScaled*> VSSImplScaled::vssImplInstances_(MasterSegmentTable::VssShmemTypes.size(),
+                                                             nullptr);
+std::vector<std::mutex> VSS::vssMutexes_(MasterSegmentTable::VssShmemTypes.size());
+
+VSSImplScaled::VSSImplScaled(unsigned key, off_t size, bool readOnly) : fVSS(key, size, readOnly)
+{
+}
+
+VSSImplScaled* VSSImplScaled::makeVSSImpl(unsigned key, off_t size,
+                                          const MasterSegmentTable::ShmemType shmType, bool readOnly)
+{
+  auto bucket = shmemType2ContinuesIdx(shmType);
+  assert(bucket < vssImplMutexes_.size() && bucket < VSSImplScaled::vssImplInstances_.size());
+  std::lock_guard lk(vssImplMutexes_[bucket]);
+
+  if (vssImplInstances_[bucket])
+  {
+    if (key != vssImplInstances_[bucket]->fVSS.key())
+    {
+      BRMShmImpl newShm(key, size);
+      vssImplInstances_[bucket]->swapout(newShm);
+    }
+
+    idbassert(key == vssImplInstances_[bucket]->fVSS.key());
+    return vssImplInstances_[bucket];
+  }
+
+  vssImplInstances_[bucket] = new VSSImplScaled(key, size, readOnly);
+
+  return vssImplInstances_[bucket];
+}
+
+size_t VSSImplScaled::shmemType2ContinuesIdx(const MasterSegmentTable::ShmemType shmemType)
+{
+  [[maybe_unused]] bool a = MasterSegmentTable::VSSSegment_ == 3;
+  [[maybe_unused]] bool b = MasterSegmentTable::EMIndex_ == 5;
+  [[maybe_unused]] bool c = shmemType >= MasterSegmentTable::extVSS1;
+  [[maybe_unused]] bool d = shmemType <= MasterSegmentTable::extVSS8;
+  [[maybe_unused]] bool e = shmemType < MasterSegmentTable::end;
+
+  assert(MasterSegmentTable::VSSSegment_ == 3 && MasterSegmentTable::extVSS1 == 6 &&
+         shmemType >= MasterSegmentTable::extVSS1 && shmemType <= MasterSegmentTable::extVSS8 &&
+         shmemType < MasterSegmentTable::end);
+
+  return shmemType - MasterSegmentTable::extVSS1;
+}
+
+VSS::VSS(const MasterSegmentTable::ShmemType vssShmType)
  : vss(nullptr)
  , hashBuckets(nullptr)
  , storage(nullptr)
@@ -104,15 +153,9 @@ VSS::VSS()
  , vssShmid(0)
  , vssShminfo(nullptr)
  , fPVSSImpl(nullptr)
- , vssId_(0)
+ , vssShmType_(vssShmType)
+ , vssImpl_(nullptr)
 {
-  MSTIdx_ = vssIdx2MSTIdxMapping(0);
-}
-
-VSS::VSS(const int32_t vssId) : VSS()
-{
-  MSTIdx_ = vssIdx2MSTIdxMapping(vssId);
-  vssId_ = vssId;
 }
 
 // ported from ExtentMap
@@ -122,11 +165,11 @@ void VSS::lock(OPS op)
 
   if (op == READ)
   {
-    vssShminfo = mst.getTable_read(MSTIdx_);
+    vssShminfo = mst.getTable_read(vssShmType_);
     mutex.lock();
   }
   else
-    vssShminfo = mst.getTable_write(MSTIdx_);
+    vssShminfo = mst.getTable_write(vssShmType_);
 
   // this means that either the VSS isn't attached or that it was resized
   if (!fPVSSImpl || fPVSSImpl->key() != (unsigned)vssShminfo->tableShmkey)
@@ -136,7 +179,7 @@ void VSS::lock(OPS op)
       if (op == READ)
       {
         mutex.unlock();
-        mst.getTable_upgrade(MSTIdx_);
+        mst.getTable_upgrade(vssShmType_);
 
         try
         {
@@ -148,7 +191,7 @@ void VSS::lock(OPS op)
           throw;
         }
 
-        mst.getTable_downgrade(MSTIdx_);
+        mst.getTable_downgrade(vssShmType_);
       }
       else
       {
@@ -194,13 +237,93 @@ void VSS::lock(OPS op)
   }
 }
 
+void VSS::lock_(OPS op)
+{
+  char* shmseg;
+  auto bucket = VSSImplScaled::shmemType2ContinuesIdx(vssShmType_);
+  assert(bucket < vssMutexes_.size());
+
+  if (op == READ)
+  {
+    vssShminfo = mst.getTable_read(vssShmType_);
+    vssMutexes_[bucket].lock();
+  }
+  else
+    vssShminfo = mst.getTable_write(vssShmType_);
+
+  // this means that either the VSS isn't attached or that it was resized
+  if (!vssImpl_ || vssImpl_->key() != (unsigned)vssShminfo->tableShmkey)
+  {
+    if (vssShminfo->allocdSize == 0)
+    {
+      if (op == READ)
+      {
+        vssMutexes_[bucket].unlock();
+        mst.getTable_upgrade(vssShmType_);
+
+        try
+        {
+          growVSS_();
+        }
+        catch (...)
+        {
+          release(WRITE);
+          throw;
+        }
+
+        mst.getTable_downgrade(vssShmType_);
+      }
+      else
+      {
+        try
+        {
+          growVSS_();
+        }
+        catch (...)
+        {
+          release(WRITE);
+          throw;
+        }
+      }
+    }
+    else
+    {
+      vssImpl_ = VSSImplScaled::makeVSSImpl(vssShminfo->tableShmkey, 0, vssShmType_);
+      idbassert(vssImpl_);
+
+      if (r_only)
+        vssImpl_->makeReadOnly();
+
+      vss = vssImpl_->get();
+      shmseg = reinterpret_cast<char*>(vss);
+      hashBuckets = reinterpret_cast<int*>(&shmseg[sizeof(VSSShmsegHeader)]);
+      storage =
+          reinterpret_cast<VSSEntry*>(&shmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+
+      if (op == READ)
+        vssMutexes_[bucket].unlock();
+    }
+  }
+  else
+  {
+    vss = vssImpl_->get();
+    shmseg = reinterpret_cast<char*>(vss);
+    hashBuckets = reinterpret_cast<int*>(&shmseg[sizeof(VSSShmsegHeader)]);
+    storage =
+        reinterpret_cast<VSSEntry*>(&shmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+
+    if (op == READ)
+      vssMutexes_[bucket].unlock();
+  }
+}
+
 // ported from ExtentMap
 void VSS::release(OPS op)
 {
   if (op == READ)
-    mst.releaseTable_read(MSTIdx_);
+    mst.releaseTable_read(vssShmType_);
   else
-    mst.releaseTable_write(MSTIdx_);
+    mst.releaseTable_write(vssShmType_);
 }
 
 void VSS::initShmseg()
@@ -274,6 +397,63 @@ void VSS::growVSS()
   {
     fPVSSImpl->makeReadOnly();
     vss = fPVSSImpl->get();
+  }
+
+  newshmseg = reinterpret_cast<char*>(vss);
+  hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
+  storage =
+      reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+}
+
+void VSS::growVSS_()
+{
+  int allocSize;
+  key_t newshmkey;
+  char* newshmseg;
+
+  if (vssShminfo->allocdSize == 0)
+    allocSize = VSS_INITIAL_SIZE;
+  else
+    allocSize = vssShminfo->allocdSize + VSS_INCREMENT;
+
+  auto bucket = VSSImplScaled::shmemType2ContinuesIdx(vssShmType_);
+  assert(bucket < vssMutexes_.size());
+
+  newshmkey = chooseShmkey_(vssShmType_);
+  idbassert((allocSize == VSS_INITIAL_SIZE && !vssImpl_) || vssImpl_);
+
+  if (vssImpl_)
+  {
+    BRMShmImpl newShm(newshmkey, allocSize);
+    newshmseg = static_cast<char*>(newShm.fMapreg.get_address());
+    memset(newshmseg, 0, allocSize);
+    idbassert(vss);
+    VSSShmsegHeader* tmp = reinterpret_cast<VSSShmsegHeader*>(newshmseg);
+    tmp->capacity = vss->capacity + VSSSTORAGE_INCREMENT / sizeof(VSSEntry);
+    tmp->numHashBuckets = vss->numHashBuckets + VSSTABLE_INCREMENT / sizeof(int);
+    tmp->LWM = 0;
+    copyVSS(tmp);
+    vssImpl_->swapout(newShm);
+  }
+  else
+  {
+    vssImpl_ = VSSImplScaled::makeVSSImpl(newshmkey, allocSize, vssShmType_);
+    newshmseg = reinterpret_cast<char*>(vssImpl_->get());
+    memset(newshmseg, 0, allocSize);
+  }
+
+  vss = vssImpl_->get();
+
+  if (allocSize == VSS_INITIAL_SIZE)
+    initShmseg();
+
+  vssShminfo->tableShmkey = newshmkey;
+  vssShminfo->allocdSize = allocSize;
+
+  if (r_only)
+  {
+    vssImpl_->makeReadOnly();
+    vss = vssImpl_->get();
   }
 
   newshmseg = reinterpret_cast<char*>(vss);
@@ -363,22 +543,27 @@ void VSS::copyVSS(VSSShmsegHeader* dest)
     if (storage[i].lbid != -1)
     {
       _insert(storage[i], dest, newHashtable, newStorage, true);
-      // confirmChanges();
     }
 }
 
 key_t VSS::chooseShmkey() const
 {
   int fixedKeys = 1;
-  key_t ret;
 
   if (vssShminfo->tableShmkey + 1 == (key_t)(fShmKeys.KEYRANGE_VSS_BASE + fShmKeys.KEYRANGE_SIZE - 1) ||
       (unsigned)vssShminfo->tableShmkey < fShmKeys.KEYRANGE_VSS_BASE)
-    ret = fShmKeys.KEYRANGE_VSS_BASE + fixedKeys;
-  else
-    ret = vssShminfo->tableShmkey + 1;
+    return vssIdx2ShmkeyBase(vssShmType_) + fixedKeys;
+  return vssShminfo->tableShmkey + 1;
+}
 
-  return ret;
+uint32_t VSS::chooseShmkey_(const MasterSegmentTable::ShmemType shmemType) const
+{
+  int fixedKeys = 1;
+  auto rangeBaseNumber = vssIdx2ShmkeyBase(vssShmType_);
+  if (vssShminfo->tableShmkey + 1 == (key_t)(rangeBaseNumber + fShmKeys.KEYRANGE_SIZE - 1) ||
+      (unsigned)vssShminfo->tableShmkey < rangeBaseNumber)
+    return rangeBaseNumber + fixedKeys;
+  return vssShminfo->tableShmkey + 1;
 }
 
 void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loading)
@@ -421,6 +606,25 @@ void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loadin
 
   if (locked)
     vss->lockedEntryCount++;
+}
+
+void VSS::insert_(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loading)
+{
+  VSSEntry entry(lbid, verID, vbFlag, locked);
+
+  // check for resize
+  if (vss->currentSize == vss->capacity)
+    growVSS_();
+
+  _insert(entry, vss, hashBuckets, storage, loading);
+
+  if (!loading)
+    makeUndoRecord(&vss->currentSize, sizeof(vss->currentSize));
+
+  ++vss->currentSize;
+
+  if (locked)
+    ++vss->lockedEntryCount;
 }
 
 // assumes write lock is held and that it is properly sized already
@@ -468,29 +672,7 @@ int VSS::lookup(LBID_t lbid, const QueryContext_vss& verInfo, VER_t txnID, VER_t
                 bool vbOnly) const
 {
   int hashIndex, maxVersion = -1, minVersion = -1, currentIndex;
-  VSSEntry *listEntry, *maxEntry = NULL;
-
-#ifdef BRM_DEBUG
-
-  if (lbid < 0)
-  {
-    log("VSS::lookup(): lbid must be >= 0", logging::LOG_TYPE_DEBUG);
-    throw invalid_argument("VSS::lookup(): lbid must be >= 0");
-  }
-
-  if (verInfo.currentScn < 0)
-  {
-    log("VSS::lookup(): verID must be >= 0", logging::LOG_TYPE_DEBUG);
-    throw invalid_argument("VSS::lookup(): verID must be >= 0");
-  }
-
-  if (txnID < 0)
-  {
-    log("VSS::lookup(): txnID must be >= 0", logging::LOG_TYPE_DEBUG);
-    throw invalid_argument("VSS::lookup(): txnID must be >= 0");
-  }
-
-#endif
+  VSSEntry *listEntry, *maxEntry = nullptr;
 
   hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
 
@@ -534,7 +716,7 @@ int VSS::lookup(LBID_t lbid, const QueryContext_vss& verInfo, VER_t txnID, VER_t
     currentIndex = listEntry->next;
   }
 
-  if (maxEntry != NULL)
+  if (maxEntry != nullptr)
   {
     *outVer = maxVersion;
     *vbFlag = maxEntry->vbFlag;
@@ -566,7 +748,7 @@ VER_t VSS::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 
     if (listEntry->lbid == lbid && !listEntry->vbFlag)
     {
-      if (isLocked != NULL)
+      if (isLocked != nullptr)
         *isLocked = listEntry->locked;
 
       return listEntry->verID;
@@ -575,7 +757,7 @@ VER_t VSS::getCurrentVersion(LBID_t lbid, bool* isLocked) const
     currentIndex = listEntry->next;
   }
 
-  if (isLocked != NULL)
+  if (isLocked != nullptr)
     *isLocked = false;
 
   return 0;
@@ -706,10 +888,10 @@ void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
   }
 
   makeUndoRecord(vss, sizeof(VSSShmsegHeader));
-  vss->currentSize--;
+  --vss->currentSize;
 
   if (storage[index].locked && (vss->lockedEntryCount > 0))
-    vss->lockedEntryCount--;
+    --vss->lockedEntryCount;
 
   if (index < vss->LWM)
     vss->LWM = index;
@@ -740,7 +922,7 @@ void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
         storage[prev].next = storage[index].next;
       }
 
-      vss->currentSize--;
+      --vss->currentSize;
 
       if (storage[index].locked && (vss->lockedEntryCount > 0))
         vss->lockedEntryCount--;
@@ -785,33 +967,6 @@ bool VSS::isEntryLocked(LBID_t lbid, VER_t verID) const
 
   if (lbid == -1)
     return false;
-
-  /* See bug 3287 for info on these code blocks */
-
-  /*  This version checks for the specific lbid,ver pair
-      index = getIndex(lbid, verID, prev, bucket);
-      if (index < 0)
-              return false;
-      return storage[index].locked;
-  */
-
-  /*  This version considers any locked entry for an LBID to mean the block is locked.
-      VSSEntry *listEntry;
-      bucket = hasher((char *) &lbid, sizeof(lbid)) % vss->numHashBuckets;
-
-      index = hashBuckets[bucket];
-      while (index != -1) {
-              listEntry = &storage[index];
-              if (listEntry->lbid == lbid && listEntry->locked)
-              {
-                      ostringstream msg;
-                      msg << " Locked entry information lbid:verID = " << listEntry->lbid << ":" <<
-     listEntry->verID << endl; log(msg.str(), logging::LOG_TYPE_CRITICAL); return true;
-              }
-              index = listEntry->next;
-      }
-      return false;
-  */
 
   // This version considers the blocks needed for rollback to be locked,
   // otherwise they're unlocked.  Note, the version with the 'locked' flag set
@@ -875,22 +1030,6 @@ void VSS::setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag)
 {
   int index, prev, bucket;
 
-#ifdef BRM_DEBUG
-
-  if (lbid < 0)
-  {
-    log("VSS::setVBFlag(): lbid must be >= 0", logging::LOG_TYPE_DEBUG);
-    throw invalid_argument("VSS::setVBFlag(): lbid must be >= 0");
-  }
-
-  if (verID < 0)
-  {
-    log("VSS::setVBFlag(): verID must be >= 0", logging::LOG_TYPE_DEBUG);
-    throw invalid_argument("VSS::setVBFlag(): verID must be >= 0");
-  }
-
-#endif
-
   index = getIndex(lbid, verID, prev, bucket);
 
   if (index == -1)
@@ -940,7 +1079,7 @@ void VSS::commit(VER_t txnID)
 
       // @ bug 1426 fix. Decrease the counter when an entry releases its lock.
       if (vss->lockedEntryCount > 0)
-        vss->lockedEntryCount--;
+        --vss->lockedEntryCount;
     }
 }
 
@@ -1124,6 +1263,31 @@ void VSS::clear()
   }
 
   newshmseg = reinterpret_cast<char*>(vss);
+  hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
+  storage =
+      reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+}
+
+void VSS::clear_()
+{
+  auto allocSize = VSS_INITIAL_SIZE;
+  auto newshmkey = chooseShmkey_(vssShmType_);
+
+  idbassert(vssImpl_);
+  idbassert(vssImpl_->key() != newshmkey);
+  vssImpl_->clear(newshmkey, allocSize);
+  vssShminfo->tableShmkey = newshmkey;
+  vssShminfo->allocdSize = allocSize;
+  vss = vssImpl_->get();
+  initShmseg();
+
+  if (r_only)
+  {
+    vssImpl_->makeReadOnly();
+    vss = vssImpl_->get();
+  }
+
+  auto newshmseg = reinterpret_cast<char*>(vss);
   hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
   storage =
       reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);

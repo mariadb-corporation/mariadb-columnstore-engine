@@ -82,6 +82,7 @@ struct VSSEntry
   uint32_t pad1;
 #endif
   VSSEntry();
+  VSSEntry(const LBID_t lbid, const VER_t verID, const bool vbFlag, const bool locked);
 };
 
 struct VSSShmsegHeader
@@ -106,7 +107,7 @@ class QueryContext_vss
   }
   QueryContext_vss(const QueryContext& qc);
   VER_t currentScn;
-  boost::shared_ptr<std::set<VER_t> > txns;
+  boost::shared_ptr<std::set<VER_t>> txns;
 };
 
 class VSSImpl
@@ -160,6 +161,60 @@ class VSSImpl
   static VSSImpl* fInstance;
 };
 
+class VSSImplScaled
+{
+ public:
+  static VSSImplScaled* makeVSSImpl(unsigned key, off_t size, const MasterSegmentTable::ShmemType shmType,
+                                    bool readOnly = false);
+
+  inline void grow(unsigned key, off_t size)
+#ifndef NDBUG
+  {
+    fVSS.grow(key, size);
+  }
+#else
+  {
+    int rc = fVSS.grow(key, size);
+    idbassert(rc == 0);
+  }
+#endif
+  inline void makeReadOnly()
+  {
+    fVSS.setReadOnly();
+  }
+  inline void clear(unsigned key, off_t size)
+  {
+    fVSS.clear(key, size);
+  }
+  inline void swapout(BRMShmImpl& rhs)
+  {
+    fVSS.swap(rhs);
+    rhs.destroy();
+  }
+  inline unsigned key() const
+  {
+    return fVSS.key();
+  }
+
+  inline VSSShmsegHeader* get() const
+  {
+    return reinterpret_cast<VSSShmsegHeader*>(fVSS.fMapreg.get_address());
+  }
+
+  static size_t shmemType2ContinuesIdx(const MasterSegmentTable::ShmemType shmemType);
+
+ private:
+  VSSImplScaled(unsigned key, off_t size, bool readOnly = false);
+  ~VSSImplScaled();
+  VSSImplScaled(const VSSImpl& rhs);
+  VSSImplScaled& operator=(const VSSImpl& rhs);
+
+  BRMShmImpl fVSS;
+
+  static std::vector<std::mutex> vssImplMutexes_;
+  static std::vector<VSSImplScaled*> vssImplInstances_;
+};
+
 class VBBM;
 class ExtentMap;
 
@@ -204,8 +259,8 @@ class VSS : public Undoable
     WRITE
   };
 
-  VSS();
-  VSS(const int32_t vssId);
+  // VSS() = delete;
+  VSS(const MasterSegmentTable::ShmemType vssId = MasterSegmentTable::VSSSegment_);
   ~VSS() = default;
 
   bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
@@ -215,7 +270,8 @@ class VSS : public Undoable
   void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
   int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
              bool vbOnly = false) const;
-
+  int lookup_(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
+              bool vbOnly = false) const;
   /// Returns the version in the main DB files
   VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
 
@@ -227,11 +283,14 @@ class VSS : public Undoable
 
   void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
   void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
+  void insert_(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
+
   void commit(VER_t txnID);
   void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
   void getUnlockedLBIDs(BlockList_t& lbids);
   void getLockedLBIDs(BlockList_t& lbids);
   void lock(OPS op);
+  void lock_(OPS op);
   void release(OPS op);
   void setReadOnly();
 
@@ -241,6 +300,7 @@ class VSS : public Undoable
   void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
 
   void clear();
+  void clear_();
   void load(std::string filename);
   void save(std::string filename);
 
@@ -256,16 +316,27 @@ class VSS : public Undoable
   bool isTooOld(LBID_t lbid, VER_t verID) const;
 
  private:
-  VSS(const VSS&);
+  VSS(const VSS&) = delete;
   VSS& operator=(const VSS&);
-  int32_t vssIdx2MSTIdxMapping(const int32_t vssId) const
-  {
-    if (!vssId)
-      return MasterSegmentTable::VSSSegment;
-    assert(MasterSegmentTable::EMIndex == 5);  // a clumsy guard against external changes
-    return vssId + MasterSegmentTable::EMIndex;
-  }
 
+  uint32_t vssIdx2ShmkeyBase(const MasterSegmentTable::ShmemType shmemType) const
+  {
+    assert(shmemType <= MasterSegmentTable::extVSS8);
+    switch (shmemType)
+    {
+      case MasterSegmentTable::extVSS1: return fShmKeys.KEYRANGE_VSS_BASE1;
+      case MasterSegmentTable::extVSS2: return fShmKeys.KEYRANGE_VSS_BASE2;
+      case MasterSegmentTable::extVSS3: return fShmKeys.KEYRANGE_VSS_BASE3;
+      case MasterSegmentTable::extVSS4: return fShmKeys.KEYRANGE_VSS_BASE4;
+      case MasterSegmentTable::extVSS5: return fShmKeys.KEYRANGE_VSS_BASE5;
+      case MasterSegmentTable::extVSS6: return fShmKeys.KEYRANGE_VSS_BASE6;
+      case MasterSegmentTable::extVSS7: return fShmKeys.KEYRANGE_VSS_BASE7;
+      case MasterSegmentTable::extVSS8: return fShmKeys.KEYRANGE_VSS_BASE8;
+
+      default: return fShmKeys.KEYRANGE_VSS_BASE;
+    }
+    return 0;
+  }
   struct VSSShmsegHeader* vss;
   int* hashBuckets;
   VSSEntry* storage;
@@ -279,7 +350,9 @@ class VSS : public Undoable
   static const int MAX_IO_RETRIES = 10;
 
   key_t chooseShmkey() const;
+  uint32_t chooseShmkey_(const MasterSegmentTable::ShmemType shmemType) const;
   void growVSS();
+  void growVSS_();
   void growForLoad(int count);
   void initShmseg();
   void copyVSS(VSSShmsegHeader* dest);
@@ -291,8 +364,9 @@ class VSS : public Undoable
 
   VSSImpl* fPVSSImpl;
   utils::Hasher hasher;
-  int32_t vssId_;  // might be useless
-  int32_t MSTIdx_;
+  static std::vector<std::mutex> vssMutexes_;
+  const MasterSegmentTable::ShmemType vssShmType_;
+  VSSImplScaled* vssImpl_;
 };
 
 }  // namespace BRM

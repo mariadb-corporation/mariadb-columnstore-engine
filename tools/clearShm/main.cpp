@@ -189,6 +189,7 @@ int main(int argc, char** argv)
   semDoit(BrmKeys.KEYRANGE_VBBM_BASE, "VBBM       ");
   semDoit(BrmKeys.KEYRANGE_VSS_BASE, "VSS        ");
   semDoit(BrmKeys.KEYRANGE_EXTENTMAP_INDEX_BASE, "EXTMAP_INDX");
+  // WIP replace with a loop
   semDoit(BrmKeys.KEYRANGE_VSS_BASE1, "VSS1       ");
   semDoit(BrmKeys.KEYRANGE_VSS_BASE2, "VSS2       ");
   semDoit(BrmKeys.KEYRANGE_VSS_BASE3, "VSS3       ");
