@@ -1,4 +1,4 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
+include_directories( ${ENGINE_COMMON_INCLUDES})
 ########### next target ###############
 
 set(joblist_LIB_SRCS
@@ -15,7 +15,6 @@ set(joblist_LIB_SRCS
     filtercommand-jl.cpp
     filterstep.cpp
     groupconcat.cpp
-    jl_logger.cpp
     jlf_common.cpp
     jlf_execplantojoblist.cpp
     jlf_graphics.cpp
@@ -35,8 +34,6 @@ set(joblist_LIB_SRCS
     pdictionary.cpp
     pdictionaryscan.cpp
     pseudocc-jl.cpp
-    resourcedistributor.cpp
-    resourcemanager.cpp
     rowestimator.cpp
     rowaggregation.cpp
     rtscommand-jl.cpp
@@ -53,8 +50,7 @@ set(joblist_LIB_SRCS
     tupleunion.cpp
     unique32generator.cpp
     virtualtable.cpp
-    windowfunctionstep.cpp
-    ${ENGINE_SRC_DIR}/tools/passwd/secrets.cpp)
+) 
 
 ########### next target ###############
 

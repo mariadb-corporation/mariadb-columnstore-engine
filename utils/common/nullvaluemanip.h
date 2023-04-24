@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../../dbcon/execplan/calpontsystemcatalog.h"
+#include "calpontsystemcatalog.h"
 
 namespace utils
 {

@@ -10,5 +10,6 @@ add_executable(ddlcleanup ${ddlcleanup_SRCS})
 
 target_link_libraries(ddlcleanup ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ddlcleanuputil brm ddlpackageproc cacheutils)
 
+
 install(TARGETS ddlcleanup DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
