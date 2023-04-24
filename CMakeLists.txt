@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 PROJECT(Columnstore)
+INCLUDE (CheckCXXSourceCompiles)
 
 IF(NOT INSTALL_LAYOUT)
     IF(NOT CMAKE_BUILD_TYPE)
@@ -48,6 +49,19 @@ ELSE()
     MESSAGE_ONCE(CS_NO_CXX20 "C++ Compiler does not understand -std=c++20")
     return()
   ENDIF()
+ENDIF()
+
+CHECK_CXX_SOURCE_COMPILES(
+"#include <set>
+int main()
+{
+  std::set<int> s = {1, 2, 3, 4};
+  return s.contains(2);
+}" HAVE_STD_SET_CONTAINS)
+
+IF (NOT HAVE_STD_SET_CONTAINS)
+  MESSAGE_ONCE(CS_NO_CONTAINS "std::set does not have contains() method")
+  RETURN()
 ENDIF()
 
 # There is an inconsistency b/w default char signedness at ARM and x86.
