@@ -182,6 +182,45 @@ concept NotConstString = requires {
                                       std::is_same<EncodedKeyType, utils::ShortConstString>::value);
                          };
 
+template <typename EncodedKeyType, typename StorageType>
+  requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
+           sorting::IsConstString<EncodedKeyType>) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  return value.isNull();
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(
+      (std::is_integral<EncodedKeyType>::value || std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
+      (std::is_integral<StorageType>::value || std::is_same<StorageType, datatypes::TSInt128>::value)) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  return value == null;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value) bool
+isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull)
+{
+  return std::memcmp(&value, &null, sizeof(uint64_t)) == 0;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value) bool
+isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull)
+{
+  return std::memcmp(&value, &null, sizeof(uint32_t)) == 0;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  const StorageType v = *reinterpret_cast<const StorageType*>(value.str());
+  return v == storageNull;
+}
+
 bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidth)
 {
   switch (colType)

@@ -74,6 +74,11 @@ if(WITH_UNITTESTS)
     target_link_libraries(heaporderby ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET heaporderby TEST_PREFIX columnstore:)
 
+    add_executable(pdqorderby pdqorderby-tests.cpp)
+    add_dependencies(pdqorderby googletest)
+    target_link_libraries(pdqorderby ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET pdqorderby TEST_PREFIX columnstore:)
+
     add_executable(modified_pdqsort modified_pdqsort.cpp)
     add_dependencies(modified_pdqsort googletest)
     target_link_libraries(modified_pdqsort ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
