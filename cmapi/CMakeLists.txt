@@ -57,6 +57,27 @@ INSTALL(FILES mcs
 OPTION(RPM "Build an RPM" OFF)
 IF(RPM)
     SET(CPACK_GENERATOR "RPM")
+    # cmake wants to byte-compile all .py files.
+    # this line below will prevent it of doing such
+    # trying to byte-compile could produce some issues with not existing
+    # python3 on some systems like centos7
+    # more info:
+    # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation#Status_quo
+    # https://stackoverflow.com/questions/69988093/cmake-brp-python-bytecompile-and-python3
+    SET(CPACK_RPM_SPEC_INSTALL_POST "%global _python_bytecompile_extra 0")
+    SET(CPACK_RPM_SPEC_MORE_DEFINE "%global _python_bytecompile_extra 0")
+    # Turn off the brp-python-bytecompile script
+    # for every release including EPEL
+    # more info here:
+    # https://pagure.io/packaging-committee/issue/755
+    SET(CPACK_RPM_SPEC_INSTALL_POST "%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')")
+    SET(CPACK_RPM_SPEC_MORE_DEFINE "%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')")
+    # otherwise it could be solved to install python3 in centos7 and adding this line:
+    # SET(CPACK_RPM_SPEC_MORE_DEFINE "%define __python %{__python3}")
+    # example here:
+    # https://github.com/irods/irods/pull/6347/files
+    # but it's doesn't work because of some CPACK versions don't add definitions
+    # to the spec file using CPACK_RPM_SPEC_MORE_DEFINE
 
     SET(CPACK_RPM_PACKAGE_VERSION ${PACKAGE_VERSION})
     SET(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
