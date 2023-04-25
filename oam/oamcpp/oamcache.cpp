@@ -36,39 +36,14 @@ using namespace boost;
 #include "installdir.h"
 #include "mcsconfig.h"
 
-namespace
-{
-oam::OamCache* oamCache = nullptr;
-boost::mutex cacheLock;
-}  // namespace
-
 namespace oam
 {
-std::atomic_bool hasOAMCache{false};
 
 OamCache* OamCache::makeOamCache()
 {
-  if (!hasOAMCache.load(std::memory_order_relaxed))
-  {
-    boost::mutex::scoped_lock lk(cacheLock);
-
-    if (oamCache == nullptr)
-    {
-      oamCache = new OamCache();
-      oamCache->checkReload();
-      hasOAMCache.store(true, std::memory_order_relaxed);
-    }
-  }
-
-  return oamCache;
-}
-
-OamCache::OamCache() : mtime(0), mLocalPMId(0)
-{
-}
-
-OamCache::~OamCache()
-{
+  static OamCache cache;
+  cache.checkReload();
+  return &cache;
 }
 
 void OamCache::checkReload()

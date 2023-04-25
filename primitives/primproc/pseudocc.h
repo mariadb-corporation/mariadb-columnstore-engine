@@ -19,6 +19,7 @@
 
 #include "columncommand.h"
 #include "blocksize.h"
+#include "oamcache.h"
 
 namespace primitiveprocessor
 {
@@ -77,7 +78,7 @@ void PseudoCC::loadSingleValue(W val)
 template <typename W>
 void PseudoCC::loadPMNumber()
 {
-  uint32_t pmNum = oamCache->getLocalPMId();
+  uint32_t pmNum = oam::OamCache::makeOamCache()->getLocalPMId();
   loadSingleValue<W>(pmNum);
 }
 
