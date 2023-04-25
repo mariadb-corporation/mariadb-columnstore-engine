@@ -42,6 +42,7 @@ optparse.define short=P long=report-path desc="Path for storing reports and prof
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
 
 source $( optparse.build )
 
@@ -286,7 +287,6 @@ build()
     message "Building with flags"
     newline_array ${MDB_CMAKE_FLAGS[@]}
 
-    local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
     message_split

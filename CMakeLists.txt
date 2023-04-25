@@ -233,6 +233,8 @@ IF (MASK_LONGDOUBLE)
     MY_CHECK_AND_SET_COMPILER_FLAG("-DMASK_LONGDOUBLE")
 ENDIF()
 
+MY_CHECK_AND_SET_COMPILER_FLAG("-fdata-sections -ffunction-sections")
+
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition")
@@ -249,7 +251,8 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBIN
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
-SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
+
+SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed -Wl,--gc-sections")
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
 SET (ENGINE_OAM_LIBS        oamcpp)
