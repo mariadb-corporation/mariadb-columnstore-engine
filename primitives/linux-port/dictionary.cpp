@@ -597,7 +597,8 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
         outValue = reinterpret_cast<DataValue*>(&(*out)[header.NBYTES]);
         outValue->isnull = sigptr.data == nullptr;
         outValue->len = sigptr.len;
-        memcpy(outValue->data, sigptr.data, sigptr.len);
+        if (sigptr.data != nullptr)
+          memcpy(outValue->data, sigptr.data, sigptr.len);
         header.NBYTES += sizeof(DataValue) + sigptr.len;
       }
     }
