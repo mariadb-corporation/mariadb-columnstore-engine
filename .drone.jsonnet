@@ -517,7 +517,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
       'mv *.' + pkg_format + ' ../' + result + '/',
       'cd ../',
-      if (pkg_format == 'rpm') then 'createrepo ' + result else 'set -o pipefail && dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
+      if (pkg_format == 'rpm') then 'createrepo ' + result else 'SHELL=/bin/bash && set -o pipefail && dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
     ],
   },
   multi_node_mtr:: {
