@@ -219,7 +219,8 @@ boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
-ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
+ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly,
+                                                                  const MasterSegmentTable* emSegTable)
 {
   boost::mutex::scoped_lock lk(fInstanceMutex);
 
@@ -227,7 +228,11 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
   {
     if (key != fInstance->fManagedShm.key())
     {
+      if (emSegTable)
+        emSegTable->getTable_upgrade(MasterSegmentTable::EMTable);
       fInstance->fManagedShm.reMapSegment();
+      if (emSegTable)
+        emSegTable->getTable_downgrade(MasterSegmentTable::EMTable);
     }
 
     return fInstance;
@@ -1941,7 +1946,11 @@ void ExtentMap::grabEMEntryTable(OPS op)
     }
     else
     {
-      fPExtMapRBTreeImpl = ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(fEMRBTreeShminfo->tableShmkey, 0);
+      const bool isReadOnly = false;
+      // The ternary sends EM segment table only if this grab is for a read to allow to upgrade the RWLock if
+      // case of a shmem segment remap.
+      fPExtMapRBTreeImpl = ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(
+          fEMRBTreeShminfo->tableShmkey, 0, isReadOnly, op == READ ? &fMST : nullptr);
       ASSERT(fPExtMapRBTreeImpl);
 
       fExtentMapRBTree = fPExtMapRBTreeImpl->get();
