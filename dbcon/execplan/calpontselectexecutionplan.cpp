@@ -96,8 +96,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
     const ReturnedColumnList& returnedCols, ParseTree* filters, const SelectList& subSelects,
     const GroupByColumnList& groupByCols, ParseTree* having, const OrderByColumnList& orderByCols,
     const string alias, const int location, const bool dependent)
- : fLocalQuery(GLOBAL_QUERY)
- , fReturnedCols(returnedCols)
+ : fReturnedCols(returnedCols)
  , fFilters(filters)
  , fSubSelects(subSelects)
  , fGroupByCols(groupByCols)
@@ -106,55 +105,15 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
  , fTableAlias(alias)
  , fLocation(location)
  , fDependent(dependent)
- , fTxnID(-1)
- , fTraceFlags(TRACE_NONE)
- , fStatementID(0)
- , fDistinct(false)
- , fOverrideLargeSideEstimate(false)
- , fDistinctUnionNum(0)
- , fSubType(MAIN_SELECT)
- , fLimitStart(0)
- , fLimitNum(-1)
- , fHasOrderBy(false)
- , fStringScanThreshold(ULONG_MAX)
- , fQueryType(SELECT)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
- , fStringTableThreshold(20)
- , fOrderByThreads(1)
- , fDJSSmallSideLimit(0)
- , fDJSLargeSideLimit(0)
- , fDJSPartitionSize(100 * 1024 * 1024)
- ,  // 100MB mem usage for disk based join
- fUMMemLimit(numeric_limits<int64_t>::max())
- , fIsDML(false)
+
 {
   fUuid = QueryTeleClient::genUUID();
 }
 
 CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(string data)
- : fLocalQuery(GLOBAL_QUERY)
- , fData(data)
- , fTxnID(-1)
- , fTraceFlags(TRACE_NONE)
- , fStatementID(0)
- , fDistinct(false)
- , fOverrideLargeSideEstimate(false)
- , fDistinctUnionNum(0)
- , fSubType(MAIN_SELECT)
- , fLimitStart(0)
- , fLimitNum(-1)
- , fHasOrderBy(false)
- , fStringScanThreshold(ULONG_MAX)
- , fQueryType(SELECT)
+ : fData(data)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
- , fStringTableThreshold(20)
- , fOrderByThreads(1)
- , fDJSSmallSideLimit(0)
- , fDJSLargeSideLimit(0)
- , fDJSPartitionSize(100 * 1024 * 1024)
- ,  // 100MB mem usage for disk based join
- fUMMemLimit(numeric_limits<int64_t>::max())
- , fIsDML(false)
 {
   fUuid = QueryTeleClient::genUUID();
 }

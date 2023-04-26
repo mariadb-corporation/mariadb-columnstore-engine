@@ -400,7 +400,7 @@ fix_config_files()
         if grep -q UBSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
