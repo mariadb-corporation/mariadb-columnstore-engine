@@ -51,8 +51,6 @@ namespace BRM
 {
 BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
 {
-  // r::transform(MasterSegmentTable::VssShmemTypes, std::back_inserter(vss_),
-  //              [](auto s) { return std::unique_ptr<VSS>(new VSS(s)); });
   for (auto s : MasterSegmentTable::VssShmemTypes)
   {
     vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
@@ -187,7 +185,7 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     vss.load(vssFilename);
     for (size_t i = 0; auto& v : vss_)
     {
-      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::WRITE);
       vssIsLocked[i] = true;
       // The vss image filename numeric suffix begins with 1.

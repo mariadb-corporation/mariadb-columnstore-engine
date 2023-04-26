@@ -70,7 +70,7 @@
 
 namespace BRM
 {
-const constexpr static int32_t VssFactor = 8ULL;
+const constexpr static size_t VssFactor = MasterSegmentTable::VssShmemTypes.size();
 struct VSSEntry
 {
   LBID_t lbid;
@@ -274,6 +274,7 @@ class VSS : public Undoable
               bool vbOnly = false) const;
   /// Returns the version in the main DB files
   VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
+  // std::pair<VER_t, bool> VSS::getCurrentVersionAndLockStatus(LBID_t lbid) const;
 
   /// Returns the highest version in the version buffer, less than max
   VER_t getHighestVerInVB(LBID_t lbid, VER_t max) const;

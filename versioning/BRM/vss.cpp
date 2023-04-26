@@ -131,12 +131,6 @@ VSSImplScaled* VSSImplScaled::makeVSSImpl(unsigned key, off_t size,
 
 size_t VSSImplScaled::shmemType2ContinuesIdx(const MasterSegmentTable::ShmemType shmemType)
 {
-  [[maybe_unused]] bool a = MasterSegmentTable::VSSSegment_ == 3;
-  [[maybe_unused]] bool b = MasterSegmentTable::EMIndex_ == 5;
-  [[maybe_unused]] bool c = shmemType >= MasterSegmentTable::extVSS1;
-  [[maybe_unused]] bool d = shmemType <= MasterSegmentTable::extVSS8;
-  [[maybe_unused]] bool e = shmemType < MasterSegmentTable::end;
-
   assert(MasterSegmentTable::VSSSegment_ == 3 && MasterSegmentTable::extVSS1 == 6 &&
          shmemType >= MasterSegmentTable::extVSS1 && shmemType <= MasterSegmentTable::extVSS8 &&
          shmemType < MasterSegmentTable::end);
@@ -733,6 +727,28 @@ int VSS::lookup(LBID_t lbid, const QueryContext_vss& verInfo, VER_t txnID, VER_t
   *vbFlag = false;
   return -1;
 }
+
+// std::pair<VER_t, bool> VSS::getCurrentVersionAndLockStatus(LBID_t lbid) const
+// {
+//   int currentIndex;
+
+//   auto hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+//   currentIndex = hashBuckets[hashIndex];
+
+//   while (currentIndex != -1)
+//   {
+//     auto listEntry = &storage[currentIndex];
+
+//     if (listEntry->lbid == lbid && !listEntry->vbFlag)
+//     {
+//       return {listEntry->verID, listEntry->locked};
+//     }
+
+//     currentIndex = listEntry->next;
+//   }
+//   // not found
+//   return {0, false};
+// }
 
 VER_t VSS::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 {

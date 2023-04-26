@@ -21,9 +21,11 @@
  ****************************************************************************/
 
 #include <iostream>
+#include <iterator>
 #include <unordered_set>
 #include <sys/types.h>
 #include <vector>
+#include "hasher.h"
 #ifdef __linux__
 #include <values.h>
 #endif
@@ -174,7 +176,7 @@ int DBRM::saveState(string filename) throw()
 
     for (size_t i = 0; auto& v : vss_)
     {
-      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::READ);
       vssIsLocked[i] = true;
       v->save(vssFilename + std::to_string(i + 1));
@@ -266,6 +268,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   bool locked[2] = {false, false};
   int ret;
   bool tooOld = false;
+  size_t bucket = 0;
 
   try
   {
@@ -281,10 +284,12 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
 
       if (ret < 0)
       {
-        vss->lock(VSS::READ);
+        utils::Hasher_r hasher;
+        bucket = hasher(&lbid, sizeof(lbid), 0) % VssFactor;
+        vss_[bucket]->lock_(VSS::READ);
         locked[1] = true;
-        tooOld = vss->isTooOld(lbid, verid);
-        vss->release(VSS::READ);
+        tooOld = vss_[bucket]->isTooOld(lbid, verid);
+        vss_[bucket]->release(VSS::READ);
         locked[1] = false;
 
         if (tooOld)
@@ -297,7 +302,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   catch (exception& e)
   {
     if (locked[1])
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     if (locked[0])
       vbbm->release(VBBM::READ);
@@ -692,8 +697,9 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   }
 
 #endif
-
-  if (!vbOnly && vss->isEmpty())
+  utils::Hasher_r hasher;
+  size_t bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+  if (!vbOnly && vss_[bucket]->isEmpty())
   {
     *outVer = 0;
     *vbFlag = false;
@@ -704,17 +710,16 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
 
   try
   {
-    int rc = 0;
-    vss->lock(VSS::READ);
+    vss_[bucket]->lock_(VSS::READ);
     locked = true;
-    rc = vss->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
-    vss->release(VSS::READ);
+    int rc = vss_[bucket]->lookup_(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+    vss_[bucket]->release(VSS::READ);
     return rc;
   }
   catch (exception& e)
   {
     if (locked)
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     cerr << e.what() << endl;
     return -1;
@@ -800,33 +805,42 @@ VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* versions,
                                 vector<bool>* isLocked) const
 {
+  versions->reserve(lbids.size());
+
+  if (isLocked != nullptr)
+    isLocked->reserve(lbids.size());
+
+  size_t bucket = 0;
+  utils::Hasher_r hasher;
   bool locked = false;
-
-  versions->resize(lbids.size());
-
-  if (isLocked != NULL)
-    isLocked->resize(lbids.size());
-
   try
   {
-    vss->lock(VSS::READ);
+    bool lockStatus = false;
+
+    assert(lbids.size() && versions->size() && isLocked->size());
     locked = true;
 
-    if (isLocked != NULL)
+    if (isLocked)
     {
-      bool tmp = false;
-
-      for (uint32_t i = 0; i < lbids.size(); i++)
+      for (auto lbid : lbids)
       {
-        (*versions)[i] = vss->getCurrentVersion(lbids[i], &tmp);
-        (*isLocked)[i] = tmp;
+        bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+        vss_[bucket]->lock_(VSS::READ);
+        versions->push_back(vss_[bucket]->getCurrentVersion(lbid, &lockStatus));
+        vss_[bucket]->release(VSS::READ);
+        isLocked->push_back(lockStatus);
       }
     }
     else
-      for (uint32_t i = 0; i < lbids.size(); i++)
-        (*versions)[i] = vss->getCurrentVersion(lbids[i], NULL);
-
-    vss->release(VSS::READ);
+    {
+      for (auto lbid : lbids)
+      {
+        bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+        vss_[bucket]->lock_(VSS::READ);
+        versions->push_back(vss_[bucket]->getCurrentVersion(lbid, nullptr));
+        vss_[bucket]->release(VSS::READ);
+      }
+    }
     locked = false;
     return 0;
   }
@@ -836,7 +850,7 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
     cerr << e.what() << endl;
 
     if (locked)
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     return -1;
   }

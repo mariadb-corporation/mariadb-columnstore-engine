@@ -50,17 +50,21 @@ using namespace logging;
 
 namespace BRM
 {
-SlaveDBRMNode::SlaveDBRMNode() throw()
+SlaveDBRMNode::SlaveDBRMNode()
 {
   locked[0] = false;
   locked[1] = false;
   locked[2] = false;
+  for (auto s : MasterSegmentTable::VssShmemTypes)
+  {
+    vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
+  }
 }
 
-SlaveDBRMNode::SlaveDBRMNode(const SlaveDBRMNode& brm)
-{
-  throw logic_error("WorkerDBRMNode: Don't use the copy constructor.");
-}
+// SlaveDBRMNode::SlaveDBRMNode(const SlaveDBRMNode& brm)
+// {
+//   throw logic_error("WorkerDBRMNode: Don't use the copy constructor.");
+// }
 
 SlaveDBRMNode::~SlaveDBRMNode() throw()
 {
@@ -1023,6 +1027,8 @@ int SlaveDBRMNode::saveState(string filename) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
+  std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
+  assert(vssIsLocked.size() == vss_.size());
 
   try
   {
@@ -1035,6 +1041,17 @@ int SlaveDBRMNode::saveState(string filename) throw()
     vbbm.save(vbbmFilename);
     vss.save(vssFilename);
 
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::READ);
+      vssIsLocked[i] = true;
+      v->save(vssFilename + std::to_string(i + 1));
+      v->release(VSS::READ);
+      vssIsLocked[i] = false;
+      ++i;
+    }
+
     vss.release(VSS::READ);
     locked[1] = false;
     vbbm.release(VBBM::READ);
@@ -1042,6 +1059,15 @@ int SlaveDBRMNode::saveState(string filename) throw()
   }
   catch (exception& e)
   {
+    assert(vssIsLocked.size() == vss_.size());
+    for (auto vl = begin(vssIsLocked); auto& v : vss_)
+    {
+      if (*vl)
+      {
+        v->release(VSS::READ);
+      }
+      ++vl;
+    }
     if (locked[1])
       vss.release(VSS::READ);
 
@@ -1060,6 +1086,8 @@ int SlaveDBRMNode::loadState(string filename) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
+  std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
+  assert(vssIsLocked.size() == vss_.size());
 
   try
   {
@@ -1072,6 +1100,18 @@ int SlaveDBRMNode::loadState(string filename) throw()
     vbbm.load(vbbmFilename);
     vss.load(vssFilename);
 
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::WRITE);
+      vssIsLocked[i] = true;
+      // The vss image filename numeric suffix begins with 1.
+      v->load(vssFilename + std::to_string(i + 1));
+      v->release(VSS::WRITE);
+      vssIsLocked[i] = false;
+      ++i;
+    }
+
     vss.release(VSS::WRITE);
     locked[1] = false;
     vbbm.release(VBBM::WRITE);
@@ -1079,6 +1119,15 @@ int SlaveDBRMNode::loadState(string filename) throw()
   }
   catch (exception& e)
   {
+    assert(vssIsLocked.size() == vss_.size());
+    for (auto vl = begin(vssIsLocked); auto& v : vss_)
+    {
+      if (*vl)
+      {
+        v->release(VSS::WRITE);
+      }
+      ++vl;
+    }
     if (locked[1])
       vss.release(VSS::WRITE);
 
