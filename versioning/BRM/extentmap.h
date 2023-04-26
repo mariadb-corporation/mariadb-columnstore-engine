@@ -34,7 +34,7 @@
 #include <tr1/unordered_map>
 #include <mutex>
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/functional/hash.hpp>  //boost::hash
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -253,7 +253,8 @@ class ExtentMapRBTreeImpl
  public:
   ~ExtentMapRBTreeImpl() = default;
 
-  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly = false);
+  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly, bool& emLocked,
+                                                      const MasterSegmentTable* emSegTable = nullptr);
 
   static void refreshShm()
   {

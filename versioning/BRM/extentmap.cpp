@@ -219,7 +219,9 @@ boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
-ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
+ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly,
+                                                                  bool& emLocked,
+                                                                  const MasterSegmentTable* emSegTable)
 {
   boost::mutex::scoped_lock lk(fInstanceMutex);
 
@@ -227,7 +229,17 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
   {
     if (key != fInstance->fManagedShm.key())
     {
+      if (emSegTable)
+      {
+        emSegTable->getTable_upgrade(MasterSegmentTable::EMTable);
+        emLocked = true;
+      }
       fInstance->fManagedShm.reMapSegment();
+      if (emSegTable)
+      {
+        emLocked = false;
+        emSegTable->getTable_downgrade(MasterSegmentTable::EMTable);
+      }
     }
 
     return fInstance;
@@ -1941,7 +1953,11 @@ void ExtentMap::grabEMEntryTable(OPS op)
     }
     else
     {
-      fPExtMapRBTreeImpl = ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(fEMRBTreeShminfo->tableShmkey, 0);
+      const bool isReadOnly = false;
+      // The ternary sends EM segment table only if this grabEMEntryTable call
+      // is for a READ op to enable RWLock upgrade in case of a shmem segment remap.
+      fPExtMapRBTreeImpl = ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(
+          fEMRBTreeShminfo->tableShmkey, 0, isReadOnly, emLocked, op == READ ? &fMST : nullptr);
       ASSERT(fPExtMapRBTreeImpl);
 
       fExtentMapRBTree = fPExtMapRBTreeImpl->get();
@@ -2176,8 +2192,8 @@ void ExtentMap::growEMShmseg(size_t size)
     if (fEMRBTreeShminfo->tableShmkey == 0)
       fEMRBTreeShminfo->tableShmkey = newShmKey;
 
-    fPExtMapRBTreeImpl =
-        ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(fEMRBTreeShminfo->tableShmkey, allocSize, r_only);
+    fPExtMapRBTreeImpl = ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(fEMRBTreeShminfo->tableShmkey,
+                                                                      allocSize, r_only, emLocked);
   }
   else
   {
