@@ -1109,7 +1109,9 @@ size_t getMetricM3(sorting::ValueRangesMatrix& m)
   // std::cout << "}" << endl;
   // std::cout << endl;
 
-  assert(!m.empty());
+  // can be violated when a query gets canceled
+  // assert(!m.empty());
+
   std::vector<size_t> matrixRowSums;
   r::transform(m, std::back_inserter(matrixRowSums),
                [](auto& v)
@@ -1128,7 +1130,7 @@ size_t getMetricM3(sorting::ValueRangesMatrix& m)
 
                  return matrixRowSum;
                });
-
+  // replace with accumulate
   r::for_each(matrixRowSums,
               [&matrixRowSums, &metric](auto matrixRowPower1)
               {
