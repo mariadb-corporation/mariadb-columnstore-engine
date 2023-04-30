@@ -102,7 +102,7 @@ TYPED_TEST(PDQSortingTypedTest, PDQSortingSignedTest_RandomSet)
   std::vector<uint64_t> perm(SetSize);
   std::iota(perm.begin(), perm.end(), 0);
   auto cmpRule = std::less<T>();
-  auto gen = [&dist, &e2]() { return std::llround(dist(e2) * (std::numeric_limits<T>::max() >> 1)); };
+  auto gen = [&dist, &e2]() { return static_cast<T>(std::llround(dist(e2)) * (std::numeric_limits<T>::max() >> 1)); };
   std::generate(data.begin(), data.end(), gen);
   std::vector<T> sorted_data(data.begin(), data.end());
   std::vector<T> original_data(data.begin(), data.end());
