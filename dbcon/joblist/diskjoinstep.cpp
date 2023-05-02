@@ -344,6 +344,8 @@ out:
   buildFIFO->endOfInput();
 }
 
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+
 void DiskJoinStep::joinFcn()
 {
   /* This function mostly serves as an adapter between the
