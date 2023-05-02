@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcol_5357;
+CREATE DATABASE mcol_5357;
+USE mcol_5357;
+CREATE TABLE t1 (a INT)engine=columnstore;
+INSERT INTO t1 VALUES (1), (2), (3);
+SELECT item FROM (
+SELECT item FROM (SELECT a AS item FROM t1) tt
+UNION ALL
+SELECT item FROM (SELECT a AS item FROM t1) tt
+) ttt;
+item
+1
+2
+3
+1
+2
+3
+DROP DATABASE mcol_5357;
