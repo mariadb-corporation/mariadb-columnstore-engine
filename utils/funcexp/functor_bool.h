@@ -353,6 +353,12 @@ class Func_Compare : public Func_Bool
     return resultType;
   }
 
+  int getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return getBoolVal(row, fp, isNull, op_ct);
+  }
+
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                   execplan::CalpontSystemCatalog::ColType& op_ct)
   {
@@ -479,6 +485,12 @@ class Func_Logic_Op : public Func_Bool
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
     return resultType;
+  }
+
+  int getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return getBoolVal(row, fp, isNull, op_ct);
   }
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
