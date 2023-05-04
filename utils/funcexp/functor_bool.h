@@ -350,6 +350,7 @@ class Func_Compare : public Func_Bool
   execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
+idblog("result data type is " << ((int)resultType.colDataType) << ", op name is " << fFuncName);
     return resultType;
   }
 
