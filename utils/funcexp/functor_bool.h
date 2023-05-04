@@ -484,6 +484,7 @@ class Func_Logic_Op : public Func_Bool
   execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
+idblog("result data type is " << ((int)resultType));
     return resultType;
   }
 
