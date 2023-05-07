@@ -222,6 +222,45 @@ struct PermutationType
 using PermutationVec = std::vector<PermutationType>;
 using PermutationVecIter = PermutationVec::iterator;
 
+template <typename EncodedKeyType, typename StorageType>
+  requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
+           sorting::IsConstString<EncodedKeyType>) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  return value.isNull();
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(
+      (std::is_integral<EncodedKeyType>::value || std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
+      (std::is_integral<StorageType>::value || std::is_same<StorageType, datatypes::TSInt128>::value)) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  return value == null;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value) bool
+isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull)
+{
+  return std::memcmp(&value, &null, sizeof(uint64_t)) == 0;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value) bool
+isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull)
+{
+  return std::memcmp(&value, &null, sizeof(uint32_t)) == 0;
+}
+
+template <typename EncodedKeyType, typename StorageType>
+  requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value) bool
+isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+{
+  const StorageType v = *reinterpret_cast<const StorageType*>(value.str());
+  return v == storageNull;
+}
+
 // There is an important invariant that the code of this class must hold,
 // namely rg_ must be init-ed only once.
 class PDQOrderBy
@@ -315,46 +354,6 @@ class PDQOrderBy
   joblist::MemManager* getMM() const
   {
     return mm_.get();
-  }
-
-  template <typename EncodedKeyType, typename StorageType>
-    requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
-             sorting::IsConstString<EncodedKeyType>) bool
-  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
-  {
-    return value.isNull();
-  }
-
-  template <typename EncodedKeyType, typename StorageType>
-    requires((std::is_integral<EncodedKeyType>::value ||
-              std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
-             (std::is_integral<StorageType>::value ||
-              std::is_same<StorageType, datatypes::TSInt128>::value)) bool
-  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
-  {
-    return value == null;
-  }
-
-  template <typename EncodedKeyType, typename StorageType>
-    requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value) bool
-  isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull) const
-  {
-    return std::memcmp(&value, &null, sizeof(uint64_t)) == 0;
-  }
-
-  template <typename EncodedKeyType, typename StorageType>
-    requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value) bool
-  isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull) const
-  {
-    return std::memcmp(&value, &null, sizeof(uint32_t)) == 0;
-  }
-
-  template <typename EncodedKeyType, typename StorageType>
-    requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value) bool
-  isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull) const
-  {
-    const StorageType v = *reinterpret_cast<const StorageType*>(value.str());
-    return v == storageNull;
   }
 
  protected:

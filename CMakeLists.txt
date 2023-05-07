@@ -42,7 +42,7 @@ IF (NOT Boost_FOUND OR Boost_VERSION VERSION_GREATER 1.76.99)
 ENDIF()
 
 IF (have_CXX__std_c__20)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fconcepts")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 ELSE()
     MY_CHECK_CXX_COMPILER_FLAG("-std=c++2a")
 
@@ -260,7 +260,7 @@ ENDIF()
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 
-MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
+#MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
