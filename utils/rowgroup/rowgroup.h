@@ -197,6 +197,7 @@ class StringStore
   // it may receive nullptr as data and it is proper way to store NULL values.
   uint64_t storeString(const uint8_t* data, uint32_t length);
   // please note getPointer can return nullptr.
+  // please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
   inline utils::ConstString getConstString(uint64_t offset) const
@@ -1640,7 +1641,7 @@ class RowGroup : public messageqcpp::Serializeable
   const uint8_t* getColumnValueBuf(const uint32_t columnID, const uint32_t rowID) const
   {
     assert(data);
-    size_t valueOffset = RowGroup::getHeaderSize() + getOffsetArray()[columnID] + rowID * getRowSize();
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
     // check the out of bounds invariant somehow
     return &data[valueOffset];
   }
@@ -1650,7 +1651,7 @@ class RowGroup : public messageqcpp::Serializeable
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data);
-    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
     // check the out of bounds invariant somehow
     const ToType* valuePtr = reinterpret_cast<ToType*>(&data[valueOffset]);  // the cast is questionable here
     return *valuePtr;
@@ -1661,7 +1662,7 @@ class RowGroup : public messageqcpp::Serializeable
   ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
   {
     assert(data);
-    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
     // check the out of bounds invariant somehow
     const int128_t* valuePtr = reinterpret_cast<int128_t*>(&data[valueOffset]);
     return datatypes::TSInt128(valuePtr);
@@ -1675,7 +1676,7 @@ class RowGroup : public messageqcpp::Serializeable
     assert(data && strings);
     static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
-        RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+        RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
     // bool isNull = strings->isNullValue(offset2stringStoreOffset);
     // if (isNull)
     //   return nullValue;
@@ -1689,7 +1690,7 @@ class RowGroup : public messageqcpp::Serializeable
     assert(data);
     static utils::ConstString nullValue{nullptr, 0};
     size_t offset2stringStoreOffset =
-        RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+        RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsets()[columnID];
     // bool isNull = strings->isNullValue(offset2stringStoreOffset);
     // if (isNull)
     //   return nullValue;

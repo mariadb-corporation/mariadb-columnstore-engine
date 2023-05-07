@@ -23,7 +23,10 @@
 #include <sstream>
 #include <iomanip>
 #include <unordered_set>
+#include "conststring.h"
 #include "heaporderby.h"
+#include "pdqorderby.h"
+
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -1166,6 +1169,8 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
   using LowerBoundsVec = vector<EncodedKeyType>;
 
   vector<LowerBoundsVec> lowerBoundsMatrix;
+  auto nullValue = sorting::getNullValue<StorageType, EncodedKeyType>(ColType);
+  [[maybe_unused]] auto storageNull = sorting::getNullValue<StorageType, StorageType>(ColType);
   for (auto& sorting : sortingThreads)
   {
     const auto& perm = sorting->getPermutation();
@@ -1173,6 +1178,16 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     {
       continue;
     }
+    // for (auto& rgd : sorting->getRGDatas())
+    // {
+    //   rg.setData(&rgd);
+    //   for (size_t i = 0; i < rg.getRowCount(); ++i)
+    //   {
+    //     auto rv = rg.getColumnValue<datatypes::SystemCatalog::VARCHAR, ConstString, ConstString>(columnId,
+    //     i); std::cout << "{" << ((rv.str() != nullptr) ? rv.toString() : string("NULL")) << "} ";
+    //   }
+    // }
+
     const auto step = perm.size() / maxThreads + ((perm.empty()) ? 0 : 1);
     size_t left = 0;
     size_t right = step;
@@ -1180,11 +1195,20 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     assert(sortingThreads.size() == maxThreads);
     for_each(
         sortingThreads.begin(), sortingThreads.end(),  // used as a counter only
-        [&perm, &rg, &left, &right, &sorting, &lowerBounds, columnId, step](auto& u)
+        [&perm, &rg, &left, &right, &sorting, &nullValue, &storageNull, &lowerBounds, columnId, step](auto& u)
         {
-          auto p = perm[left];
-          rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-          lowerBounds.push_back(rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID));
+          // eliminate NULLs if possible
+          rg.setData(&(sorting->getRGDatas()[perm[left].rgdataID]));
+          auto lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, perm[left].rowID);
+          // WIP case when left goes over perm.size
+          while (left < perm.size() &&
+                 sorting::isNull<EncodedKeyType, StorageType>(lb, nullValue, storageNull))
+          {
+            auto p = perm[++left];
+            rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+            lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID);
+          }
+          lowerBounds.push_back(lb);
           left = right + ((perm.empty()) ? 0 : 1);
           right = std::min(right + step, perm.size());
         });
@@ -1221,7 +1245,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
         right = std::min(right + step, perm.size());
       }
     }
-    size_t metric2 = getMetricM2(ranges);
+    // size_t metric2 = getMetricM2(ranges);
     size_t metric = getMetricM3(ranges);
     // for (auto& el : ranges)
     // {
@@ -1240,7 +1264,8 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
       bestRanges = std::move(ranges);
     }
     // bestRanges = std::move(ranges);
-    std::cout << " metric " << metric << " metric2 " << metric2 << std::endl;
+    std::cout << std::dec << " metric " << metric << std::endl;
+    // std::cout << std::dec << " metric " << metric << " metric2 " << metric2 << std::endl;
     // rangesVec.push_back(ranges);
   }
   // debug printouts
@@ -1256,7 +1281,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
   // std::cout << "}" << endl;
   // std::cout << " trivial metric " << getMetric(testRanges) << std::endl;
 
-  // std::cout << "best ranges " << std::endl;
+  // std::cout << std::dec << "best ranges " << std::endl;
   // for (auto& el : bestRanges)
   // {
   //   std::cout << "{ " << std::endl;
@@ -1268,7 +1293,7 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
   // }
   // std::cout << "}" << endl;
   // std::cout << endl;
-  std::cout << " best metric " << getMetricM3(bestRanges) << std::endl;
+  // std::cout << " best metric " << getMetricM3(bestRanges) << std::endl;
   return bestRanges;
 }
 
@@ -1546,10 +1571,10 @@ void TupleAnnexStep::joinOutputDLs()
     for (; !cancelled() && secondPhaseFlatThreadId <= secondPhaseflatOrderBys_.size();
          ++secondPhaseFlatThreadId)
     {
-      std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
+      // std::cout << "joinOutputDLs in loop " << secondPhaseFlatThreadId << std::endl;
       bool more = true;
       auto outputDL = fOutputJobStepAssociation.outAt(secondPhaseFlatThreadId)->rowGroupDL();
-      std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
+      // std::cout << "Join id " << 1 << " " << std::hex << (uint64_t)outputDL << std::endl;
 
       if (!outputDL)
       {
@@ -1575,8 +1600,8 @@ void TupleAnnexStep::joinOutputDLs()
           fRowGroupOut.setRowCount(0);
         }
       }
-      std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
-                << std::endl;
+      // std::cout << "joinOutputDLs after " << secondPhaseFlatThreadId << " !cancelled() " << !cancelled()
+      //           << std::endl;
     }
     // auto end = std::chrono::steady_clock::now();
     // std::chrono::duration<double> elapsed_seconds = end - start;
@@ -1625,7 +1650,7 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   std::string threadName("TAS2ndPh1stT");
   threadName += std::to_string(id);
   utils::setThreadName(threadName.c_str());
-  std::cout << "enter " << threadName << std::endl;
+  // std::cout << "enter " << threadName << std::endl;
   RGData rgDataOut;
   auto& rg = firstPhaseThreads.front()->getRGRef();
   auto sortingKeyColumns = firstPhaseThreads.front()->getSortingColumns();
@@ -1633,16 +1658,16 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   sorting::HeapOrderBy sorting(rg, sortingKeyColumns, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads,
                                fMaxThreads, ranges);
 
-  std::cout << " first HeapMerge id " << id << std::endl;
+  // std::cout << " first HeapMerge id " << id << std::endl;
   auto outputDL = fOutputJobStepAssociation.outAt(idA)->rowGroupDL();
   // auto start = std::chrono::steady_clock::now();
   try
   {
-    std::cout << "try 1 id " << id << std::endl;
+    // std::cout << "try 1 id " << id << std::endl;
     size_t rows = 0;
     while ((rows = sorting.getData(rgDataOut, firstPhaseThreads)) && !cancelled())
     {
-      std::cout << "Insert rgdata with " << std::dec << rows << " rows " << std::endl;
+      // std::cout << "Insert rgdata with " << std::dec << rows << " rows " << std::endl;
       outputDL->insert(rgDataOut);
     }
   }
