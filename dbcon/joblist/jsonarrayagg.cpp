@@ -260,6 +260,14 @@ void JsonArrayInfo::mapColumns(const RowGroup& projRG)
 
     (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
                                projRG.getStringTableThreshold(), false);
+
+    // MCOL-5491/MCOL-5429 Use stringstore if the datatype of the
+    // json_arrayagg/group_concat field is a long string.
+    if ((*k)->fRowGroup.hasLongString())
+    {
+      (*k)->fRowGroup.setUseStringTable(true);
+    }
+
     (*k)->fMapping = makeMapping(projRG, (*k)->fRowGroup);
   }
 }
@@ -311,9 +319,24 @@ void JsonArrayAggregatAgUM::initialize()
 
   fConcator->initialize(fGroupConcat);
 
-  fGroupConcat->fRowGroup.initRow(&fRow, true);
-  fData.reset(new uint8_t[fRow.getSize()]);
-  fRow.setData(rowgroup::Row::Pointer(fData.get()));
+  // MCOL-5491/MCOL-5429 Use stringstore if the datatype of the
+  // json_arrayagg/group_concat field is a long string.
+  if (fGroupConcat->fRowGroup.hasLongString())
+  {
+    fRowGroup = fGroupConcat->fRowGroup;
+    fRowGroup.setUseStringTable(true);
+    fRowRGData.reinit(fRowGroup, 1);
+    fRowGroup.setData(&fRowRGData);
+    fRowGroup.resetRowGroup(0);
+    fRowGroup.initRow(&fRow);
+    fRowGroup.getRow(0, &fRow);
+  }
+  else
+  {
+    fGroupConcat->fRowGroup.initRow(&fRow, true);
+    fData.reset(new uint8_t[fRow.getSize()]);
+    fRow.setData(rowgroup::Row::Pointer(fData.get()));
+  }
 }
 
 void JsonArrayAggregatAgUM::processRow(const rowgroup::Row& inRow)
