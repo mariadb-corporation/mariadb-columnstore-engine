@@ -1,6 +1,18 @@
+if (CMAKE_VERSION VERSION_LESS 3.10.0)
+  MESSAGE_ONCE(CS_CMAKE "ColumnStore needs cmake >= 3.10")
+  RETURN()
+ENDIF()
+
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 PROJECT(Columnstore)
+INCLUDE (CheckCXXSourceCompiles)
+
+FOREACH(p CMP0135)
+  IF(POLICY ${p})
+    CMAKE_POLICY(SET ${p} NEW)
+  ENDIF()
+ENDFOREACH()
 
 IF(NOT INSTALL_LAYOUT)
     IF(NOT CMAKE_BUILD_TYPE)
@@ -48,6 +60,19 @@ ELSE()
     MESSAGE_ONCE(CS_NO_CXX20 "C++ Compiler does not understand -std=c++20")
     return()
   ENDIF()
+ENDIF()
+
+CHECK_CXX_SOURCE_COMPILES(
+"#include <set>
+int main()
+{
+  std::set<int> s = {1, 2, 3, 4};
+  return s.contains(2);
+}" HAVE_STD_SET_CONTAINS)
+
+IF (NOT HAVE_STD_SET_CONTAINS)
+  MESSAGE_ONCE(CS_NO_CONTAINS "std::set does not have contains() method")
+  RETURN()
 ENDIF()
 
 # There is an inconsistency b/w default char signedness at ARM and x86.
@@ -119,6 +144,7 @@ INCLUDE(columnstore_version)
 INCLUDE(misc)
 INCLUDE(boost)
 INCLUDE(thrift)
+INCLUDE(mpark_patterns)
 
 FIND_PACKAGE(BISON)
 IF (NOT BISON_FOUND)
@@ -362,13 +388,6 @@ ADD_SUBDIRECTORY(dbcon/mysql)
 IF(NOT TARGET columnstore)
   RETURN()
 ENDIF()
-
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-ExternalProject_Add(mpark_patterns
-    GIT_REPOSITORY https://github.com/mpark/patterns
-    GIT_TAG v0.3.0
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-)
 
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)

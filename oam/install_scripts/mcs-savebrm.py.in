@@ -118,9 +118,11 @@ def is_primary_fallback(current_hostname):
     hostnames = set()
     for _, nic_name in socket.if_nameindex():
         ip_addr = get_ip_address_by_nic(nic_name)
-        if ip_addr:
+        try:
             hostnames_3tuple = socket.gethostbyaddr(ip_addr)
             hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
+        except:
+            pass
     logging.debug('Found hostnames {}.'.format(hostnames))
     return current_hostname in hostnames
 
