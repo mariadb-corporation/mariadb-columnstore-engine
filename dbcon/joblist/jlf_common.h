@@ -364,6 +364,8 @@ struct JobInfo
   int64_t smallSideLimit;  // need to get these from a session var in execplan
   int64_t largeSideLimit;
   uint64_t partitionSize;
+  uint32_t djsMaxPartitionTreeDepth;
+  bool djsForceRun;
   bool isDML;
   long timeZone;
 
