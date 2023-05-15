@@ -546,7 +546,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'cmapi test',
     depends_on: ['publish cmapi build', 'smoke'],
     image: img,
-    volumes: [pipeline._volumes.mdb],
+    volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
