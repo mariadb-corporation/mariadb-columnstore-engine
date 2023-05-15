@@ -1965,12 +1965,14 @@ void TupleHashJoinStep::segregateJoiners()
     for (i = 0; i < smallSideCount; i++)
     {
       // if (joiners[i]->isFinished() && (rand() % 2)) {    // for debugging
+      /*
       if (joiners[i]->isFinished())
       {
         // cout << "1joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> TBPS" << endl;
         tbpsJoiners.push_back(joiners[i]);
       }
       else
+      */
       {
         joinIsTooBig = true;
         joiners[i]->setConvertToDiskJoin();
