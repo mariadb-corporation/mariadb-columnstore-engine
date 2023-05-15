@@ -135,6 +135,12 @@ static MYSQL_THDVAR_ULONG(diskjoin_bucketsize, PLUGIN_VAR_RQCMDARG,
                           "The maximum size in MB of each 'small side' table in memory.", NULL, NULL, 100, 1,
                           ~0U, 1);
 
+static MYSQL_THDVAR_ULONG(diskjoin_max_partition_tree_depth, PLUGIN_VAR_RQCMDARG,
+                          "The maximum size of partition tree depth.", NULL, NULL, 8, 1, ~0U, 1);
+
+static MYSQL_THDVAR_BOOL(diskjoin_force_run, PLUGIN_VAR_RQCMDARG, "Force run for the disk join step.", NULL,
+                         NULL, 0);
+
 static MYSQL_THDVAR_ULONG(um_mem_limit, PLUGIN_VAR_RQCMDARG,
                           "Per user Memory limit(MB). Switch to disk-based JOIN when limit is reached", NULL,
                           NULL, 0, 0, ~0U, 1);
@@ -224,6 +230,8 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(diskjoin_smallsidelimit),
                                             MYSQL_SYSVAR(diskjoin_largesidelimit),
                                             MYSQL_SYSVAR(diskjoin_bucketsize),
+                                            MYSQL_SYSVAR(diskjoin_max_partition_tree_depth),
+                                            MYSQL_SYSVAR(diskjoin_force_run),
                                             MYSQL_SYSVAR(um_mem_limit),
                                             MYSQL_SYSVAR(double_for_decimal_math),
                                             MYSQL_SYSVAR(decimal_overflow_check),
@@ -418,6 +426,24 @@ ulong get_diskjoin_bucketsize(THD* thd)
 void set_diskjoin_bucketsize(THD* thd, ulong value)
 {
   THDVAR(thd, diskjoin_bucketsize) = value;
+}
+
+ulong get_diskjoin_max_partition_tree_depth(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, diskjoin_max_partition_tree_depth);
+}
+void set_diskjoin_max_partition_tree_depth(THD* thd, ulong value)
+{
+  THDVAR(thd, diskjoin_max_partition_tree_depth) = value;
+}
+
+bool get_diskjoin_force_run(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, diskjoin_force_run);
+}
+void set_diskjoin_force_run(THD* thd, bool value)
+{
+  THDVAR(thd, diskjoin_force_run) = value;
 }
 
 ulong get_um_mem_limit(THD* thd)

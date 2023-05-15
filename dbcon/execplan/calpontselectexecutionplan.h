@@ -688,6 +688,24 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fDJSPartitionSize;
   }
 
+  void djsMaxPartitionTreeDepth(uint32_t value)
+  {
+    fDJSMaxPartitionTreeDepth = value;
+  }
+  uint64_t djsMaxPartitionTreeDepth()
+  {
+    return fDJSMaxPartitionTreeDepth;
+  }
+
+  void djsForceRun(bool b)
+  {
+    fDJSForceRun = b;
+  }
+  bool djsForceRun()
+  {
+    return fDJSForceRun;
+  }
+
   void umMemLimit(uint64_t l)
   {
     fUMMemLimit = l;
@@ -917,14 +935,14 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   boost::uuids::uuid fUuid;
 
   /* Disk-based join vars */
-  uint64_t fDJSSmallSideLimit;
-  uint64_t fDJSLargeSideLimit;
-  uint64_t fDJSPartitionSize;
-  int64_t fUMMemLimit;
-  bool fIsDML;
-
-  long fTimeZone;
-
+  uint64_t fDJSSmallSideLimit = 0;
+  uint64_t fDJSLargeSideLimit = 0;
+  uint64_t fDJSPartitionSize = 100 * 1024 * 1024;
+  uint32_t fDJSMaxPartitionTreeDepth = 8;
+  bool fDJSForceRun = false;
+  int64_t fUMMemLimit = numeric_limits<int64_t>::max();
+  bool fIsDML = false;
+  long fTimeZone = 0;
   std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
 };
 
