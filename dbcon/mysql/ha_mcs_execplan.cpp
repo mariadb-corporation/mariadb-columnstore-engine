@@ -3962,6 +3962,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 	 funcName == "and" || funcName == "or" || funcName == "xor") &&
         (gwi.clauseType == WHERE || gwi.clauseType == HAVING))
     {
+      idblog("have to fail, funcName '" << funcName << "'");
       return NULL;
     }
 
@@ -4534,6 +4535,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
   // so buildXXXcolumn function will not pop stack.
   ClauseType realClauseType = gwi.clauseType;
   gwi.clauseType = SELECT;
+  idblog("case: function '" << funcName << "', old clauseType " << ((int)realClauseType));
 
   // We ought to be able to just build from the stack, and would
   // be able to if there were any way to know which stack had the
