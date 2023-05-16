@@ -3954,6 +3954,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
   else if ((functor = funcExp->getFunctor(funcName)))
   {
+    idblog("funcName '" << funcName << "', clause type " << ((int)gwi.clauseType));
     // where clause isnull still treated as predicate operator
     // MCOL-686: between also a predicate operator so that extent elimination can happen
     if ((funcName == "isnull" || funcName == "isnotnull" || funcName == "between" ||
@@ -3962,7 +3963,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 	 funcName == "and" || funcName == "or" || funcName == "xor") &&
         (gwi.clauseType == WHERE || gwi.clauseType == HAVING))
     {
-      idblog("have to fail, funcName '" << funcName << "'");
+      idblog("have to fail, funcName '" << funcName << "', clause type " << ((int)gwi.clauseType));
       return NULL;
     }
 
