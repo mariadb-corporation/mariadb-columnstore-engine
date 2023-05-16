@@ -545,7 +545,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   cmapitest:: {
     name: 'cmapi test',
     depends_on: ['publish cmapi build', 'smoke'],
-    image: img,
+    image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
