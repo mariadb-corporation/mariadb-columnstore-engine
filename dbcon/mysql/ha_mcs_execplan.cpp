@@ -2454,6 +2454,20 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
         SimpleColumn* col = dynamic_cast<SimpleColumn*>(cols[j].get());
         string alias = cols[j]->alias();
 
+        // MCOL-5357 For the following query:
+
+        // select item from (
+        // select item from (select a as item from t1) tt
+        // union all
+        // select item from (select a as item from t1) tt
+        // ) ttt;
+
+        // When the execution reaches the outermost item (ttt.item),
+        // alias = "`tt`.`item`" and ifp->field_name.str = "item".
+        // To make the execution enter the if block below, we strip off
+        // the backticks from alias.
+        boost::erase_all(alias, "`");
+
         if (strcasecmp(ifp->field_name.str, alias.c_str()) == 0 ||
             (col && alias.find(".") != string::npos &&
              (strcasecmp(ifp->field_name.str, col->columnName().c_str()) == 0 ||
