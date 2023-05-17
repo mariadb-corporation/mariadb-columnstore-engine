@@ -4535,7 +4535,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
   funcParms.reserve(item->argument_count());
   // so buildXXXcolumn function will not pop stack.
   ClauseType realClauseType = gwi.clauseType;
-  gwi.clauseType = SELECT;
+  //gwi.clauseType = SELECT;
   idblog("case: function '" << funcName << "', old clauseType " << ((int)realClauseType));
 
   // We ought to be able to just build from the stack, and would
