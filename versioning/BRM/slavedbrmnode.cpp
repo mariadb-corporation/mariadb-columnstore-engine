@@ -1482,27 +1482,27 @@ int SlaveDBRMNode::dmlReleaseLBIDRanges(const vector<LBIDRange>& ranges)
   }
 }
 
-const bool* SlaveDBRMNode::getEMFLLockStatus()
+const std::atomic<bool>* SlaveDBRMNode::getEMFLLockStatus()
 {
   return em.getEMFLLockStatus();
 }
 
-const bool* SlaveDBRMNode::getEMLockStatus()
+const std::atomic<bool>* SlaveDBRMNode::getEMLockStatus()
 {
   return em.getEMLockStatus();
 }
 
-const bool* SlaveDBRMNode::getEMIndexLockStatus()
+const std::atomic<bool> *SlaveDBRMNode::getEMIndexLockStatus()
 {
   return em.getEMIndexLockStatus();
 }
 
-const bool* SlaveDBRMNode::getVBBMLockStatus()
+const std::atomic<bool>* SlaveDBRMNode::getVBBMLockStatus()
 {
   return &locked[0];
 }
 
-const bool* SlaveDBRMNode::getVSSLockStatus()
+const std::atomic<bool>* SlaveDBRMNode::getVSSLockStatus()
 {
   return &locked[1];
 }
