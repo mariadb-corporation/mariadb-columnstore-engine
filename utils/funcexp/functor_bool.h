@@ -351,7 +351,9 @@ class Func_Compare : public Func_Bool
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
 idblog("result data type is " << ((int)resultType.colDataType) << ", op name is " << fFuncName);
-    return resultType;
+    idbassert(fp.size() == 2);
+
+    return fp[0]->data()->resultType();
   }
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
@@ -486,6 +488,9 @@ class Func_Logic_Op : public Func_Bool
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
 idblog("result data type is " << ((int)resultType.colDataType));
+    if (fp.size() > 0) {
+      return fp[0]->data()->resultType();
+    }
     return resultType;
   }
 
