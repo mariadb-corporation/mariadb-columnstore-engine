@@ -1249,7 +1249,7 @@ void TableInfo::addColumn(ColumnInfo* info)
   fColumns.push_back(info);
   fNumberOfColumns = fColumns.size();
 
-  fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width);
+  fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width, info->column.dataType);
 }
 
 //------------------------------------------------------------------------------

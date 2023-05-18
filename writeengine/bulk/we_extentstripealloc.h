@@ -128,7 +128,7 @@ class ExtentStripeAlloc
    *  @param colOID   Column OID to be added to extent allocation list.
    *  @param colWidth Width of column associated with colOID.
    */
-  void addColumn(OID colOID, int colWidth);
+  void addColumn(OID colOID, int colWidth, datatypes::SystemCatalog::ColDataType colDataType);
 
   /** @brief Request an extent allocation for the specified OID and DBRoot.
    *  A "stripe" of extents for the corresponding table will be allocated
@@ -159,6 +159,7 @@ class ExtentStripeAlloc
   boost::mutex fMapMutex;       // protects unordered map access
   std::vector<OID> fColOIDs;    // Vector of column OIDs
   std::vector<int> fColWidths;  // Widths associated with fColOIDs
+  std::vector<datatypes::SystemCatalog::ColDataType> fColDataTypes;
 
   // unordered map where we collect the allocated extents
   std::tr1::unordered_multimap<OID, AllocExtEntry, AllocExtHasher> fMap;

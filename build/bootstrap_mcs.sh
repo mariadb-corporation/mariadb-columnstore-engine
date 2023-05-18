@@ -43,6 +43,8 @@ optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA de
 optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false
 
 source $( optparse.build )
 
@@ -290,8 +292,10 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
-    message "Building with flags"
-    newline_array ${MDB_CMAKE_FLAGS[@]}
+    if [[ $PRINT_CMAKE_FLAGS = true ]] ; then
+        message "Building with flags"
+        newline_array ${MDB_CMAKE_FLAGS[@]}
+    fi
 
     local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"

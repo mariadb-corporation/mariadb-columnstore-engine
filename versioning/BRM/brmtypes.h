@@ -317,7 +317,7 @@ struct CreateStripeColumnExtentsArgIn
 {
   OID_t oid = 0;       // column OID
   uint32_t width = 0;  // column width in bytes
-  execplan::CalpontSystemCatalog::ColDataType colDataType = execplan::CalpontSystemCatalog::UNDEFINED;
+  execplan::CalpontSystemCatalog::ColDataType colDataType;
 };
 
 /* Output Arg type for DBRM:createStripeColumnExtents() */
