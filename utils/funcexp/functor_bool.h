@@ -485,7 +485,7 @@ class Func_Logic_Op : public Func_Bool
     Func_Bool(name), fLogicOp(op)
   {
   }
-  override execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
     if (fp.size() > 0) {
@@ -496,9 +496,10 @@ idblog("result data type is " << ((int)resultType.colDataType));
     return resultType;
   }
 
-  override int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+  int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                   execplan::CalpontSystemCatalog::ColType& op_ct)
   {
+	  idblog("getting int value");
     return getBoolVal(row, fp, isNull, op_ct);
   }
 
