@@ -4065,6 +4065,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         if ((funcName == "if" && i == 0) || funcName == "xor")
         {
           // make sure the rcWorkStack is cleaned.
+idblog("setting WHERE in special logic for IF and XOR");
           gwi.clauseType = WHERE;
           sptp.reset(buildParseTree((Item_func*)(ifp_arguments[i]), gwi, nonSupport));
           gwi.clauseType = clauseType;
@@ -4831,6 +4832,7 @@ ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 #endif
   //@bug5044. PPSTFIX walking should always be treated as WHERE clause filter
   ClauseType clauseType = gwi.clauseType;
+  idblog("settin WHERE in buildParseTree");
   gwi.clauseType = WHERE;
   icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
   gwi.clauseType = clauseType;
@@ -6345,7 +6347,7 @@ void gp_walk(const Item* item, void* arg)
 
       for (uint32_t i = 0; i < row->cols(); i++)
         cols.push_back(SRCP(buildReturnedColumn(row->element_index(i), *gwip, gwip->fatalParseError)));
-
+idblog("Item::ROW_ITEM sets to WHERE");
       gwip->clauseType = WHERE;
       rowCol->columnVec(cols);
       gwip->rcWorkStack.push(rowCol);
@@ -7468,6 +7470,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     return rc;
   }
 
+idblog("setting WHERE in getSelectPlan");
   gwi.clauseType = WHERE;
   if ((rc = processWhere(select_lex, gwi, csep, condStack)))
   {
@@ -9138,6 +9141,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   bool unionSel = false;
 
+  idblog("setting WHERE in getGroupPlan");
   gwi.clauseType = WHERE;
 
   if (icp)
