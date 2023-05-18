@@ -75,13 +75,9 @@ AnyDataList::DataListTypes AnyDataList::strDlType(const StrDataList* dl)
 
 std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
 {
-  DataList_t* dle = NULL;
-  StrDataList* dls = NULL;
-  //	DoubleDataList      * dld = NULL;
-  //	TupleBucketDataList * dlt = NULL;
   bool withOid = (oss.iword(showOidInDataList_Index) != 0);
 
-  if ((dle = dl->dataList()) != NULL)
+  if (DataList_t* dle = dl->dataList(); dle != nullptr)
   {
     if (withOid)
       oss << dle->OID() << " ";
@@ -98,7 +94,7 @@ std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
     oss << "(0x" << std::hex << (ptrdiff_t)dle << std::dec << "[" << AnyDataList::dlType(dle) << "]"
         << elemSizeStr.str() << ")";
   }
-  else if ((dls = dl->stringDataList()) != NULL)
+  else if (StrDataList* dls = dl->stringDataList(); dls != nullptr)
   {
     if (withOid)
       oss << dls->OID() << " ";
@@ -115,30 +111,6 @@ std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
     oss << "(0x" << std::hex << (ptrdiff_t)dls << std::dec << "[" << AnyDataList::strDlType(dls) << "]"
         << elemSizeStr.str() << ")";
   }
-  //	else if ((dld = dl->doubleDL()) != NULL)
-  //	{
-  //		if (withOid)
-  //			oss << dld->OID() << " ";
-  //
-  //		//...If this datalist is saved to disk, then include the saved
-  //		//...element size in the printed information.
-  //		std::ostringstream elemSizeStr;
-  //		if ( dld->useDisk() )
-  //		{
-  //			elemSizeStr << "(" << dld->getDiskElemSize1st() << "," <<
-  //				dld->getDiskElemSize2nd() << ")";
-  //		}
-  //
-  //		oss << "(0x"
-  //			<< std::hex << (ptrdiff_t)dld << std::dec << "[" <<
-  //			AnyDataList::DOUBLE_DATALIST << "])";
-  //	}
-  //	else if ((dlt = dl->tupleBucketDL()) != NULL)
-  //	{
-  //		oss << dlt->OID() << " (0x";
-  //		oss << std::hex << (ptrdiff_t)dlt << std::dec << "[" << AnyDataList::TUPLEBUCKET_DATALIST << "]),
-  //";
-  //	}
   else
   {
     oss << "0 (0x0000 [0])";

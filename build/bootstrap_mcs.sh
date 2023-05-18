@@ -297,7 +297,6 @@ build()
         newline_array ${MDB_CMAKE_FLAGS[@]}
     fi
 
-    local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
     message_split
