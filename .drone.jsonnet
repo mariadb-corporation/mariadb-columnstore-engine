@@ -210,7 +210,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
     ],
   },
-
   _volumes:: {
     mdb: {
       name: 'mdb',
@@ -553,7 +552,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker cp setup-repo.sh cmapi$${DRONE_BUILD_NUMBER}:/',
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} /setup-repo.sh',
-      if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt install -y mariadb-plugin-columnstore"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y MariaDB-columnstore-engine"',
+      if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt install -y mariadb-plugin-columnstore mariadb-columnstore-cmapi"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y MariaDB-columnstore-engine MariaDB-columnstore-cmapi"',
       'cd cmapi',
       'for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/$${i}/; done',
       'docker cp run_tests.py cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/',
