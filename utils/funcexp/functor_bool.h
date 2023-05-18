@@ -489,7 +489,7 @@ class Func_Logic_Op : public Func_Bool
                                                         execplan::CalpontSystemCatalog::ColType& resultType)
   {
     if (fp.size() > 0) {
-idblog("result data type override to be " << ((int)fp[0]->data()resultType().colDataType));
+idblog("result data type override to be " << ((int)fp[0]->data()->resultType().colDataType));
       return fp[0]->data()->resultType();
     }
 idblog("result data type is " << ((int)resultType.colDataType));
