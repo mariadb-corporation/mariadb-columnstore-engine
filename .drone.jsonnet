@@ -386,7 +386,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t regression$${DRONE_BUILD_NUMBER} /usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',
     ],
   },
-
   smokelog:: {
     name: 'smokelog',
     depends_on: ['smoke'],
@@ -536,8 +535,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       if (platform == 'centos:7') then 'yum install -y epel-release && yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake',
       './cleanup.sh',
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
-      'mv *.' + pkg_format + ' ../' + result + '/',
-      'cd ../',
+      'cp *.' + pkg_format + ' /drone/src/' + result + '/',
+      'cd /drone/src/',
       if (pkg_format == 'rpm') then 'createrepo ' + result else 'SHELL=/bin/bash && dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
     ],
   },
@@ -678,7 +677,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
                platformMap(platform, arch),
                'sccache --show-stats',
-               'cp /drone/src/cmapi/*.' + pkg_format + ' ' + result + '/ | true',
                if (pkg_format == 'rpm') then 'mv *.' + pkg_format + ' ' + result + '/' else 'mv ../*.' + pkg_format + ' ' + result + '/',
                if (pkg_format == 'rpm') then 'createrepo ' + result else 'dpkg-scanpackages ' + result + ' | gzip > ' + result + '/Packages.gz',
                // list storage manager binary
