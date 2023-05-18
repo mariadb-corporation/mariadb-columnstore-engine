@@ -505,7 +505,7 @@ idblog("result data type is " << ((int)resultType.colDataType));
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                   execplan::CalpontSystemCatalog::ColType& op_ct)
   {
-	  idblog("getting bool value, op " << ((int)fLogicOp) << ", our result type is " << ((int)data()->resultType().colDataType));
+	  idblog("getting bool value, op " << ((int)fLogicOp));
     bool result = fLogicOp == AND ? true : false;
     for (uint32_t i = 0; i < fp.size(); i++)
     {
