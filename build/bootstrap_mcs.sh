@@ -40,7 +40,7 @@ optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=f
 optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
-optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
