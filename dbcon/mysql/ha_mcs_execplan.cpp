@@ -4563,6 +4563,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 
   for (int32_t i = item->argument_count() - 1; i >= 0; i--)
   {
+	  idblog("current gwi.clauseType is " << ((int)gwi.clauseType));
     // For case_searched, we know the items for the WHEN clause will
     // not be ReturnedColumns. We do this separately just to save
     // some cpu cycles trying to build a ReturnedColumn as below.
