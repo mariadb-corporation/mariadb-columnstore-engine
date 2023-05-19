@@ -448,6 +448,40 @@ class WriteBatchFieldMariaDB : public WriteBatchField
     return 4;
   }
 
+  size_t ColWriteBatchSInt24(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
+  {
+    if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+    {
+      fprintf(ci.filePtr(), "%c", ci.delimiter());
+    }
+    else
+    {
+      int32_t tmp = (
+                     (*const_cast<uint8_t*>(buf) << 8) |
+                     (*const_cast<uint8_t*>(buf+1) << 16) |
+                     (*const_cast<uint8_t*>(buf+2) << 24)
+                    ) >> 8;
+      fprintf(ci.filePtr(), "%d%c", tmp, ci.delimiter());
+    }
+    return 3;
+  }
+
+  size_t ColWriteBatchUInt24(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
+  {
+    if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+      fprintf(ci.filePtr(), "%c", ci.delimiter());
+    else
+    {
+      uint32_t tmp = (
+                      (*const_cast<uint8_t*>(buf)) |
+                      (*const_cast<uint8_t*>(buf+1) << 8) |
+                      (*const_cast<uint8_t*>(buf+2) << 16)
+                     );
+      fprintf(ci.filePtr(), "%u%c", tmp, ci.delimiter());
+    }
+    return 3;
+  }
+
   size_t ColWriteBatchSInt16(const uchar* buf, bool nullVal, ColBatchWriter& ci) override
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
