@@ -1017,6 +1017,8 @@ class WriteBatchField
   virtual size_t ColWriteBatchUInt64(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchSInt32(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchUInt32(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
+  virtual size_t ColWriteBatchSInt24(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
+  virtual size_t ColWriteBatchUInt24(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchSInt16(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchUInt16(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchSInt8(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
@@ -1296,7 +1298,7 @@ class TypeHandlerSInt24 : public TypeHandlerInt
   size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
                        ColBatchWriter& writer) const override
   {
-    return field->ColWriteBatchSInt32(buf, nullVal, writer);
+    return field->ColWriteBatchSInt24(buf, nullVal, writer);
   }
   int storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const override
   {
@@ -1569,7 +1571,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
                        ColBatchWriter& writer) const override
   {
-    return field->ColWriteBatchUInt32(buf, nullVal, writer);
+    return field->ColWriteBatchUInt24(buf, nullVal, writer);
   }
   int storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const override
   {
