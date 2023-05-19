@@ -4551,6 +4551,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
   // [case,]when1,when2,...,then1,then2,...[,else]
   // See server commit bf1ca14ff3f3faa9f7a018097b25aa0f66d068cd for more
   // information.
+#if 0
   int32_t arg_offset = 0;
 
   if ((item->argument_count() - 1) % 2)
@@ -4561,6 +4562,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
   {
     arg_offset = item->argument_count() / 2;
   }
+#endif
 
   for (int32_t i = item->argument_count() - 1; i >= 0; i--)
   {
