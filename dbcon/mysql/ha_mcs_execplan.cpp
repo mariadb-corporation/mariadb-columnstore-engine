@@ -4570,7 +4570,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
     // some cpu cycles trying to build a ReturnedColumn as below.
     // Every even numbered arg is a WHEN. In between are the THEN.
     // An odd number of args indicates an ELSE residing in the last spot.
-    if ((item->functype() == Item_func::CASE_SEARCHED_FUNC) && (i < arg_offset))
+    if ((item->functype() == Item_func::CASE_SEARCHED_FUNC)) // && (i < arg_offset))
     {
       // MCOL-1472 Nested CASE with an ISNULL predicate. We don't want the predicate
       // to pull off of rcWorkStack, so we set this inCaseStmt flag to tell it
