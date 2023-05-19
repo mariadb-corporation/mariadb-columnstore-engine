@@ -142,9 +142,9 @@ stop_service()
 check_service()
 {
     if systemctl is-active --quiet $1; then
-        message "$1 service started$color_green OK $color_normal"
+        message "$1 $color_normal[$color_green OK $color_normal]"
     else
-        error "$1 service failed"
+        message "$1 $color_normal[$color_red Fail $color_normal]"
         service $1 status
     fi
 }
@@ -156,8 +156,14 @@ start_service()
     systemctl start mariadb-columnstore
     systemctl start mariadb
 
-    check_service mariadb-columnstore
     check_service mariadb
+    check_service mariadb-columnstore
+    check_service mcs-controllernode
+    check_service mcs-ddlproc
+    check_service mcs-dmlproc
+    check_service mcs-primproc
+    check_service mcs-workernode@1
+    check_service mcs-writeengineserver
 }
 
 clean_old_installation()
@@ -501,7 +507,7 @@ smoke()
         message "Selecting magic numbers"
         MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
         if [[ $MAGIC == '42' ]] ; then
-            message "Great answer correct"
+            message "Great answer correct!"
         else
             warn "Smoke failed, answer is '$MAGIC'"
         fi
