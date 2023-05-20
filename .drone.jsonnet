@@ -535,7 +535,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       if (platform == 'centos:7') then 'yum install -y epel-release && yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake',
       './cleanup.sh',
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
-      'mv *.' + pkg_format + ' /mdb/' + result + '/',
       'mkdir -p /mdb/' + result,
       'cd /mdb/' + result,
       'mv %s/*.%s /mdb/%s/' % [if (pkg_format == 'rpm') then '.' else '..', pkg_format, result],
