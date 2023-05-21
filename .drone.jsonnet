@@ -713,7 +713,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
                'mv buildinfo.txt ./%s/' % result,
-               'yes | cp -vr ./%s /drone/src/%s' % [result, result],
+               'yes | cp -vr ./%s/ /drone/src/%s/' % [result, result],
                'ls -l /drone/src/' + result,
                'echo "check columnstore package:"',
                'ls -l /drone/src/%s | grep columnstore' % result,
