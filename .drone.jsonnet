@@ -535,10 +535,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       './cleanup.sh',
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
       'mkdir ./' + result,
-      'mv *.%s ./%s/' % [pkg_format, result],
+      'mv -v *.%s ./%s/' % [pkg_format, result],
       if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
       'mkdir /drone/src/' + result,
-      'cp -r ./%s /drone/src/%s' % [result, result],
+      'cp -vr ./%s /drone/src/%s' % [result, result],
     ],
   },
   cmapitest:: {
@@ -679,7 +679,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                platformMap(platform, arch),
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
-               'mv {%s,/drone/src/%s}/*.%s ./%s/' % [if (pkg_format == 'rpm') then '.' else '..', result, pkg_format, result],
+               'mv -v {%s,/drone/src/cmapi/%s}/*.%s ./%s/' % [if (pkg_format == 'rpm') then '.' else '..', result, pkg_format, result],
                if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
                // list storage manager binary
                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
@@ -713,7 +713,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
                'mv buildinfo.txt ./%s/' % result,
-               'yes | cp -r ./%s /drone/src/%s' % [result, result],
+               'yes | cp -vr ./%s /drone/src/%s' % [result, result],
                'ls -l /drone/src/' + result,
                'echo "check columnstore package:"',
                'ls -l /drone/src/%s | grep columnstore' % result,
