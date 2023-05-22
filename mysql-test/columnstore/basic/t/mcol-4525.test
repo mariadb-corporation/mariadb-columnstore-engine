@@ -18,7 +18,6 @@ USE mcol4525;
 CREATE TABLE t1 (a int, b int);
 INSERT INTO t1 VALUES (1, 1), (5, 0);
 SET columnstore_select_handler=ON;
---error 1178
 SELECT a xor b FROM t1;
 SET columnstore_select_handler=AUTO;
 SELECT a xor b FROM t1;
@@ -154,7 +153,6 @@ CREATE TABLE c3 (a int);
 CREATE TABLE c4 (a int);
 CREATE TABLE c5 (a int);
 SET columnstore_select_handler=ON;
---error 1178
 SELECT c1.a AS col1, c2.a AS col2, c1.a xor c2.a FROM
   c1 LEFT JOIN
   (
@@ -183,13 +181,9 @@ CREATE TABLE t1 (a int);
 INSERT INTO t1 VALUES (1), (2), (3), (4);
 SET columnstore_select_handler=ON;
 PREPARE stmt FROM "SELECT a, a xor 0 FROM t1 WHERE a > 1 AND a < 4";
---error 1178
 EXECUTE stmt;
---error 1178
 EXECUTE stmt;
---error 1178
 EXECUTE stmt;
---error 1178
 EXECUTE stmt;
 DROP PREPARE stmt;
 SET columnstore_select_handler=AUTO;
@@ -210,11 +204,8 @@ CREATE PROCEDURE mcol4525_proc()
  END
 //
 delimiter ;//
---error 1178
 CALL mcol4525_proc();
---error 1178
 CALL mcol4525_proc();
---error 1178
 CALL mcol4525_proc();
 DROP PROCEDURE mcol4525_proc;
 SET columnstore_select_handler=AUTO;

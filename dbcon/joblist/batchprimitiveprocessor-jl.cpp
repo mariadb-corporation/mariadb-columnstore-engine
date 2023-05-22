@@ -772,6 +772,8 @@ void BatchPrimitiveProcessorJL::deserializeAggregateResult(ByteStream* in, vecto
   }
 }
 
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+
 void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* out, bool* validCPData,
                                                 uint64_t* lbid, bool* fromDictScan, int128_t* min,
                                                 int128_t* max, uint32_t* cachedIO, uint32_t* physIO,
@@ -888,7 +890,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         /* Reuse the result space if possible */
         joinResults = tJoiners[j]->getPMJoinArrays(threadID);
 
-        if (joinResults.get() == NULL)
+        if (!joinResults)
         {
           joinResults.reset(new vector<uint32_t>[8192]);
           tJoiners[j]->setPMJoinResults(joinResults, threadID);

@@ -336,4 +336,221 @@ class Func_IsNotFalse : public Func_Truth
   }
 };
 
+class Func_Compare : public Func_Bool
+{
+  bool fAllowEqual;
+  bool fAllowGreater;
+  bool fAllowLess;
+ public:
+  Func_Compare(const std::string& name, bool eq, bool gt, bool lt) :
+    Func_Bool(name), fAllowEqual(eq),
+    fAllowGreater(gt), fAllowLess(lt)
+  {
+  }
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType)
+  {
+idblog("result data type is " << ((int)resultType.colDataType) << ", op name is " << fFuncName);
+    idbassert(fp.size() == 2);
+
+    return fp[0]->data()->resultType();
+  }
+
+  int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return getBoolVal(row, fp, isNull, op_ct);
+  }
+
+  bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+	  idblog("getting boolean, op" << (fAllowGreater ? ">" : "") << (fAllowLess ? "<" : "") << (fAllowEqual ? "=" : "") << ", from left type " << ((int)fp[0]->data()->resultType().colDataType) << ", right type " << ((int)fp[1]->data()->resultType().colDataType));
+    idbassert(fp.size() == 2);
+    int64_t r = 0;
+    switch (fp[0]->data()->resultType().colDataType)
+    {
+      case execplan::CalpontSystemCatalog::TEXT:
+      case execplan::CalpontSystemCatalog::CHAR:
+      case execplan::CalpontSystemCatalog::VARCHAR:
+      {
+        CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
+        const auto& str = fp[0]->data()->getStrVal(row, isNull);
+        const auto& str1 = fp[1]->data()->getStrVal(row, isNull);
+
+        r = cs->strnncollsp(str.str(), str.length(), str1.str(), str1.length());
+
+        break;
+      }
+      case execplan::CalpontSystemCatalog::DECIMAL:
+      case execplan::CalpontSystemCatalog::UDECIMAL:
+      {
+        execplan::IDB_Decimal a1 = fp[0]->data()->getDecimalVal(row, isNull);
+	execplan::IDB_Decimal a2 = fp[1]->data()->getDecimalVal(row, isNull);
+	r = a1 > a2 ? 1 : a1 < a2 ? -1 : 0;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::LONGDOUBLE:
+      {
+        long double a1 = fp[0]->data()->getLongDoubleVal(row, isNull);
+        long double a2 = fp[1]->data()->getLongDoubleVal(row, isNull);
+	r = a1 > a2 ? 1 : a1 < a2 ? -1 : 0;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::DOUBLE:
+      case execplan::CalpontSystemCatalog::UDOUBLE:
+      {
+        double a1 = fp[0]->data()->getDoubleVal(row, isNull);
+        double a2 = fp[1]->data()->getDoubleVal(row, isNull);
+	r = a1 > a2 ? 1 : a1 < a2 ? -1 : 0;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::FLOAT:
+      case execplan::CalpontSystemCatalog::UFLOAT:
+      {
+        float a1 = fp[0]->data()->getFloatVal(row, isNull);
+        float a2 = fp[1]->data()->getFloatVal(row, isNull);
+	r = a1 > a2 ? 1 : a1 < a2 ? -1 : 0;
+        break;
+      }
+      case execplan::CalpontSystemCatalog::UBIGINT:
+      case execplan::CalpontSystemCatalog::UINT:
+      case execplan::CalpontSystemCatalog::UMEDINT:
+      case execplan::CalpontSystemCatalog::UTINYINT:
+      case execplan::CalpontSystemCatalog::USMALLINT:
+      {
+        uint64_t lval = fp[0]->data()->getUintVal(row, isNull);
+	uint64_t rval = fp[1]->data()->getUintVal(row, isNull);
+	r = lval > rval ? 1 : lval < rval ? -1 : 0;
+	break;
+      }
+      case execplan::CalpontSystemCatalog::BIGINT:
+      case execplan::CalpontSystemCatalog::INT:
+      case execplan::CalpontSystemCatalog::MEDINT:
+      case execplan::CalpontSystemCatalog::TINYINT:
+      case execplan::CalpontSystemCatalog::SMALLINT:
+      {
+        int64_t lval = fp[0]->data()->getIntVal(row, isNull);
+	int64_t rval = fp[1]->data()->getIntVal(row, isNull);
+	r = lval - rval;
+	break;
+      }
+      case execplan::CalpontSystemCatalog::DATE:
+      {
+        int64_t lval = fp[0]->data()->getDateIntVal(row, isNull);
+	int64_t rval = fp[1]->data()->getDateIntVal(row, isNull);
+	r = lval - rval;
+	break;
+      }
+      case execplan::CalpontSystemCatalog::DATETIME:
+      {
+        int64_t lval = fp[0]->data()->getDatetimeIntVal(row, isNull);
+	int64_t rval = fp[1]->data()->getDatetimeIntVal(row, isNull);
+	r = lval - rval;
+	break;
+      }
+      case execplan::CalpontSystemCatalog::TIME:
+      {
+        int64_t lval = fp[0]->data()->getTimeIntVal(row, isNull);
+	int64_t rval = fp[1]->data()->getTimeIntVal(row, isNull);
+	r = lval - rval;
+	break;
+      }
+      case execplan::CalpontSystemCatalog::TIMESTAMP:
+      {
+        int64_t lval = fp[0]->data()->getTimestampIntVal(row, isNull);
+	int64_t rval = fp[1]->data()->getTimestampIntVal(row, isNull);
+	r = lval - rval;
+	break;
+      }
+      default:
+      {
+        std::ostringstream oss;
+        oss << "comparison: datatype of " << execplan::colDataTypeToString(fp[0]->data()->resultType().colDataType);
+        throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
+      }
+    }
+    return (fAllowEqual && r == 0) || (fAllowGreater && r > 0) || (fAllowLess && r < 0);
+  }
+};
+
+class Func_Logic_Op : public Func_Bool
+{
+ public:
+  enum LogicOp { AND, OR, XOR };
+ private:
+  LogicOp fLogicOp;
+ public:
+  Func_Logic_Op(const std::string& name, LogicOp op) :
+    Func_Bool(name), fLogicOp(op)
+  {
+  }
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType)
+  {
+    if (fp.size() > 0) {
+idblog("result data type override to be " << ((int)fp[0]->data()->resultType().colDataType));
+      return fp[0]->data()->resultType();
+    }
+idblog("result data type is " << ((int)resultType.colDataType));
+    return resultType;
+  }
+
+  int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+	  idblog("getting int value");
+    return getBoolVal(row, fp, isNull, op_ct);
+  }
+
+  bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+	  idblog("getting bool value, op " << ((int)fLogicOp));
+    bool result = fLogicOp == AND ? true : false;
+    for (uint32_t i = 0; i < fp.size(); i++)
+    {
+      // we must use a specific value for x when its' isNull is true.
+      // yet, we have to maintain whole-expression isNull which may
+      // be returned.
+      bool xIsNull = false;
+      bool x = fp[i]->data()->getBoolVal(row, xIsNull);
+      isNull = isNull || xIsNull;
+      switch (fLogicOp)
+      {
+        case AND:
+	{
+          result = result && (xIsNull ? true : x);
+	  if (!result) // short circuit.
+	  {
+            isNull = false;
+            return result;
+	  }
+	  break;
+	}
+        case OR:
+	{
+          result = result || (xIsNull ? false : x);
+	  if (result) // short circuit.
+	  {
+            isNull = false;
+            return result;
+	  }
+	  break;
+	}
+        case XOR:
+	{
+          if (isNull)
+	  {
+            return false;
+	  }
+          result = result ? !x : x;
+	  break;
+	}
+      }
+    }
+    return result;
+  }
+};
+
 }  // namespace funcexp

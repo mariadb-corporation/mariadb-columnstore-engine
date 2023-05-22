@@ -34,19 +34,40 @@ SELECT 'a' <= 'b' FROM t1 LIMIT 1;
 'a' <= 'b'
 1
 SELECT t1_INT, t1_DECIMAL, t1_INT > t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '>' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT > t1_DECIMAL
+-7299	111.99000	0
+103	1234.56990	0
+9913	98765.43210	0
 SELECT t1_INT, t1_DECIMAL, t1_INT < t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT < t1_DECIMAL
+-7299	111.99000	1
+103	1234.56990	1
+9913	98765.43210	1
 SELECT t1_INT, t1_DECIMAL, t1_INT >= t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '>=' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT >= t1_DECIMAL
+-7299	111.99000	0
+103	1234.56990	0
+9913	98765.43210	0
 SELECT t1_INT, t1_DECIMAL, t1_INT <= t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<=' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT <= t1_DECIMAL
+-7299	111.99000	1
+103	1234.56990	1
+9913	98765.43210	1
 SELECT t1_INT, t1_DECIMAL, t1_INT <> t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<>' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT <> t1_DECIMAL
+-7299	111.99000	1
+103	1234.56990	1
+9913	98765.43210	1
 SELECT t1_INT, t1_DECIMAL, t1_INT = t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '=' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT = t1_DECIMAL
+-7299	111.99000	0
+103	1234.56990	0
+9913	98765.43210	0
 SELECT t1_INT, t1_DECIMAL, t1_INT != t1_DECIMAL FROM t1 ORDER BY 1;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<>' isn't supported.
+t1_INT	t1_DECIMAL	t1_INT != t1_DECIMAL
+-7299	111.99000	1
+103	1234.56990	1
+9913	98765.43210	1
 SELECT t1_INT, t1_DECIMAL from t1 WHERE t1_INT != t1_DECIMAL ORDER BY 1;
 t1_INT	t1_DECIMAL
 -7299	111.99000
