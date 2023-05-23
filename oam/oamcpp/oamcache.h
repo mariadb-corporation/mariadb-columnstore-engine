@@ -63,12 +63,12 @@ class OamCache
   dbRootPMMap_t dbRootPMMap;
   dbRootPMMap_t dbRootConnectionMap;
   PMDbrootsMap_t pmDbrootsMap;
-  uint32_t numDBRoots;
-  time_t mtime;
+  uint32_t numDBRoots = 1;
+  time_t mtime = 0;
   DBRootConfigList dbroots;
   std::vector<int> moduleIds;
   std::string OAMParentModuleName;
-  int mLocalPMId;  // The PM id running on this machine
+  int mLocalPMId = 0;  // The PM id running on this machine
   std::string systemName;
   std::string moduleName;
 };
