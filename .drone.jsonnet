@@ -546,8 +546,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: ['publish cmapi build', 'smoke'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
+    environment: {
+      PYTHONPATH: '/usr/share/columnstore/cmapi/deps',
+    },
     commands: [
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --env PYTHONPATH=$${PYTHONPATH} --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
       if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker cp setup-repo.sh cmapi$${DRONE_BUILD_NUMBER}:/',
@@ -679,7 +682,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                platformMap(platform, arch),
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
-               'mv -v {%s,/drone/src/cmapi/%s}/*.%s ./%s/' % [if (pkg_format == 'rpm') then '.' else '..', result, pkg_format, result],
+               'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
                if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
                // list storage manager binary
                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
