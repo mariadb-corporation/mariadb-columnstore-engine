@@ -511,7 +511,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     commands: [
       'cd cmapi',
       '%s install -y wget zstd findutils gcc' % if (pkg_format == 'rpm') then 'yum makecache && yum ' else 'apt update && apt',
-      // if (arch == 'arm64') then '%s install -y python39-devel && export CC=gcc && export CFLAGS="$$(/usr/bin/python3.9-config --cflags)"' % if (pkg_format == 'rpm') then 'yum makecache && yum ' else 'apt update && apt',
+      if (arch == 'arm64') then '%s install -y python39-devel && export CC=gcc && export CFLAGS="$$(/usr/bin/python3.9-config --cflags)"' % if (pkg_format == 'rpm') then 'yum makecache && yum ' else 'apt update && apt',
       'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
       'mv python pp && mv pp/install python',
       'chown -R root:root python',
