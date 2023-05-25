@@ -56,8 +56,8 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
 
-local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' &&' + clang_update_alternatives;
+local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives + ' && ' + 'export CMAKE_C_COMPILER=clang-11' + ' && ' + 'export CMAKE_CXX_COMPILER=clang++-11';
+local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives + ' && ' + 'export CMAKE_C_COMPILER=clang-11' + ' && ' + 'export CMAKE_CXX_COMPILER=clang++-11';
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
@@ -502,11 +502,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   cmapipython:: {
     name: 'cmapi python',
-    image: 'rockylinux:8',
+    image: img,
     volumes: [pipeline._volumes.mdb],
     environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20221106/cpython-3.10.8+20221106-x86_64_v4-unknown-linux-gnu-noopt-full.tar.zst',
-      PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20221106/cpython-3.10.8+20221106-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
+      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v4-unknown-linux-gnu-noopt-full.tar.zst',
+      PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
     },
     commands: [
       'cd cmapi',
@@ -553,11 +553,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --env PYTHONPATH=$${PYTHONPATH} --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y sudo epel-release which rsyslog hostname procps-ng"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y rsyslog hostname procps sudo"',
       if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
+      if (platform == 'rockylinux:9') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y libxcrypt-compat',
       'docker cp setup-repo.sh cmapi$${DRONE_BUILD_NUMBER}:/',
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} /setup-repo.sh',
       if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt install -y mariadb-plugin-columnstore mariadb-columnstore-cmapi"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y MariaDB-columnstore-engine MariaDB-columnstore-cmapi"',
       'cd cmapi',
       'for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/$${i}/; done',
+      'echo "[Authentication]" >> cmapi_server/cmapi_server.conf',
+      'echo "x-api-key = \"somekey123\"" >> cmapi_server/cmapi_server.conf',
       'docker cp run_tests.py cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/',
       'docker cp cmapi_server/cmapi_server.conf cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/cmapi_server/',
       'docker cp cmapi_server/cmapi_server.conf cmapi$${DRONE_BUILD_NUMBER}:' + etc_path + '/',
