@@ -359,7 +359,8 @@ void DiskJoinStep::joinFcn()
   Row l_largeRow;
   Row l_joinFERow, l_outputRow, baseRow;
   vector<vector<Row::Pointer> > joinMatches;
-  std::shared_ptr<Row[]> smallRowTemplates(new Row[1]);
+  auto new_row = new Row[1];
+  std::shared_ptr<Row[]> smallRowTemplates(new_row);
   vector<std::shared_ptr<TupleJoiner>> joiners;
   std::shared_ptr<std::shared_ptr<int[]>[]> colMappings, fergMappings;
   boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMem;
