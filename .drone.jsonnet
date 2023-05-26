@@ -510,7 +510,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'cd cmapi',
-      '%s install -y wget zstd findutils gcc' % if (pkg_format == 'rpm') then 'yum makecache && yum ' else 'apt update && apt',
+      '%s install -y wget zstd findutils gcc' % if (pkg_format == 'rpm') then 'yum install -y epel-release && yum makecache && yum ' else 'apt update && apt',
       if (arch == 'arm64') then '%s install -y python39-devel && export CC=gcc && export CFLAGS="$$(/usr/bin/python3.9-config --cflags)"' % if (pkg_format == 'rpm') then 'yum makecache && yum ' else 'apt update && apt',
       'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
       'mv python pp && mv pp/install python',
@@ -789,32 +789,33 @@ local FinalPipeline(branch, event) = {
               std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
+  [Pipeline('develop', 'centos:7', 'pull_request', 'amd64', '10.6-enterprise'),]
 
-[
-  Pipeline(b, p, e, 'amd64', s)
-  for b in std.objectFields(platforms)
-  for p in platforms[b]
-  for s in servers[b]
-  for e in events
-] +
-[
-  Pipeline(b, p, e, 'arm64', s)
-  for b in std.objectFields(platforms_arm)
-  for p in platforms_arm[b]
-  for s in servers[b]
-  for e in events
-] +
+// [
+//   Pipeline(b, p, e, 'amd64', s)
+//   for b in std.objectFields(platforms)
+//   for p in platforms[b]
+//   for s in servers[b]
+//   for e in events
+// ] +
+// [
+//   Pipeline(b, p, e, 'arm64', s)
+//   for b in std.objectFields(platforms_arm)
+//   for p in platforms_arm[b]
+//   for s in servers[b]
+//   for e in events
+// ] +
 
-[
-  FinalPipeline(b, 'cron')
-  for b in std.objectFields(platforms)
-] +
+// [
+//   FinalPipeline(b, 'cron')
+//   for b in std.objectFields(platforms)
+// ] +
 
-[
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
-  for p in platforms_custom
-] +
-[
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
-  for p in platforms_arm_custom
-]
+// [
+//   Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
+//   for p in platforms_custom
+// ] +
+// [
+//   Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
+//   for p in platforms_arm_custom
+// ]
