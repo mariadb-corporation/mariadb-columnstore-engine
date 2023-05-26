@@ -560,9 +560,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd cmapi',
       'for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/$${i}/; done',
       'docker cp run_tests.py cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/',
-      'docker cp cmapi_server/cmapi_server.conf cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/cmapi_server/',
-      'docker cp cmapi_server/cmapi_server.conf cmapi$${DRONE_BUILD_NUMBER}:' + etc_path + '/',
+      // set API key to /etc/columnstore/cmapi_server/cmapi_server.conf
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "mcs cluster set api-key --key somekey123"',
+      // copy cmapi conf file for test purposes (there are api key already set inside)
+      'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "cp %s/cmapi_server/cmapi_server.conf %s/cmapi_server/"' % [etc_path, cmapi_path],
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} systemctl stop mariadb-columnstore-cmapi',
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "cd ' + cmapi_path + ' && python/bin/python3 run_tests.py"',
     ],
