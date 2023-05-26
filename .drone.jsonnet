@@ -790,8 +790,10 @@ local FinalPipeline(branch, event) = {
               std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
-[Pipeline('develop', 'centos:7', 'pull_request', 'amd64', '10.6-enterprise')]
-
+[
+  Pipeline('develop', p, 'pull_request', 'amd64', '10.6-enterprise')
+  for p in platforms['develop']
+]
 // [
 //   Pipeline(b, p, e, 'amd64', s)
 //   for b in std.objectFields(platforms)
