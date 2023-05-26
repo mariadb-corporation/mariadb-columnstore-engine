@@ -102,7 +102,7 @@ install_deps()
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
         liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev graphviz
 
-    elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
+    elif [[ $OS = 'CentOS' || $OS = 'Rocky' || $OS = 'Fedora' ]]; then
         if [[ "$OS_VERSION" == "7" ]]; then
             yum -y install cmake3 epel-release centos-release-scl
             CMAKE_BIN_NAME=cmake3
@@ -114,11 +114,17 @@ install_deps()
            yum -y groupinstall "Development Tools" && yum config-manager --set-enabled powertools
            yum install -y checkpolicy
         fi
-        yum -y install epel-release \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
-        && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
-        && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
-        && yum -y install pcre2-devel flex graphviz
+        if [[ $OS != 'Fedora' ]]; then
+	    yum -y install epel-release
+	fi
+
+        yum install -y bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+            vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
+            jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
+            pcre2-devel flex graphviz libaio-devel openssl-devel flex
+    else
+	error "Unsupported OS $OS"
+	exit 17
     fi
 }
 
@@ -261,10 +267,10 @@ build()
     if [[ $SKIP_SUBMODULES = true ]] ; then
         warn "Skipping initialization of columnstore submodules"
     else
-	    message "Initialization of columnstore submodules"
-	    cd storage/columnstore/columnstore
-	    git submodule update --init
-	    cd - > /dev/null
+        message "Initialization of columnstore submodules"
+        cd storage/columnstore/columnstore
+        git submodule update --init
+        cd - > /dev/null
     fi
 
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then

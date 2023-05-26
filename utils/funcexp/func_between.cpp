@@ -243,7 +243,8 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::TEXT:
     {
       const string& val = pm[0]->data()->getStrVal(row, isNull).safeString("");
-      CHARSET_INFO& cs = datatypes::Charset(ct.charsetNumber).getCharset();
+      auto charset = datatypes::Charset(ct.charsetNumber);
+      CHARSET_INFO& cs = charset.getCharset();
 
       if (notBetween)
       {
