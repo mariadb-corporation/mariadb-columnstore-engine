@@ -515,6 +515,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
       'mv python pp && mv pp/install python',
       'chown -R root:root python',
+      if (platform == 'rockylinux:9') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y libxcrypt-compat',
       'python/bin/pip3 install -t deps --only-binary :all -r requirements.txt',
       './cleanup.sh',
       'cp cmapi_server/cmapi_server.conf cmapi_server/cmapi_server.conf.default',
