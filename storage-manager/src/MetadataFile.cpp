@@ -20,6 +20,7 @@
  */
 #include "MetadataFile.h"
 #include <set>
+#include <vector>
 #include <boost/filesystem.hpp>
 #define BOOST_SPIRIT_THREADSAFE
 #ifndef __clang__
