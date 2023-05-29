@@ -10,8 +10,8 @@ case "$ID" in
 ubuntu|debian)
     apt update -y
     apt install -y ca-certificates
-    echo "${PACKAGES_URL}/${ARCH} ${OS}"
-    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH} ${OS}" > /etc/apt/sources.list.d/repo.list
+    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/${OS} ${lsb_release -cs} main" > /etc/apt/sources.list.d/repo.list
+    cat /etc/apt/sources.list.d/repo.list
     apt update -y
     ;;
 rocky|centos)

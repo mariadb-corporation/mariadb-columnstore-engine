@@ -539,7 +539,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'mv -v *.%s ./%s/' % [pkg_format, result],
       if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
       'mkdir /drone/src/' + result,
-      'cp -vr ./%s /drone/src/%s' % [result, result],
+      'yes | cp -vr ./%s /drone/src/' % result,
     ],
   },
   cmapitest:: {
