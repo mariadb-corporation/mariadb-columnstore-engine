@@ -1099,7 +1099,8 @@ const string TupleHashJoinStep::toString() const
 
   for (size_t i = 0; i < idlsz; ++i)
   {
-    RowGroupDL* idl = fInputJobStepAssociation.outAt(i)->rowGroupDL();
+    const AnyDataListSPtr& dl = fInputJobStepAssociation.outAt(i);
+    RowGroupDL* idl = dl->rowGroupDL();
     CalpontSystemCatalog::OID oidi = 0;
 
     if (idl)
@@ -1111,7 +1112,7 @@ const string TupleHashJoinStep::toString() const
       oss << "*";
 
     oss << "tb/col:" << fTableOID1 << "/" << oidi;
-    oss << " " << fInputJobStepAssociation.outAt(i);
+    oss << " " << dl;
   }
 
   idlsz = fOutputJobStepAssociation.outSize();

@@ -310,44 +310,6 @@ pColScanStep::pColScanStep(const pColStep& rhs) : JobStep(rhs), fRm(rhs.resource
   fTraceFlags = rhs.fTraceFlags;
 }
 
-void pColScanStep::addFilters()
-{
-  AnyDataListSPtr dl = fInputJobStepAssociation.outAt(0);
-  DataList_t* bdl = dl->dataList();
-  idbassert(bdl);
-  int it = -1;
-  bool more;
-  ElementType e;
-  int64_t token;
-
-  try
-  {
-    it = bdl->getIterator();
-  }
-  catch (std::exception& ex)
-  {
-    cerr << "pColScanStep::addFilters: caught exception: " << ex.what() << " stepno: " << fStepId << endl;
-    throw;
-  }
-  catch (...)
-  {
-    cerr << "pColScanStep::addFilters: caught exception" << endl;
-    throw;
-  }
-
-  fBOP = BOP_OR;
-  more = bdl->next(it, &e);
-
-  while (more)
-  {
-    token = e.second;
-    addFilter(COMPARE_EQ, token);
-    more = bdl->next(it, &e);
-  }
-
-  return;
-}
-
 bool pColScanStep::isEmptyVal(const uint8_t* val8) const
 {
   const int width = fColType.colWidth;

@@ -27,57 +27,11 @@ namespace joblist
 //
 static const int showOidInDataList_Index = std::ios_base::xalloc();
 
-/*static*/
-AnyDataList::DataListTypes AnyDataList::dlType(const DataList_t* dl)
-{
-  if (dl == 0)
-    return UNKNOWN_DATALIST;
-
-  //	if (typeid(*dl) == typeid(BandedDataList)) return BANDED_DATALIST;
-  //	if (typeid(*dl) == typeid(WorkingSetDataList)) return WORKING_SET_DATALIST;
-  if (typeid(*dl) == typeid(FifoDataList))
-    return FIFO_DATALIST;
-
-  //	if (typeid(*dl) == typeid(BucketDataList)) return BUCKET_DATALIST;
-  //	if (typeid(*dl) == typeid(ConstantDataList_t)) return CONSTANT_DATALIST;
-  //	if (typeid(*dl) == typeid(SortedWSDL)) return SORTED_WORKING_SET_DATALIST;
-  //	if (typeid(*dl) == typeid(ZonedDL)) return ZONED_DATALIST;
-  //	if (typeid(*dl) == typeid(DeliveryWSDL)) return DELIVERYWSDL;
-  if (typeid(*dl) == typeid(RowGroupDL))
-    return ROWGROUP_DATALIST;
-
-  return UNKNOWN_DATALIST;
-}
-
-AnyDataList::DataListTypes AnyDataList::strDlType(const StrDataList* dl)
-{
-  if (dl == 0)
-    return UNKNOWN_DATALIST;
-
-  //	if (typeid(*dl) == typeid(StringDataList)) return STRINGBANDED_DATALIST;
-  //	if (typeid(*dl) == typeid(StringFifoDataList)) return STRINGFIFO_DATALIST;
-  //	if (typeid(*dl) == typeid(StringBucketDataList)) return STRINGBUCKET_DATALIST;
-  if (typeid(*dl) == typeid(StrDataList))
-    return STRING_DATALIST;
-
-  //	if (typeid(*dl) == typeid(StringConstantDataList_t)) return STRINGCONSTANT_DATALIST;
-  //	if (typeid(*dl) == typeid(StringSortedWSDL)) return STRINGSORTED_WORKING_SET_DATALIST;
-  //	if (typeid(*dl) == typeid(StringZonedDL)) return STRINGZONED_DATALIST;
-  return UNKNOWN_DATALIST;
-}
-
-// AnyDataList::DataListTypes AnyDataList::tupleDlType(const TupleDataList* dl)
-//{
-//    if (dl == 0) return UNKNOWN_DATALIST;
-//    if (typeid(*dl) == typeid(TupleBucketDataList)) return TUPLEBUCKET_DATALIST;
-//    return UNKNOWN_DATALIST;
-//}
-
 std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
 {
   bool withOid = (oss.iword(showOidInDataList_Index) != 0);
 
-  if (DataList_t* dle = dl->dataList(); dle != nullptr)
+  if (auto* dle = dl->rowGroupDL(); dle != nullptr)
   {
     if (withOid)
       oss << dle->OID() << " ";
@@ -91,25 +45,7 @@ std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
       elemSizeStr << "(" << dle->getDiskElemSize1st() << "," << dle->getDiskElemSize2nd() << ")";
     }
 
-    oss << "(0x" << std::hex << (ptrdiff_t)dle << std::dec << "[" << AnyDataList::dlType(dle) << "]"
-        << elemSizeStr.str() << ")";
-  }
-  else if (StrDataList* dls = dl->stringDataList(); dls != nullptr)
-  {
-    if (withOid)
-      oss << dls->OID() << " ";
-
-    //...If this datalist is saved to disk, then include the saved
-    //...element size in the printed information.
-    std::ostringstream elemSizeStr;
-
-    if (dls->useDisk())
-    {
-      elemSizeStr << "(" << dls->getDiskElemSize1st() << "," << dls->getDiskElemSize2nd() << ")";
-    }
-
-    oss << "(0x" << std::hex << (ptrdiff_t)dls << std::dec << "[" << AnyDataList::strDlType(dls) << "]"
-        << elemSizeStr.str() << ")";
+    oss << "(0x" << std::hex << (ptrdiff_t)dle << std::dec << elemSizeStr.str() << ")";
   }
   else
   {

@@ -259,9 +259,6 @@ class pColStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
-
  private:
   /** @brief constructor for completeness
    */
@@ -482,8 +479,6 @@ class pColScanStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
 
  private:
   // defaults okay?
