@@ -9,8 +9,8 @@ ARCH=$(expr "$(uname -m)" : "arm64\|aarch64" > /dev/null && echo "arm64" || echo
 case "$ID" in
 ubuntu|debian)
     apt update -y
-    apt install -y ca-certificates lsb-release
-    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/${OS} $(lsb_release -cs) main" > /etc/apt/sources.list.d/repo.list
+    apt install -y ca-certificates
+    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/${OS}/ /" > /etc/apt/sources.list.d/repo.list
     cat /etc/apt/sources.list.d/repo.list
     apt update -y
     ;;
