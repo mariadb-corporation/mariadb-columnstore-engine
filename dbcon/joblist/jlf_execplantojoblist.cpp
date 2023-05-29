@@ -1471,17 +1471,17 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
   if (sf->op()->op() != opeq.op())
     return false;
 
-  const FunctionColumn* fc = static_cast<const FunctionColumn*>(sf->lhs());
-  const ConstantColumn* cc = static_cast<const ConstantColumn*>(sf->rhs());
+  const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(sf->lhs());
+  const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(sf->rhs());
 
-  if (fc == NULL)
+  if (fc == nullptr)
   {
-    cc = static_cast<const ConstantColumn*>(sf->lhs());
-    fc = static_cast<const FunctionColumn*>(sf->rhs());
+    cc = dynamic_cast<const ConstantColumn*>(sf->lhs());
+    fc = dynamic_cast<const FunctionColumn*>(sf->rhs());
   }
 
   // not a function or not idbparttition
-  if (fc == NULL || cc == NULL || fc->functionName().compare("idbpartition") != 0)
+  if (fc == nullptr || cc == nullptr || fc->functionName().compare("idbpartition") != 0)
     return false;
 
   // make sure the cc has 3 tokens
