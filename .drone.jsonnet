@@ -505,7 +505,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: img,
     volumes: [pipeline._volumes.mdb],
     environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v4-unknown-linux-gnu-noopt-full.tar.zst',
+      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v3-unknown-linux-gnu-pgo+lto-full.tar.zst',
       PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
     },
     commands: [
@@ -537,7 +537,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
       'mkdir ./' + result,
       'mv -v *.%s ./%s/' % [pkg_format, result],
-      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
+      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'cd ./%s && dpkg-scanpackages -m . | gzip > Packages.gz' % result,
       'mkdir /drone/src/' + result,
       'yes | cp -vr ./%s /drone/src/' % result,
     ],
@@ -687,7 +687,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
                'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
-               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages ./%s | gzip > ./%s/Packages.gz' % [result, result],
+               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'cd ./%s && dpkg-scanpackages -m . | gzip > Packages.gz' % result,
                // list storage manager binary
                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
