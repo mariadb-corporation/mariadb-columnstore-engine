@@ -561,6 +561,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd cmapi',
       'for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/$${i}/; done',
       'docker cp run_tests.py cmapi$${DRONE_BUILD_NUMBER}:' + cmapi_path + '/',
+      'docker exec -t cmapi$${DRONE_BUILD_NUMBER} systemctl start mariadb-columnstore-cmapi',
       // set API key to /etc/columnstore/cmapi_server.conf
       'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "mcs cluster set api-key --key somekey123"',
       // copy cmapi conf file for test purposes (there are api key already set inside)
@@ -791,35 +792,35 @@ local FinalPipeline(branch, event) = {
               std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
 
-[
-  Pipeline('develop', p, 'pull_request', 'amd64', '10.6-enterprise')
-  for p in platforms['develop']
-]
 // [
-//   Pipeline(b, p, e, 'amd64', s)
-//   for b in std.objectFields(platforms)
-//   for p in platforms[b]
-//   for s in servers[b]
-//   for e in events
-// ] +
-// [
-//   Pipeline(b, p, e, 'arm64', s)
-//   for b in std.objectFields(platforms_arm)
-//   for p in platforms_arm[b]
-//   for s in servers[b]
-//   for e in events
-// ] +
-
-// [
-//   FinalPipeline(b, 'cron')
-//   for b in std.objectFields(platforms)
-// ] +
-
-// [
-//   Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
-//   for p in platforms_custom
-// ] +
-// [
-//   Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
-//   for p in platforms_arm_custom
+//   Pipeline('develop', p, 'pull_request', 'amd64', '10.6-enterprise')
+//   for p in platforms['develop']
 // ]
+[
+  Pipeline(b, p, e, 'amd64', s)
+  for b in std.objectFields(platforms)
+  for p in platforms[b]
+  for s in servers[b]
+  for e in events
+] +
+[
+  Pipeline(b, p, e, 'arm64', s)
+  for b in std.objectFields(platforms_arm)
+  for p in platforms_arm[b]
+  for s in servers[b]
+  for e in events
+] +
+
+[
+  FinalPipeline(b, 'cron')
+  for b in std.objectFields(platforms)
+] +
+
+[
+  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
+  for p in platforms_custom
+] +
+[
+  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
+  for p in platforms_arm_custom
+]
