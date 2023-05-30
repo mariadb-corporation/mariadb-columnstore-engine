@@ -26,7 +26,7 @@ cd -
 
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
+optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
@@ -37,6 +37,7 @@ optparse.define short=D long=without-core-dumps desc="Do not produce core dumps"
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
+optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 
 source $( optparse.build )
 
@@ -442,7 +443,11 @@ if [[ $INSTALL_DEPS = true ]] ; then
 fi
 
 stop_service
-clean_old_installation
+
+if [[ $NO_CLEAN = false ]] ; then
+    clean_old_installation
+fi
+
 build
 run_unit_tests
 run_microbenchmarks_tests
