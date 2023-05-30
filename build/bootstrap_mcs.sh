@@ -26,7 +26,7 @@ cd - > /dev/null
 
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
+optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
@@ -42,6 +42,7 @@ optparse.define short=P long=report-path desc="Path for storing reports and prof
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 
 source $( optparse.build )
 
@@ -523,7 +524,11 @@ if [[ $INSTALL_DEPS = true ]] ; then
 fi
 
 stop_service
-clean_old_installation
+
+if [[ $NO_CLEAN = false ]] ; then
+    clean_old_installation
+fi
+
 build
 run_unit_tests
 run_microbenchmarks_tests
