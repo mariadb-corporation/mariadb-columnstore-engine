@@ -10,7 +10,7 @@ case "$ID" in
 ubuntu|debian)
     apt update -y
     apt install -y ca-certificates
-    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/${OS}/ /" > /etc/apt/sources.list.d/repo.list
+    echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/ ${OS}/" > /etc/apt/sources.list.d/repo.list
     cat /etc/apt/sources.list.d/repo.list
     apt update -y
     ;;

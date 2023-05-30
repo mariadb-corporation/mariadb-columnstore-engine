@@ -537,7 +537,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
       'mkdir ./' + result,
       'mv -v *.%s ./%s/' % [pkg_format, result],
-      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'cd ./%s && dpkg-scanpackages -m . | gzip > Packages.gz && cd ../' % result,
+      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
       'mkdir /drone/src/' + result,
       'yes | cp -vr ./%s /drone/src/' % result,
     ],
@@ -687,7 +687,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
                'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
-               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'cd ./%s && dpkg-scanpackages -m . | gzip > Packages.gz && cd ../' % result,
+               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
                // list storage manager binary
                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
