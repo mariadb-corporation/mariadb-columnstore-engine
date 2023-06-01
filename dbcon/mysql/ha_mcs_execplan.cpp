@@ -3195,12 +3195,11 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
     */
     case DECIMAL_RESULT:
     {
-      Item_decimal* idp = (Item_decimal*)item;
-
+      // decimal result do not shows us Item is Item_decimal
       ct.colDataType = CalpontSystemCatalog::DECIMAL;
 
-      unsigned int precision = idp->decimal_precision();
-      unsigned int scale = idp->decimal_scale();
+      unsigned int precision = item->decimal_precision();
+      unsigned int scale = item->decimal_scale();
 
       ct.setDecimalScalePrecision(precision, scale);
 
@@ -4047,6 +4046,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         // @todo. merge this logic to buildParseTree().
         if ((funcName == "if" && i == 0) || funcName == "xor")
         {
+
           // make sure the rcWorkStack is cleaned.
           gwi.clauseType = WHERE;
           sptp.reset(buildParseTree((Item_func*)(ifp->arguments()[i]), gwi, nonSupport));
@@ -4158,7 +4158,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     // check for unsupported arguments add the keyword unit argument for extract functions
     if (funcName == "extract")
     {
-      Item_date_add_interval* idai = (Item_date_add_interval*)ifp;
+      Item_extract* idai = static_cast<Item_extract*>(ifp);
 
       switch (idai->int_type)
       {
@@ -5762,33 +5762,31 @@ void gp_walk(const Item* item, void* arg)
             break;
           }
 
-          Item_string* isp = (Item_string*)item;
-
-          if (isp)
+          if (item->result_type() == STRING_RESULT)
           {
-            if (isp->result_type() == STRING_RESULT)
+            // dangerous cast here
+            Item* isp = const_cast<Item*>(item);
+            String val, *str = isp->val_str(&val);
+            if (str)
             {
-              String val, *str = isp->val_str(&val);
-              if (str)
-              {
-                string cval;
+              string cval;
 
-                if (str->ptr())
-                {
-                  cval.assign(str->ptr(), str->length());
-                }
-
-                gwip->rcWorkStack.push(new ConstantColumn(cval));
-                (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
-                break;
-              }
-              else
+              if (str->ptr())
               {
-                gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
-                (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
-                break;
+                cval.assign(str->ptr(), str->length());
               }
+
+              gwip->rcWorkStack.push(new ConstantColumn(cval));
+              (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
+              break;
             }
+            else
+            {
+              gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
+              (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
+              break;
+            }
+
 
             gwip->rcWorkStack.push(buildReturnedColumn(isp, *gwip, gwip->fatalParseError));
           }
@@ -6176,9 +6174,13 @@ void gp_walk(const Item* item, void* arg)
 
         if (col->type() == Item::FIELD_ITEM)
         {
-          const auto& field_name = string(((Item_field*)item)->field_name.str);
-          auto colMap = CalpontSelectExecutionPlan::ColumnMap::value_type(field_name, scsp);
-          gwip->columnMap.insert(colMap);
+          const Item_ident* ident_field = dynamic_cast<const Item_ident*>(item);
+          if (ident_field)
+          {
+            const auto& field_name = string(ident_field->field_name.str);
+            auto colMap = CalpontSelectExecutionPlan::ColumnMap::value_type(field_name, scsp);
+            gwip->columnMap.insert(colMap);
+          }
         }
       }
 
