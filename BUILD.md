@@ -1,30 +1,59 @@
 ## Checking out the source
 
-Since MCS is not meant to be built independently outside outside of MariaDB server, we should checkout the [server](https://github.com/MariaDB/server) code first.
+MariaDB Columnstore (MCS) is not meant to be built independently outside of the MariaDB server. Therefore you need to checkout the [server](https://github.com/MariaDB/server) code as a first step.
 
-Install git with your distro package manager
+You can clone the MariaDB server repository from GitHub using a SSH connection:
 
-You can now clone from github with
+```bash
+git clone git@github.com:MariaDB/server.git
 
-	git clone git@github.com:MariaDB/server.git
+```
 
-or if you are not a github user,
+or via HTTPS:
 
-	git clone https://github.com/MariaDB/server.git
+```bash
+git clone https://github.com/MariaDB/server.git
 
-MariaDB server contains many git submodules that need to be checked out with,
+```
 
-	git submodule update --init --recursive --depth=1
+(Note, that if you are a first time contributor and don’t have any access rights to the server repository, you might want to create a fork of the MariaDB server repository, if you also want to contribute to the server and not only to MCS.)
 
-Then we should checkout Columnstore branch we want to build and install
+MariaDB server contains many git submodules that need to be checked out with:
 
-	cd server/storage/columnstore/columnstore
-	git checkout <columnstore-branch-you-want-to-build>
-	git config --global --add safe.directory `pwd`
-## Building phase
+```bash
+git submodule update --init --recursive --depth=1
 
-But for development convenience, we supply a script to build, install and run Mariadb server in MCS repo.
+```
 
-	sudo -E build/bootstrap_mcs.sh
+The submodule initialisation also checks out this MCS repository. Again, if you don’t have developer rights to the MCS repository and want to contribute, you should create a fork of this repository and change the remote of the already cloned MCS repository.
 
-Ubuntu:20.04/22.04, CentOS:7, Debian:10/11, RockyLinux:8 are supported with this script
+If you want to switch the remote to your fork, you can achieve this by:
+
+```bash
+cd server/storage/columnstore/columnstore
+git remote -v #this should return 
+							#origin	https://github.com/mariadb-corporation/mariadb-columnstore-engine.git (fetch)
+							#origin	https://github.com/mariadb-corporation/mariadb-columnstore-engine.git (push)
+git remote remove origin
+git remote add origin <HTTPS-URL-TO-YOUR-FORK>
+```
+
+As a next step check out the MCS branch you want to build and install:
+
+```bash
+cd server/storage/columnstore/columnstore
+git checkout <columnstore-branch-you-want-to-build>
+git config --global --add safe.directory `pwd`
+```
+
+## Build
+
+Regarding dependencies: If this is the first time building MCS on your system you should either use the `./install-deps.sh` script or pass `--install-deps` to the `bootstrap_mcs.sh` script.
+
+For development convenience, building the MariaDB server with MCS can be done with:
+
+```
+sudo -E build/bootstrap_mcs.sh
+```
+
+Tested for: Ubuntu:20.04/22.04, CentOS:7, Debian:10/11, RockyLinux:8
