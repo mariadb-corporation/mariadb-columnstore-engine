@@ -386,8 +386,6 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     return found;
   }
 
-  Item_func* ifp_sort = static_cast<Item_func*>(sort_item);
-
   // base cases for Item_field and Item_ref. The second arg is binary cmp switch
   found = group_item->eq(sort_item, false);
   if (!found && sort_item->type() == Item::REF_ITEM)
@@ -399,6 +397,8 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
   {
     return found;
   }
+
+  Item_func* ifp_sort = static_cast<Item_func*>(sort_item);
 
   // seeking for a group_item match
   for (uint32_t i = 0; !found && i < ifp_sort->argument_count(); i++)
@@ -4153,50 +4153,6 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       addIntervalArgs(&gwi, ifp, funcParms);
     }
 
-    // check for unsupported arguments add the keyword unit argument for extract functions
-    if (funcName == "extract")
-    {
-      Item_extract* idai = static_cast<Item_extract*>(ifp);
-
-      switch (idai->int_type)
-      {
-        case INTERVAL_DAY_MICROSECOND:
-        {
-          nonSupport = true;
-          gwi.fatalParseError = true;
-          Message::Args args;
-          string info = funcName + " with DAY_MICROSECOND parameter";
-          args.add(info);
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
-          return NULL;
-        }
-
-        case INTERVAL_HOUR_MICROSECOND:
-        {
-          nonSupport = true;
-          gwi.fatalParseError = true;
-          Message::Args args;
-          string info = funcName + " with HOUR_MICROSECOND parameter";
-          args.add(info);
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
-          return NULL;
-        }
-
-        case INTERVAL_MINUTE_MICROSECOND:
-        {
-          nonSupport = true;
-          gwi.fatalParseError = true;
-          Message::Args args;
-          string info = funcName + " with MINUTE_MICROSECOND parameter";
-          args.add(info);
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
-          return NULL;
-        }
-
-        default: break;
-      }
-    }
-
     // add the keyword unit argument and char length for cast functions
     if (funcName == "cast_as_char")
     {
@@ -5577,6 +5533,8 @@ because it has multiple arguments.";
   return ac;
 }
 
+
+
 void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
 {
   string funcName = ifp->func_name();
@@ -5742,8 +5700,8 @@ void gp_walk(const Item* item, void* arg)
       {
         case INT_RESULT:
         {
-          Item_int* iip = (Item_int*)item;
-          gwip->rcWorkStack.push(buildReturnedColumn(iip, *gwip, gwip->fatalParseError));
+          Item* non_const_item  = const_cast<Item*>(item);
+          gwip->rcWorkStack.push(buildReturnedColumn(non_const_item, *gwip, gwip->fatalParseError));
           break;
         }
 
@@ -5784,32 +5742,20 @@ void gp_walk(const Item* item, void* arg)
               break;
             }
 
-
             gwip->rcWorkStack.push(buildReturnedColumn(isp, *gwip, gwip->fatalParseError));
           }
           break;
         }
 
         case REAL_RESULT:
-        {
-          Item_float* ifp = (Item_float*)item;
-          gwip->rcWorkStack.push(buildReturnedColumn(ifp, *gwip, gwip->fatalParseError));
-          break;
-        }
-
         case DECIMAL_RESULT:
-        {
-          Item_decimal* idp = (Item_decimal*)item;
-          gwip->rcWorkStack.push(buildReturnedColumn(idp, *gwip, gwip->fatalParseError));
-          break;
-        }
-
         case TIME_RESULT:
         {
-          Item_temporal_literal* itp = (Item_temporal_literal*)item;
-          gwip->rcWorkStack.push(buildReturnedColumn(itp, *gwip, gwip->fatalParseError));
+          Item* nonConstItem = const_cast<Item*>(item);
+          gwip->rcWorkStack.push(buildReturnedColumn(nonConstItem, *gwip, gwip->fatalParseError));
           break;
         }
+
         default:
         {
           if (gwip->condPush)
