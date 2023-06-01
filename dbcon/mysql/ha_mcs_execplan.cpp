@@ -343,7 +343,7 @@ void getColNameFromItem(std::ostringstream& ostream, Item* item)
   }
   else
   {
-    Item_ident* iip = reinterpret_cast<Item_ident*>(item);
+    Item_ident* iip = static_cast<Item_ident*>(item);
 
     if (iip->db_name.str)
       ostream << iip->db_name.str << '.';
@@ -386,13 +386,13 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     return found;
   }
 
-  Item_func* ifp_sort = reinterpret_cast<Item_func*>(sort_item);
+  Item_func* ifp_sort = static_cast<Item_func*>(sort_item);
 
   // base cases for Item_field and Item_ref. The second arg is binary cmp switch
   found = group_item->eq(sort_item, false);
   if (!found && sort_item->type() == Item::REF_ITEM)
   {
-    Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(sort_item);
+    Item_ref* ifp_sort_ref = static_cast<Item_ref*>(sort_item);
     found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
   }
   else if (!found && sort_item->type() == Item::FIELD_ITEM)
@@ -412,7 +412,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     else if (ifp_sort_arg->type() == Item::REF_ITEM)
     {
       // dereference the Item
-      Item_ref* ifp_sort_ref = reinterpret_cast<Item_ref*>(ifp_sort_arg);
+      Item_ref* ifp_sort_ref = static_cast<Item_ref*>(ifp_sort_arg);
       found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
     }
   }
@@ -432,14 +432,14 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
  *********************************************************/
 void check_sum_func_item(const Item* item, void* arg)
 {
-  bool* found = reinterpret_cast<bool*>(arg);
+  bool* found = static_cast<bool*>(arg);
 
   if (*found)
     return;
 
   if (item->type() == Item::REF_ITEM)
   {
-    const Item_ref* ref_item = reinterpret_cast<const Item_ref*>(item);
+    const Item_ref* ref_item = static_cast<const Item_ref*>(item);
     Item* ref_item_item = (Item*)*ref_item->ref;
     if (ref_item_item->type() == Item::SUM_FUNC_ITEM)
     {
@@ -479,7 +479,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
   // e.g. select a, if (sum(b) > 1, 2, 1) from t1 group by 1 order by 2;
   if (sort_item->type() == Item::FUNC_ITEM)
   {
-    Item_func* ifp = reinterpret_cast<Item_func*>(sort_item);
+    Item_func* ifp = static_cast<Item_func*>(sort_item);
     ifp->traverse_cond(check_sum_func_item, &found, Item::POSTFIX);
   }
   else if (sort_item->type() == Item::CONST_ITEM || sort_item->type() == Item::WINDOW_FUNC_ITEM)
@@ -528,11 +528,11 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
 
   switch (item->type())
   {
-    case Item::FIELD_ITEM: ifip = reinterpret_cast<Item_field*>(item); break;
+    case Item::FIELD_ITEM: ifip = static_cast<Item_field*>(item); break;
     default:
-      irip = reinterpret_cast<Item_ref*>(item);
+      irip = static_cast<Item_ref*>(item);
       if (irip)
-        ifip = reinterpret_cast<Item_field*>(irip->ref[0]);
+        ifip = static_cast<Item_field*>(irip->ref[0]);
       break;
   }
 
@@ -541,7 +541,7 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
     std::vector<Item*>::iterator iter = gwi.extSelAggColsItems.begin();
     for (; iter != gwi.extSelAggColsItems.end(); iter++)
     {
-      isfp = reinterpret_cast<Item_func_or_sum*>(*iter);
+      isfp = static_cast<Item_func_or_sum*>(*iter);
 
       if (isfp->type() == Item::SUM_FUNC_ITEM && isfp->result_field == ifip->field)
       {
@@ -1044,7 +1044,7 @@ void debug_walk(const Item* item, void* arg)
 
       if (join)
       {
-        Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
+        Item_cond* cond = static_cast<Item_cond*>(join->conds);
 
         if (cond)
           cond->traverse_cond(debug_walk, arg, Item::POSTFIX);
@@ -1724,7 +1724,7 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedCol
                             boost::shared_ptr<Operator>& sop, const Item_func::Functype& funcType,
                             const vector<Item*>& itemList, bool isInSubs)
 {
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   // push the column that is associated with the correlated column to the returned
   // column list, so the materialized view have the complete projection list.
@@ -2048,7 +2048,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
   else if (ifp->functype() == Item_func::GUSERVAR_FUNC)
   {
-    Item_func_get_user_var* udf = reinterpret_cast<Item_func_get_user_var*>(ifp);
+    Item_func_get_user_var* udf = static_cast<Item_func_get_user_var*>(ifp);
     String buf;
 
     if (udf->result_type() == INT_RESULT)
@@ -2801,7 +2801,7 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
   ci->expressionId = 0;
 }
 
@@ -3611,7 +3611,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   ArithmeticColumn* ac = new ArithmeticColumn();
   Item** sfitempp = item->arguments();
@@ -3872,7 +3872,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
   FuncExp* funcExp = FuncExp::instance();
@@ -3920,7 +3920,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   else if ((funcName == "charset" || funcName == "collation") && ifp->argument_count() == 1 &&
            ifp->arguments()[0]->type() == Item::FIELD_ITEM)
   {
-    Item_field* item = reinterpret_cast<Item_field*>(ifp->arguments()[0]);
+    Item_field* item = static_cast<Item_field*>(ifp->arguments()[0]);
     CHARSET_INFO* info = item->charset_for_protocol();
     ReturnedColumn* rc;
     string val;
@@ -4494,7 +4494,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   FunctionColumn* fc = new FunctionColumn();
   FunctionParm funcParms;
@@ -4921,9 +4921,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
-  cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
-  Item_sum* isp = reinterpret_cast<Item_sum*>(item);
+  Item_sum* isp = static_cast<Item_sum*>(item);
   Item** sfitempp = isp->get_orig_args();
   SRCP parm;
 
@@ -5153,7 +5153,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         {
           case Item::FIELD_ITEM:
           {
-            Item_field* ifp = reinterpret_cast<Item_field*>(sfitemp);
+            Item_field* ifp = static_cast<Item_field*>(sfitemp);
             SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
             if (!sc)
@@ -5675,7 +5675,7 @@ bool isNotFuncAndConstScalarSubSelect(Item_func* ifp, const std::string& funcNam
 
 void gp_walk(const Item* item, void* arg)
 {
-  gp_walk_info* gwip = reinterpret_cast<gp_walk_info*>(arg);
+  gp_walk_info* gwip = static_cast<gp_walk_info*>(arg);
   idbassert(gwip);
 
   // Bailout...
@@ -5752,7 +5752,7 @@ void gp_walk(const Item* item, void* arg)
           // Special handling for 0xHHHH literals
           if (item->type_handler() == &type_handler_hex_hybrid)
           {
-            Item_hex_hybrid* hip = reinterpret_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
+            Item_hex_hybrid* hip = static_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
             gwip->rcWorkStack.push(new ConstantColumn((int64_t)hip->val_int(), ConstantColumn::NUM));
             ConstantColumn* cc = dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top());
             cc->timeZone(gwip->timeZone);
@@ -5848,14 +5848,16 @@ void gp_walk(const Item* item, void* arg)
 
     case Item::FUNC_ITEM:
     {
-      Item_func* ifp = (Item_func*)item;
+      Item* ncitem = const_cast<Item*>(item);
+      Item_func* ifp = static_cast<Item_func*>(ncitem);
+
       string funcName = ifp->func_name();
 
       if (!gwip->condPush)
       {
         if (!ifp->fixed())
         {
-          ifp->fix_fields(gwip->thd, reinterpret_cast<Item**>(&ifp));
+          ifp->fix_fields(gwip->thd, &ncitem);
         }
 
         // Special handling for queries of the form:
@@ -6402,7 +6404,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
   {
     case Item::FIELD_ITEM:
     {
-      Item_field* ifp = reinterpret_cast<Item_field*>(item);
+      Item_field* ifp = static_cast<Item_field*>(item);
       field_vec.push_back(ifp);
       return;
     }
@@ -6411,7 +6413,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
     {
       // hasAggColumn = true;
       parseInfo |= AGG_BIT;
-      Item_sum* isp = reinterpret_cast<Item_sum*>(item);
+      Item_sum* isp = static_cast<Item_sum*>(item);
       Item** sfitempp = isp->arguments();
 
       for (uint32_t i = 0; i < isp->argument_count(); i++)
@@ -6422,7 +6424,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::FUNC_ITEM:
     {
-      Item_func* isp = reinterpret_cast<Item_func*>(item);
+      Item_func* isp = static_cast<Item_func*>(item);
 
       if (string(isp->func_name()) == "<in_optimizer>")
       {
@@ -6439,7 +6441,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::COND_ITEM:
     {
-      Item_cond* icp = reinterpret_cast<Item_cond*>(item);
+      Item_cond* icp = static_cast<Item_cond*>(item);
       List_iterator_fast<Item> it(*(icp->argument_list()));
       Item* cond_item;
 
@@ -6463,7 +6465,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
         if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
         {
           parseInfo |= AGG_BIT;
-          Item_sum* isp = reinterpret_cast<Item_sum*>(*(ref->ref));
+          Item_sum* isp = static_cast<Item_sum*>(*(ref->ref));
           Item** sfitempp = isp->arguments();
 
           // special handling for count(*). This should not be treated as constant.
@@ -6488,14 +6490,14 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
           if (!rc)
           {
-            Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
+            Item_field* ifp = static_cast<Item_field*>(*(ref->ref));
             field_vec.push_back(ifp);
           }
           break;
         }
         else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
         {
-          Item_func* isp = reinterpret_cast<Item_func*>(*(ref->ref));
+          Item_func* isp = static_cast<Item_func*>(*(ref->ref));
           Item** sfitempp = isp->arguments();
 
           for (uint32_t i = 0; i < isp->argument_count(); i++)
@@ -6505,7 +6507,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
         }
         else if ((*(ref->ref))->type() == Item::CACHE_ITEM)
         {
-          Item_cache* isp = reinterpret_cast<Item_cache*>(*(ref->ref));
+          Item_cache* isp = static_cast<Item_cache*>(*(ref->ref));
           parse_item(isp->get_example(), field_vec, hasNonSupportItem, parseInfo, gwi);
           break;
         }
@@ -7578,7 +7580,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
       case Item::FUNC_ITEM:
       {
-        Item_func* ifp = reinterpret_cast<Item_func*>(item);
+        Item_func* ifp = static_cast<Item_func*>(item);
 
         // @bug4383. error out non-support stored function
         if (ifp->functype() == Item_func::FUNC_SP)
@@ -7712,7 +7714,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       }  // End of FUNC_ITEM
 
       // DRRTUY Replace the whole section with typeid() checks or use
-      // reinterpret_cast here
+      // static_cast here
       case Item::CONST_ITEM:
       {
         switch (item->cmp_type())
@@ -7790,7 +7792,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
         if (join)
         {
-          Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
+          Item_cond* cond = static_cast<Item_cond*>(join->conds);
 
           if (cond)
             cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
@@ -8087,7 +8089,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   {
     gwi.clauseType = GROUP_BY;
     Item* nonSupportItem = NULL;
-    ORDER* groupcol = reinterpret_cast<ORDER*>(select_lex.group_list.first);
+    ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
     // check if window functions are in order by. InfiniDB process order by list if
     // window functions are involved, either in order by or projection.
@@ -8109,7 +8111,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
 
     gwi.hasWindowFunc = hasWindowFunc;
-    groupcol = reinterpret_cast<ORDER*>(select_lex.group_list.first);
+    groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
     for (; groupcol; groupcol = groupcol->next)
     {
@@ -8363,7 +8365,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   // ORDER BY processing
   {
     SQL_I_List<ORDER> order_list = select_lex.order_list;
-    ORDER* ordercol = reinterpret_cast<ORDER*>(order_list.first);
+    ORDER* ordercol = static_cast<ORDER*>(order_list.first);
 
     // check if window functions are in order by. InfiniDB process order by list if
     // window functions are involved, either in order by or projection.
@@ -8390,7 +8392,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
 
     // re-visit the first of ordercol list
-    ordercol = reinterpret_cast<ORDER*>(order_list.first);
+    ordercol = static_cast<ORDER*>(order_list.first);
 
     {
       for (; ordercol; ordercol = ordercol->next)
@@ -8548,7 +8550,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         if (unionSel)
           order_list = select_lex.master_unit()->global_parameters()->order_list;
 
-        ordercol = reinterpret_cast<ORDER*>(order_list.first);
+        ordercol = static_cast<ORDER*>(order_list.first);
 
         for (; ordercol; ordercol = ordercol->next)
         {
@@ -8953,7 +8955,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   Item_cond* icp = 0;
 
   if (gi.groupByWhere)
-    icp = reinterpret_cast<Item_cond*>(gi.groupByWhere);
+    icp = static_cast<Item_cond*>(gi.groupByWhere);
 
   uint32_t sessionID = csep->sessionID();
   gwi.sessionid = sessionID;
@@ -9429,7 +9431,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
       case Item::FUNC_ITEM:
       {
-        Item_func* ifp = reinterpret_cast<Item_func*>(item);
+        Item_func* ifp = static_cast<Item_func*>(item);
 
         // @bug4383. error out non-support stored function
         if (ifp->functype() == Item_func::FUNC_SP)
@@ -9560,7 +9562,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
       }
 
       // DRRTUY Replace the whole section with typeid() checks or use
-      // reinterpret_cast here
+      // static_cast here
       case Item::CONST_ITEM:
       {
         switch (item->cmp_type())
@@ -9637,7 +9639,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         if (join)
         {
-          Item_cond* cond = reinterpret_cast<Item_cond*>(join->conds);
+          Item_cond* cond = static_cast<Item_cond*>(join->conds);
 
           if (cond)
             cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
@@ -9758,7 +9760,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   if (gi.groupByHaving != 0)
   {
-    Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
+    Item_cond* having = static_cast<Item_cond*>(gi.groupByHaving);
 #ifdef DEBUG_WALK_COND
     cerr << "------------------- HAVING ---------------------" << endl;
     having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
@@ -9878,7 +9880,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   {
     gwi.clauseType = GROUP_BY;
     Item* nonSupportItem = NULL;
-    ORDER* groupcol = reinterpret_cast<ORDER*>(gi.groupByGroup);
+    ORDER* groupcol = static_cast<ORDER*>(gi.groupByGroup);
 
     // check if window functions are in order by. InfiniDB process order by list if
     // window functions are involved, either in order by or projection.
@@ -9900,7 +9902,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     }
 
     gwi.hasWindowFunc = hasWindowFunc;
-    groupcol = reinterpret_cast<ORDER*>(gi.groupByGroup);
+    groupcol = static_cast<ORDER*>(gi.groupByGroup);
 
     for (; groupcol; groupcol = groupcol->next)
     {
@@ -10153,7 +10155,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   // ORDER BY processing starts here
   {
-    ORDER* ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
+    ORDER* ordercol = static_cast<ORDER*>(gi.groupByOrder);
 
     // check if window functions are in order by. InfiniDB process order by list if
     // window functions are involved, either in order by or projection.
@@ -10164,7 +10166,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     }
 
     // re-visit the first of ordercol list
-    ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
+    ordercol = static_cast<ORDER*>(gi.groupByOrder);
 
     // for subquery, order+limit by will be supported in infinidb. build order by columns
     // @todo union order by and limit support
@@ -10441,7 +10443,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         // MCOL-1052
         if (unionSel)
         {
-          ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
+          ordercol = static_cast<ORDER*>(gi.groupByOrder);
         }
         else
           ordercol = 0;
@@ -10475,7 +10477,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           // @bug 3518. if order by clause = selected column, use position.
           else if (ord_item->name.length && ord_item->type() == Item::FIELD_ITEM)
           {
-            Item_field* field = reinterpret_cast<Item_field*>(ord_item);
+            Item_field* field = static_cast<Item_field*>(ord_item);
             string fullname;
 
             if (field->db_name.str)
