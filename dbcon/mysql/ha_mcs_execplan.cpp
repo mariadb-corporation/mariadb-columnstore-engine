@@ -3637,8 +3637,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
       if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
       {
         delete lhs;
-        Item_func* ifp = (Item_func*)sfitempp[0];
-        lhs = buildParseTree(ifp, gwi, nonSupport);
+        lhs = buildParseTree(sfitempp[0], gwi, nonSupport);
       }
       else if (!lhs->data() && (sfitempp[0]->type() == Item::REF_ITEM))
       {
@@ -3656,8 +3655,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
       if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
       {
         delete rhs;
-        Item_func* ifp = (Item_func*)sfitempp[1];
-        rhs = buildParseTree(ifp, gwi, nonSupport);
+        rhs = buildParseTree(sfitempp[1], gwi, nonSupport);
       }
       else if (!rhs->data() && (sfitempp[1]->type() == Item::REF_ITEM))
       {
@@ -4049,7 +4047,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
           // make sure the rcWorkStack is cleaned.
           gwi.clauseType = WHERE;
-          sptp.reset(buildParseTree((Item_func*)(ifp->arguments()[i]), gwi, nonSupport));
+          sptp.reset(buildParseTree(ifp->arguments()[i], gwi, nonSupport));
           gwi.clauseType = clauseType;
 
           if (!sptp)
@@ -4555,7 +4553,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       // to pull off of rcWorkStack, so we set this inCaseStmt flag to tell it
       // not to.
       gwi.inCaseStmt = true;
-      sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
+      sptp.reset(buildParseTree(item->arguments()[i], gwi, nonSupport));
       gwi.inCaseStmt = false;
       if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top() == *sptp.get())
       {
@@ -4591,7 +4589,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       }
       else
       {
-        sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
+        sptp.reset(buildParseTree(item->arguments()[i], gwi, nonSupport));
 
         // We need to pop whichever stack is holding it, if any.
         if ((!gwi.ptWorkStack.empty()) && *gwi.ptWorkStack.top()->data() == sptp->data())
@@ -4800,19 +4798,18 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   return sc;
 }
 
-ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport)
 {
   ParseTree* pt = 0;
-  Item_cond* icp = (Item_cond*)item;
 #ifdef DEBUG_WALK_COND
   // debug
   cerr << "Build Parsetree: " << endl;
-  icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+  item->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
 #endif
   //@bug5044. PPSTFIX walking should always be treated as WHERE clause filter
   ClauseType clauseType = gwi.clauseType;
   gwi.clauseType = WHERE;
-  icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+  item->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
   gwi.clauseType = clauseType;
 
   if (gwi.fatalParseError)
@@ -6254,8 +6251,7 @@ void gp_walk(const Item* item, void* arg)
       }
       else if (col->type() == Item::COND_ITEM)
       {
-        Item_func* ifp = (Item_func*)col;
-        gwip->ptWorkStack.push(buildParseTree(ifp, *gwip, gwip->fatalParseError));
+        gwip->ptWorkStack.push(buildParseTree(col, *gwip, gwip->fatalParseError));
       }
       else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
       {
@@ -7930,13 +7926,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   if (select_lex.having != 0)
   {
-    Item_cond* having = reinterpret_cast<Item_cond*>(select_lex.having);
 #ifdef DEBUG_WALK_COND
     cerr << "------------------- HAVING ---------------------" << endl;
-    having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+    select_lex.having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
     cerr << "------------------------------------------------\n" << endl;
 #endif
-    having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+    select_lex.having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
     if (gwi.fatalParseError)
     {
