@@ -6471,7 +6471,8 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
           // special handling for count(*). This should not be treated as constant.
           if (isSupportedAggregateWithOneConstArg(isp, sfitempp))
           {
-            field_vec.push_back((Item_field*)item);  // dummy
+            if (Item_field * itemf = dynamic_cast<Item_field*>(item); itemf)
+              field_vec.push_back(itemf);  // dummy
           }
 
           for (uint32_t i = 0; i < isp->argument_count(); i++)
