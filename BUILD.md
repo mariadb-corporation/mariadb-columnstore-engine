@@ -31,9 +31,7 @@ If you want to switch the remote to your fork, you can achieve this by:
 
 ```bash
 cd server/storage/columnstore/columnstore
-git remote -v #this should return 
-							#origin	https://github.com/mariadb-corporation/mariadb-columnstore-engine.git (fetch)
-							#origin	https://github.com/mariadb-corporation/mariadb-columnstore-engine.git (push)
+git remote -v #this should return: origin https://github.com/mariadb-corporation/mariadb-columnstore-engine.git (fetch)
 git remote remove origin
 git remote add origin <HTTPS-URL-TO-YOUR-FORK>
 ```
