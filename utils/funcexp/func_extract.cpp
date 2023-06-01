@@ -75,7 +75,7 @@ long long dateGet(uint64_t time, IntervalColumn::interval_type unit, bool dateTy
 
     case IntervalColumn::INTERVAL_MICROSECOND: return msec;
 
-    case IntervalColumn::INTERVAL_QUARTER: return month / 4 + 1;
+    case IntervalColumn::INTERVAL_QUARTER: return (month - 1) / 3 + 1;
 
     case IntervalColumn::INTERVAL_WEEK: return helpers::calc_mysql_week(year, month, day, 0);
 
