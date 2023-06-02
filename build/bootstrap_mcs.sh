@@ -40,9 +40,11 @@ optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=f
 optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
-optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false
 
 source $( optparse.build )
 
@@ -140,9 +142,9 @@ stop_service()
 check_service()
 {
     if systemctl is-active --quiet $1; then
-        message "$1 service started$color_green OK $color_normal"
+        message "$1 $color_normal[$color_green OK $color_normal]"
     else
-        error "$1 service failed"
+        message "$1 $color_normal[$color_red Fail $color_normal]"
         service $1 status
     fi
 }
@@ -154,8 +156,14 @@ start_service()
     systemctl start mariadb-columnstore
     systemctl start mariadb
 
-    check_service mariadb-columnstore
     check_service mariadb
+    check_service mariadb-columnstore
+    check_service mcs-controllernode
+    check_service mcs-ddlproc
+    check_service mcs-dmlproc
+    check_service mcs-primproc
+    check_service mcs-workernode@1
+    check_service mcs-writeengineserver
 }
 
 clean_old_installation()
@@ -290,10 +298,11 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
-    message "Building with flags"
-    newline_array ${MDB_CMAKE_FLAGS[@]}
+    if [[ $PRINT_CMAKE_FLAGS = true ]] ; then
+        message "Building with flags"
+        newline_array ${MDB_CMAKE_FLAGS[@]}
+    fi
 
-    local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
     message_split
@@ -400,7 +409,7 @@ fix_config_files()
         if grep -q UBSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -498,7 +507,7 @@ smoke()
         message "Selecting magic numbers"
         MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
         if [[ $MAGIC == '42' ]] ; then
-            message "Great answer correct"
+            message "Great answer correct!"
         else
             warn "Smoke failed, answer is '$MAGIC'"
         fi

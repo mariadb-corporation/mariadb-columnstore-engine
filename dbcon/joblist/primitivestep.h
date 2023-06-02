@@ -259,9 +259,6 @@ class pColStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
-
  private:
   /** @brief constructor for completeness
    */
@@ -293,7 +290,7 @@ class pColStep : public JobStep
   // 	      Running with this one will swallow rows at projection.
   bool fSwallowRows;
 
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
@@ -482,8 +479,6 @@ class pColScanStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
 
  private:
   // defaults okay?
@@ -518,7 +513,7 @@ class pColScanStep : public JobStep
   uint32_t extentSize, divShift, ridsPerBlock, rpbShift, numExtents;
   // 	config::Config *fConfig;
 
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
@@ -1233,7 +1228,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fMaxNumThreads;
   uint32_t fNumThreads;
   PrimitiveStepType ffirstStepType;
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   std::vector<uint64_t> fProducerThreads;  // thread pool handles
   std::vector<uint64_t> fProcessorThreads;
   messageqcpp::ByteStream fFilterString;

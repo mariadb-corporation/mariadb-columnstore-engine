@@ -187,7 +187,7 @@ class ArithmeticColumn : public ReturnedColumn
 
  private:
   std::string fTableAlias;  // table alias for this column
-  bool fAsc;                // asc flag for order by column
+  bool fAsc = false;                // asc flag for order by column
   std::string fData;
 
   /** build expression tree
@@ -272,7 +272,7 @@ class ArithmeticColumn : public ReturnedColumn
   }
 
  private:
-  ParseTree* fExpression;
+  ParseTree* fExpression = nullptr;
   using TreeNode::evaluate;
   void evaluate(rowgroup::Row& row)
   {

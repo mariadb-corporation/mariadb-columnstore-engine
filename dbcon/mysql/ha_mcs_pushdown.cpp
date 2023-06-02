@@ -314,14 +314,12 @@ void item_check(Item* item, bool* unsupported_feature)
   {
     case Item::COND_ITEM:
     {
-      Item_cond* icp = reinterpret_cast<Item_cond*>(item);
-      icp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+      item->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
       break;
     }
     case Item::FUNC_ITEM:
     {
-      Item_func* ifp = reinterpret_cast<Item_func*>(item);
-      ifp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+      item->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
       break;
     }
     default:
@@ -352,9 +350,7 @@ bool check_user_var(SELECT_LEX* select_lex)
 
   if (join->conds)
   {
-    Item_cond* icp = reinterpret_cast<Item_cond*>(join->conds);
-
-    icp->traverse_cond(check_user_var_func, &is_user_var_func, Item::POSTFIX);
+    join->conds->traverse_cond(check_user_var_func, &is_user_var_func, Item::POSTFIX);
   }
 
   return is_user_var_func;
@@ -420,23 +416,15 @@ group_by_handler* create_columnstore_group_by_handler(THD* thd, Query* query)
       if (!unsupported_feature)
       {
         JOIN* join = select_lex->join;
-        Item_cond* icp = 0;
 
-        if (join != 0)
-          icp = reinterpret_cast<Item_cond*>(join->conds);
-
-        if (unsupported_feature == false && icp)
+        if (unsupported_feature == false && join && join->conds)
         {
-          icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+          join->conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
 
-        // Optimizer could move some join conditions into where
-        if (select_lex->where != 0)
-          icp = reinterpret_cast<Item_cond*>(select_lex->where);
-
-        if (unsupported_feature == false && icp)
+        if (unsupported_feature == false && select_lex->where)
         {
-          icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+          select_lex->where->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
       }
 
@@ -521,18 +509,16 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
   {
     if (tl->where)
     {
-      Item_cond* where_icp = reinterpret_cast<Item_cond*>(tl->where);
-      where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-      where_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+      tl->where->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+      tl->where->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
 
     // Looking for JOIN with ON expression through
     // TABLE_LIST in FROM until CS meets unsupported feature
     if (tl->on_expr)
     {
-      Item_cond* on_icp = reinterpret_cast<Item_cond*>(tl->on_expr);
-      on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-      on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+      tl->on_expr->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+      tl->on_expr->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
 
     // Iterate and traverse through the item list and the JOIN cond
@@ -546,9 +532,8 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
 
   if (!unsupported_feature && !join_preds_list.elements && join && join->conds)
   {
-    Item_cond* conds = reinterpret_cast<Item_cond*>(join->conds);
-    conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-    conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+    join->conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+    join->conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
   }
 
   // CROSS JOIN w/o conditions isn't supported until MCOL-301
@@ -768,7 +753,8 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // Disable processing of select_result_interceptor classes
   // which intercept and transform result set rows. E.g.:
   // select a,b into @a1, @a2 from t1;
-  if (((thd->lex)->result && !((select_dumpvar*)(thd->lex)->result)->var_list.is_empty()) && (!isPS))
+  select_dumpvar* dumpvar = dynamic_cast<select_dumpvar*>((thd->lex)->result);
+  if (dumpvar && !dumpvar->var_list.is_empty() && !isPS)
   {
     return nullptr;
   }
