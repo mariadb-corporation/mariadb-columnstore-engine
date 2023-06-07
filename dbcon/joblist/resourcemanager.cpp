@@ -239,8 +239,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr, config::Config* aConfig)
   fAllowedDiskAggregation =
       getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
 
-  fMaxBPPSendQueue = getUintVal(fPrimitiveServersStr, "MaxBPPSendQueue", defaultMaxBPPSendQueue);
-
   if (!load_encryption_keys())
   {
     Logger log;
