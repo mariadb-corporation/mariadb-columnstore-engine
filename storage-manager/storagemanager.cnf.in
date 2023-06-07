@@ -1,9 +1,9 @@
 # This is the configuration file for StorageManager (SM)
 
 [ObjectStorage]
-# 'service' is the module that SM will use for cloud IO.  
+# 'service' is the module that SM will use for cloud IO.
 # Current options are "LocalStorage" and "S3".
-# "LocalStorage" will use a directory on the local filesystem as if it 
+# "LocalStorage" will use a directory on the local filesystem as if it
 # were cloud storage.  "S3" is the module that uses real cloud storage.
 # Both modules have their own sections below.
 #
@@ -20,19 +20,19 @@ service = LocalStorage
 # Regarding tuning, object stores do not support modifying stored data;
 # entire objects must be replaced on modification, and entire
 # objects are fetched on read.  This results in read and write amplification.
-# 
+#
 # Network characteristics are important to consider.  If the machine is
-# in the cloud and has low-latency and high-bandwidth access to the object 
-# store, then the limiting factor may be the get/put rate imposed by your 
+# in the cloud and has low-latency and high-bandwidth access to the object
+# store, then the limiting factor may be the get/put rate imposed by your
 # cloud provider.  In that case, using a larger object size will reduce
-# the number of get/put ops required to perform a task.  If the machine has 
-# low-bandwidth access to the object store, a lower value will reduce 
-# the degree of read/write amplification, reducing the total amount of data 
+# the number of get/put ops required to perform a task.  If the machine has
+# low-bandwidth access to the object store, a lower value will reduce
+# the degree of read/write amplification, reducing the total amount of data
 # to transfer.
 #
-# Of course, you will only really know how a complex system works by 
+# Of course, you will only really know how a complex system works by
 # experimentation.  If you experience poor performance using the default,
-# our suggestion is to reduce it to 2M and try again, then increase it to 
+# our suggestion is to reduce it to 2M and try again, then increase it to
 # 10M and try again.
 #
 # object_size should not be changed after you have run postConfigure.
@@ -56,33 +56,33 @@ journal_path = @ENGINE_DATADIR@/storagemanager/journal
 # max_concurrent_downloads is what is sounds like, per node.
 # This is not a global setting.
 max_concurrent_downloads = 21
- 
+
 # max_concurrent_uploads is what is sounds like, per node.
-# This is not a global setting.  Currently, a file is locked while 
+# This is not a global setting.  Currently, a file is locked while
 # modifications to it are synchronized with cloud storage.  If your network
 # has low upstream bandwidth, consider lowering this value to the minimum
-# necessary to saturate your network.  This will reduce the latency of certain 
-# operations and improve your experience. 
+# necessary to saturate your network.  This will reduce the latency of certain
+# operations and improve your experience.
 max_concurrent_uploads = 21
 
-# common_prefix_depth is the depth of the common prefix that all files 
-# managed by SM have.  Ex: /var/lib/columnstore/data1, and 
+# common_prefix_depth is the depth of the common prefix that all files
+# managed by SM have.  Ex: /var/lib/columnstore/data1, and
 # /var/lib/columnstore/data2 differ at the 4th directory element,
-# so they have a common prefix depth of 3.  For Columnstore, it should 
+# so they have a common prefix depth of 3.  For Columnstore, it should
 # be set to the number of directories that precede the data* directories.
-# The default value of 3 works with package installations, where data* would be in 
+# The default value of 3 works with package installations, where data* would be in
 # /var/lib/columnstore
 #
 # This value is used to manage the ownership of prefixes between
 # StorageManager instances that share a filesystem.  For example,
 # if you have SM data stored on a distributed filesystem for fault-tolerance
-# reasons, and all nodes have it mounted, SM instances will be able to 
-# negotiate ownership of data from a failed instance. 
+# reasons, and all nodes have it mounted, SM instances will be able to
+# negotiate ownership of data from a failed instance.
 common_prefix_depth = 3
 
 [S3]
 # These should be self-explanatory.  Region can be blank or commented
-# if using a private cloud storage system.  Bucket has to be set to 
+# if using a private cloud storage system.  Bucket has to be set to
 # something though.  Obviously, do not change these after running
 # postConfigure, or SM will not be able to find your data.
 region = some_region
@@ -102,29 +102,29 @@ bucket = some_bucket
 # prefix as short as possible for performance reasons.
 # prefix = cs/
 
-# Put your HMAC access keys here.  Keys can also be set through the 
+# Put your HMAC access keys here.  Keys can also be set through the
 # environment vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 # If set, SM will use these values and ignore the envvars.
 # aws_access_key_id =
-# aws_secret_access_key = 
+# aws_secret_access_key =
 
 # If you want StorageManager to assume an IAM role to use for its S3
 # accesses, specify the name of the role in iam_role_name.  The name
 # should be only the name, rather than the full path.
 #
-# The specified role must already exist and have permission to get, put, 
+# The specified role must already exist and have permission to get, put,
 # delete, and 'head' on the specified S3 bucket.
-# iam_role_name = 
+# iam_role_name =
 
 # If an IAM role is specified, sts_endpoint and sts_region are used to specify
 # which STS server & region to use to assume the role.  The default for
 # sts_endpoint is 'sts.amazonaws.com', and the default for sts_region is
 # 'us-east-1'.
-# sts_region = 
+# sts_region =
 # sts_endpoint =
 
 # If running on AWS EC2 instance the value ec2_iam_mode can be set
-# 'enabled' and allow StorageManager to detect IAM role assigned 
+# 'enabled' and allow StorageManager to detect IAM role assigned
 # to EC2 instances. This will then use the the temporary credentials
 # provided by EC2 metadata for S3 authentication access/secret keys.
 # ec2_iam_mode=enabled
@@ -136,6 +136,10 @@ bucket = some_bucket
 # Setting ssl_verify to 'disabled' for how to not use SSL verification
 # Default is ssl_verify = enabled
 # ssl_verify = disabled
+
+# libs3_debug setting controls S3 library debugging printouts
+# Default is libs3_debug = disabled
+# libs3_debug = disabled
 
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.
@@ -154,15 +158,15 @@ max_latency = 50000
 [Cache]
 
 # cache_size can be specified in terms of tera-, giga-, mega-, kilo-
-# bytes using T/t G/g M/m K/k.  Drive manufacturers use a power-of-10 
-# notion of what that means, which means 1m = 1,000,000 bytes.  These 
-# settings use the programmer's power-of-2 notion, which means 
-# 1m = 1,048,576 bytes. 
+# bytes using T/t G/g M/m K/k.  Drive manufacturers use a power-of-10
+# notion of what that means, which means 1m = 1,000,000 bytes.  These
+# settings use the programmer's power-of-2 notion, which means
+# 1m = 1,048,576 bytes.
 #
 # This number will include space used by journal files, but does not
-# include space used by metadata files.  In this version, journal data 
-# currently being written and downloads in progress are also not accounted 
-# for, so disk usage can temporarily go above this number.  You will want to 
+# include space used by metadata files.  In this version, journal data
+# currently being written and downloads in progress are also not accounted
+# for, so disk usage can temporarily go above this number.  You will want to
 # leave a little space available on the mount for those operations.
 cache_size = 2g
 
