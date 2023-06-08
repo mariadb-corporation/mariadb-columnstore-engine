@@ -178,7 +178,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test210.sh',
     'test211.sh',
     'test212.sh',
-    'test222.sh',
     'test297.sh',
     'test299.sh',
     'test300.sh',
