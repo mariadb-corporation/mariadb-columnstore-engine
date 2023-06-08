@@ -59,12 +59,12 @@ SimpleFilter* castToSimpleFilter(execplan::TreeNode* node)
 bool commonContainsSemantic(const CommonContainer& common, execplan::ParseTree* node)
 {
   auto filter = castToFilter(node);
-  return filter && common.first.contains(node);
+  return filter && common.first.count(node) != 0;
 }
 
 bool commonContainsPtr(const CommonContainer& common, execplan::ParseTree* node)
 {
-  return common.second.contains(node);
+  return common.second.count(node) != 0;
 }
 
 OpType operatorType(execplan::ParseTree* node)
