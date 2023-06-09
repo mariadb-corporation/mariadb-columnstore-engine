@@ -29,3 +29,5 @@ echo "<b> Step: ${STEP_NAME}<br> Binary name: ${BINARY}<br> </b>" >> "${FILENAME
 save_ansi_to_html "Backtrace"
 save_ansi_to_html "Arguments"
 save_ansi_to_html "Locals"
+
+gzip -5 "${COREDUMP}"
