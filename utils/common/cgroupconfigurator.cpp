@@ -18,8 +18,10 @@
 #include "cgroupconfigurator.h"
 #include "configcpp.h"
 #include "logger.h"
+#include <charconv>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sys/sysinfo.h>
 
 using namespace boost;
@@ -77,9 +79,8 @@ CGroupConfigurator::CGroupConfigurator()
   else
     cGroupDefined = true;
 
-  totalMemory = 0;
-  totalSwap = 0;
-  printedWarning = false;
+  ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
+  cGroupVersion_ = (v2Check) ? v2 : v1;
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -88,9 +89,16 @@ CGroupConfigurator::~CGroupConfigurator()
 
 uint32_t CGroupConfigurator::getNumCoresFromCGroup()
 {
-  ostringstream filename_os;
-  filename_os << "/sys/fs/cgroup/cpuset/" << cGroupName << "/cpus";
-  string filename = filename_os.str();
+  ostringstream filenameOs;
+  if (cGroupVersion_ == v1)
+  {
+    filenameOs << "/sys/fs/cgroup/cpuset/" << cGroupName << "/cpuset.cpus";
+  }
+  else
+  {
+    filenameOs << "/sys/fs/cgroup/" << cGroupName << "/cpuset.cpus";
+  }
+  string filename = filenameOs.str();
 
   ifstream in(filename.c_str());
   string cpusString;
@@ -141,7 +149,7 @@ uint32_t CGroupConfigurator::getNumCoresFromCGroup()
     first = last + 1;
   }
 
-  // cout << "found " << cpus << " CPUS in the string " << cpusString << endl;
+  cout << "found " << cpus << " CPUS in the string " << cpusString << endl;
   return cpus;
 }
 
@@ -155,7 +163,7 @@ uint32_t CGroupConfigurator::getNumCoresFromProc()
 uint32_t CGroupConfigurator::getNumCores()
 {
   /*
-      Detect if InfiniDB is in a C-Group
+      Detect if MCS is in a C-Group
           - get the group ID
       If not, get the number of cores from /proc
   */
@@ -171,7 +179,7 @@ uint32_t CGroupConfigurator::getNumCores()
       ret = getNumCoresFromProc();
   }
 
-  // cout << "There are " << ret << " cores available" << endl;
+  cout << "There are " << ret << " cores available" << endl;
   return ret;
 }
 
@@ -188,11 +196,11 @@ uint64_t CGroupConfigurator::getTotalMemory()
   {
     ret = getTotalMemoryFromCGroup();
 
-    if (ret == 0)
+    if (ret == 0 || ret == std::numeric_limits<uint64_t>::max())
       ret = getTotalMemoryFromProc();
   }
 
-  // cout << "Total mem available is " << ret << endl;
+  cout << "Total mem available is " << ret << endl;
   totalMemory = ret;
   return totalMemory;
 }
@@ -201,23 +209,11 @@ uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 {
   size_t memTot;
 
-#if   defined(__FreeBSD__)
-  string cmd("sysctl -a | awk '/realmem/ {print int(($2+1023)/1024);}'");
-  FILE* cmdPipe;
-  char input[80];
-  cmdPipe = popen(cmd.c_str(), "r");
-  input[0] = '\0';
-  fgets(input, 80, cmdPipe);
-  input[79] = '\0';
-  pclose(cmdPipe);
-  memTot = atoi(input);
-#else
   ifstream in("/proc/meminfo");
   string x;
 
   in >> x;
   in >> memTot;
-#endif
 
   // memTot is now in KB, convert to bytes
   memTot *= 1024;
@@ -227,40 +223,61 @@ uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 
 uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
 {
-  ifstream in;
-  uint64_t ret;
+  std::string memLimitStr;
+  uint64_t memLimit = std::numeric_limits<uint64_t>::max();
   ostringstream os;
-  string filename;
 
-  os << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.limit_in_bytes";
-  filename = os.str();
+  if (cGroupVersion_ == v1)
+  {
+    os << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.limit_in_bytes";
+  }
+  else
+  {
+    os << "/sys/fs/cgroup/" << cGroupName << "/memory.max";
+  }
+  string filename = os.str();
 
-  in.open(filename.c_str());
+  ifstream in(filename.c_str());
 
   if (!in)
     RETURN_NO_GROUP(0);
 
   try
   {
-    in >> ret;
+    in >> memLimitStr;
   }
   catch (...)
   {
     RETURN_READ_ERROR(0);
   }
 
-  return ret;
+  if (cGroupVersion_ == v2 && memLimitStr == "max")
+  {
+    return std::numeric_limits<uint64_t>::max();
+  }
+
+  auto [ch, ec] = std::from_chars(memLimitStr.c_str(), memLimitStr.c_str() + memLimitStr.size(), memLimit);
+  if (ec != std::errc())
+  {
+    return std::numeric_limits<uint64_t>::max();
+  }
+
+  if (cGroupVersion_ == v1)
+  {
+    return std::min(getTotalMemoryFromProc(), memLimit);
+  }
+  return memLimit;
 }
 
 uint64_t CGroupConfigurator::getFreeMemory()
 {
   uint64_t ret;
-
   if (!cGroupDefined)
     ret = getFreeMemoryFromProc();
   else
   {
     uint64_t usage = getMemUsageFromCGroup();
+    cout << "usage " << usage << endl;
 
     if (usage == 0)
       ret = getFreeMemoryFromProc();
@@ -268,20 +285,26 @@ uint64_t CGroupConfigurator::getFreeMemory()
       ret = getTotalMemory() - usage;
   }
 
-  // cout << "free memory = " << ret << endl;
+  cout << "free memory = " << ret << endl;
   return ret;
 }
 
 uint64_t CGroupConfigurator::getMemUsageFromCGroup()
 {
-  uint64_t ret = 0;
-  bool found = false;
   char oneline[80];
-
   if (memUsageFilename.empty())
   {
     ostringstream filename;
-    filename << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.stat";
+    if (cGroupVersion_ == v1)
+    {
+      memStatePrefix = "rss ";
+      filename << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.stat";
+    }
+    else
+    {
+      memStatePrefix = "anon ";
+      filename << "/sys/fs/cgroup/" << cGroupName << "/memory.stat";
+    }
     memUsageFilename = filename.str();
   }
 
@@ -293,14 +316,13 @@ uint64_t CGroupConfigurator::getMemUsageFromCGroup()
 
   try
   {
-    while (in && !found)
+    while (in)
     {
       in.getline(oneline, 80);
 
-      if (strncmp(oneline, "rss", 2) == 0)
+      if (strncmp(oneline, memStatePrefix.c_str(), memStatePrefix.size() - 1) == 0)
       {
-        ret = atoll(&oneline[3]);
-        found = true;
+        return atoll(&oneline[memStatePrefix.size()]);
       }
     }
   }
@@ -309,7 +331,7 @@ uint64_t CGroupConfigurator::getMemUsageFromCGroup()
     RETURN_READ_ERROR(0);
   }
 
-  return ret;
+  return 0;
 }
 
 uint64_t CGroupConfigurator::getFreeMemoryFromProc()
@@ -320,10 +342,6 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
   uint64_t memTotal = 0;
   uint64_t memAvailable = 0;
 
-#if   defined(__FreeBSD__)
-  // FreeBSD is not supported, no optimization.
-  memAvailable = 0;
-#else
   ifstream in("/proc/meminfo");
   string x;
 
@@ -354,137 +372,9 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
     memAvailable = memFree + buffers + cached;
   }
 
-#endif
-
   // amount available for application
   memAvailable *= 1024;
   return memAvailable;
-}
-
-uint64_t CGroupConfigurator::getTotalSwapSpace()
-{
-  int64_t ret;
-
-  if (totalSwap != 0)
-    return totalSwap;
-
-  if (!cGroupDefined)
-    ret = getTotalSwapFromSysinfo();
-  else
-  {
-    ret = getTotalMemAndSwapFromCGroup();
-
-    // if no limit is set in the cgroup, the file contains maxint64. Use sysinfo in that case.
-    if (ret == -1 || ret == numeric_limits<int64_t>::max())
-      ret = getTotalSwapFromSysinfo();
-    else
-      ret -= getTotalMemory();
-  }
-
-  // cout << "total swap=" << ret << endl;
-  totalSwap = ret;
-  return ret;
-}
-
-uint64_t CGroupConfigurator::getTotalSwapFromSysinfo()
-{
-  struct sysinfo si;
-
-  sysinfo(&si);
-  return si.totalswap;
-}
-
-int64_t CGroupConfigurator::getTotalMemAndSwapFromCGroup()
-{
-  int64_t ret;
-  ifstream in;
-  string filename;
-  ostringstream os;
-
-  os << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.memsw.limit_in_bytes";
-  filename = os.str();
-  in.open(filename.c_str());
-
-  if (!in)
-    RETURN_NO_GROUP(-1);
-
-  try
-  {
-    in >> ret;
-  }
-  catch (...)
-  {
-    RETURN_READ_ERROR(-1);
-  }
-
-  return ret;
-}
-
-uint64_t CGroupConfigurator::getSwapInUse()
-{
-  int64_t ret;
-
-  if (!cGroupDefined)
-    ret = getSwapInUseFromSysinfo();
-  else
-  {
-    ret = getSwapInUseFromCGroup();
-
-    if (ret == -1)
-      ret = getSwapInUseFromSysinfo();
-  }
-
-  // cout << "current swap in use=" << ret << endl;
-  return ret;
-}
-
-int64_t CGroupConfigurator::getSwapInUseFromCGroup()
-{
-  int64_t ret = -1;
-  ifstream in;
-  bool found = false;
-  char oneline[80];
-
-  if (usedSwapFilename.empty())
-  {
-    ostringstream os;
-    os << "/sys/fs/cgroup/memory/" << cGroupName << "/memory.stat";
-    usedSwapFilename = os.str();
-  }
-
-  string& filename = usedSwapFilename;
-  in.open(filename.c_str());
-
-  if (!in)
-    RETURN_NO_GROUP(-1);
-
-  try
-  {
-    while (in && !found)
-    {
-      in.getline(oneline, 80);
-
-      if (strncmp(oneline, "swap", 4) == 0)
-      {
-        ret = atoll(&oneline[5]);
-        found = true;
-      }
-    }
-  }
-  catch (...)
-  {
-    RETURN_READ_ERROR(-1);
-  }
-
-  return ret;
-}
-
-uint64_t CGroupConfigurator::getSwapInUseFromSysinfo()
-{
-  struct sysinfo si;
-
-  sysinfo(&si);
-  return si.totalswap - si.freeswap;
 }
 
 }  // namespace utils
