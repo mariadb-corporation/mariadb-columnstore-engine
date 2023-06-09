@@ -7,6 +7,9 @@ include(ExternalProject)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(_toolset "gcc")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
+    set(_extra "pch=off")
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   set(_toolset "clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
@@ -19,7 +22,7 @@ SET(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 LINK_DIRECTORIES("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
-set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
+set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi;${_extra};toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
 
 SET(byproducts)
 FOREACH(name chrono filesystem program_options regex system thread)
