@@ -281,7 +281,7 @@ uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
         {
           // Don't wait for memory, just send the data on to DL.
           RowGroup out(local_outputRG);
-          if (fe2 && tbps->runFEonPM())
+          if (fe2 && !tbps->runFEonPM())
           {
             processFE2(outputData);
             tbps->rgDataVecToDl(outputData, local_fe2Output, dlp);
