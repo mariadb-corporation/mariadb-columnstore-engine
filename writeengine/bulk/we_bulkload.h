@@ -244,6 +244,10 @@ class BulkLoad : public FileOp
   // Spawn the worker threads.
   void spawnWorkers();
 
+  // Handle parquet file single-threaded
+  void spawnWorkersParquet();
+
+
   // Checks if all tables have the status set
   bool allTablesDone(Status status);
 

@@ -25,6 +25,12 @@
 #include "we_bulkload.h"
 #undef WE_BULKLOAD_DLLEXPORT
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <climits>
@@ -444,6 +450,26 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
   fLog.logMsg(ossXMLTime.str(), MSGLVL_INFO1);
 
   return NO_ERROR;
+}
+
+
+
+void BulkLoad::spawnWorkersParquet()
+{
+  // std::cout << "Reading first column of parquet-arrow-example.parquet" << std::endl;
+  // std::shared_ptr<arrow::io::ReadableFile> infile;
+  // PARQUET_ASSIGN_OR_THROW(infile,
+  //                         arrow::io::ReadableFile::Open("/tmp/parquet-arrow-example.parquet",
+  //                                                       arrow::default_memory_pool()));
+  // std::unique_ptr<parquet::arrow::FileReader> reader;
+  // PARQUET_THROW_NOT_OK(
+  //     parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
+  // std::shared_ptr<arrow::ChunkedArray> array;
+  // PARQUET_THROW_NOT_OK(reader->ReadColumn(1, &array));
+  // PARQUET_THROW_NOT_OK(arrow::PrettyPrint(*array, 4, &std::cout));
+  // std::cout << std::endl;
+
+  
 }
 
 //------------------------------------------------------------------------------
@@ -1154,7 +1180,14 @@ int BulkLoad::processJob()
 
   startTimer();
 
-  spawnWorkers();
+  if (tables[0]->fLoadFileList[0].rfind(".parquet") != std::string::npos)
+  {
+    spawnWorkersParquet();
+  }
+  else
+  {
+    spawnWorkers();
+  }
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {
