@@ -551,7 +551,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
         else
         {
           if (-s >= (int32_t)value.size())
-            value = "0";
+            value = '0';
           else
           {
             // check to see if last digit needs to be rounded up
@@ -621,7 +621,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
         else
         {
           if (-s >= (int32_t)value.size())
-            value = "0";
+            value = '0';
           else
           {
             // check to see if last digit needs to be rounded up

@@ -271,12 +271,12 @@ void Operator::reverseOp()
 
     case OP_NE:
       fOp = OP_EQ;
-      fData = "=";
+      fData = '=';
       break;
 
     case OP_GT:
       fOp = OP_LT;
-      fData = "<";
+      fData = '<';
       break;
 
     case OP_GE:
@@ -286,7 +286,7 @@ void Operator::reverseOp()
 
     case OP_LT:
       fOp = OP_GT;
-      fData = ">";
+      fData = '>';
       break;
 
     case OP_LE:
