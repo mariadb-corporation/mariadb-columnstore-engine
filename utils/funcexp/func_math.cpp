@@ -2005,7 +2005,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 
   while ((comma -= 3) > end)
   {
-    value.insert(comma, ",");
+    value.insert(comma, 1, ',');
   }
 
   return value;
