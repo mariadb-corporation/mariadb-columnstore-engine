@@ -673,8 +673,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
                'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
-               'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/mariadb-shared-10.1-kvm-rpm-centos74-amd64.rpm ',
-               'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/mariadb-shared-5.3-amd64.rpm',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/mariadb-shared-10.1-kvm-rpm-centos74-amd64.rpm ',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/mariadb-shared-5.3-amd64.rpm',
              ],
            },
            {
