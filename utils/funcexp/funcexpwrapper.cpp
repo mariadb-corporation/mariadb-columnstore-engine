@@ -31,6 +31,7 @@
 
 #include "funcexpwrapper.h"
 #include "objectreader.h"
+#include "rowgroup.h"
 
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -121,6 +122,26 @@ bool FuncExpWrapper::evaluate(Row* r)
   fe->evaluate(*r, rcs);
 
   return true;
+}
+
+void FuncExpWrapper::evaluate(Row &in, Row &out, RowGroup *input, RowGroup &output, uint32_t rowCount, uint64_t baseRid, boost::shared_array<int> &mapping, uint32_t dbRoot = 0) {
+  uint32_t i;
+
+  output.resetRowGroup(baseRid);
+  output.setDBRoot(dbRoot);
+  output.getRow(0, &out);
+  input->getRow(0, &in);
+
+  for (i = 0; i < rowCount; ++i, in.nextRow())
+  {
+    if (evaluate(&in))
+    {
+      applyMapping(mapping, in, &out);
+      out.setRid(in.getRelRid());
+      output.incRowCount();
+      out.nextRow();
+    }
+  }
 }
 
 void FuncExpWrapper::addFilter(const boost::shared_ptr<ParseTree>& f)

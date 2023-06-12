@@ -181,4 +181,4 @@ build/.cmake
 *.vtg
 *.vtg-back
 '*.vtg-Stashed changes'
-
+.vscode/*

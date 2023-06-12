@@ -1682,22 +1682,24 @@ void BatchPrimitiveProcessor::execute()
         if (fe2)
         {
           /* functionize this -> processFE2() */
-          fe2Output.resetRowGroup(baseRid);
-          fe2Output.getRow(0, &fe2Out);
-          fe2Input->getRow(0, &fe2In);
+          // fe2Output.resetRowGroup(baseRid);
+          // fe2Output.getRow(0, &fe2Out);
+          // fe2Input->getRow(0, &fe2In);
 
-          // cerr << "input row: " << fe2In.toString() << endl;
-          for (j = 0; j < outputRG.getRowCount(); j++, fe2In.nextRow())
-          {
-            if (fe2->evaluate(&fe2In))
-            {
-              applyMapping(fe2Mapping, fe2In, &fe2Out);
-              // cerr << "   passed. output row: " << fe2Out.toString() << endl;
-              fe2Out.setRid(fe2In.getRelRid());
-              fe2Output.incRowCount();
-              fe2Out.nextRow();
-            }
-          }
+          // // cerr << "input row: " << fe2In.toString() << endl;
+          // for (j = 0; j < outputRG.getRowCount(); j++, fe2In.nextRow())
+          // {
+          //   if (fe2->evaluate(&fe2In))
+          //   {
+          //     applyMapping(fe2Mapping, fe2In, &fe2Out);
+          //     // cerr << "   passed. output row: " << fe2Out.toString() << endl;
+          //     fe2Out.setRid(fe2In.getRelRid());
+          //     fe2Output.incRowCount();
+          //     fe2Out.nextRow();
+          //   }
+          // }
+
+          fe2->evaluate(fe2In, fe2Out, fe2Input, fe2Output, outputRG.getRowCount(), baseRid, fe2Mapping, 0);
 
           if (!fAggregator)
           {
@@ -1833,21 +1835,23 @@ void BatchPrimitiveProcessor::execute()
               if (fe2)
               {
                 /* functionize this -> processFE2()*/
-                fe2Output.resetRowGroup(baseRid);
-                fe2Output.setDBRoot(dbRoot);
-                fe2Output.getRow(0, &fe2Out);
-                fe2Input->getRow(0, &fe2In);
+                // fe2Output.resetRowGroup(baseRid);
+                // fe2Output.setDBRoot(dbRoot);
+                // fe2Output.getRow(0, &fe2Out);
+                // fe2Input->getRow(0, &fe2In);
 
-                for (j = 0; j < joinedRG.getRowCount(); j++, fe2In.nextRow())
-                {
-                  if (fe2->evaluate(&fe2In))
-                  {
-                    applyMapping(fe2Mapping, fe2In, &fe2Out);
-                    fe2Out.setRid(fe2In.getRelRid());
-                    fe2Output.incRowCount();
-                    fe2Out.nextRow();
-                  }
-                }
+                // for (j = 0; j < joinedRG.getRowCount(); j++, fe2In.nextRow())
+                // {
+                //   if (fe2->evaluate(&fe2In))
+                //   {
+                //     applyMapping(fe2Mapping, fe2In, &fe2Out);
+                //     fe2Out.setRid(fe2In.getRelRid());
+                //     fe2Output.incRowCount();
+                //     fe2Out.nextRow();
+                //   }
+                // }
+
+                fe2->evaluate(fe2In, fe2Out, fe2Input, fe2Output, joinedRG.getRowCount(), baseRid, fe2Mapping, dbRoot);
               }
 
               RowGroup& nextRG = (fe2 ? fe2Output : joinedRG);

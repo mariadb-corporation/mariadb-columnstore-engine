@@ -1388,7 +1388,6 @@ class RowGroup : public messageqcpp::Serializeable
   @param scale An array specifying the scale of DECIMAL types (0 for non-decimal)
   @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
   */
-
   RowGroup(uint32_t colCount, const std::vector<uint32_t>& positions, const std::vector<uint32_t>& cOids,
            const std::vector<uint32_t>& tkeys,
            const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
