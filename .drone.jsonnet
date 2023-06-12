@@ -226,7 +226,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mkdir core',
@@ -258,7 +258,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
     },
     commands: [
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
@@ -349,7 +349,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar findutils lz4 wget which rsyslog hostname procps-ng elfutils"' else 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool procps wget findutils gawk gdb rsyslog hostname g++"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} mkdir core',
@@ -551,7 +551,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       PYTHONPATH: '/usr/share/columnstore/cmapi/deps',
     },
     commands: [
-      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --env PYTHONPATH=$${PYTHONPATH} --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --env PYTHONPATH=$${PYTHONPATH} --name cmapi$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y iproute sudo epel-release which rsyslog hostname procps-ng"' else 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y iproute2 rsyslog hostname procps sudo"',
       if (pkg_format == 'deb') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (platform == 'rockylinux:9') then 'docker exec -t cmapi$${DRONE_BUILD_NUMBER} bash -c "yum install -y libxcrypt-compat"',
