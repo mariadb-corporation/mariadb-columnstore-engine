@@ -271,7 +271,11 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   std::shared_ptr<TupleJoiner> joiner;
 
   jt = joinTypes[index];
-  extendedInfo += toString();
+
+  if (traceOn())
+  {
+    extendedInfo += toString();
+  }
 
   if (typelessJoin[index])
   {
@@ -349,36 +353,47 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       " size = " << joiner->size() << endl;
   */
 
-  extendedInfo += "\n";
+  if (traceOn())
+  {
+    extendedInfo += "\n";
+  }
 
   ostringstream oss;
   if (!joiner->onDisk())
   {
     // add extended info, and if not aborted then tell joiner
     // we're done reading the small side.
-    if (joiner->inPM())
+    if (traceOn())
     {
-      oss << "PM join (" << index << ")" << endl;
-#ifdef JLF_DEBUG
-      cout << oss.str();
-#endif
-      extendedInfo += oss.str();
-    }
-    else if (joiner->inUM())
-    {
-      oss << "UM join (" << index << ")" << endl;
-#ifdef JLF_DEBUG
-      cout << oss.str();
-#endif
-      extendedInfo += oss.str();
+      if (joiner->inPM())
+      {
+        {
+          oss << "PM join (" << index << ")" << endl;
+  #ifdef JLF_DEBUG
+          cout << oss.str();
+  #endif
+          extendedInfo += oss.str();
+        }
+      }
+      else if (joiner->inUM())
+      {
+        oss << "UM join (" << index << ")" << endl;
+  #ifdef JLF_DEBUG
+        cout << oss.str();
+  #endif
+        extendedInfo += oss.str();
+      }
     }
     if (!cancelled())
       joiner->doneInserting();
   }
 
-  boost::mutex::scoped_lock lk(*fStatsMutexPtr);
-  fExtendedInfo += extendedInfo;
-  formatMiniStats(index);
+  if (traceOn())
+  {
+    boost::mutex::scoped_lock lk(*fStatsMutexPtr);
+    fExtendedInfo += extendedInfo;
+    formatMiniStats(index);
+  }
 }
 
 /* Index is which small input to read. */
@@ -1099,7 +1114,8 @@ const string TupleHashJoinStep::toString() const
 
   for (size_t i = 0; i < idlsz; ++i)
   {
-    RowGroupDL* idl = fInputJobStepAssociation.outAt(i)->rowGroupDL();
+    const AnyDataListSPtr& dl = fInputJobStepAssociation.outAt(i);
+    RowGroupDL* idl = dl->rowGroupDL();
     CalpontSystemCatalog::OID oidi = 0;
 
     if (idl)
@@ -1111,7 +1127,7 @@ const string TupleHashJoinStep::toString() const
       oss << "*";
 
     oss << "tb/col:" << fTableOID1 << "/" << oidi;
-    oss << " " << fInputJobStepAssociation.outAt(i);
+    oss << " " << dl;
   }
 
   idlsz = fOutputJobStepAssociation.outSize();

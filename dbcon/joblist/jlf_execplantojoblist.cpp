@@ -624,21 +624,15 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
   {
     // not strings, no need for dictionary steps, output fifo datalist
     AnyDataListSPtr spdl1(new AnyDataList());
-    FifoDataList* dl1 = new FifoDataList(1, jobInfo.fifoSize);
-    spdl1->fifoDL(dl1);
-    dl1->OID(sc1->oid());
 
     JobStepAssociation outJs1;
     outJs1.outAdd(spdl1);
     pcs1->outputAssociation(outJs1);
 
     AnyDataListSPtr spdl2(new AnyDataList());
-    FifoDataList* dl2 = new FifoDataList(1, jobInfo.fifoSize);
-    spdl2->fifoDL(dl2);
-    dl2->OID(sc2->oid());
-
     JobStepAssociation outJs2;
     outJs2.outAdd(spdl2);
+
     pcs2->outputAssociation(outJs2);
     pcs2->inputAssociation(outJs1);
 
@@ -682,9 +676,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 1 step 1 (pcolstep) output
       AnyDataListSPtr spdl11(new AnyDataList());
-      FifoDataList* dl11 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl11->fifoDL(dl11);
-      dl11->OID(sc1->oid());
 
       JobStepAssociation outJs1;
       outJs1.outAdd(spdl11);
@@ -692,9 +683,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 1 step 2 (pdictionarystep) output
       AnyDataListSPtr spdl12(new AnyDataList());
-      StringFifoDataList* dl12 = new StringFifoDataList(1, jobInfo.fifoSize);
-      spdl12->stringDL(dl12);
-      dl12->OID(sc1->oid());
 
       JobStepAssociation outJs2;
       outJs2.outAdd(spdl12);
@@ -715,9 +703,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 2 step 1 (pcolstep) output
       AnyDataListSPtr spdl21(new AnyDataList());
-      FifoDataList* dl21 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl21->fifoDL(dl21);
-      dl21->OID(sc2->oid());
 
       JobStepAssociation outJs3;
       outJs3.outAdd(spdl21);
@@ -730,9 +715,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 2 step 2 (pdictionarystep) output
       AnyDataListSPtr spdl22(new AnyDataList());
-      StringFifoDataList* dl22 = new StringFifoDataList(1, jobInfo.fifoSize);
-      spdl22->stringDL(dl22);
-      dl22->OID(sc2->oid());
 
       JobStepAssociation outJs4;
       outJs4.outAdd(spdl22);
@@ -789,9 +771,7 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 1 step 1 (pcolstep) output
       AnyDataListSPtr spdl11(new AnyDataList());
-      FifoDataList* dl11 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl11->fifoDL(dl11);
-      dl11->OID(sc1->oid());
+
 
       JobStepAssociation outJs1;
       outJs1.outAdd(spdl11);
@@ -799,9 +779,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 1 step 2 (pdictionarystep) output
       AnyDataListSPtr spdl12(new AnyDataList());
-      StringFifoDataList* dl12 = new StringFifoDataList(1, jobInfo.fifoSize);
-      spdl12->stringDL(dl12);
-      dl12->OID(sc1->oid());
 
       JobStepAssociation outJs2;
       outJs2.outAdd(spdl12);
@@ -814,9 +791,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 2 step 1 (pcolstep) output
       AnyDataListSPtr spdl21(new AnyDataList());
-      FifoDataList* dl21 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl21->fifoDL(dl21);
-      dl21->OID(sc2->oid());
 
       JobStepAssociation outJs3;
       outJs3.outAdd(spdl21);
@@ -858,9 +832,7 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
       // extra steps for string column greater than eight bytes -- from token to string
       // data list for column 1 step 1 (pcolstep) output
       AnyDataListSPtr spdl11(new AnyDataList());
-      FifoDataList* dl11 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl11->fifoDL(dl11);
-      dl11->OID(sc1->oid());
+
 
       JobStepAssociation outJs1;
       outJs1.outAdd(spdl11);
@@ -868,9 +840,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 1 step 2 (pdictionarystep) output
       AnyDataListSPtr spdl12(new AnyDataList());
-      StringFifoDataList* dl12 = new StringFifoDataList(1, jobInfo.fifoSize);
-      spdl12->stringDL(dl12);
-      dl12->OID(sc1->oid());
 
       pDictionaryStep* pdss2 = new pDictionaryStep(dictOid2, tableOid2, ct2, jobInfo);
       jobInfo.keyInfo->dictOidToColOid[dictOid2] = sc2->oid();
@@ -882,9 +851,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 2 step 1 (pcolstep) output
       AnyDataListSPtr spdl21(new AnyDataList());
-      FifoDataList* dl21 = new FifoDataList(1, jobInfo.fifoSize);
-      spdl21->fifoDL(dl21);
-      dl21->OID(sc2->oid());
 
       JobStepAssociation outJs3;
       outJs3.outAdd(spdl21);
@@ -897,9 +863,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
 
       // data list for column 2 step 2 (pdictionarystep) output
       AnyDataListSPtr spdl22(new AnyDataList());
-      StringFifoDataList* dl22 = new StringFifoDataList(1, jobInfo.fifoSize);
-      spdl22->stringDL(dl22);
-      dl22->OID(sc2->oid());
 
       JobStepAssociation outJs4;
       outJs4.outAdd(spdl22);
@@ -1471,17 +1434,17 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
   if (sf->op()->op() != opeq.op())
     return false;
 
-  const FunctionColumn* fc = static_cast<const FunctionColumn*>(sf->lhs());
-  const ConstantColumn* cc = static_cast<const ConstantColumn*>(sf->rhs());
+  const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(sf->lhs());
+  const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(sf->rhs());
 
-  if (fc == NULL)
+  if (fc == nullptr)
   {
-    cc = static_cast<const ConstantColumn*>(sf->lhs());
-    fc = static_cast<const FunctionColumn*>(sf->rhs());
+    cc = dynamic_cast<const ConstantColumn*>(sf->lhs());
+    fc = dynamic_cast<const FunctionColumn*>(sf->rhs());
   }
 
   // not a function or not idbparttition
-  if (fc == NULL || cc == NULL || fc->functionName().compare("idbpartition") != 0)
+  if (fc == nullptr || cc == nullptr || fc->functionName().compare("idbpartition") != 0)
     return false;
 
   // make sure the cc has 3 tokens
@@ -1608,9 +1571,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         // data list for pcolstep output
         AnyDataListSPtr spdl1(new AnyDataList());
-        FifoDataList* dl1 = new FifoDataList(1, jobInfo.fifoSize);
-        spdl1->fifoDL(dl1);
-        dl1->OID(sc->oid());
 
         JobStepAssociation outJs1;
         outJs1.outAdd(spdl1);
@@ -1618,9 +1578,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         // data list for pdictionarystep output
         AnyDataListSPtr spdl2(new AnyDataList());
-        StringFifoDataList* dl2 = new StringFifoDataList(1, jobInfo.fifoSize);
-        spdl2->stringDL(dl2);
-        dl2->OID(sc->oid());
 
         JobStepAssociation outJs2;
         outJs2.outAdd(spdl2);
@@ -2712,9 +2669,6 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 
         // data list for pcolstep output
         AnyDataListSPtr spdl1(new AnyDataList());
-        FifoDataList* dl1 = new FifoDataList(1, jobInfo.fifoSize);
-        spdl1->fifoDL(dl1);
-        dl1->OID(sc->oid());
 
         JobStepAssociation outJs1;
         outJs1.outAdd(spdl1);
@@ -2722,9 +2676,6 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 
         // data list for pdictionarystep output
         AnyDataListSPtr spdl2(new AnyDataList());
-        StringFifoDataList* dl2 = new StringFifoDataList(1, jobInfo.fifoSize);
-        spdl2->stringDL(dl2);
-        dl2->OID(sc->oid());
 
         JobStepAssociation outJs2;
         outJs2.outAdd(spdl2);

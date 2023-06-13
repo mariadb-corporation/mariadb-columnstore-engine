@@ -1328,8 +1328,11 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
     if (len > getColumnWidth(colIndex))
       len = getColumnWidth(colIndex);
 
+    idbassert(val != nullptr || !len);
+
     *((uint16_t*)&data[offsets[colIndex]]) = len;
-    memcpy(&data[offsets[colIndex] + 2], val, len);
+    if (val != nullptr)
+      memcpy(&data[offsets[colIndex] + 2], val, len);
   }
 }
 

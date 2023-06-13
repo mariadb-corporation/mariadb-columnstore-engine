@@ -201,19 +201,8 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
     for (unsigned int i = 0; i < qsi->get()->outputAssociation().outSize(); i++)
     {
-      ptrdiff_t dloutptr;
-      DataList_t* dlout = qsi->get()->outputAssociation().outAt(i)->dataList();
-      uint32_t numConsumers = qsi->get()->outputAssociation().outAt(i)->getNumConsumers();
-
-      if (dlout)
-      {
-        dloutptr = (ptrdiff_t)dlout;
-      }
-      else
-      {
-        StrDataList* sdl = qsi->get()->outputAssociation().outAt(i)->stringDataList();
-        dloutptr = (ptrdiff_t)sdl;
-      }
+      RowGroupDL* dlout = qsi->get()->outputAssociation().outAt(i)->rowGroupDL();
+      ptrdiff_t dloutptr = (ptrdiff_t)dlout;
 
       for (unsigned int k = 0; k < querySteps.size(); k++)
       {
@@ -222,31 +211,12 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
         for (unsigned int j = 0; j < queryInputSA.outSize(); j++)
         {
-          ptrdiff_t dlinptr;
-          DataList_t* dlin = queryInputSA.outAt(j)->dataList();
-          StrDataList* sdl = 0;
-
-          if (dlin)
-            dlinptr = (ptrdiff_t)dlin;
-          else
-          {
-            sdl = queryInputSA.outAt(j)->stringDataList();
-            dlinptr = (ptrdiff_t)sdl;
-          }
+          RowGroupDL* dlin = queryInputSA.outAt(j)->rowGroupDL();
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
 
           if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
           {
             dotFile << stepidIn << " -> " << stepidOut;
-
-            if (dlin)
-            {
-              dotFile << " [label=\"[" << AnyDataList::dlType(dlin) << "/" << numConsumers << "]\"]" << endl;
-            }
-            else
-            {
-              dotFile << " [label=\"[" << AnyDataList::strDlType(sdl) << "/" << numConsumers << "]\"]"
-                      << endl;
-            }
           }
         }
       }
@@ -258,32 +228,12 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
         for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
         {
-          ptrdiff_t dlinptr;
-          DataList_t* dlin = projectInputSA.outAt(j)->dataList();
-          StrDataList* sdl = 0;
-
-          if (dlin)
-            dlinptr = (ptrdiff_t)dlin;
-          else
-          {
-            sdl = projectInputSA.outAt(j)->stringDataList();
-            dlinptr = (ptrdiff_t)sdl;
-          }
+          RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
 
           if (dloutptr == dlinptr)
-          // if ((ptrdiff_t)dlout == (ptrdiff_t)dlin)
           {
             dotFile << stepidIn << " -> " << stepidOut;
-
-            if (dlin)
-            {
-              dotFile << " [label=\"[" << AnyDataList::dlType(dlin) << "/" << numConsumers << "]\"]" << endl;
-            }
-            else
-            {
-              dotFile << " [label=\"[" << AnyDataList::strDlType(sdl) << "/" << numConsumers << "]\"]"
-                      << endl;
-            }
           }
         }
       }
@@ -359,19 +309,8 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
     for (unsigned int i = 0; i < psi->get()->outputAssociation().outSize(); i++)
     {
-      ptrdiff_t dloutptr;
-      DataList_t* dlout = psi->get()->outputAssociation().outAt(i)->dataList();
-      uint32_t numConsumers = psi->get()->outputAssociation().outAt(i)->getNumConsumers();
-
-      if (dlout)
-      {
-        dloutptr = (ptrdiff_t)dlout;
-      }
-      else
-      {
-        StrDataList* sdl = psi->get()->outputAssociation().outAt(i)->stringDataList();
-        dloutptr = (ptrdiff_t)sdl;
-      }
+      RowGroupDL* dlout = psi->get()->outputAssociation().outAt(i)->rowGroupDL();
+      ptrdiff_t dloutptr = (ptrdiff_t)dlout;
 
       for (unsigned int k = ctn + 1; k < projectSteps.size(); k++)
       {
@@ -380,31 +319,13 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
         for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
         {
-          ptrdiff_t dlinptr;
-          DataList_t* dlin = projectInputSA.outAt(j)->dataList();
-          StrDataList* sdl = 0;
-
-          if (dlin)
-            dlinptr = (ptrdiff_t)dlin;
-          else
-          {
-            sdl = projectInputSA.outAt(j)->stringDataList();
-            dlinptr = (ptrdiff_t)sdl;
-          }
+          RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;
 
           if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
           {
             dotFile << stepidIn << " -> " << stepidOut;
 
-            if (dlin)
-            {
-              dotFile << " [label=\"[" << AnyDataList::dlType(dlin) << "/" << numConsumers << "]\"]" << endl;
-            }
-            else
-            {
-              dotFile << " [label=\"[" << AnyDataList::strDlType(sdl) << "/" << numConsumers << "]\"]"
-                      << endl;
-            }
           }
         }
       }

@@ -1,0 +1,12 @@
+[Unit]
+Description=${CPACK_PACKAGE_DESCRIPTION_SUMMARY}
+
+[Service]
+Environment=PYTHONPATH=${CMAPI_DIR}/deps
+ExecStart=${CMAPI_DIR}/python/bin/python3 -m cmapi_server
+ExecStartPost=/bin/sh -c ${CMAPI_DIR}/check_ready.sh
+User=${CMAPI_USER}
+WorkingDirectory=${CMAPI_DIR}
+
+[Install]
+WantedBy=multi-user.target

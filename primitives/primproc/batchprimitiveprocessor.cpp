@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <cstring>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <string>
 #include <sstream>
@@ -629,7 +629,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
   {
     uint64_t key;
     uint32_t value;
-  } * arr;
+  }* arr;
 #pragma pack(pop)
 
   /* skip the header */
@@ -931,7 +931,7 @@ void BatchPrimitiveProcessor::initProcessor()
     strValues.reset(new utils::NullString[LOGICAL_BLOCK_RIDS]);
 
   outMsgSize = defaultBufferSize;
-  outputMsg.reset(new(std::align_val_t(MAXCOLUMNWIDTH)) uint8_t[outMsgSize]);
+  outputMsg.reset(new (std::align_val_t(MAXCOLUMNWIDTH)) uint8_t[outMsgSize]);
 
   if (ot == ROW_GROUP)
   {
@@ -1479,8 +1479,8 @@ void BatchPrimitiveProcessor::execute()
 
           if (!asyncLoaded[p + 1])
           {
-            loadBlockAsync(col->getLBIDAux(), versionInfo, txnID, 2, &cachedIO, &physIO,
-                           LBIDTrace, sessionID, &counterLock, &busyLoaderCount, sendThread, &vssCache);
+            loadBlockAsync(col->getLBIDAux(), versionInfo, txnID, 2, &cachedIO, &physIO, LBIDTrace, sessionID,
+                           &counterLock, &busyLoaderCount, sendThread, &vssCache);
             asyncLoaded[p + 1] = true;
           }
         }
@@ -2169,8 +2169,18 @@ void BatchPrimitiveProcessor::sendResponse()
   // !sock has a 'same host connection' semantics here.
   if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
   {
-    exeMgrDecPtr->addDataToOutput(serialized);
-    serialized.reset();
+    // Flow Control now handles same node connections so the recieving DEC queue
+    // is limited.
+    if (sendThread->flowControlEnabled())
+    {
+      sendThread->sendResult({serialized, nullptr, nullptr, 0}, false);
+    }
+    else
+    {
+      exeMgrDecPtr->addDataToOutput(serialized);
+      serialized.reset();
+    }
+
     return;
   }
 

@@ -304,7 +304,7 @@ inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long* 
 {
   int64_t days;
   bool neg;
-  int64_t microseconds;
+  int128_t microseconds;
 
   uint64_t year1 = 0, month1 = 0, day1 = 0, hour1 = 0, min1 = 0, sec1 = 0, msec1 = 0;
 

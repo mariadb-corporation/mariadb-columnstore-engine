@@ -27,61 +27,11 @@ namespace joblist
 //
 static const int showOidInDataList_Index = std::ios_base::xalloc();
 
-/*static*/
-AnyDataList::DataListTypes AnyDataList::dlType(const DataList_t* dl)
-{
-  if (dl == 0)
-    return UNKNOWN_DATALIST;
-
-  //	if (typeid(*dl) == typeid(BandedDataList)) return BANDED_DATALIST;
-  //	if (typeid(*dl) == typeid(WorkingSetDataList)) return WORKING_SET_DATALIST;
-  if (typeid(*dl) == typeid(FifoDataList))
-    return FIFO_DATALIST;
-
-  //	if (typeid(*dl) == typeid(BucketDataList)) return BUCKET_DATALIST;
-  //	if (typeid(*dl) == typeid(ConstantDataList_t)) return CONSTANT_DATALIST;
-  //	if (typeid(*dl) == typeid(SortedWSDL)) return SORTED_WORKING_SET_DATALIST;
-  //	if (typeid(*dl) == typeid(ZonedDL)) return ZONED_DATALIST;
-  //	if (typeid(*dl) == typeid(DeliveryWSDL)) return DELIVERYWSDL;
-  if (typeid(*dl) == typeid(RowGroupDL))
-    return ROWGROUP_DATALIST;
-
-  return UNKNOWN_DATALIST;
-}
-
-AnyDataList::DataListTypes AnyDataList::strDlType(const StrDataList* dl)
-{
-  if (dl == 0)
-    return UNKNOWN_DATALIST;
-
-  //	if (typeid(*dl) == typeid(StringDataList)) return STRINGBANDED_DATALIST;
-  //	if (typeid(*dl) == typeid(StringFifoDataList)) return STRINGFIFO_DATALIST;
-  //	if (typeid(*dl) == typeid(StringBucketDataList)) return STRINGBUCKET_DATALIST;
-  if (typeid(*dl) == typeid(StrDataList))
-    return STRING_DATALIST;
-
-  //	if (typeid(*dl) == typeid(StringConstantDataList_t)) return STRINGCONSTANT_DATALIST;
-  //	if (typeid(*dl) == typeid(StringSortedWSDL)) return STRINGSORTED_WORKING_SET_DATALIST;
-  //	if (typeid(*dl) == typeid(StringZonedDL)) return STRINGZONED_DATALIST;
-  return UNKNOWN_DATALIST;
-}
-
-// AnyDataList::DataListTypes AnyDataList::tupleDlType(const TupleDataList* dl)
-//{
-//    if (dl == 0) return UNKNOWN_DATALIST;
-//    if (typeid(*dl) == typeid(TupleBucketDataList)) return TUPLEBUCKET_DATALIST;
-//    return UNKNOWN_DATALIST;
-//}
-
 std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
 {
-  DataList_t* dle = NULL;
-  StrDataList* dls = NULL;
-  //	DoubleDataList      * dld = NULL;
-  //	TupleBucketDataList * dlt = NULL;
   bool withOid = (oss.iword(showOidInDataList_Index) != 0);
 
-  if ((dle = dl->dataList()) != NULL)
+  if (auto* dle = dl->rowGroupDL(); dle != nullptr)
   {
     if (withOid)
       oss << dle->OID() << " ";
@@ -95,50 +45,8 @@ std::ostream& operator<<(std::ostream& oss, const AnyDataListSPtr& dl)
       elemSizeStr << "(" << dle->getDiskElemSize1st() << "," << dle->getDiskElemSize2nd() << ")";
     }
 
-    oss << "(0x" << std::hex << (ptrdiff_t)dle << std::dec << "[" << AnyDataList::dlType(dle) << "]"
-        << elemSizeStr.str() << ")";
+    oss << "(0x" << std::hex << (ptrdiff_t)dle << std::dec << elemSizeStr.str() << ")";
   }
-  else if ((dls = dl->stringDataList()) != NULL)
-  {
-    if (withOid)
-      oss << dls->OID() << " ";
-
-    //...If this datalist is saved to disk, then include the saved
-    //...element size in the printed information.
-    std::ostringstream elemSizeStr;
-
-    if (dls->useDisk())
-    {
-      elemSizeStr << "(" << dls->getDiskElemSize1st() << "," << dls->getDiskElemSize2nd() << ")";
-    }
-
-    oss << "(0x" << std::hex << (ptrdiff_t)dls << std::dec << "[" << AnyDataList::strDlType(dls) << "]"
-        << elemSizeStr.str() << ")";
-  }
-  //	else if ((dld = dl->doubleDL()) != NULL)
-  //	{
-  //		if (withOid)
-  //			oss << dld->OID() << " ";
-  //
-  //		//...If this datalist is saved to disk, then include the saved
-  //		//...element size in the printed information.
-  //		std::ostringstream elemSizeStr;
-  //		if ( dld->useDisk() )
-  //		{
-  //			elemSizeStr << "(" << dld->getDiskElemSize1st() << "," <<
-  //				dld->getDiskElemSize2nd() << ")";
-  //		}
-  //
-  //		oss << "(0x"
-  //			<< std::hex << (ptrdiff_t)dld << std::dec << "[" <<
-  //			AnyDataList::DOUBLE_DATALIST << "])";
-  //	}
-  //	else if ((dlt = dl->tupleBucketDL()) != NULL)
-  //	{
-  //		oss << dlt->OID() << " (0x";
-  //		oss << std::hex << (ptrdiff_t)dlt << std::dec << "[" << AnyDataList::TUPLEBUCKET_DATALIST << "]),
-  //";
-  //	}
   else
   {
     oss << "0 (0x0000 [0])";

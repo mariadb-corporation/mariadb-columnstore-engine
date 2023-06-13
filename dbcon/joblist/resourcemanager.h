@@ -39,8 +39,6 @@
 
 #include "atomicops.h"
 
-#define EXPORT
-
 namespace joblist
 {
 // aggfilterstep
@@ -102,7 +100,10 @@ const uint64_t defaultRowsPerBatch = 10000;
 /* HJ CP feedback, see bug #1465 */
 const uint32_t defaultHjCPUniqueLimit = 100;
 
-const uint64_t defaultDECThrottleThreshold = 200000000;  // ~200 MB
+const constexpr uint64_t defaultFlowControlEnableBytesThresh = 50000000;     // ~50Mb
+const constexpr uint64_t defaultFlowControlDisableBytesThresh = 10000000;  // ~10 MB
+const constexpr uint64_t defaultBPPSendThreadBytesThresh = 250000000;       // ~250 MB
+const constexpr uint64_t BPPSendThreadMsgThresh = 100;
 
 const bool defaultAllowDiskAggregation = false;
 
@@ -116,8 +117,8 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  EXPORT ResourceManager(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
-  static ResourceManager* instance(bool runningInExeMgr = false, config::Config *aConfig = nullptr);
+  ResourceManager(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  static ResourceManager* instance(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
   config::Config* getConfig()
   {
     return fConfig;
@@ -149,7 +150,7 @@ class ResourceManager
   {
     return getUintVal(fExeMgrStr, "MaxPct", defaultEMMaxPct);
   }
-  EXPORT int getEmPriority() const;   // FOr Windows only
+  int getEmPriority() const;  // FOr Windows only
   int getEmExecQueueSize() const
   {
     return getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
@@ -236,7 +237,6 @@ class ResourceManager
   uint32_t getJlMaxOutstandingRequests() const
   {
     return fJlMaxOutstandingRequests;
-    // getUintVal(fJobListStr, "MaxOutstandingRequests", defaultMaxOutstandingRequests);
   }
   uint32_t getJlJoinerChunkSize() const
   {
@@ -284,35 +284,45 @@ class ResourceManager
     return getUintVal(fBatchInsertStr, "RowsPerBatch", defaultRowsPerBatch);
   }
 
-  uint64_t getDECThrottleThreshold() const
+  uint64_t getDECEnableBytesThresh() const
   {
-    return getUintVal(fJobListStr, "DECThrottleThreshold", defaultDECThrottleThreshold);
+    return getUintVal(FlowControlStr, "DECFlowControlEnableBytesThresh(", defaultFlowControlEnableBytesThresh);
   }
 
-  uint64_t getMaxBPPSendQueue() const
+  uint32_t getDECDisableBytesThresh() const
   {
-    return fMaxBPPSendQueue;
+    return getUintVal(FlowControlStr, "DECFlowControlDisableBytesThresh", defaultFlowControlDisableBytesThresh);
   }
 
-  EXPORT void emServerThreads();
-  EXPORT void emServerQueueSize();
-  EXPORT void emSecondsBetweenMemChecks();
-  EXPORT void emMaxPct();
-  EXPORT void emPriority();
-  EXPORT void emExecQueueSize();
+  uint32_t getBPPSendThreadBytesThresh() const
+  {
+    return getUintVal(FlowControlStr, "BPPSendThreadBytesThresh", defaultBPPSendThreadBytesThresh);
+  }
 
-  EXPORT void hjNumThreads();
-  EXPORT void hjMaxBuckets();
-  EXPORT void hjMaxElems();
-  EXPORT void hjFifoSizeLargeSide();
-  EXPORT void hjPmMaxMemorySmallSide();
+  uint32_t getBPPSendThreadMsgThresh() const
+  {
+    return getUintVal(FlowControlStr, "BPPSendThreadMsgThresh", BPPSendThreadMsgThresh);
+  }
+
+  void emServerThreads();
+  void emServerQueueSize();
+  void emSecondsBetweenMemChecks();
+  void emMaxPct();
+  void emPriority();
+  void emExecQueueSize();
+
+  void hjNumThreads();
+  void hjMaxBuckets();
+  void hjMaxElems();
+  void hjFifoSizeLargeSide();
+  void hjPmMaxMemorySmallSide();
 
   /* new HJ/Union/Aggregation mem interface, used by TupleBPS */
   /* sessionLimit is a pointer to the var holding the session-scope limit, should be JobInfo.umMemLimit
      for the query. */
   /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
-  EXPORT bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
-  EXPORT bool getMemory(int64_t amount, bool patience = true);
+  bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
+  bool getMemory(int64_t amount, bool patience = true);
   inline void returnMemory(int64_t amount)
   {
     atomicops::atomicAdd(&totalUmMemLimit, amount);
@@ -341,14 +351,14 @@ class ResourceManager
     return fHJUmMaxMemorySmallSideDistributor.getTotalResource();
   }
 
-  EXPORT void addHJUmMaxSmallSideMap(uint32_t sessionID, uint64_t mem);
+  void addHJUmMaxSmallSideMap(uint32_t sessionID, uint64_t mem);
 
   void removeHJUmMaxSmallSideMap(uint32_t sessionID)
   {
     fHJUmMaxMemorySmallSideDistributor.removeSession(sessionID);
   }
 
-  EXPORT void addHJPmMaxSmallSideMap(uint32_t sessionID, uint64_t mem);
+  void addHJPmMaxSmallSideMap(uint32_t sessionID, uint64_t mem);
   void removeHJPmMaxSmallSideMap(uint32_t sessionID)
   {
     fHJPmMaxMemorySmallSideSessionMap.removeSession(sessionID);
@@ -435,9 +445,9 @@ class ResourceManager
     return fUseHdfs;
   }
 
-  EXPORT bool getMysqldInfo(std::string& h, std::string& u, std::string& w, unsigned int& p) const;
-  EXPORT bool queryStatsEnabled() const;
-  EXPORT bool userPriorityEnabled() const;
+  bool getMysqldInfo(std::string& h, std::string& u, std::string& w, unsigned int& p) const;
+  bool queryStatsEnabled() const;
+  bool userPriorityEnabled() const;
 
   uint64_t getConfiguredUMMemLimit() const
   {
@@ -471,12 +481,13 @@ class ResourceManager
   std::string fExeMgrStr;
   inline static const std::string fHashJoinStr = "HashJoin";
   inline static const std::string fJobListStr = "JobList";
+  inline static const std::string FlowControlStr = "FlowControl";
+
   inline static const std::string fPrimitiveServersStr = "PrimitiveServers";
   /*static	const*/ std::string fSystemConfigStr;
   inline static const std::string fExtentMapStr = "ExtentMap";
   /*static	const*/ std::string fDMLProcStr;
   /*static	const*/ std::string fBatchInsertStr;
-  inline static const std::string fOrderByLimitStr = "OrderByLimit";
   inline static const std::string fRowAggregationStr = "RowAggregation";
   config::Config* fConfig;
   static ResourceManager* fInstance;
@@ -509,7 +520,6 @@ class ResourceManager
   bool fUseHdfs;
   bool fAllowedDiskAggregation{false};
   uint64_t fDECConnectionsPerQuery;
-  uint64_t fMaxBPPSendQueue = 250000000;
 };
 
 inline std::string ResourceManager::getStringVal(const std::string& section, const std::string& name,

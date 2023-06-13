@@ -2157,8 +2157,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
   vector<rowgroup::RGData> fromPrimProc;
   auto data = getJoinLocalDataByIndex(threadID);
 
-  bool validCPData;
-  bool hasBinaryColumn;
+  bool validCPData = false;
+  bool hasBinaryColumn = false;
   int128_t min;
   int128_t max;
   uint64_t lbid;
@@ -2203,8 +2203,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       return;
     }
 
-    bool unused;
-    bool fromDictScan;
+    bool unused = false;
+    bool fromDictScan = false;
     fromPrimProc.clear();
     fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &fromDictScan, &min, &max, &cachedIO,
                           &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);

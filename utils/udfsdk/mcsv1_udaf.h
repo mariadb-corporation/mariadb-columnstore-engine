@@ -396,7 +396,7 @@ class mcsv1Context
   mcsv1sdk::mcsv1_UDAF* func;
   int32_t fParamCount;
   std::vector<uint32_t> paramKeys;
-  enum_mariadb_return_type mariadbReturnType;
+  enum_mariadb_return_type mariadbReturnType = MYSQL_TYPE_LONGLONG;
   uint32_t fCharsetNumber;
 
  public:

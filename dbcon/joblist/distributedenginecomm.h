@@ -229,7 +229,7 @@ class DistributedEngineComm
   /* To keep some state associated with the connection.  These aren't copyable. */
   struct MQE : public boost::noncopyable
   {
-    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue);
+    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue, const uint64_t recvQueueSize);
     uint32_t getNextConnectionId(const size_t pmIndex, const size_t pmConnectionsNumber,
                                  const uint32_t DECConnectionsPerQuery);
     messageqcpp::Stats stats;
@@ -297,9 +297,9 @@ class DistributedEngineComm
   bool fIsExeMgr;
 
   // send-side throttling vars
-  uint64_t throttleThreshold;
-  static const uint32_t targetRecvQueueSize = 50000000;
-  static const uint32_t disableThreshold = 10000000;
+  uint64_t flowControlEnableBytesThresh = 50000000;
+  uint64_t flowControlDisableBytesThresh = 10000000;
+  uint64_t bigMessageSize = 300 * 1024 * 1024;
   uint32_t tbpsThreadCount;
   uint32_t fDECConnectionsPerQuery;
 
@@ -310,6 +310,8 @@ class DistributedEngineComm
   void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
   boost::mutex ackLock;
 
+  // localConnectionId_ is set running Setup() method
+  uint32_t localConnectionId_ = std::numeric_limits<uint32_t>::max();
   std::vector<struct in_addr> localNetIfaceSins_;
   std::mutex inMemoryEM2PPExchMutex_;
   std::condition_variable inMemoryEM2PPExchCV_;

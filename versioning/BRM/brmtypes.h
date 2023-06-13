@@ -315,8 +315,8 @@ struct BulkUpdateDBRootArg
 /* Input Arg type for DBRM::createStripeColumnExtents() */
 struct CreateStripeColumnExtentsArgIn
 {
-  OID_t oid;       // column OID
-  uint32_t width;  // column width in bytes
+  OID_t oid = 0;       // column OID
+  uint32_t width = 0;  // column width in bytes
   execplan::CalpontSystemCatalog::ColDataType colDataType;
 };
 
