@@ -154,4 +154,9 @@ void FuncExpWrapper::addReturnedColumn(const boost::shared_ptr<ReturnedColumn>& 
   rcs.push_back(rc);
 }
 
+void FuncExpWrapper::resetReturnedColumns()
+{
+  rcs.clear();
+}
+
 };  // namespace funcexp

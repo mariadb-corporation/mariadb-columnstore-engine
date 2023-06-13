@@ -62,6 +62,8 @@ class FuncExpWrapper : public messageqcpp::Serializeable
   void addFilter(const boost::shared_ptr<execplan::ParseTree>&);
   void addReturnedColumn(const boost::shared_ptr<execplan::ReturnedColumn>&);
 
+  void resetReturnedColumns();
+
  private:
   std::vector<boost::shared_ptr<execplan::ParseTree> > filters;
   std::vector<boost::shared_ptr<execplan::ReturnedColumn> > rcs;
@@ -77,5 +79,6 @@ inline uint32_t FuncExpWrapper::getFilterCount() const
 {
   return filters.size();
 }
+
 
 }  // namespace funcexp

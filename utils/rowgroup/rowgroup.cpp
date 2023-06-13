@@ -542,8 +542,12 @@ string Row::toString(uint32_t rownum) const
   os << "[" << std::setw(5) << rownum << std::setw(0) << "]: ";
   os << (int)useStringTable << ": ";
 
+  cout << data << ':' << endl;
+
   for (i = 0; i < columnCount; i++)
   {
+    cout << "i = " << i << endl;
+    cout << offsets[i] << ':' << data[offsets[i]] << endl;
     if (isNullValue(i))
       os << "NULL ";
     else

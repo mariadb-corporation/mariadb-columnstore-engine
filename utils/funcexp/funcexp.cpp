@@ -302,27 +302,6 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
   for (uint32_t i = 0; i < expression.size(); i++)
   {
     isNull = false;
-    // #ifdef GETDATA_DEBUG
-    {
-      std::string filename = "/home/hmu/GSoC/test/expression" + std::to_string(i) + ".bin";
-
-      std::ofstream myfile(filename, std::ios::binary);
-      if (!myfile.is_open())
-      {
-        std::cout << "Unable to open file\n";
-      }
-      else 
-      {
-        messageqcpp::ByteStream bs(0);
-        expression[i]->serialize(bs);
-        auto start = bs.buf();
-        std::streamsize len = bs.length();
-        myfile.write(reinterpret_cast<const char*>(start), len);
-        myfile.close();
-      }
-    }
-    // #endif
-
 
     switch (expression[i]->resultType().colDataType)
     {
@@ -423,6 +402,9 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       case CalpontSystemCatalog::MEDINT:
       {
         int64_t val = expression[i]->getIntVal(row, isNull);
+
+        cout << "row: " << row.toString() << endl;
+        cout << val << "!!" << expression[i]->outputIndex() << endl;
 
         if (isNull)
           row.setIntField<4>(INTNULL, expression[i]->outputIndex());

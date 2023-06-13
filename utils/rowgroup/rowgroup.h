@@ -1178,6 +1178,8 @@ inline void Row::setUintField(uint64_t val, uint32_t colIndex)
 template <int len>
 inline void Row::setIntField(int64_t val, uint32_t colIndex)
 {
+  cout << toString() << endl;
+  cout << "setIntField: " << len << " " << colIndex << " " << val << " " << data << ',' << offsets[colIndex] << endl;
   switch (len)
   {
     case 1: *((int8_t*)&data[offsets[colIndex]]) = val; break;
