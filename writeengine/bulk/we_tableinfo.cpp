@@ -55,6 +55,15 @@ using namespace querytele;
 #include "oamcache.h"
 #include "cacheutils.h"
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/io/file.h>
+#include <parquet/stream_reader.h>
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -257,6 +266,53 @@ bool TableInfo::lockForRead(const int& locker)
   }
 
   return false;
+}
+
+
+
+int TableInfo::readParquetData()
+{
+  int fileCounter = 0;
+  fFileName = fLoadFileList[fileCounter];
+
+  std::cout << "Reading by RecordBatchReader" << std::endl;
+
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+
+  // Configure general Parquet reader settings
+  auto reader_properties = parquet::ReaderProperties(pool);
+  reader_properties.set_buffer_size(4096 * 4);
+  reader_properties.enable_buffered_stream();
+
+  // Configure Arrow-specific Parquet reader settings
+  auto arrow_reader_props = parquet::ArrowReaderProperties();
+  // TODO:batch_size is set as a parameter
+  arrow_reader_props.set_batch_size(64 * 1024);  // default 64 * 1024
+
+  parquet::arrow::FileReaderBuilder reader_builder;
+  PARQUET_THROW_NOT_OK(
+      reader_builder.OpenFile(fFileName, /*memory_map=*/false, reader_properties));
+  reader_builder.memory_pool(pool);
+  reader_builder.properties(arrow_reader_props);
+
+  std::unique_ptr<parquet::arrow::FileReader> arrow_reader;
+  PARQUET_ASSIGN_OR_THROW(arrow_reader, reader_builder.Build());
+
+  std::shared_ptr<::arrow::RecordBatchReader> rb_reader;
+  PARQUET_THROW_NOT_OK(arrow_reader->GetRecordBatchReader(&rb_reader));
+
+
+  for (arrow::Result<std::shared_ptr<arrow::RecordBatch>> maybe_batch : *rb_reader) {
+    // Operate on each batch...
+    // TODO:
+    PARQUET_ASSIGN_OR_THROW(auto batch, maybe_batch);
+    // PARQUET_ASSIGN_OR_THROW(auto table,
+    //                       arrow::Table::FromRecordBatches(batch->schema(), {batch}));
+    // std::cout << "Loaded " << table->num_rows() << " rows in " << table->num_columns()
+    //           << " columns." << std::endl;
+    // PARQUET_THROW_NOT_OK(arrow::PrettyPrint(*(batch->GetColumnByName("str")), 4, &std::cout));
+    std::cout << batch->ToString() << std::endl;
+  }
 }
 
 //------------------------------------------------------------------------------

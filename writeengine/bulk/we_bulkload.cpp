@@ -456,20 +456,31 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 
 void BulkLoad::spawnWorkersParquet()
 {
-  // std::cout << "Reading first column of parquet-arrow-example.parquet" << std::endl;
-  // std::shared_ptr<arrow::io::ReadableFile> infile;
-  // PARQUET_ASSIGN_OR_THROW(infile,
-  //                         arrow::io::ReadableFile::Open("/tmp/parquet-arrow-example.parquet",
-  //                                                       arrow::default_memory_pool()));
-  // std::unique_ptr<parquet::arrow::FileReader> reader;
-  // PARQUET_THROW_NOT_OK(
-  //     parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
-  // std::shared_ptr<arrow::ChunkedArray> array;
-  // PARQUET_THROW_NOT_OK(reader->ReadColumn(1, &array));
-  // PARQUET_THROW_NOT_OK(arrow::PrettyPrint(*array, 4, &std::cout));
-  // std::cout << std::endl;
+  int tableId = -1;
 
-  
+  try
+  {
+    // Loop to select and read the next table
+
+    while (true)
+    {
+      tableId = -1;
+
+      if ((tableId = lockTableForRead(id)) == -1)
+      {
+        fLog.logMsg(
+          "BulkLoad::ReadOperation No more tables "
+          "available for processing. Read thread " +
+            Convertor::int2Str(id) + " exiting...",
+        MSGLVL_INFO2);
+        return;
+      }
+
+      // for every table, read parquet file
+      int rc = fTableInfo[tableId].readParquetData();
+      // TODO:
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -861,7 +872,7 @@ int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
   }
 
   // Initialize BulkLoadBuffers after we have added all the columns
-  rc = tableInfo->initializeBuffers(fNoOfBuffers, job.jobTableList[tableNo].fFldRefs, fixedBinaryRecLen);
+  rc = tableInfo->(fNoOfBuffers, job.jobTableList[tableNo].fFldRefs, fixedBinaryRecLen);
   if (rc)
     return rc;
 
@@ -1180,7 +1191,7 @@ int BulkLoad::processJob()
 
   startTimer();
 
-  if (tables[0]->fLoadFileList[0].rfind(".parquet") != std::string::npos)
+  if (LOAD_FILE == FILE_PARQUET)
   {
     spawnWorkersParquet();
   }
