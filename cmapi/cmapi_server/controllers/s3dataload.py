@@ -58,7 +58,7 @@ class S3DataLoadController:
             for dangerous symbols so just raise error for injection dangerous
             symbols in params.
             """
-            dangerous_symbols = ' &|;\n\r`$'
+            dangerous_symbols = ' #&|;\n\r`$'
             for symbol in dangerous_symbols:
                 if symbol in param:
                     response_error(
@@ -288,23 +288,31 @@ class S3DataLoadController:
         cpimport_error = ''
         cpimport_output = ''
 
-        alive = 3
-        while alive > 0:
+        while True:
             events = selector.select()
             for key, mask in events:
                 name = key.data
                 line = key.fileobj.readline().rstrip()
-                if not line:
-                    # EOF
-                    alive -= 1
-                    selector.unregister(key.fileobj)
-                    continue
-                if name == 'downloader_error':
+                if name == 'downloader_error' and line:
                     downloader_error += line + '\n'
-                if name == 'cpimport_error':
+                if name == 'cpimport_error' and line:
                     cpimport_error += line + '\n'
-                if name == 'cpimport_output':
+                if name == 'cpimport_output' and line:
                     cpimport_output += line + '\n'
+
+            if downloader_error:
+                response_error(downloader_error)
+
+            if cpimport_error:
+                response_error(cpimport_error)
+
+            cpimport_status = cpimport_proc.poll()
+            download_status = download_proc.poll()
+
+            if cpimport_status is not None \
+              and download_status is not None:
+                break
+
 
         # clean after Prepare Google
         if storage == 'gs' and os.path.exists(temporary_config):
