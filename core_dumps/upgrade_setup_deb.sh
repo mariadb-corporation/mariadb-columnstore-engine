@@ -8,6 +8,7 @@ ARCH="$3"
 LINK="$4"
 UPGRADE_TOKEN="$5"
 
+apt install --yes rsyslog
 sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d
 bash -c "apt update --yes && apt install -y procps wget curl"
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup

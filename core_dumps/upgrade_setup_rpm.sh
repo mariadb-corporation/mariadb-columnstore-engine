@@ -8,8 +8,7 @@ ARCH="$3"
 LINK="$4"
 UPGRADE_TOKEN="$5"
 
-yum install -y wget which procps-ng
-yum install -y diffutils
+yum install -y wget which procps-ng diffutils rsyslog
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup
 chmod +x mariadb_es_repo_setup
 bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools --skip-check-installed"
