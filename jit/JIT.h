@@ -7,9 +7,7 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 
-class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
-{
-};
+class JITModuleMemoryManager;
 class JITSymbolResolver;
 class JITCompiler;
 class JIT
@@ -40,5 +38,6 @@ class JIT
   std::unordered_map<uint64_t, std::unique_ptr<JITModuleMemoryManager>> module_identifier_to_memory_manager;
   uint64_t current_module_key = 0;
   std::atomic<size_t> compiled_code_size;
+  // TODO lock when compiling a module
   mutable std::mutex jit_lock;
 };
