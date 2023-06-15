@@ -1,11 +1,10 @@
 #include <unordered_map>
 #include <atomic>
 #include <mutex>
-#include <memory>
+
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
-#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 
 class JITModuleMemoryManager;
 class JITSymbolResolver;

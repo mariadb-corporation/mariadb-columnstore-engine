@@ -277,3 +277,18 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
 
   return std::unique_ptr<llvm::TargetMachine>(target_machine);
 }
+
+void JIT::deleteCompiledModule(JIT::CompiledModule& module)
+{
+  auto module_memory_manager_it = module_identifier_to_memory_manager.find(module.identifier);
+  if (module_memory_manager_it == module_identifier_to_memory_manager.end())
+  {
+  }
+  module_identifier_to_memory_manager.erase(module_memory_manager_it);
+  compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);
+}
+
+void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
+{
+  symbol_resolver->registerSymbol(symbol_name, address);
+}
