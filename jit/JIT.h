@@ -1,12 +1,15 @@
 #include <unordered_map>
 #include <atomic>
 #include <mutex>
-
+#include <memory>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 
-class JITModuleMemoryManager;
+class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
+{
+};
 class JITSymbolResolver;
 class JITCompiler;
 class JIT
@@ -28,6 +31,7 @@ class JIT
   std::unique_ptr<llvm::Module> createModuleForCompilation();
   CompiledModule compiledModule(std::unique_ptr<llvm::Module> module);
   static std::unique_ptr<llvm::TargetMachine> getTargetMachine();
+  std::string getMangledName(const std::string& name_to_mangle) const;
   llvm::LLVMContext context;
   std::unique_ptr<llvm::TargetMachine> target_machine;
   llvm::DataLayout data_layout;
