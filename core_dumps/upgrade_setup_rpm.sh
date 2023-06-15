@@ -8,6 +8,8 @@ ARCH="$3"
 LINK="$4"
 UPGRADE_TOKEN="$5"
 
+yum clean all
+rm -rf /var/cache/dnf/*
 yum install -y wget which procps-ng diffutils rsyslog
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup
 chmod +x mariadb_es_repo_setup
