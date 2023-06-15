@@ -674,7 +674,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'rm -rf storage/columnstore/columnstore',
                'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
                if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-10.1-kvm-rpm-centos74-amd64.rpm',
-               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3-amd64.rpm && cp -v /mdb/mariadb-shared-* /mdb/' + builddir,
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3-amd64.rpm',
              ],
            },
            {
