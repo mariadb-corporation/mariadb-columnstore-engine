@@ -584,7 +584,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   std::set<uint32_t> fFunctionJoinKeys;  // for skipping CP forward
 
   /* Disk-based join support */
-  boost::scoped_array<DiskJoinStep> djs;
+  std::vector<std::shared_ptr<DiskJoinStep>> djs;
   boost::scoped_array<boost::shared_ptr<RowGroupDL> > fifos;
   void djsReaderFcn(int index);
   uint64_t djsReader;  // thread handle from thread pool
