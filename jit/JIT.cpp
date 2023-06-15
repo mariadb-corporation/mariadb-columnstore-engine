@@ -1,4 +1,7 @@
 #include "JIT.h"
+
+#include <sys/mman.h>
+#include <boost/noncopyable.hpp>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DataLayout.h>
@@ -18,6 +21,65 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Support/SmallVectorMemoryBuffer.h>
+
+// TODO: implement this
+class MemoryPage
+{
+ public:
+  MemoryPage() : page_size(0)
+  {
+  }
+  char* allocateMemory(size_t size, size_t alignment)
+  {
+    return nullptr;
+  }
+  inline size_t getAllocatedSize() const
+  {
+    return allocated_size;
+  }
+
+ private:
+  size_t page_size = 0;
+  size_t allocated_size = 0;
+};
+
+class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
+{
+ public:
+  uint8_t* allocateCodeSection(uintptr_t size, unsigned alignment, unsigned section_id,
+                               llvm::StringRef section_name) override
+  {
+    return reinterpret_cast<uint8_t*>(exec_memory_page.allocateMemory(size, alignment));
+  }
+  uint8_t* allocateDataSection(uintptr_t size, unsigned alignment, unsigned, llvm::StringRef,
+                               bool is_read_only) override
+  {
+    if (is_read_only)
+    {
+      return reinterpret_cast<uint8_t*>(ro_memory_page.allocateMemory(size, alignment));
+    }
+    else
+    {
+      return reinterpret_cast<uint8_t*>(rw_memory_page.allocateMemory(size, alignment));
+    }
+  }
+
+  bool finalizeMemory(std::string* err_msg = nullptr) override
+  {
+    return false;
+  }
+
+  inline size_t allocatedMemorySize() const
+  {
+    return rw_memory_page.getAllocatedSize() + ro_memory_page.getAllocatedSize() +
+           exec_memory_page.getAllocatedSize();
+  }
+
+ private:
+  MemoryPage rw_memory_page;
+  MemoryPage ro_memory_page;
+  MemoryPage exec_memory_page;
+};
 
 class JITCompiler
 {
