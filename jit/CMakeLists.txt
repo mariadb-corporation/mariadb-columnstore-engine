@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 14)
+
 include_directories(${ENGINE_COMMON_INCLUDES})
 
 set(jit_LIB_SRCS
