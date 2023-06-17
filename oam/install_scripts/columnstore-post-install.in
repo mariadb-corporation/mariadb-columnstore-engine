@@ -295,6 +295,9 @@ if [ -z "$MCS_USE_S3_STORAGE" ]; then
   MCS_S3_ROLE_NAME="$(find_env_var "MCS_S3_ROLE_NAME")"
   MCS_S3_STS_REGION="$(find_env_var "MCS_S3_STS_REGION")"
   MCS_S3_STS_ENDPOINT="$(find_env_var "MCS_S3_STS_ENDPOINT")"
+  MCS_S3_USE_HTTP="$(find_env_var "MCS_S3_USE_HTTP")"
+  MCS_S3_NO_SSL_VERIFY="$(find_env_var "MCS_S3_NO_SSL_VERIFY")"
+  MCS_S3_LIBS3_DEBUG="$(find_env_var "MCS_S3_LIBS3_DEBUG")"
 fi
 
 if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
@@ -325,6 +328,15 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
       fi
       if [ ! -z "$MCS_S3_STS_ENDPOINT" ]; then
           sed -i "s|^# sts_endpoint =.*|sts_endpoint = $MCS_S3_STS_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_USE_HTTP" ]; then
+          sed -i "s|^# use_http =.*|use_http = enabled|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_NO_SSL_VERIFY" ]; then
+          sed -i "s|^# ssl_verify =.*|ssl_verify = disabled|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_LIBS3_DEBUG" ]; then
+          sed -i "s|^# libs3_debug =.*|libs3_debug = enabled|" /etc/columnstore/storagemanager.cnf
       fi
       sed -i "s|^bucket =.*|bucket = $MCS_S3_BUCKET|" /etc/columnstore/storagemanager.cnf
       sed -i "s|^# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
