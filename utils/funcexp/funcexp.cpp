@@ -403,9 +403,6 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       {
         int64_t val = expression[i]->getIntVal(row, isNull);
 
-        cout << "row: " << row.toString() << endl;
-        cout << val << "!!" << expression[i]->outputIndex() << endl;
-
         if (isNull)
           row.setIntField<4>(INTNULL, expression[i]->outputIndex());
         else

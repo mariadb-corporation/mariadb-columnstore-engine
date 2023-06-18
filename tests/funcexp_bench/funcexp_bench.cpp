@@ -24,6 +24,12 @@
 #include "funcexp.h"
 #include "funcexpwrapper.h"
 #include "arithmeticcolumn.h"
+#include "arithmeticoperator.h"
+#include "rowgroup.h"
+#include "row.h"
+#include "simplecolumn.h"
+#include "simplecolumn_int.h"
+#include "constantcolumn.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -40,7 +46,10 @@ public:
   RowGroup rg;
   vector<uint32_t> offsets, roids, tkeys, charSetNumbers, scale, precision;
   vector<CalpontSystemCatalog::ColDataType> types;
-  ArithmeticColumn* col;
+  rowgroup::RGData rgD;
+  TreeNode *tn1, *tn2, *tn3, *tn4, *tn5, *tn6, *tn7;
+  ReturnedColumn *rc1, *rc2, *rc3, *rc4, *rc5, *rc6, *rc7;
+  ParseTree *pt1, *pt2, *pt3, *pt4, *pt5;
   const uint32_t baseOffset = 2;
   const uint32_t oid = 3000;
   Row row;
@@ -51,20 +60,19 @@ public:
     TwoColumnAdd
   };
 
-  const uint64_t values[2][16] = {
-    {1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8},
-    {51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58}
+  const uint64_t values[3][32] = {
+    {1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8},
+    {51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58}, 
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
   };
 
-  void initRG(uint32_t colCount, vector<CalpontSystemCatalog::ColDataType> &dataTypes, vector<uint32_t> &widths, bool includeResult = true) 
+  void initRG(uint32_t colCount, vector<CalpontSystemCatalog::ColDataType> dataTypes, vector<uint32_t> widths, bool includeResult = true) 
   {
-    const uint32_t rowCount = 16;
+    const uint32_t rowCount = 32;
 
-    cout << "initializing row group" << endl;
+    // cout << "initializing row group" << endl;
     offsets.clear(), roids.clear(), tkeys.clear(), charSetNumbers.clear(), scale.clear(), precision.clear();
-    types.clear();
-    for (uint32_t i = 0; i < colCount; ++i)
-      types.push_back(dataTypes[i]);
+    types = dataTypes;
     uint32_t offset = baseOffset;
     for (uint32_t i = 0; i <= colCount; ++i)
     {
@@ -97,15 +105,15 @@ public:
                   false           // useStringTable
     );
 
-    rowgroup::RGData rgD = rowgroup::RGData(rg);
+    rgD = rowgroup::RGData(rg);
     rg.setData(&rgD);
     rg.initRow(&row); 
     uint32_t rowSize = row.getSize();
 
-    cout << "row size: " << rowSize << endl;
-    cout << "now initialize row group with data" << endl;
+    // cout << "row size: " << rowSize << endl;
+    // cout << "now initialize row group with data" << endl;
 
-    for (uint32_t i = 0; i < colCount - includeResult; ++i)
+    for (uint32_t i = 0; i < colCount; ++i)
     {
       rg.getRow(0, &row);
       switch (dataTypes[i])
@@ -301,24 +309,49 @@ public:
     rg.setRowCount(rowCount);
     rg.getRow(0, &row);
 
-    cout << "done setting values" << endl;
+    // cout << "done setting values" << endl;
   }
 
+  template <int len>
   void initExp(TestType testType)
   {
     switch (testType)
     {
       case TestType::TwoColumnAdd:
       {
-        string exp = "a * 2 + b";
         fe.resetReturnedColumns();
-        col = new ArithmeticColumn(exp);
-        col->outputIndex(2);
-        fe.addReturnedColumn(boost::shared_ptr<ArithmeticColumn>(col));
+        string exp = "col1 * 2 + col2";
+        tn1 = new SimpleColumn_INT<len>();
+        (reinterpret_cast<ReturnedColumn*>(tn1))->inputIndex(0);
+        pt1 = new ParseTree(tn1);
+
+        tn2 = new SimpleColumn_INT<len>();
+        (reinterpret_cast<ReturnedColumn*>(tn2))->inputIndex(1);
+        pt2 = new ParseTree(tn2);
+
+        tn3 = new ConstantColumn("2");
+        pt3 = new ParseTree(tn3);
+
+        tn4 = new ArithmeticOperator("*");
+        pt4 = new ParseTree(tn4);
+        pt4->left(pt1);
+        pt4->right(pt3);
+
+        tn5 = new ArithmeticOperator("+");
+        pt5 = new ParseTree(tn5);
+        pt5->left(pt4);
+        pt5->right(pt2);
+        rc1 = new ArithmeticColumn();
+        auto cp_pt5 = pt5;
+        (reinterpret_cast<ArithmeticColumn*> (rc1))->expression(cp_pt5);
+        rc1->outputIndex(2);
+
+        fe.addReturnedColumn(boost::shared_ptr<ReturnedColumn>(rc1));
         break;
       }
     }
   }
+
 
   EvaluateBenchFixture()
   {
@@ -339,12 +372,84 @@ public:
 
 };
 
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t num_rows = 32, i;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (int i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::TINYINT);
+      widths.push_back(1);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::TINYINT);
+    widths.push_back(1);
+    initRG(3, types, widths);
+    initExp<1>(TestType::TwoColumnAdd);
+    // cout << row.toString() << endl;
+    // for (int i = 0; i < 3; ++i)
+    // {
+    //   cout << "col " << i << " type " << rg.getColType(i) << endl;
+    // }
+    state.ResumeTiming();
+    for (i = 0; i < num_rows; ++i, row.nextRow())
+    {
+      // cout << "row " << i << " " << row.toString() << endl;
+      fe.evaluate(&row);
+      // cout << "row after evaluation " << i << " " << row.toString() << endl;
+    }
+  }
+}
+
+BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate);
+
+
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t num_rows = 32, i;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (int i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::SMALLINT);
+      widths.push_back(2);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::SMALLINT);
+    widths.push_back(2);
+    initRG(3, types, widths);
+    initExp<2>(TestType::TwoColumnAdd);
+    // cout << row.toString() << endl;
+    // for (int i = 0; i < 3; ++i)
+    // {
+    //   cout << "col " << i << " type " << rg.getColType(i) << endl;
+    // }
+    state.ResumeTiming();
+    for (i = 0; i < num_rows; ++i, row.nextRow())
+    {
+      // cout << "row " << i << " " << row.toString() << endl;
+      fe.evaluate(&row);
+      // cout << "row after evaluation " << i << " " << row.toString() << endl;
+    }
+  }
+}
+
+BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate);
+
 BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark::State& state)
 {
+
   for (auto _ : state)
-  {
+  {  
     state.PauseTiming();
-    uint32_t num_rows = 16, i;
+    uint32_t num_rows = 32, i;
     vector<execplan::CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> widths;
     for (int i = 0; i < 2; ++i)
@@ -355,22 +460,57 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark
     types.push_back(execplan::CalpontSystemCatalog::INT);
     widths.push_back(4);
     initRG(3, types, widths);
-    initExp(TestType::TwoColumnAdd);
-    cout << row.toString() << endl;
-    for (int i = 0; i < 3; ++i)
-    {
-      cout << "col " << i << " type " << rg.getColType(i) << endl;
-    }
+    initExp<4>(TestType::TwoColumnAdd);
+    // cout << row.toString() << endl;
+    // for (int i = 0; i < 3; ++i)
+    // {
+    //   cout << "col " << i << " type " << rg.getColType(i) << endl;
+    // }
     state.ResumeTiming();
     for (i = 0; i < num_rows; ++i, row.nextRow())
     {
-      cout << "row " << i << " " << row.toString() << endl;
+      // cout << "row " << i << " " << row.toString() << endl;
       fe.evaluate(&row);
+      // cout << "row after evaluation " << i << " " << row.toString() << endl;
     }
   }
 }
 
-BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)->Unit(benchmark::kMillisecond);
+BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate);
 
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t num_rows = 32, i;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (int i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::BIGINT);
+      widths.push_back(8);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::BIGINT);
+    widths.push_back(8);
+    initRG(3, types, widths);
+    initExp<8>(TestType::TwoColumnAdd);
+    // cout << row.toString() << endl;
+    // for (int i = 0; i < 3; ++i)
+    // {
+    //   cout << "col " << i << " type " << rg.getColType(i) << endl;
+    // }
+    state.ResumeTiming();
+    for (i = 0; i < num_rows; ++i, row.nextRow())
+    {
+      // cout << "row " << i << " " << row.toString() << endl;
+      fe.evaluate(&row);
+      // cout << "row after evaluation " << i << " " << row.toString() << endl;
+    }
+  }
+}
+
+BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate);
 
 BENCHMARK_MAIN();
