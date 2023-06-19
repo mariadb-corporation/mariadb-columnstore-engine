@@ -424,7 +424,6 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
@@ -939,7 +938,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
     createWriteDropLogFile(ropair.objnum, uniqueId, oidList);
 
     //@Bug 1358,1427 Always use the first column in the table, not the first one in columnlist to prevent
-    //random result
+    // random result
     //@Bug 4182. Use widest column as reference column
 
     // Find the widest column

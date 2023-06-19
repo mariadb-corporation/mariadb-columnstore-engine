@@ -21,10 +21,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include "exceptclasses.h"
 #include "conststring.h"
+#include "mcs_datatype_basic.h"
 
 namespace utils
 {
@@ -42,7 +44,8 @@ class NullString
   {
     idbassert(str != nullptr || length == 0);
 
-    if (str) {
+    if (str)
+    {
       mStrPtr.reset(new std::string((const char*)str, length));
     }
   }
@@ -63,6 +66,28 @@ class NullString
       return ConstString(nullptr, 0);
     }
     return ConstString(mStrPtr->c_str(), mStrPtr->length());
+  }
+  uint64_t toMCSUInt64() const
+  {
+    if (isNull())
+    {
+      return 0;
+    }
+
+    const uint64_t val = static_cast<uint64_t>(strtoul(str(), 0, 0));
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return val == joblist::UBIGINTNULL ? MAX_UBIGINT : val;
+  }
+  int64_t toMCSInt64() const
+  {
+    if (isNull())
+    {
+      return 0;
+    }
+
+    const int64_t val = static_cast<int64_t>(atoll(str()));
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return std::max(val, static_cast<int64_t>(joblist::BIGINTEMPTYROW));
   }
   const char* str() const
   {
@@ -119,7 +144,7 @@ class NullString
   }
   NullString& rtrimZero()
   {
-    return *this; // TODO
+    return *this;  // TODO
   }
   // this can be used to safely get a string value, with default value for NULL substitution.
   // it does not raise anything and provides some nonsensical default value for you that will be
@@ -163,7 +188,7 @@ class NullString
   }
   // XXX: here we implement what Row::equals expects.
   //      It is not SQL-NULL-handling compatible, please beware.
-  bool operator ==(const NullString& a) const
+  bool operator==(const NullString& a) const
   {
     if (!mStrPtr && !a.mStrPtr)
     {
@@ -180,7 +205,7 @@ class NullString
     // fall to std::string equality.
     return (*mStrPtr) == (*a.mStrPtr);
   }
-  bool operator ==(const std::string& a) const
+  bool operator==(const std::string& a) const
   {
     if (!mStrPtr)
     {
@@ -189,7 +214,7 @@ class NullString
     // fall to std::string equality.
     return (*mStrPtr) == a;
   }
-  bool operator <(const NullString& a) const
+  bool operator<(const NullString& a) const
   {
     // order NULLs first.
     if (isNull() > a.isNull())
@@ -205,13 +230,12 @@ class NullString
       // fall to std::string equality.
       return (*mStrPtr) < (*a.mStrPtr);
     }
-    return false; // both are NULLs.
+    return false;  // both are NULLs.
   }
-  bool operator >(const NullString& a) const
+  bool operator>(const NullString& a) const
   {
     return a < (*this);
   }
 };
 
-} // namespace utils.
-
+}  // namespace utils.
