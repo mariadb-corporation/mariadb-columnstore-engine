@@ -285,7 +285,6 @@ uint64_t CGroupConfigurator::getFreeMemory()
       ret = getTotalMemory() - usage;
   }
 
-  cout << "free memory = " << ret << endl;
   return ret;
 }
 
