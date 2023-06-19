@@ -185,7 +185,6 @@ const long long columnstore_precision[19] = {0,
                                              99999999999999999LL,
                                              999999999999999999LL};
 
-
 const int128_t ConversionRangeMaxValue[20] = {9999999999999999999_xxl,
                                               99999999999999999999_xxl,
                                               999999999999999999999_xxl,
@@ -665,6 +664,18 @@ class Decimal : public TDecimal128, public TDecimal64
   {
     return isWideDecimalTypeByPrecision(precision) ? TDecimal128::toUInt64Round((uint32_t)scale)
                                                    : TDecimal64::toUInt64Round((uint32_t)scale);
+  }
+
+  int64_t toMCSInt64Round() const
+  {
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return std::max(toSInt64Round(), static_cast<int64_t>(joblist::BIGINTEMPTYROW));
+  }
+  uint64_t toMCSUInt64Round() const
+  {
+    const auto val = toUInt64Round();
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return val == joblist::UBIGINTNULL ? MAX_UBIGINT : val;
   }
 
   // FLOOR related routines

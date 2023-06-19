@@ -21,6 +21,7 @@
 #include <boost/any.hpp>
 #include "exceptclasses.h"
 #include "conststring.h"
+#include "mcs_datatype_basic.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
 #include "mcs_decimal.h"
@@ -33,46 +34,6 @@ typedef int32_t mcs_sint32_t;
 // Because including my_sys.h in a Columnstore header causes too many conflicts
 struct charset_info_st;
 typedef const struct charset_info_st CHARSET_INFO;
-
-
-namespace
-{
-const int64_t MIN_TINYINT __attribute__((unused)) = std::numeric_limits<int8_t>::min() + 2;    // -126;
-const int64_t MAX_TINYINT __attribute__((unused)) = std::numeric_limits<int8_t>::max();        //  127;
-const int64_t MIN_SMALLINT __attribute__((unused)) = std::numeric_limits<int16_t>::min() + 2;  // -32766;
-const int64_t MAX_SMALLINT __attribute__((unused)) = std::numeric_limits<int16_t>::max();      //  32767;
-const int64_t MIN_MEDINT __attribute__((unused)) = -(1ULL << 23);                              // -8388608;
-const int64_t MAX_MEDINT __attribute__((unused)) = (1ULL << 23) - 1;                           //  8388607;
-const int64_t MIN_INT __attribute__((unused)) = std::numeric_limits<int32_t>::min() + 2;       // -2147483646;
-const int64_t MAX_INT __attribute__((unused)) = std::numeric_limits<int32_t>::max();           //  2147483647;
-const int64_t MIN_BIGINT __attribute__((unused)) =
-    std::numeric_limits<int64_t>::min() + 2;  // -9223372036854775806LL;
-const int64_t MAX_BIGINT __attribute__((unused)) =
-    std::numeric_limits<int64_t>::max();  //  9223372036854775807
-
-const uint64_t MIN_UINT __attribute__((unused)) = 0;
-const uint64_t MIN_UTINYINT __attribute__((unused)) = 0;
-const uint64_t MIN_USMALLINT __attribute__((unused)) = 0;
-const uint64_t MIN_UMEDINT __attribute__((unused)) = 0;
-const uint64_t MIN_UBIGINT __attribute__((unused)) = 0;
-const uint64_t MAX_UINT __attribute__((unused)) = std::numeric_limits<uint32_t>::max() - 2;     // 4294967293
-const uint64_t MAX_UTINYINT __attribute__((unused)) = std::numeric_limits<uint8_t>::max() - 2;  // 253;
-const uint64_t MAX_USMALLINT __attribute__((unused)) = std::numeric_limits<uint16_t>::max() - 2;  // 65533;
-const uint64_t MAX_UMEDINT __attribute__((unused)) = (1ULL << 24) - 1;                            // 16777215
-const uint64_t MAX_UBIGINT __attribute__((unused)) =
-    std::numeric_limits<uint64_t>::max() - 2;  // 18446744073709551613
-
-const float MAX_FLOAT __attribute__((unused)) = std::numeric_limits<float>::max();  // 3.402823466385289e+38
-const float MIN_FLOAT __attribute__((unused)) = -std::numeric_limits<float>::max();
-const double MAX_DOUBLE __attribute__((unused)) =
-    std::numeric_limits<double>::max();  // 1.7976931348623157e+308
-const double MIN_DOUBLE __attribute__((unused)) = -std::numeric_limits<double>::max();
-const long double MAX_LONGDOUBLE __attribute__((unused)) =
-    std::numeric_limits<long double>::max();  // 1.7976931348623157e+308
-const long double MIN_LONGDOUBLE __attribute__((unused)) = -std::numeric_limits<long double>::max();
-
-const uint64_t AUTOINCR_SATURATED __attribute__((unused)) = std::numeric_limits<uint64_t>::max();
-}  // namespace
 
 using namespace std;  // e.g. string
 
