@@ -299,6 +299,9 @@ int ServicePrimProc::Child()
   int err = 0;
   err = setupCwd(cf);
 
+  // Initialize the charset library
+  MY_INIT("PrimProc");
+
   mlp = new primitiveprocessor::Logger();
 
   if (!m_debug)
@@ -328,6 +331,10 @@ int ServicePrimProc::Child()
     cerr << errMsg << endl;
 
     NotifyServiceInitializationFailed();
+
+    // Free up resources allocated by MY_INIT() above.
+    my_end(0);
+
     return 2;
   }
   utils::USpaceSpinLock startupRaceLock(getStartupRaceFlag());
@@ -693,6 +700,9 @@ int ServicePrimProc::Child()
 
   cerr << "server.start() exited!" << endl;
 
+  // Free up resources allocated by MY_INIT() above.
+  my_end(0);
+
   return 1;
 }
 
@@ -709,8 +719,6 @@ int main(int argc, char** argv)
   setlocale(LC_NUMERIC, "C");
   // This is unset due to the way we start it
   program_invocation_short_name = const_cast<char*>("PrimProc");
-  // Initialize the charset library
-  MY_INIT(argv[0]);
 
   ServicePrimProc::instance()->setOpt(opt);
   return ServicePrimProc::instance()->Run();

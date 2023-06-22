@@ -174,6 +174,9 @@ int ServiceWriteEngine::Child()
   // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
   WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_WE_SRV);
 
+  // Initialize the charset library
+  MY_INIT("WriteEngineServer");
+
   Config weConfig;
 
   ostringstream serverParms;
@@ -221,6 +224,10 @@ int ServiceWriteEngine::Child()
         logging::MessageLog ml(lid);
         ml.logCriticalMessage(message);
         NotifyServiceInitializationFailed();
+
+        // Free up resources allocated by MY_INIT() above.
+        my_end(0);
+
         return 2;
       }
     }
@@ -258,6 +265,10 @@ int ServiceWriteEngine::Child()
     cerr << errMsg << endl;
 
     NotifyServiceInitializationFailed();
+
+    // Free up resources allocated by MY_INIT() above.
+    my_end(0);
+
     return 2;
   }
 
@@ -304,6 +315,9 @@ int ServiceWriteEngine::Child()
     }
   }
 
+  // Free up resources allocated by MY_INIT() above.
+  my_end(0);
+
   // It is an error to reach here...
   return 1;
 }
@@ -317,8 +331,6 @@ int main(int argc, char** argv)
   setlocale(LC_NUMERIC, "C");
   // This is unset due to the way we start it
   program_invocation_short_name = const_cast<char*>("WriteEngineServ");
-  // Initialize the charset library
-  MY_INIT(argv[0]);
 
   return ServiceWriteEngine(opt).Run();
 }

@@ -193,6 +193,9 @@ int ServiceDDLProc::Child()
 
   ddlprocessor::DDLProcessor ddlprocessor(1, 20);
 
+  // Initialize the charset library
+  MY_INIT("DDLProc");
+
   NotifyServiceStarted();
 
   try
@@ -210,6 +213,10 @@ int ServiceDDLProc::Child()
     message.format(args);
     logging::Logger logger(logid.fSubsysID);
     logger.logMessage(LOG_TYPE_CRITICAL, message, logid);
+
+    // Free up resources allocated by MY_INIT() above.
+    my_end(0);
+
     return 1;
   }
   catch (...)
@@ -223,8 +230,15 @@ int ServiceDDLProc::Child()
     message.format(args);
     logging::Logger logger(logid.fSubsysID);
     logger.logMessage(LOG_TYPE_CRITICAL, message, logid);
+
+    // Free up resources allocated by MY_INIT() above.
+    my_end(0);
+
     return 1;
   }
+
+  // Free up resources allocated by MY_INIT() above.
+  my_end(0);
 
   return 0;
 }
@@ -237,8 +251,6 @@ int main(int argc, char** argv)
   setlocale(LC_NUMERIC, "C");
   // This is unset due to the way we start it
   program_invocation_short_name = const_cast<char*>("DDLProc");
-  // Initialize the charset library
-  MY_INIT(argv[0]);
 
   return ServiceDDLProc(opt).Run();
 }
