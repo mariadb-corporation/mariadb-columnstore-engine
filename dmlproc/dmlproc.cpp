@@ -588,6 +588,9 @@ int ServiceDMLProc::Child()
 
   WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DMLPROC);
 
+  // Initialize the charset library
+  MY_INIT("DMLProc");
+
   //@Bug 1627
   try
   {
@@ -607,6 +610,10 @@ int ServiceDMLProc::Child()
 
     cerr << "DMLProc failed to start due to : " << e.what() << endl;
     NotifyServiceInitializationFailed();
+
+    // Free up resources allocated by MY_INIT() above.
+    my_end(0);
+
     return 1;
   }
 
@@ -666,6 +673,9 @@ int ServiceDMLProc::Child()
 
   _exit(dmlserver.start());
 
+  // Free up resources allocated by MY_INIT() above.
+  my_end(0);
+
   return 1;
 }
 
@@ -678,9 +688,6 @@ int main(int argc, char** argv)
   setlocale(LC_NUMERIC, "C");
   // This is unset due to the way we start it
   program_invocation_short_name = const_cast<char*>("DMLProc");
-  // Initialize the charset library
-  MY_INIT(argv[0]);
 
   return ServiceDMLProc(opt).Run();
 }
-
