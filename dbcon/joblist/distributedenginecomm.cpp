@@ -1050,11 +1050,11 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
   uint32_t connectionId = aPMIndex;
   assert(connectionId < fPmConnections.size());
   // EM-PP exchange via the queue.
-  if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
-  {
-    pushToTheLocalQueueAndNotifyRecv(bs);
-    return 0;
-  }
+  // if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
+  // {
+  //   pushToTheLocalQueueAndNotifyRecv(bs);
+  //   return 0;
+  // }
 
   if (senderUniqueID != numeric_limits<uint32_t>::max())
   {

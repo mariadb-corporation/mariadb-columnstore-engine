@@ -2163,26 +2163,26 @@ void BatchPrimitiveProcessor::serializeStrings()
 
 void BatchPrimitiveProcessor::sendResponse()
 {
-  auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
-  // Here is the fast path for local EM to PM interaction. PM puts into the
-  // input EM DEC queue directly.
-  // !sock has a 'same host connection' semantics here.
-  if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
-  {
-    // Flow Control now handles same node connections so the recieving DEC queue
-    // is limited.
-    if (sendThread->flowControlEnabled())
-    {
-      sendThread->sendResult({serialized, nullptr, nullptr, 0}, false);
-    }
-    else
-    {
-      exeMgrDecPtr->addDataToOutput(serialized);
-      serialized.reset();
-    }
+  // auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
+  // // Here is the fast path for local EM to PM interaction. PM puts into the
+  // // input EM DEC queue directly.
+  // // !sock has a 'same host connection' semantics here.
+  // if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
+  // {
+  //   // Flow Control now handles same node connections so the recieving DEC queue
+  //   // is limited.
+  //   if (sendThread->flowControlEnabled())
+  //   {
+  //     sendThread->sendResult({serialized, nullptr, nullptr, 0}, false);
+  //   }
+  //   else
+  //   {
+  //     exeMgrDecPtr->addDataToOutput(serialized);
+  //     serialized.reset();
+  //   }
 
-    return;
-  }
+  //   return;
+  // }
 
   if (sendThread->flowControlEnabled())
   {
