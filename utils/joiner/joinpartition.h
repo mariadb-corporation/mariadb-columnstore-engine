@@ -33,8 +33,8 @@ class JoinPartition
   JoinPartition(const rowgroup::RowGroup& largeRG, const rowgroup::RowGroup& smallRG,
                 const std::vector<uint32_t>& smallkeyCols, const std::vector<uint32_t>& largeKeyCols,
                 bool typeless, bool isAntiWithMatchNulls, bool hasFEFilter, uint64_t totalUMMemory,
-                uint64_t partitionSize);
-  JoinPartition(const JoinPartition&, bool splitMode);
+                uint64_t partitionSize, uint32_t maxPartitionTreeDepth);
+  JoinPartition(const JoinPartition&, bool splitMode, uint32_t depth);
 
   virtual ~JoinPartition();
 
@@ -51,6 +51,8 @@ class JoinPartition
 
   /* Returns true if there are more partitions to fetch, false otherwise */
   bool getNextPartition(std::vector<rowgroup::RGData>* smallData, uint64_t* partitionID, JoinPartition** jp);
+
+  void collectJoinPartitions(std::vector<JoinPartition*>& joinPartitions);
 
   boost::shared_ptr<rowgroup::RGData> getNextLargeRGData();
 
@@ -100,11 +102,21 @@ class JoinPartition
   {
     return maxSmallSize;
   }
+  void readByteStream(int which, messageqcpp::ByteStream* bs);
+  uint64_t getUniqueID()
+  {
+    return uniqueID;
+  }
+  void setNextSmallOffset(size_t offset)
+  {
+    nextSmallOffset = offset;
+  }
 
  protected:
  private:
   void initBuffers();
   int64_t convertToSplitMode();
+  bool canConvertToSplitMode();
   int64_t processSmallBuffer();
   int64_t processLargeBuffer();
 
@@ -137,7 +149,7 @@ class JoinPartition
   uint64_t largeSizeOnDisk;
   utils::Hasher_r hasher;
   bool rootNode;
-
+  bool canSplit;
   /* Not-in antijoin hack.  A small-side row with a null join column has to go into every partition or
   into one always resident partition (TBD).
 
@@ -148,7 +160,6 @@ class JoinPartition
   bool hasNullJoinColumn(rowgroup::Row&);
 
   // which = 0 -> smallFile, which = 1 -> largeFile
-  void readByteStream(int which, messageqcpp::ByteStream* bs);
   uint64_t writeByteStream(int which, messageqcpp::ByteStream& bs);
 
   /* Compression support */
@@ -163,6 +174,9 @@ class JoinPartition
   /* file descriptor reduction */
   size_t nextSmallOffset;
   size_t nextLargeOffset;
-};
 
+  // Options to control partition tree depth.
+  uint32_t currentPartitionTreeDepth;
+  uint32_t maxPartitionTreeDepth;
+};
 }  // namespace joiner
