@@ -373,10 +373,10 @@ class TableInfo : public WeUIDGID
    */
   int readTableData();
 
-  /** @brief Read parquet file data
-  */
+  /** @brief Read the parquet file data into the memory
+   */
   int readParquetData();
-  
+ 
   /** @brief parse method
    */
   int parseColumn(const int& columnId, const int& bufferId, double& processingTime);

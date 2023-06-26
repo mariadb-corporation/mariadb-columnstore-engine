@@ -269,12 +269,13 @@ bool TableInfo::lockForRead(const int& locker)
 }
 
 
-
 int TableInfo::readParquetData()
 {
+  int rc = NO_ERROR;
   int fileCounter = 0;
   fFileName = fLoadFileList[fileCounter];
 
+  //---------------------------------------------------
   std::cout << "Reading by RecordBatchReader" << std::endl;
 
   arrow::MemoryPool* pool = arrow::default_memory_pool();
@@ -287,7 +288,8 @@ int TableInfo::readParquetData()
   // Configure Arrow-specific Parquet reader settings
   auto arrow_reader_props = parquet::ArrowReaderProperties();
   // TODO:batch_size is set as a parameter
-  arrow_reader_props.set_batch_size(64 * 1024);  // default 64 * 1024
+  int64_t bs = 10;
+  arrow_reader_props.set_batch_size(bs);  // default 64 * 1024
 
   parquet::arrow::FileReaderBuilder reader_builder;
   PARQUET_THROW_NOT_OK(
@@ -302,18 +304,24 @@ int TableInfo::readParquetData()
   PARQUET_THROW_NOT_OK(arrow_reader->GetRecordBatchReader(&rb_reader));
 
 
-  for (arrow::Result<std::shared_ptr<arrow::RecordBatch>> maybe_batch : *rb_reader) {
+  for (arrow::Result<std::shared_ptr<arrow::RecordBatch>> maybe_batch : *rb_reader)
+  {
     // Operate on each batch...
-    // TODO:
     PARQUET_ASSIGN_OR_THROW(auto batch, maybe_batch);
-    // PARQUET_ASSIGN_OR_THROW(auto table,
-    //                       arrow::Table::FromRecordBatches(batch->schema(), {batch}));
-    // std::cout << "Loaded " << table->num_rows() << " rows in " << table->num_columns()
-    //           << " columns." << std::endl;
-    // PARQUET_THROW_NOT_OK(arrow::PrettyPrint(*(batch->GetColumnByName("str")), 4, &std::cout));
-    std::cout << batch->ToString() << std::endl;
+    int current_batch_size = batch->num_rows();
+    // for every column in batch, parse it into ColumnBuffer
+
+    for (unsigned k = 0; k < fNumberOfColumns; k++)
+    {
+      // pass reference to my parseColumn func
+      fBuffers[0].parseParquet(fColumns[k], current_batch_size);
+
+      // TODO:setParseComplete
+    }
   }
+  return rc;
 }
+
 
 //------------------------------------------------------------------------------
 // Loop thru reading the import file(s) assigned to this TableInfo object.
@@ -714,6 +722,16 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
 
   processingTime = (parseEnd.tv_usec / 1000 + parseEnd.tv_sec * 1000) -
                    (parseStart.tv_usec / 1000 + parseStart.tv_sec * 1000);
+
+  return rc;
+}
+
+int TableInfo::parseColumnParquet(const int& columnId, double& processingTime)
+{
+  int rc = NO_ERROR;
+  timeval parseStart, parseEnd;
+  gettimeofday(&parseStart, NULL);
+
 
   return rc;
 }
