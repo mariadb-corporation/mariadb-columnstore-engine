@@ -1876,6 +1876,19 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
         // Count the memory
         if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
         {
+          // MCOL-5512
+          if (fe2)
+          {
+            RowGroup l_fe2RG;
+            Row fe2InRow;
+            Row fe2OutRow;
+
+            l_fe2RG = fe2Output;
+            l_outputRG.initRow(&fe2InRow);
+            l_fe2RG.initRow(&fe2OutRow);
+
+            processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
+          }
           // Don't let the join results buffer get out of control.
           sendResult(outputData);
           outputData.clear();
