@@ -451,8 +451,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
         {
           joinIsTooBig = true;
           ostringstream oss;
-          oss << "(" << __LINE__ << ") "
-              << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+          oss << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
           fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
           errorMessage(oss.str());
           status(logging::ERR_JOIN_TOO_BIG);
