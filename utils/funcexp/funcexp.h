@@ -31,6 +31,7 @@
 
 #include "rowgroup.h"
 #include "returnedcolumn.h"
+#include "simplecolumn.h"
 #include "parsetree.h"
 
 namespace execplan
@@ -79,12 +80,30 @@ class FuncExp
    */
   void evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressions);
 
+    /** @brief evaluate a F&E column on row. used for F&E on the select and group by clause
+   *
+   * @param row input row that contains all the columns in all the expressions
+   * @param expressions F&E that needs evaluation. The results are filled on the row.
+   */
+  void evaluate(rowgroup::Row& row, execplan::SRCP& expressions);
+
   /** @brief evaluate a F&E column on rowgroup. used for F&E on the select and group by clause
    *
    * @param row input rowgroup that contains all the columns in all the expressions
    * @param expressions vector of F&Es that needs evaluation. The results are filled on each row.
    */
-  inline void evaluate(rowgroup::RowGroup& rowgroup, std::vector<execplan::SRCP>& expressions);
+  void evaluate(rowgroup::RowGroup& rowgroup, std::vector<execplan::SRCP>& expressions);
+
+  /**
+   * @brief evaluate a F&E column on rowgroup. used for F&E on the select and group by clause
+   * @param row input rowgroup that contains all the columns in all the expressions
+   * @param expr F&E that needs evaluation. The results are filled on each row.
+   * @param colList column list, stored the column id of the column
+   * @param colData column data, stored the row data of a column together in vector
+   * @param offset offset
+   * @param batchCount batch count
+   */
+  void evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<vector<uint8_t>> colData, uint32_t offset, uint32_t batchCount);
 
   /** @brief get functor from functor map
    *

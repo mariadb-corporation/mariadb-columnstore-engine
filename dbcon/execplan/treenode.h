@@ -375,6 +375,15 @@ class TreeNode
     fResultType.charsetNumber = cnum;
     fOperationType.charsetNumber = cnum;
   }
+  
+  uint32_t dataSize() const
+  {
+    return fDataSize;
+  }
+  void dataSize(uint32_t size)
+  {
+    fDataSize = size;
+  }
 
  protected:
   Result fResult;
@@ -390,6 +399,7 @@ class TreeNode
   std::string fDerivedTable;
   uint64_t fRefCount;
   TreeNode* fDerivedRefCol;
+  uint32_t fDataSize = 0;
 
  private:
   // default okay

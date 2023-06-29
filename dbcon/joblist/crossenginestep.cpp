@@ -541,7 +541,7 @@ void CrossEngineStep::execute()
           if (feBreak)
             continue;
         }
-
+        
         // evaluate the FE join column
         fFeInstance->evaluate(rowFe1, fFeFcnJoin);
 

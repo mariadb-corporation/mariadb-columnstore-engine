@@ -113,11 +113,11 @@ void FuncExpWrapper::deserialize(ByteStream& bs)
 
 bool FuncExpWrapper::evaluate(Row* r)
 {
-  uint32_t i;
+  // uint32_t i;
 
-  for (i = 0; i < filters.size(); i++)
-    if (!fe->evaluate(*r, filters[i].get()))
-      return false;
+  // for (i = 0; i < filters.size(); i++)
+  //   if (!fe->evaluate(*r, filters[i].get()))
+  //     return false;
 
   fe->evaluate(*r, rcs);
 
@@ -130,17 +130,16 @@ void FuncExpWrapper::evaluate(Row &in, Row &out, RowGroup *input, RowGroup &outp
   output.resetRowGroup(baseRid);
   output.setDBRoot(dbRoot);
   output.getRow(0, &out);
-  input->getRow(0, &in);
+  // input->getRow(0, &in);
 
-  for (i = 0; i < rowCount; ++i, in.nextRow())
-  {
-    if (evaluate(&in))
-    {
-      applyMapping(mapping, in, &out);
-      out.setRid(in.getRelRid());
-      output.incRowCount();
-      out.nextRow();
-    }
+  fe->evaluate(*input, rcs);
+
+  input->getRow(0, &in);
+  for (i = 0; i < rowCount; ++i, in.nextRow()) {
+    applyMapping(mapping, in, &out);
+    out.setRid(in.getRelRid());
+    output.incRowCount();
+    out.nextRow();
   }
 }
 

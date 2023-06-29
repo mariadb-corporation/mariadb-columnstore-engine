@@ -89,11 +89,6 @@ if (WITH_UNITTESTS)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 
-    find_package(benchmark REQUIRED)
-    add_executable(funcexp_bench funcexp_bench/funcexp_bench.cpp)
-    target_include_directories(funcexp_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
-    target_link_libraries(funcexp_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
-    add_test(NAME columnstore_microbenchmarks:funcexp_bench, COMMAND funcexp_bench)
 
 endif()
 
@@ -104,5 +99,10 @@ if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     target_link_libraries(primitives_scan_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
     add_test(NAME columnstore_microbenchmarks:primitives_scan_bench, COMMAND primitives_scan_bench)
 
+    find_package(benchmark REQUIRED)
+    add_executable(funcexp_bench funcexp_bench/funcexp_bench.cpp)
+    target_include_directories(funcexp_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
+    target_link_libraries(funcexp_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
+    add_test(NAME columnstore_microbenchmarks:funcexp_bench, COMMAND funcexp_bench)
 
 endif()
