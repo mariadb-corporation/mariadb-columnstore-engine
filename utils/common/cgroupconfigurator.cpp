@@ -149,7 +149,6 @@ uint32_t CGroupConfigurator::getNumCoresFromCGroup()
     first = last + 1;
   }
 
-  cout << "found " << cpus << " CPUS in the string " << cpusString << endl;
   return cpus;
 }
 
@@ -179,7 +178,6 @@ uint32_t CGroupConfigurator::getNumCores()
       ret = getNumCoresFromProc();
   }
 
-  cout << "There are " << ret << " cores available" << endl;
   return ret;
 }
 
