@@ -456,43 +456,33 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 
 void BulkLoad::spawnWorkersParquet()
 {
-  int current_thread = 0;
+  // int current_thread = 0;
 
-  int tableId = -1;
+  int tableId = 0;
 
   // Loop to select and read the next table
 
-  while (true)
-  {
-    tableId = -1;
+  // while (true)
+  // {
+  //   tableId = 0;
 
-    if ((tableId = lockTableForRead(current_thread)) == -1)
-    {
-      fLog.logMsg(
-        "BulkLoad::ReadOperation No more tables "
-        "available for processing. Read thread ",
-      MSGLVL_INFO2);
-      return;
-    }
+  //   // if ((tableId = lockTableForRead(current_thread)) == -1)
+  //   // {
+  //   //   fLog.logMsg(
+  //   //     "BulkLoad::ReadOperation No more tables "
+  //   //     "available for processing. Read thread ",
+  //   //   MSGLVL_INFO2);
+  //   //   return;
+  //   // }
 
-    // for every table, read parquet file
-    int rc = fTableInfo[tableId].readParquetData();
-    // TODO:
-    if (rc == NO_ERROR)
-      break;
-  }
-  // std::cout << "Reading first column of parquet-arrow-example.parquet" << std::endl;
-  // std::shared_ptr<arrow::io::ReadableFile> infile;
-  // PARQUET_ASSIGN_OR_THROW(infile,
-  //                         arrow::io::ReadableFile::Open("/tmp/parquet-arrow-example.parquet",
-  //                                                       arrow::default_memory_pool()));
-  // std::unique_ptr<parquet::arrow::FileReader> reader;
-  // PARQUET_THROW_NOT_OK(
-  //     parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
-  // std::shared_ptr<arrow::ChunkedArray> array;
-  // PARQUET_THROW_NOT_OK(reader->ReadColumn(1, &array));
-  // PARQUET_THROW_NOT_OK(arrow::PrettyPrint(*array, 4, &std::cout));
-  // std::cout << std::endl;
+  //   // for every table, read parquet file
+  //   int rc = fTableInfo[tableId].readParquetData();
+  //   if (rc == NO_ERROR)
+  //     break;
+  // }
+  int rc = fTableInfo[tableId].readParquetData();
+  std::cout << rc << std::endl;
+  std::cout << "it's all done" << std::endl;
 }
 
 //------------------------------------------------------------------------------

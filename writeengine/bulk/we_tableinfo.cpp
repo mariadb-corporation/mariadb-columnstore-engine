@@ -269,10 +269,61 @@ bool TableInfo::lockForRead(const int& locker)
 }
 
 
+// int TableInfo::parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs)
+// {
+//   int rc = NO_ERROR;
+//   ColumnBufferSection* section = 0;
+//   uint32_t nRowsParsed;
+//   RID lastInputRowInExtent;
+//   ColumnInfo& columnInfo = fColumns[k];
+//   RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(10 * k, bs, nRowsParsed,
+//                   &section, lastInputRowInExtent));
+  
+
+//   if (nRowsParsed > 0)
+//   {
+//     unsigned char* buf = new unsigned char[bs * columnInfo.column.width];
+
+//     std::shared_ptr<arrow::Array> columnData = batch->column(k);
+    
+//   }
+//   return rc;
+// }
+
+
+// int TableInfo::parseParquetDict(unsigned int k, int bs)
+// {
+//   int rc = NO_ERROR;
+
+
+//   return rc;
+// }
+
+// int TableInfo::parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs)
+// {
+//   int rc = NO_ERROR;
+//   ColumnBufferSection* section = 0;
+//   uint32_t nRowsParsed;
+//   RID lastInputExtent;
+//   // ColumnInfo& columnInfo = fColumns[k];
+
+//   if (columnInfo.column.colType == COL_TYPE_DICT)
+//   {
+//     rc = parseParquetDict(k, bs);
+//   }
+//   else
+//   {
+//     rc = parseParquetCol(batch, k, bs);
+//   }
+
+// }
+
+
 int TableInfo::readParquetData()
 {
   int rc = NO_ERROR;
   int fileCounter = 0;
+  // read first file temporarily
   fFileName = fLoadFileList[fileCounter];
 
   //---------------------------------------------------
@@ -303,22 +354,392 @@ int TableInfo::readParquetData()
   std::shared_ptr<::arrow::RecordBatchReader> rb_reader;
   PARQUET_THROW_NOT_OK(arrow_reader->GetRecordBatchReader(&rb_reader));
 
-
+  int batch_processed = 0;
   for (arrow::Result<std::shared_ptr<arrow::RecordBatch>> maybe_batch : *rb_reader)
   {
     // Operate on each batch...
     PARQUET_ASSIGN_OR_THROW(auto batch, maybe_batch);
-    int current_batch_size = batch->num_rows();
+    unsigned int current_batch_size = batch->num_rows();
     // for every column in batch, parse it into ColumnBuffer
+    
+    // fNumberOfColumns-1 because there is a special column named aux which is internal column
+    // And later `aux` should be processed individually
 
-    for (unsigned k = 0; k < fNumberOfColumns; k++)
+    for (unsigned k = 0; k < fNumberOfColumns-1; k++)
     {
-      // pass reference to my parseColumn func
-      fBuffers[0].parseParquet(fColumns[k], current_batch_size);
+      // parseParquet(batch, k, current_batch_size);
+      if (fColumns[k].column.colType == COL_TYPE_DICT)
+      {
+        // rc = parseParquetDict(k, bs);
+        continue;
+      }
+      else
+      {
+          // rc = parseParquetCol(batch, k, bs);
+        // int rc = NO_ERROR;
+        ColumnBufferSection* section = 0;
+        uint32_t nRowsParsed;
+        RID lastInputRowInExtent;
+        ColumnInfo& columnInfo = fColumns[k];
+        RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batch_processed, current_batch_size, nRowsParsed,
+                        &section, lastInputRowInExtent));
+        if (nRowsParsed > 0)
+        {
+          unsigned char* buf = new unsigned char[current_batch_size * columnInfo.column.width];
 
-      // TODO:setParseComplete
+          BLBufferStats bufStats(columnInfo.column.dataType);
+          bool updateCPInfoPendingFlag = false;
+          std::shared_ptr<arrow::Array> columnData = batch->column(k);
+          // get current column data type
+          // arrow::Type::type colType = columnData->type()->id();
+          // only consider `int` type now 
+          const char* data_ptr = columnData->data()->GetValues<char>(1);
+          for (uint32_t i = 0; i < current_batch_size; i++)
+          {
+            unsigned char* p = buf + i * columnInfo.column.width;
+            void *t;
+            long long origVal;
+            int32_t iVal;
+            bool bSatVal = false;
+            if (columnData->IsNull(i))
+            {
+              if (columnInfo.column.fWithDefault)
+              {
+                origVal = columnInfo.column.fDefaultInt;
+              }
+              else
+              {
+                iVal = joblist::INTNULL;
+              }
+            }
+            else
+            {
+              memcpy(&iVal, data_ptr + 4*i, 4);
+              origVal = (long long)iVal;
+            }
+
+            // Saturate the value
+            if (origVal < columnInfo.column.fMinIntSat)
+            {
+              origVal = columnInfo.column.fMinIntSat;
+              bSatVal = true;
+            }
+            else if (origVal > static_cast<int64_t>(columnInfo.column.fMaxIntSat))
+            {
+              origVal = static_cast<int64_t>(columnInfo.column.fMaxIntSat);
+              bSatVal = true;
+            }
+            if (bSatVal)
+              bufStats.satCount++;
+
+            if (origVal < bufStats.minBufferVal)
+              bufStats.minBufferVal = origVal;
+
+            if (origVal > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = origVal;
+            t = &iVal;
+            memcpy(p, t, 4);
+
+            updateCPInfoPendingFlag = true;
+
+            if ((RID)(bs * batch_processed + i) == lastInputRowInExtent)
+            {
+              if (columnInfo.column.width <= 8)
+              {
+                columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                        columnInfo.column.dataType, columnInfo.column.width);
+              }
+              else
+              {
+                columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                        columnInfo.column.dataType, columnInfo.column.width);
+              }
+
+              // what's this rowsPerExtent for?
+              lastInputRowInExtent += columnInfo.rowsPerExtent();
+
+              if (isUnsigned(columnInfo.column.dataType))
+              {
+                if (columnInfo.column.width <= 8)
+                {
+                  bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+                  bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+                }
+                else
+                {
+                  bufStats.bigMinBufferVal = -1;
+                  bufStats.bigMaxBufferVal = 0;
+                }
+                updateCPInfoPendingFlag = false;
+              }
+              else
+              {
+                if (columnInfo.column.width <= 8)
+                {
+                  bufStats.minBufferVal = MAX_BIGINT;
+                  bufStats.maxBufferVal = MIN_BIGINT;
+                }
+                else
+                {
+                  utils::int128Max(bufStats.bigMinBufferVal);
+                  utils::int128Min(bufStats.bigMaxBufferVal);
+                }
+                updateCPInfoPendingFlag = false;
+              }
+            }
+
+          }
+
+          if (updateCPInfoPendingFlag)
+          {
+            if (columnInfo.column.width <= 8)
+            {
+              columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                      columnInfo.column.dataType, columnInfo.column.width);
+            }
+            else
+            {
+              columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                      columnInfo.column.dataType, columnInfo.column.width);
+            }
+          }
+
+          if (bufStats.satCount)
+          {
+            columnInfo.incSaturatedCnt(bufStats.satCount);
+          }
+
+          section->write(buf, current_batch_size);
+          delete[] buf;
+
+          RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section))
+
+        }
+        // return rc;
+      }
+    }
+
+    // process `aux` column
+    ColumnInfo& columnInfo = fColumns[fNumberOfColumns-1];
+    ColumnBufferSection* section = 0;
+    uint32_t nRowsParsed;
+    RID lastInputRowInExtent;
+    // ColumnInfo& columnInfo = fColumns[k];
+    RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batch_processed, current_batch_size, nRowsParsed,
+                    &section, lastInputRowInExtent));
+    if (nRowsParsed > 0)
+    {
+      unsigned char* buf = new unsigned char[current_batch_size * columnInfo.column.width];
+
+      BLBufferStats bufStats(columnInfo.column.dataType);
+      bool updateCPInfoPendingFlag = false;
+
+      // std::shared_ptr<arrow::Array> columnData = batch->column(k);
+      // get current column data type
+      // arrow::Type::type colType = columnData->type()->id();
+      // only consider `int` type now 
+      // const char* data_ptr = columnData->data()->GetValues<char>(1);
+      for (uint32_t i = 0; i < current_batch_size; i++)
+      {
+        unsigned char* p = buf + i * columnInfo.column.width;
+        void *t;
+        int64_t origVal;
+        // int32_t iVal;
+        bool bSatVal = false;
+        origVal = static_cast<int64_t>(columnInfo.column.fDefaultUInt);
+        // Saturate the value
+        if (origVal < columnInfo.column.fMinIntSat)
+        {
+          origVal = columnInfo.column.fMinIntSat;
+          bSatVal = true;
+        }
+        else if (origVal > static_cast<int64_t>(columnInfo.column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(columnInfo.column.fMaxIntSat);
+          bSatVal = true;
+        }
+        if (bSatVal)
+          bufStats.satCount++;
+        uint64_t uVal = origVal;
+
+        if (uVal < static_cast<uint64_t>(bufStats.minBufferVal))
+          bufStats.minBufferVal = origVal;
+
+        if (uVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+          bufStats.maxBufferVal = origVal;
+        
+        uint8_t ubiVal = origVal;
+        t = &ubiVal;
+        memcpy(p, t, 1);
+
+        updateCPInfoPendingFlag = true;
+
+        if ((RID)(bs * batch_processed + i) == lastInputRowInExtent)
+        {
+          if (columnInfo.column.width <= 8)
+          {
+            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                    columnInfo.column.dataType, columnInfo.column.width);
+          }
+          else
+          {
+            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                    columnInfo.column.dataType, columnInfo.column.width);
+          }
+
+          // what's this rowsPerExtent for?
+          lastInputRowInExtent += columnInfo.rowsPerExtent();
+
+          if (isUnsigned(columnInfo.column.dataType))
+          {
+            if (columnInfo.column.width <= 8)
+            {
+              bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+              bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+            }
+            else
+            {
+              bufStats.bigMinBufferVal = -1;
+              bufStats.bigMaxBufferVal = 0;
+            }
+            updateCPInfoPendingFlag = false;
+          }
+          else
+          {
+            if (columnInfo.column.width <= 8)
+            {
+              bufStats.minBufferVal = MAX_BIGINT;
+              bufStats.maxBufferVal = MIN_BIGINT;
+            }
+            else
+            {
+              utils::int128Max(bufStats.bigMinBufferVal);
+              utils::int128Min(bufStats.bigMaxBufferVal);
+            }
+            updateCPInfoPendingFlag = false;
+          }
+        }
+
+
+      }
+
+      if (updateCPInfoPendingFlag)
+      {
+        if (columnInfo.column.width <= 8)
+        {
+          columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                  columnInfo.column.dataType, columnInfo.column.width);
+        }
+        else
+        {
+          columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                  columnInfo.column.dataType, columnInfo.column.width);
+        }
+      }
+
+      if (bufStats.satCount)
+      {
+        columnInfo.incSaturatedCnt(bufStats.satCount);
+      }
+
+      section->write(buf, current_batch_size);
+      delete[] buf;
+
+      RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section))
+
+    }
+
+
+
+
+    batch_processed++;
+  }
+
+  // TODO:setParseComplete
+  // After all the data has been parsed
+  // Accumulate list of HWM dictionary blocks to be flushed from cache
+  for (unsigned k = 0; k < fNumberOfColumns; k++)
+  {
+    std::vector<BRM::LBID_t> dictBlksToFlush;
+    fColumns[k].getDictFlushBlks(dictBlksToFlush);
+
+    for (unsigned kk = 0; kk < dictBlksToFlush.size(); kk++)
+    {
+      fDictFlushBlks.push_back(dictBlksToFlush[kk]);
+    }
+
+    int rc = fColumns[k].finishParsing();
+    if (rc != NO_ERROR)
+    {
+      return rc;
     }
   }
+
+  if (!idbdatafile::IDBPolicy::useHdfs())
+  {
+    if (fDictFlushBlks.size() > 0)
+    {
+      cacheutils::flushPrimProcAllverBlocks(fDictFlushBlks);
+      fDictFlushBlks.clear();
+    }
+  }
+  
+  rc = synchronizeAutoInc();
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  std::vector<DBRootExtentInfo> segFileInfo;
+  for (unsigned i = 0; i < fColumns.size(); i++)
+  {
+    DBRootExtentInfo extentInfo;
+    fColumns[i].getSegFileInfo(extentInfo);
+    segFileInfo.push_back(extentInfo);
+  }
+
+
+  rc = validateColumnHWMs(0, segFileInfo, "Ending");
+
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  rc = confirmDBFileChanges();
+
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  rc = finishBRM();
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  rc = changeTableLockState();
+
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  deleteTempDBFileChanges();
+  deleteMetaDataRollbackFile();
+
+  rc = releaseTableLock();
+
+  if (rc != NO_ERROR)
+  {
+    return rc;
+  }
+
+  fStatusTI = WriteEngine::PARSE_COMPLETE;
+
+  freeProcessingBuffers();
+
   return rc;
 }
 
@@ -726,15 +1147,15 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
   return rc;
 }
 
-int TableInfo::parseColumnParquet(const int& columnId, double& processingTime)
-{
-  int rc = NO_ERROR;
-  timeval parseStart, parseEnd;
-  gettimeofday(&parseStart, NULL);
+// int TableInfo::parseColumnParquet(const int& columnId, double& processingTime)
+// {
+//   int rc = NO_ERROR;
+//   timeval parseStart, parseEnd;
+//   gettimeofday(&parseStart, NULL);
 
 
-  return rc;
-}
+//   return rc;
+// }
 
 //------------------------------------------------------------------------------
 // Mark the specified column (columnId) in the specified buffer (bufferId) as

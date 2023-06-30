@@ -289,10 +289,6 @@ class BulkLoadBuffer
    */
   int parse(ColumnInfo& columnInfo);
 
-  /** @brief Parse the parquet table data
-  */
-  int parseParquet(ColumnInfo& columnInfo, int current_batch_size);
-
   /** @brief Set the delimiter used to delimit the columns within a row
    */
   void setColDelimiter(const char& delim)
