@@ -19,6 +19,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <ctime>
 #include <vector>
@@ -105,18 +106,20 @@ struct StepTeleStats
   enum StepType
   {
     T_INVALID,
-    T_HJS,  // TupleHashJoinStep
-    T_DSS,  // DictionaryScanStep
-    T_CES,  // CrossEngineStep
-    T_SQS,  // SubQueryStep
-    T_TAS,  // TupleAggregateStep
-    T_TNS,  // TupleAnnexStep
-    T_BPS,  // TupleBPS
-    T_TCS,  // TupleConstantStep
-    T_HVS,  // TupleHavingStep
-    T_WFS,  // WindowFunctionStep
-    T_SAS,  // SubAdapterStep
-    T_TUN,  // TupleUnion
+    T_HJS,   // TupleHashJoinStep
+    T_DSS,   // DictionaryScanStep
+    T_CES,   // CrossEngineStep
+    T_SQS,   // SubQueryStep
+    T_TAS,   // TupleAggregateStep
+    T_TNS,   // TupleAnnexStep
+    T_BPS,   // TupleBPS
+    T_TCS,   // TupleConstantStep
+    T_TCOS,  // TupleConstantOnlyStep
+    T_TCBS,  // TupleConstantBooleanStep
+    T_HVS,   // TupleHavingStep
+    T_WFS,   // WindowFunctionStep
+    T_SAS,   // SubAdapterStep
+    T_TUN,   // TupleUnion
   };
 
   StepTeleStats()
@@ -136,6 +139,26 @@ struct StepTeleStats
   {
     query_uuid = boost::uuids::nil_generator()();
     step_uuid = boost::uuids::nil_generator()();
+  }
+
+  StepTeleStats(const boost::uuids::uuid& query_uuid_, const boost::uuids::uuid& step_uuid_, STType msg_type_,
+                int32_t total_units_of_work_)
+   : query_uuid(query_uuid_)
+   , msg_type(msg_type_)
+   , step_uuid(step_uuid_)
+   , total_units_of_work(total_units_of_work_)
+  {
+  }
+
+  StepTeleStats(const boost::uuids::uuid& query_uuid_, const boost::uuids::uuid& step_uuid_, STType msg_type_,
+                int32_t total_units_of_work_, int32_t units_of_work_completed_, int64_t rows_)
+   : query_uuid(query_uuid_)
+   , msg_type(msg_type_)
+   , step_uuid(step_uuid_)
+   , rows(rows_)
+   , total_units_of_work(total_units_of_work_)
+   , units_of_work_completed(units_of_work_completed_)
+  {
   }
 
   ~StepTeleStats()

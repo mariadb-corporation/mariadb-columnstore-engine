@@ -18,7 +18,7 @@
 
 //  $Id: tupleannexstep.cpp 9661 2013-07-01 20:33:05Z pleblanc $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -120,7 +120,6 @@ TupleAnnexStep::TupleAnnexStep(const JobInfo& jobInfo)
  , fDistinct(false)
  , fParallelOp(false)
  , fOrderBy(NULL)
- , fConstant(NULL)
  , fFeInstance(funcexp::FuncExp::instance())
  , fJobList(jobInfo.jobListPtr)
  , fFinishedThreads(0)
@@ -151,11 +150,6 @@ TupleAnnexStep::~TupleAnnexStep()
     delete fOrderBy;
 
   fOrderBy = NULL;
-
-  if (fConstant)
-    delete fConstant;
-
-  fConstant = NULL;
 }
 
 void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
@@ -189,34 +183,26 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     }
   }
 
-  if (fConstant == NULL)
-  {
-    vector<uint32_t> oids, oidsIn = rgIn.getOIDs();
-    vector<uint32_t> keys, keysIn = rgIn.getKeys();
-    vector<uint32_t> scale, scaleIn = rgIn.getScale();
-    vector<uint32_t> precision, precisionIn = rgIn.getPrecision();
-    vector<CalpontSystemCatalog::ColDataType> types, typesIn = rgIn.getColTypes();
-    vector<uint32_t> csNums, csNumsIn = rgIn.getCharsetNumbers();
-    vector<uint32_t> pos, posIn = rgIn.getOffsets();
-    size_t n = jobInfo.nonConstDelCols.size();
+  vector<uint32_t> oids, oidsIn = rgIn.getOIDs();
+  vector<uint32_t> keys, keysIn = rgIn.getKeys();
+  vector<uint32_t> scale, scaleIn = rgIn.getScale();
+  vector<uint32_t> precision, precisionIn = rgIn.getPrecision();
+  vector<CalpontSystemCatalog::ColDataType> types, typesIn = rgIn.getColTypes();
+  vector<uint32_t> csNums, csNumsIn = rgIn.getCharsetNumbers();
+  vector<uint32_t> pos, posIn = rgIn.getOffsets();
+  size_t n = jobInfo.nonConstDelCols.size();
 
-    // Add all columns into output RG as keys. Can we put only keys?
-    oids.insert(oids.end(), oidsIn.begin(), oidsIn.begin() + n);
-    keys.insert(keys.end(), keysIn.begin(), keysIn.begin() + n);
-    scale.insert(scale.end(), scaleIn.begin(), scaleIn.begin() + n);
-    precision.insert(precision.end(), precisionIn.begin(), precisionIn.begin() + n);
-    types.insert(types.end(), typesIn.begin(), typesIn.begin() + n);
-    csNums.insert(csNums.end(), csNumsIn.begin(), csNumsIn.begin() + n);
-    pos.insert(pos.end(), posIn.begin(), posIn.begin() + n + 1);
+  // Add all columns into output RG as keys. Can we put only keys?
+  oids.insert(oids.end(), oidsIn.begin(), oidsIn.begin() + n);
+  keys.insert(keys.end(), keysIn.begin(), keysIn.begin() + n);
+  scale.insert(scale.end(), scaleIn.begin(), scaleIn.begin() + n);
+  precision.insert(precision.end(), precisionIn.begin(), precisionIn.begin() + n);
+  types.insert(types.end(), typesIn.begin(), typesIn.begin() + n);
+  csNums.insert(csNums.end(), csNumsIn.begin(), csNumsIn.begin() + n);
+  pos.insert(pos.end(), posIn.begin(), posIn.begin() + n + 1);
 
-    fRowGroupOut =
-        RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
-  }
-  else
-  {
-    fConstant->initialize(jobInfo, &rgIn);
-    fRowGroupOut = fConstant->getOutputRowGroup();
-  }
+  fRowGroupOut =
+      RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
 
   fRowGroupOut.initRow(&fRowOut);
   fRowGroupDeliver = fRowGroupOut;
@@ -256,11 +242,7 @@ void TupleAnnexStep::run()
       dlTimes.setFirstReadTime();
 
     // *DRRTUY Make this block conditional
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     for (uint32_t id = 1; id <= fMaxThreads; id++)
@@ -335,8 +317,7 @@ uint32_t TupleAnnexStep::nextBand(messageqcpp::ByteStream& bs)
   {
     // send an empty / error band
     fRgDataOut.reinit(fRowGroupDeliver, 0);
-    fRowGroupDeliver.setData(&fRgDataOut);
-    fRowGroupDeliver.resetRowGroup(0);
+    fRowGroupDeliver.setDataAndResetRowGroup(&fRgDataOut, 0);
     fRowGroupDeliver.setStatus(status());
     fRowGroupDeliver.serializeRGData(bs);
   }
@@ -353,12 +334,7 @@ void TupleAnnexStep::execute()
   else
     executeNoOrderBy();
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   if (traceOn())
@@ -392,11 +368,7 @@ void TupleAnnexStep::executeNoOrderBy()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled() && !fLimitHit)
@@ -405,8 +377,7 @@ void TupleAnnexStep::executeNoOrderBy()
       fRowGroupIn.getRow(0, &fRowIn);
       // Get a new output rowgroup for each input rowgroup to preserve the rids
       rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-      fRowGroupOut.setData(&rgDataOut);
-      fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+      fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, fRowGroupIn.getBaseRid());
       fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
       fRowGroupOut.getRow(0, &fRowOut);
 
@@ -426,10 +397,7 @@ void TupleAnnexStep::executeNoOrderBy()
           continue;
         }
 
-        if (fConstant)
-          fConstant->fillInConstants(fRowIn, fRowOut);
-        else
-          copyRow(fRowIn, &fRowOut);
+        copyRow(fRowIn, &fRowOut);
 
         fRowGroupOut.incRowCount();
 
@@ -475,8 +443,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   bool more = false;
 
   rgDataOut.reinit(fRowGroupOut);
-  fRowGroupOut.setData(&rgDataOut);
-  fRowGroupOut.resetRowGroup(0);
+  fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
   fRowGroupOut.getRow(0, &fRowOut);
 
   fRowGroupOut.initRow(&row1);
@@ -484,8 +451,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
   rowGroupSkip = fRowGroupOut;
   rgDataSkip.reinit(rowGroupSkip);
-  rowGroupSkip.setData(&rgDataSkip);
-  rowGroupSkip.resetRowGroup(0);
+  rowGroupSkip.setDataAndResetRowGroup(&rgDataSkip, 0);
   rowGroupSkip.initRow(&rowSkip);
   rowGroupSkip.getRow(0, &rowSkip);
 
@@ -496,11 +462,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled() && !fLimitHit)
@@ -518,10 +480,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
         else
           rowPtr = &fRowOut;
 
-        if (fConstant)
-          fConstant->fillInConstants(fRowIn, *rowPtr);
-        else
-          copyRow(fRowIn, rowPtr);
+        copyRow(fRowIn, rowPtr);
 
         fRowIn.nextRow();
         inserted = distinctMap->insert(rowPtr->getPointer());
@@ -548,8 +507,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
               // are few skipped rows
               dataVecSkip.push_back(rgDataSkip);
               rgDataSkip.reinit(rowGroupSkip);
-              rowGroupSkip.setData(&rgDataSkip);
-              rowGroupSkip.resetRowGroup(0);
+              rowGroupSkip.setDataAndResetRowGroup(&rgDataSkip, 0);
               rowGroupSkip.getRow(0, &rowSkip);
             }
             continue;
@@ -564,8 +522,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
           {
             dataVec.push_back(rgDataOut);
             rgDataOut.reinit(fRowGroupOut);
-            fRowGroupOut.setData(&rgDataOut);
-            fRowGroupOut.resetRowGroup(0);
+            fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
             fRowGroupOut.getRow(0, &fRowOut);
           }
         }
@@ -611,11 +568,7 @@ void TupleAnnexStep::executeWithOrderBy()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled())
@@ -638,7 +591,7 @@ void TupleAnnexStep::executeWithOrderBy()
     {
       while (fOrderBy->getData(rgDataIn))
       {
-        if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
+        if (fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
         {
           rgDataOut = rgDataIn;
           fRowGroupOut.setData(&rgDataOut);
@@ -649,17 +602,13 @@ void TupleAnnexStep::executeWithOrderBy()
           fRowGroupIn.getRow(0, &fRowIn);
 
           rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-          fRowGroupOut.setData(&rgDataOut);
-          fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+          fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, fRowGroupIn.getBaseRid());
           fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
           fRowGroupOut.getRow(0, &fRowOut);
 
           for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
           {
-            if (fConstant)
-              fConstant->fillInConstants(fRowIn, fRowOut);
-            else
-              copyRow(fRowIn, &fRowOut);
+            copyRow(fRowIn, &fRowOut);
 
             fRowGroupOut.incRowCount();
             fRowOut.nextRow();
@@ -709,8 +658,7 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
 
   rowgroup::RGData rgDataOut;
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-  fRowGroupOut.setData(&rgDataOut);
-  fRowGroupOut.resetRowGroup(0);
+  fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
   ordering::SortingPQ finalPQ;
@@ -762,14 +710,8 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   {
     ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
     fRowIn.setData(topOBRow.fData);
-    if (!fConstant)
-    {
-      copyRow(fRowIn, &fRowOut);
-    }
-    else
-    {
-      fConstant->fillInConstants(fRowIn, fRowOut);
-    }
+    copyRow(fRowIn, &fRowOut);
+
     rowSize = fRowOut.getSize();
     fRowGroupOut.incRowCount();
     fRowOut.nextRow(rowSize);
@@ -777,88 +719,43 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
     count++;
   }
 
-  if (!fConstant)
+  while (finalPQ.size())
   {
-    while (finalPQ.size())
+    if (cancelled())
     {
-      if (cancelled())
-      {
-        break;
-      }
+      break;
+    }
 
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-
-        fRowIn.setData(topOBRow.fData);
-        copyRow(fRowIn, &fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
-
-        finalPQ.pop();
-        count++;
-        if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
-        {
-          break;
-        }
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupIn, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }
-  else  // Add ConstantColumns striped earlier
-  {
-    while (finalPQ.size())
+    while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
     {
-      if (cancelled())
+      ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
+
+      fRowIn.setData(topOBRow.fData);
+      copyRow(fRowIn, &fRowOut);
+      fRowGroupOut.incRowCount();
+      fRowOut.nextRow(rowSize);
+
+      finalPQ.pop();
+      count++;
+      if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
       {
         break;
       }
+    }
 
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-
-        fRowIn.setData(topOBRow.fData);
-        fConstant->fillInConstants(fRowIn, fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
-
-        finalPQ.pop();
-        count++;
-        if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
-        {
-          break;
-        }
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }    // end of if-else
+    if (fRowGroupOut.getRowCount() > 0)
+    {
+      fRowsReturned += fRowGroupOut.getRowCount();
+      fOutputDL->insert(rgDataOut);
+      rgDataOut.reinit(fRowGroupIn, rowgroup::rgCommonSize);
+      fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
+      fRowGroupOut.getRow(0, &fRowOut);
+    }
+    else
+    {
+      break;
+    }
+  }  // end of limit bound while loop
 
   if (fRowGroupOut.getRowCount() > 0)
   {
@@ -868,12 +765,7 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
 
   fOutputDL->endOfInput();
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   if (traceOn())
@@ -909,8 +801,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   rowgroup::RGData rgDataOut;
   ordering::SortingPQ finalPQ;
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-  fRowGroupOut.setData(&rgDataOut);
-  fRowGroupOut.resetRowGroup(0);
+  fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
 
@@ -953,14 +844,8 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   {
     ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
     fRowIn.setData(topOBRow.fData);
-    if (!fConstant)
-    {
-      copyRow(fRowIn, &fRowOut);
-    }
-    else
-    {
-      fConstant->fillInConstants(fRowIn, fRowOut);
-    }
+    copyRow(fRowIn, &fRowOut);
+
     rowSize = fRowOut.getSize();
     fRowGroupOut.incRowCount();
     fRowOut.nextRow(rowSize);
@@ -968,84 +853,39 @@ void TupleAnnexStep::finalizeParallelOrderBy()
     count++;
   }
 
-  if (!fConstant)
+  while (finalPQ.size())
   {
-    while (finalPQ.size())
+    if (cancelled())
     {
-      if (cancelled())
-      {
-        break;
-      }
+      break;
+    }
 
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
-
-        fRowIn.setData(topOBRow.fData);
-        copyRow(fRowIn, &fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
-
-        finalPQ.pop();
-        count++;
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupIn, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }
-  else  // Add ConstantColumns striped earlier
-  {
-    while (finalPQ.size())
+    while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
     {
-      if (cancelled())
-      {
-        break;
-      }
+      ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
 
-      while (count < fLimitCount && finalPQ.size() && fRowGroupOut.getRowCount() < rowgroup::rgCommonSize)
-      {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(finalPQ.top());
+      fRowIn.setData(topOBRow.fData);
+      copyRow(fRowIn, &fRowOut);
+      fRowGroupOut.incRowCount();
+      fRowOut.nextRow(rowSize);
 
-        fRowIn.setData(topOBRow.fData);
-        fConstant->fillInConstants(fRowIn, fRowOut);
-        fRowGroupOut.incRowCount();
-        fRowOut.nextRow(rowSize);
+      finalPQ.pop();
+      count++;
+    }
 
-        finalPQ.pop();
-        count++;
-        if (fRowGroupOut.getRowCount() == rowgroup::rgCommonSize)
-        {
-          break;
-        }
-      }
-
-      if (fRowGroupOut.getRowCount() > 0)
-      {
-        fRowsReturned += fRowGroupOut.getRowCount();
-        fOutputDL->insert(rgDataOut);
-        rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(0);
-        fRowGroupOut.getRow(0, &fRowOut);
-      }
-      else
-      {
-        break;
-      }
-    }  // end of limit bound while loop
-  }    // end of if-else
+    if (fRowGroupOut.getRowCount() > 0)
+    {
+      fRowsReturned += fRowGroupOut.getRowCount();
+      fOutputDL->insert(rgDataOut);
+      rgDataOut.reinit(fRowGroupIn, rowgroup::rgCommonSize);
+      fRowGroupOut.setDataAndResetRowGroup(&rgDataOut, 0);
+      fRowGroupOut.getRow(0, &fRowOut);
+    }
+    else
+    {
+      break;
+    }
+  }  // end of limit bound while loop
 
   if (fRowGroupOut.getRowCount() > 0)
   {
@@ -1055,12 +895,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
 
   fOutputDL->endOfInput();
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   if (traceOn())
@@ -1210,9 +1045,6 @@ const string TupleAnnexStep::toString() const
 
   if (fOrderBy)
     oss << "    " << fOrderBy->toString();
-
-  if (fConstant)
-    oss << "    " << fConstant->toString();
 
   oss << endl;
 

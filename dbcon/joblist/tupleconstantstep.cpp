@@ -1,27 +1,19 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2019 MariaDB Corporation
+/*
+ Copyright (C) 2023 MariaDB Corporation
+ This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+ Public License as published by the Free Software Foundation; version 2 of the License. This program is
+ distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with this program; if not, write to
+ the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; version 2 of
-   the License.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
-
-//  $Id: tupleconstantstep.cpp 9649 2013-06-25 16:08:05Z xlou $
-
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
+#include <tr1/unordered_set>
+#include <fstream>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -34,53 +26,35 @@ using namespace messageqcpp;
 
 #include "loggingid.h"
 #include "errorcodes.h"
-#include "idberrorinfo.h"
-#include "errorids.h"
 using namespace logging;
 
 #include "calpontsystemcatalog.h"
 #include "constantcolumn.h"
+#include "simplecolumn.h"
 using namespace execplan;
 
-#include "jobstep.h"
 #include "rowgroup.h"
 using namespace rowgroup;
+
+#include "hasher.h"
+#include "stlpoolallocator.h"
+#include "threadnaming.h"
+using namespace utils;
 
 #include "querytele.h"
 using namespace querytele;
 
+#include "funcexp.h"
+#include "jobstep.h"
 #include "jlf_common.h"
+#include "tupleconstantstep.h"
+#include "limitedorderby.h"
+
 #include "tupleconstantstep.h"
 
 namespace joblist
 {
-// static utility method
-SJSTEP TupleConstantStep::addConstantStep(const JobInfo& jobInfo, const rowgroup::RowGroup* rg)
-{
-  TupleConstantStep* tcs = NULL;
-
-  if (jobInfo.constantCol != CONST_COL_ONLY)
-  {
-    tcs = new TupleConstantStep(jobInfo);
-  }
-  else
-  {
-    tcs = new TupleConstantOnlyStep(jobInfo);
-  }
-
-  tcs->initialize(jobInfo, rg);
-  SJSTEP spcs(tcs);
-  return spcs;
-}
-
-TupleConstantStep::TupleConstantStep(const JobInfo& jobInfo)
- : JobStep(jobInfo)
- , fRowsReturned(0)
- , fInputDL(NULL)
- , fOutputDL(NULL)
- , fInputIterator(0)
- , fRunner(0)
- , fEndOfResult(false)
+TupleConstantStep::TupleConstantStep(const JobInfo& jobInfo) : JobStep(jobInfo), jobList_(jobInfo.jobListPtr)
 {
   fExtendedInfo = "TCS: ";
   fQtc.stepParms().stepType = StepTeleStats::T_TCS;
@@ -95,27 +69,33 @@ void TupleConstantStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
   throw runtime_error("Disabled, use initialize() to set output RowGroup.");
 }
 
-void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
+void TupleConstantStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 {
-  vector<uint32_t> oids, oidsIn = fRowGroupIn.getOIDs();
-  vector<uint32_t> keys, keysIn = fRowGroupIn.getKeys();
-  vector<uint32_t> scale, scaleIn = fRowGroupIn.getScale();
-  vector<uint32_t> precision, precisionIn = fRowGroupIn.getPrecision();
-  vector<CalpontSystemCatalog::ColDataType> types, typesIn = fRowGroupIn.getColTypes();
-  vector<uint32_t> csNums, csNumsIn = fRowGroupIn.getCharsetNumbers();
+  // Initialize structures used by separate workers
+  constInitialize(jobInfo, &rgIn);
+}
+
+void TupleConstantStep::constInitialize(const JobInfo& jobInfo, const RowGroup* rgIn)
+{
+  vector<uint32_t> oids, oidsIn = rowGroupIn_.getOIDs();
+  vector<uint32_t> keys, keysIn = rowGroupIn_.getKeys();
+  vector<uint32_t> scale, scaleIn = rowGroupIn_.getScale();
+  vector<uint32_t> precision, precisionIn = rowGroupIn_.getPrecision();
+  vector<CalpontSystemCatalog::ColDataType> types, typesIn = rowGroupIn_.getColTypes();
+  vector<uint32_t> csNums, csNumsIn = rowGroupIn_.getCharsetNumbers();
   vector<uint32_t> pos;
   pos.push_back(2);
 
   if (rgIn)
   {
-    fRowGroupIn = *rgIn;
-    fRowGroupIn.initRow(&fRowIn);
-    oidsIn = fRowGroupIn.getOIDs();
-    keysIn = fRowGroupIn.getKeys();
-    scaleIn = fRowGroupIn.getScale();
-    precisionIn = fRowGroupIn.getPrecision();
-    typesIn = fRowGroupIn.getColTypes();
-    csNumsIn = fRowGroupIn.getCharsetNumbers();
+    rowGroupIn_ = *rgIn;
+    rowGroupIn_.initRow(&rowIn_);
+    oidsIn = rowGroupIn_.getOIDs();
+    keysIn = rowGroupIn_.getKeys();
+    scaleIn = rowGroupIn_.getScale();
+    precisionIn = rowGroupIn_.getPrecision();
+    typesIn = rowGroupIn_.getColTypes();
+    csNumsIn = rowGroupIn_.getCharsetNumbers();
   }
 
   for (uint64_t i = 0, j = 0; i < jobInfo.deliveredCols.size(); i++)
@@ -143,7 +123,7 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
       csNums.push_back(ct.charsetNumber);
       pos.push_back(pos.back() + ct.colWidth);
 
-      fIndexConst.push_back(i);
+      indexConst_.push_back(i);
     }
     else
     {
@@ -161,17 +141,17 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
       precision.push_back(precisionIn[j]);
       types.push_back(typesIn[j]);
       csNums.push_back(csNumsIn[j]);
-      pos.push_back(pos.back() + fRowGroupIn.getColumnWidth(j));
+      pos.push_back(pos.back() + rowGroupIn_.getColumnWidth(j));
       j++;
 
-      fIndexMapping.push_back(i);
+      indexMapping_.push_back(i);
     }
   }
 
-  fRowGroupOut =
+  rowGroupOut_ =
       RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
-  fRowGroupOut.initRow(&fRowOut);
-  fRowGroupOut.initRow(&fRowConst, true);
+  rowGroupOut_.initRow(&rowOut_);
+  rowGroupOut_.initRow(&rowConst_, true);
 
   constructContanstRow(jobInfo);
 }
@@ -179,12 +159,12 @@ void TupleConstantStep::initialize(const JobInfo& jobInfo, const RowGroup* rgIn)
 void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 {
   // construct a row with only the constant values
-  fConstRowData.reset(new uint8_t[fRowConst.getSize()]);
-  fRowConst.setData(rowgroup::Row::Pointer(fConstRowData.get()));
-  fRowConst.initToNull();  // make sure every col is init'd to something, because later we copy the whole row
-  const vector<CalpontSystemCatalog::ColDataType>& types = fRowGroupOut.getColTypes();
+  constRowData_.reset(new uint8_t[rowConst_.getSize()]);
+  rowConst_.setData(rowgroup::Row::Pointer(constRowData_.get()));
+  rowConst_.initToNull();  // make sure every col is init'd to something, because later we copy the whole row
+  const vector<CalpontSystemCatalog::ColDataType>& types = rowGroupOut_.getColTypes();
 
-  for (vector<uint64_t>::iterator i = fIndexConst.begin(); i != fIndexConst.end(); i++)
+  for (vector<uint64_t>::iterator i = indexConst_.begin(); i != indexConst_.end(); i++)
   {
     const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(jobInfo.deliveredCols[*i].get());
     const execplan::Result c = cc->result();
@@ -194,15 +174,15 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
       if (types[*i] == CalpontSystemCatalog::CHAR || types[*i] == CalpontSystemCatalog::VARCHAR ||
           types[*i] == CalpontSystemCatalog::TEXT)
       {
-        fRowConst.setStringField(nullptr, 0, *i);
+        rowConst_.setStringField(nullptr, 0, *i);
       }
       else if (isUnsigned(types[*i]))
       {
-        fRowConst.setUintField(fRowConst.getNullValue(*i), *i);
+        rowConst_.setUintField(rowConst_.getNullValue(*i), *i);
       }
       else
       {
-        fRowConst.setIntField(fRowConst.getSignedNullValue(*i), *i);
+        rowConst_.setIntField(rowConst_.getSignedNullValue(*i), *i);
       }
 
       continue;
@@ -220,37 +200,37 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
       case CalpontSystemCatalog::TIME:
       case CalpontSystemCatalog::TIMESTAMP:
       {
-        fRowConst.setIntField(c.intVal, *i);
+        rowConst_.setIntField(c.intVal, *i);
         break;
       }
 
       case CalpontSystemCatalog::DECIMAL:
       case CalpontSystemCatalog::UDECIMAL:
       {
-        if (fRowGroupOut.getColWidths()[*i] > datatypes::MAXLEGACYWIDTH)
-          fRowConst.setInt128Field(c.decimalVal.TSInt128::getValue(), *i);
+        if (rowGroupOut_.getColWidths()[*i] > datatypes::MAXLEGACYWIDTH)
+          rowConst_.setInt128Field(c.decimalVal.TSInt128::getValue(), *i);
         else
-          fRowConst.setIntField(c.decimalVal.value, *i);
+          rowConst_.setIntField(c.decimalVal.value, *i);
         break;
       }
 
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT:
       {
-        fRowConst.setFloatField(c.floatVal, *i);
+        rowConst_.setFloatField(c.floatVal, *i);
         break;
       }
 
       case CalpontSystemCatalog::DOUBLE:
       case CalpontSystemCatalog::UDOUBLE:
       {
-        fRowConst.setDoubleField(c.doubleVal, *i);
+        rowConst_.setDoubleField(c.doubleVal, *i);
         break;
       }
 
       case CalpontSystemCatalog::LONGDOUBLE:
       {
-        fRowConst.setLongDoubleField(c.longDoubleVal, *i);
+        rowConst_.setLongDoubleField(c.longDoubleVal, *i);
         break;
       }
 
@@ -258,7 +238,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        fRowConst.setStringField(c.strVal, *i);
+        rowConst_.setStringField(c.strVal, *i);
         break;
       }
 
@@ -268,7 +248,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
       case CalpontSystemCatalog::UINT:
       case CalpontSystemCatalog::UBIGINT:
       {
-        fRowConst.setUintField(c.uintVal, *i);
+        rowConst_.setUintField(c.uintVal, *i);
         break;
       }
 
@@ -286,37 +266,42 @@ void TupleConstantStep::run()
   if (fInputJobStepAssociation.outSize() == 0)
     throw logic_error("No input data list for constant step.");
 
-  fInputDL = fInputJobStepAssociation.outAt(0)->rowGroupDL();
+  inputDL_ = fInputJobStepAssociation.outAt(0)->rowGroupDL();
 
-  if (fInputDL == NULL)
+  if (inputDL_ == nullptr)
     throw logic_error("Input is not a RowGroup data list.");
 
-  fInputIterator = fInputDL->getIterator();
+  if (fOutputJobStepAssociation.outSize() == 0)
+    throw logic_error("No output data list for annex step.");
 
-  if (fDelivery == false)
+  outputDL_ = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
+
+  if (outputDL_ == nullptr)
+    throw logic_error("Output is not a RowGroup data list.");
+
+  if (fDelivery == true)
   {
-    if (fOutputJobStepAssociation.outSize() == 0)
-      throw logic_error("No output data list for non-delivery constant step.");
-
-    fOutputDL = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
-
-    if (fOutputDL == NULL)
-      throw logic_error("Output is not a RowGroup data list.");
-
-    fRunner = jobstepThreadPool.invoke(Runner(this));
+    fOutputIterator = outputDL_->getIterator();
   }
+
+  inputDL_ = fInputJobStepAssociation.outAt(0)->rowGroupDL();
+  if (inputDL_ == nullptr)
+    throw logic_error("Input is not a RowGroup data list.");
+
+  fInputIterator = inputDL_->getIterator();
+  runner_ = jobstepThreadPool.invoke([this]() { this->execute(); });
 }
 
 void TupleConstantStep::join()
 {
-  if (fRunner)
-    jobstepThreadPool.join(fRunner);
+  if (runner_)
+  {
+    jobstepThreadPool.join(runner_);
+  }
 }
 
 uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
 {
-  RGData rgDataIn;
-  RGData rgDataOut;
   bool more = false;
   uint32_t rowCount = 0;
 
@@ -324,56 +309,39 @@ uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
   {
     bs.restart();
 
-    more = fInputDL->next(fInputIterator, &rgDataIn);
+    more = outputDL_->next(fOutputIterator, &rgDataOut_);
 
-    if (traceOn() && dlTimes.FirstReadTime().tv_sec == 0)
-      dlTimes.setFirstReadTime();
-
-    if (!more && cancelled())
+    if (more && !cancelled())
     {
-      fEndOfResult = true;
-    }
-
-    if (more && !fEndOfResult)
-    {
-      fRowGroupIn.setData(&rgDataIn);
-      rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-      fRowGroupOut.setData(&rgDataOut);
-
-      fillInConstants();
-      fRowGroupOut.serializeRGData(bs);
-      rowCount = fRowGroupOut.getRowCount();
+      rowGroupOut_.setData(&rgDataOut_);
+      rowGroupOut_.serializeRGData(bs);
+      rowCount = rowGroupOut_.getRowCount();
     }
     else
     {
-      fEndOfResult = true;
+      while (more)
+        more = outputDL_->next(fOutputIterator, &rgDataOut_);
+
+      endOfResult_ = true;
     }
   }
   catch (...)
   {
-    handleException(std::current_exception(), logging::tupleConstantStepErr, logging::ERR_ALWAYS_CRITICAL,
+    handleException(std::current_exception(), logging::ERR_IN_DELIVERY, logging::ERR_ALWAYS_CRITICAL,
                     "TupleConstantStep::nextBand()");
     while (more)
-      more = fInputDL->next(fInputIterator, &rgDataIn);
+      more = outputDL_->next(fOutputIterator, &rgDataOut_);
 
-    fEndOfResult = true;
+    endOfResult_ = true;
   }
 
-  if (fEndOfResult)
+  if (endOfResult_)
   {
     // send an empty / error band
-    RGData rgData(fRowGroupOut, 0);
-    fRowGroupOut.setData(&rgData);
-    fRowGroupOut.resetRowGroup(0);
-    fRowGroupOut.setStatus(status());
-    fRowGroupOut.serializeRGData(bs);
-
-    if (traceOn())
-    {
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
+    rgDataOut_.reinit(rowGroupOut_, 0);
+    rowGroupOut_.setDataAndResetRowGroup(&rgDataOut_, 0);
+    rowGroupOut_.setStatus(status());
+    rowGroupOut_.serializeRGData(bs);
   }
 
   return rowCount;
@@ -381,130 +349,90 @@ uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
 
 void TupleConstantStep::execute()
 {
+  utils::setThreadName("TACS");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
 
   try
   {
-    more = fInputDL->next(fInputIterator, &rgDataIn);
+    more = inputDL_->next(fInputIterator, &rgDataIn);
 
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
-    if (!more && cancelled())
+    while (more && !cancelled())
     {
-      fEndOfResult = true;
-    }
+      rowGroupIn_.setData(&rgDataIn);
+      rowGroupIn_.getRow(0, &rowIn_);
+      // Get a new output rowgroup for each input rowgroup to preserve the rids
+      rgDataOut.reinit(rowGroupOut_, rowGroupIn_.getRowCount());
+      rowGroupOut_.setDataAndResetRowGroup(&rgDataOut, rowGroupIn_.getBaseRid());
+      rowGroupOut_.setDBRoot(rowGroupIn_.getDBRoot());
+      rowGroupOut_.getRow(0, &rowOut_);
 
-    while (more && !fEndOfResult)
-    {
-      fRowGroupIn.setData(&rgDataIn);
-      rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-      fRowGroupOut.setData(&rgDataOut);
-
-      fillInConstants();
-
-      more = fInputDL->next(fInputIterator, &rgDataIn);
-
-      if (cancelled())
+      uint64_t i = 0;
+      for (; i < rowGroupIn_.getRowCount() && !cancelled(); ++i)
       {
-        fEndOfResult = true;
+        fillInConstants(rowIn_, rowOut_);
+        rowGroupOut_.incRowCount();
+
+        rowOut_.nextRow();
+        rowIn_.nextRow();
       }
-      else
+
+      if (rowGroupOut_.getRowCount() > 0)
       {
-        fOutputDL->insert(rgDataOut);
+        outputDL_->insert(rgDataOut);
       }
+
+      rowsReturned_ += i;
+
+      more = inputDL_->next(fInputIterator, &rgDataIn);
     }
   }
   catch (...)
   {
-    handleException(std::current_exception(), logging::tupleConstantStepErr, logging::ERR_ALWAYS_CRITICAL,
+    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
                     "TupleConstantStep::execute()");
   }
 
   while (more)
-    more = fInputDL->next(fInputIterator, &rgDataIn);
+    more = inputDL_->next(fInputIterator, &rgDataIn);
 
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  outputDL_->endOfInput();
+
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, rowsReturned_);
   postStepSummaryTele(sts);
 
-  // Bug 3136, let mini stats to be formatted if traceOn.
   if (traceOn())
   {
+    if (dlTimes.FirstReadTime().tv_sec == 0)
+      dlTimes.setFirstReadTime();
+
     dlTimes.setLastReadTime();
     dlTimes.setEndOfInputTime();
     printCalTrace();
   }
-
-  fEndOfResult = true;
-  fOutputDL->endOfInput();
-}
-
-// *DRRTUY Copy row at once not one field at a time
-void TupleConstantStep::fillInConstants()
-{
-  fRowGroupIn.getRow(0, &fRowIn);
-  fRowGroupOut.getRow(0, &fRowOut);
-
-  if (fIndexConst.size() > 1 || fIndexConst[0] != 0)
-  {
-    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
-    {
-      copyRow(fRowConst, &fRowOut);
-
-      fRowOut.setRid(fRowIn.getRelRid());
-
-      for (uint64_t j = 0; j < fIndexMapping.size(); ++j)
-        fRowIn.copyField(fRowOut, fIndexMapping[j], j);
-
-      fRowIn.nextRow();
-      fRowOut.nextRow();
-    }
-  }
-  else  // only first column is constant
-  {
-    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
-    {
-      fRowOut.setRid(fRowIn.getRelRid());
-      fRowConst.copyField(fRowOut, 0, 0);
-
-      for (uint32_t i = 1; i < fRowOut.getColumnCount(); i++)
-        fRowIn.copyField(fRowOut, i, i - 1);
-
-      fRowIn.nextRow();
-      fRowOut.nextRow();
-    }
-  }
-
-  fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
-  fRowGroupOut.setRowCount(fRowGroupIn.getRowCount());
-  fRowsReturned += fRowGroupOut.getRowCount();
 }
 
 void TupleConstantStep::fillInConstants(const rowgroup::Row& rowIn, rowgroup::Row& rowOut)
 {
-  if (fIndexConst.size() > 1 || fIndexConst[0] != 0)
+  if (indexConst_.size() > 1 || indexConst_[0] != 0)
   {
-    copyRow(fRowConst, &rowOut);
+    copyRow(rowConst_, &rowOut);
     rowOut.setRid(rowIn.getRelRid());
 
-    for (uint64_t j = 0; j < fIndexMapping.size(); ++j)
-      rowIn.copyField(rowOut, fIndexMapping[j], j);
+    for (uint64_t j = 0; j < indexMapping_.size(); ++j)
+      rowIn.copyField(rowOut, indexMapping_[j], j);
   }
   else  // only first column is constant
   {
     rowOut.setRid(rowIn.getRelRid());
-    fRowConst.copyField(rowOut, 0, 0);
+    rowConst_.copyField(rowOut, 0, 0);
 
     for (uint32_t i = 1; i < rowOut.getColumnCount(); i++)
       rowIn.copyField(rowOut, i, i - 1);
@@ -513,28 +441,29 @@ void TupleConstantStep::fillInConstants(const rowgroup::Row& rowIn, rowgroup::Ro
 
 const RowGroup& TupleConstantStep::getOutputRowGroup() const
 {
-  return fRowGroupOut;
+  return rowGroupOut_;
 }
 
 const RowGroup& TupleConstantStep::getDeliveredRowGroup() const
 {
-  return fRowGroupOut;
+  return rowGroupOut_;
 }
 
 void TupleConstantStep::deliverStringTableRowGroup(bool b)
 {
-  fRowGroupOut.setUseStringTable(b);
+  rowGroupOut_.setUseStringTable(b);
 }
 
 bool TupleConstantStep::deliverStringTableRowGroup() const
 {
-  return fRowGroupOut.usesStringTable();
+  return rowGroupOut_.usesStringTable();
 }
 
 const string TupleConstantStep::toString() const
 {
   ostringstream oss;
-  oss << "ConstantStep   ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
+  oss << "ConstantStep ";
+  oss << "  ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
 
   oss << " in:";
 
@@ -559,7 +488,7 @@ void TupleConstantStep::printCalTrace()
   timeString[strlen(timeString) - 1] = '\0';
   ostringstream logStr;
   logStr << "ses:" << fSessionId << " st: " << fStepId << " finished at " << timeString
-         << "; total rows returned-" << fRowsReturned << endl
+         << "; total rows returned-" << rowsReturned_ << endl
          << "\t1st read " << dlTimes.FirstReadTimeString() << "; EOI " << dlTimes.EndOfInputTimeString()
          << "; runtime-" << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
          << "s;\n\tUUID " << uuids::to_string(fStepUuid) << endl
@@ -572,273 +501,16 @@ void TupleConstantStep::printCalTrace()
 void TupleConstantStep::formatMiniStats()
 {
   ostringstream oss;
-  oss << "TCS "
-      << "UM "
+  oss << "TACS ";
+  oss << "UM "
       << "- "
       << "- "
       << "- "
       << "- "
       << "- "
       << "- " << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-      << fRowsReturned << " ";
+      << rowsReturned_ << " ";
   fMiniInfo += oss.str();
-}
-
-// class TupleConstantOnlyStep
-TupleConstantOnlyStep::TupleConstantOnlyStep(const JobInfo& jobInfo) : TupleConstantStep(jobInfo)
-{
-  //	fExtendedInfo = "TCOS: ";
-}
-
-TupleConstantOnlyStep::~TupleConstantOnlyStep()
-{
-}
-
-// void TupleConstantOnlyStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
-void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn)
-{
-  vector<uint32_t> oids;
-  vector<uint32_t> keys;
-  vector<uint32_t> scale;
-  vector<uint32_t> precision;
-  vector<CalpontSystemCatalog::ColDataType> types;
-  vector<uint32_t> csNums;
-  vector<uint32_t> pos;
-  pos.push_back(2);
-
-  deliverStringTableRowGroup(false);
-
-  for (uint64_t i = 0; i < jobInfo.deliveredCols.size(); i++)
-  {
-    const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(jobInfo.deliveredCols[i].get());
-
-    if (cc == NULL)
-      throw runtime_error("none constant column found.");
-
-    CalpontSystemCatalog::ColType ct = cc->resultType();
-
-    if (ct.colDataType == CalpontSystemCatalog::VARCHAR)
-      ct.colWidth++;
-
-    // Round colWidth up
-    if (ct.colWidth == 3)
-      ct.colWidth = 4;
-    else if (ct.colWidth == 5 || ct.colWidth == 6 || ct.colWidth == 7)
-      ct.colWidth = 8;
-
-    oids.push_back(-1);
-    keys.push_back(-1);
-    scale.push_back(ct.scale);
-    precision.push_back(ct.precision);
-    types.push_back(ct.colDataType);
-    csNums.push_back(ct.charsetNumber);
-    pos.push_back(pos.back() + ct.colWidth);
-
-    fIndexConst.push_back(i);
-  }
-
-  fRowGroupOut = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
-                          jobInfo.stringTableThreshold, false);
-  fRowGroupOut.initRow(&fRowOut);
-  fRowGroupOut.initRow(&fRowConst, true);
-
-  constructContanstRow(jobInfo);
-}
-
-void TupleConstantOnlyStep::run()
-{
-  if (fDelivery == false)
-  {
-    if (fOutputJobStepAssociation.outSize() == 0)
-      throw logic_error("No output data list for non-delivery constant step.");
-
-    fOutputDL = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
-
-    if (fOutputDL == NULL)
-      throw logic_error("Output is not a RowGroup data list.");
-
-    try
-    {
-      RGData rgDataOut(fRowGroupOut, 1);
-      fRowGroupOut.setData(&rgDataOut);
-
-      if (traceOn())
-        dlTimes.setFirstReadTime();
-
-      fillInConstants();
-
-      fOutputDL->insert(rgDataOut);
-    }
-    catch (...)
-    {
-      handleException(std::current_exception(), logging::tupleConstantStepErr, logging::ERR_ALWAYS_CRITICAL,
-                      "TupleConstantOnlyStep::run()");
-    }
-
-    if (traceOn())
-    {
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
-
-    // Bug 3136, let mini stats to be formatted if traceOn.
-    fEndOfResult = true;
-    fOutputDL->endOfInput();
-  }
-}
-
-uint32_t TupleConstantOnlyStep::nextBand(messageqcpp::ByteStream& bs)
-{
-  RGData rgDataOut;
-  uint32_t rowCount = 0;
-
-  if (!fEndOfResult)
-  {
-    try
-    {
-      bs.restart();
-
-      if (traceOn() && dlTimes.FirstReadTime().tv_sec == 0)
-        dlTimes.setFirstReadTime();
-
-      rgDataOut.reinit(fRowGroupOut, 1);
-      fRowGroupOut.setData(&rgDataOut);
-
-      fillInConstants();
-      fRowGroupOut.serializeRGData(bs);
-      rowCount = fRowGroupOut.getRowCount();
-    }
-    catch (...)
-    {
-      handleException(std::current_exception(), logging::tupleConstantStepErr, logging::ERR_ALWAYS_CRITICAL,
-                      "TupleConstantOnlyStep::nextBand()");
-    }
-
-    fEndOfResult = true;
-  }
-  else
-  {
-    // send an empty / error band
-    RGData rgData(fRowGroupOut, 0);
-    fRowGroupOut.setData(&rgData);
-    fRowGroupOut.resetRowGroup(0);
-    fRowGroupOut.setStatus(status());
-    fRowGroupOut.serializeRGData(bs);
-
-    if (traceOn())
-    {
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
-  }
-
-  return rowCount;
-}
-
-void TupleConstantOnlyStep::fillInConstants()
-{
-  fRowGroupOut.getRow(0, &fRowOut);
-  idbassert(fRowConst.getColumnCount() == fRowOut.getColumnCount());
-  fRowOut.usesStringTable(fRowConst.usesStringTable());
-  copyRow(fRowConst, &fRowOut);
-  fRowGroupOut.resetRowGroup(0);
-  fRowGroupOut.setRowCount(1);
-  fRowsReturned = 1;
-}
-
-const string TupleConstantOnlyStep::toString() const
-{
-  ostringstream oss;
-  oss << "ConstantOnlyStep ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
-
-  oss << " out:";
-
-  for (unsigned i = 0; i < fOutputJobStepAssociation.outSize(); i++)
-    oss << fOutputJobStepAssociation.outAt(i);
-
-  oss << endl;
-
-  return oss.str();
-}
-
-// class TupleConstantBooleanStep
-TupleConstantBooleanStep::TupleConstantBooleanStep(const JobInfo& jobInfo, bool value)
- : TupleConstantStep(jobInfo), fValue(value)
-{
-  //	fExtendedInfo = "TCBS: ";
-}
-
-TupleConstantBooleanStep::~TupleConstantBooleanStep()
-{
-}
-
-void TupleConstantBooleanStep::initialize(const RowGroup& rgIn, const JobInfo&)
-{
-  fRowGroupOut = rgIn;
-  fRowGroupOut.initRow(&fRowOut);
-  fRowGroupOut.initRow(&fRowConst, true);
-}
-
-void TupleConstantBooleanStep::run()
-{
-  if (fDelivery == false)
-  {
-    if (fOutputJobStepAssociation.outSize() == 0)
-      throw logic_error("No output data list for non-delivery constant step.");
-
-    fOutputDL = fOutputJobStepAssociation.outAt(0)->rowGroupDL();
-
-    if (fOutputDL == NULL)
-      throw logic_error("Output is not a RowGroup data list.");
-
-    if (traceOn())
-    {
-      dlTimes.setFirstReadTime();
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
-
-    // Bug 3136, let mini stats to be formatted if traceOn.
-    fOutputDL->endOfInput();
-  }
-}
-
-uint32_t TupleConstantBooleanStep::nextBand(messageqcpp::ByteStream& bs)
-{
-  // send an empty band
-  RGData rgData(fRowGroupOut, 0);
-  fRowGroupOut.setData(&rgData);
-  fRowGroupOut.resetRowGroup(0);
-  fRowGroupOut.setStatus(status());
-  fRowGroupOut.serializeRGData(bs);
-
-  if (traceOn())
-  {
-    dlTimes.setFirstReadTime();
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
-
-  return 0;
-}
-
-const string TupleConstantBooleanStep::toString() const
-{
-  ostringstream oss;
-  oss << "ConstantBooleanStep ses:" << fSessionId << " txn:" << fTxnId << " st:" << fStepId;
-
-  oss << " out:";
-
-  for (unsigned i = 0; i < fOutputJobStepAssociation.outSize(); i++)
-    oss << fOutputJobStepAssociation.outAt(i);
-
-  oss << endl;
-
-  return oss.str();
 }
 
 }  // namespace joblist

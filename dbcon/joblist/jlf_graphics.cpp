@@ -29,6 +29,7 @@ using namespace std;
 #include "windowfunctionstep.h"
 #include "tupleaggregatestep.h"
 #include "tupleannexstep.h"
+#include "tupleconstantstep.h"
 #include "tuplehashjoin.h"
 #include "tupleunion.h"
 using namespace joblist;
@@ -129,7 +130,7 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
     //			dotFile << " shape=triangle orientation=180";
     //		}
     //		else if (typeid(*(qsi->get())) == typeid(BatchPrimitiveStep) || typeid(*(qsi->get())) ==
-    //typeid(TupleBPS))
+    // typeid(TupleBPS))
     else if (typeid(*(qsi->get())) == typeid(TupleBPS))
     {
       bool isTuple = false;
@@ -212,7 +213,8 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
         for (unsigned int j = 0; j < queryInputSA.outSize(); j++)
         {
           RowGroupDL* dlin = queryInputSA.outAt(j)->rowGroupDL();
-          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;
+          ;
 
           if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
           {
@@ -229,7 +231,8 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
         for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
         {
           RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
-          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;
+          ;
 
           if (dloutptr == dlinptr)
           {
@@ -269,7 +272,7 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
       dotFile << " shape=octagon";
     }
     //		else if (typeid(*(psi->get())) == typeid(BatchPrimitiveStep) || typeid(*(psi->get())) ==
-    //typeid(TupleBPS))
+    // typeid(TupleBPS))
     else if (typeid(*(psi->get())) == typeid(TupleBPS))
     {
       bool isTuple = false;
@@ -325,7 +328,6 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
           if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
           {
             dotFile << stepidIn << " -> " << stepidOut;
-
           }
         }
       }
@@ -338,7 +340,6 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 }
 
 }  // end namespace jlf_graphics
-
 
 #ifdef __clang__
 #pragma clang diagnostic pop

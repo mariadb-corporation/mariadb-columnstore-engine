@@ -47,6 +47,8 @@ set(joblist_LIB_SRCS
     tupleaggregatestep.cpp
     tupleannexstep.cpp
     tupleconstantstep.cpp
+    tupleconstantonlystep.cpp
+    tupleconstantbooleanstep.cpp
     tuplehashjoin.cpp
     tuplehavingstep.cpp
     tupleunion.cpp

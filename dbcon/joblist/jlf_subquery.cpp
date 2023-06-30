@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stack>
 #include <iterator>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -55,7 +55,7 @@ using namespace logging;
 #include "jlf_common.h"
 #include "jlf_execplantojoblist.h"
 #include "expressionstep.h"
-#include "tupleconstantstep.h"
+#include "tupleconstantbooleanstep.h"
 #include "tuplehashjoin.h"
 #include "subquerystep.h"
 #include "subquerytransformer.h"
