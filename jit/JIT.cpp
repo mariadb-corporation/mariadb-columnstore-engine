@@ -21,9 +21,11 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Support/SmallVectorMemoryBuffer.h>
+#include <llvm/Passes/PassBuilder.h>
+
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
-
-
+#include <llvm/ADT/None.h>
+#include <llvm/ExecutionEngine/MCJIT.h>
 // Arena Memory pool for JIT
 class Arena : private boost::noncopyable
 {
@@ -198,9 +200,11 @@ class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
     }
   }
 
-  bool finalizeMemory(std::string* err_msg = nullptr) override
+  bool finalizeMemory(std::string* err_msg) override
   {
-    return false;
+    ro_memory_page.protect(PROT_READ);
+    exec_memory_page.protect(PROT_READ | PROT_EXEC);
+    return true;
   }
 
   inline size_t allocatedMemorySize() const
@@ -317,7 +321,8 @@ JIT::CompiledModule JIT::compiledModule(std::function<void(llvm::Module&)> compi
 
 JIT::CompiledModule JIT::compiledModule(std::unique_ptr<llvm::Module> module)
 {
-  // TODO: module optimization function
+  runOptimizationPassesOnModule(*module);
+
   auto buffer = compiler->compile(*module);
   llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>> object_file =
       llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
@@ -333,7 +338,7 @@ JIT::CompiledModule JIT::compiledModule(std::unique_ptr<llvm::Module> module)
   llvm::RuntimeDyld runtime_dynamic_link = {*module_memory_manager, *symbol_resolver};
   auto linked_object = runtime_dynamic_link.loadObject(*object_file.get());
   runtime_dynamic_link.resolveRelocations();
-  module_memory_manager->finalizeMemory();
+  module_memory_manager->finalizeMemory(nullptr);
 
   CompiledModule compiled_module;
   for (const auto& function : *module)
@@ -342,7 +347,7 @@ JIT::CompiledModule JIT::compiledModule(std::unique_ptr<llvm::Module> module)
     {
       continue;
     }
-    auto function_name = std::string(function.getName());
+    auto function_name = function.getName().str();
     auto function_mangled_name = getMangledName(function_name);
     auto jit_symbol = runtime_dynamic_link.getSymbol(function_mangled_name);
     if (!jit_symbol)
@@ -353,7 +358,7 @@ JIT::CompiledModule JIT::compiledModule(std::unique_ptr<llvm::Module> module)
     auto* jit_symbol_address = reinterpret_cast<void*>(jit_symbol.getAddress());
     compiled_module.function_name_to_symbol.emplace(std::move(function_name), jit_symbol_address);
   }
-  //  compiled_module.size = module_memory_manager->allocatedSize();
+  compiled_module.size = module_memory_manager->allocatedMemorySize();
   compiled_module.identifier = current_module_key;
   module_identifier_to_memory_manager.emplace(current_module_key, std::move(module_memory_manager));
   compiled_code_size.fetch_add(compiled_module.size, std::memory_order_relaxed);
@@ -414,9 +419,11 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
 
 void JIT::deleteCompiledModule(JIT::CompiledModule& module)
 {
+  std::lock_guard<std::mutex> lock(jit_lock);
   auto module_memory_manager_it = module_identifier_to_memory_manager.find(module.identifier);
   if (module_memory_manager_it == module_identifier_to_memory_manager.end())
   {
+    throw std::runtime_error("There is no compiled module with identifier");
   }
   module_identifier_to_memory_manager.erase(module_memory_manager_it);
   compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);
@@ -424,5 +431,33 @@ void JIT::deleteCompiledModule(JIT::CompiledModule& module)
 
 void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
 {
+  std::lock_guard<std::mutex> lock(jit_lock);
   symbol_resolver->registerSymbol(symbol_name, address);
+}
+
+void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
+{
+    llvm::PassManagerBuilder pass_manager_builder;
+    llvm::legacy::PassManager mpm;
+    llvm::legacy::FunctionPassManager fpm(&module);
+    pass_manager_builder.OptLevel = 3;
+    pass_manager_builder.SLPVectorize = true;
+    pass_manager_builder.LoopVectorize = true;
+    pass_manager_builder.RerollLoops = true;
+    pass_manager_builder.VerifyInput = true;
+    pass_manager_builder.VerifyOutput = true;
+    target_machine->adjustPassManager(pass_manager_builder);
+
+    fpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
+    mpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
+
+    pass_manager_builder.populateFunctionPassManager(fpm);
+    pass_manager_builder.populateModulePassManager(mpm);
+
+    fpm.doInitialization();
+    for (auto & function : module)
+        fpm.run(function);
+    fpm.doFinalization();
+
+    mpm.run(module);
 }
