@@ -29,6 +29,7 @@ class JIT
   CompiledModule compiledModule(std::unique_ptr<llvm::Module> module);
   static std::unique_ptr<llvm::TargetMachine> getTargetMachine();
   std::string getMangledName(const std::string& name_to_mangle) const;
+  void runOptimizationPassesOnModule(llvm::Module & module) const;
   llvm::LLVMContext context;
   std::unique_ptr<llvm::TargetMachine> target_machine;
   llvm::DataLayout data_layout;
