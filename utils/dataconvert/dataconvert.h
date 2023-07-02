@@ -1228,6 +1228,13 @@ class DataConvert
   EXPORT static int64_t convertColumnTime(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
                                           int& status, unsigned int dataOrgLen);
 
+
+  EXPORT static int64_t convertArrowColumnTime32(int32_t timeVal);
+
+  EXPORT static int64_t convertArrowColumnTime64(int64_t timeVal);
+
+
+
   /**
    * @brief Is specified datetime valid; used by binary bulk load
    */

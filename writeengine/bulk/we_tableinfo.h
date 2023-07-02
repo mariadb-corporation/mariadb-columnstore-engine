@@ -395,6 +395,8 @@ class TableInfo : public WeUIDGID
   // */
   // int parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
 
+  void parquetConvert(std::shared_ptr<arrow::Array> columnData, JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, int cbs)
+
   /** @brief Read the parquet file data into the memory
    */
   int readParquetData();

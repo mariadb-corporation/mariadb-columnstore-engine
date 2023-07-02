@@ -64,6 +64,8 @@ using namespace querytele;
 #include <arrow/status.h>
 #include <arrow/io/file.h>
 #include <parquet/stream_reader.h>
+using namespace execplan;
+
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -319,6 +321,639 @@ bool TableInfo::lockForRead(const int& locker)
 // }
 
 
+void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, int cbs)
+{
+  char biVal;
+  int iVal;
+  float fVal;
+  double dVal;
+  short siVal;
+  void* pVal;
+  int32_t iDate;
+  char charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
+  long long llVal = 0, llDate = 0;
+  int128_t bigllVal = 0;
+  uint64_t tmp64;
+  uint32_t tmp32;
+  uint8_t ubiVal;
+  uint16_t usiVal;
+  uint32_t uiVal;
+  uint64_t ullVal;
+
+  int width = column.width;
+  switch (column.weType)
+  {
+    case WriteEngine::WR_FLOAT:
+    {
+      const float* dataPtr = columnData->data()->GetValues<float>(1);
+      for (uint32_t i = 0; i < cbs; i++)
+      {
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (column.fWithDefault)
+          {
+            fVal = column.fDefaultDbl;
+            pVal = &fVal;
+          }
+          else
+          {
+            tmp32 = joblist::FLOATNULL;
+            pVal = &tmp32;
+          }
+        }
+        else
+        {
+          float minFltSat = column.fMinDblSat;
+          float maxFltSat = column.fMaxDblSat;
+          memcpy(&fVal, dataPtr + i, width);
+          if (fVal > maxFltSat)
+          {
+            fVal = maxFltSat;
+            bufStats.satCount++;
+          }
+          else if (fVal < minFltSat)
+          {
+            fVal = minFltSat;
+            bufStats.satCount++;
+          }
+          pVal = &fVal;
+        }
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_DOUBLE:
+    {
+      const double* dataPtr = columnData->data()->GetValues<double>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (column.fWithDefault)
+          {
+            dVal = column.fDefaultDbl;
+            pVal = &dVal;
+          }
+          else
+          {
+            tmp64 = joblist::DOUBLENULL;
+            pVal = &tmp64;
+          }
+        }
+        else
+        {
+          memcpy(&dVal, dataPtr + i, width);
+        }
+        if (dVal > column.fMaxDblSat)
+        {
+          dVal = column.fMaxDblSat;
+          bufStats.satCount++;
+        }
+        else if (dVal < column.fMinDblSat)
+        {
+          dVal = column.fMinDblSat;
+          bufStats.satCount++;
+        }
+        pVal = &dVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_CHAR:
+    {
+      auto binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+      int tokenLen;
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        void* p = buf + width * i;
+        if (columnData->IsNull(i))
+        {
+          if (column.fWithDefault)
+          {
+            int defLen = column.fDefaultChr.size();
+            const char* defData = column.fDefaultChr.c_str();
+            if (defLen > column.definedWidth)
+              memcpy(charTmpBuf, defData, column.definedWidth);
+            else
+              memcpy(charTmpBuf, defData, defLen);
+          }
+          else
+          {
+            idbassert(width <= 8);
+            for (j = 0; j < width - 1; j++)
+            {
+              charTmpBuf[j] = '\377';
+            }
+            charTmpBuf[width - 1] = '\376';
+            pVal = charTmpBuf;
+            // break;
+          }
+        }
+        else
+        {
+          const uint8_t* dataPtr = binaryArray->GetValue(i, &tokenLen);
+          if (tokenLen > column.definedWidth)
+          {
+            uint8_t truncate_point = utf8::utf8_truncate_point(field, column.definedWidth);
+            memcpy(charTmpBuf, dataPtr, column.definedWidth - truncate_point);
+            bufStats.satCount++;
+          }
+          else
+          {
+            memcpy(charTmpBuf, dataPtr, tokenLen);
+          }
+        }
+
+        uint64_t compChar = uint64ToStr(*(reinterpret_cast<uint64_t*>(charTmpBuf)));
+        int64_t binChar = static_cast<int64_t>(compChar);
+
+        // Update min/max range
+        uint64_t minVal = static_cast<uint64_t>(bufStats.minBufferVal);
+        uint64_t maxVal = static_cast<uint64_t>(bufStats.maxBufferVal);
+
+        if (compChar < minVal)
+          bufStats.minBufferVal = binChar;
+        if (compChar > maxVal)
+          bufStats.maxBufferVal = binChar;
+
+        pVal = charTmpBuf;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_SHORT:
+    {
+      long long origVal;
+      // use char type here
+      const short* dataPtr = columnData->data()->GetValues<short>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (column.fWithDefault)
+            {
+              origVal = column.fDefaultInt;
+            }
+            else
+            {
+              siVal = joblist::SMALLINTNULL;
+              pVal = &siVal;
+              // to jump to next loop
+              continue;
+            }
+          }
+          else
+          {
+            // FIXME: no fAutoIncNextValue in tableInfo
+            // fill 1 temporarily
+            // origVal = tAutoIncNextValue++;
+            origVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&siVal, dataPtr + i, width);
+          origVal = siVal;
+        }
+
+        if (origVal < column.fMinIntSat)
+        {
+          origVal = column.fMinIntSat;
+          bSatVal = true;
+        }
+        else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(column.fMaxIntSat);
+          bSatVal = true;
+        }
+
+        if (bSatVal)
+          bufStats.satCount++;
+
+        if (origVal < bufStats.minBufferVal)
+          bufStats.minBufferVal = origVal;
+        if (origVal > bufStats.maxBufferVal)
+          bufStats.maxBufferVal = origVal;
+        
+        siVal = origVal;
+        pVal = &siVal;
+        memcpy(p, pVal, width);
+        
+      }
+      break;
+    }
+
+
+    case WriteEngine::WR_USHORT:
+    {
+      int64_t origVal = 0;
+      const uint16_t* dataPtr = columnData->data()->GetValues<uint16_t>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (column.fWithDefault)
+            {
+              origVal = static_cast<int64_t>(column.fDefaultUInt);
+            }
+            else
+            {
+              usiVal = joblist::USMALLINTNULL;
+              pVal = &usiVal;
+              // FIXME:
+              // to jump to next loop
+              continue;
+            }
+          }
+          else
+          {
+            // FIXME: no fAutoIncNextValue in tableInfo
+            // fill 1 temporarily
+            // origVal = tAutoIncNextValue++;
+            origVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&usiVal, dataPtr + i, width);
+          origVal = usiVal;
+        }
+
+        if (origVal < column.fMinIntSat)
+        {
+          origVal = column.fMinIntSat;
+          bSatVal = true;
+        }
+        else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(column.fMaxIntSat);
+          bSatVal = true;
+        }
+
+        if (bSatVal)
+          bufStats.satCount++;
+
+        uint64_t uVal = origVal;
+
+        if (uVal < static_cast<uint64_t>(bufStats.minBufferVal))
+          bufStats.minBufferVal = origVal;
+        if (uVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+          bufStats.maxBufferVal = origVal;
+        
+        usiVal = origVal;
+        pVal = &usiVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_BYTE:
+    {
+      long long origVal;
+      const char* dataPtr = columnData->data()->GetValues<char>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (!column.fWithDefault)
+            {
+              origVal = column.fDefaultInt;
+            }
+            else
+            {
+              biVal = joblist::TINYINTNULL;
+              pVal = &biVal;
+              continue;
+            }
+
+          }
+          else
+          {
+            origVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&biVal, dataPtr + i, width);
+        }
+
+        if (origVal < column.fMinIntSat)
+        {
+          origVal = column.fMinIntSat;
+        }
+        else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(column.fMaxIntSat);
+          bSatVal = true;
+        }
+
+        if (bSatVal)
+          bufStats.satCount++;
+
+
+        if (origVal < bufStats.minBufferVal)
+          bufStats.minBufferVal = origVal;
+        
+        if (origVal > bufStats.maxBufferVal)
+          bufStats.maxBufferVal = origVal;
+
+        biVal = origVal;
+        pVal = &biVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_UBYTE:
+    {
+      int64_t origVal = 0;
+      const uint8_t* dataPtr = columnData->data()->GetValues<uint8_t>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (!column.fWithDefault)
+            {
+              origVal = static_cast<int64_t>(column.fDefaultUInt);
+            }
+            else
+            {
+              ubiVal = joblist::UTINYINTNULL;
+              pVal = &ubiVal;
+              continue;
+            }
+          }
+          else
+          {
+            origVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&ubiVal, dataPtr + i, width);
+        }
+
+        if (origVal < column.fMinIntSat)
+        {
+          origVal = column.fMinIntSat;
+        }
+        else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(column.fMaxIntSat);
+          bSatVal = true;
+        }
+
+        if (bSatVal)
+          bufStats.satCount++;
+
+        uint64_t uVal = origVal;
+
+        if (origVal < static_cast<uint64_t>(bufStats.minBufferVal))
+          bufStats.minBufferVal = origVal;
+        
+        if (origVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+          bufStats.maxBufferVal = origVal;
+
+        ubiVal = origVal;
+        pVal = &ubiVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+    
+    case WriteEngine::WR_LONGLONG:
+    {
+      if (column.dataType != CalpontSystemCatalog::DATETIME &&
+          column.dataType != CalpontSystemCatalog::TIMESTAMP &&
+          column.dataType != CalpontSystemCatalog::TIME)
+      {
+        const long long *dataPtr = columnData->data()->GetValues<long long>(1);
+        for (unsigned int i = 0; i < cbs; i++)
+        {
+          void *p = buf + i * width;
+          bool bSatVal = false;
+          if (columnData->IsNull(i))
+          {
+            if (!column.autoIncFlag)
+            {
+              if (column.fWithDefault)
+              {
+                llVal = column.fDefaultInt;
+              }
+              else
+              {
+                llVal = joblist::BIGINTNULL;
+                pVal = &llVal;
+                continue;
+              }
+            }
+            else
+            {
+              llVal = 1;
+            }
+          }
+          else
+          {
+            memcpy(&llVal, dataPtr + i, width);
+          }
+          if (llVal < column.fMinIntSat)
+          {
+            llVal = column.fMinIntSat;
+            bSatVal = true;
+          }
+          else if (llVal > static_cast<int64_t>(column.fMaxIntSat))
+          {
+            llVal = static_cast<int64_t>(column.fMaxIntSat);
+            bSatVal = true;
+          }
+
+          if (bSatVal)
+            bufStats.satCount++;
+
+          // Update min/max range
+          if (llVal < bufStats.minBufferVal)
+            bufStats.minBufferVal = llVal;
+
+          if (llVal > bufStats.maxBufferVal)
+            bufStats.maxBufferVal = llVal;
+
+          pVal = &llVal;
+          memcpy(p, pVal, width);
+        }
+      }
+      else if (column.dataType == CalpontSystemCatalog::TIME)
+      {
+        // time conversion here
+        // for parquet, there are two time type, time32 and time64
+        // if it's time32, unit is millisecond, int32
+        if (columnData->type_id() == arrow::Type::type::TIME32)
+        {
+          std::shared_ptr<arrow::Time32Array> timeArray = std::static_pointer_cast<arrow::Time32Array>(columnData);
+          for (unsigned int i = 0; i < cbs; i++)
+          {
+            bool bSatVal = false;
+            void *p = buf + i * width;
+            if (columnData->IsNull(i))
+            {
+              if (column.fWithDefault)
+              {
+                llDate = column.fDefaultInt;
+              }
+              else
+              {
+                llDate = joblist::TIMENULL;
+                pVal = &llDate;
+                continue;
+              }
+            }
+            else
+            {
+              // timeVal is millisecond since midnight
+              int32_t timeVal = timeArray->Value(i);
+              llDate = dataconvert::DataConvert::convertArrowColumnTime32(timeVal);
+
+            }
+            if (llDate < bufStats.minBufferVal)
+              bufStats.minBufferVal = llDate;
+            if (llDate > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = llDate;
+            memcpy(p, pVal, width);
+          }
+        }
+        // if it's time64, unit is microsecond, int64
+        else if (columnData->type_id() == arrow::Type::type::TIME64)
+        {
+          std::shared_ptr<arrow::Time64Array> timeArray = std::static_pointer_cast<arrow::Time64Array>(columnData);
+          for (unsigned int i = 0; i < cbs; i++)
+          {
+            bool bSatVal = false;
+            void *p = buf + i * width;
+            if (columnData->IsNull(i))
+            {
+              if (column.fWithDefault)
+              {
+                llDate = column.fDefaultInt;
+              }
+              else
+              {
+                llDate = joblist::TIMENULL;
+                pVal = &llDate;
+                continue;
+              }
+            }
+            else
+            {
+              // timeVal is macrosecond since midnight
+              int64_t timeVal = timeArray->Value(i);
+              llDate = dataconvert::DataConvert::convertArrowColumnTime64(timeVal);
+
+            }
+            if (llDate < bufStats.minBufferVal)
+              bufStats.minBufferVal = llDate;
+            if (llDate > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = llDate;
+            pVal = &llDate;
+            memcpy(p, pVal, width);
+          }
+        }
+      }
+      else if (column.dataType == CalpontSystemCatalog::TIMESTAMP)
+      {
+        // timestamp conversion here
+        // default column type is TIMESTAMP
+        // default unit is millisecond
+        std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
+        for (unsigned int i = 0; i < cbs; i++)
+        {
+          bool bSatVal = false;
+          void *p = buf + i * width;
+          if (columnData->IsNull(i))
+          {
+            if (column.fWithDefault)
+            {
+              llDate = column.fDefaultInt;
+            }
+            else
+            {
+              llDate = joblist::TIMESTAMPNULL;
+              pVal = &llDate;
+              continue;
+            }
+          }
+          else
+          {
+            int64_t timeVal = timeArray->Value(i);
+            llDate = timeVal;
+          }
+          if (llDate < bufStats.minBufferVal)
+            bufStats.minBufferVal = llDate;
+          if (llDate > bufStats.maxBufferVal)
+            bufStats.maxBufferVal = llDate;
+          pVal = &llDate;
+          memcpy(p, pVal, width);
+        }
+      }
+      else
+      {
+        // datetime conversion here
+        // default column type is TIMESTAMP
+        std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
+        for (unsigned int i = 0; i < cbs; i++)
+        {
+          bool bSatVal = false;
+          void *p = buf + i * width;
+          if (columnData->IsNull(i))
+          {
+            if (column.fWithDefault)
+            {
+              llDate = column.fDefaultInt;
+            }
+            else
+            {
+              llDate = joblist::DATETIMENULL;
+              pVal = &llDate;
+              continue;
+            }
+          }
+          else
+          {
+            int64_t timestampVal = timeArray->Value(i);
+            // TODO:To get the datetime info of timestampVal
+          }
+        }
+
+      }
+    }
+
+    case WriteEngine::WR_BINARY:
+    {
+      bool bSatVal = false;
+
+    }
+  }
+}
+
 int TableInfo::readParquetData()
 {
   int rc = NO_ERROR;
@@ -393,6 +1028,15 @@ int TableInfo::readParquetData()
           // get current column data type
           // arrow::Type::type colType = columnData->type()->id();
           // only consider `int` type now 
+
+          // parquetConvert(std::shared_ptr<arrow::Array>, JobColumn&, BLBufferStats&, unsigned char*)
+
+          parquetConvert(columnData, columnInfo.column, bufStats, buf, current_batch_size);
+
+
+
+
+
           const char* data_ptr = columnData->data()->GetValues<char>(1);
           for (uint32_t i = 0; i < current_batch_size; i++)
           {

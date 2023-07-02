@@ -2003,6 +2003,116 @@ int64_t DataConvert::convertColumnTimestamp(const char* dataOrg, CalpontDateTime
   return value;
 }
 
+
+int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
+{
+  int64_t value = 0;
+  // convert millisecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000;
+  // inHour %= 24;
+  inMinute = (timeVal - inHour * 3600000) / 60000;
+  // inMinute %= 60;
+  inSecond = (timeVal - inHour * 3600000 - inMinute * 60000) / 1000;
+  // inSecond %= 60;
+  inMicrosecond = (timeVal - inHour * 360000 - inMinute * 60000 - inSecond * 1000) * 1000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+  }
+  return value;
+}
+
+int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
+{
+  int64_t value = 0;
+  // convert macrosecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000000;
+  // inHour %= 24;
+  inMinute = (timeVal - inHour * 3600000000) / 60000000;
+  // inMinute %= 60;
+  inSecond = (timeVal - inHour * 3600000000 - inMinute * 60000000) / 1000000;
+  // inSecond %= 60;
+  inMicrosecond = timeVal - inHour * 360000000 - inMinute * 60000000 - inSecond * 1000000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+  }
+  return value;
+}
+
+
 //------------------------------------------------------------------------------
 // Convert time string to binary time.  Used by BulkLoad.
 // Most of this is taken from str_to_time in sql-common/my_time.c
