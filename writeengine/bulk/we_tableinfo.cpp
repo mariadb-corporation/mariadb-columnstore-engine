@@ -66,6 +66,8 @@ using namespace querytele;
 #include <parquet/stream_reader.h>
 using namespace execplan;
 
+#include "utils_utf8.h"  // utf8_truncate_point()
+
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -293,13 +295,36 @@ bool TableInfo::lockForRead(const int& locker)
 // }
 
 
-// int TableInfo::parseParquetDict(unsigned int k, int bs)
-// {
-//   int rc = NO_ERROR;
+int TableInfo::parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed)
+{
+  int rc = NO_ERROR;
+  ColumnInfo& columnInfo = fColumns[k];
 
+  ColumnBufferSection* section = 0;
+  RID lastInputRowInExtent = 0;
+  uint32_t nRowsParsed;
+  RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batchProcessed, cbs, nRowsParsed, &section, lastInputRowInExtent));
 
-//   return rc;
-// }
+  if (nRowsParsed > 0)
+  {
+    char* tokenBuf = new char[nRowsParsed * 8];
+    std::shared_ptr<arrow::Array> columnData = batch->column(k);
+    rc = columnInfo.updateDctnryStoreParquet(columnData, nRowsParsed, tokenBuf);
+
+    if (rc == NO_ERROR)
+    {
+      section->write(tokenBuf, nRowsParsed);
+      delete[] tokenBuf;
+
+      RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
+    }
+    else
+    {
+      delete[] tokenBuf;
+    }
+  }
+  return rc;
+}
 
 // int TableInfo::parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs)
 // {
@@ -321,7 +346,7 @@ bool TableInfo::lockForRead(const int& locker)
 // }
 
 
-void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, int cbs)
+void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs)
 {
   char biVal;
   int iVal;
@@ -329,8 +354,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
   double dVal;
   short siVal;
   void* pVal;
-  int32_t iDate;
-  char charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
+  // int32_t iDate;
   long long llVal = 0, llDate = 0;
   int128_t bigllVal = 0;
   uint64_t tmp64;
@@ -360,6 +384,8 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           {
             tmp32 = joblist::FLOATNULL;
             pVal = &tmp32;
+            memcpy(p, pVal, width);
+            continue;
           }
         }
         else
@@ -401,6 +427,8 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           {
             tmp64 = joblist::DOUBLENULL;
             pVal = &tmp64;
+            memcpy(p, pVal, width);
+            continue;
           }
         }
         else
@@ -429,6 +457,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
       int tokenLen;
       for (unsigned int i = 0; i < cbs; i++)
       {
+        char charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
         void* p = buf + width * i;
         if (columnData->IsNull(i))
         {
@@ -444,21 +473,24 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           else
           {
             idbassert(width <= 8);
-            for (j = 0; j < width - 1; j++)
+            for (int j = 0; j < width - 1; j++)
             {
               charTmpBuf[j] = '\377';
             }
             charTmpBuf[width - 1] = '\376';
             pVal = charTmpBuf;
+            memcpy(p, pVal, width);
+            continue;
             // break;
           }
         }
         else
         {
-          const uint8_t* dataPtr = binaryArray->GetValue(i, &tokenLen);
+          const uint8_t* data = binaryArray->GetValue(i, &tokenLen);
+          const char* dataPtr = reinterpret_cast<const char*>(data);
           if (tokenLen > column.definedWidth)
           {
-            uint8_t truncate_point = utf8::utf8_truncate_point(field, column.definedWidth);
+            uint8_t truncate_point = utf8::utf8_truncate_point(dataPtr, column.definedWidth);
             memcpy(charTmpBuf, dataPtr, column.definedWidth - truncate_point);
             bufStats.satCount++;
           }
@@ -507,6 +539,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               siVal = joblist::SMALLINTNULL;
               pVal = &siVal;
+              memcpy(p, pVal, width);
               // to jump to next loop
               continue;
             }
@@ -573,6 +606,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               usiVal = joblist::USMALLINTNULL;
               pVal = &usiVal;
+              memcpy(p, pVal, width);
               // FIXME:
               // to jump to next loop
               continue;
@@ -640,6 +674,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               biVal = joblist::TINYINTNULL;
               pVal = &biVal;
+              memcpy(p, pVal, width);
               continue;
             }
 
@@ -701,6 +736,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               ubiVal = joblist::UTINYINTNULL;
               pVal = &ubiVal;
+              memcpy(p, pVal, width);
               continue;
             }
           }
@@ -717,6 +753,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         if (origVal < column.fMinIntSat)
         {
           origVal = column.fMinIntSat;
+          bSatVal = true;
         }
         else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
         {
@@ -729,10 +766,10 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
 
         uint64_t uVal = origVal;
 
-        if (origVal < static_cast<uint64_t>(bufStats.minBufferVal))
+        if (uVal < static_cast<uint64_t>(bufStats.minBufferVal))
           bufStats.minBufferVal = origVal;
         
-        if (origVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+        if (uVal > static_cast<uint64_t>(bufStats.maxBufferVal))
           bufStats.maxBufferVal = origVal;
 
         ubiVal = origVal;
@@ -765,6 +802,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
               {
                 llVal = joblist::BIGINTNULL;
                 pVal = &llVal;
+                memcpy(p, pVal, width);
                 continue;
               }
             }
@@ -812,7 +850,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           std::shared_ptr<arrow::Time32Array> timeArray = std::static_pointer_cast<arrow::Time32Array>(columnData);
           for (unsigned int i = 0; i < cbs; i++)
           {
-            bool bSatVal = false;
+            // bool bSatVal = false;
             void *p = buf + i * width;
             if (columnData->IsNull(i))
             {
@@ -824,6 +862,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
               {
                 llDate = joblist::TIMENULL;
                 pVal = &llDate;
+                memcpy(p, pVal, width);
                 continue;
               }
             }
@@ -847,7 +886,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           std::shared_ptr<arrow::Time64Array> timeArray = std::static_pointer_cast<arrow::Time64Array>(columnData);
           for (unsigned int i = 0; i < cbs; i++)
           {
-            bool bSatVal = false;
+            // bool bSatVal = false;
             void *p = buf + i * width;
             if (columnData->IsNull(i))
             {
@@ -859,6 +898,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
               {
                 llDate = joblist::TIMENULL;
                 pVal = &llDate;
+                memcpy(p, pVal, width);
                 continue;
               }
             }
@@ -886,7 +926,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
         for (unsigned int i = 0; i < cbs; i++)
         {
-          bool bSatVal = false;
+          // bool bSatVal = false;
           void *p = buf + i * width;
           if (columnData->IsNull(i))
           {
@@ -898,6 +938,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               llDate = joblist::TIMESTAMPNULL;
               pVal = &llDate;
+              memcpy(p, pVal, width);
               continue;
             }
           }
@@ -921,7 +962,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
         for (unsigned int i = 0; i < cbs; i++)
         {
-          bool bSatVal = false;
+          // bool bSatVal = false;
           void *p = buf + i * width;
           if (columnData->IsNull(i))
           {
@@ -933,23 +974,259 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               llDate = joblist::DATETIMENULL;
               pVal = &llDate;
+              memcpy(p, pVal, width);
               continue;
             }
           }
           else
           {
-            int64_t timestampVal = timeArray->Value(i);
+            // int64_t timestampVal = timeArray->Value(i);
             // TODO:To get the datetime info of timestampVal
+            continue;
           }
         }
 
       }
+      break;
     }
 
     case WriteEngine::WR_BINARY:
     {
-      bool bSatVal = false;
+      // Parquet does not have data type with 128 byte
+      // const int128_t* dataPtr = static_pointer_cast<int128_t>(columnData);
+      const int128_t* dataPtr = columnData->data()->GetValues<int128_t>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        void* p = buf + i * width;
+        // bool bSatVal = false;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (column.fWithDefault)
+            {
+              bigllVal = column.fDefaultWideDecimal;
+            }
+            else
+            {
+              bigllVal = datatypes::Decimal128Null;
+              pVal = &bigllVal;
+              memcpy(p, pVal, width);
+              continue;
+            }
+          }
+          else
+          {
+            bigllVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&bigllVal, dataPtr + i, width);
+        }
 
+        //TODO: no bSatVal change here
+        if (bigllVal < bufStats.bigMinBufferVal)
+          bufStats.bigMinBufferVal = bigllVal;
+        
+        if (bigllVal > bufStats.bigMaxBufferVal)
+          bufStats.bigMaxBufferVal = bigllVal;
+        
+        pVal = &bigllVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+
+    case WriteEngine::WR_ULONGLONG:
+    {
+      const uint64_t* dataPtr = columnData->data()->GetValues<uint64_t>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        // const uint64_t* dataPtr = static_pointer_cast<uint64_t>(columnData);
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (column.fWithDefault)
+            {
+              ullVal = column.fDefaultUInt;
+            }
+            else
+            {
+              ullVal = joblist::UBIGINTNULL;
+              pVal = &ullVal;
+              memcpy(p, pVal, width);
+              continue;
+            }
+          }
+          else
+          {
+            ullVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&ullVal, dataPtr+i, width);
+        }
+        if (ullVal > column.fMaxIntSat)
+        {
+          ullVal = column.fMaxIntSat;
+          bSatVal = true;
+        }
+        // TODO:why no comparsion with column.fMinIntSat
+        
+
+        if (bSatVal)
+          bufStats.satCount++;
+        if (ullVal < static_cast<uint64_t>(bufStats.minBufferVal))
+          bufStats.minBufferVal = static_cast<int64_t>(ullVal);
+
+        if (ullVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+          bufStats.maxBufferVal = static_cast<int64_t>(ullVal);
+
+        pVal = &ullVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_UMEDINT:
+    case WriteEngine::WR_UINT:
+    {
+      int64_t origVal;
+      // const uint32_t* dataPtr = static_pointer_cast<uint32_t>(columnData);
+      const uint32_t* dataPtr = columnData->data()->GetValues<uint32_t>(1);
+      for (unsigned int i = 0; i < cbs; i++)
+      {
+        bool bSatVal = false;
+        void* p = buf + i * width;
+        if (columnData->IsNull(i))
+        {
+          if (!column.autoIncFlag)
+          {
+            if (column.fWithDefault)
+            {
+              origVal = static_cast<int64_t>(column.fDefaultUInt);
+            }
+            else
+            {
+              uiVal = joblist::UINTNULL;
+              pVal = &uiVal;
+              memcpy(p, pVal, width);
+              // TODO:continue jump to next loop?
+              continue;
+            }
+          }
+          else
+          {
+            origVal = 1;
+          }
+        }
+        else
+        {
+          memcpy(&uiVal, dataPtr + i, width);
+        }
+        if (origVal < column.fMinIntSat)
+        {
+          origVal = column.fMinIntSat;
+          bSatVal = true;
+        }
+        else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+        {
+          origVal = static_cast<int64_t>(column.fMaxIntSat);
+          bSatVal = true;
+        }
+
+        if (bSatVal)
+          bufStats.satCount++;
+
+        // Update min/max range
+        uint64_t uVal = origVal;
+
+        if (uVal < static_cast<uint64_t>(bufStats.minBufferVal))
+          bufStats.minBufferVal = origVal;
+
+        if (uVal > static_cast<uint64_t>(bufStats.maxBufferVal))
+          bufStats.maxBufferVal = origVal;
+
+        uiVal = origVal;
+        pVal = &uiVal;
+        memcpy(p, pVal, width);
+      }
+      break;
+    }
+
+    case WriteEngine::WR_MEDINT:
+    case WriteEngine::WR_INT:
+    default:
+    {
+      if (column.dataType != CalpontSystemCatalog::DATE)
+      {
+        const int* dataPtr = columnData->data()->GetValues<int>(1);
+        for (unsigned int i = 0; i < cbs; i++)
+        {
+          bool bSatVal = false;
+          void* p = buf + i * width;
+          long long origVal;
+          if (columnData->IsNull(i))
+          {
+            if (!column.autoIncFlag)
+            {
+              if (column.fWithDefault)
+              {
+                origVal = column.fDefaultInt;
+              }
+              else
+              {
+                iVal = joblist::INTNULL;
+                pVal = &iVal;
+                memcpy(p, pVal, width);
+                continue;
+              }
+            }
+            else
+            {
+              origVal = 1;
+            }
+          }
+          else
+          {
+            memcpy(&iVal, dataPtr + i, width);
+            origVal = (long long)iVal;
+          }
+
+          if (origVal < column.fMinIntSat)
+          {
+            origVal = column.fMinIntSat;
+            bSatVal = true;
+          }
+          else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
+          {
+            origVal = static_cast<int64_t>(column.fMaxIntSat);
+            bSatVal = true;
+          }
+          if (bSatVal)
+            bufStats.satCount++;
+
+          if (origVal < bufStats.minBufferVal)
+            bufStats.minBufferVal = origVal;
+
+          if (origVal > bufStats.maxBufferVal)
+            bufStats.maxBufferVal = origVal;
+
+          iVal = (int)origVal;
+          pVal = &iVal;
+          memcpy(p, pVal, width);
+        }
+      }
+      else
+      {
+        // date conversion here
+      }
     }
   }
 }
@@ -1005,7 +1282,8 @@ int TableInfo::readParquetData()
       // parseParquet(batch, k, current_batch_size);
       if (fColumns[k].column.colType == COL_TYPE_DICT)
       {
-        // rc = parseParquetDict(k, bs);
+        rc = parseParquetDict(batch, k, current_batch_size, bs, batch_processed);
+        //TODO: if input data is spanned to 2 extents.
         continue;
       }
       else
@@ -1033,105 +1311,49 @@ int TableInfo::readParquetData()
 
           parquetConvert(columnData, columnInfo.column, bufStats, buf, current_batch_size);
 
+          updateCPInfoPendingFlag = true;
 
-
-
-
-          const char* data_ptr = columnData->data()->GetValues<char>(1);
-          for (uint32_t i = 0; i < current_batch_size; i++)
+          if (columnInfo.column.width <= 8)
           {
-            unsigned char* p = buf + i * columnInfo.column.width;
-            void *t;
-            long long origVal;
-            int32_t iVal;
-            bool bSatVal = false;
-            if (columnData->IsNull(i))
+            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                    columnInfo.column.dataType, columnInfo.column.width);
+          }
+          else
+          {
+            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                    columnInfo.column.dataType, columnInfo.column.width);
+          }
+
+          // what's this rowsPerExtent for?
+          lastInputRowInExtent += columnInfo.rowsPerExtent();
+
+          if (isUnsigned(columnInfo.column.dataType))
+          {
+            if (columnInfo.column.width <= 8)
             {
-              if (columnInfo.column.fWithDefault)
-              {
-                origVal = columnInfo.column.fDefaultInt;
-              }
-              else
-              {
-                iVal = joblist::INTNULL;
-              }
+              bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+              bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
             }
             else
             {
-              memcpy(&iVal, data_ptr + 4*i, 4);
-              origVal = (long long)iVal;
+              bufStats.bigMinBufferVal = -1;
+              bufStats.bigMaxBufferVal = 0;
             }
-
-            // Saturate the value
-            if (origVal < columnInfo.column.fMinIntSat)
+            updateCPInfoPendingFlag = false;
+          }
+          else
+          {
+            if (columnInfo.column.width <= 8)
             {
-              origVal = columnInfo.column.fMinIntSat;
-              bSatVal = true;
+              bufStats.minBufferVal = MAX_BIGINT;
+              bufStats.maxBufferVal = MIN_BIGINT;
             }
-            else if (origVal > static_cast<int64_t>(columnInfo.column.fMaxIntSat))
+            else
             {
-              origVal = static_cast<int64_t>(columnInfo.column.fMaxIntSat);
-              bSatVal = true;
+              utils::int128Max(bufStats.bigMinBufferVal);
+              utils::int128Min(bufStats.bigMaxBufferVal);
             }
-            if (bSatVal)
-              bufStats.satCount++;
-
-            if (origVal < bufStats.minBufferVal)
-              bufStats.minBufferVal = origVal;
-
-            if (origVal > bufStats.maxBufferVal)
-              bufStats.maxBufferVal = origVal;
-            t = &iVal;
-            memcpy(p, t, 4);
-
-            updateCPInfoPendingFlag = true;
-
-            if ((RID)(bs * batch_processed + i) == lastInputRowInExtent)
-            {
-              if (columnInfo.column.width <= 8)
-              {
-                columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
-                                        columnInfo.column.dataType, columnInfo.column.width);
-              }
-              else
-              {
-                columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
-                                        columnInfo.column.dataType, columnInfo.column.width);
-              }
-
-              // what's this rowsPerExtent for?
-              lastInputRowInExtent += columnInfo.rowsPerExtent();
-
-              if (isUnsigned(columnInfo.column.dataType))
-              {
-                if (columnInfo.column.width <= 8)
-                {
-                  bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
-                  bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
-                }
-                else
-                {
-                  bufStats.bigMinBufferVal = -1;
-                  bufStats.bigMaxBufferVal = 0;
-                }
-                updateCPInfoPendingFlag = false;
-              }
-              else
-              {
-                if (columnInfo.column.width <= 8)
-                {
-                  bufStats.minBufferVal = MAX_BIGINT;
-                  bufStats.maxBufferVal = MIN_BIGINT;
-                }
-                else
-                {
-                  utils::int128Max(bufStats.bigMinBufferVal);
-                  utils::int128Min(bufStats.bigMaxBufferVal);
-                }
-                updateCPInfoPendingFlag = false;
-              }
-            }
-
+            updateCPInfoPendingFlag = false;
           }
 
           if (updateCPInfoPendingFlag)
@@ -1156,13 +1378,10 @@ int TableInfo::readParquetData()
           section->write(buf, current_batch_size);
           delete[] buf;
 
-          RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section))
-
+          RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
         }
-        // return rc;
       }
     }
-
     // process `aux` column
     ColumnInfo& columnInfo = fColumns[fNumberOfColumns-1];
     ColumnBufferSection* section = 0;
@@ -1289,7 +1508,7 @@ int TableInfo::readParquetData()
       section->write(buf, current_batch_size);
       delete[] buf;
 
-      RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section))
+      RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
 
     }
 

@@ -389,13 +389,13 @@ class TableInfo : public WeUIDGID
 
   // /** @brief parse parquet data
   // */
-  // int parseParquetDict(unsigned int k, int bs);
+  int parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
 
   // /** @brief parse parquet data
   // */
   // int parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
 
-  void parquetConvert(std::shared_ptr<arrow::Array> columnData, JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, int cbs)
+  void parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs);
 
   /** @brief Read the parquet file data into the memory
    */

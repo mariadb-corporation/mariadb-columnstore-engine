@@ -1657,6 +1657,31 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
   return rc;
 }
 
+
+int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, const int totalRow, char* tokenBuf)
+{
+  long long truncCount = 0;
+
+  // if ((curCol.colDataType == WR_VARBINARY) || (curCol.colType == WR_BLOB))
+  // {
+
+  // }
+  int rc = fStore->insertDctnryParquet(columnData, totalRow, id, tokenBuf, truncCount);
+  if (rc != NO_ERROR)
+  {
+    WErrorCodes ec;
+    std::ostringstream oss;
+    oss << "updateDctnryStore: error adding rows to store file for "
+        << "OID-" << column.dctnry.dctnryOid << "; DBRoot-" << curCol.dataFile.fDbRoot << "; part-"
+        << curCol.dataFile.fPartition << "; seg-" << curCol.dataFile.fSegment << "; " << ec.errorString(rc);
+    fLog->logMsg(oss.str(), rc, MSGLVL_CRITICAL);
+    fpTableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
+    return rc;
+  }
+  incSaturatedCnt(truncCount);
+  return NO_ERROR;
+}
+
 //------------------------------------------------------------------------------
 // Update dictionary store file with specified strings, and return the assigned
 // tokens (tokenbuf) to be stored in the corresponding column token file.
