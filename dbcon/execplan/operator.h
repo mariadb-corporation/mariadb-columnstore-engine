@@ -160,6 +160,12 @@ class Operator : public TreeNode
   }
 
   // The following methods should be pure virtual. Currently too many instanslization exists.
+  using TreeNode::getIntSimdVal;
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
+  {
+    return fResult.simdIntVal;
+  }
+
   using TreeNode::getStrVal;
   virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {

@@ -105,8 +105,18 @@ class ArithmeticOperator : public Operator
   /***********************************************************
    *                 F&E framework                           *
    ***********************************************************/
+
+  using Operator::evaluateSimd;
+  inline virtual void evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop);
+
   using Operator::evaluate;
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
+
+  using Operator::getIntSimdVal;
+  inline virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop);
+  {
+    evaluateSimd(colList, colData, offset, batchCount, simdType, lop, rop);
+  }
 
   using Operator::getStrVal;
   virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
@@ -204,6 +214,8 @@ class ArithmeticOperator : public Operator
   }
 
  private:
+  template <SIMD_TYPE simdType, typename T>
+  inline T executeSimd(T op1, T op2);
   template <typename result_t>
   inline result_t execute(result_t op1, result_t op2, bool& isNull);
   inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
@@ -260,6 +272,55 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
   }
 }
 
+// TODO: WHERE TO PUT THE WRAPPERS FOR THE ARITHMETIC OPERATORS FOR SIMD?
+// better put them completely outside! (in funcexp.h)
+// TODO: add null mask check for SIMD to prevent divide by zero
+
+inline void ArithmeticOperator::evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
+{
+  switch (simdType)
+  {
+    case SIMD_INT16: 
+      fResult.simdIntVal = executeSimd<SIMD_INT16, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+
+    case SIMD_INT32:
+      fResult.simdIntVal = executeSimd<SIMD_INT32, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+
+    case SIMD_INT64:
+      fResult.simdIntVal = executeSimd<SIMD_INT64, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+    
+    case SIMD_UINT16:
+      fResult.simdIntVal = executeSimd<SIMD_UINT16, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+
+    case SIMD_UINT32:
+      fResult.simdIntVal = executeSimd<SIMD_UINT32, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+    
+    case SIMD_UINT64:
+      fResult.simdIntVal = executeSimd<SIMD_UINT64, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      break;
+
+    // case SIMD_FLOAT:
+    //   fResult.simdFloatVal = executeSimd<SIMD_FLOAT, simd::vi128f_t>(lop->getFloatSimdVal(colList, colData, offset, batchCount, simdType), rop->getFloatSimdVal(colList, colData, offset, batchCount, simdType));
+    //   break;
+
+    // case SIMD_DOUBLE:
+    //   fResult.simdDoubleVal = executeSimd<SIMD_DOUBLE, simd::vi128d_t>(lop->getDoubleSimdVal(colList, colData, offset, batchCount, simdType), rop->getDoubleSimdVal(colList, colData, offset, batchCount, simdType));
+    //   break;
+    
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operand type: " << fOperationType.colDataType;
+      throw logging::InvalidArgumentExcept(oss.str());
+    }
+  }
+}
+
 template <typename result_t>
 inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& isNull)
 {
@@ -278,6 +339,29 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
         isNull = true;
 
       return 0;
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+
+template <SIMD_TYPE simdType, typename T>
+inline T ArithmeticOperator::executeSimd(T op1, T op2)
+{
+  switch (fOp)
+  {
+    case OP_ADD: return simd::add<simdType, T>(op1, op2);
+
+    case OP_SUB: return simd::sub<simdType, T>(op1, op2);
+
+    case OP_MUL: return simd::mul<simdType, T>(op1, op2);
+
+    // TODO: add null mask check for SIMD to prevent divide by zero
+    case OP_DIV: return simd::div<simdType, T>(op1, op2);
 
     default:
     {

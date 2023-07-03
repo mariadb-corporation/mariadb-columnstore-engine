@@ -31,6 +31,7 @@
 #include "operator.h"
 #include "mcs_decimal.h"
 #include <boost/core/demangle.hpp>
+#include "simd_sse.h"
 
 
 namespace rowgroup
@@ -232,6 +233,15 @@ class ParseTree
    **********************************************************************/
 
  public:
+
+  inline simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  {
+    if (fLeft && fRight)
+      return (reinterpret_cast<Operator*>(fData))->getIntSimdVal(colList, colData, offset, batchCount, simdType, fLeft, fRight);
+    else
+      return fData->getIntSimdVal(colList, colData, offset, batchCount, simdType);
+  }
+
   inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     if (fLeft && fRight)

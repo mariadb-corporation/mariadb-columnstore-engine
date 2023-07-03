@@ -27,6 +27,18 @@ enum ENUM_KIND
   KIND_TEXT
 };  // whitespace-trimmed and then compared as signed integers
 
+enum SIMD_TYPE
+{
+  SIMD_INT16, 
+  SIMD_INT32,
+  SIMD_INT64,
+  SIMD_UINT16,
+  SIMD_UINT32,
+  SIMD_UINT64,
+  SIMD_FLOAT,
+  SIMD_DOUBLE,
+};
+
 #if defined(__x86_64__)
 
 #include <cstdint>
@@ -1854,6 +1866,104 @@ class SimdFilterProcessor<
     return _mm_set_epi64x(0xFFFFFFFFFFFFFFFFLL, 0xFFFFFFFFFFFFFFFFLL);
   }
 };
+
+template <SIMD_TYPE simdType,  typename T>
+T add(T x, T y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_INT16:
+      return _mm_adds_epi16(x, y);
+    case SIMD_TYPE::SIMD_INT32:
+      return _mm_adds_epi32(x, y);
+    case SIMD_TYPE::SIMD_INT64:
+      return _mm_adds_epi64(x, y);
+    case SIMD_TYPE::SIMD_UINT16:
+      return _mm_adds_epu16(x, y);
+    case SIMD_TYPE::SIMD_UINT32:
+      return _mm_adds_epu32(x, y);
+    case SIMD_TYPE::SIMD_UINT64:
+      return _mm_adds_epu64(x, y);
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_add_ps(x, y);
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_add_pd(x, y);
+    default:
+      cerr << "Error: Unknown SIMD type" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType,  typename T>
+T sub(T x, T y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_INT16:
+      return _mm_subs_epi16(x, y);
+    case SIMD_TYPE::SIMD_INT32:
+      return _mm_subs_epi32(x, y);
+    case SIMD_TYPE::SIMD_INT64:
+      return _mm_subs_epi64(x, y);
+    case SIMD_TYPE::SIMD_UINT16:
+      return _mm_subs_epu16(x, y);
+    case SIMD_TYPE::SIMD_UINT32:
+      return _mm_subs_epu32(x, y);
+    case SIMD_TYPE::SIMD_UINT64:
+      return _mm_subs_epu64(x, y);
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_sub_ps(x, y);
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_sub_pd(x, y);
+    default:
+      cerr << "Error: Unknown SIMD type" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType,  typename T>
+T mul(T x, T y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_INT16:
+      return _mm_mullo_epi16(x, y);
+    case SIMD_TYPE::SIMD_INT32:
+      return _mm_mullo_epi32(x, y);
+    case SIMD_TYPE::SIMD_INT64:
+      return _mm_mullo_epi64(x, y);
+    case SIMD_TYPE::SIMD_UINT16:
+      return _mm_mullo_epi16(x, y);
+    case SIMD_TYPE::SIMD_UINT32:
+      return _mm_mullo_epi32(x, y);
+    case SIMD_TYPE::SIMD_UINT64:
+      return _mm_mullo_epi64(x, y);
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_mul_ps(x, y);
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_mul_pd(x, y);
+    default:
+      cerr << "Error: Unknown SIMD type" << endl;
+      exit(1);
+  }
+}
+
+// TODO: add NULL mask
+template <SIMD_TYPE simdType,  typename T>
+T div(T x, T y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_div_ps(x, y);
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_div_pd(x, y);
+    default:
+      cerr << "Error: Unsupported SIMD type" << endl;
+      exit(1);
+  }
+}
+
 
 }  // namespace simd
 

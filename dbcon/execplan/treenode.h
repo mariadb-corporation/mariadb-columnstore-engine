@@ -38,6 +38,8 @@
 #include "mcs_int64.h"
 #include "numericliteral.h"
 
+#include "simd_sse.h"
+
 namespace messageqcpp
 {
 class ByteStream;
@@ -159,6 +161,10 @@ struct Result
   std::string strVal;
   IDB_Decimal decimalVal;
   bool valueConverted;
+
+  simd::vi128_t simdIntVal;
+  simd::vi128f_t simdFloatVal;
+  simd::vi128d_t simdDoubleVal;
 };
 
 /**
@@ -261,6 +267,12 @@ class TreeNode
   /***********************************************************************
    *                     F&E framework                                   *
    ***********************************************************************/
+
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  {
+    return fResult.simdIntVal;
+  }
+
   virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     return fResult.strVal;
@@ -324,6 +336,9 @@ class TreeNode
   virtual void evaluate(rowgroup::Row& row, bool& isNull)
   {
   }
+
+  // TODO: do data conversion, why essential?? 
+  inline simd::vi128_t getIntSimdVal();
 
   inline bool getBoolVal();
   inline const std::string& getStrVal(const long timeZone);
