@@ -10,7 +10,7 @@ struct CompiledFunction
   JIT::CompiledModule compiled_module;
 };
 
-CompiledFunction compileFunction(JIT& jit, const Func & function);
+CompiledFunction compileFunction(JIT& jit, const Func& function);
 
 }  // namespace funcexp
 #endif  // MARIADB_COMPILEFUNCTION_H

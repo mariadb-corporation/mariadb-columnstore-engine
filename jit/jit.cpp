@@ -29,7 +29,7 @@
 
 #include <boost/noncopyable.hpp>
 // Arena Memory pool for JIT
-class Arena: private boost::noncopyable
+class Arena : private boost::noncopyable
 {
  public:
   Arena() : page_size(8)
@@ -438,27 +438,27 @@ void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
 
 void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
 {
-    llvm::PassManagerBuilder pass_manager_builder;
-    llvm::legacy::PassManager mpm;
-    llvm::legacy::FunctionPassManager fpm(&module);
-    pass_manager_builder.OptLevel = 3;
-    pass_manager_builder.SLPVectorize = true;
-    pass_manager_builder.LoopVectorize = true;
-    pass_manager_builder.RerollLoops = true;
-    pass_manager_builder.VerifyInput = true;
-    pass_manager_builder.VerifyOutput = true;
-    target_machine->adjustPassManager(pass_manager_builder);
+  llvm::PassManagerBuilder pass_manager_builder;
+  llvm::legacy::PassManager mpm;
+  llvm::legacy::FunctionPassManager fpm(&module);
+  pass_manager_builder.OptLevel = 3;
+  pass_manager_builder.SLPVectorize = true;
+  pass_manager_builder.LoopVectorize = true;
+  pass_manager_builder.RerollLoops = true;
+  pass_manager_builder.VerifyInput = true;
+  pass_manager_builder.VerifyOutput = true;
+  target_machine->adjustPassManager(pass_manager_builder);
 
-    fpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
-    mpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
+  fpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
+  mpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
 
-    pass_manager_builder.populateFunctionPassManager(fpm);
-    pass_manager_builder.populateModulePassManager(mpm);
+  pass_manager_builder.populateFunctionPassManager(fpm);
+  pass_manager_builder.populateModulePassManager(mpm);
 
-    fpm.doInitialization();
-    for (auto & function : module)
-        fpm.run(function);
-    fpm.doFinalization();
+  fpm.doInitialization();
+  for (auto& function : module)
+    fpm.run(function);
+  fpm.doFinalization();
 
-    mpm.run(module);
+  mpm.run(module);
 }
