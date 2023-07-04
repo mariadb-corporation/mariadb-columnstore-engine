@@ -1,4 +1,4 @@
-#include "JIT.h"
+#include "jit.h"
 
 #include <sys/mman.h>
 #include <boost/noncopyable.hpp>
@@ -26,8 +26,10 @@
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/ADT/None.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+
+#include <boost/noncopyable.hpp>
 // Arena Memory pool for JIT
-class Arena : private boost::noncopyable
+class Arena: private boost::noncopyable
 {
  public:
   Arena() : page_size(8)
@@ -227,8 +229,7 @@ class JITCompiler
   }
 
   /**
-   * 把module编译成机器码
-   * EN：Compile the module into machine code
+   * Compile the module into machine code
    * */
   std::unique_ptr<llvm::MemoryBuffer> compile(llvm::Module& module)
   {
@@ -309,17 +310,17 @@ JIT::JIT()
   symbol_resolver->registerSymbol("memcmp", reinterpret_cast<void*>(&memcmp));
 }
 
-JIT::CompiledModule JIT::compiledModule(std::function<void(llvm::Module&)> compile_function)
+JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
 {
   auto module = createModuleForCompilation();
   compile_function(*module);
-  auto module_info = compiledModule(std::move(module));
+  auto module_info = compileModule(std::move(module));
 
   ++current_module_key;
   return module_info;
 }
 
-JIT::CompiledModule JIT::compiledModule(std::unique_ptr<llvm::Module> module)
+JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
   runOptimizationPassesOnModule(*module);
 
