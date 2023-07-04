@@ -38,6 +38,8 @@
 
 #include "dataconvert.h"
 
+#include <llvm/IR/IRBuilder.h>
+
 namespace rowgroup
 {
 class Row;
@@ -80,6 +82,13 @@ class Func
     oss << "Illegal parameter data type " << execplan::colDataTypeToString(colType.colDataType)
         << " for operation " << funcName();
     throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
+  }
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType){
+    return false;
+  }
+  llvm::Value * compile(){
+
   }
 
   virtual bool fix(execplan::FunctionColumn& col) const

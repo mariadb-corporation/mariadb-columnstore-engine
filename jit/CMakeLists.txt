@@ -1,11 +1,10 @@
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(${ENGINE_COMMON_INCLUDES})
 
 set(jit_LIB_SRCS
-        JIT.cpp
-        JIT.h
-        )
+        jit.cpp
+        jit.h
+        compilefunction.cpp compilefunction.h)
 
 
 add_library(jit SHARED ${jit_LIB_SRCS})
@@ -30,3 +29,6 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link against LLVM libraries
 target_link_libraries(jit ${llvm_libs})
+
+install(TARGETS jit DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+
