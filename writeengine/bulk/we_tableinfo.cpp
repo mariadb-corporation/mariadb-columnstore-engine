@@ -354,7 +354,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
   double dVal;
   short siVal;
   void* pVal;
-  // int32_t iDate;
+  int32_t iDate;
   long long llVal = 0, llDate = 0;
   int128_t bigllVal = 0;
   uint64_t tmp64;
@@ -877,6 +877,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
               bufStats.minBufferVal = llDate;
             if (llDate > bufStats.maxBufferVal)
               bufStats.maxBufferVal = llDate;
+            pVal = &llDate;
             memcpy(p, pVal, width);
           }
         }
@@ -963,6 +964,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         for (unsigned int i = 0; i < cbs; i++)
         {
           // bool bSatVal = false;
+          int rc = 0;
           void *p = buf + i * width;
           if (columnData->IsNull(i))
           {
@@ -982,8 +984,25 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           {
             // int64_t timestampVal = timeArray->Value(i);
             // TODO:To get the datetime info of timestampVal
-            continue;
+            int64_t timeVal = timeArray->Value(i);
+            llDate = dataconvert::DataConvert::convertArrowColumnDatetime(timeVal, rc);
+            // continue;
           }
+          if (rc == 0)
+          {
+            if (llDate < bufStats.minBufferVal)
+              bufStats.minBufferVal = llDate;
+
+            if (llDate > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = llDate;
+          }
+          else
+          {
+            llDate = 0;
+            bufStats.satCount++;
+          }
+          pVal = &llDate;
+          memcpy(p, pVal, width);
         }
 
       }
@@ -1226,6 +1245,45 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
       else
       {
         // date conversion here
+        std::shared_ptr<arrow::Date32Array> timeArray = std::static_pointer_cast<arrow::Date32Array>(columnData);
+        for (unsigned int i = 0; i < cbs; i++)
+        {
+          int rc = 0;
+          void* p = buf + i * width;
+          if (columnData->IsNull(i))
+          {
+            if (column.fWithDefault)
+            {
+              iDate = column.fDefaultInt;
+            }
+            else
+            {
+              iDate = joblist::DATENULL;
+              pVal = &iDate;
+              continue;
+            }
+          }
+          else
+          {
+            int32_t dayVal = timeArray->Value(i);
+            iDate = dataconvert::DataConvert::ConvertArrowColumnDate(dayVal, rc);
+          }
+          if (rc == 0)
+          {
+            if (iDate < bufStats.minBufferVal)
+              bufStats.minBufferVal = iDate;
+
+            if (iDate > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = iDate;
+          }
+          else
+          {
+            iDate = 0;
+            bufStats.satCount++;
+          }
+          pVal = &iDate;
+          memcpy(p, pVal, width);
+        }
       }
     }
   }

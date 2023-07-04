@@ -40,6 +40,7 @@ using namespace boost::algorithm;
 
 #include "joblisttypes.h"
 
+#include <chrono>
 #define DATACONVERT_DLLEXPORT
 #include "dataconvert.h"
 #undef DATACONVERT_DLLEXPORT
@@ -1603,6 +1604,43 @@ boost::any DataConvert::StringToTimestamp(const datatypes::ConvertFromStringPara
   return value;
 }
 
+
+int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
+{
+  int inYear;
+  int inMonth;
+  int inDay;
+  int32_t value = 0;
+
+  dayVal = (long long)dayVal;
+  int64_t secondsSinceEpoch = dayVal * 86400;
+  std::chrono::seconds duration(secondsSinceEpoch);
+
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::localtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+
+  if (isDateValid(inDay, inMonth, inYear))
+  {
+    Date aDay;
+    aDay.year = inYear;
+    aDay.month = inMonth;
+    aDay.day = inDay;
+    memcpy(&value, &aDay, 4);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
+
+}
+
 //------------------------------------------------------------------------------
 // Convert date string to binary date.  Used by BulkLoad.
 //------------------------------------------------------------------------------
@@ -1687,6 +1725,50 @@ bool DataConvert::isColumnDateValid(int32_t date)
   void* dp = static_cast<void*>(&d);
   memcpy(dp, &date, sizeof(int32_t));
   return (isDateValid(d.day, d.month, d.year));
+}
+
+int64_t DataConvert::convertArrowColumnDatetime(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+
+  std::chrono::milliseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::localtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = (duration.count() % 1000) * 1000;
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    DateTime aDatetime;
+    aDatetime.year = inYear;
+    aDatetime.month = inMonth;
+    aDatetime.day = inDay;
+    aDatetime.hour = inHour;
+    aDatetime.minute = inMinute;
+    aDatetime.second = inSecond;
+    aDatetime.msecond = inMicrosecond;
+
+    memcpy(&value, &aDatetime, 8);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
 }
 
 //------------------------------------------------------------------------------

@@ -1170,6 +1170,10 @@ class DataConvert
   EXPORT static std::string timeToString1(long long timevalue);
   static inline void timeToString1(long long timevalue, char* buf, unsigned int buflen);
 
+
+  EXPORT static int32_t ConvertArrowColumnDate(int32_t dayVal, int& status);
+
+
   /**
    * @brief convert a date column data, represnted as a string, to it's native
    * format. This function is for bulkload to use.
@@ -1187,6 +1191,10 @@ class DataConvert
    * @brief Is specified date valid; used by binary bulk load
    */
   EXPORT static bool isColumnDateValid(int32_t date);
+
+  EXPORT static int64_t convertArrowColumnDatetime(int64_t timeVal, int& status);
+
+
 
   /**
    * @brief convert a datetime column data, represented as a string,
