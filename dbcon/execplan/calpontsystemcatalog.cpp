@@ -3019,6 +3019,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     if (aTableName.schema != CALPONT_SCHEMA)
       DEBUG << aTableName << " was cached: " << rl.size() << " rows" << endl;
 
+    idblog("first return from columnRIDs");
     return rl;
   }
 
@@ -3338,8 +3339,10 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   // delete col[9];
   if (rlOut.size() != 0)
   {
+    idblog("second return from columnRIDs");
     return rlOut;
   }
+  idblog("throw");
 
   Message::Args args;
   args.add("'" + tableName.schema + "." + tableName.table + "'");
