@@ -20,13 +20,13 @@ class JIT
     uint64_t identifier;
     std::unordered_map<std::string, void*> function_name_to_symbol;
   };
-  CompiledModule compiledModule(std::function<void(llvm::Module&)> compile_function);
+  CompiledModule compileModule(std::function<void(llvm::Module&)> compile_function);
   void deleteCompiledModule(CompiledModule& module);
   void registerExternalSymbol(const std::string& symbol_name, void* address);
 
  private:
   std::unique_ptr<llvm::Module> createModuleForCompilation();
-  CompiledModule compiledModule(std::unique_ptr<llvm::Module> module);
+  CompiledModule compileModule(std::unique_ptr<llvm::Module> module);
   static std::unique_ptr<llvm::TargetMachine> getTargetMachine();
   std::string getMangledName(const std::string& name_to_mangle) const;
   void runOptimizationPassesOnModule(llvm::Module & module) const;
