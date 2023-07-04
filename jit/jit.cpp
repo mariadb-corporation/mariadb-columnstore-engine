@@ -28,6 +28,8 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 
 #include <boost/noncopyable.hpp>
+namespace msc_jit
+{
 // Arena Memory pool for JIT
 class Arena : private boost::noncopyable
 {
@@ -462,3 +464,4 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
 
   mpm.run(module);
 }
+}  // namespace msc_jit
