@@ -6,6 +6,8 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
 
+namespace msc_jit
+{
 class JITModuleMemoryManager;
 class JITSymbolResolver;
 class JITCompiler;
@@ -41,3 +43,4 @@ class JIT
   // TODO lock when compiling a module
   mutable std::mutex jit_lock;
 };
+}  // namespace msc_jit
