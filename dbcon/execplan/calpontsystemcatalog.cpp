@@ -3203,10 +3203,10 @@ idblog("got sys data");
       }
     }
 
+  }
     lk1.lock();
     fTableInfoMap[aTableName] = ti;
     lk1.unlock();
-  }
 idblog("going thru sysDataList second time");
   // loop 2nd time to make sure rl has been populated.
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
