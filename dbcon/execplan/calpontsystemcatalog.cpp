@@ -2941,6 +2941,8 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 {
   TableName aTableName(tableName);
 
+  idblog("columnRIDs is entered");
+
   if (lower_case_table_names)
   {
     boost::algorithm::to_lower(aTableName.schema);
