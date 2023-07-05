@@ -3156,10 +3156,10 @@ idblog("got sys data");
   ColType ct;
   ColType* ctList = NULL;
   TableInfo ti;
+  ti.tablewithautoincr = NO_AUTOINCRCOL;
 
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
-    ti.tablewithautoincr = NO_AUTOINCRCOL; // despite we expect here only one table, good practice is to expect many.
 
     if ((*it)->ColumnOID() == oid[1])  // objectid
     {
@@ -3207,12 +3207,13 @@ idblog("got sys data");
     fTableInfoMap[aTableName] = ti;
     lk1.unlock();
   }
-
+idblog("going thru sysDataList second time");
   // loop 2nd time to make sure rl has been populated.
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid[12])
     {
+	    idblog("lk2 lock");
       lk2.lock();
 
       for (int i = 0; i < (*it)->dataCount(); i++)
@@ -3225,6 +3226,7 @@ idblog("got sys data");
       }
 
       lk2.unlock();
+	    idblog("lk2 unlocked");
     }
     else if ((*it)->ColumnOID() == oid[0])
     {
@@ -3310,7 +3312,7 @@ idblog("got sys data");
         ctList[i].nextvalue = ((*it)->GetData(i));
     }
   }
-
+idblog("went through sysDataList second time");
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
   std::sort(ctList, ctList + ti.numOfCols, ctListSort);
 
