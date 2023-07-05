@@ -2101,7 +2101,7 @@ int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
   // inMinute %= 60;
   inSecond = (timeVal - inHour * 3600000 - inMinute * 60000) / 1000;
   // inSecond %= 60;
-  inMicrosecond = (timeVal - inHour * 360000 - inMinute * 60000 - inSecond * 1000) * 1000;
+  inMicrosecond = (timeVal - inHour * 3600000 - inMinute * 60000 - inSecond * 1000) * 1000;
   if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
   {
     Time atime;
@@ -2155,7 +2155,7 @@ int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
   // inMinute %= 60;
   inSecond = (timeVal - inHour * 3600000000 - inMinute * 60000000) / 1000000;
   // inSecond %= 60;
-  inMicrosecond = timeVal - inHour * 360000000 - inMinute * 60000000 - inSecond * 1000000;
+  inMicrosecond = timeVal - inHour * 3600000000 - inMinute * 60000000 - inSecond * 1000000;
   if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
   {
     Time atime;
