@@ -3148,16 +3148,19 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
+  idblog("getting sys data");
   getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+idblog("got sys data");
 
   vector<ColumnResult*>::const_iterator it;
   ColType ct;
   ColType* ctList = NULL;
   TableInfo ti;
-  ti.tablewithautoincr = NO_AUTOINCRCOL;
 
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
+    ti.tablewithautoincr = NO_AUTOINCRCOL; // despite we expect here only one table, good practice is to expect many.
+
     if ((*it)->ColumnOID() == oid[1])  // objectid
     {
       DEBUG << "column count: " << (*it)->dataCount() << endl;
@@ -3311,6 +3314,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
   std::sort(ctList, ctList + ti.numOfCols, ctListSort);
 
+  idblog("sorted, locking");
   // populate colinfo cache
   lk3.lock();
 
