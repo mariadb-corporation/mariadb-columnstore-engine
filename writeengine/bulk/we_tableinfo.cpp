@@ -346,7 +346,7 @@ int TableInfo::parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsig
 // }
 
 
-void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs)
+void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue)
 {
   char biVal;
   int iVal;
@@ -549,13 +549,14 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             // FIXME: no fAutoIncNextValue in tableInfo
             // fill 1 temporarily
             // origVal = tAutoIncNextValue++;
-            origVal = 1;
+            origVal = fAutoIncNextValue++;
           }
         }
         else
         {
-          memcpy(&siVal, dataPtr + i, width);
-          origVal = siVal;
+          origVal = *(dataPtr + i);
+          // memcpy(&siVal, dataPtr + i, width);
+          // origVal = siVal;
         }
 
         if (origVal < column.fMinIntSat)
@@ -617,7 +618,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             // FIXME: no fAutoIncNextValue in tableInfo
             // fill 1 temporarily
             // origVal = tAutoIncNextValue++;
-            origVal = 1;
+            origVal = fAutoIncNextValue++;
           }
         }
         else
@@ -681,7 +682,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            origVal = 1;
+            origVal = fAutoIncNextValue++;
           }
         }
         else
@@ -742,7 +743,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            origVal = 1;
+            origVal = fAutoIncNextValue++;
           }
         }
         else
@@ -808,7 +809,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             }
             else
             {
-              llVal = 1;
+              llVal = fAutoIncNextValue++;
             }
           }
           else
@@ -1036,7 +1037,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            bigllVal = 1;
+            bigllVal = fAutoIncNextValue++;
           }
         }
         else
@@ -1084,7 +1085,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            ullVal = 1;
+            ullVal = fAutoIncNextValue++;
           }
         }
         else
@@ -1142,7 +1143,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            origVal = 1;
+            origVal = fAutoIncNextValue++;
           }
         }
         else
@@ -1209,7 +1210,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             }
             else
             {
-              origVal = 1;
+              origVal = fAutoIncNextValue++;
             }
           }
           else
@@ -1354,8 +1355,16 @@ int TableInfo::readParquetData()
         ColumnInfo& columnInfo = fColumns[k];
         RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batch_processed, current_batch_size, nRowsParsed,
                         &section, lastInputRowInExtent));
+        uint64_t fAutoIncNextValue = 0;
+        int64_t nullCount = batch->column(k)->null_count();
         if (nRowsParsed > 0)
         {
+          if ((columnInfo.column.autoIncFlag) && (nullCount > 0))
+          {
+            rc = columnInfo.reserveAutoIncNums(nullCount, fAutoIncNextValue);
+          }
+
+
           unsigned char* buf = new unsigned char[current_batch_size * columnInfo.column.width];
 
           BLBufferStats bufStats(columnInfo.column.dataType);
@@ -1367,7 +1376,7 @@ int TableInfo::readParquetData()
 
           // parquetConvert(std::shared_ptr<arrow::Array>, JobColumn&, BLBufferStats&, unsigned char*)
 
-          parquetConvert(columnData, columnInfo.column, bufStats, buf, current_batch_size);
+          parquetConvert(columnData, columnInfo.column, bufStats, buf, current_batch_size, fAutoIncNextValue);
 
           updateCPInfoPendingFlag = true;
 
