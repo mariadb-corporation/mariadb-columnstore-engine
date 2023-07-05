@@ -803,7 +803,9 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
       try
       {
+	      idblog("before getSysData_FE");
         getSysData_FE(csep, sysDataList, sysTableName);
+	      idblog("after getSysData_FE");
         break;
       }
       catch (IDBExcept&)  // error already occurred. this is not a broken pipe
@@ -818,6 +820,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
         try
         {
+		idblog("connecting to exemgr");
           fExeMgr->connect(5);
         }
         catch (...)
