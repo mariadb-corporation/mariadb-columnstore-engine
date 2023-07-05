@@ -282,11 +282,11 @@ class SimpleColumn : public ReturnedColumn
    ***********************************************************/
  public:
   virtual void evaluate(rowgroup::Row& row, bool& isNull);
-  virtual void evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType);
+  virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType);
 
-  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
   {
-    evaluateSimd(colList, colData, offset, batchCount, simdType);
+    evaluateSimd(colList, colWidth, colData, offset, batchCount, simdType);
     return TreeNode::getIntSimdVal();
   }
 

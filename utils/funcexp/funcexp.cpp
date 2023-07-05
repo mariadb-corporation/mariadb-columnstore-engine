@@ -316,10 +316,15 @@ void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& ex
       }
     }
 
-    vector<uint32_t> colList(colSet.begin(), colSet.end()); // vector with column indexes
+    vector<uint32_t> colList(colSet.begin(), colSet.end()), colWidth(colList.size()); // vector with column indexes
     vector<vector<uint8_t>> colData = vector<vector<uint8_t>> (colList.size()); // according values for each column
 
     rows.getRow(0, &row);
+    for (i = 0; i < colList.size(); ++i)
+    {
+      colWidth[i] = row.getColumnWidth(colList[i]);
+    }
+
     for (j = 0; j < rowCount; ++j, row.nextRow())
     {
       for (i = 0; i < colList.size(); ++i)
@@ -362,7 +367,7 @@ void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& ex
       {
         for (; j + batchCount < rowCount; j += batchCount)
         {
-          evaluateSimd(row, expr, colList, colData, offset, batchCount);
+          evaluateSimd(row, expr, colList, colWidth, colData, offset, batchCount);
           offset += batchCount;
         }
       }
@@ -384,33 +389,43 @@ void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& ex
   }
 }
 
-void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount)
+void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount)
 {
-  bool isNull = false;
+  // bool isNull = false;
   switch (expression->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
-      simd::vi128_t val = expression->getIntSimdVal(colList, colData, offset, batchCount, SIMD_TYPE::SIMD_INT16);
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT16);
       switch (expression->resultType().colDataType)
       {
         case execplan::CalpontSystemCatalog::TINYINT:
+        {
           int8_t *valPtr = (int8_t *)&val;
           for (uint32_t i = 0; i < batchCount; ++i)
           {
             row.setIntField<1>(valPtr[i << 1 | 1], expression->outputIndex());
           }
           break;
+        }
         case execplan::CalpontSystemCatalog::SMALLINT:
+        {
           int16_t *valPtr = (int16_t *)&val;
           for (uint32_t i = 0; i < batchCount; ++i)
           {
             row.setIntField<2>(valPtr[i], expression->outputIndex());
           }
           break;
+        }
+        default:
+          break;
       }
+      break;
     }
+
+    default:
+      break;
   }
 }
 

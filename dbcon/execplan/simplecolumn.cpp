@@ -494,12 +494,138 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 }
 
 // TODO: get value from colData
-void evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType) 
+void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType) 
 {
   switch (simdType)
   {
     case SIMD_TYPE::SIMD_INT16: 
-
+    {
+      uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+      if (width == 2)
+      {
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+      }
+      else 
+      {
+        int16_t data[8];
+        for (int i = 0; i < 8; i++)
+        {
+          switch (width)
+          {
+            case 1:
+              data[i] = *((int8_t*)(&colData[index][offset + i]));
+              break;
+            default:
+              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              break;
+          }
+        }
+        fResult.simdIntVal = *((simd::vi128_t*)data);
+      }
+      break;
+    }
+    case SIMD_TYPE::SIMD_INT32:
+    {
+      uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+      if (width == 4)
+      {
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+      }
+      else 
+      {
+        int32_t data[4];
+        for (int i = 0; i < 4; i++)
+        {
+          switch (width)
+          {
+            case 1:
+              data[i] = *((int8_t*)(&colData[index][offset + i]));
+              break;
+            case 2:
+              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              break;
+            default:
+              data[i] = *((int32_t*)(&colData[index][offset + (i << 2)]));
+              break;
+          }
+        }
+        fResult.simdIntVal = *((simd::vi128_t*)data);
+      }
+      break;
+    }
+    case SIMD_TYPE::SIMD_INT64:
+    {
+      uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+      if (width == 8)
+      {
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+      }
+      else 
+      {
+        int64_t data[2];
+        for (int i = 0; i < 2; i++)
+        {
+          switch (width)
+          {
+            case 1:
+              data[i] = *((int8_t*)(&colData[index][offset + i]));
+              break;
+            case 2:
+              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              break;
+            case 4:
+              data[i] = *((int32_t*)(&colData[index][offset + (i << 2)]));
+              break;
+            default:
+              data[i] = *((int64_t*)(&colData[index][offset + (i << 3)]));
+              break;
+          }
+        }
+        fResult.simdIntVal = *((simd::vi128_t*)data);
+      }
+      break;
+    }
+    case SIMD_TYPE::SIMD_FLOAT:
+    {
+      uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+      if (width == 4)
+      {
+        fResult.simdFloatVal = *((simd::vi128f_t*)(&colData[index][offset]));
+      }
+      else 
+      {
+        float data[4];
+        for (int i = 0; i < 4; i++)
+        {
+          data[i] = *((float*)(&colData[index][offset + i * width]));
+        }
+        fResult.simdFloatVal = *((simd::vi128f_t*)data);
+      }
+      break;
+    }
+    case SIMD_TYPE::SIMD_DOUBLE:
+    {
+      uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+      if (width == 8)
+      {
+        fResult.simdDoubleVal = *((simd::vi128d_t*)(&colData[index][offset]));
+      }
+      else 
+      {
+        double data[2];
+        for (int i = 0; i < 2; i++)
+        {
+          if (width == 4)
+            data[i] = *((float*)(&colData[index][offset + (i << 2)]));
+          else
+            data[i] = *((double*)(&colData[index][offset + (i << 3)]));
+        }
+        fResult.simdDoubleVal = *((simd::vi128d_t*)data);
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 

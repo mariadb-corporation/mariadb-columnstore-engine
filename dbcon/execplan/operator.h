@@ -158,10 +158,15 @@ class Operator : public TreeNode
   virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
   {
   }
+  using TreeNode::evaluateSimd;
+  inline virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
+  {
+  }
+
 
   // The following methods should be pure virtual. Currently too many instanslization exists.
   using TreeNode::getIntSimdVal;
-  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
   {
     return fResult.simdIntVal;
   }

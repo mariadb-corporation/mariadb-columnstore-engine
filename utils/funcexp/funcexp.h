@@ -103,7 +103,7 @@ class FuncExp
    * @param offset offset point to the beginning row in the batch
    * @param batchCount rows count in the batch
    */
-  void evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount);
+  void evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount);
 
   /** @brief get functor from functor map
    *

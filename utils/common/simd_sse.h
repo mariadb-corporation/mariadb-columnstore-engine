@@ -1867,62 +1867,151 @@ class SimdFilterProcessor<
   }
 };
 
-template <SIMD_TYPE simdType,  typename T>
-T add(T x, T y)
+template <SIMD_TYPE simdType>
+vi128_t add(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
     case SIMD_TYPE::SIMD_INT16:
-      return _mm_adds_epi16(x, y);
+      return _mm_add_epi16(x, y);
     case SIMD_TYPE::SIMD_INT32:
-      return _mm_adds_epi32(x, y);
+      return _mm_add_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
-      return _mm_adds_epi64(x, y);
+      return _mm_add_epi64(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_adds_epu16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
-      return _mm_adds_epu32(x, y);
+      return _mm_add_epi32(x, y);
     case SIMD_TYPE::SIMD_UINT64:
-      return _mm_adds_epu64(x, y);
+      return _mm_add_epi64(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128f_t add(vi128f_t x, vi128f_t y)
+{
+  switch (simdType)
+  {
     case SIMD_TYPE::SIMD_FLOAT:
       return _mm_add_ps(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128d_t add(vi128d_t x, vi128d_t y)
+{
+  switch (simdType)
+  {
     case SIMD_TYPE::SIMD_DOUBLE:
       return _mm_add_pd(x, y);
     default:
-      cerr << "Error: Unknown SIMD type" << endl;
+      cerr << "Error: SIMD type missmatch" << endl;
       exit(1);
   }
 }
 
-template <SIMD_TYPE simdType,  typename T>
-T sub(T x, T y)
+template <SIMD_TYPE simdType>
+vi128_t sub(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
     case SIMD_TYPE::SIMD_INT16:
-      return _mm_subs_epi16(x, y);
+      return _mm_sub_epi16(x, y);
     case SIMD_TYPE::SIMD_INT32:
-      return _mm_subs_epi32(x, y);
+      return _mm_sub_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
-      return _mm_subs_epi64(x, y);
+      return _mm_sub_epi64(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_subs_epu16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
-      return _mm_subs_epu32(x, y);
+      return _mm_sub_epi32(x, y);
     case SIMD_TYPE::SIMD_UINT64:
-      return _mm_subs_epu64(x, y);
-    case SIMD_TYPE::SIMD_FLOAT:
-      return _mm_sub_ps(x, y);
-    case SIMD_TYPE::SIMD_DOUBLE:
-      return _mm_sub_pd(x, y);
+      return _mm_sub_epi64(x, y);
     default:
-      cerr << "Error: Unknown SIMD type" << endl;
+      cerr << "Error: SIMD type missmatch" << endl;
       exit(1);
   }
 }
 
-template <SIMD_TYPE simdType,  typename T>
-T mul(T x, T y)
+template <SIMD_TYPE simdType>
+vi128f_t sub(vi128f_t x, vi128f_t y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_sub_ps(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128d_t sub(vi128d_t x, vi128d_t y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_sub_pd(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+inline vi128_t mul_u64(vi128_t a, vi128_t b) {
+    // Product of lower 32-bit parts
+    vi128_t lo_lo = _mm_mul_epu32(a, b);
+
+    // Product of upper and lower 32-bit parts
+    vi128_t a_shift = _mm_srli_epi64(a, 32);
+    vi128_t b_shift = _mm_srli_epi64(b, 32);
+    vi128_t lo_hi = _mm_mul_epu32(a, b_shift);
+    vi128_t hi_lo = _mm_mul_epu32(a_shift, b);
+
+    // Sum of cross products
+    vi128_t cross = _mm_add_epi64(lo_hi, hi_lo);
+
+    // Adjust for carry
+    vi128_t cross_shift = _mm_slli_epi64(cross, 32);
+    vi128_t result = _mm_add_epi64(lo_lo, cross_shift);
+
+    return result;
+}
+inline vi128_t mul_i64(vi128_t a, vi128_t b) {
+    // Compute the sign of the result
+    vi128_t a_sign = _mm_srai_epi32(a, 31); // arithmetic shift right
+    vi128_t b_sign = _mm_srai_epi32(b, 31);
+    vi128_t result_sign = _mm_xor_si128(a_sign, b_sign); // xor will give us the sign of the result
+
+    // Compute absolute values
+    a = _mm_sub_epi64(_mm_xor_si128(a, a_sign), a_sign);
+    b = _mm_sub_epi64(_mm_xor_si128(b, b_sign), b_sign);
+
+    // Use the same multiplication algorithm as before
+    vi128_t lo_lo = _mm_mul_epu32(a, b);
+    vi128_t a_shift = _mm_srli_epi64(a, 32);
+    vi128_t b_shift = _mm_srli_epi64(b, 32);
+    vi128_t lo_hi = _mm_mul_epu32(a, b_shift);
+    vi128_t hi_lo = _mm_mul_epu32(a_shift, b);
+    vi128_t cross = _mm_add_epi64(lo_hi, hi_lo);
+    vi128_t cross_shift = _mm_slli_epi64(cross, 32);
+    vi128_t result = _mm_add_epi64(lo_lo, cross_shift);
+
+    // Adjust the sign of the result
+    result = _mm_sub_epi64(_mm_xor_si128(result, result_sign), result_sign);
+
+    return result;
+}
+
+template <SIMD_TYPE simdType>
+vi128_t mul(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
@@ -1931,39 +2020,82 @@ T mul(T x, T y)
     case SIMD_TYPE::SIMD_INT32:
       return _mm_mullo_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
-      return _mm_mullo_epi64(x, y);
+      return mul_i64(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_mullo_epi16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
       return _mm_mullo_epi32(x, y);
     case SIMD_TYPE::SIMD_UINT64:
-      return _mm_mullo_epi64(x, y);
+      return mul_u64(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128f_t mul(vi128f_t x, vi128f_t y)
+{
+  switch (simdType)
+  {
     case SIMD_TYPE::SIMD_FLOAT:
       return _mm_mul_ps(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128d_t mul(vi128d_t x, vi128d_t y)
+{
+  switch (simdType)
+  {
     case SIMD_TYPE::SIMD_DOUBLE:
       return _mm_mul_pd(x, y);
     default:
-      cerr << "Error: Unknown SIMD type" << endl;
+      cerr << "Error: SIMD type missmatch" << endl;
       exit(1);
   }
 }
 
 // TODO: add NULL mask
-template <SIMD_TYPE simdType,  typename T>
-T div(T x, T y)
+template <SIMD_TYPE simdType>
+vi128_t div(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
-    case SIMD_TYPE::SIMD_FLOAT:
-      return _mm_div_ps(x, y);
-    case SIMD_TYPE::SIMD_DOUBLE:
-      return _mm_div_pd(x, y);
     default:
       cerr << "Error: Unsupported SIMD type" << endl;
       exit(1);
   }
 }
 
+template <SIMD_TYPE simdType>
+vi128f_t div(vi128f_t x, vi128f_t y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_FLOAT:
+      return _mm_div_ps(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
+
+template <SIMD_TYPE simdType>
+vi128d_t div(vi128d_t x, vi128d_t y)
+{
+  switch (simdType)
+  {
+    case SIMD_TYPE::SIMD_DOUBLE:
+      return _mm_div_pd(x, y);
+    default:
+      cerr << "Error: SIMD type missmatch" << endl;
+      exit(1);
+  }
+}
 
 }  // namespace simd
 

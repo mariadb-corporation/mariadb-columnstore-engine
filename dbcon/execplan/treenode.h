@@ -268,7 +268,7 @@ class TreeNode
    *                     F&E framework                                   *
    ***********************************************************************/
 
-  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
   {
     return fResult.simdIntVal;
   }
@@ -336,9 +336,15 @@ class TreeNode
   virtual void evaluate(rowgroup::Row& row, bool& isNull)
   {
   }
+  inline virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  {
+  }
 
   // TODO: do data conversion, why essential?? 
-  inline simd::vi128_t getIntSimdVal();
+  inline simd::vi128_t getIntSimdVal()
+  {
+    return fResult.simdIntVal;
+  }
 
   inline bool getBoolVal();
   inline const std::string& getStrVal(const long timeZone);

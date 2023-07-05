@@ -107,15 +107,16 @@ class ArithmeticOperator : public Operator
    ***********************************************************/
 
   using Operator::evaluateSimd;
-  inline virtual void evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop);
+  inline virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop);
 
   using Operator::evaluate;
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
 
   using Operator::getIntSimdVal;
-  inline virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop);
+  inline virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
   {
-    evaluateSimd(colList, colData, offset, batchCount, simdType, lop, rop);
+    evaluateSimd(colList, colWidth, colData, offset, batchCount, simdType, lop, rop);
+    return TreeNode::getIntSimdVal();
   }
 
   using Operator::getStrVal;
@@ -276,32 +277,32 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 // better put them completely outside! (in funcexp.h)
 // TODO: add null mask check for SIMD to prevent divide by zero
 
-inline void ArithmeticOperator::evaluateSimd(vector<uint32_t> &colList, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
+inline void ArithmeticOperator::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType, ParseTree* lop, ParseTree* rop)
 {
   switch (simdType)
   {
     case SIMD_INT16: 
-      fResult.simdIntVal = executeSimd<SIMD_INT16, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_INT16, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
 
     case SIMD_INT32:
-      fResult.simdIntVal = executeSimd<SIMD_INT32, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_INT32, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
 
     case SIMD_INT64:
-      fResult.simdIntVal = executeSimd<SIMD_INT64, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_INT64, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
     
     case SIMD_UINT16:
-      fResult.simdIntVal = executeSimd<SIMD_UINT16, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_UINT16, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
 
     case SIMD_UINT32:
-      fResult.simdIntVal = executeSimd<SIMD_UINT32, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_UINT32, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
     
     case SIMD_UINT64:
-      fResult.simdIntVal = executeSimd<SIMD_UINT64, simd::vi128_t>(lop->getIntSimdVal(colList, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colData, offset, batchCount, simdType));
+      fResult.simdIntVal = executeSimd<SIMD_UINT64, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;
 
     // case SIMD_FLOAT:
@@ -354,14 +355,14 @@ inline T ArithmeticOperator::executeSimd(T op1, T op2)
 {
   switch (fOp)
   {
-    case OP_ADD: return simd::add<simdType, T>(op1, op2);
+    case OP_ADD: return simd::add<simdType>(op1, op2);
 
-    case OP_SUB: return simd::sub<simdType, T>(op1, op2);
+    case OP_SUB: return simd::sub<simdType>(op1, op2);
 
-    case OP_MUL: return simd::mul<simdType, T>(op1, op2);
+    case OP_MUL: return simd::mul<simdType>(op1, op2);
 
     // TODO: add null mask check for SIMD to prevent divide by zero
-    case OP_DIV: return simd::div<simdType, T>(op1, op2);
+    case OP_DIV: return simd::div<simdType>(op1, op2);
 
     default:
     {
