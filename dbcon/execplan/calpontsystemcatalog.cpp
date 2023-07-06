@@ -1025,6 +1025,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 {
   if (Oid >= 3000)
     DEBUG << "Enter colType: " << Oid << endl;
+  idblog("colType entered");
 
   ColType ct;
 
@@ -1355,6 +1356,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
 {
   if (oid >= 3000)
     DEBUG << "Enter colName: " << oid;
+  idblog("colName entered");
 
   TableColName tableColName;
 
