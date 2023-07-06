@@ -91,14 +91,29 @@ class Func
         << " for operation " << funcName();
     throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
   }
-
+  /**
+   * Determine whether compilation is supported
+   * */
   bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
   {
     return false;
   }
+  /**
+   * Compile the common parts of functions in IR
+   * and hand over specific blocks and instructions
+   * to the implementation function for implementation
+   *
+   * */
   llvm::Value* compile()
   {
   }
+
+  virtual bool isCompilableImpl() const
+  {
+    return false;
+  }
+
+  virtual llvm::Value* compileImpl() const = 0;
 
   virtual bool fix(execplan::FunctionColumn& col) const
   {
