@@ -2936,7 +2936,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                                                                      int lower_case_table_names)
 {
   TableName aTableName(tableName);
-  std::string ident - "schema " + tableName.schema + ", table " + tableName.table;
+  std::string ident = "schema " + tableName.schema + ", table " + tableName.table;
 
   idblog("columnRIDs is entered: " << ident);
 
