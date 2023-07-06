@@ -2936,8 +2936,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                                                                      int lower_case_table_names)
 {
   TableName aTableName(tableName);
+  std::string ident - "schema " + tableName.schema + ", table " + tableName.table;
 
-  idblog("columnRIDs is entered");
+  idblog("columnRIDs is entered: " << ident);
 
   if (lower_case_table_names)
   {
@@ -3017,7 +3018,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     if (aTableName.schema != CALPONT_SCHEMA)
       DEBUG << aTableName << " was cached: " << rl.size() << " rows" << endl;
 
-    idblog("first return from columnRIDs");
+    idblog("first return from columnRIDs, ident " << ident);
     return rl;
   }
 
@@ -3144,9 +3145,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  idblog("getting sys data");
+  idblog("getting sys data: ident " << ident);
   getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
-idblog("got sys data");
+idblog("got sys data, ident " << ident);
 
   vector<ColumnResult*>::const_iterator it;
   ColType ct;
@@ -3203,13 +3204,13 @@ idblog("got sys data");
     lk1.lock();
     fTableInfoMap[aTableName] = ti;
     lk1.unlock();
-idblog("going thru sysDataList second time");
+idblog("going thru sysDataList second time, ident " << ident);
   // loop 2nd time to make sure rl has been populated.
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid[12])
     {
-	    idblog("lk2 lock");
+	    idblog("lk2 lock, ident  " << ident);
       lk2.lock();
 
       for (int i = 0; i < (*it)->dataCount(); i++)
@@ -3222,7 +3223,7 @@ idblog("going thru sysDataList second time");
       }
 
       lk2.unlock();
-	    idblog("lk2 unlocked");
+	    idblog("lk2 unlocked, ident " << ident);
     }
     else if ((*it)->ColumnOID() == oid[0])
     {
@@ -3308,11 +3309,11 @@ idblog("going thru sysDataList second time");
         ctList[i].nextvalue = ((*it)->GetData(i));
     }
   }
-idblog("went through sysDataList second time");
+idblog("went through sysDataList second time, ident " << ident);
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
   std::sort(ctList, ctList + ti.numOfCols, ctListSort);
 
-  idblog("sorted, locking");
+  idblog("sorted, locking, " << ident);
   // populate colinfo cache
   lk3.lock();
 
@@ -3343,10 +3344,10 @@ idblog("went through sysDataList second time");
   // delete col[9];
   if (rlOut.size() != 0)
   {
-    idblog("second return from columnRIDs");
+    idblog("second return from columnRIDs, ident " << ident);
     return rlOut;
   }
-  idblog("throw");
+  idblog("throw, ident " << ident);
 
   Message::Args args;
   args.add("'" + tableName.schema + "." + tableName.table + "'");
