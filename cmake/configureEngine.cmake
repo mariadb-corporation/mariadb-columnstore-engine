@@ -314,9 +314,9 @@ int
 main ()
 {
 struct stat s, t;
-  return ! (stat (\"conftest.data\", &s) == 0
-        && utime (\"conftest.data\", 0) == 0
-        && stat (\"conftest.data\", &t) == 0
+  return ! (stat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", &s) == 0
+        && utime (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", 0) == 0
+        && stat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", &t) == 0
         && t.st_mtime >= s.st_mtime
         && t.st_mtime - s.st_mtime < 120);
   ;
@@ -453,7 +453,7 @@ EXECUTE_PROCESS(
     COMMAND rm -f conftest.sym conftest.file
     COMMAND touch conftest.file
     COMMAND ln -s conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 CHECK_CXX_SOURCE_RUNS(
 "
@@ -465,7 +465,7 @@ struct stat sbuf;
      /* Linux will dereference the symlink and fail, as required by POSIX.
     That is better in the sense that it means we will not
     have to compile and use the lstat wrapper.  */
-     return lstat (\"conftest.sym/\", &sbuf) == 0;
+     return lstat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.sym/\", &sbuf) == 0;
   ;
   return 0;
 }" LSTAT_FOLLOWS_SLASHED_SYMLINK)
@@ -718,7 +718,7 @@ ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     
 CHECK_CXX_SOURCE_RUNS("
