@@ -1463,17 +1463,8 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
   if (oid > 3000)
     DEBUG << "|" << tableColName.schema << "|" << tableColName.table << "|" << tableColName.column << endl;
 
-#if BOOST_VERSION < 103800
+  lk2.lock();
 
-  if (!lk2.locked())
-    lk2.lock();
-
-#else
-
-  if (!lk2.owns_lock())
-    lk2.lock();
-
-#endif
   fOIDmap[tableColName] = oid;
 
   return tableColName;
