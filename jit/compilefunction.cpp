@@ -12,10 +12,9 @@ namespace funcexp
 void compileFunction(llvm::Module& module, const Func& function)
 {
   llvm::IRBuilder<> b(module.getContext());
-  function->
 }
 
-CompiledFunction compileFunction(JIT& jit, const Func& function)
+CompiledFunction compileFunction(msc_jit::JIT& jit, const Func& function)
 {
   auto compiled_module = jit.compileModule([&](llvm::Module& module) { compileFunction(module, function); });
 }
