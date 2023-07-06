@@ -78,5 +78,9 @@ long double Func_abs::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
   return fabsl(parm[0]->data()->getLongDoubleVal(row, isNull));
 }
 
+llvm::Value* Func_abs::compileImpl() const{
+  return nullptr;
+}
+
 }  // namespace funcexp
 // vim:ts=4 sw=4:

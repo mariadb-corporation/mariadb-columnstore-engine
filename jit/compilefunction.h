@@ -7,10 +7,10 @@ namespace funcexp
 {
 struct CompiledFunction
 {
-  JIT::CompiledModule compiled_module;
+  msc_jit::JIT::CompiledModule compiled_module;
 };
 
-CompiledFunction compileFunction(JIT& jit, const Func& function);
+CompiledFunction compileFunction(msc_jit::JIT& jit, const Func& function);
 
 }  // namespace funcexp
 #endif  // MARIADB_COMPILEFUNCTION_H
