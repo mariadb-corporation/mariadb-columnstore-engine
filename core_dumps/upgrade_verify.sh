@@ -5,7 +5,6 @@ set -xeuo pipefail
 SCHEMA_DIR=$(dirname "$0")
 NAME1='airports'
 NAME2='airlines'
-NAME3='flights'
 
 
 test_data ()
@@ -19,4 +18,3 @@ test_data ()
 
 test_data "$NAME1"
 test_data "$NAME2"
-#test_data "$NAME3"

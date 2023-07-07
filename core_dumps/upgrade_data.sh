@@ -7,7 +7,6 @@ CPIMPORT=$(which cpimport)
 SCHEMA_DIR=$(dirname "$0")
 NAME1='airports'
 NAME2='airlines'
-NAME3='flights'
 
 
 get_data ()
@@ -41,8 +40,6 @@ fi
 
 get_data "$NAME1"
 get_data "$NAME2"
-#get_data "$NAME3"
 
 import_data "$NAME1"
 import_data "$NAME2"
-#import_data "$NAME3"
