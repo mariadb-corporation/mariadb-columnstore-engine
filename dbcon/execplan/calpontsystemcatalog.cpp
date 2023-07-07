@@ -834,10 +834,11 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
       // throw runtime_error("Error occurred when calling system catalog. ExeMgr is not functioning.");
       throw IDBExcept(ERR_SYSTEM_CATALOG);
   }
-
+idblog("restoring csep values");
   csep.sessionID(fSessionID);
   csep.txnID(oldTxnID);
   csep.verID(oldVerID);
+  idblog("exiting the getSysData");
 }
 
 void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,

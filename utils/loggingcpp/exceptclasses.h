@@ -288,7 +288,7 @@ class ProtocolError : public std::logic_error
   {                                                                                      \
     std::ostringstream os;                                                               \
                                                                                          \
-    os << __FILE__ << "@" << __LINE__ << ":  log: \'" << x << "\'"; \
+    os << __PRETTY_FUNCTION__ << ":  log: \'" << x << "\'"; \
     std::cerr << os.str() << std::endl;                                                  \
     logging::MessageLog logger((logging::LoggingID()));                                  \
     logging::Message message;                                                            \
