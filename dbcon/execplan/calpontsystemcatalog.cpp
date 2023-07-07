@@ -1048,6 +1048,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 
     if (iter != fColinfomap.end())
     {
+	    idblog("first exit from colType");
       return iter->second;
     }
   }
@@ -1248,8 +1249,8 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   }
 
   // populate colinfomap cache and oidbitmap
-  lk3.lock();
   boost::mutex::scoped_lock lk2(fOIDmapLock);
+  lk3.lock();
   fColinfomap[Oid] = ct;
   fOIDmap[tcn] = Oid;
 
@@ -1258,7 +1259,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 
   // Prevent mem leak
   // delete col[9];
-
+idblog("exit from colType");
   return ct;
 }
 
@@ -2966,10 +2967,14 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   // search fOIDmap for system catalog tables
   // or if fTableInfoMap has entry for this table, column oids are cached.
   // because columnRIDs(), colType() and tableInfo() are actually binded.
+#if 0
 #if BOOST_VERSION < 103800
   boost::mutex::scoped_lock lk2(fOIDmapLock, false);
 #else
   boost::mutex::scoped_lock lk2(fOIDmapLock, boost::defer_lock);
+#endif
+#else
+  boost::mutex::scoped_lock lk2(fOIDmapLock);
 #endif
   boost::mutex::scoped_lock lk3(fColinfomapLock);
 
@@ -2979,8 +2984,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       lk3.unlock();
     else
       rl.resize(ti_iter->second.numOfCols);
-
-    lk2.lock();
 
     if (aTableName.schema != CALPONT_SCHEMA)
       DEBUG << "for " << aTableName << ", searching " << fOIDmap.size() << " oids" << endl;
@@ -3022,8 +3025,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     return rl;
   }
 
-  lk1.unlock();
   lk3.unlock();
+  lk2.unlock();
+  lk1.unlock();
 
   if (aTableName.schema != CALPONT_SCHEMA)
     DEBUG << aTableName << " was not cached, fetching..." << endl;
