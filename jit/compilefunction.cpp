@@ -17,6 +17,8 @@ void compileFunction(llvm::Module& module, const Func& function)
 CompiledFunction compileFunction(msc_jit::JIT& jit, const Func& function)
 {
   auto compiled_module = jit.compileModule([&](llvm::Module& module) { compileFunction(module, function); });
+  CompiledFunction compiledFunction;
+  return compiledFunction;
 }
 
 }  // namespace funcexp

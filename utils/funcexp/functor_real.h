@@ -99,8 +99,6 @@ class Func_abs : public Func_Real
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct);
-
-  llvm::Value* compileImpl() const override;
 };
 
 /** @brief Func_exp class
