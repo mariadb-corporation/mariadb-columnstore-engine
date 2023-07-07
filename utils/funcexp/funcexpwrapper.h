@@ -55,6 +55,7 @@ class FuncExpWrapper : public messageqcpp::Serializeable
   void deserialize(messageqcpp::ByteStream&);
 
   bool evaluate(rowgroup::Row*);
+  void evaluate(rowgroup::RowGroup*);
   void evaluate(rowgroup::Row &in, rowgroup::Row &out, rowgroup::RowGroup *input, rowgroup::RowGroup &output, uint32_t rowCount, uint64_t baseRid, boost::shared_array<int> &mapping, uint32_t dbRoot);
   inline bool evaluateFilter(uint32_t num, rowgroup::Row* r);
   inline uint32_t getFilterCount() const;
@@ -63,6 +64,8 @@ class FuncExpWrapper : public messageqcpp::Serializeable
   void addReturnedColumn(const boost::shared_ptr<execplan::ReturnedColumn>&);
 
   void resetReturnedColumns();
+
+  FuncExp* getFuncExp() const;
 
  private:
   std::vector<boost::shared_ptr<execplan::ParseTree> > filters;

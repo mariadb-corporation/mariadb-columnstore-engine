@@ -503,7 +503,7 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
       uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
       if (width == 2)
       {
-        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset << 1]));
       }
       else 
       {
@@ -516,7 +516,7 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
               data[i] = *((int8_t*)(&colData[index][offset + i]));
               break;
             default:
-              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              data[i] = *((int16_t*)(&colData[index][(offset + i) << 1]));
               break;
           }
         }
@@ -529,7 +529,7 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
       uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
       if (width == 4)
       {
-        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset << 2]));
       }
       else 
       {
@@ -542,10 +542,10 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
               data[i] = *((int8_t*)(&colData[index][offset + i]));
               break;
             case 2:
-              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              data[i] = *((int16_t*)(&colData[index][(offset + i) << 1]));
               break;
             default:
-              data[i] = *((int32_t*)(&colData[index][offset + (i << 2)]));
+              data[i] = *((int32_t*)(&colData[index][(offset + i) << 2]));
               break;
           }
         }
@@ -558,7 +558,7 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
       uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
       if (width == 8)
       {
-        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset]));
+        fResult.simdIntVal = *((simd::vi128_t*)(&colData[index][offset << 3]));
       }
       else 
       {
@@ -571,13 +571,13 @@ void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &col
               data[i] = *((int8_t*)(&colData[index][offset + i]));
               break;
             case 2:
-              data[i] = *((int16_t*)(&colData[index][offset + (i << 1)]));
+              data[i] = *((int16_t*)(&colData[index][(offset + i) << 1]));
               break;
             case 4:
-              data[i] = *((int32_t*)(&colData[index][offset + (i << 2)]));
+              data[i] = *((int32_t*)(&colData[index][(offset + i) << 2]));
               break;
             default:
-              data[i] = *((int64_t*)(&colData[index][offset + (i << 3)]));
+              data[i] = *((int64_t*)(&colData[index][(offset + i) << 3]));
               break;
           }
         }

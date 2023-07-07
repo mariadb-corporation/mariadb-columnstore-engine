@@ -153,8 +153,8 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan1ByteVectorizedCode)(benchma
 {
   for (auto _ : state)
   {
-    constexpr const uint8_t W = 1;
     state.PauseTiming();
+    constexpr const uint8_t W = 1;
     inTestRunSetUp("col1block.cdf", W, SystemCatalog::TINYINT, OT_DATAVALUE, args);
     state.ResumeTiming();
     runFilterBenchTemplated<W>();

@@ -335,7 +335,7 @@ void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& ex
 
     for (execplan::SRCP expr : expression) 
     {
-      uint32_t width = expr->resultType().colWidth, offset = 0, batchCount = 16 / width;
+      uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
       allowSimd = false;
       switch (expr->resultType().colDataType)
       {
@@ -367,8 +367,7 @@ void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& ex
       {
         for (; j + batchCount < rowCount; j += batchCount)
         {
-          evaluateSimd(row, expr, colList, colWidth, colData, offset, batchCount);
-          offset += batchCount;
+          evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
         }
       }
       for (; j < rowCount; ++j, row.nextRow())
@@ -406,6 +405,7 @@ void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vecto
           for (uint32_t i = 0; i < batchCount; ++i)
           {
             row.setIntField<1>(valPtr[i << 1 | 1], expression->outputIndex());
+            row.nextRow();
           }
           break;
         }
@@ -415,11 +415,34 @@ void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vecto
           for (uint32_t i = 0; i < batchCount; ++i)
           {
             row.setIntField<2>(valPtr[i], expression->outputIndex());
+            row.nextRow();
           }
           break;
         }
         default:
           break;
+      }
+      break;
+    }
+    case execplan::CalpontSystemCatalog::INT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT32);
+      int32_t *valPtr = (int32_t *)&val;
+      for (uint32_t i = 0; i < batchCount; ++i)
+      {
+        row.setIntField<4>(valPtr[i], expression->outputIndex());
+        row.nextRow();
+      }
+      break;
+    }
+    case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT64);
+      int64_t *valPtr = (int64_t *)&val;
+      for (uint32_t i = 0; i < batchCount; ++i)
+      {
+        row.setIntField<8>(valPtr[i], expression->outputIndex());
+        row.nextRow();
       }
       break;
     }
@@ -681,256 +704,10 @@ void FuncExp::evaluate(rowgroup::Row& row, execplan::SRCP& expression)
 
 void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expression)
 {
-  bool isNull;
 
   for (uint32_t i = 0; i < expression.size(); i++)
   {
-    isNull = false;
-
-    switch (expression[i]->resultType().colDataType)
-    {
-      case CalpontSystemCatalog::DATE:
-      {
-        int64_t val = expression[i]->getIntVal(row, isNull);
-
-        // @bug6061, workaround date_add always return datetime for both date and datetime
-        if (val & 0xFFFFFFFF00000000)
-          val = (((val >> 32) & 0xFFFFFFC0) | 0x3E);
-
-        if (isNull)
-          row.setUintField<4>(DATENULL, expression[i]->outputIndex());
-        else
-          row.setUintField<4>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::DATETIME:
-      {
-        int64_t val = expression[i]->getDatetimeIntVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<8>(DATETIMENULL, expression[i]->outputIndex());
-        else
-          row.setUintField<8>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::TIMESTAMP:
-      {
-        int64_t val = expression[i]->getTimestampIntVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<8>(TIMESTAMPNULL, expression[i]->outputIndex());
-        else
-          row.setUintField<8>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::TIME:
-      {
-        int64_t val = expression[i]->getTimeIntVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<8>(TIMENULL, expression[i]->outputIndex());
-        else
-          row.setIntField<8>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::CHAR:
-      case CalpontSystemCatalog::VARCHAR:
-
-      // TODO: might not be right thing for BLOB
-      case CalpontSystemCatalog::BLOB:
-      case CalpontSystemCatalog::TEXT:
-      {
-        const std::string& val = expression[i]->getStrVal(row, isNull);
-
-        if (isNull)
-          row.setStringField(CPNULLSTRMARK, expression[i]->outputIndex());
-        else
-          row.setStringField(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::BIGINT:
-      {
-        int64_t val = expression[i]->getIntVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
-        else
-          row.setIntField<8>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::UBIGINT:
-      {
-        uint64_t val = expression[i]->getUintVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<8>(UBIGINTNULL, expression[i]->outputIndex());
-        else
-          row.setUintField<8>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::INT:
-      case CalpontSystemCatalog::MEDINT:
-      {
-        int64_t val = expression[i]->getIntVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<4>(INTNULL, expression[i]->outputIndex());
-        else
-          row.setIntField<4>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::UINT:
-      case CalpontSystemCatalog::UMEDINT:
-      {
-        uint64_t val = expression[i]->getUintVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<4>(UINTNULL, expression[i]->outputIndex());
-        else
-          row.setUintField<4>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::SMALLINT:
-      {
-        int64_t val = expression[i]->getIntVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<2>(SMALLINTNULL, expression[i]->outputIndex());
-        else
-          row.setIntField<2>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::USMALLINT:
-      {
-        uint64_t val = expression[i]->getUintVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<2>(USMALLINTNULL, expression[i]->outputIndex());
-        else
-          row.setUintField<2>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::TINYINT:
-      {
-        int64_t val = expression[i]->getIntVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<1>(TINYINTNULL, expression[i]->outputIndex());
-        else
-          row.setIntField<1>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::UTINYINT:
-      {
-        uint64_t val = expression[i]->getUintVal(row, isNull);
-
-        if (isNull)
-          row.setUintField<1>(UTINYINTNULL, expression[i]->outputIndex());
-        else
-          row.setUintField<1>(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      // In this case, we're trying to load a double output column with float data. This is the
-      // case when you do sum(floatcol), e.g.
-      case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE:
-      {
-        double val = expression[i]->getDoubleVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<8>(DOUBLENULL, expression[i]->outputIndex());
-        else
-          row.setDoubleField(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::FLOAT:
-      case CalpontSystemCatalog::UFLOAT:
-      {
-        float val = expression[i]->getFloatVal(row, isNull);
-
-        if (isNull)
-          row.setIntField<4>(FLOATNULL, expression[i]->outputIndex());
-        else
-          row.setFloatField(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::LONGDOUBLE:
-      {
-        long double val = expression[i]->getLongDoubleVal(row, isNull);
-
-        if (isNull)
-          row.setLongDoubleField(LONGDOUBLENULL, expression[i]->outputIndex());
-        else
-          row.setLongDoubleField(val, expression[i]->outputIndex());
-
-        break;
-      }
-
-      case CalpontSystemCatalog::DECIMAL:
-      case CalpontSystemCatalog::UDECIMAL:
-      {
-        IDB_Decimal val = expression[i]->getDecimalVal(row, isNull);
-
-        if (expression[i]->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-        {
-          if (isNull)
-          {
-            row.setBinaryField_offset(const_cast<int128_t*>(&datatypes::Decimal128Null),
-                                      expression[i]->resultType().colWidth,
-                                      row.getOffset(expression[i]->outputIndex()));
-          }
-          else
-          {
-            row.setBinaryField_offset(&val.s128Value, expression[i]->resultType().colWidth,
-                                      row.getOffset(expression[i]->outputIndex()));
-          }
-        }
-        else
-        {
-          if (isNull)
-            row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
-          else
-            row.setIntField<8>(val.value, expression[i]->outputIndex());
-        }
-
-        break;
-      }
-
-      default:  // treat as int64
-      {
-        throw std::runtime_error("funcexp::evaluate(): non support datatype to set field.");
-      }
-    }
+    evaluate(row, expression[i]);
   }
 }
 

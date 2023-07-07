@@ -30,6 +30,7 @@
 #include "simplecolumn.h"
 #include "simplecolumn_int.h"
 #include "constantcolumn.h"
+#include "values.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -46,30 +47,26 @@ public:
   RowGroup rg;
   vector<uint32_t> offsets, roids, tkeys, charSetNumbers, scale, precision;
   vector<CalpontSystemCatalog::ColDataType> types;
+  boost::shared_ptr<ReturnedColumn> expr;
   rowgroup::RGData rgD;
   TreeNode *tn1, *tn2, *tn3, *tn4, *tn5, *tn6, *tn7;
   ReturnedColumn *rc1, *rc2, *rc3, *rc4, *rc5, *rc6, *rc7;
   ParseTree *pt1, *pt2, *pt3, *pt4, *pt5;
   const uint32_t baseOffset = 2;
   const uint32_t oid = 3000;
+  const uint32_t rowCount = 4096;
   Row row;
-
+  vector<uint32_t> colList = {0, 1};
+  vector<uint32_t> colWidth = {0, 0};
+  vector<vector<uint8_t>> colData; // according values for each column
 
   enum TestType
   {
     TwoColumnAdd
   };
 
-  const uint64_t values[3][32] = {
-    {1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8},
-    {51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58, 51, 52, 53, 54, 55, 56, 57, 58}, 
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-  };
-
   void initRG(uint32_t colCount, vector<CalpontSystemCatalog::ColDataType> dataTypes, vector<uint32_t> widths, bool includeResult = true) 
   {
-    const uint32_t rowCount = 32;
-
     // cout << "initializing row group" << endl;
     offsets.clear(), roids.clear(), tkeys.clear(), charSetNumbers.clear(), scale.clear(), precision.clear();
     types = dataTypes;
@@ -320,7 +317,7 @@ public:
       case TestType::TwoColumnAdd:
       {
         fe.resetReturnedColumns();
-        string exp = "col1 * 2 + col2";
+        string exp = "col1 + 2 + col2";
         tn1 = new SimpleColumn_INT<len>();
         (reinterpret_cast<ReturnedColumn*>(tn1))->inputIndex(0);
         pt1 = new ParseTree(tn1);
@@ -346,7 +343,66 @@ public:
         (reinterpret_cast<ArithmeticColumn*> (rc1))->expression(cp_pt5);
         rc1->outputIndex(2);
 
-        fe.addReturnedColumn(boost::shared_ptr<ReturnedColumn>(rc1));
+        CalpontSystemCatalog::ColType *colType = new CalpontSystemCatalog::ColType();
+
+        switch (len)
+        {
+          case 1: 
+            colType->colDataType = execplan::CalpontSystemCatalog::TINYINT;
+            break;
+          case 2:
+            colType->colDataType = execplan::CalpontSystemCatalog::SMALLINT;
+            break;
+          case 4:
+            colType->colDataType = execplan::CalpontSystemCatalog::INT;
+            break;
+          case 8:
+            colType->colDataType = execplan::CalpontSystemCatalog::BIGINT;
+            break;
+          default:
+            break;
+        }
+        colType->colWidth = len;
+
+        rc1->resultType(*colType);
+
+        delete colType;
+
+        expr = boost::shared_ptr<ReturnedColumn>(rc1);
+        fe.addReturnedColumn(expr);
+        break;
+      }
+    }
+  }
+
+  template <int len>
+  void initData(TestType testType) 
+  {
+    switch (testType)
+    {
+      case TestType::TwoColumnAdd:
+      {
+        if (colWidth[0] != len)
+        // if (true)
+        {
+          colWidth[0] = colWidth[1] = len;
+          uint32_t i, j;
+          colData = vector<vector<uint8_t>> (colList.size());
+          rg.getRow(0, &row);
+          for (i = 0; i < colList.size(); ++i)
+          {
+            colWidth[i] = row.getColumnWidth(colList[i]);
+          }
+
+          for (j = 0; j < rowCount; ++j, row.nextRow())
+          {
+            for (i = 0; i < colList.size(); ++i)
+            {
+              colData[i].insert(colData[i].end(), row.getData() + row.getOffset(colList[i]), row.getData() + row.getOffset(colList[i] + 1));
+            }
+          }
+
+        }
         break;
       }
     }
@@ -378,10 +434,10 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate)(benchmark
   for (auto _ : state)
   {  
     state.PauseTiming();
-    uint32_t num_rows = 32, i;
+    uint32_t i;
     vector<execplan::CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> widths;
-    for (int i = 0; i < 2; ++i)
+    for (i = 0; i < 2; ++i)
     {
       types.push_back(execplan::CalpontSystemCatalog::TINYINT);
       widths.push_back(1);
@@ -396,7 +452,7 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate)(benchmark
     //   cout << "col " << i << " type " << rg.getColType(i) << endl;
     // }
     state.ResumeTiming();
-    for (i = 0; i < num_rows; ++i, row.nextRow())
+    for (i = 0; i < rowCount; ++i, row.nextRow())
     {
       // cout << "row " << i << " " << row.toString() << endl;
       fe.evaluate(&row);
@@ -405,8 +461,43 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate)(benchmark
   }
 }
 
-BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate);
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluate);
 
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluateVectorized)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t i, j;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::TINYINT);
+      widths.push_back(1);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::TINYINT);
+    widths.push_back(1);
+    initRG(3, types, widths);
+    initExp<1>(TestType::TwoColumnAdd);
+    initData<1>(TestType::TwoColumnAdd);
+
+    state.ResumeTiming();
+    uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
+    rg.getRow(0, &row);
+    for (; j + batchCount < rowCount; j += batchCount)
+    {
+      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+    }
+    for (; j < rowCount; ++j, row.nextRow())
+    {
+      (fe.getFuncExp())->evaluate(row, expr);
+    }
+  }
+}
+
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluateVectorized);
 
 BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate)(benchmark::State& state)
 {
@@ -414,10 +505,10 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate)(benchmark
   for (auto _ : state)
   {  
     state.PauseTiming();
-    uint32_t num_rows = 32, i;
+    uint32_t i;
     vector<execplan::CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> widths;
-    for (int i = 0; i < 2; ++i)
+    for (i = 0; i < 2; ++i)
     {
       types.push_back(execplan::CalpontSystemCatalog::SMALLINT);
       widths.push_back(2);
@@ -432,7 +523,7 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate)(benchmark
     //   cout << "col " << i << " type " << rg.getColType(i) << endl;
     // }
     state.ResumeTiming();
-    for (i = 0; i < num_rows; ++i, row.nextRow())
+    for (i = 0; i < rowCount; ++i, row.nextRow())
     {
       // cout << "row " << i << " " << row.toString() << endl;
       fe.evaluate(&row);
@@ -441,7 +532,43 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate)(benchmark
   }
 }
 
-BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate);
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluate);
+
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluateVectorized)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t i, j;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::SMALLINT);
+      widths.push_back(2);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::SMALLINT);
+    widths.push_back(2);
+    initRG(3, types, widths);
+    initExp<2>(TestType::TwoColumnAdd);
+    initData<2>(TestType::TwoColumnAdd);
+
+    state.ResumeTiming();
+    uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
+    rg.getRow(0, &row);
+    for (; j + batchCount < rowCount; j += batchCount)
+    {
+      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+    }
+    for (; j < rowCount; ++j, row.nextRow())
+    {
+      (fe.getFuncExp())->evaluate(row, expr);
+    }
+  }
+}
+
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluateVectorized);
 
 BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark::State& state)
 {
@@ -449,10 +576,10 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark
   for (auto _ : state)
   {  
     state.PauseTiming();
-    uint32_t num_rows = 32, i;
+    uint32_t i;
     vector<execplan::CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> widths;
-    for (int i = 0; i < 2; ++i)
+    for (i = 0; i < 2; ++i)
     {
       types.push_back(execplan::CalpontSystemCatalog::INT);
       widths.push_back(4);
@@ -467,7 +594,7 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark
     //   cout << "col " << i << " type " << rg.getColType(i) << endl;
     // }
     state.ResumeTiming();
-    for (i = 0; i < num_rows; ++i, row.nextRow())
+    for (i = 0; i < rowCount; ++i, row.nextRow())
     {
       // cout << "row " << i << " " << row.toString() << endl;
       fe.evaluate(&row);
@@ -476,7 +603,45 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate)(benchmark
   }
 }
 
-BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate);
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluate);
+
+
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluateVectorized)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t i, j;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::INT);
+      widths.push_back(4);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::INT);
+    widths.push_back(4);
+    initRG(3, types, widths);
+    initExp<4>(TestType::TwoColumnAdd);
+    initData<4>(TestType::TwoColumnAdd);
+
+    state.ResumeTiming();
+
+    uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
+    rg.getRow(0, &row);
+    for (; j + batchCount < rowCount; j += batchCount)
+    {
+      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+    }
+    for (; j < rowCount; ++j, row.nextRow())
+    {
+      (fe.getFuncExp())->evaluate(row, expr);
+    }
+  }
+}
+
+BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluateVectorized);
 
 BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate)(benchmark::State& state)
 {
@@ -484,10 +649,10 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate)(benchmark
   for (auto _ : state)
   {  
     state.PauseTiming();
-    uint32_t num_rows = 32, i;
+    uint32_t i;
     vector<execplan::CalpontSystemCatalog::ColDataType> types;
     vector<uint32_t> widths;
-    for (int i = 0; i < 2; ++i)
+    for (i = 0; i < 2; ++i)
     {
       types.push_back(execplan::CalpontSystemCatalog::BIGINT);
       widths.push_back(8);
@@ -502,7 +667,7 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate)(benchmark
     //   cout << "col " << i << " type " << rg.getColType(i) << endl;
     // }
     state.ResumeTiming();
-    for (i = 0; i < num_rows; ++i, row.nextRow())
+    for (i = 0; i < rowCount; ++i, row.nextRow())
     {
       // cout << "row " << i << " " << row.toString() << endl;
       fe.evaluate(&row);
@@ -511,6 +676,42 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate)(benchmark
   }
 }
 
-BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate);
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluate);
+
+BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluateVectorized)(benchmark::State& state)
+{
+
+  for (auto _ : state)
+  {  
+    state.PauseTiming();
+    uint32_t i, j;
+    vector<execplan::CalpontSystemCatalog::ColDataType> types;
+    vector<uint32_t> widths;
+    for (i = 0; i < 2; ++i)
+    {
+      types.push_back(execplan::CalpontSystemCatalog::BIGINT);
+      widths.push_back(8);
+    }
+    types.push_back(execplan::CalpontSystemCatalog::BIGINT);
+    widths.push_back(8);
+    initRG(3, types, widths);
+    initExp<8>(TestType::TwoColumnAdd);
+    initData<8>(TestType::TwoColumnAdd);
+    
+    state.ResumeTiming();
+    uint32_t width = expr->resultType().colWidth, batchCount = 16 / width;
+    rg.getRow(0, &row);
+    for (; j + batchCount < rowCount; j += batchCount)
+    {
+      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+    }
+    for (; j < rowCount; ++j, row.nextRow())
+    {
+      (fe.getFuncExp())->evaluate(row, expr);
+    }
+  }
+}
+
+// BENCHMARK_REGISTER_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluateVectorized);
 
 BENCHMARK_MAIN();

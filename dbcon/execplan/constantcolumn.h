@@ -244,6 +244,36 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
+  using ReturnedColumn::evaluateSimd;
+  virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  {
+  }
+
+  /**
+   * F&E
+   */
+  virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+  {
+    switch (simdType) 
+    {
+      case SIMD_TYPE::SIMD_INT16: 
+      case SIMD_TYPE::SIMD_UINT16:
+        return fResult.simdIntVal = simd::set_8x16b((int16_t) fResult.intVal);
+      case SIMD_TYPE::SIMD_INT32:
+      case SIMD_TYPE::SIMD_UINT32:
+        return fResult.simdIntVal = simd::set_4x32b((int32_t) fResult.intVal);
+      case SIMD_TYPE::SIMD_INT64:
+      case SIMD_TYPE::SIMD_UINT64:
+        return fResult.simdIntVal = simd::set_2x64b((int64_t) fResult.intVal);
+      default:
+        cerr << "ConstantColumn::getIntSimdVal: unsupported SIMD type" << endl;
+        exit(1);
+    }
+  }
+
+  /**
+   * F&E
+   */
   virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
   {
     isNull = isNull || (fType == NULLDATA);

@@ -31,7 +31,6 @@
 #include "operator.h"
 #include "mcs_decimal.h"
 #include <boost/core/demangle.hpp>
-#include "simd_sse.h"
 
 
 namespace rowgroup

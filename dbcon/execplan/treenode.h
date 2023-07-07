@@ -37,7 +37,6 @@
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
 #include "numericliteral.h"
-
 #include "simd_sse.h"
 
 namespace messageqcpp

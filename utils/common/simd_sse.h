@@ -2097,6 +2097,31 @@ vi128d_t div(vi128d_t x, vi128d_t y)
   }
 }
 
+inline vi128_t set_8x16b(int16_t x)
+{
+  return _mm_set1_epi16(x);
+}
+
+inline vi128_t set_4x32b(int32_t x)
+{
+  return _mm_set1_epi32(x);
+}
+
+inline vi128_t set_2x64b(int64_t x)
+{
+  return _mm_set1_epi64x(x);
+}
+
+inline vi128f_t set_4x32f(float x)
+{
+  return _mm_set1_ps(x);
+}
+
+inline vi128d_t set_2x64d(double x)
+{
+  return _mm_set1_pd(x);
+}
+
 }  // namespace simd
 
 #endif  // if defined(__x86_64__ )

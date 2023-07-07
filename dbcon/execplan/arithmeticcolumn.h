@@ -31,8 +31,6 @@
 #include "returnedcolumn.h"
 #include "expressionparser.h"
 
-#include "simd_sse.h"
-
 /**
  * Namespace
  */

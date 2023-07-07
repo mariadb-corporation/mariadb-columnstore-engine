@@ -113,15 +113,13 @@ void FuncExpWrapper::deserialize(ByteStream& bs)
 
 bool FuncExpWrapper::evaluate(Row* r)
 {
-  // uint32_t i;
-
-  // for (i = 0; i < filters.size(); i++)
-  //   if (!fe->evaluate(*r, filters[i].get()))
-  //     return false;
-
   fe->evaluate(*r, rcs);
-
   return true;
+}
+
+void FuncExpWrapper::evaluate(RowGroup* rg)
+{
+  fe->evaluate(*rg, rcs);
 }
 
 void FuncExpWrapper::evaluate(Row &in, Row &out, RowGroup *input, RowGroup &output, uint32_t rowCount, uint64_t baseRid, boost::shared_array<int> &mapping, uint32_t dbRoot = 0) {
@@ -156,6 +154,11 @@ void FuncExpWrapper::addReturnedColumn(const boost::shared_ptr<ReturnedColumn>& 
 void FuncExpWrapper::resetReturnedColumns()
 {
   rcs.clear();
+}
+
+FuncExp* FuncExpWrapper::getFuncExp() const
+{
+  return fe;
 }
 
 };  // namespace funcexp
