@@ -515,6 +515,85 @@ void number_int_value(const string& data, cscDataType typeCode,
   }
 }
 
+void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal)
+{
+  int128_t leftPart = bigllVal, rightPart;
+  for (int i = 0; i < fScale; i++)
+  {
+    // bigllVal
+    leftPart /= 10;
+  }
+  // int128_t tPart = leftPart;
+  for (int i = 0; i < fScale; i++)
+  {
+    leftPart *= 10;
+  }
+  rightPart = bigllVal - leftPart;
+
+  // apply the scale
+  if (columnScale > fScale)
+  {
+    for (int i = 0; i < columnScale - fScale; i++)
+    {
+      rightPart *= 10;
+      leftPart *= 10;
+    }
+  }
+  else
+  {
+    for (int i = 0; i < fScale - columnScale; i++)
+    {
+      leftPart /= 10;
+      rightPart /= 10;
+    }
+  }
+
+  bigllVal = leftPart + rightPart;
+  // is column.width always 16?
+  // if (LIKELY(column.width == 16))
+  // {
+  int128_t tmp;
+  utils::int128Min(tmp);
+  if (bigllVal < tmp + 2)  // + 2 for NULL and EMPTY values
+  {
+    bigllVal = tmp + 2;
+    *bSatVal = true;
+  }
+  // }
+
+  if (columnScale > 0)
+  {
+    int128_t rangeUp, rangeLow;
+    if (columnPrecision < 19)
+    {
+      rangeUp = (int128_t)columnstore_precision[columnPrecision];
+    }
+    else
+    {
+      auto precision = 
+          columnPrecision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : columnPrecision;
+      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
+      {
+        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                              dataTypeErr);
+      }
+      rangeUp = datatypes::ConversionRangeMaxValue[columnPrecision - 19];
+    }
+    rangeLow = -rangeUp;
+
+    if (bigllVal > rangeUp)
+    {
+      bigllVal = rangeUp;
+      *bSatVal = true;
+    }
+    else if (bigllVal < rangeLow)
+    {
+      bigllVal = rangeLow;
+      *bSatVal = true;
+    }
+  }
+}
+
 // Explicit template instantiation
 template void number_int_value<int64_t>(const std::string& data, cscDataType typeCode,
                                         const datatypes::SystemCatalog::TypeAttributesStd& ct,

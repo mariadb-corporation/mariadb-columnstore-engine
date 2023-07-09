@@ -1,0 +1,36 @@
+if (!$MYSQL_TEST_ROOT){
+    skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs287_db;
+--enable_warnings
+
+CREATE DATABASE mcs287_db;
+USE mcs287_db;
+
+CREATE TABLE t1(col1 INT, col2 FLOAT, col3 DOUBLE, col4 TIME, col5 VARCHAR(20), col6 TIMESTAMP, col7 DATE) ENGINE=Columnstore;
+
+# Generate data
+--exec mcsParquetGen -d a
+--exec mcsParquetGen -d b
+--exec mcsParquetGen -d c
+--exec mcsParquetGen -d d
+--exec mcsParquetGen -d e
+--exec mcsParquetGen -d f
+--exec mcsParquetGen -d g
+--exec mcsParquetGen -d h
+--exec mcsParquetGen -d i
+
+
+#Valid data and table
+--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/test-small-scale.parquet >/dev/null
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+
+TRUNCATE t1;
+
+# Clean UP
+DROP DATABASE mcs287_db;

@@ -554,7 +554,18 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          origVal = *(dataPtr + i);
+          // origVal = *(dataPtr + i);
+          if ((column.dataType == CalpontSystemCatalog::DECIMAL) ||
+              (column.dataType == CalpontSystemCatalog::UDECIMAL))
+          {
+            const int128_t* dataPtr1 = reinterpret_cast<const int128_t*>(dataPtr);
+            // auto dataPtr1 = std::static_pointer_cast<int128_t>(dataPtr);
+            origVal = *(dataPtr1 + i);
+          }
+          else
+          {
+            origVal = *(dataPtr + i);
+          }
           // memcpy(&siVal, dataPtr + i, width);
           // origVal = siVal;
         }
@@ -623,8 +634,9 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          memcpy(&usiVal, dataPtr + i, width);
-          origVal = usiVal;
+          origVal = *(dataPtr + i);
+          // memcpy(&usiVal, dataPtr + i, width);
+          // origVal = usiVal;
         }
 
         if (origVal < column.fMinIntSat)
@@ -658,7 +670,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
     case WriteEngine::WR_BYTE:
     {
       long long origVal;
-      const char* dataPtr = columnData->data()->GetValues<char>(1);
+      const int8_t* dataPtr = columnData->data()->GetValues<int8_t>(1);
       for (unsigned int i = 0; i < cbs; i++)
       {
         bool bSatVal = false;
@@ -687,7 +699,19 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          memcpy(&biVal, dataPtr + i, width);
+          // memcpy(&biVal, dataPtr + i, width);
+          // origVal = *(dataPtr + i);
+          if ((column.dataType == CalpontSystemCatalog::DECIMAL) ||
+              (column.dataType == CalpontSystemCatalog::UDECIMAL))
+          {
+            const int128_t* dataPtr1 = reinterpret_cast<const int128_t*>(dataPtr);
+            // auto dataPtr1 = std::static_pointer_cast<int128_t>(dataPtr);
+            origVal = *(dataPtr1 + i);
+          }
+          else
+          {
+            origVal = *(dataPtr + i);
+          }
         }
 
         if (origVal < column.fMinIntSat)
@@ -748,7 +772,8 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          memcpy(&ubiVal, dataPtr + i, width);
+          // memcpy(&ubiVal, dataPtr + i, width);
+          origVal = *(dataPtr + i);
         }
 
         if (origVal < column.fMinIntSat)
@@ -814,8 +839,38 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            memcpy(&llVal, dataPtr + i, width);
+            // memcpy(&llVal, dataPtr + i, width);
+            if ((column.dataType == CalpontSystemCatalog::DECIMAL) ||
+                (column.dataType == CalpontSystemCatalog::UDECIMAL))
+            {
+              const int128_t* dataPtr1 = reinterpret_cast<const int128_t*>(dataPtr);
+              llVal = *(dataPtr1 + i);
+              // long double ldVal = static_cast<long double>(llVal);
+              // for (int ii = 0; ii < column.scale; ii++)
+              // {
+              //   ldVal *= 10;
+              // }
+              // if (ldVal > LLONG_MAX)
+              // {
+              //   bSatVal = true;
+              //   llVal = LLONG_MAX;
+              // }
+              // else if (ldVal < LLONG_MIN)
+              // {
+              //   bSatVal = true;
+              //   llVal = LLONG_MIN;
+              // }
+              // else
+              // {
+              //   llVal = ldVal;
+              // }
+            }
+            else
+            {
+              llVal = *(dataPtr + i);
+            }
           }
+
           if (llVal < column.fMinIntSat)
           {
             llVal = column.fMinIntSat;
@@ -1014,11 +1069,18 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
     {
       // Parquet does not have data type with 128 byte
       // const int128_t* dataPtr = static_pointer_cast<int128_t>(columnData);
-      const int128_t* dataPtr = columnData->data()->GetValues<int128_t>(1);
+      // const int128_t* dataPtr = columnData->data()->GetValues<int128_t>(1);
+      std::shared_ptr<arrow::Decimal128Array> decimalArray = std::static_pointer_cast<arrow::Decimal128Array>(columnData);
+      std::shared_ptr<arrow::DecimalType> fType = std::static_pointer_cast<arrow::DecimalType>(decimalArray->type());
+      // int32_t fPrecision = fType->precision();
+      // int32_t fScale = fType->scale();
+      const int128_t* dataPtr = decimalArray->data()->GetValues<int128_t>(1);
+
+
       for (unsigned int i = 0; i < cbs; i++)
       {
         void* p = buf + i * width;
-        // bool bSatVal = false;
+        bool bSatVal = false;
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -1042,8 +1104,17 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          memcpy(&bigllVal, dataPtr + i, width);
+          // TODO:
+          // compare parquet data precision and scale with table column precision and scale
+          
+          // Get int and frac part
+          memcpy(&bigllVal, dataPtr + i, sizeof(int128_t));
+          // dataconvert::parquet_int_value(bigllVal, column.scale, column.precision, fScale, fPrecision, &bSatVal);
+
+
         }
+        if (bSatVal)
+          bufStats.satCount++;
 
         //TODO: no bSatVal change here
         if (bigllVal < bufStats.bigMinBufferVal)
@@ -1215,8 +1286,39 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
           }
           else
           {
-            memcpy(&iVal, dataPtr + i, width);
-            origVal = (long long)iVal;
+            // memcpy(&iVal, dataPtr + i, width);
+            // origVal = (long long)iVal;
+            // memcpy(&origVal, )
+            if ((column.dataType == CalpontSystemCatalog::DECIMAL) ||
+                (column.dataType == CalpontSystemCatalog::UDECIMAL))
+            {
+              const int128_t* dataPtr1 = reinterpret_cast<const int128_t*>(dataPtr);
+              // auto dataPtr1 = std::static_pointer_cast<int128_t>(dataPtr);
+              origVal = *(dataPtr1 + i);
+              // long double ldVal = static_cast<long double>(origVal);
+              // for (int ii = 0; ii< column.scale; ii++)
+              // {
+              //   ldVal *= 10;
+              // }
+              // if (ldVal > LLONG_MAX)
+              // {
+              //   bSatVal = true;
+              //   origVal = LLONG_MAX;
+              // }
+              // else if (ldVal < LLONG_MIN)
+              // {
+              //   bSatVal = true;
+              //   origVal = LLONG_MIN;
+              // }
+              // else
+              // {
+              //   origVal = ldVal;
+              // }
+            }
+            else
+            {
+              origVal = *(dataPtr + i);
+            }
           }
 
           if (origVal < column.fMinIntSat)

@@ -1081,6 +1081,8 @@ inline uint64_t string_to_ull(const std::string& data, bool& bSaturate)
   return value;
 }
 
+void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal);
+
 template <typename T>
 void number_int_value(const std::string& data, cscDataType typeCode,
                       const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
