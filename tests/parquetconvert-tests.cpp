@@ -24,6 +24,6 @@ TEST(ParquetConvertTests, Convert)
   PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
   std::shared_ptr<arrow::Array> array;
   PARQUET_THROW_NOT_OK(builder.Finish(&array));
-
+  // TODO: how to call tableInfo method
   
 }
