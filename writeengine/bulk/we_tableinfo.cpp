@@ -669,7 +669,14 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
 
     case WriteEngine::WR_BYTE:
     {
+      // TODO:support boolean
+
       long long origVal;
+      // FIXME:if use int8_t here, it will take 8 bool value of parquet array
+      // if (columnData->type_id() == arrow::Type::type::BOOL)
+      // {
+      std::shared_ptr<arrow::BooleanArray> boolArray = std::static_pointer_cast<arrow::BooleanArray>(columnData);
+      // }
       const int8_t* dataPtr = columnData->data()->GetValues<int8_t>(1);
       for (unsigned int i = 0; i < cbs; i++)
       {
@@ -679,7 +686,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         {
           if (!column.autoIncFlag)
           {
-            if (!column.fWithDefault)
+            if (column.fWithDefault)
             {
               origVal = column.fDefaultInt;
             }
@@ -707,6 +714,10 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             const int128_t* dataPtr1 = reinterpret_cast<const int128_t*>(dataPtr);
             // auto dataPtr1 = std::static_pointer_cast<int128_t>(dataPtr);
             origVal = *(dataPtr1 + i);
+          }
+          else if (columnData->type_id() == arrow::Type::type::BOOL)
+          {
+            origVal = boolArray->Value(i);
           }
           else
           {
@@ -753,7 +764,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         {
           if (!column.autoIncFlag)
           {
-            if (!column.fWithDefault)
+            if (column.fWithDefault)
             {
               origVal = static_cast<int64_t>(column.fDefaultUInt);
             }
