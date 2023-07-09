@@ -69,6 +69,7 @@ class SimpleColumn_INT : public SimpleColumn
   }
 
   /** Evaluate methods */
+  virtual inline simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType);
   virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
   virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
   virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
@@ -148,6 +149,146 @@ inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, b
 
   fResult.strVal = std::string(tmp);
   return fResult.strVal;
+}
+
+template <int len>  
+inline simd::vi128_t SimpleColumn_INT<len>::getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
+{
+  uint32_t index = lower_bound(colList.begin(), colList.end(), fInputIndex) - colList.begin(), width = colWidth[index];
+  if (len != 1 && width == len)
+  {
+    return *((simd::vi128_t*)(&colData[index][offset * width]));
+  }
+  else
+  {
+    uint32_t j;
+    switch (len)
+    {
+      case 1:
+      case 2:
+      {
+        switch (len)
+        {
+          case 1: 
+          {
+            int16_t ret[8];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int8_t*) (&colData[index][offset + j]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 2:
+          {
+            int16_t ret[8];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int16_t*) (&colData[index][(offset + j) << 1]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 4:
+          {
+            int16_t ret[8];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int32_t*) (&colData[index][(offset + j) << 2]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 8:
+          {
+            int16_t ret[8];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int64_t*) (&colData[index][(offset + j) << 3]);
+            return *((simd::vi128_t*)ret);
+          }
+          default:
+          {
+            int16_t ret[8] = {0};
+            return *((simd::vi128_t*)ret);
+          }
+        }
+      }
+      case 4:
+      {
+        switch (width)
+        {
+          case 1:
+          {
+            int32_t ret[4];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int8_t*) (&colData[index][offset + j]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 2:
+          {
+            int32_t ret[4];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int16_t*) (&colData[index][(offset + j) << 1]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 4:
+          {
+            int32_t ret[4];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int32_t*) (&colData[index][(offset + j) << 2]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 8:
+          {
+            int32_t ret[4];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int64_t*) (&colData[index][(offset + j) << 3]);
+            return *((simd::vi128_t*)ret);
+          }
+          default:
+          {
+            int32_t ret[4] = {0};
+            return *((simd::vi128_t*)ret);
+          }
+        }
+      }
+      case 8:
+      {
+        switch (width)
+        {
+          case 1:
+          {
+            int64_t ret[2];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int8_t*) (&colData[index][offset + j]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 2:
+          {
+            int64_t ret[2];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int16_t*) (&colData[index][(offset + j) << 1]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 4:
+          {
+            int64_t ret[2];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int32_t*) (&colData[index][(offset + j) << 2]);
+            return *((simd::vi128_t*)ret);
+          }
+          case 8:
+          {
+            int64_t ret[2];
+            for (j = 0; j < batchCount; j++)
+              ret[j] = *(int64_t*) (&colData[index][(offset + j) << 3]);
+            return *((simd::vi128_t*)ret);
+          }
+          default:
+          {
+            int64_t ret[2] = {0};
+            return *((simd::vi128_t*)ret);
+          }
+        }
+      }
+      default:
+      {
+        int64_t ret[2] = {0};
+        return *((simd::vi128_t*)ret);
+      }
+    }
+  }
 }
 
 template <int len>

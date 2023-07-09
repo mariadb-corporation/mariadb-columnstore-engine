@@ -90,7 +90,7 @@ if (WITH_UNITTESTS)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 
     find_package(benchmark REQUIRED)
-    add_executable(funcexp_bench funcexp_bench/funcexp_bench.cpp)
+    add_executable(funcexp_bench funcexp_bench.cpp)
     target_include_directories(funcexp_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
     target_link_libraries(funcexp_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
     add_test(NAME columnstore_microbenchmarks:funcexp_bench, COMMAND funcexp_bench)

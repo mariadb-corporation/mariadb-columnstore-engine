@@ -397,30 +397,23 @@ void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vecto
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
       simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT16);
-      switch (expression->resultType().colDataType)
+      if (expression->resultType().colDataType == execplan::CalpontSystemCatalog::TINYINT)
       {
-        case execplan::CalpontSystemCatalog::TINYINT:
+        int8_t *valPtr = (int8_t *)&val;
+        for (uint32_t i = 0; i < batchCount; ++i)
         {
-          int8_t *valPtr = (int8_t *)&val;
-          for (uint32_t i = 0; i < batchCount; ++i)
-          {
-            row.setIntField<1>(valPtr[i << 1 | 1], expression->outputIndex());
-            row.nextRow();
-          }
-          break;
+          row.setIntField<1>(valPtr[i << 1 | 1], expression->outputIndex());
+          row.nextRow();
         }
-        case execplan::CalpontSystemCatalog::SMALLINT:
+      }
+      else 
+      {
+        int16_t *valPtr = (int16_t *)&val;
+        for (uint32_t i = 0; i < batchCount; ++i)
         {
-          int16_t *valPtr = (int16_t *)&val;
-          for (uint32_t i = 0; i < batchCount; ++i)
-          {
-            row.setIntField<2>(valPtr[i], expression->outputIndex());
-            row.nextRow();
-          }
-          break;
+          row.setIntField<2>(valPtr[i], expression->outputIndex());
+          row.nextRow();
         }
-        default:
-          break;
       }
       break;
     }

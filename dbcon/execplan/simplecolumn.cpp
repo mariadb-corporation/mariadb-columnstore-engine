@@ -493,7 +493,6 @@ bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
   return true;
 }
 
-// TODO: get value from colData
 void SimpleColumn::evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType) 
 {
   switch (simdType)
