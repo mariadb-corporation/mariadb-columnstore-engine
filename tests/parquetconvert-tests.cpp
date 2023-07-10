@@ -5,8 +5,7 @@ using namespace dataconvert;
 #include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <parquet/exception.h>
-
-
+#include "we_tableinfo.h"
 
 // int32
 TEST(ParquetConvertTests, Convert)
@@ -25,5 +24,5 @@ TEST(ParquetConvertTests, Convert)
   std::shared_ptr<arrow::Array> array;
   PARQUET_THROW_NOT_OK(builder.Finish(&array));
   // TODO: how to call tableInfo method
-  
+  WriteEngine::TableInfo* tTable = new WriteEngine::TableInfo
 }

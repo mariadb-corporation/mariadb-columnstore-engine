@@ -912,7 +912,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         // time conversion here
         // for parquet, there are two time type, time32 and time64
         // if it's time32, unit is millisecond, int32
-        if (columnData->type_id() == arrow::Type::type::TIME32)
+        if (columnData->type_id() == arrow::Type::type::TIME32 || columnData->type_id() == arrow::Type::type::NA)
         {
           std::shared_ptr<arrow::Time32Array> timeArray = std::static_pointer_cast<arrow::Time32Array>(columnData);
           for (unsigned int i = 0; i < cbs; i++)
@@ -1230,7 +1230,8 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         }
         else
         {
-          memcpy(&uiVal, dataPtr + i, width);
+          // memcpy(&uiVal, dataPtr + i, width);
+          origVal = *(dataPtr + i);
         }
         if (origVal < column.fMinIntSat)
         {
@@ -1374,6 +1375,7 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
             {
               iDate = joblist::DATENULL;
               pVal = &iDate;
+              memcpy(p, pVal, width);
               continue;
             }
           }

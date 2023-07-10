@@ -19,8 +19,9 @@ void generateIntTable()
   validity[2] = 0;
   validity[3] = 0;
   std::vector<int32_t> values;
-  for (int32_t i = 0; i < reserve_num; i++)
+  for (int32_t i = 0; i < reserve_num-1; i++)
     values.push_back(i);
+  values.push_back(2147483648);
   PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
   std::shared_ptr<arrow::Array> array;
   PARQUET_THROW_NOT_OK(builder.Finish(&array));
@@ -36,6 +37,39 @@ void generateIntTable()
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/int32.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+
+}
+
+void generateInt64Table()
+{
+	// generate data
+  arrow::Int64Builder builder;
+  int reserve_num = 30;
+  PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
+  std::vector<bool> validity(reserve_num, true);
+  validity[1] = 0;
+  validity[2] = 0;
+  validity[3] = 0;
+  std::vector<int64_t> values;
+  for (int64_t i = 0; i < reserve_num-1; i++)
+    values.push_back(i);
+  values.push_back(2147483648);
+  PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
+  std::shared_ptr<arrow::Array> array;
+  PARQUET_THROW_NOT_OK(builder.Finish(&array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("int64", arrow::int64()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/int64.parquet"));
   PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
 
 }
@@ -246,6 +280,35 @@ void generateInt16Table()
 	
 }
 
+void generateInt8Table()
+{
+	int reserve_num = 30;
+  // ---------------int16
+  arrow::Int8Builder i8builder;
+  PARQUET_THROW_NOT_OK(i8builder.Reserve(reserve_num));
+  std::vector<bool> i8validity(reserve_num, true);
+  std::vector<int8_t> i8values;
+  for (int8_t i = 0; i < reserve_num; i++)
+    i8values.push_back(i);
+  PARQUET_THROW_NOT_OK(i8builder.AppendValues(i8values, i8validity));
+  std::shared_ptr<arrow::Array> i8array;
+  PARQUET_THROW_NOT_OK(i8builder.Finish(&i8array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("int8", arrow::int8()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i8array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/int8.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+	
+}
+
 void generateDecimalTable()
 {
   // ----------------------decimal
@@ -276,67 +339,273 @@ void generateDecimalTable()
 	
 }
 
+
+void generateUintTable()
+{
+	// generate data
+  arrow::UInt32Builder builder;
+  uint reserve_num = 30;
+  PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
+  std::vector<bool> validity(reserve_num, true);
+  validity[1] = 0;
+  validity[2] = 0;
+  validity[3] = 0;
+  std::vector<uint32_t> values;
+  for (uint32_t i = 0; i < reserve_num-1; i++)
+    values.push_back(i);
+  values.push_back(2147483648);
+  PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
+  std::shared_ptr<arrow::Array> array;
+  PARQUET_THROW_NOT_OK(builder.Finish(&array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("int", arrow::uint32()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/uint32.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+
+}
+
+
+void generateUint16Table()
+{
+	uint16_t reserve_num = 30;
+  // ---------------int16
+  arrow::UInt16Builder i16builder;
+  PARQUET_THROW_NOT_OK(i16builder.Reserve(reserve_num));
+  std::vector<bool> i16validity(reserve_num, true);
+  std::vector<uint16_t> i16values;
+  for (uint16_t i = 0; i < reserve_num; i++)
+    i16values.push_back(i);
+  PARQUET_THROW_NOT_OK(i16builder.AppendValues(i16values, i16validity));
+  std::shared_ptr<arrow::Array> i16array;
+  PARQUET_THROW_NOT_OK(i16builder.Finish(&i16array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("uint16", arrow::uint16()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i16array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/uint16.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+	
+}
+
+void generateUint8Table()
+{
+	uint8_t reserve_num = 30;
+  // ---------------int16
+  arrow::UInt8Builder i8builder;
+  PARQUET_THROW_NOT_OK(i8builder.Reserve(reserve_num));
+  std::vector<bool> i8validity(reserve_num, true);
+  std::vector<uint8_t> i8values;
+  for (uint8_t i = 0; i < reserve_num; i++)
+    i8values.push_back(i);
+  PARQUET_THROW_NOT_OK(i8builder.AppendValues(i8values, i8validity));
+  std::shared_ptr<arrow::Array> i8array;
+  PARQUET_THROW_NOT_OK(i8builder.Finish(&i8array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("uint8", arrow::uint8()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i8array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/uint8.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+	
+}
+
+void generateUint64Table()
+{
+	// generate data
+  arrow::UInt64Builder builder;
+  uint64_t reserve_num = 30;
+  PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
+  std::vector<bool> validity(reserve_num, true);
+  validity[1] = 0;
+  validity[2] = 0;
+  validity[3] = 0;
+  std::vector<uint64_t> values;
+  for (uint64_t i = 0; i < reserve_num-1; i++)
+    values.push_back(i);
+  values.push_back(2147483648);
+  PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
+  std::shared_ptr<arrow::Array> array;
+  PARQUET_THROW_NOT_OK(builder.Finish(&array));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("uint64", arrow::uint64()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/uint64.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+
+}
+
+void generateBoolTable()
+{
+  int reserve_num = 30;
+  // ----------------------boolean
+  arrow::BooleanBuilder boolBuilder;
+  PARQUET_THROW_NOT_OK(boolBuilder.Reserve(reserve_num));
+  std::vector<bool> boolValidity(reserve_num, true);
+  std::vector<bool> boolValues;
+  for (int i = 0; i < reserve_num; i++)
+    boolValues.push_back(true);
+  boolValues[5] = false;
+  PARQUET_THROW_NOT_OK(boolBuilder.AppendValues(boolValues, boolValidity));
+  std::shared_ptr<arrow::Array> boolArray;
+  PARQUET_THROW_NOT_OK(boolBuilder.Finish(&boolArray));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("bool", arrow::boolean()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {boolArray});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/bool.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+
+
+}
+
+
+void generateNullTable()
+{
+  int reserve_num = 30;
+  // ---------------------null
+  arrow::NullBuilder nullBuilder;
+  PARQUET_THROW_NOT_OK(nullBuilder.Reserve(reserve_num));
+  PARQUET_THROW_NOT_OK(nullBuilder.AppendNulls(reserve_num));
+  std::shared_ptr<arrow::Array> nullarray;
+  PARQUET_THROW_NOT_OK(nullBuilder.Finish(&nullarray));
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+		arrow::field("null", arrow::null()),
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {nullarray});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/null.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+
+}
+
+
+void generateTable()
+{
+  generateBoolTable();
+  generateDateTable();
+  generateDecimalTable();
+  generateDoubleTable();
+  generateFloatTable();
+  generateInt16Table();
+  generateInt64Table();
+  generateInt8Table();
+  generateIntTable();
+  generateNullTable();
+  generateStringTable();
+  generateTimestampTable();
+  generateTimeTable();
+  generateUint16Table();
+  generateUint64Table();
+  generateUint8Table();
+  generateUintTable();
+}
+
+
 int main(int argc, char** argv)
 {
   int32_t option;
 
-  while ((option = getopt(argc, argv, "d:")) != EOF)
+  while ((option = getopt(argc, argv, "d")) != EOF)
   {
     switch (option)
     {
       case 'd':
       {
-        char col = optarg[0];
+        generateTable();
+        // char col = optarg[0];
 
-        switch (col)
-        {
-          case 'a':
-          {
-						generateIntTable();
-						break;
-          }
-					case 'b':
-					{
-						generateFloatTable();
-						break;
-					}
-					case 'c':
-					{
-						generateDoubleTable();
-						break;
-					}
-					case 'd':
-					{
-						generateTimeTable();
-						break;
-					}
-					case 'e':
-					{
-						generateStringTable();
-						break;
-					}
-					case 'f':
-					{
-						generateTimestampTable();
-						break;
-					}
-					case 'g':
-					{
-						generateDateTable();
-						break;
-					}
-					case 'h':
-					{
-						generateInt16Table();
-						break;
-					}
-					case 'i':
-					{
-						generateDecimalTable();
-						break;
-					}
+        // switch (col)
+        // {
+        //   case 'a':
+        //   {
+				// 		generateIntTable();
+				// 		break;
+        //   }
+				// 	case 'b':
+				// 	{
+				// 		generateFloatTable();
+				// 		break;
+				// 	}
+				// 	case 'c':
+				// 	{
+				// 		generateDoubleTable();
+				// 		break;
+				// 	}
+				// 	case 'd':
+				// 	{
+				// 		generateTimeTable();
+				// 		break;
+				// 	}
+				// 	case 'e':
+				// 	{
+				// 		generateStringTable();
+				// 		break;
+				// 	}
+				// 	case 'f':
+				// 	{
+				// 		generateTimestampTable();
+				// 		break;
+				// 	}
+				// 	case 'g':
+				// 	{
+				// 		generateDateTable();
+				// 		break;
+				// 	}
+				// 	case 'h':
+				// 	{
+				// 		generateInt16Table();
+				// 		break;
+				// 	}
+				// 	case 'i':
+				// 	{
+				// 		generateDecimalTable();
+				// 		break;
+				// 	}
 					
-        }
+        // }
       }
     }
   }
