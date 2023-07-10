@@ -1311,6 +1311,7 @@ struct BPPHandler
     {
       // MCOL-857 We don't have the full packet yet
       bs.rewind();
+      idblog("not a full packet");
       return -1;
     }
 
