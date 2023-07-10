@@ -20,3 +20,4 @@ ExecStart=/usr/bin/env bash -c "@PRIMPROC_ALLOC_CONFIG@ @LD_PRELOAD_STRING@ exec
 
 Restart=on-failure
 TimeoutStopSec=2
+MemoryLimit=16000000000
