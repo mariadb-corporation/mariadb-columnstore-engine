@@ -350,7 +350,7 @@ class ThreadPool
   boost::condition_variable fNeedThread;       // triggered when a thread is needed
   ThreadPoolGroup fThreads;
 
-  bool fStop;
+  std::atomic<bool> fStop = false;
   long fGeneralErrors;
   long fFunctorErrors;
   uint32_t waitingFunctorsSize;
