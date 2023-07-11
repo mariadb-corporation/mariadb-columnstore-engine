@@ -29,9 +29,11 @@ enum ENUM_KIND
 
 enum SIMD_TYPE
 {
+  SIMD_INT8,
   SIMD_INT16, 
   SIMD_INT32,
   SIMD_INT64,
+  SIMD_UINT8,
   SIMD_UINT16,
   SIMD_UINT32,
   SIMD_UINT64,
@@ -1872,12 +1874,16 @@ vi128_t add(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
+    case SIMD_TYPE::SIMD_INT8:
+      return _mm_add_epi8(x, y);
     case SIMD_TYPE::SIMD_INT16:
       return _mm_add_epi16(x, y);
     case SIMD_TYPE::SIMD_INT32:
       return _mm_add_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
       return _mm_add_epi64(x, y);
+    case SIMD_TYPE::SIMD_UINT8:
+      return _mm_adds_epu8(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_adds_epu16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
@@ -1921,12 +1927,16 @@ vi128_t sub(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
+    case SIMD_TYPE::SIMD_INT8:
+      return _mm_sub_epi8(x, y);
     case SIMD_TYPE::SIMD_INT16:
       return _mm_sub_epi16(x, y);
     case SIMD_TYPE::SIMD_INT32:
       return _mm_sub_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
       return _mm_sub_epi64(x, y);
+    case SIMD_TYPE::SIMD_UINT8:
+      return _mm_subs_epu8(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_subs_epu16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
@@ -1965,49 +1975,48 @@ vi128d_t sub(vi128d_t x, vi128d_t y)
   }
 }
 
-inline vi128_t mul_u64(vi128_t a, vi128_t b) {
-    // Product of lower 32-bit parts
-    vi128_t lo_lo = _mm_mul_epu32(a, b);
+inline vi128_t mul_i8(vi128_t x, vi128_t y)
+{
+  // Unpack to two 16-bit integers
+  __m128i xl = _mm_unpacklo_epi8(x, _mm_setzero_si128());
+  __m128i xh = _mm_unpackhi_epi8(x, _mm_setzero_si128());
+  __m128i yl = _mm_unpacklo_epi8(x, _mm_setzero_si128());
+  __m128i yh = _mm_unpackhi_epi8(x, _mm_setzero_si128());
 
-    // Product of upper and lower 32-bit parts
-    vi128_t a_shift = _mm_srli_epi64(a, 32);
-    vi128_t b_shift = _mm_srli_epi64(b, 32);
-    vi128_t lo_hi = _mm_mul_epu32(a, b_shift);
-    vi128_t hi_lo = _mm_mul_epu32(a_shift, b);
-
-    // Sum of cross products
-    vi128_t cross = _mm_add_epi64(lo_hi, hi_lo);
-
-    // Adjust for carry
-    vi128_t cross_shift = _mm_slli_epi64(cross, 32);
-    vi128_t result = _mm_add_epi64(lo_lo, cross_shift);
-
-    return result;
+  // Multiply 16-bit integers and pack the results
+  return _mm_packs_epi16(_mm_mullo_epi16(xl, yl), _mm_mullo_epi16(xh, yh));
 }
-inline vi128_t mul_i64(vi128_t a, vi128_t b) {
-    // Compute the sign of the result
-    vi128_t a_sign = _mm_srai_epi32(a, 31); // arithmetic shift right
-    vi128_t b_sign = _mm_srai_epi32(b, 31);
-    vi128_t result_sign = _mm_xor_si128(a_sign, b_sign); // xor will give us the sign of the result
 
-    // Compute absolute values
-    a = _mm_sub_epi64(_mm_xor_si128(a, a_sign), a_sign);
-    b = _mm_sub_epi64(_mm_xor_si128(b, b_sign), b_sign);
+inline vi128_t mul_u8(vi128_t x, vi128_t y)
+{
+  // Unpack to two 16-bit integers
+  __m128i xl = _mm_unpacklo_epi8(x, _mm_setzero_si128());
+  __m128i xh = _mm_unpackhi_epi8(x, _mm_setzero_si128());
+  __m128i yl = _mm_unpacklo_epi8(x, _mm_setzero_si128());
+  __m128i yh = _mm_unpackhi_epi8(x, _mm_setzero_si128());
 
-    // Use the same multiplication algorithm as before
-    vi128_t lo_lo = _mm_mul_epu32(a, b);
-    vi128_t a_shift = _mm_srli_epi64(a, 32);
-    vi128_t b_shift = _mm_srli_epi64(b, 32);
-    vi128_t lo_hi = _mm_mul_epu32(a, b_shift);
-    vi128_t hi_lo = _mm_mul_epu32(a_shift, b);
-    vi128_t cross = _mm_add_epi64(lo_hi, hi_lo);
-    vi128_t cross_shift = _mm_slli_epi64(cross, 32);
-    vi128_t result = _mm_add_epi64(lo_lo, cross_shift);
+  // Multiply 16-bit integers and pack the results
+  return _mm_packus_epi16(_mm_mullo_epi16(xl, yl), _mm_mullo_epi16(xh, yh));
+}
 
-    // Adjust the sign of the result
-    result = _mm_sub_epi64(_mm_xor_si128(result, result_sign), result_sign);
+inline vi128_t mul_u64(vi128_t a, vi128_t b) 
+{
+  uint64_t *a_ptr = (uint64_t *) &a;
+  uint64_t *b_ptr = (uint64_t *) &b;
+  uint64_t rett[2];
+  rett[0] = a_ptr[0] * b_ptr[0];
+  rett[1] = a_ptr[1] * b_ptr[1];
+  return *((vi128_t *) rett);
+}
 
-    return result;
+inline vi128_t mul_i64(vi128_t a, vi128_t b) 
+{
+  int64_t *a_ptr = (int64_t *) &a;
+  int64_t *b_ptr = (int64_t *) &b;
+  int64_t ret[2];
+  ret[0] = a_ptr[0] * b_ptr[0];
+  ret[1] = a_ptr[1] * b_ptr[1];
+  return *((vi128_t *) ret);
 }
 
 template <SIMD_TYPE simdType>
@@ -2015,12 +2024,16 @@ vi128_t mul(vi128_t x, vi128_t y)
 {
   switch (simdType)
   {
+    case SIMD_TYPE::SIMD_INT8:
+      return mul_i8(x, y);
     case SIMD_TYPE::SIMD_INT16:
       return _mm_mullo_epi16(x, y);
     case SIMD_TYPE::SIMD_INT32:
       return _mm_mullo_epi32(x, y);
     case SIMD_TYPE::SIMD_INT64:
       return mul_i64(x, y);
+    case SIMD_TYPE::SIMD_UINT8:
+      return mul_u8(x, y);
     case SIMD_TYPE::SIMD_UINT16:
       return _mm_mullo_epi16(x, y);
     case SIMD_TYPE::SIMD_UINT32:
@@ -2095,6 +2108,11 @@ vi128d_t div(vi128d_t x, vi128d_t y)
       cerr << "Error: SIMD type missmatch" << endl;
       exit(1);
   }
+}
+
+inline vi128_t set_16x8b(int8_t x)
+{
+  return _mm_set1_epi8(x);
 }
 
 inline vi128_t set_8x16b(int16_t x)

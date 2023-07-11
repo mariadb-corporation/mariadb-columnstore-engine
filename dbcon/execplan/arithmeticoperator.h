@@ -281,6 +281,10 @@ inline void ArithmeticOperator::evaluateSimd(vector<uint32_t> &colList, vector<u
 {
   switch (simdType)
   {
+    case SIMD_INT8: 
+      fResult.simdIntVal = executeSimd<SIMD_INT8, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
+      break;
+
     case SIMD_INT16: 
       fResult.simdIntVal = executeSimd<SIMD_INT16, simd::vi128_t>(lop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType), rop->getIntSimdVal(colList, colWidth, colData, offset, batchCount, simdType));
       break;

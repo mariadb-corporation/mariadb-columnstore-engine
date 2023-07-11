@@ -295,150 +295,60 @@ Func* FuncExp::getFunctor(std::string& funcName)
     return (*iter).second;
 }
 
-void FuncExp::evaluate(rowgroup::RowGroup& rows, std::vector<execplan::SRCP>& expression) 
-{
-  rowgroup::Row row;
-  uint32_t rowCount = rows.getRowCount(), i, j = 0;
-
-  bool allowSimd = true;
-
-  if (allowSimd)
-  {
-
-    set<uint32_t> colSet;
-
-    for (execplan::SRCP expr : expression) 
-    {
-      expr->setSimpleColumnList();
-      for (execplan::SimpleColumn *col : expr->simpleColumnList())
-      {
-        colSet.insert(col->execplan::ReturnedColumn::inputIndex());
-      }
-    }
-
-    vector<uint32_t> colList(colSet.begin(), colSet.end()), colWidth(colList.size()); // vector with column indexes
-    vector<vector<uint8_t>> colData = vector<vector<uint8_t>> (colList.size()); // according values for each column
-
-    rows.getRow(0, &row);
-    for (i = 0; i < colList.size(); ++i)
-    {
-      colWidth[i] = row.getColumnWidth(colList[i]);
-    }
-
-    for (j = 0; j < rowCount; ++j, row.nextRow())
-    {
-      for (i = 0; i < colList.size(); ++i)
-      {
-        colData[i].insert(colData[i].end(), row.getData() + row.getOffset(colList[i]), row.getData() + row.getOffset(colList[i] + 1));
-      }
-    }
-
-    for (execplan::SRCP expr : expression) 
-    {
-      uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
-      allowSimd = false;
-      switch (expr->resultType().colDataType)
-      {
-        case execplan::CalpontSystemCatalog::TINYINT:
-        case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::INT:
-        case execplan::CalpontSystemCatalog::BIGINT:
-        case execplan::CalpontSystemCatalog::UTINYINT:
-        case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::UINT:
-        case execplan::CalpontSystemCatalog::UBIGINT:
-        case execplan::CalpontSystemCatalog::FLOAT:
-        case execplan::CalpontSystemCatalog::DOUBLE:
-          allowSimd = true;
-          break;
-
-        case execplan::CalpontSystemCatalog::DECIMAL:
-        case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::TIME:
-        case execplan::CalpontSystemCatalog::DATETIME:
-        case execplan::CalpontSystemCatalog::TIMESTAMP:
-        default:
-          break;
-      }
-
-      rows.getRow(0, &row);
-      j = 0;
-      if (allowSimd)
-      {
-        for (; j + batchCount < rowCount; j += batchCount)
-        {
-          evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
-        }
-      }
-      for (; j < rowCount; ++j, row.nextRow())
-      {
-        evaluate(row, expr);
-      }
-    }
-    return;
-  }
-
-  for (execplan::SRCP expr : expression)
-  {
-    rows.getRow(0, &row);
-    for (j = 0; j < rowCount; ++j, row.nextRow())
-    {
-      evaluate(row, expr);
-    }
-  }
-}
-
-void FuncExp::evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount)
+void FuncExp::evaluateSimd(execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, vector<uint8_t> &retCol, uint32_t offset, uint32_t batchCount)
 {
   // bool isNull = false;
   switch (expression->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT8);
+      memcpy(retCol.data() + (offset << 0), &val, sizeof(val));
+      break;
+    }
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
       simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT16);
-      if (expression->resultType().colDataType == execplan::CalpontSystemCatalog::TINYINT)
-      {
-        int8_t *valPtr = (int8_t *)&val;
-        for (uint32_t i = 0; i < batchCount; ++i)
-        {
-          row.setIntField<1>(valPtr[i << 1 | 1], expression->outputIndex());
-          row.nextRow();
-        }
-      }
-      else 
-      {
-        int16_t *valPtr = (int16_t *)&val;
-        for (uint32_t i = 0; i < batchCount; ++i)
-        {
-          row.setIntField<2>(valPtr[i], expression->outputIndex());
-          row.nextRow();
-        }
-      }
+      memcpy(retCol.data() + (offset << 1), &val, sizeof(val));
       break;
     }
     case execplan::CalpontSystemCatalog::INT:
     {
       simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT32);
-      int32_t *valPtr = (int32_t *)&val;
-      for (uint32_t i = 0; i < batchCount; ++i)
-      {
-        row.setIntField<4>(valPtr[i], expression->outputIndex());
-        row.nextRow();
-      }
+      memcpy(retCol.data() + (offset << 2), &val, sizeof(val));
       break;
     }
     case execplan::CalpontSystemCatalog::BIGINT:
     {
       simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_INT64);
-      int64_t *valPtr = (int64_t *)&val;
-      for (uint32_t i = 0; i < batchCount; ++i)
-      {
-        row.setIntField<8>(valPtr[i], expression->outputIndex());
-        row.nextRow();
-      }
+      memcpy(retCol.data() + (offset << 3), &val, sizeof(val));
       break;
     }
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_UINT8);
+      memcpy(retCol.data() + (offset << 0), &val, sizeof(val));
+      break;
+    }
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_UINT16);
+      memcpy(retCol.data() + (offset << 1), &val, sizeof(val));
+      break;
+    }
+    case execplan::CalpontSystemCatalog::UINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_UINT32);
+      memcpy(retCol.data() + (offset << 2), &val, sizeof(val));
+      break;
+    }
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    {
+      simd::vi128_t val = expression->getIntSimdVal(colList, colWidth, colData, offset, batchCount, SIMD_TYPE::SIMD_UINT64);
+      memcpy(retCol.data() + (offset << 3), &val, sizeof(val));
+      break;
+    }
+
 
     default:
       break;

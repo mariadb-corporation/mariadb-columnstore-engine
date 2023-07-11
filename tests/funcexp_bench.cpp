@@ -486,16 +486,18 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd1ByteEvaluateVectorized)
     initData<1>(TestType::TwoColumnAdd);
     testWidth = 1;
 
+    uint32_t width = expr->resultType().colWidth, batchCount = 16 / width;
+    vector<uint8_t> retCol = vector<uint8_t>((rowCount / batchCount) * batchCount * width);
     state.ResumeTiming();
-    uint32_t width = std::max(2, expr->resultType().colWidth), batchCount = 16 / width;
-    rg.getRow(0, &row);
     for (j = 0; j + batchCount < rowCount; j += batchCount)
     {
-      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+      (fe.getFuncExp())->evaluateSimd(expr, colList, colWidth, colData, retCol, j, batchCount);
     }
+    rg.getRow(j, &row);
     for (; j < rowCount; ++j, row.nextRow())
     {
       (fe.getFuncExp())->evaluate(row, expr);
+      retCol.insert(retCol.end(), row.getData() + row.getOffset(expr->outputIndex()), row.getData() + row.getOffset(expr->outputIndex()) + width);
     }
   }
 }
@@ -558,16 +560,18 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd2ByteEvaluateVectorized)
     initData<2>(TestType::TwoColumnAdd);
     testWidth = 2;
 
-    state.ResumeTiming();
     uint32_t width = expr->resultType().colWidth, batchCount = 16 / width;
-    rg.getRow(0, &row);
+    vector<uint8_t> retCol = vector<uint8_t>((rowCount / batchCount) * batchCount * width);
+    state.ResumeTiming();
     for (j = 0; j + batchCount < rowCount; j += batchCount)
     {
-      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+      (fe.getFuncExp())->evaluateSimd(expr, colList, colWidth, colData, retCol, j, batchCount);
     }
+    rg.getRow(j, &row);
     for (; j < rowCount; ++j, row.nextRow())
     {
       (fe.getFuncExp())->evaluate(row, expr);
+      retCol.insert(retCol.end(), row.getData() + row.getOffset(expr->outputIndex()), row.getData() + row.getOffset(expr->outputIndex()) + width);
     }
   }
 }
@@ -632,18 +636,19 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd4ByteEvaluateVectorized)
     initData<4>(TestType::TwoColumnAdd);
     testWidth = 4;
     
-    state.ResumeTiming();
     uint32_t width = expr->resultType().colWidth, batchCount = 16 / width;
-    rg.getRow(0, &row);
+    vector<uint8_t> retCol = vector<uint8_t>((rowCount / batchCount) * batchCount * width);
+    state.ResumeTiming();
     for (j = 0; j + batchCount < rowCount; j += batchCount)
     {
-      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+      (fe.getFuncExp())->evaluateSimd(expr, colList, colWidth, colData, retCol, j, batchCount);
     }
+    rg.getRow(j, &row);
     for (; j < rowCount; ++j, row.nextRow())
     {
       (fe.getFuncExp())->evaluate(row, expr);
+      retCol.insert(retCol.end(), row.getData() + row.getOffset(expr->outputIndex()), row.getData() + row.getOffset(expr->outputIndex()) + width);
     }
-    rg.getRow(0, &row);
   }
 }
 
@@ -705,16 +710,18 @@ BENCHMARK_DEFINE_F(EvaluateBenchFixture, BM_TowColumnAdd8ByteEvaluateVectorized)
     initData<8>(TestType::TwoColumnAdd);
     testWidth = 8;
     
-    state.ResumeTiming();
     uint32_t width = expr->resultType().colWidth, batchCount = 16 / width;
-    rg.getRow(0, &row);
+    vector<uint8_t> retCol = vector<uint8_t>((rowCount / batchCount) * batchCount * width);
+    state.ResumeTiming();
     for (j = 0; j + batchCount < rowCount; j += batchCount)
     {
-      (fe.getFuncExp())->evaluateSimd(row, expr, colList, colWidth, colData, j, batchCount);
+      (fe.getFuncExp())->evaluateSimd(expr, colList, colWidth, colData, retCol, j, batchCount);
     }
+    rg.getRow(j, &row);
     for (; j < rowCount; ++j, row.nextRow())
     {
       (fe.getFuncExp())->evaluate(row, expr);
+      retCol.insert(retCol.end(), row.getData() + row.getOffset(expr->outputIndex()), row.getData() + row.getOffset(expr->outputIndex()) + width);
     }
     // rg.getRow(0, &row);
     // for (i = 0; i < rowCount; ++i, row.nextRow())

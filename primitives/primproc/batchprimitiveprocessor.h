@@ -396,7 +396,7 @@ class BatchPrimitiveProcessor
   boost::shared_array<int> projectForFE1;
   boost::shared_array<int> fe1ToProjection, fe2Mapping;  // RG mappings
   boost::scoped_array<boost::shared_array<int>> joinFEMappings;
-  rowgroup::Row fe1In, fe1Out, fe2In, fe2Out, joinFERow;
+  rowgroup::Row fe1In, fe1Out, joinFERow;
 
   bool hasDictStep;
 

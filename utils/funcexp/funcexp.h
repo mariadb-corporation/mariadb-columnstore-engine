@@ -87,13 +87,6 @@ class FuncExp
    */
   void evaluate(rowgroup::Row& row, execplan::SRCP& expressions);
 
-  /** @brief evaluate a F&E column on rowgroup. used for F&E on the select and group by clause
-   *
-   * @param row input rowgroup that contains all the columns in all the expressions
-   * @param expressions vector of F&Es that needs evaluation. The results are filled on each row.
-   */
-  void evaluate(rowgroup::RowGroup& rowgroup, std::vector<execplan::SRCP>& expressions);
-
   /**
    * @brief evaluate compressed F&E columns using SIMD
    * @param row the beginning row of current batch, used to store the result
@@ -103,7 +96,7 @@ class FuncExp
    * @param offset offset point to the beginning row in the batch
    * @param batchCount rows count in the batch
    */
-  void evaluateSimd(rowgroup::Row& row, execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount);
+  void evaluateSimd(execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, vector<uint8_t> &retCol, uint32_t offset, uint32_t batchCount);
 
   /** @brief get functor from functor map
    *

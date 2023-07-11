@@ -117,27 +117,116 @@ bool FuncExpWrapper::evaluate(Row* r)
   return true;
 }
 
-void FuncExpWrapper::evaluate(RowGroup* rg)
-{
-  fe->evaluate(*rg, rcs);
-}
+void FuncExpWrapper::evaluate(RowGroup &input, RowGroup &output, uint32_t rowCount, boost::shared_array<int> &mapping) {
 
-void FuncExpWrapper::evaluate(Row &in, Row &out, RowGroup *input, RowGroup &output, uint32_t rowCount, uint64_t baseRid, boost::shared_array<int> &mapping, uint32_t dbRoot = 0) {
-  uint32_t i;
+  uint32_t i, j = 0;
 
-  output.resetRowGroup(baseRid);
-  output.setDBRoot(dbRoot);
-  output.getRow(0, &out);
-  // input->getRow(0, &in);
+  Row in, out;
+  input.initRow(&in);
+  output.initRow(&out);
 
-  fe->evaluate(*input, rcs);
+  set<uint32_t> colSet;
 
-  input->getRow(0, &in);
-  for (i = 0; i < rowCount; ++i, in.nextRow()) {
-    applyMapping(mapping, in, &out);
-    out.setRid(in.getRelRid());
-    output.incRowCount();
-    out.nextRow();
+  for (execplan::SRCP expr : rcs) 
+  {
+    expr->setSimpleColumnList();
+    for (execplan::SimpleColumn *col : expr->simpleColumnList())
+    {
+      colSet.insert(col->execplan::ReturnedColumn::inputIndex());
+    }
+  }
+
+  vector<uint32_t> colList(colSet.begin(), colSet.end()), colWidth(colList.size()); // vector with column indexes
+  vector<vector<uint8_t>> colData = vector<vector<uint8_t>> (colList.size()); // according values for each column
+
+
+  input.getRow(0, &in);
+  for (i = 0; i < colList.size(); ++i)
+  {
+    colWidth[i] = in.getColumnWidth(colList[i]);
+  }
+
+  for (j = 0; j < rowCount; ++j, in.nextRow())
+  {
+    for (i = 0; i < colList.size(); ++i)
+    {
+      colData[i].insert(colData[i].end(), in.getData() + in.getOffset(colList[i]), in.getData() + in.getOffset(colList[i] + 1));
+    }
+  }
+
+  for (i = 0; i < rcs.size(); ++i)
+  {
+    bool allowSimd = false;    
+    switch (rcs[i]->resultType().colDataType)
+    {
+      case execplan::CalpontSystemCatalog::TINYINT:
+      case execplan::CalpontSystemCatalog::SMALLINT:
+      case execplan::CalpontSystemCatalog::INT:
+      case execplan::CalpontSystemCatalog::BIGINT:
+      case execplan::CalpontSystemCatalog::UTINYINT:
+      case execplan::CalpontSystemCatalog::USMALLINT:
+      case execplan::CalpontSystemCatalog::UINT:
+      case execplan::CalpontSystemCatalog::UBIGINT:
+        allowSimd = true;
+        break;
+
+      case execplan::CalpontSystemCatalog::FLOAT:
+      case execplan::CalpontSystemCatalog::DOUBLE:
+      case execplan::CalpontSystemCatalog::DECIMAL:
+      case execplan::CalpontSystemCatalog::DATE:
+      case execplan::CalpontSystemCatalog::TIME:
+      case execplan::CalpontSystemCatalog::DATETIME:
+      case execplan::CalpontSystemCatalog::TIMESTAMP:
+      default:
+        break;
+    }
+    if (allowSimd)
+    {
+      uint32_t width = rcs[i]->resultType().colWidth, batchCount = 16 / width;
+      vector<uint8_t> retCol = vector<uint8_t>((rowCount / batchCount) * batchCount * width);
+
+      for (j = 0; j + batchCount <= rowCount; j += batchCount)
+      {
+        fe->evaluateSimd(rcs[i], colList, colWidth, colData, retCol, j, batchCount);
+      }
+      if (j < rowCount)
+      {
+        input.getRow(j, &in);
+        for (; j < rowCount; ++j, in.nextRow())
+        {
+          fe->evaluate(in, rcs[i]);
+          retCol.insert(retCol.end(), in.getData() + in.getOffset(rcs[i]->outputIndex()), in.getData() + in.getOffset(rcs[i]->outputIndex()) + width);
+        }
+      }
+
+      input.getRow(0, &in);
+      output.getRow(0, &out);
+      for (j = 0; j < rowCount; ++j, in.nextRow()) 
+      {
+        in.setBinaryField_offset(retCol.data() + j * width, width, in.getOffset(rcs[i]->outputIndex()));
+        applyMapping(mapping, in, &out);
+        out.setRid(in.getRelRid());
+        output.incRowCount();
+        out.nextRow();
+      }
+    }
+    else 
+    {
+      input.getRow(0, &in);
+      for (j = 0; j < rowCount; ++j, in.nextRow())
+      {
+        fe->evaluate(in, rcs[i]);
+      }    
+      input.getRow(0, &in);
+      output.getRow(0, &out);
+      for (j = 0; j < rowCount; ++j, in.nextRow()) 
+      {
+        applyMapping(mapping, in, &out);
+        out.setRid(in.getRelRid());
+        output.incRowCount();
+        out.nextRow();
+      }
+    }
   }
 }
 
