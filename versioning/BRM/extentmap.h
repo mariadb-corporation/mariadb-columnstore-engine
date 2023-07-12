@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <tr1/unordered_map>
 #include <mutex>
+#include <atomic>
 
 //#define NDEBUG
 #include <cassert>
