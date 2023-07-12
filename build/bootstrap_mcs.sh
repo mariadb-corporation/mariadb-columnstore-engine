@@ -38,6 +38,7 @@ optparse.define short=v long=verbose desc="Verbose makefile commands" variable=M
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
 optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
+optparse.define short=f long=fuzzer desc="Build with FUZZER" variable=FUZZER default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
@@ -238,6 +239,11 @@ build()
     if [[ $UBSAN = true ]] ; then
         warn "Building with UB Sanitizer"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+    fi
+
+    if [[ $FUZZER = true ]] ; then
+        warn "Building with Fuzzer"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COLUMNSTORE_FUZZER=ON"
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]] ; then
