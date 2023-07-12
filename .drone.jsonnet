@@ -276,8 +276,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chown -R mysql:mysql ' + mtr_path,
       // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
       "docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'",
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo character_set_server=latin1 >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo character_set_server=latin1 >> /etc/my.cnf.d/columnstore.cnf"',
-      if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo collation_server=latin1_swedish_ci >> /etc/mysql/mariadb.conf.d/columnstore.cnf"' else 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "echo collation_server=latin1_swedish_ci >> /etc/my.cnf.d/columnstore.cnf"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl daemon-reload',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mariadb -e "create database if not exists test;"',
