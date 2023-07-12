@@ -5,6 +5,11 @@ ENDIF()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
+# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
+
 PROJECT(Columnstore)
 INCLUDE (CheckCXXSourceCompiles)
 
@@ -258,18 +263,15 @@ ENDIF()
 IF (WITH_COLUMNSTORE_FUZZER)
     MESSAGE("Building with fuzzer man")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=fuzzer -v")
-    message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-message("CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
-message("CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}")
-message("CMAKE_MODULE_LINKER_FLAGS: ${CMAKE_MODULE_LINKER_FLAGS}")
-
     # MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=fuzzer")
 ENDIF()
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
-SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
+# SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
+SET (ENGINE_LDFLAGS    "-fsanitize=fuzzer")
+
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
 SET (ENGINE_OAM_LIBS        oamcpp)
