@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -ex
 
 . /etc/os-release
 
@@ -12,6 +12,11 @@ ubuntu|debian)
     apt install -y ca-certificates
     echo "deb [trusted=yes] ${PACKAGES_URL}/${ARCH}/ ${OS}/" > /etc/apt/sources.list.d/repo.list
     cat /etc/apt/sources.list.d/repo.list
+    cat << EOF > /etc/apt/preferences
+Package: *
+Pin: origin cspkg.s3.amazonaws.com
+Pin-Priority: 700
+EOF
     apt update -y
     ;;
 rocky|centos)
