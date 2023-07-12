@@ -4,7 +4,3 @@ if ($notcolumnstore == 1)
 {
   --skip Test requires engine ColumnStore.
 }
-
---disable_query_log
-set global character_set_server='latin1';
---enable_query_log
