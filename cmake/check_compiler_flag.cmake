@@ -32,6 +32,31 @@ MACRO (MY_CHECK_CXX_COMPILER_FLAG flag)
   SET(CMAKE_REQUIRED_FLAGS "${SAVE_CMAKE_REQUIRED_FLAGS}")
 ENDMACRO()
 
+MACRO (MY_CHECK_CXX_COMPILER_FLAG_FUZZER flag)
+  STRING(REGEX REPLACE "[-,= +]" "_" result "have_CXX_${flag}")
+  SET(SAVE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${flag}")
+  CHECK_CXX_SOURCE_COMPILES("
+    #include <iostream>
+    extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+      return 0;
+    }
+  " ${result} ${fail_patterns})
+  SET(CMAKE_REQUIRED_FLAGS "${SAVE_CMAKE_REQUIRED_FLAGS}")
+ENDMACRO()
+
+# rewrite MY_CHECK_CXX_COMPILER_FLAG_FUZZER as MY_CHECK_C_COMPILER_FLAG_FUZZER
+
+MACRO (MY_CHECK_C_COMPILER_FLAG_FUZZER flag)
+  STRING(REGEX REPLACE "[-,= +]" "_" result "have_C_${flag}")
+  SET(SAVE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  SET(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${flag}")
+  CHECK_C_SOURCE_COMPILES("
+    extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
+  " ${result} ${fail_patterns})
+  SET(CMAKE_REQUIRED_FLAGS "${SAVE_CMAKE_REQUIRED_FLAGS}")
+ENDMACRO()
+
 FUNCTION(MY_CHECK_AND_SET_COMPILER_FLAG flag)
   # At the moment this is gcc-only.
   # Let's avoid expensive compiler tests on Windows:
@@ -39,6 +64,7 @@ FUNCTION(MY_CHECK_AND_SET_COMPILER_FLAG flag)
     RETURN()
   ENDIF()
   IF(flag STREQUAL "-fsanitize=fuzzer")
+    MY_CHECK_C_COMPILER_FLAG_FUZZER(${flag})
     MY_CHECK_CXX_COMPILER_FLAG_FUZZER(${flag})
   ELSE()
     MY_CHECK_C_COMPILER_FLAG(${flag})
