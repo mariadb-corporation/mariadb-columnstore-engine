@@ -256,6 +256,7 @@ IF (WITH_COLUMNSTORE_ASAN)
 ENDIF()
 
 IF (WITH_COLUMNSTORE_FUZZER)
+    MESSAGE("Building with fuzzer man")
     MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=fuzzer")
 ENDIF()
 
