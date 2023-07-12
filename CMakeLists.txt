@@ -257,7 +257,8 @@ ENDIF()
 
 IF (WITH_COLUMNSTORE_FUZZER)
     MESSAGE("Building with fuzzer man")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=fuzzer")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=fuzzer")
+    # MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=fuzzer")
 ENDIF()
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
