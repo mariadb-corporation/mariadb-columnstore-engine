@@ -5,6 +5,7 @@ ENDIF()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
 PROJECT(Columnstore)
 INCLUDE (CheckCXXSourceCompiles)
 
