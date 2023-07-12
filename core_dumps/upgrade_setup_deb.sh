@@ -26,12 +26,7 @@ cat << EOF > /etc/apt/auth.conf
 machine ${LINK}${RESULT}/
 EOF
 
-apt update --yes
-apt install -y ca-certificates
-cd /etc/apt/sources.list.d
-echo "deb [trusted=yes] ${LINK} ${RESULT}/" > repo.list
+bash -c "./setup-repo.sh"
 
-cd /
-apt update --yes
 apt upgrade --yes
 bash -c "./upgrade_verify.sh"

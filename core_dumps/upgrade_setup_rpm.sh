@@ -22,18 +22,7 @@ systemctl start mariadb-columnstore
 bash -c "./upgrade_data.sh"
 bash -c "./upgrade_verify.sh"
 
-cd /etc/yum.repos.d/
-touch repo.repo
-cat <<EOF > repo.repo
-[repo]
-name = repo
-baseurl = ${LINK}${RESULT}/
-enabled = 1
-gpgcheck = 0
-module_hotfixes=1
-EOF
-
-cd /
+bash -c "./setup-repo.sh"
 
 dnf repo-pkgs repo list
 dnf -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
