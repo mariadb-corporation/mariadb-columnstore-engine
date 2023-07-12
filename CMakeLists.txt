@@ -270,7 +270,7 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBIN
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
 # SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
-SET (ENGINE_LDFLAGS    "-fsanitize=fuzzer-no-link")
+SET (ENGINE_LDFLAGS    "-fsanitize=fuzzer-no-link -Wl,--no-allow-shlib-undefined")
 
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
