@@ -262,14 +262,14 @@ ENDIF()
 
 IF (WITH_COLUMNSTORE_FUZZER)
     MESSAGE("Building with fuzzer man")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=fuzzer-no-link -v")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=fuzzer-no-link")
     # MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=fuzzer")
 ENDIF()
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
-SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed -fsanitize=fuzzer")
+SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed -fsanitize=fuzzer-no-link")
 # SET (ENGINE_LDFLAGS    "-fsanitize=fuzzer-no-link -Wl,--no-allow-shlib-undefined")
 
 SET (ENGINE_DT_LIB datatypes)
