@@ -116,8 +116,6 @@ bool gPMProfOn = false;
 uint32_t gSession = 0;
 dbbc::Stats pmstats(statsName);
 
-oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-
 // FIXME: there is an anon ns burried later in between 2 named namespaces...
 namespace primitiveprocessor
 {

@@ -13,7 +13,7 @@ set(dmlpackageproc_LIB_SRCS
     autoincrementdata.cpp
     tablelockdata.cpp)
 
-add_library(dmlpackageproc SHARED ${dmlpackageproc_LIB_SRCS})
+add_library(dmlpackageproc STATIC ${dmlpackageproc_LIB_SRCS})
 
 add_dependencies(dmlpackageproc loggingcpp)
 

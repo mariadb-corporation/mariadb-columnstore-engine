@@ -14,11 +14,12 @@ set(common_LIB_SRCS
     statistics.cpp
     string_prefixes.cpp)
 
-add_library(common SHARED ${common_LIB_SRCS})
-
-target_link_libraries(common boost_filesystem)
+add_library(common STATIC ${common_LIB_SRCS})
 
 add_dependencies(common loggingcpp)
+target_link_libraries(common boost_filesystem loggingcpp mysys)
+
+
 
 install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

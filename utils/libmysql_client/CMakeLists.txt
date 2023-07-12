@@ -9,7 +9,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 set(libmysql_client_LIB_SRCS libmysql_client.cpp)
 
-add_library(libmysql_client SHARED ${libmysql_client_LIB_SRCS})
+add_library(libmysql_client STATIC ${libmysql_client_LIB_SRCS})
 target_link_libraries(libmysql_client ${MARIADB_CLIENT_LIBS})
 
 add_dependencies(libmysql_client loggingcpp)

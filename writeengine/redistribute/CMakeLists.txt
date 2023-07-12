@@ -9,7 +9,7 @@ set(writeengineredistribute_LIB_SRCS
     we_redistributecontrolthread.cpp
     we_redistributeworkerthread.cpp)
 
-add_library(writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
+add_library(writeengineredistribute STATIC ${writeengineredistribute_LIB_SRCS})
 
 add_dependencies(writeengineredistribute loggingcpp)
 

@@ -6,7 +6,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 set(batchloader_LIB_SRCS batchloader.cpp)
 
-add_library(batchloader SHARED ${batchloader_LIB_SRCS})
+add_library(batchloader STATIC ${batchloader_LIB_SRCS})
 
 add_dependencies(batchloader loggingcpp)
 

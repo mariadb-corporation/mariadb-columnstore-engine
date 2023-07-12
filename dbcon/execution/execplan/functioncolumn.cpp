@@ -29,6 +29,9 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 using namespace boost;
 
+typedef char my_bool;
+#include "mysql_time.h"
+
 #include "functor_json.h"
 #include "bytestream.h"
 #include "functioncolumn.h"

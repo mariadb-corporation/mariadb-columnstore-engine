@@ -61,24 +61,8 @@ namespace fs = boost::filesystem;
 
 #include "bytestream.h"
 
-namespace
-{
-static const std::string configDefaultFileName("Columnstore.xml");
-const fs::path defaultConfigFilePath(configDefaultFileName);
-}  // namespace
-
 namespace config
 {
-boost::mutex Config::fInstanceMapMutex;
-Config::configMap_t Config::fInstanceMap;
-// duplicate to that in the Config class
-boost::mutex Config::fXmlLock;
-// duplicate to that in the Config class
-boost::mutex Config::fWriteXmlLock;
-std::atomic_bool globHasConfig;
-
-ConfigUniqPtr globConfigInstancePtr;
-
 
 void Config::checkAndReloadConfig()
 {
@@ -95,46 +79,35 @@ void Config::checkAndReloadConfig()
   }
 }
 
+Config& Config::globConfigInstance()
+{
+  std::string configFilePath =
+      std::string(MCSSYSCONFDIR) + std::string("/columnstore/") + configDefaultFileName();
+  static Config config(configFilePath);
+  return config;
+}
+
 Config* Config::makeConfig(const string& cf)
 {
-  if (cf.empty() || cf == configDefaultFileName)
+  if (cf.empty() || cf == configDefaultFileName())
   {
-    if (!globHasConfig.load(std::memory_order_relaxed))
-    {
-      // To save against the moment zero race when multiple threads hits
-      // this scope.
-      boost::mutex::scoped_lock lk(fInstanceMapMutex);
-      if (globConfigInstancePtr)
-      {
-        globConfigInstancePtr->checkAndReloadConfig();
-        return globConfigInstancePtr.get();
-      }
-
-      // Make this configurable at least at compile-time.
-      std::string configFilePath =
-          std::string(MCSSYSCONFDIR) + std::string("/columnstore/") + configDefaultFileName;
-      globConfigInstancePtr.reset(new Config(configFilePath));
-      globHasConfig.store(true, std::memory_order_relaxed);
-      return globConfigInstancePtr.get();
-    }
-
-    boost::mutex::scoped_lock lk(fInstanceMapMutex);
-    globConfigInstancePtr->checkAndReloadConfig();
-    return globConfigInstancePtr.get();
+    boost::mutex::scoped_lock lk(instanceMapMutex());
+    globConfigInstance().checkAndReloadConfig();
+    return &globConfigInstance();
   }
 
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
+  boost::mutex::scoped_lock lk(instanceMapMutex());
 
-  if (fInstanceMap.find(cf) == fInstanceMap.end())
+  if (instanceMap().find(cf) == instanceMap().end())
   {
-    fInstanceMap[cf] = new Config(cf);
+    instanceMap()[cf].reset(new Config(cf));
   }
   else
   {
-    fInstanceMap[cf]->checkAndReloadConfig();
+    instanceMap()[cf]->checkAndReloadConfig();
   }
 
-  return fInstanceMap[cf];
+  return instanceMap()[cf].get();
 }
 
 Config* Config::makeConfig(const char* cf)
@@ -191,9 +164,9 @@ void Config::parseDoc(void)
       cerr << oss.str() << endl;
     }
 
-    fXmlLock.lock();
+    xmlMutex().lock();
     fDoc = xmlParseFile(fConfigFile.c_str());
-    fXmlLock.unlock();
+    xmlMutex().unlock();
 
     fl.l_type = F_UNLCK;  // unlock
     fcntl(fd, F_SETLK, &fl);
@@ -346,10 +319,10 @@ void Config::writeConfig(const string& configFile) const
   if (fDoc == 0)
     throw runtime_error("Config::writeConfig: no XML document!");
 
-
-  const fs::path defaultConfigFilePathTemp("Columnstore.xml.temp");
-  const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
-  const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
+  static const fs::path defaultConfigFilePath("Columnstore.xml");
+  static const fs::path defaultConfigFilePathTemp("Columnstore.xml.temp");
+  static const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
+  static const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
 
   fs::path etcdir = fs::path(MCSSYSCONFDIR) / fs::path("columnstore");
 
@@ -439,7 +412,7 @@ void Config::writeConfig(const string& configFile) const
 
 void Config::write(void) const
 {
-  boost::mutex::scoped_lock lk(fWriteXmlLock);
+  boost::mutex::scoped_lock lk(writeXmlMutex());
   write(fConfigFile);
 }
 
@@ -628,20 +601,6 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
   }
   // NOTREACHED
   return {};
-}
-
-void Config::ConfigDeleter::operator()(Config* config)
-{
-  boost::mutex::scoped_lock lk(fInstanceMapMutex);
-
-  for (Config::configMap_t::iterator iter = fInstanceMap.begin(); iter != fInstanceMap.end(); ++iter)
-  {
-    Config* instance = iter->second;
-    delete instance;
-  }
-
-  fInstanceMap.clear();
-  delete config;
 }
 
 }  // namespace config

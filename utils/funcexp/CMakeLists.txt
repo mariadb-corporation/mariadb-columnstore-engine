@@ -146,11 +146,11 @@ set(funcexp_LIB_SRCS
     jsonhelpers.cpp
     sql_crypt.cpp)
 
-add_library(funcexp SHARED ${funcexp_LIB_SRCS})
+add_library(funcexp STATIC ${funcexp_LIB_SRCS})
 
 add_dependencies(funcexp loggingcpp)
 
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES})
+target_link_libraries(funcexp ${NETSNMP_LIBRARIES} udfsdk common rowgroup)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

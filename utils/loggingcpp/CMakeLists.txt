@@ -18,7 +18,7 @@ ADD_CUSTOM_COMMAND(
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/messageids.h PROPERTIES GENERATED TRUE)
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/errorids.h PROPERTIES GENERATED TRUE)
 
-add_library(loggingcpp SHARED
+add_library(loggingcpp STATIC
     message.cpp
     messagelog.cpp
     logger.cpp
@@ -30,6 +30,8 @@ add_library(loggingcpp SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
 )
 add_dependencies(loggingcpp external_boost)
+target_link_libraries(loggingcpp configcpp)
+
 
 install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 

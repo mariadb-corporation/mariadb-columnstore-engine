@@ -24,8 +24,8 @@ set(windowfunction_LIB_SRCS
     wf_sum_avg.cpp
     wf_udaf.cpp)
 
-add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
+add_library(windowfunction STATIC ${windowfunction_LIB_SRCS})
 
-add_dependencies(windowfunction loggingcpp)
+add_dependencies(windowfunction loggingcpp rowgroup)
 
 install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

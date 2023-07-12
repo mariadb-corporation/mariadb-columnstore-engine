@@ -14,7 +14,7 @@ set_source_files_properties(ddl-gram.cpp PROPERTIES COMPILE_FLAGS "-Wno-unused-b
 ########### next target ###############
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}) # to pick up flex/bison output
-ADD_LIBRARY(ddlpackage SHARED
+ADD_LIBRARY(ddlpackage STATIC
     serialize.cpp
     ddl-scan.cpp
     ddl-gram.cpp

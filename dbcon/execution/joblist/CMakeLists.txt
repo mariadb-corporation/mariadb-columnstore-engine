@@ -1,4 +1,4 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/tools/passwd)
+include_directories( ${ENGINE_COMMON_INCLUDES})
 ########### next target ###############
 
 set(joblist_LIB_SRCS
@@ -15,7 +15,6 @@ set(joblist_LIB_SRCS
     filtercommand-jl.cpp
     filterstep.cpp
     groupconcat.cpp
-    jl_logger.cpp
     jlf_common.cpp
     jlf_execplantojoblist.cpp
     jlf_graphics.cpp
@@ -35,9 +34,8 @@ set(joblist_LIB_SRCS
     pdictionary.cpp
     pdictionaryscan.cpp
     pseudocc-jl.cpp
-    resourcedistributor.cpp
-    resourcemanager.cpp
     rowestimator.cpp
+    rowaggregation.cpp
     rtscommand-jl.cpp
     subquerystep.cpp
     subquerytransformer.cpp
@@ -52,23 +50,20 @@ set(joblist_LIB_SRCS
     tupleunion.cpp
     unique32generator.cpp
     virtualtable.cpp
-    windowfunctionstep.cpp
-    ${ENGINE_SRC_DIR}/tools/passwd/secrets.cpp)
-
-########### next target ###############
-
-add_library(joblist_server STATIC ${joblist_LIB_SRCS})
-add_dependencies(joblist_server loggingcpp)
+) 
 
 ########### next target ###############
 
 add_definitions(-DMYSQL_SERVICE_THD_TIMEZONE_INCLUDED)
 
-add_library(joblist SHARED ${joblist_LIB_SRCS})
+add_library(joblist STATIC ${joblist_LIB_SRCS})
+
 target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR}
   ${LIBMARIADB_BININC_DIR}
   ${LIBMARIADB_SRCINC_DIR})
 add_dependencies(joblist loggingcpp)
+
+target_link_libraries(joblist joiner threadpool libmysql_client querystats compress loggingcpp querytele rowgroup funcexp windowfunction)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
