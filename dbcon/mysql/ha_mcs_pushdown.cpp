@@ -1169,6 +1169,25 @@ int ha_columnstore_select_handler::end_scan()
 
   scan_ended = true;
 
+  // MCOL-4740 select_handler::send_eof() is called after
+  // select_handler::end_scan() in select_handler::execute().
+  // So we set multi_update::updated and multi_update::found here
+  // which are used in send_eof() to output the affected number
+  // of rows to the client.
+  if (current_thd->lex->sql_command == SQLCOM_UPDATE_MULTI)
+  {
+    multi_update* multi = (multi_update*) result;
+    multi->table_to_update = multi->update_tables ? multi->update_tables->table : 0;
+
+    cal_impl_if::cal_connection_info* ci =
+      reinterpret_cast<cal_impl_if::cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (ci)
+    {
+      multi->updated = multi->found = ci->affectedRows;
+    }
+  }
+
   int rc = ha_mcs_impl_rnd_end(table, true);
 
   DBUG_RETURN(rc);
