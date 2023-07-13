@@ -388,6 +388,11 @@ IF(NOT TARGET columnstore)
   RETURN()
 ENDIF()
 
+IF (WITH_COLUMNSTORE_FUZZER)
+    ADD_SUBDIRECTORY(utils/fuzzers)
+ENDIF()
+
+
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)
 ADD_SUBDIRECTORY(dbcon/execplan)
