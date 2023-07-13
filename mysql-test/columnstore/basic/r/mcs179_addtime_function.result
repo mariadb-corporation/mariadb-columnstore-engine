@@ -11,7 +11,7 @@ t1	CREATE TABLE `t1` (
   `b` int(11) DEFAULT NULL,
   `c` datetime DEFAULT NULL,
   `d` double DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SELECT ADDTIME('2020-02-02 22:22:22', '2 1:1:1');
 ADDTIME('2020-02-02 22:22:22', '2 1:1:1')
 2020-02-04 23:23:23

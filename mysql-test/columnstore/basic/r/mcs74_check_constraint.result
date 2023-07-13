@@ -8,7 +8,7 @@ t1	CREATE TABLE `t1` (
   `t1_int` int(11) DEFAULT NULL,
   `t1_char` char(5) DEFAULT NULL,
   CONSTRAINT `CONSTRAINT_1` CHECK (`t1_int` > 0)
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 INSERT INTO t1 VALUES(NULL, NULL);
 INSERT INTO t1 VALUES(1, 'a');
 INSERT INTO t1 VALUES(0, 'b');
@@ -25,7 +25,7 @@ Table	Create Table
 t2	CREATE TABLE `t2` (
   `t1_char` char(10) DEFAULT NULL,
   CONSTRAINT `c1` CHECK (`t1_char` = '')
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 INSERT INTO t2 VALUES();
 INSERT INTO t2 VALUES('');
 INSERT INTO t2 VALUES('aaaa');
@@ -51,7 +51,7 @@ t3	CREATE TABLE `t3` (
   CONSTRAINT `t3_check_date` CHECK (`t3_datetime` >= '1212-12-12 12:12:12'),
   CONSTRAINT `t3_check_decimal` CHECK (`t3_decimal` < 888.88),
   CONSTRAINT `t3_check_blob` CHECK (`t3_blob` = 'aaaa')
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 INSERT INTO t3(t3_decimal) VALUES(NULL);
 INSERT INTO t3(t3_decimal) VALUES(888.87);
 INSERT INTO t3(t3_decimal) VALUES(888.88);

@@ -9,7 +9,7 @@ Table	Create Table
 t1	CREATE TABLE `t1` (
   `a` date DEFAULT NULL,
   `b` datetime DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SELECT DATE('1212-12-12 11:11:11');
 DATE('1212-12-12 11:11:11')
 1212-12-12

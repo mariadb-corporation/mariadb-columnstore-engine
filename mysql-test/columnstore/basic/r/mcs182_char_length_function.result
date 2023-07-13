@@ -8,7 +8,7 @@ SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (
   `a` varchar(20) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SELECT CHAR_LENGTH('MariaDB');
 CHAR_LENGTH('MariaDB')
 7
@@ -41,7 +41,7 @@ t1	CREATE TABLE `t1` (
   `b` int(11) DEFAULT NULL,
   `c` datetime DEFAULT NULL,
   `d` double DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SELECT a, CHARACTER_LENGTH(a) FROM t1 ORDER BY a;
 a	CHARACTER_LENGTH(a)
 NULL	NULL
