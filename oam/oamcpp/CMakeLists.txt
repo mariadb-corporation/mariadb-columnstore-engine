@@ -10,9 +10,9 @@ add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
 
 add_dependencies(oamcpp loggingcpp)
 
-target_link_libraries(oamcpp )
+target_link_libraries(oamcpp PRIVATE /usr/lib/llvm-16/lib/clang/16/lib/linux/libclang_rt.fuzzer-x86_64.a)
 
-target_compile_options(oamcpp PRIVATE -Wno-unused-result)
+target_compile_options(oamcpp PRIVATE -Wno-unused-result -fsanitize=fuzzer)
 
 install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
