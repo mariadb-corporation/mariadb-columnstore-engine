@@ -14,7 +14,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
       if (size > 2 && data[2] == '!')
       {
         std::cout << "Fuzzing test succeeded!" << std::endl;
-        hello(); // Call the function from the shared library
+        // hello(); // Call the function from the shared library
         __builtin_trap();
       }
   return 0;
