@@ -10,6 +10,13 @@ add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
 
 add_dependencies(oamcpp loggingcpp)
 
+
+# if (CMAKE_CXX_FLAGS MATCHES "-fsanitize=fuzzer" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#     message(STATUS "Building oamcpp with fuzzer")
+    # target_link_libraries(oamcpp PRIVATE /usr/lib/llvm-16/lib/clang/16/lib/linux/libclang_rt.fuzzer-x86_64.a)
+
+    # target_compile_options(oamcpp PRIVATE -Wno-unused-result -fsanitize=fuzzer)
+
 target_link_libraries(oamcpp PRIVATE /usr/lib/llvm-16/lib/clang/16/lib/linux/libclang_rt.fuzzer-x86_64.a)
 
 target_compile_options(oamcpp PRIVATE -Wno-unused-result -fsanitize=fuzzer)
