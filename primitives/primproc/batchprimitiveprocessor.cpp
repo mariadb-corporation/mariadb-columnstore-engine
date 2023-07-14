@@ -1409,8 +1409,9 @@ uint32_t BatchPrimitiveProcessor::executeTupleJoin(uint32_t startRid)
     // The caller will restart to continue where we left off.
     if (resultCount >= maxResultCount)
     {
-      newStartRid += newRowCount;
-      break;
+      // FIXME: Implement proper pipleline. (MCOL-5522).
+      cerr << "BPP join match count exceeded the limit, match count: " << resultCount << endl;
+      resultCount = 0;
     }
   }
 
