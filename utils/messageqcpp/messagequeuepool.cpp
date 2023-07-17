@@ -22,43 +22,17 @@
 #include "messagequeuepool.h"
 #include "messagequeue.h"
 
-#include <new>
-#include <type_traits>
-
-
 namespace messageqcpp
 {
 
-using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
-
-struct LockedClientMap
+std::mutex& getQueueMutex()
 {
-  LockedClientMap()
-  {
-  }
-  ~LockedClientMap()
-  {
-  }
-  ClientMapType clientMap;
-  std::mutex queueMutex;
-};
-
-static int clientMapNiftyCounter;
-
-static typename std::aligned_storage<sizeof(LockedClientMap), alignof(LockedClientMap)>::type clientMapBuf;
-
-auto& lockedMap = reinterpret_cast<LockedClientMap&>(clientMapBuf);
-
-
-LockedClientMapInitilizer::LockedClientMapInitilizer ()
-{
-  if (clientMapNiftyCounter++ == 0) new (&lockedMap) LockedClientMap (); // placement new
-}
-LockedClientMapInitilizer::~LockedClientMapInitilizer ()
-{
-  if (--clientMapNiftyCounter == 0) (&lockedMap)->~LockedClientMap();
+  static std::mutex queueMutex;
+  return queueMutex;
 }
 
+// Make linker happy
+MessageQueueClientPool::ClientMapType MessageQueueClientPool::clientMap;
 
 // 300 seconds idle until cleanup
 #define MAX_IDLE_TIME 300
@@ -70,7 +44,7 @@ static uint64_t TimeSpecToSeconds(struct timespec* ts)
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrIp, uint64_t port)
 {
-  auto lock = std::scoped_lock(lockedMap.queueMutex);
+  std::scoped_lock lock(getQueueMutex());
 
   std::ostringstream oss;
   oss << dnOrIp << "_" << port;
@@ -93,14 +67,13 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrI
   newClientObject->client.reset(new MessageQueueClient(dnOrIp, port));
   newClientObject->inUse = true;
   newClientObject->lastUsed = nowSeconds;
-  lockedMap.clientMap.emplace(std::move(searchString), std::move(newClientObject));
+  clientMap.emplace(std::move(searchString), std::move(newClientObject));
   return newClientObject->client.get();
 }
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& module)
 {
-  auto lock = std::scoped_lock(lockedMap.queueMutex);
-
+  std::scoped_lock lock(getQueueMutex());
 
   MessageQueueClient* returnClient = MessageQueueClientPool::findInPool(module);
 
@@ -122,7 +95,7 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& modul
   newClientObject->inUse = true;
   newClientObject->lastUsed = nowSeconds;
   auto result = newClientObject->client.get();
-  lockedMap.clientMap.emplace(std::move(module), std::move(newClientObject));
+  clientMap.emplace(std::move(module), std::move(newClientObject));
   return result;
 }
 
@@ -133,11 +106,11 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
   uint64_t nowSeconds = TimeSpecToSeconds(&now);
   MessageQueueClient* returnClient = NULL;
 
-  auto it = lockedMap.clientMap.begin();
+  auto it = clientMap.begin();
 
 
   // Scan pool
-  while (it != lockedMap.clientMap.end())
+  while (it != clientMap.end())
   {
     ClientObject* clientObject = it->second.get();
     uint64_t elapsedTime = nowSeconds - clientObject->lastUsed;
@@ -149,7 +122,7 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
       // Do this so we don't invalidate current interator
       auto toDelete = it;
       it++;
-      lockedMap.clientMap.erase(toDelete);
+      clientMap.erase(toDelete);
       continue;
     }
 
@@ -163,7 +136,7 @@ MessageQueueClient* MessageQueueClientPool::findInPool(const std::string& search
         // Do this so we don't invalidate current interator
         auto toDelete = it;
         it++;
-        lockedMap.clientMap.erase(toDelete);
+        clientMap.erase(toDelete);
         continue;
       }
     }
@@ -193,10 +166,11 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  auto lock = std::scoped_lock(lockedMap.queueMutex);
-  auto it = lockedMap.clientMap.begin();
 
-  while (it != lockedMap.clientMap.end())
+  std::scoped_lock lock(getQueueMutex());
+  auto it = clientMap.begin();
+
+  while (it != clientMap.end())
   {
     if (it->second->client.get() == client)
     {
@@ -222,14 +196,14 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
     return;
 
 
-  auto lock = std::scoped_lock(lockedMap.queueMutex);
-  auto it = lockedMap.clientMap.begin();
+  std::scoped_lock lock(getQueueMutex());
+  auto it = clientMap.begin();
 
-  while (it != lockedMap.clientMap.end())
+  while (it != clientMap.end())
   {
     if (it->second->client.get() == client)
     {
-      lockedMap.clientMap.erase(it);
+      clientMap.erase(it);
       return;
     }
 

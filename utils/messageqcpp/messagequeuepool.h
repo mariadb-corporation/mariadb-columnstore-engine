@@ -21,17 +21,8 @@
 #include "messagequeue.h"
 #include <memory>
 
-#include <boost/stacktrace.hpp>
-
 namespace messageqcpp
 {
-
-
-static struct LockedClientMapInitilizer {
-  LockedClientMapInitilizer ();
-  ~LockedClientMapInitilizer ();
-} clientMapInitilizer; // static initializer for every translation unit
-
 struct ClientObject
 {
   std::unique_ptr<MessageQueueClient> client;
@@ -41,6 +32,7 @@ struct ClientObject
 
 class MessageQueueClientPool
 {
+  using ClientMapType = std::multimap<std::string, std::unique_ptr<ClientObject>>;
  public:
   static MessageQueueClient* getInstance(const std::string& module);
   static MessageQueueClient* getInstance(const std::string& dnOrIp, uint64_t port);
@@ -51,6 +43,8 @@ class MessageQueueClientPool
  private:
   MessageQueueClientPool(){};
   ~MessageQueueClientPool(){};
+
+  static ClientMapType clientMap;
 };
 
 }  // namespace messageqcpp
