@@ -15,5 +15,7 @@ if [ ! -f $ABOVE_MDB_ROOT/mariadb-columnstore-regression-test/dev-scripts/README
 fi
 
 docker rmi -f do-not-publish-roli8-curr-mdb
+echo "# ignoring .git"  > $ABOVE_MDB_ROOT/.gitignore
+echo "*/.git/*"        >> $ABOVE_MDB_ROOT/.gitignore
 # Adding sources and building the dependencies.
 DOCKER_BUILDKIT=1 docker build -f Dockerfile_start -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
