@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# check for MDB, columnstore and regression tests suite.
+ABOVE_MDB_ROOT=../../../../../.. # good enough for tests.
+
+if [ ! -f $ABOVE_MDB_ROOT/MariaDBEnterprise/storage/columnstore/columnstore/build/docker/start ]; then
+  echo "Can't detect MDB and columnstore."
+  exit 1
+fi
+if [ ! -f $ABOVE_MDB_ROOT/mariadb-columnstore-regression-test/dev-scripts/README ]; then
+  echo "Can't find regression test suite."
+fi
+
+# Adding sources and building the dependencies.
+DOCKER_BUILDKIT=1 docker build -f Dockerfile_build_run -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
