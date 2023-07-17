@@ -144,6 +144,7 @@ struct Result
    , strVal("")
    , decimalVal(IDB_Decimal())
    , valueConverted(false)
+   , compiledBlock(nullptr)
   {
   }
   int64_t intVal;
@@ -159,6 +160,7 @@ struct Result
   std::string strVal;
   IDB_Decimal decimalVal;
   bool valueConverted;
+  llvm::Value* compiledBlock;
 };
 
 /**
@@ -320,6 +322,10 @@ class TreeNode
   virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
   {
     return fResult.intVal;
+  }
+  virtual llvm::Value *getCompiledBlock(rowgroup::Row& row, bool& isNull)
+  {
+    return fResult.compiledBlock;
   }
   virtual void evaluate(rowgroup::Row& row, bool& isNull)
   {
