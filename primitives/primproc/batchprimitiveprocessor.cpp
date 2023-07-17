@@ -2168,7 +2168,7 @@ void BatchPrimitiveProcessor::sendResponse()
   // Here is the fast path for local EM to PM interaction. PM puts into the
   // input EM DEC queue directly.
   // !sock has a 'same host connection' semantics here.
-  if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
+  if (!sock)
   {
     // Flow Control now handles same node connections so the recieving DEC queue
     // is limited.
