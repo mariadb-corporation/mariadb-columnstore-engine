@@ -618,6 +618,25 @@ int ha_mcs::rnd_end()
 {
   DBUG_ENTER("ha_mcs::rnd_end");
 
+  // MCOL-4740 multi_update::send_eof(), which outputs the affected
+  // number of rows to the client, is called after handler::rnd_end().
+  // So we set multi_update::updated and multi_update::found here.
+  if (current_thd->lex->sql_command == SQLCOM_UPDATE_MULTI)
+  {
+    SELECT_LEX_UNIT *unit = &current_thd->lex->unit;
+    SELECT_LEX *select_lex= unit->first_select();
+    multi_update* multi = (multi_update*) select_lex->join->result;
+    multi->table_to_update = multi->update_tables ? multi->update_tables->table : 0;
+
+    cal_impl_if::cal_connection_info* ci =
+      reinterpret_cast<cal_impl_if::cal_connection_info*>(get_fe_conn_info_ptr());
+
+    if (ci)
+    {
+      multi->updated = multi->found = ci->affectedRows;
+    }
+  }
+
   int rc;
   try
   {
