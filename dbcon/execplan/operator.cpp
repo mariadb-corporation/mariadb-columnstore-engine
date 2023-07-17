@@ -349,5 +349,10 @@ void Operator::reverseOp()
       break;
   }
 }
+llvm::Value* Operator::compile(llvm::IRBuilder<>& b, rowgroup::Row& row, bool& isNull, ReturnedColumn* lop,
+                               ReturnedColumn* rop)
+{
+  return nullptr;
+}
 
 }  // namespace execplan

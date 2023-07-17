@@ -359,6 +359,17 @@ class ParseTree
 
   // F&E framework
   void evaluate(rowgroup::Row& row, bool& isNull);
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, rowgroup::Row& row, bool& isNull)
+  {
+    if (fLeft && fRight)
+    {
+      return (reinterpret_cast<Operator*>(fData))->compile(b,row,isNull,fLeft,fRight);
+    }else{
+      return fData->getCompiledBlock(row,isNull);
+    }
+  }
 };
 
 }  // namespace execplan
