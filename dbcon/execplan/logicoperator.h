@@ -28,7 +28,7 @@
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
 
-//#include "expressionparser.h"
+// #include "expressionparser.h"
 #include "operator.h"
 #include "parsetree.h"
 
@@ -175,9 +175,36 @@ class LogicOperator : public Operator
   // default okay
   // Operator& operator=(const Operator& rhs);
   // std::string fData;
+ public:
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
+                              ParseTree* lop, ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
 // typedef boost::shared_ptr<Operator> SOP;
+inline llvm::Value* LogicOperator::compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row,
+                                           bool& isNull, ParseTree* lop, ParseTree* rop)
+{
+  return compile(b, lop->compile(b, args, row, isNull), rop->compile(b, args, row, isNull));
+}
+inline llvm::Value* LogicOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_AND: return b.CreateAnd(l, r);
+
+    case OP_OR: return b.CreateOr(l, r);
+
+    case OP_XOR: return b.CreateXor(l, r);
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
 
 std::ostream& operator<<(std::ostream& os, const LogicOperator& rhs);
 }  // namespace execplan

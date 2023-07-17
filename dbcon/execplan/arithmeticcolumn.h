@@ -276,6 +276,12 @@ class ArithmeticColumn : public ReturnedColumn
   void evaluate(rowgroup::Row& row)
   {
   }
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
+  {
+    return fExpression->compile(b, args,row, isNull);
+  }
 };
 
 /**
