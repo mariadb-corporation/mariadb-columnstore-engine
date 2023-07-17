@@ -225,6 +225,11 @@ class ArithmeticOperator : public Operator
 
   long fTimeZone;
   bool fDecimalOverflowCheck;
+
+ public:
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                              ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
 // Can be easily replaced with a template over T if MDB changes the result return type.
@@ -491,5 +496,33 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
   }
 }
 
+inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, rowgroup::Row& row, bool& isNull,
+                                                ParseTree* lop, ParseTree* rop)
+{
+  return compile(b, lop->compile(b, row, isNull), rop->compile(b, row, isNull));
+}
+inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateAdd(l, r);
+
+    case OP_SUB: return b.CreateSub(l, r);
+
+    case OP_MUL: return b.CreateMul(l, r);
+
+    case OP_DIV:
+      if (l->getType()->isIntegerTy())
+        throw std::runtime_error("Div not support int");
+      else
+        return b.CreateFDiv(l, r);
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
 std::ostream& operator<<(std::ostream& os, const ArithmeticOperator& rhs);
 }  // namespace execplan

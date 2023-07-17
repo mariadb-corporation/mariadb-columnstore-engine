@@ -27,7 +27,7 @@
 #include <string>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
-
+#include <llvm/IR/IRBuilder.h>
 #include "treenode.h"
 
 namespace messageqcpp
@@ -242,6 +242,9 @@ class Operator : public TreeNode
 
  protected:
   OpType fOp;
+
+ public:
+  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
 };
 
 typedef boost::shared_ptr<Operator> SOP;

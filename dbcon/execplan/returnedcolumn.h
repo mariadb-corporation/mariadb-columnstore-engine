@@ -28,6 +28,7 @@
 #include <vector>
 #include <cmath>
 #include <boost/shared_ptr.hpp>
+#include <llvm/IR/IRBuilder.h>
 
 #include "treenode.h"
 #include "calpontsystemcatalog.h"
@@ -374,6 +375,9 @@ class ReturnedColumn : public TreeNode
   uint32_t fInputIndex;    /// index to the input rowgroup
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
+
+ public:
+  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull);
 };
 
 std::ostream& operator<<(std::ostream& os, const ReturnedColumn& rhs);
