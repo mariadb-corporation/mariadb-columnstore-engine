@@ -13,4 +13,4 @@ RUN mkdir -p mdb
 
 COPY MariaDBEnterprise mariadb-columnstore-regression-test /mdb
 
-RUN 
+RUN mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/bootstrap_mcs.sh -D -d Rocky -t RelWithDebInfo -z
