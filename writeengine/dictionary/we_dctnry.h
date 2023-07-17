@@ -36,6 +36,16 @@
 #include "we_brm.h"
 #include "bytestream.h"
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/io/file.h>
+#include <parquet/stream_reader.h>
+
 #define EXPORT
 
 /** Namespace WriteEngine */
@@ -146,6 +156,8 @@ class Dctnry : public DbFileOp
     return m_dctnryHeader2;
   }
 
+
+
   /**
    * @brief Insert a signature value to a file block and return token/pointer.
    * (for DDL/DML use)
@@ -155,6 +167,16 @@ class Dctnry : public DbFileOp
    * @param token          - (output) token associated with inserted signature
    */
   EXPORT int insertDctnry(const int& sgnature_size, const unsigned char* sgnature_value, Token& token);
+
+
+
+  /**
+   * @brief Insert signature value to a file block and return token/pointer
+   * (for Bulk use)
+  */
+  EXPORT int insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, const int totalRow, const int col, char* tokenBuf, long long& truncCount);
+  
+
 
   /**
    * @brief Insert a signature value to a file block and return token/pointer

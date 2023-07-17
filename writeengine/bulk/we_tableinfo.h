@@ -30,6 +30,16 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/io/file.h>
+#include <parquet/stream_reader.h>
+
 #include <libmarias3/marias3.h>
 
 #include "we_type.h"
@@ -373,9 +383,31 @@ class TableInfo : public WeUIDGID
    */
   int readTableData();
 
+  // /** @brief parse parquet data
+  // */
+  // int parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
+
+  // /** @brief parse parquet data
+  // */
+  int parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
+
+  // /** @brief parse parquet data
+  // */
+  // int parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
+
+  void parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue);
+
+  /** @brief Read the parquet file data into the memory
+   */
+  int readParquetData();
+ 
   /** @brief parse method
    */
   int parseColumn(const int& columnId, const int& bufferId, double& processingTime);
+
+  /** @brief update the buffer status for column(parquet)
+  */
+  int setParseCompleteParquet();
 
   /** @brief update the buffer status for column
    */

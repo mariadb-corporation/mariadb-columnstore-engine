@@ -45,6 +45,12 @@
 
 #include "utils_utf8.h"  // utf8_truncate_point()
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+
 using namespace std;
 using namespace boost;
 using namespace execplan;
@@ -1521,6 +1527,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
 
   memcpy(output, pVal, width);
 }
+
 
 //------------------------------------------------------------------------------
 // Parse the contents of the Read buffer based on whether it is a dictionary

@@ -25,6 +25,12 @@
 #include "we_bulkload.h"
 #undef WE_BULKLOAD_DLLEXPORT
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <climits>
@@ -444,6 +450,39 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
   fLog.logMsg(ossXMLTime.str(), MSGLVL_INFO1);
 
   return NO_ERROR;
+}
+
+
+
+void BulkLoad::spawnWorkersParquet()
+{
+  // int current_thread = 0;
+
+  int tableId = 0;
+
+  // Loop to select and read the next table
+
+  // while (true)
+  // {
+  //   tableId = 0;
+
+  //   // if ((tableId = lockTableForRead(current_thread)) == -1)
+  //   // {
+  //   //   fLog.logMsg(
+  //   //     "BulkLoad::ReadOperation No more tables "
+  //   //     "available for processing. Read thread ",
+  //   //   MSGLVL_INFO2);
+  //   //   return;
+  //   // }
+
+  //   // for every table, read parquet file
+  //   int rc = fTableInfo[tableId].readParquetData();
+  //   if (rc == NO_ERROR)
+  //     break;
+  // }
+  int rc = fTableInfo[tableId].readParquetData();
+  std::cout << rc << std::endl;
+  std::cout << "it's all done" << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -1154,7 +1193,14 @@ int BulkLoad::processJob()
 
   startTimer();
 
-  spawnWorkers();
+  if (LOAD_FILE == FILE_PARQUET)
+  {
+    spawnWorkersParquet();
+  }
+  else
+  {
+    spawnWorkers();
+  }
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {
