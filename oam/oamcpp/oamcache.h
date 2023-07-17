@@ -25,7 +25,6 @@
 
 #include "liboamcpp.h"
 
-#define EXPORT
 
 namespace oam
 {
@@ -35,30 +34,31 @@ class OamCache
   typedef boost::shared_ptr<std::map<int, int> > dbRootPMMap_t;
   typedef std::vector<int> dbRoots;
   typedef boost::shared_ptr<std::map<int, dbRoots> > PMDbrootsMap_t;
-  EXPORT virtual ~OamCache();
+  virtual ~OamCache() = default;
 
-  EXPORT void checkReload();
-  EXPORT void forceReload()
+  void checkReload();
+  void forceReload()
   {
     mtime = 0;
   }
 
-  EXPORT dbRootPMMap_t getDBRootToPMMap();
-  EXPORT dbRootPMMap_t getDBRootToConnectionMap();
-  EXPORT PMDbrootsMap_t getPMToDbrootsMap();
-  EXPORT uint32_t getDBRootCount();
-  EXPORT DBRootConfigList& getDBRootNums();
-  EXPORT std::vector<int>& getModuleIds();
-  EXPORT static OamCache* makeOamCache();
-  EXPORT std::string getOAMParentModuleName();
-  EXPORT int getLocalPMId();  // return the PM id of this machine.
-  EXPORT std::string getSystemName();
-  EXPORT std::string getModuleName();
+  dbRootPMMap_t getDBRootToPMMap();
+  dbRootPMMap_t getDBRootToConnectionMap();
+  PMDbrootsMap_t getPMToDbrootsMap();
+  uint32_t getDBRootCount();
+  DBRootConfigList& getDBRootNums();
+  std::vector<int>& getModuleIds();
+  static OamCache* makeOamCache();
+  std::string getOAMParentModuleName();
+  int getLocalPMId();  // return the PM id of this machine.
+  std::string getSystemName();
+  std::string getModuleName();
 
  private:
-  OamCache();
-  OamCache(const OamCache&);
-  OamCache& operator=(const OamCache&) const;
+  friend struct CacheReloaded;
+  OamCache() = default;
+  OamCache(const OamCache&) = delete;
+  OamCache& operator=(const OamCache&) const = delete;
 
   dbRootPMMap_t dbRootPMMap;
   dbRootPMMap_t dbRootConnectionMap;
@@ -75,4 +75,3 @@ class OamCache
 
 }  // namespace oam
 
-#undef EXPORT
