@@ -208,7 +208,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} mkdir -p reg-logs',
-      "docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c 'sleep 4800 && eu-stack -p `pidof PrimProc` -n 0 | tee /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/prim_proc_callstacks.txt' & ",
+      "docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c 'sleep 4800 && /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
       'docker exec --env PRESERVE_LOGS=true -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
       'docker exec -t --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest regression$${DRONE_BUILD_NUMBER} cat go.log || echo "missing go.log"',
     ],
