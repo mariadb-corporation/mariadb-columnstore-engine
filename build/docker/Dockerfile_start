@@ -9,3 +9,8 @@ RUN dnf update -y
 
 RUN dnf install -y gdb git
 
+RUN mkdir -p mdb
+
+COPY MariaDBEnterprise mariadb-columnstore-regression-test /mdb
+
+RUN 

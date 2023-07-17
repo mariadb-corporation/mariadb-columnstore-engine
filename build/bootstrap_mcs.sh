@@ -539,12 +539,14 @@ if [[ $NO_CLEAN = false ]] ; then
     clean_old_installation
 fi
 
-build
-run_unit_tests
-run_microbenchmarks_tests
-install
-start_service
-smoke
-generate_svgs
+if [[ "$DISABLE_BUILD_INSTALL" == "false" ]]; then
+  build
+  run_unit_tests
+  run_microbenchmarks_tests
+  install
+  start_service
+  smoke
+  generate_svgs
+fi
 
 message_splitted "FINISHED"

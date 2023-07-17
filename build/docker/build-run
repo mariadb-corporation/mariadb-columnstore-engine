@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
+IFS=$'\n\t'
+
 # check for MDB, columnstore and regression tests suite.
 ABOVE_MDB_ROOT=../../../../../.. # good enough for tests.
 
@@ -13,3 +16,4 @@ fi
 
 # Adding sources and building the dependencies.
 DOCKER_BUILDKIT=1 docker build -f Dockerfile_build_run -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
+docker run mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/bootstrap_mcs.sh -D -d Ubuntu -t RelWithDebInfo
