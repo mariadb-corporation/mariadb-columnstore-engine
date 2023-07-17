@@ -1,0 +1,11 @@
+# Stage one - install dependencies, configure and build.
+
+# parent image
+FROM rockylinux:8
+
+ENV LANG en_US.utf8
+
+RUN dnf update -y
+
+RUN dnf install -y gdb git
+

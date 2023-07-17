@@ -45,6 +45,7 @@ optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SK
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
 optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false
+optparse.define short=z long=disable-build-install desc="Disable actual build and install steps" variable=DISABLE_BUILD_INSTALL default=false value=true
 
 source $( optparse.build )
 
