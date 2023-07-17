@@ -9,8 +9,8 @@ RUN dnf update -y
 
 RUN dnf install -y gdb git
 
-RUN mkdir -p mdb
+RUN mkdir -p /mdb
 
-COPY MariaDBEnterprise mariadb-columnstore-regression-test /mdb
+COPY MariaDBEnterprise mariadb-columnstore-regression-test /mdb/
 
 RUN mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/bootstrap_mcs.sh -D -d Rocky -t RelWithDebInfo -z

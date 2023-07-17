@@ -18,4 +18,4 @@ docker rmi -f do-not-publish-roli8-curr-mdb
 echo "# ignoring .git"  > $ABOVE_MDB_ROOT/.dockerignore
 echo "*/.git"          >> $ABOVE_MDB_ROOT/.dockerignore
 # Adding sources and building the dependencies.
-DOCKER_BUILDKIT=1 docker build -f Dockerfile_start -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
+docker build -f Dockerfile_start -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
