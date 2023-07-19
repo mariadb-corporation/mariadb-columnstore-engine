@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <unordered_set>
+#include <llvm/IR/IRBuilder.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -330,7 +331,7 @@ class TreeNode
   {
     return fResult.intVal;
   }
-  virtual llvm::Value *getCompiledBlock(rowgroup::Row& row, bool& isNull)
+  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull)
   {
     return fResult.compiledBlock;
   }

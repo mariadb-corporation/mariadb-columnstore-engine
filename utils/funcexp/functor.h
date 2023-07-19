@@ -95,17 +95,17 @@ class Func
   /**
    * Determine whether compilation is supported
    * */
-//  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
-//  {
-//    return false;
-//  }
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType) const
+  {
+    return false;
+  }
   /**
    * Compile the common parts of functions in IR
    * and hand over specific blocks and instructions
    * to the implementation function for implementation
    *
    * */
-  llvm::Value* compile()
+  llvm::Value* compile() const
   {
     return nullptr;
   }
