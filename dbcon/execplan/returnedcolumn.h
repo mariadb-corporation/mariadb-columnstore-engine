@@ -375,9 +375,11 @@ class ReturnedColumn : public TreeNode
   uint32_t fInputIndex;    /// index to the input rowgroup
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
-
  public:
-  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull);
+  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull)
+  {
+    return fResult.compiledBlock;
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const ReturnedColumn& rhs);

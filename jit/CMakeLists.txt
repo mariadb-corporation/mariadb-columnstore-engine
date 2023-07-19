@@ -4,7 +4,10 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 set(jit_LIB_SRCS
         jit.cpp
         jit.h
-        compilefunction.cpp compilefunction.h)
+        compilefunction.cpp compilefunction.h
+        compileoperator.cpp
+        compileoperator.h
+        expressionjit.cpp)
 
 
 add_library(jit SHARED ${jit_LIB_SRCS})
