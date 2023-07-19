@@ -274,7 +274,7 @@ MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELW
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB} ${llvm_libs})
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
 SET (ENGINE_OAM_LIBS        oamcpp)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (PLUGIN_EXEC_LIBS       execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querytele threadpool ${ENGINE_BRM_LIBS})

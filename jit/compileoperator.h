@@ -11,7 +11,8 @@ struct CompiledOperator
   msc_jit::JIT::CompiledModule compiled_module;
 };
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::ParseTree* root);
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP expression, rowgroup::Row& row,
+                                 bool& isNull);
 
 }
 #endif  // MARIADB_COMPILEOPERATOR_H
