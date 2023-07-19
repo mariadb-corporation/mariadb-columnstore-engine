@@ -170,3 +170,6 @@ void set_s3_secret(THD* thd, char* value);
 
 const char* get_s3_region(THD* thd);
 void set_s3_region(THD* thd, char* value);
+
+const char* get_pron(THD* thd);
+void set_pron(THD* thd, char* value);

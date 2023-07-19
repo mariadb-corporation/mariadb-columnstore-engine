@@ -205,6 +205,7 @@ static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, 
 
 static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL,
                         "");
+static MYSQL_THDVAR_STR(pron, PLUGIN_VAR_MEMALLOC, "Debug options json dictionary", NULL, NULL, "");
 
 static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL,
                               NULL, 8640, 100, 65356, 1);
@@ -251,6 +252,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(s3_key),
                                             MYSQL_SYSVAR(s3_secret),
                                             MYSQL_SYSVAR(s3_region),
+                                            MYSQL_SYSVAR(pron),
                                             NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
@@ -594,6 +596,16 @@ const char* get_cmapi_key(THD* thd)
 void set_cmapi_key(THD* thd, char* value)
 {
   THDVAR(thd, cmapi_key) = value;
+}
+
+const char* get_pron(THD* thd)
+{
+  return (thd == NULL) ? "" : THDVAR(thd, pron);
+}
+
+void set_pron(THD* thd, char* value)
+{
+  THDVAR(thd, pron) = value;
 }
 
 const char* get_s3_key(THD* thd)

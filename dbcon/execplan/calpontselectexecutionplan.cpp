@@ -37,7 +37,10 @@ using namespace messageqcpp;
 #include "querystats.h"
 
 #include "querytele.h"
+#include "utils/pron/pron.h"
+
 using namespace querytele;
+
 
 namespace
 {
@@ -465,6 +468,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
   b << (uint8_t)fIsDML;
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   b << timeZone;
+  b << fPron;
 }
 
 void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
@@ -664,6 +668,8 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   messageqcpp::ByteStream::octbyte timeZone;
   b >> timeZone;
   fTimeZone = timeZone;
+  b >> fPron;
+  utils::Pron::instance().pron(fPron);
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const
@@ -817,5 +823,12 @@ void CalpontSelectExecutionPlan::rmParms(const RMParmVec& parms)
   frmParms.clear();
   frmParms.assign(parms.begin(), parms.end());
 }
+
+
+void CalpontSelectExecutionPlan::pron(std::string&& pron)
+{
+  fPron = pron;
+}
+
 
 }  // namespace execplan

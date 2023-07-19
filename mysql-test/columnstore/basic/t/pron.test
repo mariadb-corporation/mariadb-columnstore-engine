@@ -1,0 +1,29 @@
+DROP DATABASE IF EXISTS pron;
+CREATE DATABASE pron;
+USE pron;
+
+CREATE TABLE t
+(
+ a double
+) ENGINE=Columnstore;
+
+INSERT INTO t VALUES(1.5707963267948966);
+
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+
+SET columnstore_pron='{"megasinus": "123"}';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+SET columnstore_pron='{"megasinus": "-200"}';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+SET columnstore_pron='';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+
+DROP DATABASE pron;
