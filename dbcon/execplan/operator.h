@@ -244,7 +244,10 @@ class Operator : public TreeNode
   OpType fOp;
 
  public:
-  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop);
+  using TreeNode::compile;
+  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop){
+    return fResult.compiledBlock;
+  }
 };
 
 typedef boost::shared_ptr<Operator> SOP;
