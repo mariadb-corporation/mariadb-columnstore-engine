@@ -322,9 +322,11 @@ class ParseTree
   {
     if (fLeft && fRight)
     {
-      return (reinterpret_cast<Operator*>(fData))->compile(b,row,isNull,fLeft,fRight);
-    }else{
-      return fData->getCompiledBlock(row,isNull);
+      return (reinterpret_cast<Operator*>(fData))->compile(b, row, isNull, fLeft, fRight);
+    }
+    else
+    {
+      return fData->compile(b, row, isNull);
     }
   }
 };
