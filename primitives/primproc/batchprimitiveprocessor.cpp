@@ -1489,7 +1489,7 @@ void BatchPrimitiveProcessor::execute()
         asyncLoadProjectColumns();
       }
     }
-
+    std::cout << "execute: async load" << std::endl;
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->stop("BatchPrimitiveProcessor::execute first part");
     stopwatch->start("BatchPrimitiveProcessor::execute second part");
@@ -1561,6 +1561,7 @@ void BatchPrimitiveProcessor::execute()
         }
       }
     }
+    std::cout << "execute: filters" << std::endl;
 
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->stop("BatchPrimitiveProcessor::execute second part");
@@ -1756,6 +1757,8 @@ void BatchPrimitiveProcessor::execute()
       }
       else  // Is doJoin
       {
+        std::cout << "execute: join" << std::endl;
+
         uint32_t startRid = 0;
         ByteStream preamble = *serialized;
         origRidCount = ridCount;  // ridCount can get modified by executeTupleJoin(). We need to keep track of
@@ -1779,6 +1782,7 @@ void BatchPrimitiveProcessor::execute()
 #endif
           }
         }
+        std::cout << "execute: join 1" << std::endl;
 
         do  // while (startRid > 0)
         {
@@ -1790,6 +1794,8 @@ void BatchPrimitiveProcessor::execute()
           startRid = executeTupleJoin(startRid);
 //                    sStartRid = startRid;
 #endif
+          std::cout << "execute: after join" << std::endl;
+
           /* project the non-key columns */
           for (j = 0; j < projectCount; ++j)
           {
@@ -1805,6 +1811,7 @@ void BatchPrimitiveProcessor::execute()
 #endif
             }
           }
+          std::cout << "execute: after join proj" << std::endl;
           /* The RowGroup is fully joined at this point.
            *            Add additional RowGroup processing here.
            *            TODO:  Try to clean up all of the switching */
@@ -1915,6 +1922,8 @@ void BatchPrimitiveProcessor::execute()
           }
           else
           {
+            std::cout << "execute: ser" << std::endl;
+
             *serialized << (uint8_t)(startRid > 0 ? 0 : 1);  // the "count this msg" var
             outputRG.setDBRoot(dbRoot);
             // cerr << "serializing " << outputRG.toString() << endl;
@@ -2178,6 +2187,7 @@ void BatchPrimitiveProcessor::sendResponse()
     }
     else
     {
+      std::cout << "BPP:sendResponse localsend" << std::endl;
       exeMgrDecPtr->addDataToOutput(serialized);
       serialized.reset();
     }
@@ -2187,6 +2197,7 @@ void BatchPrimitiveProcessor::sendResponse()
 
   if (sendThread->flowControlEnabled())
   {
+    std::cout << "BPP:sendResponse network sendThread" << std::endl;
     // newConnection should be set only for the first result of a batch job
     // it tells sendthread it should consider it for the connection array
     sendThread->sendResult(BPPSendThread::Msg_t(serialized, sock, writelock, sockIndex), newConnection);
@@ -2194,6 +2205,7 @@ void BatchPrimitiveProcessor::sendResponse()
   }
   else
   {
+    std::cout << "BPP:sendResponse network" << std::endl;
     boost::mutex::scoped_lock lk(*writelock);
     sock->write(*serialized);
   }
