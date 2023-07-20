@@ -25,7 +25,7 @@
 #include <cstring>
 #include <utility>
 #include <sstream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <ctime>
 using namespace std;
@@ -583,6 +583,8 @@ void pDictionaryScan::receivePrimitiveMessages()
       }
 
       mutex.unlock();
+
+      std::cout << "pDict: recv queue " << uniqueID << std::endl;
 
       fDec->read(uniqueID, bs);
 

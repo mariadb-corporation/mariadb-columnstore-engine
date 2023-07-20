@@ -2183,6 +2183,7 @@ void BatchPrimitiveProcessor::sendResponse()
     // is limited.
     if (sendThread->flowControlEnabled())
     {
+      std::cout << "BPP:sendResponse localsend sendThread" << std::endl;
       sendThread->sendResult({serialized, nullptr, nullptr, 0}, false);
     }
     else

@@ -468,6 +468,7 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 void DistributedEngineComm::removeQueue(uint32_t key)
 {
   std::lock_guard lk(fMlock);
+  std::cout << "DEC: removeQueue " << key << std::endl;
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())
@@ -956,10 +957,12 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
   uint32_t uniqueId = p->UniqueID;
   std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
+  std::cout << "DEC: addDataToOutput queue " << uniqueId << std::endl;
 
   // The message for a session that doesn't exist.
   if (map_tok == fSessionMessages.end())
   {
+    std::cout << "DEC: addDataToOutput early quit " << uniqueId << std::endl;
     // Here gets the dead session ByteStream that is already removed
     // from DEC queue.
     return;
