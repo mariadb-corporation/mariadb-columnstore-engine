@@ -34,7 +34,7 @@ namespace msc_jit
 class Arena : private boost::noncopyable
 {
  public:
-  Arena() : page_size(8)
+  Arena() : page_size(4096)
   {
   }
   ~Arena()
@@ -189,7 +189,7 @@ class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
   uint8_t* allocateCodeSection(uintptr_t size, unsigned alignment, unsigned section_id,
                                llvm::StringRef section_name) override
   {
-    return reinterpret_cast<uint8_t*>(exec_memory_page.allocateAligned(size, alignment));
+    return reinterpret_cast<uint8_t*>(ex_memory_page.allocateAligned(size, alignment));
   }
   uint8_t* allocateDataSection(uintptr_t size, unsigned alignment, unsigned, llvm::StringRef,
                                bool is_read_only) override
@@ -207,20 +207,20 @@ class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
   bool finalizeMemory(std::string* err_msg) override
   {
     ro_memory_page.protect(PROT_READ);
-    exec_memory_page.protect(PROT_READ | PROT_EXEC);
+    ex_memory_page.protect(PROT_READ | PROT_EXEC);
     return true;
   }
 
   inline size_t allocatedMemorySize() const
   {
     return rw_memory_page.getAllocatedSize() + ro_memory_page.getAllocatedSize() +
-           exec_memory_page.getAllocatedSize();
+           ex_memory_page.getAllocatedSize();
   }
 
  private:
   Arena rw_memory_page;
   Arena ro_memory_page;
-  Arena exec_memory_page;
+  Arena ex_memory_page;
 };
 
 class JITCompiler
@@ -463,5 +463,8 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   fpm.doFinalization();
 
   mpm.run(module);
+}
+JIT::~JIT()
+{
 }
 }  // namespace msc_jit

@@ -13,6 +13,6 @@ set(jit_LIB_SRCS
 
 add_library(jit SHARED ${jit_LIB_SRCS})
 
-target_link_libraries(jit ${NETSNMP_LIBRARIES} ${llvm_libs})
+target_link_libraries(jit ${NETSNMP_LIBRARIES} ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS})
 
 install(TARGETS jit DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

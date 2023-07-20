@@ -378,7 +378,7 @@ class ReturnedColumn : public TreeNode
  public:
   virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull)
   {
-    return fResult.compiledBlock;
+    return b.getInt64(0);
   }
 };
 
