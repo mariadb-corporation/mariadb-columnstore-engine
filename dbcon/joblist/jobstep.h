@@ -497,6 +497,7 @@ class JobStep
   int64_t fStartTime;
   int64_t fLastStepTeleTime;
   long fTimeZone;
+  uint32_t fMaxPmJoinResultCount;
 
  private:
   static boost::mutex fLogMutex;

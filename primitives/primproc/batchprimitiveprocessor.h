@@ -336,7 +336,7 @@ class BatchPrimitiveProcessor
   std::shared_ptr<std::shared_ptr<boost::shared_ptr<TJoiner>[]>[]> tJoiners;
   typedef std::vector<uint32_t> MatchedData[LOGICAL_BLOCK_RIDS];
   std::shared_ptr<MatchedData[]> tSmallSideMatches;
-  uint32_t executeTupleJoin(uint32_t startRid);
+  uint32_t executeTupleJoin(uint32_t startRid, rowgroup::RowGroup& largeSideRowGroup);
   bool getTupleJoinRowGroupData;
   std::vector<rowgroup::RowGroup> smallSideRGs;
   rowgroup::RowGroup largeSideRG;
@@ -438,7 +438,7 @@ class BatchPrimitiveProcessor
   bool initiatedByEM_;
   uint32_t weight_;
 
-  static const uint64_t maxResultCount = 1048576;  // 2^20
+  uint32_t maxPmJoinResultCount = 1048576;
   friend class Command;
   friend class ColumnCommand;
   friend class DictStep;

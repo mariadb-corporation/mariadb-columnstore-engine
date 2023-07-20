@@ -706,6 +706,15 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fDJSForceRun;
   }
 
+  void maxPmJoinResultCount(uint32_t value)
+  {
+    fMaxPmJoinResultCount = value;
+  }
+  uint32_t maxPmJoinResultCount()
+  {
+    return fMaxPmJoinResultCount;
+  }
+
   void umMemLimit(uint64_t l)
   {
     fUMMemLimit = l;
@@ -940,6 +949,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   uint64_t fDJSPartitionSize = 100 * 1024 * 1024;
   uint32_t fDJSMaxPartitionTreeDepth = 8;
   bool fDJSForceRun = false;
+  uint32_t fMaxPmJoinResultCount = 1048576;
   int64_t fUMMemLimit = numeric_limits<int64_t>::max();
   bool fIsDML = false;
   long fTimeZone = 0;
