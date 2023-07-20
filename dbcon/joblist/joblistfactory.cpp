@@ -22,7 +22,7 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 #include <set>
@@ -172,7 +172,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
       // This is a double-step step
       //			if (jobInfo.trace)
       //				cout << "doProject Emit pGetSignature for SimpleColumn " << dictOid <<
-      //endl;
+      // endl;
 
       pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
       jobInfo.keyInfo->dictOidToColOid[dictOid] = oid;
@@ -2066,6 +2066,7 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm,
     jobInfo.smallSideLimit = csep->djsSmallSideLimit();
     jobInfo.largeSideLimit = csep->djsLargeSideLimit();
     jobInfo.partitionSize = csep->djsPartitionSize();
+    jobInfo.maxPmJoinResultCount = csep->maxPmJoinResultCount();
     jobInfo.umMemLimit.reset(new int64_t);
     *(jobInfo.umMemLimit) = csep->umMemLimit();
     jobInfo.isDML = csep->isDML();

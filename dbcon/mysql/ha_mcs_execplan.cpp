@@ -1881,7 +1881,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
   }
 
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2796,7 +2797,8 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
   thd->raise_error_printf(errcode, errmsg.c_str());
 
   // reset expressionID
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3608,7 +3610,8 @@ ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& 
 
 ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3871,7 +3874,8 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 
 ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
 {
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3964,7 +3968,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         nonSupport = true;
         gwi.fatalParseError = true;
         Message::Args args;
-        string info = funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
+        string info =
+            funcName + " with argument count > " + std::to_string(std::numeric_limits<uint16_t>::max());
         args.add(info);
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
         return NULL;
@@ -4492,7 +4497,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
 FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -4920,7 +4926,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   vector<SRCP> orderCols;
   ConstArgParam constArgParam;
 
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -5951,7 +5958,9 @@ void gp_walk(const Item* item, void* arg)
 
         // bug 3137. If filter constant like 1=0, put it to ptWorkStack
         // MariaDB bug 750. Breaks if compare is an argument to a function.
-        //				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty() ? 0
+        //				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty()
+        //?
+        // 0
         //: gwip->rcBookMarkStack.top())
         //				&& isPredicateFunction(ifp, gwip))
         if (isPredicateFunction(ifp, gwip))
@@ -6223,12 +6232,13 @@ void gp_walk(const Item* item, void* arg)
           if (operand)
           {
             gwip->rcWorkStack.push(operand);
-            if (i == 0 && gwip->scsp == NULL) // first item is the WHEN LHS
+            if (i == 0 && gwip->scsp == NULL)  // first item is the WHEN LHS
             {
               SimpleColumn* sc = dynamic_cast<SimpleColumn*>(operand);
               if (sc)
               {
-                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is rarely executed so the cost is acceptable.
+                gwip->scsp.reset(sc->clone());  // We need to clone else sc gets double deleted. This code is
+                                                // rarely executed so the cost is acceptable.
               }
             }
           }
@@ -6686,7 +6696,7 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
   csep->djsSmallSideLimit(get_diskjoin_smallsidelimit(gwi.thd) * 1024ULL * 1024);
   csep->djsLargeSideLimit(get_diskjoin_largesidelimit(gwi.thd) * 1024ULL * 1024);
   csep->djsPartitionSize(get_diskjoin_bucketsize(gwi.thd) * 1024ULL * 1024);
-
+  csep->maxPmJoinResultCount(get_max_pm_join_result_count(gwi.thd));
   if (get_um_mem_limit(gwi.thd) == 0)
     csep->umMemLimit(numeric_limits<int64_t>::max());
   else
@@ -7405,8 +7415,7 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
  *  error id as an int
  ***********************************************************/
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
-                  bool isSelectHandlerTop, bool isSelectLexUnit,
-                  const std::vector<COND*>& condStack)
+                  bool isSelectHandlerTop, bool isSelectLexUnit, const std::vector<COND*>& condStack)
 {
 #ifdef DEBUG_WALK_COND
   cerr << "getSelectPlan()" << endl;
@@ -7434,8 +7443,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   CalpontSelectExecutionPlan::SelectList derivedTbList;
   // @bug 1796. Remember table order on the FROM list.
   gwi.clauseType = FROM;
-  if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop,
-                        isSelectLexUnit)))
+  if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop, isSelectLexUnit)))
   {
     return rc;
   }
@@ -7900,7 +7908,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.returnedCols[i]->hasAggregate(true);
       }
 
-      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
+      gwi.returnedCols[i]->resultType(
+          CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
 
       if (unionedTypeRc != 0)
       {
@@ -9132,14 +9141,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   {
     // MCOL-1052 The condition could be useless.
     // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-    //#if MYSQL_VERSION_ID < 50172
+    // #if MYSQL_VERSION_ID < 50172
     //@bug 3039. fix fields for constants
     if (!icp->fixed())
     {
       icp->fix_fields(gwi.thd, (Item**)&icp);
     }
 
-    //#endif
+    // #endif
     gwi.fatalParseError = false;
 #ifdef DEBUG_WALK_COND
     cerr << "------------------ WHERE -----------------------" << endl;
@@ -9733,7 +9742,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           gwi.returnedCols[i]->hasAggregate(true);
       }
 
-      gwi.returnedCols[i]->resultType(CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
+      gwi.returnedCols[i]->resultType(
+          CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
 
       if (unionedTypeRc != 0)
       {
