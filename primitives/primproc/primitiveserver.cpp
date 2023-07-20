@@ -31,7 +31,7 @@
 #include <mutex>
 #include <stdexcept>
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
@@ -348,7 +348,6 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
 
   *blocksWereVersioned = false;
 
-
   if (LBIDTrace)
   {
     for (i = 0; i < blockCount; i++)
@@ -409,7 +408,6 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
   if (ret != blockCount && doPrefetch)
   {
     prefetchBlocks(lbids[0], compType, &blksRead);
-
 
     if (fPMProfOn)
       pmstats.markEvent(lbids[0], (pthread_t)-1, sessionID, 'M');
@@ -494,10 +492,8 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
   uint32_t blksRead = 0;
   VSSCache::iterator it;
 
-
   if (LBIDTrace)
     stats.touchedLBID(lbid, pthread_self(), sessionID);
-
 
   if (vssCache)
   {
@@ -554,13 +550,11 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         SUMMARY_INFO2("open failed: ", fileNamePtr);
         char errbuf[80];
         string errMsg;
-        //#if STRERROR_R_CHAR_P
+        // #if STRERROR_R_CHAR_P
         const char* p;
 
         if ((p = strerror_r(errCode, errbuf, 80)) != 0)
           errMsg = p;
-
-
 
         if (errCode == EINVAL)
         {
@@ -809,7 +803,6 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
   {
     prefetchBlocks(lbid, compType, &blksRead);
 
-
     if (fPMProfOn)
       pmstats.markEvent(lbid, (pthread_t)-1, sessionID, 'M');
 
@@ -981,7 +974,7 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
 
 }  // namespace primitiveprocessor
 
-//#define DCT_DEBUG 1
+// #define DCT_DEBUG 1
 #define SETUP_GUARD                      \
   {                                      \
     unsigned char* o = outputp.get();    \
@@ -1939,6 +1932,8 @@ struct ReadThread
         const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
         const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
         const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
+        std::cout << "disp cr uniqueID " << uniqueID << std::endl;
+
         const uint32_t weight = 1;
         const uint32_t priority = 0;
         uint32_t id = 0;
@@ -2004,6 +1999,7 @@ struct ReadThread
           txnId = *((uint32_t*)&buf[pos + 2]);
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
+          std::cout << "disp run uniqueID " << id << " " << txnId << " " << uniqueID << std::endl;
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
         {
@@ -2339,6 +2335,8 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
           joblist::DistributedEngineComm::SBSVector primitiveMsgs;
           for (auto& sbs : exeMgrDecPtr->readLocalQueueMessagesOrWait(primitiveMsgs))
           {
+            std::cout << "recv loop " << std::endl;
+
             if (sbs->length() == 0)
             {
               std::cout << "PPSHServerThr got an empty ByteStream." << std::endl;

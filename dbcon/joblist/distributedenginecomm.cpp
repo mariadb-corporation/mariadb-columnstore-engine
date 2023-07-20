@@ -1055,6 +1055,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
   // EM-PP exchange via the queue.
   if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
   {
+    std::cout << "DEC:write uniqueID " << senderUniqueID << std::endl;
     pushToTheLocalQueueAndNotifyRecv(bs);
     return 0;
   }
