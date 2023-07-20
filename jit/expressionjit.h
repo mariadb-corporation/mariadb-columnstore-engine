@@ -12,7 +12,7 @@ static JIT& getJITInstance()
 class CompiledColumn : execplan::ReturnedColumn
 {
 };
-static void compileExpression(const execplan::SRCP expression, rowgroup::Row& row, bool& isNull)
+static void compileExpression(const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
 {
   compileOperator(getJITInstance(), expression, row, isNull);
 }
