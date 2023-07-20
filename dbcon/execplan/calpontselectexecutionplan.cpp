@@ -828,5 +828,4 @@ void CalpontSelectExecutionPlan::pron(std::string&& pron)
   fPron = pron;
 }
 
-
 }  // namespace execplan
