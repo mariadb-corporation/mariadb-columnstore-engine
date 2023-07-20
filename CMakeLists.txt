@@ -141,79 +141,79 @@ IF (NOT BISON_FOUND)
     return()
 ENDIF()
 
-#find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+
+# Find the libraries that correspond to the LLVM components
+# that we wish to use
+llvm_map_components_to_libnames(LLVM_LIBS support core irreader mcjit native orcjit)
+set(LLVM_INCLUDEDIR ${LLVM_INCLUDE_DIRS})
+#set(LLVM_CONFIG_EXECUTABLE /home/noorall/third_party/llvm-Release-install/bin/llvm-config)
+#if(NOT EXISTS ${LLVM_CONFIG_EXECUTABLE})
+#    message(FATAL_ERROR "llvm-config could not be found!")
+#endif()
 #
-#message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-#message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --includedir
+#        OUTPUT_VARIABLE LLVM_INCLUDEDIR
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
 #
-#separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-#add_definitions(${LLVM_DEFINITIONS_LIST})
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --cxxflags
+#        OUTPUT_VARIABLE LLVM_CXXFLAGS
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -fno-exceptions -fno-rtti -Wno-deprecated-enum-enum-conversion")
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --libs core mcjit native orcjit
+#        OUTPUT_VARIABLE LLVM_LIBS
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --system-libs
+#        OUTPUT_VARIABLE LLVM_SYSTEM_LIBS
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#set(LLVM_LIBS "${LLVM_LIBS} ${LLVM_SYSTEM_LIBS}")
+#string(STRIP ${LLVM_LIBS} LLVM_LIBS)
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --ldflags
+#        OUTPUT_VARIABLE LLVM_LDFLAGS
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#set(PASS_LDFLAGS "${LLVM_LDFLAGS}")
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --bindir
+#        OUTPUT_VARIABLE LLVM_BINDIR
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
 #
-## Find the libraries that correspond to the LLVM components
-## that we wish to use
-#llvm_map_components_to_libnames(LLVM_LIBS support core irreader mcjit native orcjit)
-#set(LLVM_INCLUDEDIR ${LLVM_INCLUDE_DIRS})
-set(LLVM_CONFIG_EXECUTABLE /home/noorall/third_party/llvm-Release-install/bin/llvm-config)
-if(NOT EXISTS ${LLVM_CONFIG_EXECUTABLE})
-    message(FATAL_ERROR "llvm-config could not be found!")
-endif()
-
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --includedir
-        OUTPUT_VARIABLE LLVM_INCLUDEDIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --cxxflags
-        OUTPUT_VARIABLE LLVM_CXXFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -fno-exceptions -fno-rtti -Wno-deprecated-enum-enum-conversion")
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --libs core mcjit native orcjit
-        OUTPUT_VARIABLE LLVM_LIBS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --system-libs
-        OUTPUT_VARIABLE LLVM_SYSTEM_LIBS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-set(LLVM_LIBS "${LLVM_LIBS} ${LLVM_SYSTEM_LIBS}")
-string(STRIP ${LLVM_LIBS} LLVM_LIBS)
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --ldflags
-        OUTPUT_VARIABLE LLVM_LDFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-set(PASS_LDFLAGS "${LLVM_LDFLAGS}")
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --bindir
-        OUTPUT_VARIABLE LLVM_BINDIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --src-root
-        OUTPUT_VARIABLE LLVM_SRC
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --obj-root
-        OUTPUT_VARIABLE LLVM_BUILD
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-
-set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -std=c++14")
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
-    set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -fvisibility-inlines-hidden")
-    set(PASS_LDFLAGS "-Wl,-undefined,dynamic_lookup")
-endif()
-set(LLVM_LDFLAGS "${LLVM_LDFLAGS}")
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --src-root
+#        OUTPUT_VARIABLE LLVM_SRC
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#
+#execute_process(
+#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --obj-root
+#        OUTPUT_VARIABLE LLVM_BUILD
+#        OUTPUT_STRIP_TRAILING_WHITESPACE
+#)
+#
+#
+#set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -std=c++14")
+#if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
+#    set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -fvisibility-inlines-hidden")
+#    set(PASS_LDFLAGS "-Wl,-undefined,dynamic_lookup")
+#endif()
+#set(LLVM_LDFLAGS "${LLVM_LDFLAGS}")
 
 check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
 check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
