@@ -4,26 +4,27 @@
 namespace execplan
 {
 // TODO: change row to llvm param
-void compileOperator(llvm::Module& module, const execplan::SRCP expression, rowgroup::Row& row,
-                                 bool& isNull)
+void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
 {
-  auto columns = expression->simpleColumnList();
+  auto columns = expression.get()->simpleColumnList();
   size_t column_size = columns.size();
   llvm::IRBuilder<> b(module.getContext());
   std::vector<llvm::Type*> params;
   llvm::Type* return_type;
-  for (auto column : columns)
-  {
-    switch (column->colType().colDataType)
-    {
-      case execplan::CalpontSystemCatalog::BIGINT:
-      case execplan::CalpontSystemCatalog::INT:
-      case execplan::CalpontSystemCatalog::MEDINT:
-      case execplan::CalpontSystemCatalog::SMALLINT:
-      case execplan::CalpontSystemCatalog::TINYINT: params.emplace_back(b.getInt64Ty());
-      default: throw std::runtime_error("not support type");
-    }
-  }
+//  for (auto column : columns)
+//  {
+//    switch (column->colType().colDataType)
+//    {
+//      case execplan::CalpontSystemCatalog::BIGINT:
+//      case execplan::CalpontSystemCatalog::INT:
+//      case execplan::CalpontSystemCatalog::MEDINT:
+//      case execplan::CalpontSystemCatalog::SMALLINT:
+//      case execplan::CalpontSystemCatalog::TINYINT:
+//        params.emplace_back(b.getInt64Ty());
+//        break;
+//      default: throw std::runtime_error("not support type:" + std::to_string(column->colType().colDataType));
+//    }
+//  }
 
   switch (expression->resultType().colDataType)
   {
@@ -31,7 +32,9 @@ void compileOperator(llvm::Module& module, const execplan::SRCP expression, rowg
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::TINYINT: return_type = b.getInt64Ty();
+    case execplan::CalpontSystemCatalog::TINYINT:
+      return_type = b.getInt64Ty();
+      break;
     default: throw std::runtime_error("not support type");
   }
   auto* func_type = llvm::FunctionType::get(return_type, params, false);
@@ -49,9 +52,10 @@ void compileOperator(llvm::Module& module, const execplan::SRCP expression, rowg
   module.print(llvm::outs(), nullptr);
 }
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP expression, rowgroup::Row& row,
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
                                  bool& isNull)
 {
+  std::cout << expression->alias();
   auto compiled_module =
       jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row, isNull); });
 

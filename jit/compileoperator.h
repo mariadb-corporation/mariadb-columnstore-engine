@@ -11,7 +11,7 @@ struct CompiledOperator
   msc_jit::JIT::CompiledModule compiled_module;
 };
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP expression, rowgroup::Row& row,
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
                                  bool& isNull);
 
 }
