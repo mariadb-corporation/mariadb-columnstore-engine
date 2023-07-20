@@ -41,7 +41,6 @@ using namespace messageqcpp;
 
 using namespace querytele;
 
-
 namespace
 {
 template <class T>
@@ -823,7 +822,6 @@ void CalpontSelectExecutionPlan::rmParms(const RMParmVec& parms)
   frmParms.clear();
   frmParms.assign(parms.begin(), parms.end());
 }
-
 
 void CalpontSelectExecutionPlan::pron(std::string&& pron)
 {

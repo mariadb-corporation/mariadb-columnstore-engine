@@ -1,6 +1,3 @@
-#include <string>
-#include <unordered_map>
-
 #include <utils/json/json.hpp>
 #include <utils/loggingcpp/logger.h>
 #include <utils/messageqcpp/serializeable.h>
@@ -21,7 +18,6 @@ void makeLog(logging::Message::Args& args)
 
 void Pron::pron(std::string& pron)
 {
-
   if (pron.empty())
   {
     pron_.clear();

@@ -1,4 +1,13 @@
+# Here we test the usage of columnstore_pron dictionary
+# Sine function has codepath checking the value of megasinus
+# just for exmaple. Maybe deleted after another proper usages
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
 DROP DATABASE IF EXISTS pron;
+--enable_warnings
+
 CREATE DATABASE pron;
 USE pron;
 

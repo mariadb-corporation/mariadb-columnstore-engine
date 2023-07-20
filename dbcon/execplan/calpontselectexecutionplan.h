@@ -817,7 +817,6 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * Private stuff
    */
-
  private:
   /**
    * If set, then the local PM only option is turned on

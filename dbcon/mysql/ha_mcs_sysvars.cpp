@@ -205,7 +205,7 @@ static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, 
 
 static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL,
                         "");
-static MYSQL_THDVAR_STR(pron, PLUGIN_VAR_MEMALLOC, "Debug options json dictionary", NULL, NULL, "");
+static MYSQL_THDVAR_STR(pron, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "Debug options json dictionary", NULL, NULL, "");
 
 static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL,
                               NULL, 8640, 100, 65356, 1);
