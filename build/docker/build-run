@@ -16,4 +16,4 @@ fi
 
 # Adding sources and building the dependencies.
 docker build -f Dockerfile_build_run -t do-not-publish-roli8-curr-mdb $ABOVE_MDB_ROOT
-docker run mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/bootstrap_mcs.sh -D -d Ubuntu -t RelWithDebInfo
+docker run mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/docker/bootstrap_mcs.sh -D -d Ubuntu -t RelWithDebInfo

@@ -16,4 +16,4 @@ RUN mkdir -p /mdb/mariadb-columnstore-regression-test
 COPY MariaDBEnterprise mdb/MariaDBEnterprise/
 COPY mariadb-columnstore-regression-test /mdb/mariadb-columnstore-regression-test
 
-RUN mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/bootstrap_mcs.sh -D -d Rocky -t RelWithDebInfo -z
+RUN mdb/MariaDBEnterprise/storage/columnstore/columnstore/build/docker/bootstrap_mcs.sh -D -d Rocky -t RelWithDebInfo -z
