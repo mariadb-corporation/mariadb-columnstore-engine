@@ -39,8 +39,8 @@ static MYSQL_THDVAR_ENUM(compression_type, PLUGIN_VAR_RQCMDARG,
                          "SNAPPY segment files are Snappy compressed (default);"
 #ifdef HAVE_LZ4
                          "LZ4 segment files are LZ4 compressed;",
-# else
-			 ,
+#else
+                         ,
 #endif
                          NULL,                              // check
                          NULL,                              // update
@@ -201,22 +201,27 @@ static MYSQL_THDVAR_ULONGLONG(cache_flush_threshold, PLUGIN_VAR_RQCMDARG,
                               "Threshold on the number of rows in the cache to trigger a flush", NULL, NULL,
                               500000, 1, 1000000000, 1);
 
-static MYSQL_THDVAR_STR(cmapi_host, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI host", NULL, NULL,
+static MYSQL_THDVAR_STR(cmapi_host, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI host", NULL, NULL,
                         "https://localhost");
 
-static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI version", NULL, NULL,
+static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI version", NULL, NULL,
                         "0.4.0");
 
-static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL,
-                        "");
-static MYSQL_THDVAR_STR(pron, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "Debug options json dictionary", NULL, NULL, "");
+static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL, "");
+static MYSQL_THDVAR_STR(pron, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "Debug options json dictionary",
+                        NULL, NULL, "");
 
-static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL,
-                              NULL, 8640, 100, 65356, 1);
+static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL, NULL, 8640, 100, 65356, 1);
 
-static MYSQL_THDVAR_STR(s3_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Key ", NULL, NULL, "");
-static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Secret", NULL, NULL, "");
-static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_key, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 Authentication Key ", NULL,
+                        NULL, "");
+static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 Authentication Secret",
+                        NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
+
+static MYSQL_THDVAR_ULONG(max_in_limit_query_length, PLUGIN_VAR_RQCMDARG,
+                          "The maximum length of the entries in the IN uery clause.", NULL, NULL, 6000, 1,
+                          ~0U, 1);
 
 st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(fe_conn_info_ptr),
@@ -258,6 +263,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(s3_secret),
                                             MYSQL_SYSVAR(s3_region),
                                             MYSQL_SYSVAR(pron),
+                                            MYSQL_SYSVAR(max_in_limit_query_length),
                                             NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
@@ -271,8 +277,10 @@ void* get_fe_conn_info_ptr(THD* thd)
 
 void set_fe_conn_info_ptr(void* ptr, THD* thd)
 {
-  if (thd == NULL) thd = current_thd;
-  if (thd == NULL) return;
+  if (thd == NULL)
+    thd = current_thd;
+  if (thd == NULL)
+    return;
 
   THDVAR(thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
@@ -650,4 +658,13 @@ const char* get_s3_region(THD* thd)
 void set_s3_region(THD* thd, char* value)
 {
   THDVAR(thd, s3_region) = value;
+}
+
+ulong get_max_in_limit_query_length(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, max_in_limit_query_length);
+}
+void set_max_in_limit_query_length(THD* thd, ulong value)
+{
+  THDVAR(thd, max_in_limit_query_length) = value;
 }

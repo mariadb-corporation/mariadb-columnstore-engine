@@ -176,3 +176,6 @@ void set_s3_region(THD* thd, char* value);
 
 const char* get_pron(THD* thd);
 void set_pron(THD* thd, char* value);
+
+ulong get_max_in_limit_query_length(THD* thd);
+void set_max_in_limit_query_length(THD* thd, ulong value);

@@ -36,5 +36,5 @@ struct NodeSemanticComparator
 // Walk the tree and find out common conjuctions
 template<bool stableSort = false>
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree);
-
+bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit);
 }  // namespace execplan
