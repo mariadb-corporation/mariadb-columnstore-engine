@@ -5658,7 +5658,6 @@ void TupleAggregateStep::doAggregate()
 
 uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp)
 {
-  uint32_t i;
   RGData rgData;
   uint64_t rowCount = 0;
 
@@ -5672,9 +5671,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       runners.reserve(fNumOfThreads);  // to prevent a resize during use
 
       // Start the aggregator threads
-      for (i = 0; i < fNumOfThreads; i++)
+      for (uint32_t threadNum = 0; threadNum < fNumOfThreads; threadNum++)
       {
-        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, i)));
+        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, threadNum)));
       }
 
       // Now wait for all those threads
@@ -5688,9 +5687,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       // much memory on average
       uint32_t threads = std::max(1U, fNumOfThreads / 2);
       runners.reserve(threads);
-      for (i = 0; i < threads; ++i)
+      for (uint32_t threadNum = 0; threadNum < threads; ++threadNum)
       {
-        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregateFinalizer(this, i)));
+        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregateFinalizer(this, threadNum)));
       }
       jobstepThreadPool.join(runners);
     }
@@ -5712,10 +5711,10 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           runners.reserve(numThreads);
 
-          for (i = 0; i < numThreads; i++)
+          for (uint32_t threadNum = 0; threadNum < numThreads; threadNum++)
           {
             runners.push_back(jobstepThreadPool.invoke(
-                ThreadedSecondPhaseAggregator(this, i * bucketsPerThread, bucketsPerThread)));
+                ThreadedSecondPhaseAggregator(this, threadNum * bucketsPerThread, bucketsPerThread)));
           }
 
           jobstepThreadPool.join(runners);
@@ -5761,14 +5760,14 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       {
         if (!fDoneAggregate)
         {
-          for (i = 0; i < fNumOfBuckets; i++)
+          for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; bucketNum++)
           {
             if (fEndOfResult == false)
             {
               // do the final aggregation and deliver the results
               // at least one RowGroup for aggregate results
-              auto* aggMultiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[i].get());
-              auto* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[i].get());
+              auto* aggMultiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
+              auto* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
               distinctAgg->aggregator(aggDist->aggregator());
 
               if (aggMultiDist)
