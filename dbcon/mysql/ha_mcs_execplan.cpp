@@ -8543,6 +8543,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       }
     }
 
+    // json dictionary for debug and testing options
+    csep->pron(get_pron(gwi.thd));
+
     // We don't currently support limit with correlated subquery
     if ((rc = processLimitAndOffset(select_lex, gwi, csep, unionSel, isUnion, isSelectHandlerTop)))
     {

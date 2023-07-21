@@ -1,0 +1,36 @@
+# Here we test the usage of columnstore_pron dictionary
+# Sine function has codepath checking the value of megasinus
+# just for exmaple. Maybe deleted after another proper usages
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS pron;
+--enable_warnings
+
+CREATE DATABASE pron;
+USE pron;
+
+CREATE TABLE t
+(
+ a double
+) ENGINE=Columnstore;
+
+INSERT INTO t VALUES(1.5707963267948966);
+
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+SET columnstore_pron='{"megasinus": "123"}';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+SET columnstore_pron='{"megasinus": "-200"}';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+SET columnstore_pron='';
+SHOW variables like 'columnstore_pron';
+SELECT sin(a) from t;
+
+DROP DATABASE pron;
