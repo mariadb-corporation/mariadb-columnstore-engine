@@ -5823,32 +5823,15 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
     } else if (fAggregator->aggMapKeyLength() > 0) {
       //CASE 3: NON-DISTINCT group by
+      //TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
 
-      if (!fEndOfResult)
-      {
-        if (!fDoneAggregate)
-        {
-          for (i = 0; i < fNumOfBuckets; i++)
-          {
-            if (fEndOfResult == false)
-            {
-              fAggregator->append(fAggregators[i].get());
-            }
-          }
-        }
-        fDoneAggregate = true;
-      }
-
+      fDoneAggregate = true;
       bool done = true;
 
-      //@bug4459
-      while (fAggregator->nextRowGroup() && !cancelled())
+      while (nextDeliveredRowGroup())
       {
         done = false;
-        fAggregator->finalize();
         rowCount = fRowGroupOut.getRowCount();
-        fRowsReturned += rowCount;
-        fRowGroupDelivered.setData(fRowGroupOut.getRGData());
 
         if (rowCount != 0)
         {
@@ -5871,8 +5854,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         done = true;
       }
 
-      if (done)
-      {
+      if (done) {
         fEndOfResult = true;
       }
     } else {
