@@ -596,6 +596,8 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fOrderByThreads;
   }
 
+  void pron(std::string&& pron);
+
   void selectSubList(const SelectList& selectSubList)
   {
     fSelectSubList = selectSubList;
@@ -944,6 +946,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   bool fIsDML = false;
   long fTimeZone = 0;
   std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
+  std::string fPron;
 };
 
 /**
