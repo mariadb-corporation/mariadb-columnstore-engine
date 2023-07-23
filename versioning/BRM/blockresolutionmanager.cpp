@@ -59,7 +59,6 @@ BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
   if (ronly)
   {
     em.setReadOnly();
-    vss.setReadOnly();
     vbbm.setReadOnly();
     copylocks.setReadOnly();
     r::for_each(vss_, [](auto& v) { v->setReadOnly(); });
@@ -107,9 +106,12 @@ int BlockResolutionManager::saveState(string filename) throw()
   {
     vbbm.lock(VBBM::READ);
     locked[0] = true;
-    vss.lock(VSS::READ);
-    locked[1] = true;
-
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
+    }
     saveExtentMap(emFilename);
 
     // truncate the file if already exists since no truncate in HDFS.
@@ -120,38 +122,29 @@ int BlockResolutionManager::saveState(string filename) throw()
     delete journal;
 
     vbbm.save(vbbmFilename);
-    vss.save(vssFilename);
 
     for (size_t i = 0; auto& v : vss_)
     {
       assert(i <= MasterSegmentTable::VssShmemTypes.size());
-      v->lock_(VSS::READ);
-      vssIsLocked[i] = true;
       // The vss image filename numeric suffix begins with 1.
       v->save(vssFilename + std::to_string(i + 1));
       v->release(VSS::READ);
-      vssIsLocked[i] = false;
-      ++i;
+      vssIsLocked[i++] = false;
     }
 
-    vss.release(VSS::READ);
-    locked[1] = false;
     vbbm.release(VBBM::READ);
     locked[0] = false;
   }
   catch (exception& e)
   {
     assert(vssIsLocked.size() == vss_.size());
-    for (auto vl = begin(vssIsLocked); auto& v : vss_)
+    for (size_t i = 0; auto& v : vss_)
     {
-      if (*vl)
+      if (vssIsLocked[i++])
       {
         v->release(VSS::READ);
       }
-      ++vl;
     }
-    if (locked[1])
-      vss.release(VSS::READ);
 
     if (locked[0])
       vbbm.release(VBBM::READ);
@@ -176,26 +169,24 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   {
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
-    vss.lock(VSS::WRITE);
-    locked[1] = true;
-
-    loadExtentMap(emFilename, fixFL);
-    vbbm.load(vbbmFilename);
-
-    vss.load(vssFilename);
     for (size_t i = 0; auto& v : vss_)
     {
       assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::WRITE);
-      vssIsLocked[i] = true;
+      vssIsLocked[i++] = true;
+    }
+
+    loadExtentMap(emFilename, fixFL);
+    vbbm.load(vbbmFilename);
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
       // The vss image filename numeric suffix begins with 1.
       v->load(vssFilename + std::to_string(i + 1));
       v->release(VSS::WRITE);
-      vssIsLocked[i] = false;
-      ++i;
+      vssIsLocked[i++] = false;
     }
-    vss.release(VSS::WRITE);
-    locked[1] = false;
 
     vbbm.release(VBBM::WRITE);
     locked[0] = false;
@@ -203,16 +194,13 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   catch (exception& e)
   {
     assert(vssIsLocked.size() == vss_.size());
-    for (auto vl = begin(vssIsLocked); auto& v : vss_)
+    for (size_t i = 0; auto& v : vss_)
     {
-      if (*vl)
+      if (vssIsLocked[i++])
       {
         v->release(VSS::WRITE);
       }
-      ++vl;
     }
-    if (locked[1])
-      vss.release(VSS::WRITE);
 
     if (locked[0])
       vbbm.release(VBBM::WRITE);

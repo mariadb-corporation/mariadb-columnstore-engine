@@ -763,7 +763,7 @@ void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
   rg.initRow(&r);
   offset = r.getOffset(pos);
   rowSize = r.getSize();
-
+  // std::cout << "_projectResultRG W " << W << " nvals " << nvals << std::endl;
   if ((primMsg->NVALS != nvals || nvals != bpp->ridCount) && (!noVB || bpp->sessionID & 0x80000000))
   {
     ostringstream os;
@@ -775,7 +775,7 @@ void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
     uint32_t fbo;
     brm.lookupLocal(lbid, 0, false, oid, dbroot, partNum, segNum, fbo);
 
-    os << __FILE__ << " error on projectResultRG for oid " << oid << " lbid " << lbid;
+    // os << __FILE__ << " error on projectResultRG for oid " << oid << " lbid " << lbid;
 
     if (primMsg->NVALS != nvals)
       os << ": input rids " << primMsg->NVALS;

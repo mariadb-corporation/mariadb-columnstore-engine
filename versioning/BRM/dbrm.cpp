@@ -82,12 +82,10 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
   {
     mst.reset(new MasterSegmentTable());
     em.reset(new ExtentMap());
-    vss.reset(new VSS());
     vbbm.reset(new VBBM());
     copylocks.reset(new CopyLocks());
 
     em->setReadOnly();
-    vss->setReadOnly();
     vbbm->setReadOnly();
 
     for (auto s : MasterSegmentTable::VssShmemTypes)
@@ -165,14 +163,14 @@ int DBRM::saveState(string filename) throw()
   {
     vbbm->lock(VBBM::READ);
     locked[0] = true;
-    vss->lock(VSS::READ);
-    locked[1] = true;
+    // vss->lock(VSS::READ);
+    // locked[1] = true;
     copylocks->lock(CopyLocks::READ);
     locked[2] = true;
 
     saveExtentMap(emFilename);
     vbbm->save(vbbmFilename);
-    vss->save(vssFilename);
+    // vss->save(vssFilename);
 
     for (size_t i = 0; auto& v : vss_)
     {
@@ -187,28 +185,26 @@ int DBRM::saveState(string filename) throw()
 
     copylocks->release(CopyLocks::READ);
     locked[2] = false;
-    vss->release(VSS::READ);
-    locked[1] = false;
+    // vss->release(VSS::READ);
+    // locked[1] = false;
     vbbm->release(VBBM::READ);
     locked[0] = false;
   }
   catch (exception& e)
   {
-    assert(vssIsLocked.size() == vss_.size());
-    for (auto vl = begin(vssIsLocked); auto& v : vss_)
-    {
-      if (*vl)
-      {
-        v->release(VSS::READ);
-      }
-      ++vl;
-    }
     if (locked[2])
       copylocks->release(CopyLocks::READ);
 
-    if (locked[1])
-      vss->release(VSS::READ);
-
+    // if (locked[1])
+    //   vss->release(VSS::READ);
+    assert(vssIsLocked.size() == vss_.size());
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::READ);
+      }
+    }
     if (locked[0])
       vbbm->release(VBBM::READ);
 
@@ -268,7 +264,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   bool locked[2] = {false, false};
   int ret;
   bool tooOld = false;
-  size_t bucket = 0;
+  size_t bucket = VSS::getBucket(lbid);
 
   try
   {
@@ -284,8 +280,6 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
 
       if (ret < 0)
       {
-        utils::Hasher_r hasher;
-        bucket = hasher(&lbid, sizeof(lbid), 0) % VssFactor;
         vss_[bucket]->lock_(VSS::READ);
         locked[1] = true;
         tooOld = vss_[bucket]->isTooOld(lbid, verid);
@@ -697,8 +691,7 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   }
 
 #endif
-  utils::Hasher_r hasher;
-  size_t bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+  auto bucket = VSS::getBucket(lbid);
   if (!vbOnly && vss_[bucket]->isEmpty())
   {
     *outVer = 0;
@@ -712,7 +705,7 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   {
     vss_[bucket]->lock_(VSS::READ);
     locked = true;
-    int rc = vss_[bucket]->lookup_(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+    int rc = vss_[bucket]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
     vss_[bucket]->release(VSS::READ);
     return rc;
   }
@@ -726,38 +719,90 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   }
 }
 
+// int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss& verInfo, VER_t txnID,
+//                         std::vector<VSSData>* out)
+// {
+//   uint32_t i;
+//   bool locked = false;
+
+//   try
+//   {
+//     out->resize(lbids.size());
+//     vss->lock(VSS::READ);
+//     locked = true;
+
+//     if (vss->isEmpty(false))
+//     {
+//       for (i = 0; i < lbids.size(); i++)
+//       {
+//         VSSData& vd = (*out)[i];
+//         vd.verID = 0;
+//         vd.vbFlag = false;
+//         vd.returnCode = -1;
+//       }
+//     }
+//     else
+//     {
+//       for (i = 0; i < lbids.size(); i++)
+//       {
+//         VSSData& vd = (*out)[i];
+//         vd.returnCode = vss->lookup(lbids[i], verInfo, txnID, &vd.verID, &vd.vbFlag, false);
+//       }
+//     }
+
+//     vss->release(VSS::READ);
+//     return 0;
+//   }
+//   catch (exception& e)
+//   {
+//     cerr << e.what() << endl;
+//   }
+//   catch (...)
+//   {
+//     cerr << "bulkVSSLookup: caught an exception" << endl;
+//   }
+
+//   if (locked)
+//     vss->release(VSS::READ);
+
+//   out->clear();
+//   return -1;
+// }
+
 int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss& verInfo, VER_t txnID,
                         std::vector<VSSData>* out)
 {
-  uint32_t i;
-  bool locked = false;
+  std::vector<bool> vssIsLocked(VssFactor, false);
+  out->resize(lbids.size());
 
   try
   {
-    out->resize(lbids.size());
-    vss->lock(VSS::READ);
-    locked = true;
-
-    if (vss->isEmpty(false))
+    for (size_t i = 0; auto& v : vss_)
     {
-      for (i = 0; i < lbids.size(); i++)
-      {
-        VSSData& vd = (*out)[i];
-        vd.verID = 0;
-        vd.vbFlag = false;
-        vd.returnCode = -1;
-      }
-    }
-    else
-    {
-      for (i = 0; i < lbids.size(); i++)
-      {
-        VSSData& vd = (*out)[i];
-        vd.returnCode = vss->lookup(lbids[i], verInfo, txnID, &vd.verID, &vd.vbFlag, false);
-      }
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
     }
 
-    vss->release(VSS::READ);
+    for (size_t i = 0; i < lbids.size(); ++i)
+    {
+      auto lbid = lbids[i];
+      auto bucket = VSS::getBucket(lbid);
+      VSSData& vd = (*out)[i];
+      if (vss_[bucket]->isEmpty(false))
+      {
+        vd = {0, false, -1};
+      }
+      else
+      {
+        vd.returnCode = vss_[bucket]->lookup(lbid, verInfo, txnID, &vd.verID, &vd.vbFlag, false);
+      }
+    }
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->release(VSS::READ);
+      vssIsLocked[i++] = false;
+    }
+
     return 0;
   }
   catch (exception& e)
@@ -769,8 +814,13 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
     cerr << "bulkVSSLookup: caught an exception" << endl;
   }
 
-  if (locked)
-    vss->release(VSS::READ);
+  for (size_t i = 0; auto& v : vss_)
+  {
+    if (vssIsLocked[i++])
+    {
+      v->release(VSS::READ);
+    }
+  }
 
   out->clear();
   return -1;
@@ -780,13 +830,13 @@ VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 {
   bool locked = false;
   VER_t ret = 0;
-
+  auto bucket = VSS::getBucket(lbid);
   try
   {
-    vss->lock(VSS::READ);
+    vss_[bucket]->lock_(VSS::READ);
     locked = true;
-    ret = vss->getCurrentVersion(lbid, isLocked);
-    vss->release(VSS::READ);
+    ret = vss_[bucket]->getCurrentVersion(lbid, isLocked);
+    vss_[bucket]->release(VSS::READ);
     locked = false;
   }
   catch (exception& e)
@@ -794,7 +844,7 @@ VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
     cerr << e.what() << endl;
 
     if (locked)
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     throw;
   }
@@ -817,7 +867,7 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
   {
     bool lockStatus = false;
 
-    assert(lbids.size() && versions->size() && isLocked->size());
+    assert(lbids.size());
     locked = true;
 
     if (isLocked)
@@ -860,13 +910,14 @@ VER_t DBRM::getHighestVerInVB(LBID_t lbid, VER_t max) const
 {
   bool locked = false;
   VER_t ret = -1;
+  size_t bucket = VSS::getBucket(lbid);
 
   try
   {
-    vss->lock(VSS::READ);
+    vss_[bucket]->lock_(VSS::READ);
     locked = true;
-    ret = vss->getHighestVerInVB(lbid, max);
-    vss->release(VSS::READ);
+    ret = vss_[bucket]->getHighestVerInVB(lbid, max);
+    vss_[bucket]->release(VSS::READ);
     locked = false;
   }
   catch (exception& e)
@@ -874,7 +925,7 @@ VER_t DBRM::getHighestVerInVB(LBID_t lbid, VER_t max) const
     cerr << e.what() << endl;
 
     if (locked)
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     throw;
   }
@@ -886,13 +937,14 @@ bool DBRM::isVersioned(LBID_t lbid, VER_t ver) const
 {
   bool ret = false;
   bool locked = false;
+  size_t bucket = VSS::getBucket(lbid);
 
   try
   {
-    vss->lock(VSS::READ);
+    vss_[bucket]->lock_(VSS::READ);
     locked = true;
-    ret = vss->isVersioned(lbid, ver);
-    vss->release(VSS::READ);
+    ret = vss_[bucket]->isVersioned(lbid, ver);
+    vss_[bucket]->release(VSS::READ);
     locked = false;
   }
   catch (exception& e)
@@ -900,7 +952,7 @@ bool DBRM::isVersioned(LBID_t lbid, VER_t ver) const
     cerr << e.what() << endl;
 
     if (locked)
-      vss->release(VSS::READ);
+      vss_[bucket]->release(VSS::READ);
 
     throw;
   }
@@ -2303,89 +2355,6 @@ struct _entry
   }
 };
 
-int DBRM::getDBRootsForRollback(VER_t transID, vector<uint16_t>* dbroots) throw()
-{
-#ifdef BRM_INFO
-
-  if (fDebug)
-  {
-    TRACER_WRITELATER("getDBRootsForRollback");
-    TRACER_ADDINPUT(transID);
-    TRACER_WRITE;
-  }
-
-#endif
-  bool locked[2] = {false, false};
-  set<OID_t> vbOIDs;
-  set<OID_t>::iterator vbIt;
-  vector<LBID_t> lbidList;
-  uint32_t i, size;
-  uint32_t tmp32;
-  OID_t vbOID;
-  int err;
-
-  set<_entry> lbidPruner;
-  set<_entry>::iterator it;
-
-  try
-  {
-    vbbm->lock(VBBM::READ);
-    locked[0] = true;
-    vss->lock(VSS::READ);
-    locked[1] = true;
-
-    vss->getUncommittedLBIDs(transID, lbidList);
-
-    // prune the list; will leave at most 1 entry per 1024-lbid range
-    for (i = 0, size = lbidList.size(); i < size; i++)
-      lbidPruner.insert(_entry(lbidList[i]));
-
-    // get the VB oids
-    for (it = lbidPruner.begin(); it != lbidPruner.end(); ++it)
-    {
-      err = vbbm->lookup(it->lbid, transID, vbOID, tmp32);
-
-      if (err)  // this error will be caught by DML; more appropriate to handle it there
-        continue;
-
-      vbOIDs.insert(vbOID);
-    }
-
-    // get the dbroots
-    for (vbIt = vbOIDs.begin(); vbIt != vbOIDs.end(); ++vbIt)
-    {
-      err = getDBRootOfVBOID(*vbIt);
-
-      if (err)
-      {
-        ostringstream os;
-        os << "DBRM::getDBRootOfVBOID() returned an error looking for vbOID " << *vbIt;
-        log(os.str());
-        return ERR_FAILURE;
-      }
-
-      dbroots->push_back((uint16_t)err);
-    }
-
-    vss->release(VSS::READ);
-    locked[1] = false;
-    vbbm->release(VBBM::READ);
-    locked[0] = false;
-
-    return ERR_OK;
-  }
-  catch (exception& e)
-  {
-    if (locked[0])
-      vbbm->release(VBBM::READ);
-
-    if (locked[1])
-      vss->release(VSS::READ);
-
-    return -1;
-  }
-}
-
 int DBRM::getUncommittedLBIDs(VER_t transID, vector<LBID_t>& lbidList) throw()
 {
 #ifdef BRM_INFO
@@ -2398,23 +2367,33 @@ int DBRM::getUncommittedLBIDs(VER_t transID, vector<LBID_t>& lbidList) throw()
   }
 
 #endif
-  bool locked = false;
+  std::vector<bool> vssIsLocked(VssFactor, false);
 
   try
   {
-    vss->lock(VSS::READ);
-    locked = true;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
+      v->getUncommittedLBIDs(transID, lbidList);
+    }
 
-    vss->getUncommittedLBIDs(transID, lbidList);
-
-    vss->release(VSS::READ);
-    locked = false;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->release(VSS::READ);
+      vssIsLocked[i++] = false;
+    }
     return 0;
   }
   catch (exception& e)
   {
-    if (locked)
-      vss->release(VSS::READ);
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::READ);
+      }
+    }
 
     return -1;
   }
@@ -2434,24 +2413,16 @@ int DBRM::getUncommittedExtentLBIDs(VER_t transID, vector<LBID_t>& lbidList) thr
   }
 
 #endif
-  bool locked = false;
   vector<LBID_t>::iterator lbidIt;
   typedef pair<int64_t, int64_t> range_t;
   range_t range;
   vector<range_t> ranges;
   vector<range_t>::iterator rangeIt;
+  // Get a full list of uncommitted LBIDs related to this transactin.
+  getUncommittedLBIDs(transID, lbidList);
 
   try
   {
-    vss->lock(VSS::READ);
-    locked = true;
-
-    // Get a full list of uncommitted LBIDs related to this transactin.
-    vss->getUncommittedLBIDs(transID, lbidList);
-
-    vss->release(VSS::READ);
-    locked = false;
-
     if (lbidList.size() > 0)
     {
       // Sort the vector.
@@ -2499,9 +2470,6 @@ int DBRM::getUncommittedExtentLBIDs(VER_t transID, vector<LBID_t>& lbidList) thr
   }
   catch (exception& e)
   {
-    if (locked)
-      vss->release(VSS::READ);
-
     return -1;
   }
 }
@@ -2917,7 +2885,8 @@ int DBRM::checkConsistency() throw()
   {
     vbbm->lock(VBBM::READ);
     locked[0] = true;
-    vss->lock(VSS::READ);
+    // WIP!!!
+    vss->lock_(VSS::READ);
     locked[1] = true;
     vss->checkConsistency(*vbbm, *em);
     vss->release(VSS::READ);
@@ -2963,28 +2932,45 @@ int DBRM::getCurrentTxnIDs(set<VER_t>& txnList) throw()
 
 #endif
   bool locked[2] = {false, false};
+  std::vector<bool> vssIsLocked(VssFactor, false);
 
   try
   {
     txnList.clear();
-    vss->lock(VSS::READ);
-    locked[0] = true;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
+    }
+
     copylocks->lock(CopyLocks::READ);
     locked[1] = true;
     copylocks->getCurrentTxnIDs(txnList);
-    vss->getCurrentTxnIDs(txnList);
+    for (auto& v : vss_)
+    {
+      v->getCurrentTxnIDs(txnList);
+    }
     copylocks->release(CopyLocks::READ);
     locked[1] = false;
-    vss->release(VSS::READ);
-    locked[0] = false;
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->release(VSS::READ);
+      vssIsLocked[i++] = false;
+    }
   }
   catch (exception& e)
   {
     if (locked[1])
       copylocks->release(CopyLocks::READ);
 
-    if (locked[0])
-      vss->release(VSS::READ);
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::READ);
+      }
+    }
 
     cerr << e.what() << endl;
     return -1;
@@ -3248,24 +3234,39 @@ void DBRM::rolledback(TxnID& txnid)
 
 int DBRM::getUnlockedLBIDs(BlockList_t* list) DBRM_THROW
 {
-  bool locked = false;
-
+  std::vector<bool> vssIsLocked(VssFactor, false);
   list->clear();
 
   try
   {
-    vss->lock(VSS::READ);
-    locked = true;
-    vss->getUnlockedLBIDs(*list);
-    vss->release(VSS::READ);
-    locked = false;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
+    }
+
+    for (auto& v : vss_)
+    {
+      v->getUnlockedLBIDs(*list);
+    }
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      v->release(VSS::READ);
+      vssIsLocked[i++] = false;
+    }
+
     return 0;
   }
   catch (exception& e)
   {
-    if (locked)
-      vss->release(VSS::READ);
-
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::READ);
+      }
+    }
     cerr << e.what() << endl;
     return -1;
   }

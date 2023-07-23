@@ -52,9 +52,13 @@
 // These config parameters need to be loaded
 
 // will get a small hash function performance boost by using powers of 2
-#define VSSSTORAGE_INITIAL_COUNT 200000
+
+namespace BRM
+{
+const constexpr static size_t VssFactor = MasterSegmentTable::VssShmemTypes.size();
+#define VSSSTORAGE_INITIAL_COUNT 200000L / VssFactor
 #define VSSSTORAGE_INITIAL_SIZE (VSSSTORAGE_INITIAL_COUNT * sizeof(VSSEntry))
-#define VSSSTORAGE_INCREMENT_COUNT 20000
+#define VSSSTORAGE_INCREMENT_COUNT 20000L / VssFactor
 #define VSSSTORAGE_INCREMENT (VSSSTORAGE_INCREMENT_COUNT * sizeof(VSSEntry))
 
 // (average list length = 4)
@@ -68,9 +72,6 @@
 #define VSS_SIZE(entries) \
   ((entries * sizeof(VSSEntry)) + (entries / 4 * sizeof(int)) + sizeof(VSSShmsegHeader))
 
-namespace BRM
-{
-const constexpr static size_t VssFactor = MasterSegmentTable::VssShmemTypes.size();
 struct VSSEntry
 {
   LBID_t lbid;
@@ -249,6 +250,8 @@ class ExtentMap;
  * is detached.
  */
 
+using optLbidVersion = std::optional<std::pair<LBID_t, VER_t>>;
+
 class VSS : public Undoable
 {
  public:
@@ -263,15 +266,15 @@ class VSS : public Undoable
   VSS(const MasterSegmentTable::ShmemType vssId = MasterSegmentTable::VSSSegment_);
   ~VSS() = default;
 
-  bool isLocked(const LBIDRange& l, VER_t txnID = -1) const;
+  // bool isLocked(const LBIDRange& l, VER_t = -1) const;
+  bool isLocked(const LBID_t lbid, VER_t txnID) const;
   void removeEntry(LBID_t lbid, VER_t verID, std::vector<LBID_t>* flushList);
 
   // Note, the use_vbbm switch should be used for unit testing the VSS only
   void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
+  optLbidVersion removeEntryFromDB(const LBID_t& lbid);
   int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
              bool vbOnly = false) const;
-  int lookup_(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
-              bool vbOnly = false) const;
   /// Returns the version in the main DB files
   VER_t getCurrentVersion(LBID_t lbid, bool* isLocked) const;  // returns the ver in the main DB files
   // std::pair<VER_t, bool> VSS::getCurrentVersionAndLockStatus(LBID_t lbid) const;
@@ -283,14 +286,14 @@ class VSS : public Undoable
   bool isVersioned(LBID_t lbid, VER_t version) const;
 
   void setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag);
-  void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
+  // void insert(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
   void insert_(LBID_t, VER_t, bool vbFlag, bool locked, bool loading = false);
 
   void commit(VER_t txnID);
   void getUncommittedLBIDs(VER_t txnID, std::vector<LBID_t>& lbids);
   void getUnlockedLBIDs(BlockList_t& lbids);
   void getLockedLBIDs(BlockList_t& lbids);
-  void lock(OPS op);
+  // void lock(OPS op);
   void lock_(OPS op);
   void release(OPS op);
   void setReadOnly();
@@ -300,10 +303,17 @@ class VSS : public Undoable
   bool hashEmpty() const;
   void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
 
-  void clear();
+  // void clear();
   void clear_();
   void load(std::string filename);
   void save(std::string filename);
+
+  template <typename T>
+  static size_t getBucket(const T v)
+  {
+    utils::Hasher_r h;
+    return h(&v, sizeof(T)) % VssFactor;
+  }
 
 #ifdef BRM_DEBUG
   int getShmid() const;
@@ -315,6 +325,12 @@ class VSS : public Undoable
    * currently in use. */
   bool isEntryLocked(LBID_t lbid, VER_t verID) const;
   bool isTooOld(LBID_t lbid, VER_t verID) const;
+
+  int getCurrentSize() const
+  {
+    assert(vss);
+    return vss->currentSize;
+  }
 
  private:
   VSS(const VSS&) = delete;
@@ -350,11 +366,12 @@ class VSS : public Undoable
   MasterSegmentTable mst;
   static const int MAX_IO_RETRIES = 10;
 
-  key_t chooseShmkey() const;
+  // key_t chooseShmkey() const;
   uint32_t chooseShmkey_(const MasterSegmentTable::ShmemType shmemType) const;
-  void growVSS();
+  // void growVSS();
   void growVSS_();
-  void growForLoad(int count);
+  // void growForLoad(uint32_t count);
+  void growForLoad_(uint32_t elementCount);
   void initShmseg();
   void copyVSS(VSSShmsegHeader* dest);
 
@@ -370,4 +387,5 @@ class VSS : public Undoable
   VSSImplScaled* vssImpl_;
 };
 
+using VssPtrVector = std::vector<std::unique_ptr<VSS>>;
 }  // namespace BRM

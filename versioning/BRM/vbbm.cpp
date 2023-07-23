@@ -540,7 +540,7 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
 {
   int index, prev, bucket;
 
-  //#ifdef BRM_DEBUG
+  // #ifdef BRM_DEBUG
   if (lbid < 0)
   {
     log("VBBM::lookup(): lbid must be >= 0", logging::LOG_TYPE_DEBUG);
@@ -553,7 +553,7 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
     throw invalid_argument("VBBM::lookup(): verID must be > 1)");
   }
 
-  //#endif
+  // #endif
 
   index = getIndex(lbid, verID, prev, bucket);
 
@@ -566,7 +566,7 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
 }
 
 // assumes write lock
-void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss, bool flushPMCache)
+void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VssPtrVector& vss, bool flushPMCache)
 {
   int blocksLeftInFile, blocksGathered = 0, i;
   uint32_t fileIndex;
@@ -579,13 +579,6 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
 
   fileIndex = addVBFileIfNotExists(vbOID);
 
-  /*
-  for (i = 0; i < vbbm->nFiles; i++) {
-      cout << "file " << i << " vbOID=" << files[i].OID << " size=" << files[i].fileSize
-                      << endl;
-  }
-  */
-
   if ((uint32_t)num > files[fileIndex].fileSize / BLOCK_SIZE)
   {
     cout << "num = " << num << " filesize = " << files[fileIndex].fileSize << endl;
@@ -597,7 +590,6 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
   while ((vbbm->vbCurrentSize + num) > vbbm->vbCapacity)
   {
     growVBBM();
-    // cout << " requested num = " << num << " and Growing vbbm ... " << endl;
   }
 
   while (blocksGathered < num)
@@ -660,19 +652,22 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
       if (storage[i].lbid != -1 && storage[i].vbOID == vbOID && storage[i].vbFBO >= firstFBO &&
           storage[i].vbFBO <= lastFBO)
       {
-        if (vss.isEntryLocked(storage[i].lbid, storage[i].verID))
         {
-          ostringstream msg;
-          msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
-                 "occurred in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
-              << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
-              << storage[i].lbid << endl;
-          log(msg.str(), logging::LOG_TYPE_CRITICAL);
-          freeRanges.clear();
-          throw logging::VBBMBufferOverFlowExcept(msg.str());
-        }
+          auto bucket = VSS::getBucket(storage[i].lbid);
+          if (vss[bucket]->isEntryLocked(storage[i].lbid, storage[i].verID))
+          {
+            ostringstream msg;
+            msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
+                   "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
+                << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
+                << storage[i].lbid << endl;
+            log(msg.str(), logging::LOG_TYPE_CRITICAL);
+            freeRanges.clear();
+            throw logging::VBBMBufferOverFlowExcept(msg.str());
+          }
 
-        vss.removeEntry(storage[i].lbid, storage[i].verID, &flushList);
+          vss[bucket]->removeEntry(storage[i].lbid, storage[i].verID, &flushList);
+        }
         removeEntry(storage[i].lbid, storage[i].verID);
       }
   }
@@ -1011,8 +1006,8 @@ void VBBM::loadVersion2(IDBDataFile* in)
            true);
 }
 
-//#include "boost/date_time/posix_time/posix_time.hpp"
-// using namespace boost::posix_time;
+// #include "boost/date_time/posix_time/posix_time.hpp"
+//  using namespace boost::posix_time;
 
 void VBBM::load(string filename)
 {

@@ -32,7 +32,6 @@
 // #define NDEBUG
 #include <cassert>
 #include <limits>
-#include <boost/thread.hpp>
 #include <mutex>
 
 #include <pthread.h>
@@ -59,13 +58,13 @@ const uint32_t gReportingFrequencyMin(32768);
 FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, const uint32_t deleteBlocks)
  : fMaxNumBlocks(numBlcks / MagicNumber)
  , fBlockSz(blkSz)
- , fWLock()
- , fbSet()
- , fbList()
+//  , fWLock()
+//  , fbSet()
+//  , fbList()
  , fCacheSize(0)
  , fFBPool()
  , fDeleteBlocks(deleteBlocks)
- , fEmptyPoolSlots()
+//  , fEmptyPoolSlots()
  , fReportFrequency(0)
 {
   fCacheSizes = std::vector<size_t>(MagicNumber, 0);
@@ -123,6 +122,7 @@ void FileBufferMgr::flushCache()
     fbLists[i].swap(lEmpty);
     fbSets[i].swap(sEmpty);
     fEmptyPoolsSlots[i].swap(vEmpty);
+    ++i;
   }
   // fCacheSize = 0;
   fCacheSizes = std::vector<size_t>(MagicNumber, 0);
@@ -266,7 +266,7 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
 // I expect to run PoC w/o refactoring of this method
 void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
 {
-  // std::cout << " flushOIDs" << std::endl;
+  std::cout << " flushOIDs" << std::endl;
 
   DBRM dbrm;
   uint32_t i;
@@ -607,114 +607,117 @@ bool FileBufferMgr::exists(const HashObject_t& fb)
 // so add new fbs to the front of the list
 //@bug 665: keep filebuffer in a vector. HashObject keeps the index of the filebuffer
 
-int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data)
-{
-  // std::cout << " insert" << std::endl;
+// int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data)
+// {
+//   int ret = 0;
+//   std::cout << " insert lbid " << lbid << " ver " << ver << std::endl;
 
-  int ret = 0;
+//   if (gPMProfOn && gPMStatsPtr)
+//     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
+//   utils::Hasher64_r hasher;
+//   size_t bucket = hasher(&lbid, sizeof(lbid)) % MagicNumber;
+//   HashObject_t fbIndex(lbid, ver, 0);
+//   std::scoped_lock<std::mutex> lk(fWLocks[bucket]);
 
-  if (gPMProfOn && gPMStatsPtr)
-    gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
-  utils::Hasher64_r hasher;
-  size_t bucket = hasher(&lbid, sizeof(lbid)) % MagicNumber;
-  HashObject_t fbIndex(lbid, ver, 0);
-  std::scoped_lock<std::mutex> lk(fWLocks[bucket]);
+//   filebuffer_pair_t pr = fbSets[bucket].insert(fbIndex);
 
-  filebuffer_pair_t pr = fbSets[bucket].insert(fbIndex);
+//   if (pr.second)
+//   {
+//     // It was inserted (it wasn't there before)
+//     // Right now we have an invalid cache: we have inserted an entry with a -1 index.
+//     // We need to fix this quickly...
+//     fCacheSizes[bucket]++;
+//     FBData_t fbdata = {lbid, ver, 0};
+//     fbLists[bucket].push_front(fbdata);
+//     fBlksLoaded++;
 
-  if (pr.second)
-  {
-    // It was inserted (it wasn't there before)
-    // Right now we have an invalid cache: we have inserted an entry with a -1 index.
-    // We need to fix this quickly...
-    fCacheSizes[bucket]++;
-    FBData_t fbdata = {lbid, ver, 0};
-    fbLists[bucket].push_front(fbdata);
-    fBlksLoaded++;
+//     if (fReportFrequency && (fBlksLoaded % fReportFrequency) == 0)
+//     {
+//       struct timespec tm;
+//       clock_gettime(CLOCK_MONOTONIC, &tm);
+//       fLog << "insert: " << left << fixed << ((double)(tm.tv_sec + (1.e-9 * tm.tv_nsec))) << " " << right
+//            << setw(12) << fBlksLoaded << " " << right << setw(12) << fBlksNotUsed << endl;
+//     }
+//   }
+//   else
+//   {
+//     // if it's a duplicate there's nothing to do
+//     if (gPMProfOn && gPMStatsPtr)
+//       gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'D');
+//     return ret;
+//   }
 
-    if (fReportFrequency && (fBlksLoaded % fReportFrequency) == 0)
-    {
-      struct timespec tm;
-      clock_gettime(CLOCK_MONOTONIC, &tm);
-      fLog << "insert: " << left << fixed << ((double)(tm.tv_sec + (1.e-9 * tm.tv_nsec))) << " " << right
-           << setw(12) << fBlksLoaded << " " << right << setw(12) << fBlksNotUsed << endl;
-    }
-  }
-  else
-  {
-    // if it's a duplicate there's nothing to do
-    if (gPMProfOn && gPMStatsPtr)
-      gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'D');
-    return ret;
-  }
+//   uint32_t pi = numeric_limits<int>::max();
 
-  uint32_t pi = numeric_limits<int>::max();
+//   if (fCacheSizes[bucket] > maxCacheSize())
+//   {
+//     // If the insert above caused the cache to exceed its max size, find the lru block in
+//     // the cache and use its pool index to store the block data.
+//     FBData_t& fbdata = fbLists[bucket].back();  // the lru block
+//     HashObject_t lastFB(fbdata.lbid, fbdata.ver, 0);
+//     filebuffer_uset_iter_t iter = fbSets[bucket].find(lastFB);  // should be there
 
-  if (fCacheSizes[bucket] > maxCacheSize())
-  {
-    // If the insert above caused the cache to exceed its max size, find the lru block in
-    // the cache and use its pool index to store the block data.
-    FBData_t& fbdata = fbLists[bucket].back();  // the lru block
-    HashObject_t lastFB(fbdata.lbid, fbdata.ver, 0);
-    filebuffer_uset_iter_t iter = fbSets[bucket].find(lastFB);  // should be there
+//     idbassert(iter != fbSets[bucket].end());
+//     pi = iter->poolIdx;
+//     idbassert(pi < maxCacheSize());
+//     idbassert(pi < fFBPool.size());
 
-    idbassert(iter != fbSets[bucket].end());
-    pi = iter->poolIdx;
-    idbassert(pi < maxCacheSize());
-    idbassert(pi < fFBPool.size());
+//     // set iters are always const. We are not changing the hash here, and this gets us
+//     // the pointer we need cheaply...
+//     HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
+//     ref.poolIdx = pi;
 
-    // set iters are always const. We are not changing the hash here, and this gets us
-    // the pointer we need cheaply...
-    HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
-    ref.poolIdx = pi;
+//     // replace the lru block with this block
+//     FileBuffer fb(lbid, ver, NULL, 0);
+//     fFBPool[pi] = fb;
+//     fFBPool[pi].setData(data, 8192);
+//     fbSets[bucket].erase(iter);
 
-    // replace the lru block with this block
-    FileBuffer fb(lbid, ver, NULL, 0);
-    fFBPool[pi] = fb;
-    fFBPool[pi].setData(data, 8192);
-    fbSets[bucket].erase(iter);
+//     if (fbLists[bucket].back().hits == 0)
+//       fBlksNotUsed++;
 
-    if (fbLists[bucket].back().hits == 0)
-      fBlksNotUsed++;
+//     fbLists[bucket].pop_back();
+//     --fCacheSizes[bucket];
+//     depleteCache(bucket);
+//     ret = 1;
+//   }
+//   else
+//   {
+//     if (!fEmptyPoolsSlots[bucket].empty())
+//     {
+//       pi = fEmptyPoolsSlots[bucket].front();
+//       std::cout << " insert lbid " << lbid << " ver " << ver << " pi " << pi << std::endl;
 
-    fbLists[bucket].pop_back();
-    --fCacheSizes[bucket];
-    depleteCache(bucket);
-    ret = 1;
-  }
-  else
-  {
-    if (!fEmptyPoolsSlots[bucket].empty())
-    {
-      pi = fEmptyPoolsSlots[bucket].front();
-      fEmptyPoolsSlots[bucket].pop_front();
-      FileBuffer fb(lbid, ver, NULL, 0);
-      fFBPool[pi] = fb;
-      fFBPool[pi].setData(data, 8192);
-    }
-    else
-    {
-      pi = fFBPool.size();
-      FileBuffer fb(lbid, ver, NULL, 0);
-      fFBPool.push_back(fb);
-      fFBPool[pi].setData(data, 8192);
-    }
+//       fEmptyPoolsSlots[bucket].pop_front();
+//       FileBuffer fb(lbid, ver, NULL, 0);
+//       fFBPool[pi] = fb;
+//       fFBPool[pi].setData(data, 8192);
+//     }
+//     else
+//     {
+//       pi = fFBPool.size();
+//       std::cout << " insert lbid " << lbid << " ver " << ver << " pi " << pi << std::endl;
 
-    // See comment above
-    HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
-    ref.poolIdx = pi;
-    ret = 1;
-  }
+//       FileBuffer fb(lbid, ver, NULL, 0);
+//       fFBPool.push_back(fb);
+//       fFBPool[pi].setData(data, 8192);
+//     }
 
-  idbassert(pi < fFBPool.size());
-  fFBPool[pi].listLoc(fbLists[bucket].begin());
+//     // See comment above
+//     HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
+//     ref.poolIdx = pi;
+//     ret = 1;
+//   }
 
-  if (gPMProfOn && gPMStatsPtr)
-    gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'J');
+//   idbassert(pi < fFBPool.size());
+//   fFBPool[pi].listLoc(fbLists[bucket].begin());
 
-  idbassert(fCacheSizes[bucket] <= maxCacheSize());
-  return ret;
-}
+//   if (gPMProfOn && gPMStatsPtr)
+//     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'J');
+
+//   idbassert(fCacheSizes[bucket] <= maxCacheSize());
+//   return ret;
+// }
 
 // The bucket lock must be taken calling this method
 void FileBufferMgr::depleteCache(const size_t bucket)
@@ -742,16 +745,21 @@ void FileBufferMgr::depleteCache(const size_t bucket)
   }
 }
 
-// TBD
 ostream& FileBufferMgr::formatLRUList(ostream& os) const
 {
-  filebuffer_list_t::const_iterator iter = fbList.begin();
-  filebuffer_list_t::const_iterator end = fbList.end();
-
-  while (iter != end)
+  for (auto l : fbLists)
   {
-    os << iter->lbid << '\t' << iter->ver << endl;
-    ++iter;
+    for (auto [lbid, ver, hits] : l)
+    {
+      cout << to_string(lbid) << "\t" << to_string(ver) << std::endl;
+    }
+  }
+
+  for (size_t i = 0; auto& buf : fFBPool)
+  {
+    cout << i << " " << buf.Lbid() << " " << buf.Verid() << " list it (" << buf.listLoc()->lbid << " "
+         << buf.listLoc()->ver << ")" << std::endl;
+    ++i;
   }
 
   return os;
@@ -760,7 +768,7 @@ ostream& FileBufferMgr::formatLRUList(ostream& os) const
 // puts the new entry at the front of the list
 void FileBufferMgr::updateLRU(const FBData_t& f, const size_t bucket)
 {
-  // std::cout << " updateLRU" << std::endl;
+  std::cout << " updateLRU" << std::endl;
 
   if (fCacheSizes[bucket] > maxCacheSize())
   {
@@ -788,7 +796,7 @@ void FileBufferMgr::updateLRU(const FBData_t& f, const size_t bucket)
 uint32_t FileBufferMgr::doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data,
                                     const size_t bucket)
 {
-  // std::cout << " doBlockCopy" << std::endl;
+  std::cout << " doBlockCopy" << std::endl;
 
   uint32_t poolIdx;
 
@@ -811,7 +819,7 @@ uint32_t FileBufferMgr::doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& v
 
 int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
 {
-  // std::cout << " bulkInsert" << std::endl;
+  std::cout << " bulkInsert" << std::endl;
   uint32_t i;
   int32_t pi;
   int ret = 0;
@@ -842,7 +850,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
         continue;
       }
 
-      if (fReportFrequency)
+      // if (fReportFrequency)
       {
         fLog << op.lbid << " " << op.ver << ", ";
       }
@@ -856,6 +864,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
       HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
       ref.poolIdx = pi;
       fFBPool[pi].listLoc(fbLists[bucket].begin());
+      std::cout << op.lbid << " " << op.ver << " pi " << pi << std::endl;
 
       if (gPMProfOn && gPMStatsPtr)
         gPMStatsPtr->markEvent(op.lbid, pthread_self(), gSession, 'J');
@@ -863,7 +872,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
       idbassert(fCacheSizes[bucket] <= maxCacheSize());
     }
   }
-  if (fReportFrequency)
+  // if (fReportFrequency)
   {
     fLog << endl;
   }

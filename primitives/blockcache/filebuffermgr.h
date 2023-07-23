@@ -132,17 +132,17 @@ class FileBufferMgr
   /**
    * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
    **/
-  int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
+  // int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
   int bulkInsert(const std::vector<CacheInsert_t>&);
 
   /**
    * @brief returns the total number of Disk Blocks in the Cache
    **/
-  uint32_t size() const
-  {
-    return fbSet.size();
-  }
+  // uint32_t size() const
+  // {
+  //   return fbSet.size();
+  // }
 
   /**
    * @brief
@@ -188,15 +188,15 @@ class FileBufferMgr
     return fMaxNumBlocks;
   }
 
-  uint32_t listSize() const
-  {
-    return fbList.size();
-  }
+  // uint32_t listSize() const
+  // {
+  //   return fbList.size();
+  // }
 
-  const filebuffer_uset_iter_t end() const
-  {
-    return fbSet.end();
-  }
+  // const filebuffer_uset_iter_t end() const
+  // {
+  //   return fbSet.end();
+  // }
 
   void setReportingFrequency(const uint32_t d);
   uint32_t ReportingFrequency() const
@@ -211,13 +211,13 @@ class FileBufferMgr
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
-  mutable boost::mutex fWLock;
+  // mutable boost::mutex fWLock;
   std::mutex fWLocks[MagicNumber];
 
-  mutable filebuffer_uset_t fbSet;
+  // mutable filebuffer_uset_t fbSet;
   filebuffer_uset_t fbSets[MagicNumber];
 
-  mutable filebuffer_list_t fbList;        // rename this
+  // mutable filebuffer_list_t fbList;        // rename this
   filebuffer_list_t fbLists[MagicNumber];  // rename this
 
   uint32_t fCacheSize;
@@ -225,7 +225,7 @@ class FileBufferMgr
 
   FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
-  emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
+  // emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
   emptylist_t fEmptyPoolsSlots[MagicNumber];  // keep track of FBPool slots that can be reused
 
   // void depleteCache();
@@ -243,7 +243,8 @@ class FileBufferMgr
 
   // used by bulkInsert
   void updateLRU(const FBData_t& f, const size_t bucket);
-  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data, const size_t bucket);
+  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data,
+                       const size_t bucket);
 };
 
 }  // namespace dbbc

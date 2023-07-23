@@ -43,11 +43,10 @@ using namespace messageqcpp;
 
 namespace joblist
 {
-ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID,
-                                 bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_,
-                                 execplan::CalpontSystemCatalog::OID oidAux) :
-                                extentsAux(extentsAux_), hasAuxCol(hasAuxCol_),
-                                fOidAux(oidAux)
+ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID, bool hasAuxCol_,
+                                 const std::vector<BRM::EMEntry>& extentsAux_,
+                                 execplan::CalpontSystemCatalog::OID oidAux)
+ : extentsAux(extentsAux_), hasAuxCol(hasAuxCol_), fOidAux(oidAux)
 {
   BRM::DBRM dbrm;
   isScan = true;
@@ -254,13 +253,11 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
     {
       lbid = extents[i].range.start + (blockNum * colWidth);
       currentExtentIndex = i;
-      /*
       ostringstream os;
       os << "CCJL: rid=" << rid << "; dbroot=" << dbRoot << "; partitionNum=" << partNum
-          << "; segmentNum=" << segNum <<	"; extentNum = " << (int) extentNum <<
-          "; blockNum = " << blockNum << "; OID=" << OID << " LBID=" << lbid;
+         << "; segmentNum=" << segNum << "; extentNum = " << (int)extentNum << "; blockNum = " << blockNum
+         << "; OID=" << OID << " LBID=" << lbid;
       cout << os.str() << endl;
-      */
       break;
     }
   }
@@ -289,8 +286,10 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
 
   //		ostringstream os;
   //		os << "CCJL: rid=" << rid << "; dbroot=" << dbRoot << "; partitionNum=" << partitionNum << ";
-  //segmentNum=" << segmentNum << "; stripeWithinPartition=" << 			stripeWithinPartition << "; OID=" << OID << "
-  //LBID=" << lbid; 		BRM::log(os.str());
+  // segmentNum=" << segmentNum << "; stripeWithinPartition=" << 			stripeWithinPartition
+  // <<
+  // "; OID="
+  // << OID << " LBID=" << lbid; 		BRM::log(os.str());
 }
 
 inline uint32_t ColumnCommandJL::getFBO(uint64_t lbid)
@@ -350,8 +349,8 @@ string ColumnCommandJL::toString()
 {
   ostringstream ret;
 
-  ret << "ColumnCommandJL: " << filterCount << " filters, BOP=" << ((int)BOP) << ", colwidth=" << colType.colWidth << " oid=" << OID
-      << " name=" << colName;
+  ret << "ColumnCommandJL: " << filterCount << " filters, BOP=" << ((int)BOP)
+      << ", colwidth=" << colType.colWidth << " oid=" << OID << " name=" << colName;
 
   if (isScan)
     ret << " (scan)";
@@ -373,6 +372,7 @@ void ColumnCommandJL::reloadExtents()
 {
   int err;
   BRM::DBRM dbrm;
+  std::cout << "reloadExtents OID " << OID << std::endl;
 
   err = dbrm.getExtents(OID, extents);
 

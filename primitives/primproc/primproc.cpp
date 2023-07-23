@@ -39,7 +39,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -124,7 +124,6 @@ void setupSignalHandlers()
   sigaddset(&sigset, SIGUSR1);
   sigaddset(&sigset, SIGUSR2);
   sigprocmask(SIG_BLOCK, &sigset, 0);
-
 }
 
 int8_t setupCwd(Config* cf)
@@ -221,17 +220,13 @@ class QszMonThd
 };
 #endif
 
-#define DUMP_CACHE_CONTENTS
-#ifdef DUMP_CACHE_CONTENTS
+// #define DUMP_CACHE_CONTENTS
+// #ifdef DUMP_CACHE_CONTENTS
 void* waitForSIGUSR1(void* p)
 {
   utils::setThreadName("waitForSIGUSR1");
-#if defined(__LP64__) || defined(_MSC_VER)
   ptrdiff_t tmp = reinterpret_cast<ptrdiff_t>(p);
   int cacheCount = static_cast<int>(tmp);
-#else
-  int cacheCount = reinterpret_cast<int>(p);
-#endif
   sigset_t oset;
   int rec_sig;
   int32_t rpt_state = 0;
@@ -277,7 +272,7 @@ void* waitForSIGUSR1(void* p)
 
   return 0;
 }
-#endif
+// #endif
 
 }  // namespace
 
@@ -647,7 +642,6 @@ int ServicePrimProc::Child()
   if ((strVal == "n") || (strVal == "N"))
     directIOFlag = 0;
 
-
   IDBPolicy::configIDBPolicy();
 
   // no versionbuffer if using HDFS for performance reason
@@ -683,7 +677,7 @@ int ServicePrimProc::Child()
 
 #endif
 
-#ifdef DUMP_CACHE_CONTENTS
+  // #ifdef DUMP_CACHE_CONTENTS
   {
     // Need to use pthreads API here...
     pthread_t thd1;
@@ -692,7 +686,7 @@ int ServicePrimProc::Child()
     pthread_attr_setdetachstate(&attr1, PTHREAD_CREATE_DETACHED);
     pthread_create(&thd1, &attr1, waitForSIGUSR1, reinterpret_cast<void*>(cacheCount));
   }
-#endif
+  // #endif
 
   primServerThreadPool = server.getProcessorThreadPool();
 

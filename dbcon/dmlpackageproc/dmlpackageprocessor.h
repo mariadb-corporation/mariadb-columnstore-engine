@@ -45,7 +45,7 @@
 
 #define EXPORT
 
-//#define IDB_DML_DEBUG
+#define IDB_DML_DEBUG
 namespace dmlpackageprocessor
 {
 typedef std::vector<std::string> dicStrValues;
@@ -175,7 +175,7 @@ class DMLPackageProcessor
   /** @brief ctor
    */
   DMLPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid)
-   : fEC(0), DMLLoggingId(21), fRollbackPending(false), fDebugLevel(NONE)
+   : fEC(0), DMLLoggingId(21), fRollbackPending(false), fDebugLevel(VERBOSE)
   {
     try
     {
@@ -538,12 +538,12 @@ class DMLPackageProcessor
 /** @brief helper template function to do safe from string to type conversions
  *
  */
-template <class T>
-bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
-{
-  std::istringstream iss(s);
-  return !(iss >> f >> t).fail();
-}
+// template <class T>
+// bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
+// {
+//   std::istringstream iss(s);
+//   return !(iss >> f >> t).fail();
+// }
 
 }  // namespace dmlpackageprocessor
 

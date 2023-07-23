@@ -80,6 +80,11 @@ if (WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
+    add_executable(vss_tests vss.cpp)
+    add_dependencies(vss_tests googletest)
+    target_link_libraries(vss_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET vss_tests TEST_PREFIX columnstore:)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)

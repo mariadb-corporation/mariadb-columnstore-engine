@@ -41,8 +41,22 @@
 
 namespace rwlock
 {
-const std::array<const std::string, 7> RWLockNames = {{
-    "all", "VSS", "ExtentMap", "FreeList", "VBBM", "CopyLocks", "ExtentMapIndex",
+const std::array<const std::string, 15> RWLockNames = {{
+    "all",
+    "VSS",
+    "ExtentMap",
+    "FreeList",
+    "VBBM",
+    "CopyLocks",
+    "ExtentMapIndex",
+    "extVSS1",
+    "extVSS2",
+    "extVSS3",
+    "extVSS4",
+    "extVSS5",
+    "extVSS6",
+    "extVSS7",
+    "extVSS8",
 }};
 
 /// the layout of the shmseg
@@ -262,4 +276,3 @@ class RWLock
 }  // namespace rwlock
 
 #undef EXPORT
-
