@@ -228,7 +228,6 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
@@ -886,7 +885,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
@@ -1374,11 +1372,10 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return result;
 }
 
 }  // namespace ddlpackageprocessor
-

@@ -29,7 +29,7 @@
 #include <string>
 #include <ctime>
 #include <unistd.h>
-//#include <sys/stat.h>
+// #include <sys/stat.h>
 using namespace std;
 
 #include "boost/scoped_ptr.hpp"
@@ -297,11 +297,11 @@ int RedistributeControl::handleStatusMsg(messageqcpp::ByteStream&, messageqcpp::
       }
       catch (const std::exception&)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
       catch (...)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
 
       break;
@@ -550,11 +550,11 @@ void RedistributeControl::updateState(uint32_t s)
     }
     catch (const std::exception&)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     fRedistributeInfo = RedistributeInfo();
@@ -570,7 +570,8 @@ void RedistributeControl::updateState(uint32_t s)
   {
     //		boost::filesystem::path dirPath(fRedistributeDir);
     //		if (boost::filesystem::exists(fRedistributeDir) &&
-    //!boost::filesystem::is_directory(fRedistributeDir)) 			boost::filesystem::remove(fRedistributeDir);
+    //! boost::filesystem::is_directory(fRedistributeDir))
+    //! boost::filesystem::remove(fRedistributeDir);
     if (!boost::filesystem::exists(fRedistributeDir))
     {
       errno = 0;
@@ -701,4 +702,3 @@ void RedistributeControl::logMessage(const string& msg)
 }
 
 }  // namespace redistribute
-

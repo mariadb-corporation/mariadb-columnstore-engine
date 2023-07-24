@@ -47,7 +47,7 @@ using namespace logging;
 
 #include "clientrotator.h"
 
-//#include "idb_mysql.h"
+// #include "idb_mysql.h"
 
 /** Debug macro */
 #ifdef INFINIDB_DEBUG
@@ -293,7 +293,7 @@ void ClientRotator::connect(double timeout)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   if (!connected)
@@ -371,7 +371,7 @@ void ClientRotator::connectList(double timeout)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 

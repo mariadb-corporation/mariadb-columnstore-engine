@@ -165,11 +165,11 @@ void RedistributeWorkerThread::handleRequest()
   }
   catch (const std::exception&)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   sendResponse(RED_ACTN_REQUEST);
@@ -246,8 +246,8 @@ int RedistributeWorkerThread::grabTableLock()
       if (fStopAction)
         return RED_EC_USER_STOP;
 
-        // always wait long enough for ddl/dml/cpimport to get table lock
-        // for now, triple the ddl/dml/cpimport retry interval: 3 * 100ms
+      // always wait long enough for ddl/dml/cpimport to get table lock
+      // for now, triple the ddl/dml/cpimport retry interval: 3 * 100ms
       struct timespec tmp = ts;
 
       while (nanosleep(&tmp, &ts) < 0)
@@ -1523,4 +1523,3 @@ void RedistributeWorkerThread::logMessage(const string& msg, int line)
 }
 
 }  // namespace redistribute
-

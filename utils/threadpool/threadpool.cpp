@@ -57,7 +57,7 @@ ThreadPool::~ThreadPool() throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -445,7 +445,7 @@ void ThreadPool::beginThread() throw()
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
   catch (...)
@@ -470,7 +470,7 @@ void ThreadPool::beginThread() throw()
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }

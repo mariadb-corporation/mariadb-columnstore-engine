@@ -56,7 +56,7 @@ WeightedThreadPool::~WeightedThreadPool() throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -337,7 +337,7 @@ void WeightedThreadPool::beginThread() throw()
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
   catch (...)
@@ -360,7 +360,7 @@ void WeightedThreadPool::beginThread() throw()
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }

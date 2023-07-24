@@ -65,7 +65,7 @@ void shmDoit(key_t shm_key, const string& label)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 
@@ -134,7 +134,6 @@ class ThdFunc
 
 int main(int argc, char** argv)
 {
-
   int c;
   opterr = 0;
   bool cFlg = false;

@@ -263,7 +263,7 @@ void getStorageConfig(FILE* pOutputFile)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     string::size_type pos = cloud.find("amazon", 0);
@@ -353,7 +353,7 @@ void getStorageConfig(FILE* pOutputFile)
         }
         catch (...)
         {
-         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+          std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
         }
 
         fprintf(pOutputFile, "Amazon EC2 Volume Name/Device Name for 'um%i': %s, %s", id, volumeName.c_str(),
@@ -431,7 +431,7 @@ void getStorageConfig(FILE* pOutputFile)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     if (DataRedundancyConfig == "y")
@@ -449,7 +449,7 @@ void getStorageConfig(FILE* pOutputFile)
       }
       catch (...)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
 
       if (moduleType != "pm")
@@ -475,7 +475,7 @@ void getStorageConfig(FILE* pOutputFile)
           }
           catch (...)
           {
-           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+            std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
           }
 
           boost::char_separator<char> sep(" ");
@@ -555,7 +555,7 @@ void getStorageStatus(FILE* pOutputFile)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 

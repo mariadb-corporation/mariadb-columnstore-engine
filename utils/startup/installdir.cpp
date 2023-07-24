@@ -51,7 +51,6 @@ const string StartUp::tmpDir()
   if (fTmpDirp)
     return *fTmpDirp;
 
-
   // check for non-root user
   /*    const char* p = getenv("HOME");
           string homedir = p;
@@ -91,11 +90,10 @@ const string StartUp::tmpDir()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return TempFileDir;
-
 }
 
 }  // namespace startup

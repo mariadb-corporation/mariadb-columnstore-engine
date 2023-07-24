@@ -419,12 +419,12 @@ void DiskJoinStep::joinFcn()
   RowGroup l_outputRG = outputRG;
   Row l_largeRow;
   Row l_joinFERow, l_outputRow, baseRow;
-  vector<vector<Row::Pointer> > joinMatches;
+  vector<vector<Row::Pointer>> joinMatches;
   auto new_row = new Row[1];
   std::shared_ptr<Row[]> smallRowTemplates(new_row);
   vector<std::shared_ptr<TupleJoiner>> joiners;
   std::shared_ptr<std::shared_ptr<int[]>[]> colMappings, fergMappings;
-  boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMem;
+  boost::scoped_array<boost::scoped_array<uint8_t>> smallNullMem;
   boost::scoped_array<uint8_t> joinFEMem;
   Row smallNullRow;
 
@@ -623,8 +623,8 @@ void DiskJoinStep::mainRunner()
         break;
 
       loadFIFO.reset(
-          new FIFO<boost::shared_ptr<LoaderOutput> >(1, 1));  // double buffering should be good enough
-      buildFIFO.reset(new FIFO<boost::shared_ptr<BuilderOutput> >(1, 1));
+          new FIFO<boost::shared_ptr<LoaderOutput>>(1, 1));  // double buffering should be good enough
+      buildFIFO.reset(new FIFO<boost::shared_ptr<BuilderOutput>>(1, 1));
 
       std::vector<uint64_t> thrds;
       thrds.reserve(3);
@@ -651,7 +651,7 @@ void DiskJoinStep::mainRunner()
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }  // doesn't matter if this fails to open the large-file
 
     largeReader();  // large reader will only drain the fifo when cancelled()

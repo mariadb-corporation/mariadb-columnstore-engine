@@ -27,8 +27,8 @@
 #include "liboamcpp.h"
 #include "IDBPolicy.h"
 #include "PosixFileSystem.h"
-//#include "HdfsFileSystem.h"
-//#include "HdfsFsCache.h"
+// #include "HdfsFileSystem.h"
+// #include "HdfsFsCache.h"
 #include "IDBLogger.h"
 #include "IDBFactory.h"
 
@@ -89,7 +89,7 @@ void IDBPolicy::init(bool bEnableLogging, bool bUseRdwrMemBuffer, const string& 
       }
       catch (...)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
       if (!itWorked)
       {

@@ -1788,7 +1788,7 @@ void BatchPrimitiveProcessor::execute()
           stopwatch->stop("-- executeTupleJoin()");
 #else
           startRid = executeTupleJoin(startRid);
-//                    sStartRid = startRid;
+          //                    sStartRid = startRid;
 #endif
           /* project the non-key columns */
           for (j = 0; j < projectCount; ++j)

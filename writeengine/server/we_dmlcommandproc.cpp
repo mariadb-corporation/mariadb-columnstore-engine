@@ -415,8 +415,8 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
-                                                      false, false);
+                datavalue =
+                    colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), false, false);
               }
               catch (exception&)
               {
@@ -643,7 +643,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 
@@ -994,7 +994,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
         Column aColumn;
 
-        if ((i == ridList.size() - 1) && (tableAUXColOid > 3000)) // AUX column
+        if ((i == ridList.size() - 1) && (tableAUXColOid > 3000))  // AUX column
         {
           aColumn.colWidth = execplan::AUX_COL_WIDTH;
           aColumn.colDataType = execplan::AUX_COL_DATATYPE;
@@ -1035,8 +1035,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     }
 
     //@Bug 5996 validate hwm before starts
-    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting",
-                            tableAUXColOid > 3000);
+    rc =
+        validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting", tableAUXColOid > 3000);
 
     if (rc != 0)
     {
@@ -1347,8 +1347,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
-                                                      false, false);
+                datavalue =
+                    colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), false, false);
               }
               catch (exception&)
               {
@@ -2047,7 +2047,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               case execplan::CalpontSystemCatalog::BLOB:
                 bs >> valStr;
 
-                if (!valStr.isNull()) // null values do not require any padding or truncation.
+                if (!valStr.isNull())  // null values do not require any padding or truncation.
                 {
                   if (valStr.length() > (unsigned int)colType.colWidth)
                   {
@@ -2453,8 +2453,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
                                auxColDBRootExtentInfo.end());
   }
 
-  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending",
-                          hasAUXCol);
+  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending", hasAUXCol);
 
   if (rc != 0)
   {
@@ -3448,7 +3447,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 if (!value.isNull())
                 {
                   unsigned i = strlen(value.str());
-                  value.assign(value.safeString().substr(0, i)); // XXX: why???
+                  value.assign(value.safeString().substr(0, i));  // XXX: why???
                 }
                 break;
               }
@@ -3620,8 +3619,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
             try
             {
-              datavalue =
-                  colType.convertColumnData(colType.defaultValue.safeString(""), pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(colType.defaultValue.safeString(""), pushWarn, timeZone,
+                                                    isNull, false, false);
             }
             catch (exception&)
             {
@@ -3653,7 +3652,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             try
             {
-              datavalue = colType.convertColumnData(value.safeString(""), pushWarn, timeZone, isNull, false, false);
+              datavalue =
+                  colType.convertColumnData(value.safeString(""), pushWarn, timeZone, isNull, false, false);
             }
             catch (exception&)
             {
@@ -3697,7 +3697,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           inData = columnsUpdated[j]->get_DataVector()[0];
         }
 
-        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (inData.safeString("").compare("0000-00-00") == 0)) ||
+        if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) &&
+             (inData.safeString("").compare("0000-00-00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) &&
              (inData.safeString("").compare("0000-00-00 00:00:00") == 0)) ||
             ((colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) &&
@@ -3803,8 +3804,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             try
             {
-              datavalue =
-                  colType.convertColumnData(colType.defaultValue.safeString(), pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(colType.defaultValue.safeString(), pushWarn, timeZone,
+                                                    isNull, false, false);
             }
             catch (exception&)
             {
@@ -3940,7 +3941,7 @@ uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::str
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   bs.restart();
@@ -4025,7 +4026,7 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 

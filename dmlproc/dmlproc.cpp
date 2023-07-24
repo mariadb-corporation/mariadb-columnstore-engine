@@ -25,8 +25,8 @@
 #include <string>
 #include <set>
 #include <clocale>
-//#include "boost/filesystem/operations.hpp"
-//#include "boost/filesystem/path.hpp"
+// #include "boost/filesystem/operations.hpp"
+// #include "boost/filesystem/path.hpp"
 using namespace std;
 
 #include "liboamcpp.h"
@@ -643,7 +643,7 @@ int ServiceDMLProc::Child()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   DMLServer dmlserver(serverThreads, serverQueueSize, &dbrm);

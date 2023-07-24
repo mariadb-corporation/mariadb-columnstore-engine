@@ -28,7 +28,7 @@
 #include <values.h>
 #endif
 #include <boost/thread.hpp>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 #include "dataconvert.h"
@@ -1400,7 +1400,7 @@ int DBRM::deleteOID(OID_t oid) DBRM_THROW
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }  // an error here means a network problem, will be caught elsewhere
 
   return err;
@@ -1447,7 +1447,7 @@ int DBRM::deleteOIDs(const std::vector<OID_t>& oids) DBRM_THROW
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }  // an error here means a network problem, will be caught elsewhere
 
   return err;
@@ -3599,7 +3599,7 @@ int DBRM::getSystemState(uint32_t& stateFlags) throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -3651,7 +3651,7 @@ int DBRM::setSystemState(uint32_t stateFlags) throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   stateFlags = 0;
@@ -3702,7 +3702,7 @@ int DBRM::clearSystemState(uint32_t stateFlags) throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -3738,7 +3738,7 @@ bool DBRM::isDBRMReady() throw()
       }
       catch (...)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
 
       MessageQueueClientPool::releaseInstance(msgClient);
@@ -3748,7 +3748,7 @@ bool DBRM::isDBRMReady() throw()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return false;
@@ -4465,11 +4465,12 @@ void DBRM::deleteAISequence(uint32_t OID)
 void DBRM::addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList)
 {
   boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
-    execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
-  std::unordered_map<execplan::CalpontSystemCatalog::OID,
-    std::unordered_map<execplan::CalpontSystemCatalog::OID,
-      std::vector<struct BRM::EMEntry>>> extentMap;
+  std::unordered_map<
+      execplan::CalpontSystemCatalog::OID,
+      std::unordered_map<execplan::CalpontSystemCatalog::OID, std::vector<struct BRM::EMEntry>>>
+      extentMap;
 
   int err = 0;
 
@@ -4494,18 +4495,15 @@ void DBRM::addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList)
       throw runtime_error(os.str());
     }
 
-    execplan::CalpontSystemCatalog::OID tableOid =
-      systemCatalogPtr->isAUXColumnOID(oid);
+    execplan::CalpontSystemCatalog::OID tableOid = systemCatalogPtr->isAUXColumnOID(oid);
 
     if (tableOid >= 3000)
     {
       if (tableOidSet.find(tableOid) == tableOidSet.end())
       {
         tableOidSet.insert(tableOid);
-        execplan::CalpontSystemCatalog::TableName tableName =
-          systemCatalogPtr->tableName(tableOid);
-        execplan::CalpontSystemCatalog::RIDList tableColRidList =
-          systemCatalogPtr->columnRIDs(tableName);
+        execplan::CalpontSystemCatalog::TableName tableName = systemCatalogPtr->tableName(tableOid);
+        execplan::CalpontSystemCatalog::RIDList tableColRidList = systemCatalogPtr->columnRIDs(tableName);
 
         for (unsigned j = 0; j < tableColRidList.size(); j++)
         {

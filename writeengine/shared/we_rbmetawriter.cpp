@@ -355,7 +355,7 @@ void RBMetaWriter::saveBulkRollbackMetaData(const std::vector<Column>& columns,
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     throw WeException(ex.what(), ex.errorCode());
@@ -1147,7 +1147,6 @@ int RBMetaWriter::writeHWMChunk(bool bColumnFile,    // is this a column (vs dic
   backupFile->flush();
   //   IDBDataFile flush() does a sync where appropriate
   delete backupFile;
-
 
   // Rename HWM backup file to final name.
   if (fs.rename(fileNameTmp.c_str(), fileName.c_str()))

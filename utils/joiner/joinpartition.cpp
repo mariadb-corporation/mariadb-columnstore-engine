@@ -31,7 +31,6 @@ using namespace rowgroup;
 using namespace messageqcpp;
 using namespace logging;
 
-
 namespace joiner
 {
 // FIXME: Possible overflow, we have to null it after clearing files.
@@ -106,7 +105,7 @@ JoinPartition::JoinPartition(const RowGroup& lRG, const RowGroup& sRG, const vec
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   if (compressionType == "LZ4")
@@ -442,7 +441,6 @@ int64_t JoinPartition::convertToSplitMode()
       buckets[hash]->insertSmallSideRow(row);
     }
   }
-
 
   boost::filesystem::remove(smallFilename);
   smallFilename.clear();

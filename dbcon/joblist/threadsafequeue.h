@@ -28,8 +28,6 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
-
-
 namespace joblist
 {
 struct TSQSize_t

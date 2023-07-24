@@ -23,7 +23,7 @@
  */
 
 // XXX: a definition to switch off computations for token columns.
-//#define	XXX_WRITEENGINE_TOKENS_RANGES_XXX
+// #define	XXX_WRITEENGINE_TOKENS_RANGES_XXX
 
 #include <cmath>
 #include <cstdlib>
@@ -68,7 +68,7 @@ using namespace idbdatafile;
 #include "mcs_decimal.h"
 
 namespace WriteEngine
-//#define PROFILE 1
+// #define PROFILE 1
 
 #define RETURN_ON_ERROR_REPORT(statement)                                                              \
   do                                                                                                   \
@@ -792,9 +792,7 @@ void WriteEngineWrapper::convertValue(const CalpontSystemCatalog::ColType& cscCo
 
       case WriteEngine::WR_ULONGLONG: ((uint64_t*)valArray)[pos] = boost::any_cast<uint64_t>(data); break;
 
-      case WriteEngine::WR_TOKEN:
-        ((Token*)valArray)[pos] = boost::any_cast<Token>(data);
-        break;
+      case WriteEngine::WR_TOKEN: ((Token*)valArray)[pos] = boost::any_cast<Token>(data); break;
 
       case WriteEngine::WR_BINARY:
         size_t size = cscColType.colWidth;
@@ -1000,23 +998,13 @@ void emptyValueToAny(boost::any* any, const uint8_t* emptyValue, int colWidth)
 {
   switch (colWidth)
   {
-    case 16:
-      *any = *(uint128_t*)emptyValue;
-      break;
-    case 8:
-      *any = *(uint64_t*)emptyValue;
-      break;
-    case 4:
-      *any = *(uint32_t*)emptyValue;
-      break;
-    case 2:
-      *any = *(uint16_t*)emptyValue;
-      break;
-    default:
-      *any = *emptyValue;
+    case 16: *any = *(uint128_t*)emptyValue; break;
+    case 8: *any = *(uint64_t*)emptyValue; break;
+    case 4: *any = *(uint32_t*)emptyValue; break;
+    case 2: *any = *(uint16_t*)emptyValue; break;
+    default: *any = *emptyValue;
   }
 }
-
 
 int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>& colExtentsColType,
                                   vector<ColStructList>& colExtentsStruct, vector<void*>& colOldValueList,
@@ -1754,8 +1742,8 @@ int WriteEngineWrapper::insertColumnRecs(
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
-          strPrefix = encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize,
-                                                    dctnryStructList[i].fCharsetNumber);
+          strPrefix =
+              encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize, dctnryStructList[i].fCharsetNumber);
 #endif
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -2730,7 +2718,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
         // cout << "updated old ext info for oid " << colStructList[i].dataOid << "
         // dbroot:part:seg:hwm:current = "
         //<< it->dbRoot<<":"<<it->partNum<<":"<<it->segNum<<":"<<it->hwm<<":"<< it->current<< " and newExtent
-        //is " << newExtent << endl;
+        // is " << newExtent << endl;
       }
       else
         return ERR_INVALID_PARAM;
@@ -4219,7 +4207,7 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList, con
       }
       catch (...)
       {
-       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+        std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
       }
 
       if (isDebug(DEBUG_3))
@@ -4618,9 +4606,9 @@ int WriteEngineWrapper::updateColumnRec(const TxnID& txnid, const vector<CSCType
       }
     }
 
-    //#ifdef PROFILE
-    // timer.start("markExtentsInvalid");
-    //#endif
+    // #ifdef PROFILE
+    //  timer.start("markExtentsInvalid");
+    // #endif
 
     bool hasFastDelete = false;
 
@@ -5755,8 +5743,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
                                              const ColValueList& colValueList, vector<void*>& colOldValueList,
                                              const RIDList& ridList, const int32_t tableOid,
                                              bool convertStructFlag, ColTupleList::size_type nRows,
-                                             std::vector<ExtCPInfo*>* cpInfos,
-                                             bool hasAUXCol)
+                                             std::vector<ExtCPInfo*>* cpInfos, bool hasAUXCol)
 {
   bool bExcp;
   int rc = 0;
@@ -5782,8 +5769,9 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
   std::vector<VBRange> freeList;
   vector<vector<uint32_t> > fboLists;
   vector<vector<LBIDRange> > rangeLists;
-  rc = processBeginVBCopy(txnid, ((m_opType == DELETE && hasAUXCol) ? ColStructList(1, colStructList.back()) : colStructList),
-                          ridList, freeList, fboLists, rangeLists, rangeListTot);
+  rc = processBeginVBCopy(
+      txnid, ((m_opType == DELETE && hasAUXCol) ? ColStructList(1, colStructList.back()) : colStructList),
+      ridList, freeList, fboLists, rangeLists, rangeListTot);
 
   if (rc != NO_ERROR)
   {
@@ -5877,8 +5865,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
 
     if (!idbdatafile::IDBPolicy::useHdfs())
     {
-      if (rangeListTot.size() > 0 &&
-          (m_opType != DELETE || !hasAUXCol || (i == colStructList.size() - 1)))
+      if (rangeListTot.size() > 0 && (m_opType != DELETE || !hasAUXCol || (i == colStructList.size() - 1)))
       {
         ColStructList::size_type j = i;
 
@@ -6021,7 +6008,7 @@ int WriteEngineWrapper::writeColumnRecUpdate(const TxnID& txnid, const CSCTypesL
   if (rangeListTot.size() > 0)
     BRMWrapper::getInstance()->writeVBEnd(txnid, rangeListTot);
 
-  // timer.stop("Delete:writecolrec");
+    // timer.stop("Delete:writecolrec");
 #ifdef PROFILE
   timer.finish();
 #endif

@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <sstream>
 #include <limits>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -167,7 +167,7 @@ int flushPrimProcCache()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -218,7 +218,7 @@ int flushPrimProcBlocks(const BRM::BlockList_t& list)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -247,7 +247,7 @@ int flushPrimProcAllverBlocks(const vector<LBID_t>& list)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -323,7 +323,7 @@ int dropPrimProcFdCache()
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 
   return -1;
@@ -357,4 +357,3 @@ int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId)
   return rc;
 }
 }  // namespace cacheutils
-

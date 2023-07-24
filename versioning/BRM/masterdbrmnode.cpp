@@ -1390,7 +1390,7 @@ void MasterDBRMNode::doNewTxnID(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1434,7 +1434,7 @@ void MasterDBRMNode::doCommitted(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1448,7 +1448,7 @@ void MasterDBRMNode::doCommitted(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1482,7 +1482,7 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1496,7 +1496,7 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1527,7 +1527,7 @@ void MasterDBRMNode::doGetTxnID(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1543,7 +1543,7 @@ void MasterDBRMNode::doGetTxnID(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1567,7 +1567,7 @@ void MasterDBRMNode::doSIDTIDMap(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1596,7 +1596,7 @@ void MasterDBRMNode::doSIDTIDMap(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1647,7 +1647,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
         }
         catch (...)
         {
-         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+          std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
         }
 
         return;
@@ -1673,7 +1673,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
             }
             catch (...)
             {
-             std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+              std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
             }
 
             return;
@@ -1704,7 +1704,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1723,7 +1723,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1755,7 +1755,7 @@ void MasterDBRMNode::doGetUniqueUint32(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1795,7 +1795,7 @@ void MasterDBRMNode::doGetUniqueUint64(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1838,7 +1838,7 @@ void MasterDBRMNode::doGetSystemState(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1881,7 +1881,7 @@ void MasterDBRMNode::doSetSystemState(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1896,7 +1896,7 @@ void MasterDBRMNode::doSetSystemState(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1925,7 +1925,7 @@ void MasterDBRMNode::doClearSystemState(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
 
     return;
@@ -1940,7 +1940,7 @@ void MasterDBRMNode::doClearSystemState(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -1964,7 +1964,7 @@ void MasterDBRMNode::doSessionManagerReset(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
-   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+    std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
   }
 }
 
@@ -2002,7 +2002,7 @@ void MasterDBRMNode::doAllocOIDs(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2041,7 +2041,7 @@ void MasterDBRMNode::doReturnOIDs(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2074,7 +2074,7 @@ void MasterDBRMNode::doOidmSize(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2112,7 +2112,7 @@ void MasterDBRMNode::doAllocVBOID(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2150,7 +2150,7 @@ void MasterDBRMNode::doGetDBRootOfVBOID(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2185,7 +2185,7 @@ void MasterDBRMNode::doGetVBOIDToDBRootMap(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2228,7 +2228,7 @@ void MasterDBRMNode::doGetTableLock(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2262,7 +2262,7 @@ void MasterDBRMNode::doReleaseTableLock(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2300,7 +2300,7 @@ void MasterDBRMNode::doChangeTableLockState(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2406,7 +2406,7 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2437,7 +2437,7 @@ void MasterDBRMNode::doGetAllTableLocks(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2466,7 +2466,7 @@ void MasterDBRMNode::doReleaseAllTableLocks(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2502,7 +2502,7 @@ void MasterDBRMNode::doGetTableLockInfo(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2593,7 +2593,7 @@ void MasterDBRMNode::doOwnerCheck(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2627,7 +2627,7 @@ void MasterDBRMNode::doStartAISequence(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2659,7 +2659,7 @@ void MasterDBRMNode::doGetAIRange(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2690,7 +2690,7 @@ void MasterDBRMNode::doResetAISequence(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2720,7 +2720,7 @@ void MasterDBRMNode::doGetAILock(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2750,7 +2750,7 @@ void MasterDBRMNode::doReleaseAILock(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }
@@ -2780,7 +2780,7 @@ void MasterDBRMNode::doDeleteAISequence(ByteStream& msg, ThreadParams* p)
     }
     catch (...)
     {
-     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+      std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
     }
   }
 }

@@ -224,14 +224,14 @@ void TeleConsumer()
         }
         catch (...)
         {
-         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+          std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
           try
           {
             fTransport->close();
           }
           catch (...)
           {
-           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+            std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
           }
         }
 
@@ -267,7 +267,7 @@ void TeleConsumer()
           }
           catch (...)
           {
-           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+            std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
           }
         }
 
@@ -305,7 +305,7 @@ void TeleConsumer()
           }
           catch (...)
           {
-           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
+            std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" << __LINE__ << std::endl;
           }
         }
 
