@@ -651,6 +651,7 @@ void DiskJoinStep::mainRunner()
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }  // doesn't matter if this fails to open the large-file
 
     largeReader();  // large reader will only drain the fifo when cancelled()

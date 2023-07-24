@@ -167,6 +167,7 @@ int flushPrimProcCache()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;
@@ -217,6 +218,7 @@ int flushPrimProcBlocks(const BRM::BlockList_t& list)
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;
@@ -245,6 +247,7 @@ int flushPrimProcAllverBlocks(const vector<LBID_t>& list)
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;
@@ -320,6 +323,7 @@ int dropPrimProcFdCache()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;

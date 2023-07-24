@@ -18,6 +18,7 @@
 #include <queue>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 #define BOOST_DISABLE_ASSERTS
@@ -223,12 +224,14 @@ void TeleConsumer()
         }
         catch (...)
         {
+         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
           try
           {
             fTransport->close();
           }
           catch (...)
           {
+           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
           }
         }
 
@@ -264,6 +267,7 @@ void TeleConsumer()
           }
           catch (...)
           {
+           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
           }
         }
 
@@ -301,6 +305,7 @@ void TeleConsumer()
           }
           catch (...)
           {
+           std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
           }
         }
 

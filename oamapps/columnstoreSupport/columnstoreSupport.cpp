@@ -542,6 +542,7 @@ int main(int argc, char* argv[])
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   if (singleServerInstall == "n" && !LOCAL)

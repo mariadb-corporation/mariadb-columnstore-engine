@@ -60,6 +60,7 @@ CompressedInetStreamSocket::CompressedInetStreamSocket()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   if (val == "" || val == "Y")
@@ -73,6 +74,7 @@ CompressedInetStreamSocket::CompressedInetStreamSocket()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   auto* compressInterface = compress::getCompressInterfaceByName(compressionType);

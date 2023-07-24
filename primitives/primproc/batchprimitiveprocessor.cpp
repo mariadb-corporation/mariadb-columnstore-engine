@@ -2030,7 +2030,7 @@ void BatchPrimitiveProcessor::execute()
                 bc.flushOIDs(&oids[0], oids.size());
             }
         }
-        catch (...) { }     // doesn't matter if this fails, just avoid crashing
+        catch (...) {std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl; }     // doesn't matter if this fails, just avoid crashing
 
 #endif
 

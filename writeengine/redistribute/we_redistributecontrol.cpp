@@ -297,9 +297,11 @@ int RedistributeControl::handleStatusMsg(messageqcpp::ByteStream&, messageqcpp::
       }
       catch (const std::exception&)
       {
+       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
       }
       catch (...)
       {
+       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
       }
 
       break;
@@ -548,9 +550,11 @@ void RedistributeControl::updateState(uint32_t s)
     }
     catch (const std::exception&)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
 
     fRedistributeInfo = RedistributeInfo();

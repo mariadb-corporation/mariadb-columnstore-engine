@@ -106,6 +106,7 @@ JoinPartition::JoinPartition(const RowGroup& lRG, const RowGroup& sRG, const vec
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   if (compressionType == "LZ4")

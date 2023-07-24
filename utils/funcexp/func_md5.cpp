@@ -285,7 +285,7 @@ char* MD5File(char* szFilename)
     }
     catch (...)
     {
-
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
 
     return NULL; // failed

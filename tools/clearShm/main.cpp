@@ -65,6 +65,7 @@ void shmDoit(key_t shm_key, const string& label)
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
   }
 

@@ -2131,6 +2131,7 @@ int ha_mcs_impl_discover_existence(const char* schema, const char* name)
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return 0;
@@ -2668,9 +2669,9 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     ByteStream::quadbyte qb = 1; // Tell PrimProc front session to eat all the rows
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
-    // This is the command to start sending return values. because we previously sent the swallow 
+    // This is the command to start sending return values. because we previously sent the swallow
     // rows command, there won't be anything useful coming back, but it needs this to flush internal queues.
-    qb = 5; // Read the result data. 
+    qb = 5; // Read the result data.
     msg.reset();
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);

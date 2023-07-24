@@ -329,6 +329,7 @@ void MessageQueueClient::write(const ByteStream& msg, const struct timespec* tim
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
 
     fClientSock.close();
@@ -358,6 +359,7 @@ bool MessageQueueClient::connect() const
         }
         catch (...)
         {
+         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
         }
       }
       else

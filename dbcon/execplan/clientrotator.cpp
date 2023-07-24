@@ -293,6 +293,7 @@ void ClientRotator::connect(double timeout)
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   if (!connected)
@@ -370,6 +371,7 @@ void ClientRotator::connectList(double timeout)
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
   }
 

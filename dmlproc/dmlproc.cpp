@@ -643,6 +643,7 @@ int ServiceDMLProc::Child()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   DMLServer dmlserver(serverThreads, serverQueueSize, &dbrm);

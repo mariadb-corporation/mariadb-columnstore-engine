@@ -643,6 +643,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
   }
 
@@ -3939,6 +3940,7 @@ uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::str
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   bs.restart();
@@ -4023,6 +4025,7 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
   }
 

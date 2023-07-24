@@ -262,6 +262,7 @@ int ddl_cleanup()
       }
       catch (...)
       {
+       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
       }
     }
   }

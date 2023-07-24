@@ -89,6 +89,7 @@ void IDBPolicy::init(bool bEnableLogging, bool bUseRdwrMemBuffer, const string& 
       }
       catch (...)
       {
+       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
       }
       if (!itWorked)
       {

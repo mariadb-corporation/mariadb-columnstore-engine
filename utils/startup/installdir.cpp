@@ -91,6 +91,7 @@ const string StartUp::tmpDir()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return TempFileDir;

@@ -1400,6 +1400,7 @@ int DBRM::deleteOID(OID_t oid) DBRM_THROW
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }  // an error here means a network problem, will be caught elsewhere
 
   return err;
@@ -1446,6 +1447,7 @@ int DBRM::deleteOIDs(const std::vector<OID_t>& oids) DBRM_THROW
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }  // an error here means a network problem, will be caught elsewhere
 
   return err;
@@ -3597,6 +3599,7 @@ int DBRM::getSystemState(uint32_t& stateFlags) throw()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;
@@ -3648,6 +3651,7 @@ int DBRM::setSystemState(uint32_t stateFlags) throw()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   stateFlags = 0;
@@ -3698,6 +3702,7 @@ int DBRM::clearSystemState(uint32_t stateFlags) throw()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return -1;
@@ -3733,6 +3738,7 @@ bool DBRM::isDBRMReady() throw()
       }
       catch (...)
       {
+       std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
       }
 
       MessageQueueClientPool::releaseInstance(msgClient);
@@ -3742,6 +3748,7 @@ bool DBRM::isDBRMReady() throw()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return false;

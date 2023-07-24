@@ -165,9 +165,11 @@ void RedistributeWorkerThread::handleRequest()
   }
   catch (const std::exception&)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   sendResponse(RED_ACTN_REQUEST);

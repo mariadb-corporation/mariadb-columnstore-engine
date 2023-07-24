@@ -476,9 +476,11 @@ void CreateIndexProcessor::rollBackIndex(BRM::TxnID& txnID, int sessionId)
   }
   catch (exception& ex)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   fSessionManager.rolledback(txnID);

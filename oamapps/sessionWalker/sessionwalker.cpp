@@ -69,6 +69,7 @@ void rollback(const SessionMonitor::MonSIDTIDEntry& txn)
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 }
 

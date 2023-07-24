@@ -355,6 +355,7 @@ void RBMetaWriter::saveBulkRollbackMetaData(const std::vector<Column>& columns,
     }
     catch (...)
     {
+     std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
     }
 
     throw WeException(ex.what(), ex.errorCode());

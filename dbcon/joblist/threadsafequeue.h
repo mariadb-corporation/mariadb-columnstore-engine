@@ -75,6 +75,7 @@ class ThreadSafeQueue
         }
         catch (...)
         {
+         std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
         }
 
 #endif

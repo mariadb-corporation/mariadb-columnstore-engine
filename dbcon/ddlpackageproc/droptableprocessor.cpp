@@ -1374,6 +1374,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
 
   return result;

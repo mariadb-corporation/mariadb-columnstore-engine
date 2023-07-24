@@ -124,6 +124,7 @@ void ThreadPool::processingLoop()
   }
   catch (...)
   {
+   std::cout << "UNHANDLABLE EXCEPTION: " << __FILE__ << ":" <<__LINE__ << std::endl;
   }
   //  _processingLoop returns with the lock held
 
