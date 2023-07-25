@@ -180,7 +180,10 @@ class TableInfo : public WeUIDGID
   oam::OamCache* fOamCachePtr;              // OamCache: ptr is copyable
   boost::uuids::uuid fJobUUID;              // Job UUID
   std::vector<BRM::LBID_t> fDictFlushBlks;  // dict blks to be flushed from cache
-
+  
+  std::shared_ptr<arrow::RecordBatchReader> fParquetReader;
+  std::unique_ptr<parquet::arrow::FileReader> fReader;
+  // arrow::RecordBatchIterator fParquetIter;
   //--------------------------------------------------------------------------
   // Private Functions
   //--------------------------------------------------------------------------
@@ -193,6 +196,7 @@ class TableInfo : public WeUIDGID
   int finishBRM();                       // Finish reporting updates for BRM
   void freeProcessingBuffers();          // Free up Processing Buffers
   bool isBufferAvailable(bool report);   // Is tbl buffer available for reading
+  int openTableFileParquet(int64_t &totalRowsParquet);
   int openTableFile();                   // Open data file and set the buffer
   void reportTotals(double elapsedSec);  // Report summary totals
   void sleepMS(long int ms);             // Sleep method
@@ -391,6 +395,7 @@ class TableInfo : public WeUIDGID
   // */
   int parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
 
+  int parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
   // /** @brief parse parquet data
   // */
   // int parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);

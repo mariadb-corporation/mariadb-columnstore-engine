@@ -319,7 +319,8 @@ inline void BulkLoad::addToCmdLineImportFileList(const std::string& importFile)
 {
   if (importFile.rfind(".parquet") != std::string::npos)
   {
-    LOAD_FILE = FILE_PARQUET;
+    // LOAD_FILE = FILE_PARQUET;
+    setImportDataMode(IMPORT_DATA_PARQUET);
   }
   fCmdLineImportFiles.push_back(importFile);
 }

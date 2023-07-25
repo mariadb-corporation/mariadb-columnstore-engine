@@ -28,7 +28,7 @@ void generateIntTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("int", arrow::int32()),
+		arrow::field("col1", arrow::int32()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
@@ -61,7 +61,7 @@ void generateInt64Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("int64", arrow::int64()),
+		arrow::field("col1", arrow::int64()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
@@ -89,7 +89,7 @@ void generateFloatTable()
   PARQUET_THROW_NOT_OK(builder.Finish(&array));
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("float", arrow::float32()),
+		arrow::field("col1", arrow::float32()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
@@ -118,7 +118,7 @@ void generateDoubleTable()
   PARQUET_THROW_NOT_OK(doublebuilder.Finish(&doublearray));
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("double", arrow::float64()),
+		arrow::field("col1", arrow::float64()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {doublearray});
 
@@ -147,7 +147,7 @@ void generateTimeTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("time", arrow::time32(arrow::TimeUnit::MILLI)),
+		arrow::field("col1", arrow::time32(arrow::TimeUnit::MILLI)),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {time32array});
 
@@ -180,7 +180,7 @@ void generateStringTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("str", arrow::utf8()),
+		arrow::field("col1", arrow::utf8()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {strarray});
 
@@ -209,7 +209,7 @@ void generateTimestampTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("timestamp", arrow::timestamp(arrow::TimeUnit::MILLI)),
+		arrow::field("col1", arrow::timestamp(arrow::TimeUnit::MILLI)),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {tsarray});
 
@@ -238,7 +238,7 @@ void generateDateTable()
   PARQUET_THROW_NOT_OK(date32builder.Finish(&date32array));
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("date", arrow::date32()),
+		arrow::field("col1", arrow::date32()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {date32array});
 
@@ -267,7 +267,7 @@ void generateInt16Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("int16", arrow::int16()),
+		arrow::field("col1", arrow::int16()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i16array});
 
@@ -296,7 +296,7 @@ void generateInt8Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("int8", arrow::int8()),
+		arrow::field("col1", arrow::int8()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i8array});
 
@@ -325,7 +325,7 @@ void generateDecimalTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("decimal", arrow::decimal128(9, 3)),
+		arrow::field("col1", arrow::decimal128(9, 3)),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {decimalArray});
 
@@ -360,7 +360,7 @@ void generateUintTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("int", arrow::uint32()),
+		arrow::field("col1", arrow::uint32()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
@@ -390,7 +390,7 @@ void generateUint16Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("uint16", arrow::uint16()),
+		arrow::field("col1", arrow::uint16()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i16array});
 
@@ -419,7 +419,7 @@ void generateUint8Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("uint8", arrow::uint8()),
+		arrow::field("col1", arrow::uint8()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {i8array});
 
@@ -452,7 +452,7 @@ void generateUint64Table()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("uint64", arrow::uint64()),
+		arrow::field("col1", arrow::uint64()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
@@ -482,7 +482,7 @@ void generateBoolTable()
 
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("bool", arrow::boolean()),
+		arrow::field("col1", arrow::boolean()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {boolArray});
 
@@ -508,7 +508,7 @@ void generateNullTable()
   PARQUET_THROW_NOT_OK(nullBuilder.Finish(&nullarray));
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
-		arrow::field("null", arrow::null()),
+		arrow::field("col1", arrow::null()),
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {nullarray});
 

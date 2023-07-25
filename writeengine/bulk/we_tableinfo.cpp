@@ -166,6 +166,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fRejectErrCnt(0)
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
+ , fParquetReader(NULL)
 {
   fBuffers.clear();
   fColumns.clear();
@@ -326,25 +327,109 @@ int TableInfo::parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsig
   return rc;
 }
 
-// int TableInfo::parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs)
-// {
-//   int rc = NO_ERROR;
-//   ColumnBufferSection* section = 0;
-//   uint32_t nRowsParsed;
-//   RID lastInputExtent;
-//   // ColumnInfo& columnInfo = fColumns[k];
+int TableInfo::parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed)
+{
+  int rc = NO_ERROR;
+  ColumnBufferSection* section = 0;
+  uint32_t nRowsParsed;
+  RID lastInputRowInExtent;
+  ColumnInfo& columnInfo = fColumns[k];
+  RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batchProcessed, cbs, nRowsParsed,
+                  &section, lastInputRowInExtent));
+  uint64_t fAutoIncNextValue = 0;
+  int64_t nullCount = batch->column(k)->null_count();
+  if (nRowsParsed > 0)
+  {
+    if ((columnInfo.column.autoIncFlag) && (nullCount > 0))
+    {
+      rc = columnInfo.reserveAutoIncNums(nullCount, fAutoIncNextValue);
+    }
 
-//   if (columnInfo.column.colType == COL_TYPE_DICT)
-//   {
-//     rc = parseParquetDict(k, bs);
-//   }
-//   else
-//   {
-//     rc = parseParquetCol(batch, k, bs);
-//   }
 
-// }
+    unsigned char* buf = new unsigned char[cbs * columnInfo.column.width];
 
+    BLBufferStats bufStats(columnInfo.column.dataType);
+    bool updateCPInfoPendingFlag = false;
+    std::shared_ptr<arrow::Array> columnData = batch->column(k);
+    // get current column data type
+    // arrow::Type::type colType = columnData->type()->id();
+    // only consider `int` type now 
+
+    // parquetConvert(std::shared_ptr<arrow::Array>, JobColumn&, BLBufferStats&, unsigned char*)
+
+    parquetConvert(columnData, columnInfo.column, bufStats, buf, cbs, fAutoIncNextValue);
+
+    updateCPInfoPendingFlag = true;
+
+    if (columnInfo.column.width <= 8)
+    {
+      columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                              columnInfo.column.dataType, columnInfo.column.width);
+    }
+    else
+    {
+      columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                              columnInfo.column.dataType, columnInfo.column.width);
+    }
+
+    // what's this rowsPerExtent for?
+    lastInputRowInExtent += columnInfo.rowsPerExtent();
+
+    if (isUnsigned(columnInfo.column.dataType))
+    {
+      if (columnInfo.column.width <= 8)
+      {
+        bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+        bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+      }
+      else
+      {
+        bufStats.bigMinBufferVal = -1;
+        bufStats.bigMaxBufferVal = 0;
+      }
+      updateCPInfoPendingFlag = false;
+    }
+    else
+    {
+      if (columnInfo.column.width <= 8)
+      {
+        bufStats.minBufferVal = MAX_BIGINT;
+        bufStats.maxBufferVal = MIN_BIGINT;
+      }
+      else
+      {
+        utils::int128Max(bufStats.bigMinBufferVal);
+        utils::int128Min(bufStats.bigMaxBufferVal);
+      }
+      updateCPInfoPendingFlag = false;
+    }
+
+    if (updateCPInfoPendingFlag)
+    {
+      if (columnInfo.column.width <= 8)
+      {
+        columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                                columnInfo.column.dataType, columnInfo.column.width);
+      }
+      else
+      {
+        columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                                columnInfo.column.dataType, columnInfo.column.width);
+      }
+    }
+
+    if (bufStats.satCount)
+    {
+      columnInfo.incSaturatedCnt(bufStats.satCount);
+    }
+
+    section->write(buf, cbs);
+    delete[] buf;
+
+    RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
+  }
+  return rc;
+}
 
 void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue)
 {
@@ -1462,106 +1547,10 @@ int TableInfo::readParquetData()
       }
       else
       {
+        rc = parseParquetCol(batch, k ,current_batch_size, bs, batch_processed);
           // rc = parseParquetCol(batch, k, bs);
         // int rc = NO_ERROR;
-        ColumnBufferSection* section = 0;
-        uint32_t nRowsParsed;
-        RID lastInputRowInExtent;
-        ColumnInfo& columnInfo = fColumns[k];
-        RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(bs * batch_processed, current_batch_size, nRowsParsed,
-                        &section, lastInputRowInExtent));
-        uint64_t fAutoIncNextValue = 0;
-        int64_t nullCount = batch->column(k)->null_count();
-        if (nRowsParsed > 0)
-        {
-          if ((columnInfo.column.autoIncFlag) && (nullCount > 0))
-          {
-            rc = columnInfo.reserveAutoIncNums(nullCount, fAutoIncNextValue);
-          }
 
-
-          unsigned char* buf = new unsigned char[current_batch_size * columnInfo.column.width];
-
-          BLBufferStats bufStats(columnInfo.column.dataType);
-          bool updateCPInfoPendingFlag = false;
-          std::shared_ptr<arrow::Array> columnData = batch->column(k);
-          // get current column data type
-          // arrow::Type::type colType = columnData->type()->id();
-          // only consider `int` type now 
-
-          // parquetConvert(std::shared_ptr<arrow::Array>, JobColumn&, BLBufferStats&, unsigned char*)
-
-          parquetConvert(columnData, columnInfo.column, bufStats, buf, current_batch_size, fAutoIncNextValue);
-
-          updateCPInfoPendingFlag = true;
-
-          if (columnInfo.column.width <= 8)
-          {
-            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
-                                    columnInfo.column.dataType, columnInfo.column.width);
-          }
-          else
-          {
-            columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
-                                    columnInfo.column.dataType, columnInfo.column.width);
-          }
-
-          // what's this rowsPerExtent for?
-          lastInputRowInExtent += columnInfo.rowsPerExtent();
-
-          if (isUnsigned(columnInfo.column.dataType))
-          {
-            if (columnInfo.column.width <= 8)
-            {
-              bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
-              bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
-            }
-            else
-            {
-              bufStats.bigMinBufferVal = -1;
-              bufStats.bigMaxBufferVal = 0;
-            }
-            updateCPInfoPendingFlag = false;
-          }
-          else
-          {
-            if (columnInfo.column.width <= 8)
-            {
-              bufStats.minBufferVal = MAX_BIGINT;
-              bufStats.maxBufferVal = MIN_BIGINT;
-            }
-            else
-            {
-              utils::int128Max(bufStats.bigMinBufferVal);
-              utils::int128Min(bufStats.bigMaxBufferVal);
-            }
-            updateCPInfoPendingFlag = false;
-          }
-
-          if (updateCPInfoPendingFlag)
-          {
-            if (columnInfo.column.width <= 8)
-            {
-              columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
-                                      columnInfo.column.dataType, columnInfo.column.width);
-            }
-            else
-            {
-              columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
-                                      columnInfo.column.dataType, columnInfo.column.width);
-            }
-          }
-
-          if (bufStats.satCount)
-          {
-            columnInfo.incSaturatedCnt(bufStats.satCount);
-          }
-
-          section->write(buf, current_batch_size);
-          delete[] buf;
-
-          RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
-        }
       }
     }
     // process `aux` column
@@ -1796,24 +1785,45 @@ int TableInfo::readTableData()
 {
   RID validTotalRows = 0;
   RID totalRowsPerInputFile = 0;
+  int64_t totalRowsParquet = 0;
   int filesTBProcessed = fLoadFileList.size();
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
-
-  if (fHandle == NULL)
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
   {
-    fFileName = fLoadFileList[fileCounter];
-    int rc = openTableFile();
-
-    if (rc != NO_ERROR)
+    if (fHandle == NULL)
     {
-      // Mark the table status as error and exit.
-      boost::mutex::scoped_lock lock(fSyncUpdatesTI);
-      fStatusTI = WriteEngine::ERR;
-      return rc;
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFile();
+
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+
+      fileCounter++;
     }
 
-    fileCounter++;
+  }
+  else
+  {
+    if (fParquetReader == NULL)
+    {
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFileParquet(totalRowsParquet);
+      fileCounter++;
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+    }
+
   }
 
   timeval readStart;
@@ -1957,8 +1967,15 @@ int TableInfo::readTableData()
     }
     else
     {
-      readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
-                                                validTotalRows, fColumns, allowedErrCntThisCall);
+      if (fImportDataMode != IMPORT_DATA_PARQUET)
+      {
+        readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
+                                                  validTotalRows, fColumns, allowedErrCntThisCall);
+      }
+      else
+      {
+        readRc = fBuffers[readBufNo].fillFromFileParquet(totalRowsPerInputFile, validTotalRows);
+      }
     }
 
     if (readRc != NO_ERROR)
@@ -2060,7 +2077,7 @@ int TableInfo::readTableData()
       fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
       // bufferCount++;
-      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)))
+      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) || (totalRowsPerInputFile == (RID)totalRowsParquet))
       {
         timeval readFinished;
         gettimeofday(&readFinished, NULL);
@@ -2097,7 +2114,15 @@ int TableInfo::readTableData()
         if (fileCounter < filesTBProcessed)
         {
           fFileName = fLoadFileList[fileCounter];
-          int rc = openTableFile();
+          int rc;
+          if (fImportDataMode != IMPORT_DATA_PARQUET)
+          {
+            rc = openTableFile();
+          }
+          else
+          {
+            rc = openTableFileParquet(totalRowsParquet);
+          }
 
           if (rc != NO_ERROR)
           {
@@ -2790,6 +2815,29 @@ void TableInfo::addColumn(ColumnInfo* info)
   fNumberOfColumns = fColumns.size();
 
   fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width);
+}
+
+
+int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
+{
+  if (fParquetReader != NULL)
+    return NO_ERROR;
+  std::shared_ptr<arrow::io::ReadableFile> infile;
+  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
+  PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
+  //TODO: batch_size set here as hyperparameter
+  fReader->set_batch_size(10);
+  PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 10, &totalRowsParquet));
+  PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
+  // fParquetIter = fParquetReader->begin();
+  // fParquetIter++;
+  // initialize fBuffers batch source
+  for (int i = 0; i < fReadBufCount; ++i)
+  {
+    fBuffers[i].setParquetReader(fParquetReader);
+  }
+  return NO_ERROR;
+
 }
 
 //------------------------------------------------------------------------------

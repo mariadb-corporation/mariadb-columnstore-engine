@@ -1,0 +1,1 @@
+CREATE TABLE decimal(col1 DECIMAL(9,3)) ENGINE=Columnstore;

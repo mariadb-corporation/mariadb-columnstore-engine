@@ -30,7 +30,11 @@
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
-
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
 namespace WriteEngine
 {
 class Log;
@@ -83,7 +87,9 @@ class BulkLoadBuffer
 
   char* fOverflowBuf;      // Overflow data held for next buffer
   unsigned fOverflowSize;  // Current size of fOverflowBuf
-
+  std::shared_ptr<arrow::RecordBatch> fParquetBatch;
+  std::shared_ptr<arrow::RecordBatch> fParquetBatchParser;
+  std::shared_ptr<::arrow::RecordBatchReader> fParquetReader;
   // Information about the locker and status for each column in this buffer.
   // Note that TableInfo::fSyncUpdatesTI mutex is used to synchronize
   // access to fColumnLocks and fParseComplete from both read and parse
@@ -174,6 +180,11 @@ class BulkLoadBuffer
   void convert(char* field, int fieldLength, bool nullFlag, unsigned char* output, const JobColumn& column,
                BLBufferStats& bufStats);
 
+  int parseColParquet(ColumnInfo& columnInfo);
+
+  int parseDictParquet(ColumnInfo& columnInfo);
+  
+  void convertParquet(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue);
   /** @brief Copy the overflow data
    */
   void copyOverflow(const BulkLoadBuffer& buffer);
@@ -263,6 +274,11 @@ class BulkLoadBuffer
     fStatusBLB = status;
   }
 
+  void setParquetReader(std::shared_ptr<::arrow::RecordBatchReader> reader)
+  {
+    fParquetReader = reader;
+  }
+
   /** @brief Try to lock a column for the buffer
    * TableInfo::fSyncUpdatesTI mutex should be locked when calling this
    * function (see fColumnLocks discussion).
@@ -272,6 +288,9 @@ class BulkLoadBuffer
   int fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const char* input, size_t length,
                      size_t* parse_length, RID& totalReadRows, RID& correctTotalRows,
                      const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
+
+
+  int fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows);
 
   /** @brief Read the table data into the buffer
    */

@@ -1,0 +1,1 @@
+CREATE TABLE float(col1 FLOAT) ENGINE=Columnstore;

@@ -1,0 +1,1 @@
+CREATE TABLE int32table(col1 INT) ENGINE=Columnstore;
