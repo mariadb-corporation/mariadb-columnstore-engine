@@ -1950,7 +1950,7 @@ int BulkLoadBuffer::parseDict(ColumnInfo& columnInfo)
         return rc;
     }
   }
-
+  // git test
   return rc;
 }
 
