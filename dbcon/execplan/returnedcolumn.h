@@ -376,7 +376,7 @@ class ReturnedColumn : public TreeNode
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
  public:
-  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull)
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull)
   {
     return b.getInt64(0);
   }

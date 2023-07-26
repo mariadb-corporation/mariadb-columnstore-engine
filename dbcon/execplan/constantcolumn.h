@@ -397,7 +397,7 @@ class ConstantColumn : public ReturnedColumn
     return fResult.doubleVal;
   }
  public:
-  llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull) override{
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override{
     auto ret = b.getInt64(fResult.intVal);
     return ret;
   }
