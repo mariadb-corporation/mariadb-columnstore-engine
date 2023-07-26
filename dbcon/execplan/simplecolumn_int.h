@@ -86,6 +86,23 @@ class SimpleColumn_INT : public SimpleColumn
 
  private:
   void setNullVal();
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
+  {
+    auto offset = row.getOffset(fInputIndex);
+    auto* data_ptr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), args, offset);
+    switch (len)
+    {
+      case 1: return b.CreateLoad(b.getInt8Ty(), data_ptr);
+      case 2: return b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(data_ptr, b.getInt16Ty()->getPointerTo()));
+      case 4: return b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(data_ptr, b.getInt32Ty()->getPointerTo()));
+
+      case 8: return b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(data_ptr, b.getInt64Ty()->getPointerTo()));
+
+      default: throw std::logic_error("Row::getIntField(): bad length.");
+    }
+  }
 };
 
 template <int len>

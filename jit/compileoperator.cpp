@@ -1,5 +1,6 @@
 #include "compileoperator.h"
 #include "llvm/IR/Verifier.h"
+#include "rowgroup.h"
 
 namespace execplan
 {
@@ -7,43 +8,27 @@ namespace execplan
 void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
 {
   auto columns = expression.get()->simpleColumnList();
-  size_t column_size = columns.size();
   llvm::IRBuilder<> b(module.getContext());
-  std::vector<llvm::Type*> params;
   llvm::Type* return_type;
-//  for (auto column : columns)
-//  {
-//    switch (column->colType().colDataType)
-//    {
-//      case execplan::CalpontSystemCatalog::BIGINT:
-//      case execplan::CalpontSystemCatalog::INT:
-//      case execplan::CalpontSystemCatalog::MEDINT:
-//      case execplan::CalpontSystemCatalog::SMALLINT:
-//      case execplan::CalpontSystemCatalog::TINYINT:
-//        params.emplace_back(b.getInt64Ty());
-//        break;
-//      default: throw std::runtime_error("not support type:" + std::to_string(column->colType().colDataType));
-//    }
-//  }
-
+  auto * data_type = b.getInt8Ty()->getPointerTo();
   switch (expression->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::TINYINT:
-      return_type = b.getInt64Ty();
-      break;
+    case execplan::CalpontSystemCatalog::TINYINT: return_type = b.getInt64Ty(); break;
     default: throw std::runtime_error("not support type");
   }
-  auto* func_type = llvm::FunctionType::get(return_type, params, false);
+  auto* func_type = llvm::FunctionType::get(return_type, {data_type}, false);
   auto* func =
       llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, expression->alias(), module);
 
+  auto * args = func->args().begin();
+  llvm::Value * data_pointer = args++;
   auto* entry = llvm::BasicBlock::Create(b.getContext(), "entry", func);
   b.SetInsertPoint(entry);
-  auto* ret = expression->compile(b, row, isNull);
+  auto* ret = expression->compile(b, data_pointer, row, isNull);
 
   b.CreateRet(ret);
 
@@ -52,14 +37,17 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   module.print(llvm::outs(), nullptr);
 }
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
-                                 bool& isNull)
+CompiledOperatorINT64 compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
+                                      bool& isNull)
 {
   std::cout << expression->alias();
   auto compiled_module =
       jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row, isNull); });
 
-  CompiledOperator result_compiled_function{.compiled_module = compiled_module};
+  auto compiled_function_ptr = reinterpret_cast<JITCompiledOperatorINT64>(
+      compiled_module.function_name_to_symbol[expression->alias()]);
+  CompiledOperatorINT64 result_compiled_function{.compiled_module = compiled_module,
+                                                 .compiled_function = compiled_function_ptr};
 
   return result_compiled_function;
 }
