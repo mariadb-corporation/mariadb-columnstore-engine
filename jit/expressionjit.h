@@ -12,8 +12,8 @@ static JIT& getJITInstance()
 class CompiledColumn : execplan::ReturnedColumn
 {
 };
-static void compileExpression(const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
+static CompiledOperatorINT64 compileExpression(const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
 {
-  compileOperator(getJITInstance(), expression, row, isNull);
+  return compileOperator(getJITInstance(), expression, row, isNull);
 }
 }  // namespace msc_jit

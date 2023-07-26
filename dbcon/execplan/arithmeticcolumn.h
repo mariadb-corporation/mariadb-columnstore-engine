@@ -279,9 +279,9 @@ class ArithmeticColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull) override
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
   {
-    return fExpression->compile(b,row,isNull);
+    return fExpression->compile(b, args,row, isNull);
   }
 };
 

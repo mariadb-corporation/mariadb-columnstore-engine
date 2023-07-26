@@ -378,6 +378,10 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();
   }
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override{
+    return b.getInt64(0);
+  }
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;

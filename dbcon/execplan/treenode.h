@@ -331,7 +331,7 @@ class TreeNode
   {
     return fResult.intVal;
   }
-  virtual llvm::Value *compile(llvm::IRBuilder<> & b, rowgroup::Row& row, bool& isNull)
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull)
   {
     return fResult.compiledBlock;
   }
