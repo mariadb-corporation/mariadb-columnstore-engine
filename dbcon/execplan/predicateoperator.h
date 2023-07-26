@@ -121,6 +121,11 @@ class PredicateOperator : public Operator
   inline bool strTrimCompare(const std::string& op1, const std::string& op2);
 
   const CHARSET_INFO* cs;
+
+ public:
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
 inline bool PredicateOperator::numericCompare(const IDB_Decimal& op1, const IDB_Decimal& op2)
@@ -164,6 +169,36 @@ inline bool PredicateOperator::numericCompare(const result_t op1, const result_t
     case OP_LT: return op1 < op2;
 
     case OP_LE: return op1 <= op2;
+
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid predicate operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+
+inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+{
+  return compile(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+}
+inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_EQ: return b.CreateICmpEQ(l, r);
+
+    case OP_NE: return b.CreateICmpNE(l, r);
+
+    case OP_GT: return b.CreateICmpSGT(l, r);
+
+    case OP_GE: return b.CreateICmpSGE(l, r);
+
+    case OP_LT: return b.CreateICmpSLT(l, r);
+
+    case OP_LE: return b.CreateICmpSLE(l, r);
 
     default:
     {

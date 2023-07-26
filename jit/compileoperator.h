@@ -6,7 +6,7 @@
 
 namespace execplan
 {
-using JITCompiledOperatorINT64 = int64_t (*)(uint8_t* data);
+using JITCompiledOperatorINT64 = int64_t (*)(uint8_t* data, bool& isNull);
 struct CompiledOperatorINT64
 {
   msc_jit::JIT::CompiledModule compiled_module;

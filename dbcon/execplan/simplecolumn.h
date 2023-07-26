@@ -365,8 +365,13 @@ class SimpleColumn : public ReturnedColumn
     return TreeNode::getTimeIntVal();
   }
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override{
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       rowgroup::Row& row) override{
     return b.getInt64(0);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return false;
   }
 };
 

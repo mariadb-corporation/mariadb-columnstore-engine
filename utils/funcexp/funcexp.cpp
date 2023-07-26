@@ -43,7 +43,6 @@ using namespace joblist;
 #endif
 
 #include "mcs_decimal.h"
-#include "expressionjit.h"
 namespace funcexp
 {
 /* static */
@@ -262,12 +261,12 @@ Func* FuncExp::getFunctor(std::string& funcName)
 void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expression)
 {
   bool isNull;
-
   for (uint32_t i = 0; i < expression.size(); i++)
   {
     isNull = false;
-    CompiledOperatorINT64 compiledOperatorInt64 = msc_jit::compileExpression(expression[i], row, isNull);
-    std::cout << "compiledOperatorInt64: " << compiledOperatorInt64.compiled_function(row.getData()) << std::endl;
+    //    CompiledOperatorINT64 compiledOperatorInt64 = msc_jit::compileExpression(expression[i], row,
+    //    isNull); std::cout << "compiledOperatorInt64: " <<
+    //    compiledOperatorInt64.compiled_function(row.getData()) << std::endl;
     switch (expression[i]->resultType().colDataType)
     {
       case CalpontSystemCatalog::DATE:
@@ -342,7 +341,6 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       case CalpontSystemCatalog::BIGINT:
       {
         int64_t val = expression[i]->getIntVal(row, isNull);
-        int64_t val2 = val;
         if (isNull)
           row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
         else

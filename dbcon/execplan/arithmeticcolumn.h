@@ -278,9 +278,14 @@ class ArithmeticColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       rowgroup::Row& row) override
   {
-    return fExpression->compile(b, args,row, isNull);
+    return fExpression->compile(b, data, isNull, row);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return fExpression->isCompilable(row);
   }
 };
 
