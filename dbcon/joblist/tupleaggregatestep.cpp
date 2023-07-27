@@ -343,10 +343,12 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
   fNumOfBuckets = fRm->aggNumBuckets();
   fNumOfRowGroups = fRm->aggNumRowGroups();
 
-  auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
-  fNumOfBuckets =
-      calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups, fRowGroupIn.getRowSize(),
-                          fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
+  // auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
+  //  fNumOfBuckets =
+  //      calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups,
+  //      fRowGroupIn.getRowSize(),
+  //                          fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
+  fNumOfBuckets = 2;
   fNumOfThreads = std::min(fNumOfThreads, fNumOfBuckets);
 
   fMemUsage.reset(new uint64_t[fNumOfThreads]);
@@ -5723,7 +5725,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         fDoneAggregate = true;
         bool done = true;
 
-        while (nextDeliveredRowGroup())
+        while (nextDeliveredRowGroup() && !cancelled())
         {
           done = false;
           rowCount = fRowGroupOut.getRowCount();
@@ -5753,7 +5755,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           fEndOfResult = true;
       }
     }
-    //Case 2: Query contains DISTINCT keyword but no GROUP BY attributes
+    // Case 2: Query contains aggregate function on a column with a DISTINCT operator but no GROUP BY
+    // attribute e.g. SELECT SUM(DISTINCT col1) FROM test;
     else if (distinctAgg)
     {
       if (!fEndOfResult)
@@ -5781,45 +5784,38 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           }
         }
         fDoneAggregate = true;
-      }
 
-      bool done = true;
-
-      //@bug4459
-      while (fAggregator->nextRowGroup() && !cancelled())
-      {
-        done = false;
-        fAggregator->finalize();
-        rowCount = fRowGroupOut.getRowCount();
-        fRowsReturned += rowCount;
-        fRowGroupDelivered.setData(fRowGroupOut.getRGData());
-
-        if (rowCount != 0)
+        bool done = true;
+        while (fAggregator->nextRowGroup() && !cancelled())
         {
-          if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-            pruneAuxColumns();
+          done = false;
+          fAggregator->finalize();
+          rowCount = fRowGroupOut.getRowCount();
+          fRowsReturned += rowCount;
+          fRowGroupDelivered.setData(fRowGroupOut.getRGData());
 
-          if (dlp)
+          if (rowCount != 0)
           {
-            rgData = fRowGroupDelivered.duplicate();
-            dlp->insert(rgData);
+            if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+              pruneAuxColumns();
+
+            if (dlp)
+            {
+              rgData = fRowGroupDelivered.duplicate();
+              dlp->insert(rgData);
+            }
+            else
+            {
+              bs.restart();
+              fRowGroupDelivered.serializeRGData(bs);
+              break;
+            }
           }
-          else
-          {
-            bs.restart();
-            fRowGroupDelivered.serializeRGData(bs);
-            break;
-          }
+          done = true;
         }
-
-        done = true;
+        if (done)
+          fEndOfResult = true;
       }
-
-      if (done)
-      {
-        fEndOfResult = true;
-      }
-
     } else if (fAggregator->aggMapKeyLength() > 0) {
       //CASE 3: NON-DISTINCT group by
       //TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
@@ -5827,7 +5823,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       fDoneAggregate = true;
       bool done = true;
 
-      while (nextDeliveredRowGroup())
+      while (nextDeliveredRowGroup() && !cancelled())
       {
         done = false;
         rowCount = fRowGroupOut.getRowCount();
