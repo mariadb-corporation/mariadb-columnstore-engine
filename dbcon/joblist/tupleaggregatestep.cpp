@@ -5660,7 +5660,6 @@ void TupleAggregateStep::doAggregate()
 
 uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp)
 {
-  RGData rgData;
   uint64_t rowCount = 0;
 
   try
@@ -5732,20 +5731,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           if (rowCount != 0)
           {
-            if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-              pruneAuxColumns();
-
-            if (dlp)
-            {
-              rgData = fRowGroupDelivered.duplicate();
-              dlp->insert(rgData);
-            }
-            else
-            {
-              bs.restart();
-              fRowGroupDelivered.serializeRGData(bs);
+            if (!cleanUpAndOutputRow(bs, dlp))
               break;
-            }
           }
 
           done = true;
@@ -5796,20 +5783,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           if (rowCount != 0)
           {
-            if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-              pruneAuxColumns();
-
-            if (dlp)
-            {
-              rgData = fRowGroupDelivered.duplicate();
-              dlp->insert(rgData);
-            }
-            else
-            {
-              bs.restart();
-              fRowGroupDelivered.serializeRGData(bs);
+            if (!cleanUpAndOutputRow(bs, dlp))
               break;
-            }
           }
           done = true;
         }
@@ -5830,20 +5805,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
         if (rowCount != 0)
         {
-          if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-            pruneAuxColumns();
-
-          if (dlp)
-          {
-            rgData = fRowGroupDelivered.duplicate();
-            dlp->insert(rgData);
-          }
-          else
-          {
-            bs.restart();
-            fRowGroupDelivered.serializeRGData(bs);
+          if (!cleanUpAndOutputRow(bs, dlp))
             break;
-          }
         }
 
         done = true;
@@ -5893,6 +5856,25 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
   }
 
   return rowCount;
+}
+
+bool TupleAggregateStep::cleanUpAndOutputRow(ByteStream& bs, RowGroupDL* dlp)
+{
+  if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+    pruneAuxColumns();
+
+  if (dlp)
+  {
+    RGData rgData = fRowGroupDelivered.duplicate();
+    dlp->insert(rgData);
+  }
+  else
+  {
+    bs.restart();
+    fRowGroupDelivered.serializeRGData(bs);
+    return false;
+  }
+  return true;
 }
 
 void TupleAggregateStep::pruneAuxColumns()
