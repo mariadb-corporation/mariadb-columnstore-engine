@@ -56,7 +56,7 @@ int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
-void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs)
+void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_cs)
 {
     auto* column = dynamic_cast<ColumnDef*>(elem);
 
@@ -338,7 +338,7 @@ create_table_statement:
 	{
         for (auto* elem : *$6)
         {
-            fix_column_length(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset);
         }
 		$$ = new CreateTableStatement(new TableDef($4, $6, $8));
 	}
@@ -702,17 +702,17 @@ ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
      * dynamic_cast here.
      */
-	ADD column_def { fix_column_length($2, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
-	| ADD COLUMN column_def { fix_column_length($3, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
+	ADD column_def { fix_column_length_and_charset($2, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
+	| ADD COLUMN column_def { fix_column_length_and_charset($3, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
 	| ADD '(' table_element_list ')' {
         for (auto* elem : *$3) {
-            fix_column_length(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset);
         }
         $$ = new AtaAddColumns($3);
     }
 	| ADD COLUMN '(' table_element_list ')' {
         for (auto* elem : *$4) {
-            fix_column_length(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset);
         }
         $$ = new AtaAddColumns($4);
     }

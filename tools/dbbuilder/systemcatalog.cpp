@@ -272,6 +272,7 @@ void SystemCatalog::build()
     oids[DICTOID_SYSCOLUMN_MAXVALUE] = DICTOID_SYSCOLUMN_MAXVALUE;
     oids[OID_SYSCOLUMN_COMPRESSIONTYPE] = OID_SYSCOLUMN_COMPRESSIONTYPE;
     oids[OID_SYSCOLUMN_NEXTVALUE] = OID_SYSCOLUMN_NEXTVALUE;
+    oids[OID_SYSCOLUMN_CHARSETNUM] = OID_SYSCOLUMN_CHARSETNUM;
   }
 
   cout << endl;
@@ -566,6 +567,17 @@ void SystemCatalog::build()
   msg << "  Creating NEXTVALUE column OID: " << OID_SYSCOLUMN_NEXTVALUE;
   cout << msg.str() << endl;
   rc = fWriteEngine.createColumn(txnID, OID_SYSCOLUMN_NEXTVALUE, CalpontSystemCatalog::UBIGINT, 8, dbRoot,
+                                 partition, compressionType);
+
+  if (rc)
+    throw runtime_error(msg.str() + ec.errorString(rc));
+
+  msg.str("");
+
+  // charsetnum
+  msg << "  Creating CHARSETNUM column OID: " << OID_SYSCOLUMN_CHARSETNUM;
+  cout << msg.str() << endl;
+  rc = fWriteEngine.createColumn(txnID, OID_SYSCOLUMN_CHARSETNUM, CalpontSystemCatalog::INT, 4, dbRoot,
                                  partition, compressionType);
 
   if (rc)

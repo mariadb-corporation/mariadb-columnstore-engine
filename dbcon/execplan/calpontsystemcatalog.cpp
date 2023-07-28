@@ -5912,317 +5912,132 @@ void CalpontSystemCatalog::updateColinfoCache(CalpontSystemCatalog::OIDNextvalMa
 }
 void CalpontSystemCatalog::buildSysColinfomap()
 {
-  ColType aCol;
-  // aCol.defaultValue = "";
-  aCol.scale = 0;
-  aCol.precision = 10;
-  aCol.compressionType = 0;
+  int32_t scale = 0, precision = 10, compressionType = 0, colPosition = 0;
 
   ResourceManager* rm = ResourceManager::instance();
 
   if (rm->useHdfs())
-    aCol.compressionType = 2;
+    compressionType = 2;
 
   DictOID notDict;
 
   // @bug 4433 - Increase object width from 64 to 128 for schema names, table names, and column names.
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSTABLE_TABLENAME;
-  aCol.ddn.listOID = LISTOID_SYSTABLE_TABLENAME;
-  aCol.ddn.treeOID = TREEOID_SYSTABLE_TABLENAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition = 0;
-  aCol.columnOID = OID_SYSTABLE_TABLENAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_TABLENAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSTABLE_TABLENAME, LISTOID_SYSTABLE_TABLENAME, TREEOID_SYSTABLE_TABLENAME, compressionType),
+    colPosition++, compressionType, OID_SYSTABLE_TABLENAME, VARCHAR);
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSTABLE_SCHEMA;
-  aCol.ddn.listOID = LISTOID_SYSTABLE_SCHEMA;
-  aCol.ddn.treeOID = TREEOID_SYSTABLE_SCHEMA;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_SCHEMA;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_SCHEMA] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSTABLE_SCHEMA, LISTOID_SYSTABLE_SCHEMA, TREEOID_SYSTABLE_SCHEMA, compressionType),
+    colPosition++, compressionType, OID_SYSTABLE_SCHEMA, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_OBJECTID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_OBJECTID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_OBJECTID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_CREATEDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_CREATEDATE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_CREATEDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_LASTUPDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_LASTUPDATE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_LASTUPDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_INIT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_INIT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_INIT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NEXT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NEXT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NEXT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NUMOFROWS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NUMOFROWS] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NUMOFROWS, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AVGROWLEN;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AVGROWLEN] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AVGROWLEN, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NUMOFBLOCKS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NUMOFBLOCKS] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NUMOFBLOCKS, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AUTOINCREMENT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AUTOINCREMENT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AUTOINCREMENT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AUXCOLUMNOID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AUXCOLUMNOID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AUXCOLUMNOID, INT);
 
   fTablemap[make_table(CALPONT_SCHEMA, SYSCOLUMN_TABLE)] = SYSCOLUMN_BASE;
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition = 0;
-  aCol.columnOID = OID_SYSCOLUMN_SCHEMA;
-  fColinfomap[aCol.columnOID] = aCol;
+  colPosition = 0;
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_TABLENAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_SCHEMA] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_SCHEMA, LISTOID_SYSCOLUMN_SCHEMA, TREEOID_SYSCOLUMN_SCHEMA, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_SCHEMA, VARCHAR);
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLNAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_TABLENAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_TABLENAME, LISTOID_SYSCOLUMN_TABLENAME, TREEOID_SYSCOLUMN_TABLENAME, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_TABLENAME, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_OBJECTID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLNAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_COLNAME, LISTOID_SYSCOLUMN_COLNAME, TREEOID_SYSCOLUMN_COLNAME, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_COLNAME, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DICTOID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_OBJECTID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_OBJECTID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_LISTOBJID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DICTOID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DICTOID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_TREEOBJID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_LISTOBJID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_LISTOBJID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DATATYPE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_TREEOBJID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_TREEOBJID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLUMNLEN;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DATATYPE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DATATYPE, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLUMNPOS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLUMNLEN] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COLUMNLEN, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_LASTUPDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLUMNPOS] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COLUMNPOS, INT);
 
-  aCol.colWidth = 64;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DEFAULTVAL;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_LASTUPDATE] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_LASTUPDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NULLABLE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DEFAULTVAL] = ColType(64, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_DEFAULTVAL, LISTOID_SYSCOLUMN_DEFAULTVAL, TREEOID_SYSCOLUMN_DEFAULTVAL, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_DEFAULTVAL, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_SCALE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_NULLABLE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NULLABLE, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_PRECISION;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_SCALE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_SCALE, INT);
 
-  aCol.colWidth = 1;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = CHAR;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_AUTOINC;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_PRECISION] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_PRECISION, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DISTCOUNT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(1, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_AUTOINC, CHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NULLCOUNT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DISTCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DISTCOUNT, INT);
 
-  aCol.colWidth = 65;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_MINVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_NULLCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NULLCOUNT, INT);
 
-  aCol.colWidth = 65;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_MAXVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_MINVALUE] = ColType(65, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_MINVALUE, LISTOID_SYSCOLUMN_MINVALUE, TREEOID_SYSCOLUMN_MINVALUE, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_MINVALUE, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COMPRESSIONTYPE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_MAXVALUE] = ColType(65, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_MAXVALUE, LISTOID_SYSCOLUMN_MAXVALUE, TREEOID_SYSCOLUMN_MAXVALUE, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_MAXVALUE, VARCHAR);
 
-  aCol.colWidth = 8;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = UBIGINT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NEXTVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COMPRESSIONTYPE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COMPRESSIONTYPE, INT);
+
+  fColinfomap[OID_SYSCOLUMN_NEXTVALUE] = ColType(8, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NEXTVALUE, UBIGINT);
+
+  fColinfomap[OID_SYSCOLUMN_CHARSETNUM] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_CHARSETNUM, INT);
 }
 
 void CalpontSystemCatalog::buildSysOIDmap()
@@ -6261,6 +6076,7 @@ void CalpontSystemCatalog::buildSysOIDmap()
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, MAXVALUE_COL)] = OID_SYSCOLUMN_MAXVALUE;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, COMPRESSIONTYPE_COL)] = OID_SYSCOLUMN_COMPRESSIONTYPE;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, NEXTVALUE_COL)] = OID_SYSCOLUMN_NEXTVALUE;
+  fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, CHARSETNUM_COL)] = OID_SYSCOLUMN_CHARSETNUM;
 }
 
 void CalpontSystemCatalog::buildSysTablemap()
@@ -6324,6 +6140,21 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs) : TypeHolderStd(rhs)
   nextvalue = rhs.nextvalue;
   charsetNumber = rhs.charsetNumber;
   cs = rhs.cs;
+}
+
+CalpontSystemCatalog::ColType::ColType(int32_t colWidth_, int32_t scale_, int32_t precision_,
+  const ConstraintType& constraintType_, const DictOID& ddn_, int32_t colPosition_,
+  int32_t compressionType_, OID columnOID_, const ColDataType& colDataType_)
+  : constraintType(constraintType_),
+    ddn(ddn_),
+    colPosition(colPosition_),
+    compressionType(compressionType_),
+    columnOID(columnOID_)
+{
+  colWidth = colWidth_;
+  scale = scale_;
+  precision = precision_;
+  colDataType = colDataType_;
 }
 
 CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const ColType& rhs)

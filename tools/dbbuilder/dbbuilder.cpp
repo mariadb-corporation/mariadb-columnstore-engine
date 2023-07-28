@@ -203,13 +203,18 @@ int main(int argc, char* argv[])
                                                     // note that the candidate and reference OID
                                                     // datatypes and colwidths are assumed to be the
                                                     // same in SystemCatalog::upgrade().
+    upgradeOidMap[OID_SYSCOLUMN_CHARSETNUM] =
+      std::make_pair(OID_SYSCOLUMN_OBJECTID, false);
 
     std::unordered_map<int, OidTypeT> upgradeOidTypeMap;
     upgradeOidTypeMap[OID_SYSTABLE_AUXCOLUMNOID] =
       std::make_pair(CalpontSystemCatalog::INT, 4);
+    upgradeOidTypeMap[OID_SYSCOLUMN_CHARSETNUM] =
+      std::make_pair(CalpontSystemCatalog::INT, 4);
 
     std::unordered_map<int, std::string> upgradeOidDefaultValStrMap;
     upgradeOidDefaultValStrMap[OID_SYSTABLE_AUXCOLUMNOID] = "0";
+    upgradeOidDefaultValStrMap[OID_SYSCOLUMN_CHARSETNUM] = "0";
 
     try
     {
@@ -300,7 +305,7 @@ int main(int argc, char* argv[])
       }
       else
       {
-        sysCatalog.upgrade(upgradeOidMap, upgradeOidTypeMap,upgradeOidDefaultValStrMap);
+        sysCatalog.upgrade(upgradeOidMap, upgradeOidTypeMap, upgradeOidDefaultValStrMap);
       }
 
       std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
