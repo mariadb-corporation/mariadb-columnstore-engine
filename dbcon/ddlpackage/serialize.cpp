@@ -1109,6 +1109,7 @@ int ColumnType::unserialize(ByteStream& bytestream)
   messageqcpp::ByteStream::quadbyte compressiontype;
   std::string autoincrement;
   messageqcpp::ByteStream::octbyte nextVal;
+  messageqcpp::ByteStream::quadbyte charsetNum;
 
   // read column types
   bytestream >> ftype;
@@ -1119,6 +1120,7 @@ int ColumnType::unserialize(ByteStream& bytestream)
   bytestream >> compressiontype;
   bytestream >> autoincrement;
   bytestream >> nextVal;
+  bytestream >> charsetNum;
 
   fType = ftype;
   fLength = length;
@@ -1128,6 +1130,7 @@ int ColumnType::unserialize(ByteStream& bytestream)
   fCompressiontype = compressiontype;
   fAutoincrement = autoincrement;
   fNextvalue = nextVal;
+  fCharsetNum = charsetNum;
 
   //	cout << "BS length = " << bytestream.length() << endl;
 
@@ -1147,6 +1150,7 @@ int ColumnType::serialize(ByteStream& bytestream)
   messageqcpp::ByteStream::quadbyte compressiontype = fCompressiontype;
   std::string autoincrement = fAutoincrement;
   messageqcpp::ByteStream::octbyte nextVal = fNextvalue;
+  messageqcpp::ByteStream::quadbyte charsetNum = fCharsetNum;
 
   // write column types
   bytestream << ftype;
@@ -1157,6 +1161,7 @@ int ColumnType::serialize(ByteStream& bytestream)
   bytestream << compressiontype;
   bytestream << autoincrement;
   bytestream << nextVal;
+  bytestream << charsetNum;
 
   //	cout << "BS length = " << bytestream.length() << endl;
 

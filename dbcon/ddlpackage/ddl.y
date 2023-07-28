@@ -56,24 +56,42 @@ int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
-void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs) {
+void fix_column_length(SchemaObject* elem, const CHARSET_INFO* def_cs)
+{
     auto* column = dynamic_cast<ColumnDef*>(elem);
+
     if (column == NULL || column->fType == NULL)
     {
         return;
     }
 
-    if (column->fType->fType == DDL_VARCHAR ||
-         column->fType->fType == DDL_CHAR ||
-         (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength))
+    if (column->fType->fType == DDL_BLOB ||
+        column->fType->fType == DDL_VARBINARY)
     {
-        unsigned mul = def_cs ? def_cs->mbmaxlen : 1;
-        if (column->fType->fCharset) {
-            const CHARSET_INFO* cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
-            if (cs)
-                mul = cs->mbmaxlen;
-        }
-        column->fType->fLength *= mul;
+        CHARSET_INFO* cs = &my_charset_bin;
+        column->fType->fCharset = cs->cs_name.str;
+        column->fType->fCollate = cs->coll_name.str;
+        column->fType->fCharsetNum = cs->number;
+        return;
+    }
+
+    if (column->fType->fType == DDL_VARCHAR ||
+        column->fType->fType == DDL_CHAR ||
+        column->fType->fType == DDL_TEXT)
+    {
+        CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
+
+        if (column->fType->fCollate)
+            cs = get_charset_by_name(column->fType->fCollate, MYF(0));
+        else if (column->fType->fCharset)
+            cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
+
+        column->fType->fCharset = cs->cs_name.str;
+        column->fType->fCollate = cs->coll_name.str;
+        column->fType->fCharsetNum = cs->number;
+
+        if ((column->fType->fType != DDL_TEXT) || column->fType->fExplicitLength)
+            column->fType->fLength *= cs->mbmaxlen;
     }
 
     if (column->fType->fType == DDL_TEXT && column->fType->fExplicitLength)
@@ -236,6 +254,7 @@ ZEROFILL
 %type <str>                  ident
 %type <str>                  opt_quoted_literal
 %type <str>                  opt_column_charset
+%type <str>                  opt_column_collate
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -500,8 +519,19 @@ table_options:
 	;
 
 opt_equal:
-	{} | '=' {}
+	  /* empty */ {}
+        | '=' {}
 	;
+
+opt_default:
+          /* empty */ {}
+        | DEFAULT {}
+        ;
+
+charset:
+          IDB_CHAR SET {}
+        | CHARSET {}
+        ;
 
 table_option:
  	ENGINE opt_equal ident {$$ = new pair<string,string>("engine", $3);}
@@ -515,19 +545,13 @@ table_option:
 	COMMENT string_literal {$$ = new pair<string,string>("comment", $2);}
  	|
 	AUTO_INCREMENT opt_equal ICONST
-    {
-       $$ = new pair<string,string>("auto_increment", $3);
-    }
+        {
+          $$ = new pair<string,string>("auto_increment", $3);
+        }
  	|
- 	DEFAULT CHARSET opt_equal ident {$$ = new pair<string,string>("default charset", $4);}
-    |
-    CHARSET opt_equal ident {$$ = new pair<string, string>("default charset", $3);}
+        opt_default charset opt_equal opt_quoted_literal {$$ = new pair<string,string>("default charset", $4);}
  	|
- 	DEFAULT IDB_CHAR SET opt_equal ident {$$ = new pair<string,string>("default charset", $5);}
-    |
-    DEFAULT COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $4);}
-    |
-    COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $3);}
+        opt_default COLLATE opt_equal opt_quoted_literal {$$ = new pair<string, string>("default collate", $4);}
 	;
 
 alter_table_statement:
@@ -780,18 +804,19 @@ optional_braces:
 opt_column_charset:
     /* empty */ { $$ = NULL; }
     |
-    IDB_CHAR SET opt_quoted_literal { $$ = $3; }
+    charset opt_quoted_literal { $$ = $2; }
     ;
 
 opt_column_collate:
-    /* empty */ {}
+    /* empty */ { $$ = NULL; }
     |
-    COLLATE opt_quoted_literal {}
+    COLLATE opt_quoted_literal { $$ = $2; }
     ;
 
 data_type:
 	character_string_type opt_column_charset opt_column_collate {
         $1->fCharset = $2;
+        $1->fCollate = $3;
         $$ = $1;
     }
 	| binary_string_type
@@ -800,6 +825,7 @@ data_type:
 	| blob_type
 	| text_type opt_column_charset opt_column_collate {
         $1->fCharset = $2;
+        $1->fCollate = $3;
         $$ = $1;
     }
 	| IDB_BLOB

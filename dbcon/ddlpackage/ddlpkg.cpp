@@ -64,13 +64,16 @@ ColumnType::ColumnType(int prec, int scale)
  , fScale(scale)
  , fWithTimezone(false)
  , fCharset(NULL)
+ , fCollate(NULL)
+ , fCharsetNum(0)
  , fExplicitLength(false)
 {
   fLength = utils::widthByPrecision(fPrecision);
 }
 
 ColumnType::ColumnType(int type)
- : fType(type), fLength(0), fScale(0), fWithTimezone(false), fCharset(NULL), fExplicitLength(false)
+ : fType(type), fLength(0), fScale(0), fWithTimezone(false),
+   fCharset(NULL), fCollate(NULL), fCharsetNum(0), fExplicitLength(false)
 {
   switch (type)
   {
