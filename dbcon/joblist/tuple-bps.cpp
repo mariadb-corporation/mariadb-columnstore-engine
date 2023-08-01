@@ -3380,6 +3380,7 @@ void TupleBPS::abort_nolock()
     }
     catch (...)
     {
+      std::cout << "@@@@ UGLY CATCH ... HAPPEN" << __LINE__ <<  uniqueID << std::endl;
       // this throws only if there are no PMs left.  If there are none,
       // that is the cause of the abort and that will be reported to the
       // front-end already.  Nothing to do here.
