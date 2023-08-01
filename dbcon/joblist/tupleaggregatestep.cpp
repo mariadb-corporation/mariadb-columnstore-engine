@@ -5658,12 +5658,27 @@ void TupleAggregateStep::doAggregate()
   return;
 }
 
+/** @brief Aggregate input row groups in two-phase multi-threaded aggregation.
+ * In second phase handle three different aggregation cases differently:
+ * 1. Query contains at least one aggregation on a DISTINCT column, e.g. SUM (DISTINCT col1) AND at least one
+ * GROUP BY column
+ * 2. Query contains at least one aggregation on a DISTINCT column but no GROUP BY column
+ * 3. Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
+ * DISTINCT selects (e.g. SELECT DISTINCT col1 FROM ...) are handled in tupleannexstep.cpp.
+ */
 uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp)
 {
+  // initialize return value variable
   uint64_t rowCount = 0;
 
   try
   {
+    /*
+     * Phase 1: Distribute input rows to different buckets depending on the hash value of the group by columns
+     * per row. Then distribute buckets equally on aggregators in fAggregators. (Number of fAggregators ==
+     * fNumOfBuckets). Each previously created hash bucket is represented as one RowGroup in a fAggregator.
+     */
+
     if (!fDoneAggregate)
     {
       initializeMultiThread();
@@ -5695,9 +5710,16 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       jobstepThreadPool.join(runners);
     }
 
+    /*
+     * Phase 2: Depending on query type (see below) do aggregation per previously created RowGroup of rows
+     * that need to aggregated and output results.
+     */
+
     auto* distinctAggregator = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
     const bool hasGroupByColumns = fAggregator->aggMapKeyLength() > 0;
-    //Case 1: Query contains DISTINCT keyword and GROUP BY attributes
+
+    // Case 1: Query contains at least one aggregation on a DISTINCT column AND at least one GROUP BY column
+    // e.g. SELECT SUM(DISTINCT col1) FROM test GROUP BY col2;
     if (distinctAggregator && hasGroupByColumns)
     {
       if (!fEndOfResult)
@@ -5743,8 +5765,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           fEndOfResult = true;
       }
     }
-    // Case 2: Query contains aggregate function on a column with a DISTINCT operator but no GROUP BY
-    // attribute e.g. SELECT SUM(DISTINCT col1) FROM test;
+    // Case 2. Query contains at least one aggregation on a DISTINCT column but no GROUP BY column
+    // e.g. SELECT SUM(DISTINCT col1) FROM test;
     else if (distinctAggregator)
     {
       if (!fEndOfResult)
@@ -5793,7 +5815,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           fEndOfResult = true;
       }
     } else if (hasGroupByColumns) {
-      // CASE 3: NON-DISTINCT group by
+      // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
+      // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
       // TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
       fDoneAggregate = true;
       bool done = true;
@@ -5820,7 +5843,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           "TupleAggregateStep::doThreadedAggregate: No DISTINCT columns nested into aggregation function or "
           "GROUP BY columns found. Should not reach here.");
     }
-  }  // try
+  }
   catch (...)
   {
     handleException(std::current_exception(), logging::tupleAggregateStepErr,
