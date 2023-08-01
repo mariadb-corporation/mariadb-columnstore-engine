@@ -227,8 +227,8 @@ class ArithmeticOperator : public Operator
   bool fDecimalOverflowCheck;
 
  public:
-  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
-                              ParseTree* lop, ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
@@ -497,10 +497,10 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
   }
 }
 
-inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row,
-                                                bool& isNull, ParseTree* lop, ParseTree* rop)
+inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
 {
-  return compile(b, lop->compile(b, args, row, isNull), rop->compile(b, args, row, isNull));
+  return compile(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
 }
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {

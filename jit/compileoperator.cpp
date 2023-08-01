@@ -10,7 +10,8 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   auto columns = expression.get()->simpleColumnList();
   llvm::IRBuilder<> b(module.getContext());
   llvm::Type* return_type;
-  auto * data_type = b.getInt8Ty()->getPointerTo();
+  auto* data_type = b.getInt8Ty()->getPointerTo();
+  auto* isNull_type = b.getInt1Ty()->getPointerTo();
   switch (expression->resultType().colDataType)
   {
     case execplan::CalpontSystemCatalog::BIGINT:
@@ -20,15 +21,16 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case execplan::CalpontSystemCatalog::TINYINT: return_type = b.getInt64Ty(); break;
     default: throw std::runtime_error("not support type");
   }
-  auto* func_type = llvm::FunctionType::get(return_type, {data_type}, false);
+  auto* func_type = llvm::FunctionType::get(return_type, {data_type, isNull_type}, false);
   auto* func =
       llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, expression->alias(), module);
 
-  auto * args = func->args().begin();
-  llvm::Value * data_pointer = args++;
+  auto* args = func->args().begin();
+  llvm::Value* data_ptr = args++;
+  llvm::Value* isNull_ptr = args++;
   auto* entry = llvm::BasicBlock::Create(b.getContext(), "entry", func);
   b.SetInsertPoint(entry);
-  auto* ret = expression->compile(b, data_pointer, row, isNull);
+  auto* ret = expression->compile(b, data_ptr, isNull_ptr, row);
 
   b.CreateRet(ret);
 
