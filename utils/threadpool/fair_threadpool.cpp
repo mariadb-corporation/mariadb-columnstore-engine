@@ -145,7 +145,7 @@ void FairThreadPool::removeJobs(uint32_t id)
 void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue)
 {
   utils::setThreadName("Idle");
-  RunListT runList(1);  // This is a vector to allow to grab multiple jobs
+  RunListT runList;  // This is a vector to allow to grab multiple jobs
   RescheduleVecType reschedule;
   bool running = false;
   bool rescheduleJob = false;
