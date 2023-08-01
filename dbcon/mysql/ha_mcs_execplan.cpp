@@ -5324,7 +5324,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         // in groupconcat.cpp when ExeMgr processes groupconcat. As a temporary
         // fix, we cap off the max groupconcat length to std::numeric_limits<int32_t>::max().
         // The proper fix would be to change colWidth type to uint32_t.
-        if (isp->max_length <= std::numeric_limits<int32_t>::max())
+        if (isp->max_length <= static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
         {
           ct.colWidth = isp->max_length;
         }
