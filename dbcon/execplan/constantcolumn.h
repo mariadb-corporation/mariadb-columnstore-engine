@@ -401,6 +401,10 @@ class ConstantColumn : public ReturnedColumn
     auto ret = b.getInt64(fResult.intVal);
     return ret;
   }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return true;
+  }
 };
 
 class ConstantColumnNull : public ConstantColumn
