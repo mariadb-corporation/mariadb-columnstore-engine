@@ -516,7 +516,6 @@ void pDictionaryScan::sendAPrimitiveMessage(BRM::LBID_t msgLbidStart, uint32_t m
 
   try
   {
-    std::cout << "pDict send uniqueID " << uniqueID << std::endl;
     fDec->write(uniqueID, primMsg);
   }
   catch (...)
@@ -583,8 +582,6 @@ void pDictionaryScan::receivePrimitiveMessages()
       }
 
       mutex.unlock();
-
-      std::cout << "pDict: recv queue " << uniqueID << std::endl;
 
       fDec->read(uniqueID, bs);
 

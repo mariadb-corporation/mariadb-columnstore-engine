@@ -468,7 +468,6 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 void DistributedEngineComm::removeQueue(uint32_t key)
 {
   std::lock_guard lk(fMlock);
-  std::cout << "DEC: removeQueue " << key << std::endl;
   MessageQueueMap::iterator map_tok = fSessionMessages.find(key);
 
   if (map_tok == fSessionMessages.end())

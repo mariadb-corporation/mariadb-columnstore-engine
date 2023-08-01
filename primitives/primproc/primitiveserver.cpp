@@ -1558,10 +1558,10 @@ struct BPPHandler
   {
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
-    std::cout << "@@@ destroyBPP" << std::endl;
+    std::cout << "@@@ destroyBPP" << dieTime << std::endl;
     if (bs.length() < sizeof(ISMPacketHeader) + sizeof(sessionID) + sizeof(stepID) + sizeof(uniqueID))
     {
-      std::cout << "@@@ destroyBPP: " <<  __LINE__  << std::endl;
+      std::cout << "@@@ destroyBPP: l " << bs.length() << " " << __LINE__ << std::endl;
       // MCOL-857 We don't appear to have the full packet yet!
       return -1;
     }
@@ -1598,14 +1598,14 @@ struct BPPHandler
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
         // We're not ready for a destroy. Reschedule.
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@@@ destroyBPP: join " << __LINE__ << "ID: " << uniqueID << std::endl;
         return -1;
       }
     }
     else
     {
       cout << "got a destroy for an unknown obj " << uniqueID << endl;
-      std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
+      std::cerr << "@@@@ destroyBPP: unkn " << __LINE__ << "ID: " << uniqueID << std::endl;
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
@@ -1617,11 +1617,11 @@ lk.unlock();
 deleteDJLock(uniqueID);
 return 0;
         */
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@@@ destroyBPP: die " << __LINE__ << "ID: " << uniqueID << std::endl;
       }
       else
       {
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@@@ destroyBPP: don't die " << __LINE__ << "ID: " << uniqueID << std::endl;
         return -1;
       }
     }
@@ -1638,7 +1638,7 @@ return 0;
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
-    std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
+    std::cerr << "@@@@ destroyBPP: " << __LINE__ << "ID: " << uniqueID << std::endl;
     return 0;
   }
 
@@ -1941,7 +1941,7 @@ struct ReadThread
         const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
         const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
         const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
-        std::cout << "disp cr uniqueID " << uniqueID << std::endl;
+        std::cerr << "disp cr uniqueID " << uniqueID << std::endl;
 
         const uint32_t weight = 1;
         const uint32_t priority = 0;
@@ -1949,40 +1949,39 @@ struct ReadThread
         boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
         {
-          std::cout << "@@@@ DICT_CREATE_EQUALITY_FILTER: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ DICT_CREATE_EQUALITY_FILTER: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new CreateEqualityFilter(sbs));
         }
         else if (ismHdr->Command == DICT_DESTROY_EQUALITY_FILTER)
         {
-          std::cout << "@@@@ DICT_DESTROY_EQUALITY_FILTER: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ DICT_DESTROY_EQUALITY_FILTER: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new DestroyEqualityFilter(sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_CREATE)
         {
-          std::cout << "@@@@ BATCH_PRIMITIVE_CREATE: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ BATCH_PRIMITIVE_CREATE: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::Create(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
         {
-          std::cout << "@@@@ BATCH_PRIMITIVE_ADD_JOINER: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ BATCH_PRIMITIVE_ADD_JOINER: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "@@@@ BATCH_PRIMITIVE_END_JOINER JOB: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ BATCH_PRIMITIVE_END_JOINER JOB: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
         {
-
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "@@@@ DESTROY JOB: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ DESTROY JOB: " << __LINE__ << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
         {
-          std::cout << "@@@@ ABORT JOB: " <<  __LINE__  << "ID:" << id << std::endl;
+          std::cerr << "@@@@ ABORT JOB: " << __LINE__ << "ID:" << id << std::endl;
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
@@ -2016,7 +2015,6 @@ struct ReadThread
           txnId = *((uint32_t*)&buf[pos + 2]);
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
-          std::cout << "disp run uniqueID " << id << " " << txnId << " " << uniqueID << std::endl;
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_RUN)
         {
@@ -2352,8 +2350,6 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
           joblist::DistributedEngineComm::SBSVector primitiveMsgs;
           for (auto& sbs : exeMgrDecPtr->readLocalQueueMessagesOrWait(primitiveMsgs))
           {
-            std::cout << "recv loop " << std::endl;
-
             if (sbs->length() == 0)
             {
               std::cout << "PPSHServerThr got an empty ByteStream." << std::endl;
