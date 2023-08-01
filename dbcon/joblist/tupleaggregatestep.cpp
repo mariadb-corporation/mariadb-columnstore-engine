@@ -5816,7 +5816,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         fEndOfResult = true;
       }
     } else {
-      //Exception - Aggregation without DISTINCT or GROUP BY shouldn't happen
+      throw logic_error(
+          "TupleAggregateStep::doThreadedAggregate: No DISTINCT columns nested into aggregation function or "
+          "GROUP BY columns found. Should not reach here.");
     }
   }  // try
   catch (...)
