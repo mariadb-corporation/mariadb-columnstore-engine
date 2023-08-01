@@ -3365,6 +3365,8 @@ void TupleBPS::abort_nolock()
   if (fDie)
     return;
 
+  std::cout << "ABORT_NO_LOCK:" << toString() << std::endl;
+
   JobStep::abort();
 
   if (fDec && BPPIsAllocated)

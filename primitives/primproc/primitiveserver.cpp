@@ -1565,8 +1565,10 @@ struct BPPHandler
   {
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
+    std::cout << "@@@ destroyBPP" << std::endl;
     if (bs.length() < sizeof(ISMPacketHeader) + sizeof(sessionID) + sizeof(stepID) + sizeof(uniqueID))
     {
+      std::cout << "@@@ destroyBPP: " <<  __LINE__  << std::endl;
       // MCOL-857 We don't appear to have the full packet yet!
       return -1;
     }
@@ -1603,12 +1605,14 @@ struct BPPHandler
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
         // We're not ready for a destroy. Reschedule.
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
         return -1;
       }
     }
     else
     {
-      // cout << "got a destroy for an unknown obj " << uniqueID << endl;
+      cout << "got a destroy for an unknown obj " << uniqueID << endl;
+      std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
@@ -1620,9 +1624,13 @@ lk.unlock();
 deleteDJLock(uniqueID);
 return 0;
         */
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
       }
       else
+      {
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
         return -1;
+      }
     }
 
     // 			cout << "  destroy: new size is " << bppMap.size() << endl;
@@ -1637,6 +1645,7 @@ return 0;
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
+    std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
     return 0;
   }
 
@@ -1966,11 +1975,13 @@ struct ReadThread
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
         {
+          std::cout << "@@@@ DESTROY JOB: " <<  __LINE__  << std::endl;
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
         {
+          std::cout << "@@@@@ ABORT JOB: " <<  __LINE__  << std::endl;
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
