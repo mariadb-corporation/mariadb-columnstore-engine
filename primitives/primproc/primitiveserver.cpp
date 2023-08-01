@@ -1598,14 +1598,14 @@ struct BPPHandler
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
         // We're not ready for a destroy. Reschedule.
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
         return -1;
       }
     }
     else
     {
       cout << "got a destroy for an unknown obj " << uniqueID << endl;
-      std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
+      std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
@@ -1617,11 +1617,11 @@ lk.unlock();
 deleteDJLock(uniqueID);
 return 0;
         */
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
       }
       else
       {
-        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
+        std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
         return -1;
       }
     }
@@ -1638,7 +1638,7 @@ return 0;
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
-    std::cout << "@@@@ destroyBPP: " <<  __LINE__  << std::endl;
+    std::cout << "@@@@ destroyBPP: " <<  __LINE__  << "ID: " << uniqueID << std::endl;
     return 0;
   }
 
@@ -1949,34 +1949,40 @@ struct ReadThread
         boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
         {
+          std::cout << "@@@@ DICT_CREATE_EQUALITY_FILTER: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new CreateEqualityFilter(sbs));
         }
         else if (ismHdr->Command == DICT_DESTROY_EQUALITY_FILTER)
         {
+          std::cout << "@@@@ DICT_DESTROY_EQUALITY_FILTER: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new DestroyEqualityFilter(sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_CREATE)
         {
+          std::cout << "@@@@ BATCH_PRIMITIVE_CREATE: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::Create(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
         {
+          std::cout << "@@@@ BATCH_PRIMITIVE_ADD_JOINER: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "@@@@ BATCH_PRIMITIVE_END_JOINER JOB: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
         {
-          std::cout << "@@@@ DESTROY JOB: " <<  __LINE__  << std::endl;
+
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "@@@@ DESTROY JOB: " <<  __LINE__  << "ID:" << id << std::endl;
           functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
         {
-          std::cout << "@@@@@ ABORT JOB: " <<  __LINE__  << std::endl;
+          std::cout << "@@@@ ABORT JOB: " <<  __LINE__  << "ID:" << id << std::endl;
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
