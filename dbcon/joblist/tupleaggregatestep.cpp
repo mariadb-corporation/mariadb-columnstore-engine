@@ -5732,7 +5732,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           if (rowCount != 0)
           {
-            if (!cleanUpAndOutputRow(bs, dlp))
+            if (!cleanUpAndOutputRowGroup(bs, dlp))
               break;
           }
 
@@ -5784,7 +5784,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           if (rowCount != 0)
           {
-            if (!cleanUpAndOutputRow(bs, dlp))
+            if (!cleanUpAndOutputRowGroup(bs, dlp))
               break;
           }
           done = true;
@@ -5805,7 +5805,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
         if (rowCount != 0)
         {
-          if (!cleanUpAndOutputRow(bs, dlp))
+          if (!cleanUpAndOutputRowGroup(bs, dlp))
             break;
         }
 
@@ -5860,7 +5860,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
   return rowCount;
 }
 
-bool TupleAggregateStep::cleanUpAndOutputRow(ByteStream& bs, RowGroupDL* dlp)
+bool TupleAggregateStep::cleanUpAndOutputRowGroup(ByteStream& bs, RowGroupDL* dlp)
 {
   if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
     pruneAuxColumns();
