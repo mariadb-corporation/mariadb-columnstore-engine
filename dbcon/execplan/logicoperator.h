@@ -176,16 +176,16 @@ class LogicOperator : public Operator
   // Operator& operator=(const Operator& rhs);
   // std::string fData;
  public:
-  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
-                              ParseTree* lop, ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
 // typedef boost::shared_ptr<Operator> SOP;
-inline llvm::Value* LogicOperator::compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row,
-                                           bool& isNull, ParseTree* lop, ParseTree* rop)
+inline llvm::Value* LogicOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                           rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
 {
-  return compile(b, lop->compile(b, args, row, isNull), rop->compile(b, args, row, isNull));
+  return compile(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
 }
 inline llvm::Value* LogicOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {

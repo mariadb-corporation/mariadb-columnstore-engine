@@ -123,8 +123,8 @@ class PredicateOperator : public Operator
   const CHARSET_INFO* cs;
 
  public:
-  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
-                              ParseTree* lop, ParseTree* rop) override;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
@@ -179,10 +179,10 @@ inline bool PredicateOperator::numericCompare(const result_t op1, const result_t
   }
 }
 
-inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row,
-                                               bool& isNull, ParseTree* lop, ParseTree* rop)
+inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
 {
-  return compile(b, lop->compile(b, args, row, isNull), rop->compile(b, args, row, isNull));
+  return compile(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
 }
 inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {
