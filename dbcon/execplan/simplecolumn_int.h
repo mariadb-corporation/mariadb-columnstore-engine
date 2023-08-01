@@ -88,20 +88,33 @@ class SimpleColumn_INT : public SimpleColumn
   void setNullVal();
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       rowgroup::Row& row) override
   {
     auto offset = row.getOffset(fInputIndex);
-    auto* data_ptr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), args, offset);
+    auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), data, offset);
+    llvm::Value* result;
+    auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
     switch (len)
     {
-      case 1: return b.CreateLoad(b.getInt8Ty(), data_ptr);
-      case 2: return b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(data_ptr, b.getInt16Ty()->getPointerTo()));
-      case 4: return b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(data_ptr, b.getInt32Ty()->getPointerTo()));
-
-      case 8: return b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(data_ptr, b.getInt64Ty()->getPointerTo()));
-
+      case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr);
+        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt8(joblist::TINYINTNULL)), isNullVal), isNull);
+        break;
+      case 2:
+        result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
+        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt16(joblist::SMALLINTNULL)), isNullVal), isNull);
+        break;
+      case 4:
+        result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
+        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt32(joblist::INTNULL)), isNullVal), isNull);
+        break;
+      case 8:
+        result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
+        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt64(joblist::BIGINTNULL)), isNullVal), isNull);
+        break;
       default: throw std::logic_error("Row::getIntField(): bad length.");
     }
+    return result;
   }
   bool isCompilable(rowgroup::Row& row) override
   {

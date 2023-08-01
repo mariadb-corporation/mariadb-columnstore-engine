@@ -361,15 +361,15 @@ class ParseTree
   void evaluate(rowgroup::Row& row, bool& isNull);
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull)
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row)
   {
     if (fLeft && fRight)
     {
-      return (reinterpret_cast<Operator*>(fData))->compile(b, args, row, isNull, fLeft, fRight);
+      return (reinterpret_cast<Operator*>(fData))->compile(b, data, isNull, row, fLeft, fRight);
     }
     else
     {
-      return fData->compile(b, args, row, isNull);
+      return fData->compile(b, data, isNull, row);
     }
   }
   bool isCompilable(rowgroup::Row& row)
