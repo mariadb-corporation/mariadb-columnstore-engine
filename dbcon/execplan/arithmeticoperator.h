@@ -215,6 +215,7 @@ class ArithmeticOperator : public Operator
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
                               ParseTree* lop, ParseTree* rop) override;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
 
 #include "parsetree.h"
@@ -463,6 +464,10 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
       throw logging::InvalidOperationExcept(oss.str());
     }
   }
+}
+inline bool ArithmeticOperator::isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+{
+  return lop->isCompilable(row) && rop->isCompilable(row);
 }
 std::ostream& operator<<(std::ostream& os, const ArithmeticOperator& rhs);
 }  // namespace execplan

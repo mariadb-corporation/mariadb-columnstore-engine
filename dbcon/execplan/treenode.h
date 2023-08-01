@@ -328,6 +328,10 @@ class TreeNode
   {
     return fResult.compiledBlock;
   }
+  virtual bool isCompilable(rowgroup::Row& row)
+  {
+    return false;
+  }
   virtual void evaluate(rowgroup::Row& row, bool& isNull)
   {
   }
