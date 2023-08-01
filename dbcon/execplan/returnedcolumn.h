@@ -376,9 +376,13 @@ class ReturnedColumn : public TreeNode
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
  public:
-  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull)
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
   {
     return b.getInt64(0);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return false;
   }
 };
 

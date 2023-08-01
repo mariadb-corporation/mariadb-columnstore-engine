@@ -372,6 +372,17 @@ class ParseTree
       return fData->compile(b, args, row, isNull);
     }
   }
+  bool isCompilable(rowgroup::Row& row)
+  {
+    if (fLeft && fRight)
+    {
+      return (reinterpret_cast<Operator*>(fData))->isCompilable(row, fLeft, fRight);
+    }
+    else
+    {
+      return fData->isCompilable(row);
+    }
+  }
 };
 
 }  // namespace execplan

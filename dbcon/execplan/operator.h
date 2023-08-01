@@ -250,6 +250,11 @@ class Operator : public TreeNode
   {
     return fResult.compiledBlock;
   }
+  using TreeNode::isCompilable;
+  virtual bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+  {
+    return false;
+  }
 };
 
 typedef boost::shared_ptr<Operator> SOP;
