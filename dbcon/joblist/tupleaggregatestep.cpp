@@ -5695,15 +5695,16 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       jobstepThreadPool.join(runners);
     }
 
-    auto* distinctAgg = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
+    auto* distinctAggregator = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
+    const bool hasGroupByColumns = fAggregator->aggMapKeyLength() > 0;
     //Case 1: Query contains DISTINCT keyword and GROUP BY attributes
-    if (distinctAgg && fAggregator->aggMapKeyLength() > 0)
+    if (distinctAggregator && hasGroupByColumns)
     {
-      // 2nd phase multi-threaded aggregate
       if (!fEndOfResult)
       {
         if (!fDoneAggregate)
         {
+          // 2nd phase multi-threaded aggregate
           vector<uint64_t> runners;  // thread pool handles
           fRowGroupsDeliveredData.resize(fNumOfBuckets);
 
@@ -5744,7 +5745,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     }
     // Case 2: Query contains aggregate function on a column with a DISTINCT operator but no GROUP BY
     // attribute e.g. SELECT SUM(DISTINCT col1) FROM test;
-    else if (distinctAgg)
+    else if (distinctAggregator)
     {
       if (!fEndOfResult)
       {
@@ -5758,15 +5759,15 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
               // at least one RowGroup for aggregate results
               auto* aggMultiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
               auto* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
-              distinctAgg->aggregator(aggDist->aggregator());
+              distinctAggregator->aggregator(aggDist->aggregator());
 
               if (aggMultiDist)
               {
-                (dynamic_cast<RowAggregationMultiDistinct*>(distinctAgg))
+                (dynamic_cast<RowAggregationMultiDistinct*>(distinctAggregator))
                     ->subAggregators(aggMultiDist->subAggregators());
               }
 
-              distinctAgg->doDistinctAggregation();
+              distinctAggregator->doDistinctAggregation();
             }
           }
         }
@@ -5791,10 +5792,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         if (done)
           fEndOfResult = true;
       }
-    } else if (fAggregator->aggMapKeyLength() > 0) {
-      //CASE 3: NON-DISTINCT group by
-      //TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
-
+    } else if (hasGroupByColumns) {
+      // CASE 3: NON-DISTINCT group by
+      // TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
       fDoneAggregate = true;
       bool done = true;
 
