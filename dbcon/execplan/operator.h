@@ -245,8 +245,8 @@ class Operator : public TreeNode
 
  public:
   using TreeNode::compile;
-  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull,
-                               ParseTree* lop, ParseTree* rop)
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
   {
     return fResult.compiledBlock;
   }
