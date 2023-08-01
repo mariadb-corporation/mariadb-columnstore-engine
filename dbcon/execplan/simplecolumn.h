@@ -382,6 +382,10 @@ class SimpleColumn : public ReturnedColumn
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override{
     return b.getInt64(0);
   }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return false;
+  }
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;

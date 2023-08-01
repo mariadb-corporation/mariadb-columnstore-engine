@@ -281,7 +281,11 @@ class ArithmeticColumn : public ReturnedColumn
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* args, rowgroup::Row& row, bool& isNull) override
   {
-    return fExpression->compile(b, args,row, isNull);
+    return fExpression->compile(b, args, row, isNull);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return fExpression->isCompilable(row);
   }
 };
 

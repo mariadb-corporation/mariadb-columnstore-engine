@@ -103,6 +103,10 @@ class SimpleColumn_INT : public SimpleColumn
       default: throw std::logic_error("Row::getIntField(): bad length.");
     }
   }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return true;
+  }
 };
 
 template <int len>
