@@ -261,7 +261,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
     },
     commands: [
-      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --memory=8g --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
@@ -288,6 +288,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
       //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
       //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
+      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
@@ -352,7 +353,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker run --memory=8g --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       if (pkg_format == 'rpm') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar findutils lz4 wget which rsyslog hostname procps-ng elfutils"' else 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool procps wget findutils gawk gdb rsyslog hostname g++ elfutils"',
       if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y sysvinit-tools"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
@@ -381,7 +382,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
       //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 5G"',
       //'docker exec -t regressin$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 2G"',
-      //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=regression$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=regression$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
