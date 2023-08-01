@@ -5724,9 +5724,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     {
       if (!fEndOfResult)
       {
+        // Do multi-threaded second phase aggregation (per row group created for GROUP BY statement)
         if (!fDoneAggregate)
         {
-          // 2nd phase multi-threaded aggregate
           vector<uint64_t> runners;  // thread pool handles
           fRowGroupsDeliveredData.resize(fNumOfBuckets);
 
@@ -5744,9 +5744,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           jobstepThreadPool.join(runners);
         }
 
+        // Deliver results
         fDoneAggregate = true;
         bool done = true;
-
         while (nextDeliveredRowGroup() && !cancelled())
         {
           done = false;
@@ -5761,8 +5761,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           done = true;
         }
 
-        if (done)
+        if (done) {
           fEndOfResult = true;
+        }
       }
     }
     // Case 2. Query contains at least one aggregation on a DISTINCT column but no GROUP BY column
@@ -5773,28 +5774,31 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       {
         if (!fDoneAggregate)
         {
+          // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
+          // easy way of multi-threading this and it's done in a single thread for now.
           for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; bucketNum++)
           {
             if (fEndOfResult == false)
             {
-              // do the final aggregation and deliver the results
-              // at least one RowGroup for aggregate results
-              auto* aggMultiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
-              auto* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
-              distinctAggregator->aggregator(aggDist->aggregator());
+              // The distinctAggregator accumulates the aggregation results of all row groups by being added
+              // all row groups of each bucket aggregator and doing an aggregation step after each addition.
+              auto* bucketMultiDistinctAggregator = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
+              auto* bucketDistinctAggregator = dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
+              distinctAggregator->aggregator(bucketDistinctAggregator->aggregator());
 
-              if (aggMultiDist)
+              if (bucketMultiDistinctAggregator)
               {
                 (dynamic_cast<RowAggregationMultiDistinct*>(distinctAggregator))
-                    ->subAggregators(aggMultiDist->subAggregators());
+                    ->subAggregators(bucketMultiDistinctAggregator->subAggregators());
               }
 
               distinctAggregator->doDistinctAggregation();
             }
           }
         }
-        fDoneAggregate = true;
 
+        // Deliver results
+        fDoneAggregate = true;
         bool done = true;
         while (fAggregator->nextRowGroup() && !cancelled())
         {
@@ -5817,6 +5821,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     } else if (hasGroupByColumns) {
       // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
       // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
+      // As the aggregation algorithm of first phase calculates aggregation results online, e.g. for SUM()
+      // the aggregation here is already finished and the row groups just need to be delivered.
       // TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
       fDoneAggregate = true;
       bool done = true;
@@ -5831,7 +5837,6 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           if (!cleanUpAndOutputRowGroup(bs, dlp))
             break;
         }
-
         done = true;
       }
 
