@@ -6,8 +6,8 @@ GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL,NULL),(1,'ddd'),(2,'bbb'),(3,'fffff'),(4,'eee'),(5,'a'),(6,'ccc'),(7,'ggg');
-INSERT INTO t2 VALUES (NULL,NULL),(1,'ooo'),(3,'iii'),(5,'hhh'),(7,'nnnnn'),(9,'kkkk'),(11,'mm'),(13,'j');
+INSERT INTO t1 VALUES (NULL,''),(1,'ddd'),(2,'bbb'),(3,'fffff'),(4,'eee'),(5,'a'),(6,'ccc'),(7,'ggg');
+INSERT INTO t2 VALUES (NULL,''),(1,'ooo'),(3,'iii'),(5,'hhh'),(7,'nnnnn'),(9,'kkkk'),(11,'mm'),(13,'j');
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1;
 t1_int	t1_char	t2_int	t2_char
 1	ddd	1	ooo

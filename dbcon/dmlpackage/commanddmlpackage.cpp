@@ -29,7 +29,6 @@ using namespace std;
 #define COMMANDDMLPKG_DLLEXPORT
 #include "commanddmlpackage.h"
 #undef COMMANDDMLPKG_DLLEXPORT
-#include "exceptclasses.h"
 namespace dmlpackage
 {
 CommandDMLPackage::CommandDMLPackage()

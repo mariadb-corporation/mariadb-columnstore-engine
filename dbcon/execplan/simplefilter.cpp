@@ -562,50 +562,54 @@ void SimpleFilter::convertConstant()
 
     if (fRhs->resultType().colDataType == CalpontSystemCatalog::DATE)
     {
-      if (lcc->isNull())
+      if (lcc->constval().empty())
       {
+        lcc->constval("0000-00-00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = lcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::dateToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::dateToInt(result.strVal);
       }
     }
     else if (fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME)
     {
-      if (lcc->isNull())
+      if (lcc->constval().empty())
       {
+        lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = lcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
       }
     }
     else if (fRhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP)
     {
-      if (lcc->isNull())
+      if (lcc->constval().empty())
       {
+        lcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = lcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), fTimeZone);
+        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, fTimeZone);
       }
     }
     else if (fRhs->resultType().colDataType == CalpontSystemCatalog::TIME)
     {
-      if (lcc->isNull())
+      if (lcc->constval().empty())
       {
+        lcc->constval("00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = lcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
       }
     }
 
@@ -618,50 +622,54 @@ void SimpleFilter::convertConstant()
 
     if (fLhs->resultType().colDataType == CalpontSystemCatalog::DATE)
     {
-      if (rcc->isNull())
+      if (rcc->constval().empty())
       {
+        rcc->constval("0000-00-00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = rcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::dateToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::dateToInt(result.strVal);
       }
     }
     else if (fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME)
     {
-      if (rcc->isNull())
+      if (rcc->constval().empty())
       {
+        rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = rcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
       }
     }
     else if (fLhs->resultType().colDataType == CalpontSystemCatalog::TIMESTAMP)
     {
-      if (rcc->isNull())
+      if (rcc->constval().empty())
       {
+        rcc->constval("0000-00-00 00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = rcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), fTimeZone);
+        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, fTimeZone);
       }
     }
     else if (fLhs->resultType().colDataType == CalpontSystemCatalog::TIME)
     {
-      if (rcc->isNull())
+      if (rcc->constval().empty())
       {
+        rcc->constval("00:00:00");
         result.intVal = 0;
-        result.strVal.dropString();
+        result.strVal = rcc->constval();
       }
       else
       {
-        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal.safeString());
+        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
       }
     }
 

@@ -361,14 +361,10 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       case CalpontSystemCatalog::BLOB:
       case CalpontSystemCatalog::TEXT:
       {
-        const utils::NullString& val = expression[i]->getStrVal(row, isNull);
+        const std::string& val = expression[i]->getStrVal(row, isNull);
 
-        // XXX: TODO: we may as well set the string field directly.
         if (isNull)
-        {
-          utils::NullString nullstr;
-          row.setStringField(nullstr, expression[i]->outputIndex());
-        }
+          row.setStringField(CPNULLSTRMARK, expression[i]->outputIndex());
         else
           row.setStringField(val, expression[i]->outputIndex());
 

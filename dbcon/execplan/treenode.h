@@ -40,7 +40,6 @@
 #include "mcs_decimal.h"
 #include "mcs_int64.h"
 #include "numericliteral.h"
-#include "nullstring.h"
 
 namespace messageqcpp
 {
@@ -146,7 +145,7 @@ struct Result
    , longDoubleVal(0)
    , floatVal(0)
    , boolVal(false)
-   , strVal()
+   , strVal("")
    , decimalVal(IDB_Decimal())
    , valueConverted(false)
   {
@@ -161,7 +160,7 @@ struct Result
   long double longDoubleVal;
   float floatVal;
   bool boolVal;
-  utils::NullString strVal;
+  std::string strVal;
   IDB_Decimal decimalVal;
   bool valueConverted;
 };
@@ -267,9 +266,8 @@ class TreeNode
   /***********************************************************************
    *                     F&E framework                                   *
    ***********************************************************************/
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    isNull = isNull || fResult.strVal.isNull(); // XXX: NullString returns isNull, we should remove that parameter altogether.
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
@@ -333,7 +331,7 @@ class TreeNode
   }
 
   inline bool getBoolVal();
-  inline const utils::NullString& getStrVal(const long timeZone);
+  inline const std::string& getStrVal(const long timeZone);
   inline int64_t getIntVal();
   inline uint64_t getUintVal();
   inline float getFloatVal();
@@ -411,15 +409,13 @@ inline bool TreeNode::getBoolVal()
       if (fResultType.colWidth <= 8)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      idbassert(fResult.strVal.str());
-      return (atoi(fResult.strVal.str()) != 0);
+      return (atoi(fResult.strVal.c_str()) != 0);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      idbassert(fResult.strVal.str());
-      return (atoi(fResult.strVal.str()) != 0);
+      return (atoi(fResult.strVal.c_str()) != 0);
 
     // FIXME: Huh???
     case CalpontSystemCatalog::VARBINARY:
@@ -428,8 +424,7 @@ inline bool TreeNode::getBoolVal()
       if (fResultType.colWidth <= 7)
         return (atoi((char*)(&fResult.origIntVal)) != 0);
 
-      idbassert(fResult.strVal.str());
-      return (atoi(fResult.strVal.str()) != 0);
+      return (atoi(fResult.strVal.c_str()) != 0);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::SMALLINT:
@@ -468,28 +463,28 @@ inline bool TreeNode::getBoolVal()
   return fResult.boolVal;
 }
 
-inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
+inline const std::string& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
-    case CalpontSystemCatalog::VARCHAR:
-      if (fResultType.colWidth <= 7)
-      {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
-        fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
-      }
+    case CalpontSystemCatalog::CHAR:
+      if (fResultType.colWidth <= 8)
+        fResult.strVal = (char*)(&fResult.origIntVal);
 
       break;
 
-    case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::VARBINARY: // XXX: TODO: we don't have varbinary support now, but it may be handled just like varchar.
+    case CalpontSystemCatalog::VARCHAR:
+      if (fResultType.colWidth <= 7)
+        fResult.strVal = (char*)(&fResult.origIntVal);
+
+      break;
+
+    // FIXME: ???
+    case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
-      if (fResultType.colWidth <= 8)
-      {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
-        fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
-      }
+      if (fResultType.colWidth <= 7)
+        fResult.strVal = (char*)(&fResult.origIntVal);
 
       break;
 
@@ -504,7 +499,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 #else
       snprintf(tmp, 20, "%ld", fResult.intVal);
 #endif
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
@@ -519,7 +514,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 #else
       snprintf(tmp, 20, "%lu", fResult.uintVal);
 #endif
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
@@ -529,7 +524,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
       if ((fabs(fResult.floatVal) > (1.0 / IDB_pow[4])) && (fabs(fResult.floatVal) < (float)IDB_pow[6]))
       {
         snprintf(tmp, 312, "%f", fResult.floatVal);
-        fResult.strVal.assign(removeTrailing0(tmp, 312));
+        fResult.strVal = removeTrailing0(tmp, 312);
       }
       else
       {
@@ -540,15 +535,14 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%f", fResult.floatVal);
-          fResult.strVal.assign(removeTrailing0(tmp, 312));
+          fResult.strVal = removeTrailing0(tmp, 312);
         }
         else
         {
           snprintf(tmp, 312, "%.5f", base);
-          std::string tmpCat(removeTrailing0(tmp, 312));
+          fResult.strVal = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
-          tmpCat += tmp;
-          fResult.strVal.assign(tmpCat);
+          fResult.strVal += tmp;
         }
 
         //				snprintf(tmp, 312, "%e.5", fResult.floatVal);
@@ -564,7 +558,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
       if ((fabs(fResult.doubleVal) > (1.0 / IDB_pow[13])) && (fabs(fResult.doubleVal) < (float)IDB_pow[15]))
       {
         snprintf(tmp, 312, "%f", fResult.doubleVal);
-        fResult.strVal.assign(removeTrailing0(tmp, 312));
+        fResult.strVal = removeTrailing0(tmp, 312);
       }
       else
       {
@@ -575,15 +569,14 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%f", fResult.doubleVal);
-          fResult.strVal.assign(removeTrailing0(tmp, 312));
+          fResult.strVal = removeTrailing0(tmp, 312);
         }
         else
         {
           snprintf(tmp, 312, "%.9f", base);
-          std::string tmpCat(removeTrailing0(tmp, 312));
+          fResult.strVal = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
-          tmpCat += tmp;
-          fResult.strVal.assign(tmpCat);
+          fResult.strVal += tmp;
         }
 
         //				snprintf(tmp, 312, "%e", fResult.doubleVal);
@@ -599,7 +592,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
           (fabsl(fResult.longDoubleVal) < (float)IDB_pow[15]))
       {
         snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
-        fResult.strVal.assign(removeTrailing0(tmp, 312));
+        fResult.strVal = removeTrailing0(tmp, 312);
       }
       else
       {
@@ -610,15 +603,14 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
         if (std::isnan(exponent) || std::isnan(base))
         {
           snprintf(tmp, 312, "%Lf", fResult.longDoubleVal);
-          fResult.strVal.assign(removeTrailing0(tmp, 312));
+          fResult.strVal = removeTrailing0(tmp, 312);
         }
         else
         {
           snprintf(tmp, 312, "%.14Lf", base);
-          std::string tmpCat = removeTrailing0(tmp, 312);
+          fResult.strVal = removeTrailing0(tmp, 312);
           snprintf(tmp, 312, "e%02d", exponent);
-          tmpCat += tmp;
-          fResult.strVal.assign(tmpCat);
+          fResult.strVal += tmp;
         }
 
         //				snprintf(tmp, 312, "%e", fResult.doubleVal);
@@ -632,42 +624,38 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     case CalpontSystemCatalog::UDECIMAL:
     {
       if (fResultType.colWidth == datatypes::MAXDECIMALWIDTH)
-      {
         // Explicit path for TSInt128 decimals with low precision
-        fResult.strVal = fResult.decimalVal.toNullString(true);
-      }
+        fResult.strVal = fResult.decimalVal.toString(true);
       else
-      {
-        fResult.strVal = fResult.decimalVal.toNullString(false);
-      }
+        fResult.strVal = fResult.decimalVal.toString();
       break;
     }
 
     case CalpontSystemCatalog::DATE:
     {
       dataconvert::DataConvert::dateToString(fResult.intVal, tmp, 255);
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
     case CalpontSystemCatalog::DATETIME:
     {
       dataconvert::DataConvert::datetimeToString(fResult.intVal, tmp, 255, fResultType.precision);
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
     case CalpontSystemCatalog::TIMESTAMP:
     {
       dataconvert::DataConvert::timestampToString(fResult.intVal, tmp, 255, timeZone, fResultType.precision);
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
     case CalpontSystemCatalog::TIME:
     {
       dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255, fResultType.precision);
-      fResult.strVal.assign(std::string(tmp));
+      fResult.strVal = std::string(tmp);
       break;
     }
 
@@ -688,7 +676,7 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
       }
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
     case CalpontSystemCatalog::VARCHAR:
@@ -700,7 +688,7 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
 
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      literal::Converter<literal::SignedInteger> cnv(fResult.strVal, cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
 
@@ -748,10 +736,10 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::TEXT:
     {
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal, cnverr);
       if (datatypes::DataCondition::Code(cnverr) != 0)
       {
-        cerr << "error in unsigned int conversion from '" << fResult.strVal.safeString() << "'";
+        cerr << "error in unsigned int conversion from '" << fResult.strVal << "'";
       }
       return cnv.toXIntPositive<uint64_t>(cnverr);
     }
@@ -796,15 +784,13 @@ inline float TreeNode::getFloatVal()
       if (fResultType.colWidth <= 8)
         return atof((char*)(&fResult.origIntVal));
 
-      idbassert(fResult.strVal.str());
-      return atof(fResult.strVal.str());
+      return atof(fResult.strVal.c_str());
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return atof((char*)(&fResult.origIntVal));
 
-      idbassert(fResult.strVal.str());
-      return atof(fResult.strVal.str());
+      return atof(fResult.strVal.c_str());
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -813,8 +799,7 @@ inline float TreeNode::getFloatVal()
       if (fResultType.colWidth <= 7)
         return atof((char*)(&fResult.origIntVal));
 
-      idbassert(fResult.strVal.str());
-      return atof(fResult.strVal.str());
+      return atof(fResult.strVal.c_str());
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -867,15 +852,13 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 8)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.str(), NULL);
+      return strtod(fResult.strVal.c_str(), NULL);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.str(), NULL);
+      return strtod(fResult.strVal.c_str(), NULL);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -884,8 +867,7 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      //idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.safeString("").c_str(), NULL);
+      return strtod(fResult.strVal.c_str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -938,15 +920,13 @@ inline long double TreeNode::getLongDoubleVal()
       if (fResultType.colWidth <= 8)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.c_str(), NULL);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.c_str(), NULL);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
@@ -955,8 +935,7 @@ inline long double TreeNode::getLongDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtold((char*)(&fResult.origIntVal), NULL);
 
-      idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.c_str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:

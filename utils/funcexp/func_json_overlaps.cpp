@@ -279,8 +279,8 @@ bool Func_json_overlaps::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                     CalpontSystemCatalog::ColType& type)
 {
   bool isNullJS1 = false, isNullJS2 = false;
-  const auto js1 = fp[0]->data()->getStrVal(row, isNullJS1);
-  const auto js2 = fp[1]->data()->getStrVal(row, isNullJS2);
+  const string_view js1 = fp[0]->data()->getStrVal(row, isNullJS1);
+  const string_view js2 = fp[1]->data()->getStrVal(row, isNullJS2);
   if (isNullJS1 || isNullJS2)
     return false;
 

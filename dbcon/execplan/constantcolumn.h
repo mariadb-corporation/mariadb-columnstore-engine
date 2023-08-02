@@ -27,10 +27,6 @@
 #include <string>
 
 #include "returnedcolumn.h"
-#include "nullstring.h"
-
-#include "stdlib.h"
-#include "execinfo.h"
 
 namespace messageqcpp
 {
@@ -104,28 +100,16 @@ class ConstantColumn : public ReturnedColumn
   /**
    * accessor
    */
-  inline const utils::NullString& constval() const
+  inline const std::string& constval() const
   {
-    if (isNull())
-    {
-      static NullString nullstr;
-      return nullstr;
-    }
     return fConstval;
   }
   /**
    * accessor
    */
-  inline void constval(const utils::NullString& constval)
-  {
-    fConstval = constval;
-    fResult.strVal = constval;
-  }
   inline void constval(const std::string& constval)
   {
-    idbassert(fType != NULLDATA);
-    fConstval.assign(constval);
-    fResult.strVal.assign(constval);
+    fConstval = constval;
   }
   /**
    * accessor
@@ -218,13 +202,8 @@ class ConstantColumn : public ReturnedColumn
     fDerivedTable = std::string("*");
   }
 
-  bool isNull() const
-  {
-    return fType == NULLDATA || fConstval.isNull();
-  }
-
  private:
-  utils::NullString fConstval;
+  std::string fConstval;
   int fType;
   std::string fData;
   long fTimeZone;
@@ -275,7 +254,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.strVal;
@@ -329,7 +308,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToDate(fResult.strVal.safeString());
+      fResult.intVal = dataconvert::DataConvert::stringToDate(fResult.strVal);
       fResult.valueConverted = true;
     }
 
@@ -344,8 +323,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      isNull = isNull || fResult.strVal.isNull();
-      fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal.safeString(""));
+      fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal);
       fResult.valueConverted = true;
     }
 
@@ -360,8 +338,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      isNull = isNull || fResult.strVal.isNull();
-      fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal.safeString(""), fTimeZone);
+      fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal, fTimeZone);
       fResult.valueConverted = true;
     }
 
@@ -376,7 +353,7 @@ class ConstantColumn : public ReturnedColumn
 
     if (!fResult.valueConverted)
     {
-      fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal.safeString(""));
+      fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal);
       fResult.valueConverted = true;
     }
 

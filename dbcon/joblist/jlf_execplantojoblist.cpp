@@ -276,7 +276,7 @@ template <typename T>
 void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct, bool isNull, uint8_t& rf,
                      const long timeZone, T& v)
 {
-  if (isNull)
+  if (str.size() == 0 || isNull)
   {
     valueNullNum(ct, timeZone, v);
     return;
@@ -1449,8 +1449,7 @@ bool optimizeIdbPatitionSimpleFilter(SimpleFilter* sf, JobStepVector& jsv, JobIn
 
   // make sure the cc has 3 tokens
   vector<string> cv;
-  auto str = cc->constval().safeString("");
-  boost::split(cv, str, boost::is_any_of("."));
+  boost::split(cv, cc->constval(), boost::is_any_of("."));
 
   if (cv.size() != 3)
     return false;
@@ -1519,13 +1518,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     else if (sc->schemaName().empty())
     {
       // bug 3749, mark outer join table with isNull filter
-      if (cc->isNull() && (opis == *sop || opisnull == *sop))
+      if (ConstantColumn::NULLDATA == cc->type() && (opis == *sop || opisnull == *sop))
         jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, "", view));
 
       return doExpressionFilter(sf, jobInfo);
     }
 
-    utils::NullString constval(cc->constval());
+    string constval(cc->constval());
 
     CalpontSystemCatalog::OID dictOid = 0;
     CalpontSystemCatalog::ColType ct = sc->colType();
@@ -1541,7 +1540,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     // X
 
     //@bug 339 nulls are not stored in dictionary
-    if ((dictOid = isDictCol(ct)) > 0 && !cc->isNull())
+    if ((dictOid = isDictCol(ct)) > 0 && ConstantColumn::NULLDATA != cc->type())
     {
       if (jobInfo.trace)
         cout << "Emit pTokenByScan/pCol for SimpleColumn op ConstantColumn" << endl;
@@ -1567,7 +1566,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         pds->cardinality(sc->cardinality());
 
         // Add the filter
-        pds->addFilter(cop, constval.safeString(""));
+        pds->addFilter(cop, constval);
 
         // data list for pcolstep output
         AnyDataListSPtr spdl1(new AnyDataList());
@@ -1624,7 +1623,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         pds->cardinality(sc->cardinality());
 
         // Add the filter
-        pds->addFilter(cop, constval.safeString(""));
+        pds->addFilter(cop, constval);
 
         // save for expression transformation
         pds->addFilter(sf);
@@ -1694,7 +1693,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         jsv.push_back(sjstep);
       }
     }
-    else if (!cc->isNull() && (cop & COMPARE_LIKE))  // both like and not like
+    else if (ConstantColumn::NULLDATA != cc->type() && (cop & COMPARE_LIKE))  // both like and not like
     {
       return doExpressionFilter(sf, jobInfo);
     }
@@ -1710,8 +1709,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       //   throwing
       try
       {
-        bool isNull = cc->isNull();
-        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
+        bool isNull = ConstantColumn::NULLDATA == cc->type();
+        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
         if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
         {
@@ -1747,12 +1746,12 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       }
 
 #else
-      bool isNull = cc->isNull();
+      bool isNull = ConstantColumn::NULLDATA == cc->type();
 
       if (ct.isWideDecimalType())
-        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value128);
+        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
       else
-        convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
+        convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value);
 
       if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
       {
@@ -1768,12 +1767,12 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 #endif
 
       // @bug 2584, make "= null" to COMPARE_NIL.
-      if (cc->isNull() && (opeq == *sop || opne == *sop))
+      if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
         cop = COMPARE_NIL;
 
       if (jobInfo.trace)
         cout << "doSimpleFilter Emit pCol for SimpleColumn op ConstantColumn = " << value << " ("
-             << cc->constval().safeString() << ')' << endl;
+             << cc->constval() << ')' << endl;
 
       if (sf->indexFlag() == 0)
       {
@@ -1813,7 +1812,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             jobInfo.tokenOnly[ti.key] = true;
         }
 
-        if (cc->isNull() && (opis == *sop || opisnull == *sop))
+        if (ConstantColumn::NULLDATA == cc->type() && (opis == *sop || opisnull == *sop))
           jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, sc->schemaName(), view));
       }
       else
@@ -2657,10 +2656,10 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (cc->isNull() && (opeq == *sop || opne == *sop))
+          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
-          string value = cc->constval().safeString("");
+          string value = cc->constval();
           // Because, on a filter, we want to compare ignoring trailing spaces
           boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
@@ -2735,10 +2734,10 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (cc->isNull() && (opeq == *sop || opne == *sop))
+          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
-          string value = cc->constval().safeString("");
+          string value = cc->constval();
           // Because, on a filter, we want to compare ignoring trailing spaces
           boost::algorithm::trim_right_if(value, boost::is_any_of(" "));
 
@@ -2846,11 +2845,11 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           int8_t cop = op2num(sop);
           int64_t value = 0;
           int128_t value128 = 0;
-          string constval = cc->constval().safeString("");
+          string constval = cc->constval();
 
           // @bug 1151 string longer than colwidth of char/varchar.
           uint8_t rf = 0;
-          bool isNull = cc->isNull();
+          bool isNull = ConstantColumn::NULLDATA == cc->type();
 
           if (ct.isWideDecimalType())
             convertValueNum(constval, ct, isNull, rf, jobInfo.timeZone, value128);
@@ -2869,7 +2868,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
           }
 
           // @bug 2584, make "= null" to COMPARE_NIL.
-          if (cc->isNull() && (opeq == *sop || opne == *sop))
+          if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
             cop = COMPARE_NIL;
 
           if (ct.isWideDecimalType())
@@ -2934,8 +2933,7 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
         if (cc)
         {
           vector<string> cv;
-          auto str = cc->constval().safeString("");
-          boost::split(cv, str, boost::is_any_of("."));
+          boost::split(cv, cc->constval(), boost::is_any_of("."));
 
           if (cv.size() == 3)
           {
@@ -2987,7 +2985,7 @@ const JobStepVector doFunctionFilter(const ParseTree* n, JobInfo& jobInfo)
 
         if (cc)
         {
-          constParms[0].push_back(cc->constval().safeString(""));
+          constParms[0].push_back(cc->constval());
           constParmsCount++;
         }
       }

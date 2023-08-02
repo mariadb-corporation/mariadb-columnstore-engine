@@ -52,11 +52,11 @@ int64_t Func_inet_aton::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 
   int64_t iValue = joblist::NULL_INT64;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if (!isNull)
       iValue = iVal;
@@ -76,11 +76,11 @@ double Func_inet_aton::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 
   double dValue = doubleNullVal();
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iValue = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iValue = convertAton(sValue, isNull);
 
     if (!isNull)
       dValue = iValue;
@@ -102,18 +102,14 @@ std::string Func_inet_aton::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
 {
   //	std::cout << "In Func_inet_aton::getStrVal" << std::endl;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    convertAton(sValue.unsafeStringRef(), isNull);  // ignore return valuea
-    if (isNull)
-    {
-      return "";
-    }
+    convertAton(sValue, isNull);  // ignore return value
   }
 
-  return sValue.safeString("");
+  return sValue;
 }
 
 //------------------------------------------------------------------------------
@@ -126,11 +122,11 @@ bool Func_inet_aton::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNu
 {
   bool bValue = false;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if ((!isNull) && (iVal != 0))
       bValue = true;
@@ -148,13 +144,13 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row, Function
 {
   execplan::CalpontSystemCatalog::ColType colType = fp[0]->data()->resultType();
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
   if (!datatypes::Decimal::isWideDecimalTypeByPrecision(colType.precision))
   {
-    if (!sValue.isNull())
+    if (!isNull)
     {
-      int64_t iValue = convertAton(sValue.unsafeStringRef(), isNull);
+      int64_t iValue = convertAton(sValue, isNull);
 
       if (!isNull)
         return execplan::IDB_Decimal(iValue, colType.scale, colType.precision);
@@ -166,7 +162,7 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row, Function
   {
     if (!isNull)
     {
-      int64_t iValue = convertAton(sValue.unsafeStringRef(), isNull);
+      int64_t iValue = convertAton(sValue, isNull);
 
       if (!isNull)
         return execplan::IDB_Decimal(0, colType.scale, colType.precision, (int128_t)iValue);
@@ -186,11 +182,11 @@ int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 {
   int32_t iValue = joblist::DATENULL;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if (!isNull)
       iValue = iVal;
@@ -210,11 +206,11 @@ int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, 
 {
   int64_t iValue = joblist::DATETIMENULL;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if (!isNull)
       iValue = iVal;
@@ -228,11 +224,11 @@ int64_t Func_inet_aton::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp,
 {
   int64_t iValue = joblist::TIMESTAMPNULL;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if (!isNull)
       iValue = iVal;
@@ -246,11 +242,11 @@ int64_t Func_inet_aton::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 {
   int64_t iValue = joblist::TIMENULL;
 
-  const auto& sValue = fp[0]->data()->getStrVal(row, isNull);
+  const std::string& sValue = fp[0]->data()->getStrVal(row, isNull);
 
-  if (!sValue.isNull())
+  if (!isNull)
   {
-    int64_t iVal = convertAton(sValue.unsafeStringRef(), isNull);
+    int64_t iVal = convertAton(sValue, isNull);
 
     if (!isNull)
       iValue = iVal;

@@ -287,16 +287,9 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getBoolVal();
   }
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
-    bool localIsNull = false;
-    evaluate(row, localIsNull);
-    if (localIsNull)
-    {
-      isNull = isNull || localIsNull;
-      fResult.strVal.dropString();
-      return fResult.strVal;
-    }
+    evaluate(row, isNull);
     return TreeNode::getStrVal(fTimeZone);
   }
 

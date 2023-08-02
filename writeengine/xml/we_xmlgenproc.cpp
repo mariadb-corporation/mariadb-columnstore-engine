@@ -325,24 +325,23 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
       }
 
       // Include NotNull and Default value
-      const NullString col_defaultValue(col->colType.defaultValue);
+      const std::string col_defaultValue(col->colType.defaultValue);
 
       if (col->colType.constraintType == execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
       {
         int notNull = 1;
         xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_NOT_NULL], "%d", notNull);
 
-        if (!col_defaultValue.isNull())
+        if (!col_defaultValue.empty())
         {
           xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                                      BAD_CAST col_defaultValue.unsafeStringRef().c_str());
+                                      BAD_CAST col_defaultValue.c_str());
         }
       }
       else if (col->colType.constraintType == execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
       {
-        idbassert(!col_defaultValue.isNull()); // good enough for now. I have to figure out how to store the null.
         xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                                    BAD_CAST (col_defaultValue.unsafeStringRef().c_str()));
+                                    BAD_CAST col_defaultValue.c_str());
       }
     }  // end of "if fSysCatRpt"
 

@@ -48,16 +48,14 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row, FunctionParm& fp
 {
   CHARSET_INFO* cs = ct.getCharset();
 
-  const auto& nstr = fp[0]->data()->getStrVal(row, isNull);
-  if (nstr.isNull())
+  const string& str = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-  const auto& str = nstr.unsafeStringRef();
   int64_t strLen = str.length();
 
-  const auto& ndelimstr = fp[1]->data()->getStrVal(row, isNull);
-  if (ndelimstr.isNull())
+  const string& delimstr = fp[1]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-  const auto& delimstr = ndelimstr.unsafeStringRef();
   int64_t delimLen = delimstr.length();
 
   int64_t count = fp[2]->data()->getIntVal(row, isNull);

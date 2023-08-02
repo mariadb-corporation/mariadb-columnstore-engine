@@ -713,18 +713,18 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
-      if (!ct.defaultValue.isNull())
+      if ((!ct.defaultValue.empty()) || (ct.defaultValue.length() > 0))
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
           ct.constraintType = DEFAULT_CONSTRAINT;
       }
     }
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_SCHEMA)
-      tcn.schema = ((*it)->GetStringData(0).safeString(""));
+      tcn.schema = ((*it)->GetStringData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_TABLENAME)
-      tcn.table = ((*it)->GetStringData(0).safeString(""));
+      tcn.table = ((*it)->GetStringData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
-      tcn.column = ((*it)->GetStringData(0).safeString(""));
+      tcn.column = ((*it)->GetStringData(0));
   }
 
   // temporialy memory leak fix until defaultvalue is added.
@@ -1196,7 +1196,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     {
       ct.defaultValue = ((*it)->GetStringData(0));
 
-      if (!ct.defaultValue.isNull())
+      if ((!ct.defaultValue.empty()) || (ct.defaultValue.length() > 0))
       {
         if (ct.constraintType != NOTNULL_CONSTRAINT)
           ct.constraintType = DEFAULT_CONSTRAINT;
@@ -1205,11 +1205,11 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     // NJL fix.  The schema, table, and column now return the oids for the dictionary columns
     // on schema, table, and column.
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_SCHEMA)
-      tcn.schema = ((*it)->GetStringData(0).safeString(""));
+      tcn.schema = ((*it)->GetStringData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_TABLENAME)
-      tcn.table = ((*it)->GetStringData(0).safeString(""));
+      tcn.table = ((*it)->GetStringData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_COLNAME)
-      tcn.column = ((*it)->GetStringData(0).safeString(""));
+      tcn.column = ((*it)->GetStringData(0));
     else if ((*it)->ColumnOID() == oid[13])
     {
       if (static_cast<ConstraintType>((*it)->GetData(0)) == 0)
@@ -1448,11 +1448,11 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid2)
-      tableColName.schema = (*it)->GetStringData(0).safeString("");
+      tableColName.schema = (*it)->GetStringData(0);
     else if ((*it)->ColumnOID() == oid3)
-      tableColName.table = (*it)->GetStringData(0).safeString("");
+      tableColName.table = (*it)->GetStringData(0);
     else if ((*it)->ColumnOID() == oid4)
-      tableColName.column = (*it)->GetStringData(0).safeString("");
+      tableColName.column = (*it)->GetStringData(0);
   }
 
   if (oid > 3000)
@@ -1549,11 +1549,11 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
   {
     if ((*it)->ColumnOID() == oid2)
-      tableColName.schema = (*it)->GetStringData(0).safeString("");
+      tableColName.schema = (*it)->GetStringData(0);
     else if ((*it)->ColumnOID() == oid3)
-      tableColName.table = (*it)->GetStringData(0).safeString("");
+      tableColName.table = (*it)->GetStringData(0);
     else if ((*it)->ColumnOID() == oid4)
-      tableColName.column = (*it)->GetStringData(0).safeString("");
+      tableColName.column = (*it)->GetStringData(0);
   }
 
   if (oid > 3000)
@@ -2812,8 +2812,8 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        tables.push_back(make_pair(0, make_table("", (*it)->GetStringData(i).safeString(""))));
-        tnl.push_back((*it)->GetStringData(i).safeString(""));
+        tables.push_back(make_pair(0, make_table("", (*it)->GetStringData(i))));
+        tnl.push_back((*it)->GetStringData(i));
       }
     }
   }
@@ -2823,7 +2823,7 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
     if ((*it)->ColumnOID() == oid2)
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
-        tables[i].second.schema = (*it)->GetStringData(i).safeString("");
+        tables[i].second.schema = (*it)->GetStringData(i);
     }
   }
 
@@ -3211,7 +3211,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        TableColName tcn = make_tcn(aTableName.schema, aTableName.table, (*it)->GetStringData(i).safeString(""));
+        TableColName tcn = make_tcn(aTableName.schema, aTableName.table, (*it)->GetStringData(i));
         fOIDmap[tcn] = rl[i].objnum;
 
         if (fIdentity == EC)
@@ -3267,7 +3267,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
 
-        if (!ctList[i].defaultValue.isNull())
+        if ((!ctList[i].defaultValue.empty()) || (ctList[i].defaultValue.length() > 0))
         {
           if (ctList[i].constraintType != NOTNULL_CONSTRAINT)
             ctList[i].constraintType = DEFAULT_CONSTRAINT;
@@ -3436,9 +3436,9 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
     }
 
     if ((*it)->ColumnOID() == oid2)
-      tableName.schema = (*it)->GetStringData(0).safeString("");
+      tableName.schema = (*it)->GetStringData(0);
     else if ((*it)->ColumnOID() == oid3)
-      tableName.table = (*it)->GetStringData(0).safeString("");
+      tableName.table = (*it)->GetStringData(0);
   }
 
   //@Bug 2682. datacount 0 sometimes does not mean the table is not found.
@@ -5671,7 +5671,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        tableNames.push_back((*it)->GetStringData(i).safeString(""));
+        tableNames.push_back((*it)->GetStringData(i));
         tbIter = tbInfo.find(tableNames[i]);
 
         if (tbIter == tbInfo.end())
@@ -5714,7 +5714,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       // lk2.lock();
       for (int i = 0; i < (*it)->dataCount(); i++)
       {
-        TableColName tcn = make_tcn(schema, tableNames[i], (*it)->GetStringData(i).safeString(""));
+        TableColName tcn = make_tcn(schema, tableNames[i], (*it)->GetStringData(i));
         fOIDmap[tcn] = rl[i].objnum;
 
         if (fIdentity == EC)
@@ -5769,7 +5769,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       {
         ctList[i].defaultValue = ((*it)->GetStringData(i));
 
-        if (!ctList[i].defaultValue.isNull())
+        if ((!ctList[i].defaultValue.empty()) || (ctList[i].defaultValue.length() > 0))
         {
           if (ctList[i].constraintType != NOTNULL_CONSTRAINT)
             ctList[i].constraintType = DEFAULT_CONSTRAINT;
@@ -6302,6 +6302,7 @@ void CalpontSystemCatalog::checkSysCatVer()
 
 CalpontSystemCatalog::ColType::ColType()
  : constraintType(NO_CONSTRAINT)
+ , defaultValue("")
  , colPosition(-1)
  , compressionType(NO_COMPRESSION)
  , columnOID(0)
@@ -6374,22 +6375,6 @@ boost::any CalpontSystemCatalog::ColType::convertColumnData(const std::string& d
 
   const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
   return h->convertFromString(*this, prm, data, pushWarning);
-}
-
-boost::any CalpontSystemCatalog::ColType::convertColumnData(const NullString& data, bool& pushWarning,
-                                                            long timeZone, bool noRoundup,
-                                                            bool isUpdate) const
-{
-  pushWarning = false;
-  const datatypes::TypeHandler* h = typeHandler();
-  if (!h)
-    throw QueryDataExcept("convertColumnData: unknown column data type.", dataTypeErr);
-
-  if (data.isNull())
-    return h->getNullValueForType(*this);
-
-  const datatypes::ConvertFromStringParam prm(timeZone, noRoundup, isUpdate);
-  return h->convertFromString(*this, prm, data.unsafeStringRef(), pushWarning);
 }
 
 CalpontSystemCatalog::ColType CalpontSystemCatalog::ColType::convertUnionColType(

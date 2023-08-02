@@ -124,22 +124,22 @@ long double Func_greatest::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp
 std::string Func_greatest::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  const auto& str = fp[0]->data()->getStrVal(row, isNull);
+  const string& str = fp[0]->data()->getStrVal(row, isNull);
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
-  auto greatestStr = str;
+  string greatestStr = str;
 
   for (uint32_t i = 1; i < fp.size(); i++)
   {
-    const auto& str1 = fp[i]->data()->getStrVal(row, isNull);
+    const string& str1 = fp[i]->data()->getStrVal(row, isNull);
 
-    if (cs->strnncoll(greatestStr.str(), greatestStr.length(), str1.str(), str1.length()) < 0)
+    if (cs->strnncoll(greatestStr.c_str(), greatestStr.length(), str1.c_str(), str1.length()) < 0)
     {
       greatestStr = str1;
     }
   }
 
-  return greatestStr.safeString("");
+  return greatestStr;
 }
 
 IDB_Decimal Func_greatest::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,

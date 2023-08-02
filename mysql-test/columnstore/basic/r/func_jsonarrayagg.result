@@ -78,7 +78,7 @@ SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1 GROUP BY a;
 JSON_ARRAYAGG(a)	JSON_ARRAYAGG(b)
 [1,1,1,1]	["Hello","World","Hello","World"]
 [2,2,2,2,2,2,2,2]	["This","Will","Work","!","This","Will","Work","!"]
-[3,3]	
+[3,3]	NULL
 #
 # DISTINCT and LIMIT
 #
@@ -90,7 +90,7 @@ JSON_ARRAYAGG(b LIMIT 2)
 ["Hello","World","This","Will","Work","!","Hello","World","This","Will","Work","!"]
 SELECT JSON_ARRAYAGG(b LIMIT 1) FROM t1 GROUP BY b;
 JSON_ARRAYAGG(b LIMIT 1)
-
+NULL
 ["!","!"]
 ["Hello","Hello"]
 ["This","This"]
@@ -99,7 +99,7 @@ JSON_ARRAYAGG(b LIMIT 1)
 ["World","World"]
 SELECT JSON_ARRAYAGG(b LIMIT 2) FROM t1 GROUP BY a;
 JSON_ARRAYAGG(b LIMIT 2)
-
+NULL
 ["Hello","World","Hello","World"]
 ["This","Will","Work","!","This","Will","Work","!"]
 SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
@@ -156,7 +156,7 @@ DROP TABLE t1;
 CREATE TABLE t1 (a INT)ENGINE=COLUMNSTORE;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 JSON_ARRAYAGG(a)
-
+NULL
 DROP TABLE t1;
 #
 #

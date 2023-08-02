@@ -28,19 +28,9 @@ SELECT * FROM t1;
 INSERT INTO t1 (c1) VALUES ('hello');
 
 #Suspected bug. innodb ignores.
-#--error 1815
+--error 1815
 INSERT IGNORE INTO t1 (c1) VALUES ('hello');
 SELECT * FROM t1;
-
-# Prove we do what InnoDB does.
-# We even have the same warnings!
-CREATE TABLE t1i(
-c1 CHAR(5),
-c2 CHAR(10) NOT NULL
-) ENGINE=InnoDB;
-INSERT IGNORE INTO t1i (c1) VALUES ('hello');
-SELECT * FROM t1i;
-DROP TABLE t1i;
 
 #duplicate rows
 INSERT INTO t1 VALUES ('123', 'abc');

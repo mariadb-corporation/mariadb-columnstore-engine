@@ -54,11 +54,11 @@ namespace funcexp
 {
 const static int wildOne = '_';
 const static int wildMany = '%';
-int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs)
+int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const string_view& cmpStr, const CHARSET_INFO* cs)
 {
   if (jsEg->value_type != JSON_VALUE_STRING || !jsEg->value_escaped)
     return cs->wildcmp((const char*)jsEg->value, (const char*)(jsEg->value + jsEg->value_len),
-                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape,
+                       (const char*)cmpStr.data(), (const char*)cmpStr.data() + cmpStr.size(), escape,
                        wildOne, wildMany)
                ? 0
                : 1;
@@ -71,7 +71,7 @@ int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString&
                                 (uchar*)buf, (uchar*)(buf + strLen))) <= 0)
       return 0;
 
-    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne,
+    return cs->wildcmp(buf, buf + strLen, cmpStr.data(), cmpStr.data() + cmpStr.size(), escape, wildOne,
                        wildMany)
                ? 0
                : 1;
@@ -89,8 +89,8 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 {
   string ret;
   bool isNullJS = false, isNullVal = false;
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
-  const auto& cmpStr = fp[2]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
+  const string_view cmpStr = fp[2]->data()->getStrVal(row, isNull);
   if (isNullJS || isNullVal)
   {
     isNull = true;
@@ -102,10 +102,9 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (!isModeConst)
       isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
-    const auto& mode_ns = fp[1]->data()->getStrVal(row, isNull);
+    string mode = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return "";
-    string mode = mode_ns.safeString("");
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")
@@ -126,13 +125,13 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       return "";
     }
     bool isNullEscape = false;
-    const auto& escapeStr = fp[3]->data()->getStrVal(row, isNullEscape);
-    if (escapeStr.length() > 1)
+    const string_view escapeStr = fp[3]->data()->getStrVal(row, isNullEscape);
+    if (escapeStr.size() > 1)
     {
       isNull = true;
       return "";
     }
-    escape = isNullEscape ? '\\' : escapeStr.safeString("")[0];
+    escape = isNullEscape ? '\\' : escapeStr[0];
   }
 
   json_engine_t jsEg;
@@ -160,7 +159,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
   }
 
-  json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
+  json_get_path_start(&jsEg, cs, (const uchar*)js.data(), (const uchar*)js.data() + js.size(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {

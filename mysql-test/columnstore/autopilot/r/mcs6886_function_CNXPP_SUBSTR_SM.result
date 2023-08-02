@@ -47,25 +47,25 @@ cidx	CTINYTEXT	SUBSTR(CTINYTEXT,8)
 1	tinytext	t
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,9) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT,9)
-1	tinytext	
+1	tinytext	NULL
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 5) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 5)
 1	tinytext	text
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 9) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 9)
-1	tinytext	
+1	tinytext	NULL
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,5,2) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT,5,2)
 1	tinytext	te
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT,9,3) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT,9,3)
-1	tinytext	
+1	tinytext	NULL
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 5 FOR 2) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 5 FOR 2)
 1	tinytext	te
 select cidx, CTINYTEXT, SUBSTR(CTINYTEXT FROM 9 FOR 3) from datatypetestm ;
 cidx	CTINYTEXT	SUBSTR(CTINYTEXT FROM 9 FOR 3)
-1	tinytext	
+1	tinytext	NULL
 select cidx, CMEDIUMTEXT, SUBSTR(CMEDIUMTEXT,1) from datatypetestm ;
 cidx	CMEDIUMTEXT	SUBSTR(CMEDIUMTEXT,1)
 1	mediumtestmediumtest	mediumtestmediumtest

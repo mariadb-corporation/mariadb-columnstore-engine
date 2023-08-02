@@ -47,12 +47,14 @@ std::string Func_left::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 {
   CHARSET_INFO* cs = type.getCharset();
   // The original string
-  const auto& src = fp[0]->data()->getStrVal(row, isNull);
-  if (isNull || src.length() < 1) // null or empty string.
+  const string& src = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
+  if (src.empty() || src.length() == 0)
+    return src;
   // binLen represents the number of bytes in src
   size_t binLen = src.length();
-  const char* pos = src.str();
+  const char* pos = src.c_str();
   const char* end = pos + binLen;
 
   size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
@@ -63,7 +65,7 @@ std::string Func_left::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 
   if ((binLen <= trimLength) || (binLen <= (charPos = cs->charpos(pos, end, trimLength))))
   {
-    return src.safeString("");
+    return src;
   }
 
   std::string ret(pos, charPos);

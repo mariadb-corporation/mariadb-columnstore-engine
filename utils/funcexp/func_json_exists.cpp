@@ -24,7 +24,7 @@ CalpontSystemCatalog::ColType Func_json_exists::operationType(FunctionParm& fp,
 bool Func_json_exists::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                   CalpontSystemCatalog::ColType& type)
 {
-  const auto js = fp[0]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 

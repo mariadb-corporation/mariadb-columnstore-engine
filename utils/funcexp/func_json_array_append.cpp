@@ -23,7 +23,7 @@ CalpontSystemCatalog::ColType Func_json_array_append::operationType(FunctionParm
 string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
@@ -33,17 +33,16 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   const uchar* arrEnd;
   size_t strRestLen;
   string retJS;
-  retJS.reserve(js.length() + padding);
+  retJS.reserve(js.size() + padding);
 
   initJSPaths(paths, fp, 1, 2);
 
-  utils::NullString tmpJS(js);
+  string tmpJS{js};
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
-    const char* rawJS = tmpJS.str();
-    const size_t jsLen = tmpJS.length();
+    const char* rawJS = tmpJS.data();
+    const size_t jsLen = tmpJS.size();
     JSONPath& path = paths[j];
-
     if (!path.parsed && parseJSPath(path, row, fp[i], false))
       goto error;
 
@@ -78,6 +77,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
       /* Wrap as an array. */
       retJS.append(rawJS, (const char*)jsEg.value_begin - rawJS);
       start = jsEg.value_begin;
+
       if (jsEg.value_type == JSON_VALUE_OBJECT)
       {
         if (json_skip_level(&jsEg))
@@ -97,7 +97,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     }
 
     // tmpJS save the json string for next loop
-    tmpJS.assign(retJS);
+    tmpJS.swap(retJS);
     retJS.clear();
   }
 

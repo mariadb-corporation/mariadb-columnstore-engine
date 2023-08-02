@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS mcs189_db;
 CREATE DATABASE mcs189_db;
 USE mcs189_db;
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
-INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(1, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(1, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
 SELECT SUM(DISTINCT a) FROM t1;
 SUM(DISTINCT a)
 25

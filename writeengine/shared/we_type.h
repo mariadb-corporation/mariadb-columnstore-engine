@@ -39,7 +39,6 @@
 #include "calpontsystemcatalog.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
-#include "nullstring.h"
 
 #undef EXPORT
 #undef DELETE
@@ -332,7 +331,7 @@ typedef std::vector<ColTupleList> ColValueList;                            /** @
 typedef std::vector<RID> RIDList;                                          /** @brief RID list */
 typedef std::vector<execplan::CalpontSystemCatalog::ColType> CSCTypesList; /** @brief CSC column types list */
 
-typedef std::vector<NullString> dictStr;
+typedef std::vector<std::string> dictStr;
 typedef std::vector<dictStr> DictStrList;
 
 // dictionary
@@ -409,7 +408,7 @@ struct JobColumn /** @brief Job Column Structure */
   unsigned long long fDefaultUInt; /** @brief UnsignedInt col default*/
   double fDefaultDbl;              /** @brief Dbl/Flt column default */
   int128_t fDefaultWideDecimal;    /** @brief Wide decimal column default */
-  utils::NullString fDefaultChr;   /** @brief Char column default */
+  std::string fDefaultChr;         /** @brief Char column default */
   JobColumn()
    : mapOid(0)
    , dataType(execplan::CalpontSystemCatalog::INT)

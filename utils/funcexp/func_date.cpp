@@ -143,9 +143,9 @@ int64_t Func_date::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
 string Func_date::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType&)
 {
-  const auto& val = parm[0]->data()->getStrVal(row, isNull);
+  const string& val = parm[0]->data()->getStrVal(row, isNull);
 
-  return val.safeString("").substr(0, 10);
+  return val.substr(0, 10);
 }
 
 }  // namespace funcexp

@@ -39,14 +39,14 @@ namespace execplan
 /**
  *  Constructors/Destructors
  */
-ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(NULLDATA)
+ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
 {
 }
 
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
 
   fResult.intVal = atoll(sql.c_str());
   fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
@@ -81,7 +81,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
   fResult.doubleVal = val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -96,7 +96,7 @@ ConstantColumn::ConstantColumn(const string& sql, const double val)
 ConstantColumn::ConstantColumn(const string& sql, const long double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
   fResult.doubleVal = (double)val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -111,7 +111,7 @@ ConstantColumn::ConstantColumn(const string& sql, const long double val)
 ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -125,7 +125,7 @@ ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
   fResult.uintVal = val;
   fResult.intVal = (int64_t)fResult.uintVal;
   fResult.floatVal = (float)fResult.uintVal;
@@ -139,7 +139,7 @@ ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const IDB_Decimal& val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal.assign(sql);
+  fResult.strVal = sql;
   fResult.intVal = (int64_t)atoll(sql.c_str());
   fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
   fResult.floatVal = atof(sql.c_str());
@@ -167,9 +167,9 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) : ReturnedColumn(),
 {
   ostringstream oss;
   oss << val;
-  fConstval.assign(oss.str());
+  fConstval = oss.str();
   fData = oss.str();
-  fResult.strVal.assign(fData);
+  fResult.strVal = fData;
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -185,9 +185,9 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
 {
   ostringstream oss;
   oss << val;
-  fConstval.assign(oss.str());
+  fConstval = oss.str();
   fData = oss.str();
-  fResult.strVal.assign(fData);
+  fResult.strVal = fData;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = val;
   fResult.floatVal = (float)fResult.uintVal;
@@ -205,8 +205,7 @@ ConstantColumn::~ConstantColumn()
 const string ConstantColumn::toString() const
 {
   ostringstream oss;
-  oss << "ConstantColumn: " << fConstval.safeString("<<NuLL>>") << " intVal=" << fResult.intVal
-      << " uintVal=" << fResult.uintVal;
+  oss << "ConstantColumn: " << fConstval << " intVal=" << fResult.intVal << " uintVal=" << fResult.uintVal;
   oss << '(';
 
   if (fType == LITERAL)
@@ -229,7 +228,7 @@ std::string ConstantColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("constantcolumn.h");
   std::stringstream ss;
-  ss << "ConstantColumn(" << std::quoted(fData) << ", " << fConstval.safeString() << ")";
+  ss << "ConstantColumn(" << std::quoted(fData) << ", " << fConstval << ")";
 
   return ss.str();
 }
@@ -306,10 +305,7 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
   if (*rc1 != *rc2)
     return false;
 
-  if (fConstval.isNull() != t.fConstval.isNull())
-    return false;
-
-  if (!fConstval.isNull() && fConstval.unsafeStringRef() != t.fConstval.unsafeStringRef())
+  if (fConstval != t.fConstval)
     return false;
 
   if (fType != t.fType)

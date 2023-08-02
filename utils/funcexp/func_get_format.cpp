@@ -64,14 +64,14 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 {
   // parm[0] -- format
   // parm[1] -- type
-  string format = parm[0]->data()->getStrVal(row, isNull).safeString("");
+  string format = parm[0]->data()->getStrVal(row, isNull);
 
   if (isNull)
     return "";
 
   transform(format.begin(), format.end(), format.begin(), to_upper());
 
-  string type = parm[1]->data()->getStrVal(row, isNull).safeString("");
+  string type = parm[1]->data()->getStrVal(row, isNull);
 
   if (isNull)
     return "";
@@ -98,9 +98,7 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       {
         case 0: return known_date_time_formats[i][2]; break;
 
-        default:
-          isNull = true;
-          return "";
+        default: return "";
       }
     }
   }

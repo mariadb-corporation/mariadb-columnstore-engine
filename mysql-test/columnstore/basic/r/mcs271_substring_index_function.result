@@ -23,7 +23,7 @@ SUBSTRING_INDEX('pqr stu vwz', ' ', -1)
 vwz
 SELECT SUBSTRING_INDEX('pqr stu vwz', ' ', 0) FROM t1 LIMIT 1;
 SUBSTRING_INDEX('pqr stu vwz', ' ', 0)
-
+NULL
 SELECT SUBSTRING_INDEX('11:12:13', ':', 4) FROM t1 LIMIT 1;
 SUBSTRING_INDEX('11:12:13', ':', 4)
 11:12:13

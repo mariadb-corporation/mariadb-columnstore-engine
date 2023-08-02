@@ -28,12 +28,9 @@ CalpontSystemCatalog::ColType Func_json_quote::operationType(FunctionParm& fp,
 std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto js = fp[0]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull || !isCharType(fp[0]->data()->resultType().colDataType))
-  {
-    isNull = true;
     return "";
-  }
 
   string ret("\"");
 

@@ -48,11 +48,11 @@ std::string Func_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 {
   CHARSET_INFO* cs = ct.getCharset();
 
-  const auto& str = fp[0]->data()->getStrVal(row, isNull);
-  if (str.isNull())
+  const string& str = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
   int64_t strLen = str.length();
-  const char* strptr = str.str();
+  const char* strptr = str.c_str();
   const char* strend = strptr + strLen;
   uint32_t strChars = cs->numchars(strptr, strend);
 
@@ -89,7 +89,7 @@ std::string Func_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     return "";
 
   if (start == 0 && strLen == length)
-    return str.safeString("");
+    return str;
 
   length = std::min(length, strLen - start);
 

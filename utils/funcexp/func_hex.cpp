@@ -78,10 +78,10 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
     case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::TIME:
     {
-      const auto& arg = parm[0]->data()->getStrVal(row, isNull);
-      scoped_array<char> hexPtr(new char[arg.length() * 2 + 1]); // XXX: code now the same as for BLOB.
-      octet2hex(hexPtr.get(), arg.str(), arg.length());
-      return string(hexPtr.get(), arg.length() * 2);
+      const string& arg = parm[0]->data()->getStrVal(row, isNull);
+      scoped_array<char> hexPtr(new char[strlen(arg.c_str()) * 2 + 1]);
+      octet2hex(hexPtr.get(), arg.c_str(), strlen(arg.c_str()));
+      return string(hexPtr.get(), strlen(arg.c_str()) * 2);
     }
 
     case CalpontSystemCatalog::DOUBLE:
@@ -114,10 +114,10 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     {
-      const auto& arg = parm[0]->data()->getStrVal(row, isNull);
-      uint64_t hexLen = arg.length() * 2;
+      const string& arg = parm[0]->data()->getStrVal(row, isNull);
+      uint64_t hexLen = arg.size() * 2;
       scoped_array<char> hexPtr(new char[hexLen + 1]);  // "+ 1" for the last \0
-      octet2hex(hexPtr.get(), arg.str(), arg.length());
+      octet2hex(hexPtr.get(), arg.data(), arg.size());
       return string(hexPtr.get(), hexLen);
     }
 

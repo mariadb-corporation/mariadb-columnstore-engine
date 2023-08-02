@@ -143,8 +143,7 @@ int UpdateDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
   while (iter != updateStmt.fColAssignmentListPtr->end())
   {
     ColumnAssignment* colaPtr = *iter;
-    NullString expr(colaPtr->fScalarExpression);
-    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, expr);
+    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, colaPtr->fScalarExpression);
     rowPtr->get_ColumnList().push_back(colPtr);
 
     ++iter;
@@ -206,13 +205,12 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
       // Build a column list
       colName = dataList[n++];
       colValue = dataList[n++];
-      NullString val(colValue);
 #ifdef DML_PACKAGE_DEBUG
 
       // cout << "The column data: " << colName << " " << colValue << endl;
 #endif
 
-      DMLColumn* aColumn = new DMLColumn(colName, val);
+      DMLColumn* aColumn = new DMLColumn(colName, colValue);
       (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
 
@@ -230,7 +228,7 @@ int UpdateDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
   initializeTable();
   Row* aRowPtr = new Row();
   std::string colName;
-  ColValuesList colValList;
+  std::vector<std::string> colValList;
 
   for (int j = 0; j < columns; j++)
   {
@@ -264,8 +262,7 @@ void UpdateDMLPackage::buildUpdateFromMysqlBuffer(UpdateSqlStatement& updateStmt
   while (iter != updateStmt.fColAssignmentListPtr->end())
   {
     ColumnAssignment* colaPtr = *iter;
-    NullString scalarExpression(colaPtr->fScalarExpression);
-    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, scalarExpression, colaPtr->fFromCol,
+    DMLColumn* colPtr = new DMLColumn(colaPtr->fColumn, colaPtr->fScalarExpression, colaPtr->fFromCol,
                                       colaPtr->fFuncScale, colaPtr->fIsNull);
     rowPtr->get_ColumnList().push_back(colPtr);
 

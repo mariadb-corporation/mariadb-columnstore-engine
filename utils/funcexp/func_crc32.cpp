@@ -55,10 +55,10 @@ int64_t Func_crc32::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
       if (isNull)
         return 0;
   }
-  const auto& b = parm[parm.size() - 1]->data()->getStrVal(row, isNull);
+  const string& b = parm[parm.size() - 1]->data()->getStrVal(row, isNull);
   if (isNull)
     return 0;
-  return crc32(crc, reinterpret_cast<const uint8_t*>(b.str()), b.length());
+  return crc32(crc, reinterpret_cast<const uint8_t*>(b.data()), b.size());
 }
 
 }  // namespace funcexp

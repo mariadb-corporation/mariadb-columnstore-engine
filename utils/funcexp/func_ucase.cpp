@@ -55,9 +55,9 @@ CalpontSystemCatalog::ColType Func_ucase::operationType(FunctionParm& fp,
 std::string Func_ucase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& colType)
 {
-  const auto& tstr = fp[0]->data()->getStrVal(row, isNull);
+  const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
-  if (tstr.isNull())
+  if (isNull)
     return "";
 
   CHARSET_INFO* cs = colType.getCharset();
@@ -69,7 +69,7 @@ std::string Func_ucase::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 #endif
   char* outBuf = new char[bufLen];
 
-  uint64_t outLen = cs->caseup(tstr.str(), inLen, outBuf, bufLen);
+  uint64_t outLen = cs->caseup(tstr.c_str(), inLen, outBuf, bufLen);
 
   string ret = string(outBuf, outLen);
   delete[] outBuf;

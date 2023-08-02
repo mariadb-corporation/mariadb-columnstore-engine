@@ -297,7 +297,7 @@ void WindowFunctionType::getValue<long double>(uint64_t i, long double& t, CDT* 
 }
 
 template <>
-void WindowFunctionType::getValue<utils::NullString>(uint64_t i, utils::NullString& t, CDT* cdt)
+void WindowFunctionType::getValue<string>(uint64_t i, string& t, CDT* cdt)
 {
   t = fRow.getStringField(i);
   // By not setting cdt, we let it default to the column's type
@@ -356,14 +356,14 @@ void WindowFunctionType::setValue<int128_t>(uint64_t i, int128_t& t)
 }
 
 template <>
-void WindowFunctionType::setValue<utils::NullString>(uint64_t i, utils::NullString& t)
+void WindowFunctionType::setValue<string>(uint64_t i, string& t)
 {
   fRow.setStringField(t, i);
 }
 
 // MCOL-1676 Need a separate specialization for string now.
 template <>
-void WindowFunctionType::setValue<utils::NullString>(int ct, int64_t b, int64_t e, int64_t c, utils::NullString* v)
+void WindowFunctionType::setValue<string>(int ct, int64_t b, int64_t e, int64_t c, string* v)
 {
   if (c != WF__BOUND_ALL)
     b = e = c;
@@ -371,12 +371,13 @@ void WindowFunctionType::setValue<utils::NullString>(int ct, int64_t b, int64_t 
   uint64_t i = fFieldIndex[0];
 
   if (v == NULL)
-    v = (utils::NullString*)getNullValueByType(ct, i);
+    v = (string*)getNullValueByType(ct, i);
 
   for (int64_t j = b; j <= e; j++)
   {
     if (j % 1000 == 0 && fStep->cancelled())
       break;
+
     fRow.setData(getPointer((*fRowData)[j]));
     setValue(i, *v);
   }
@@ -573,7 +574,7 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 }
 
 template <>
-void WindowFunctionType::implicit2T<utils::NullString>(uint64_t i, utils::NullString& t, int)
+void WindowFunctionType::implicit2T<string>(uint64_t i, string& t, int)
 {
   t = fRow.getStringField(i);
 }
@@ -620,7 +621,7 @@ void WindowFunctionType::getConstValue<float>(ConstantColumn* cc, float& t, bool
 }
 
 template <>
-void WindowFunctionType::getConstValue<utils::NullString>(ConstantColumn* cc, utils::NullString& t, bool& b)
+void WindowFunctionType::getConstValue<string>(ConstantColumn* cc, string& t, bool& b)
 {
   t = cc->getStrVal(fRow, b);
 }
@@ -659,7 +660,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
   //    static uint64_t char2Null     = joblist::CHAR2NULL;
   //    static uint64_t char4Null     = joblist::CHAR4NULL;
   //    static uint64_t char8Null     = joblist::CHAR8NULL;
-  static utils::NullString stringNull;
+  static string stringNull("");
   static int128_t int128Null;  // Set at runtime;
 
   void* v = NULL;
@@ -691,8 +692,6 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARBINARY: // XXX: I guess it is right to do that. TODO: we can add TEXT here too.
     {
 //			uint64_t len = fRow.getColumnWidth(pos);
 #if 0
@@ -765,6 +764,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
     case CalpontSystemCatalog::LONGDOUBLE: v = &longDoubleNull; break;
 
+    case CalpontSystemCatalog::VARBINARY:
     default:
       std::ostringstream oss;
       oss << "not supported data type: " << colType2String[ct];

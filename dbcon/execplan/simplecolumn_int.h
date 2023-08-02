@@ -69,7 +69,7 @@ class SimpleColumn_INT : public SimpleColumn
   }
 
   /** Evaluate methods */
-  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override;
   virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
   virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override;
   virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
@@ -146,13 +146,10 @@ void SimpleColumn_INT<len>::setNullVal()
 }
 
 template <int len>
-inline const utils::NullString & SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
-  {
     isNull = true;
-    fResult.strVal.dropString();
-  }
   else
   {
 #ifndef __LP64__
@@ -160,9 +157,9 @@ inline const utils::NullString & SimpleColumn_INT<len>::getStrVal(rowgroup::Row&
 #else
     snprintf(tmp, 20, "%ld", (int64_t)row.getIntField<len>(fInputIndex));
 #endif
-    fResult.strVal.assign(std::string(tmp));
   }
 
+  fResult.strVal = std::string(tmp);
   return fResult.strVal;
 }
 

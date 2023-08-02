@@ -73,7 +73,7 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UFLOAT:
     {
-      expr = pm[0]->data()->getStrVal(row, isNull).safeString("");
+      expr = pm[0]->data()->getStrVal(row, isNull);
       break;
     }
 
@@ -153,7 +153,7 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      pattern = pm[1]->data()->getStrVal(row, isNull).safeString("");
+      pattern = pm[1]->data()->getStrVal(row, isNull);
       break;
     }
 

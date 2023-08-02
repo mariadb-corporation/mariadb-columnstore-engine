@@ -348,16 +348,16 @@ uint64_t Func_nullif::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& i
 string Func_nullif::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               CalpontSystemCatalog::ColType& op_ct)
 {
-  string exp1 = parm[0]->data()->getStrVal(row, isNull).safeString("");
+  string exp1 = parm[0]->data()->getStrVal(row, isNull);
   CHARSET_INFO* cs = parm[0]->data()->resultType().getCharset();
 
   if (isNull)
   {
-    // NULLIF(NULL, ...) is NULL, according to server's results.
+    isNull = false;
     return "";
   }
 
-  string exp2 = parm[1]->data()->getStrVal(row, isNull).safeString("");
+  string exp2 = parm[1]->data()->getStrVal(row, isNull);
 
   if (isNull)
   {
@@ -388,7 +388,7 @@ string Func_nullif::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
     return "";
   }
 
-  return parm[0]->data()->getStrVal(row, isNull).safeString("");
+  return parm[0]->data()->getStrVal(row, isNull);
 }
 
 int32_t Func_nullif::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,

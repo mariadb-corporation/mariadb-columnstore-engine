@@ -4,9 +4,6 @@
 --echo # MCOL-4614 calShowPartitions() precision loss for huge narrow decimal
 --echo #
 
-CREATE DATABASE udf_calshowpartitions;
-USE udf_calshowpartitions;
-
 let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='calshowpartitions'`;
 --disable_query_log
 if (!$func_exists)
@@ -27,5 +24,3 @@ if (!$func_exists)
   DROP FUNCTION calshowpartitions;
 }
 --enable_query_log
-
-DROP DATABASE udf_calshowpartitions;

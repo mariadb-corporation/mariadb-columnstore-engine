@@ -189,13 +189,10 @@ class WindowFunctionColumn : public ReturnedColumn
    *                 F&E framework                           *
    ***********************************************************/
  public:
-  using TreeNode::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
-    bool localIsNull = false;
-    evaluate(row, localIsNull);
-    isNull = isNull || localIsNull;
-    return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
+    evaluate(row, isNull);
+    return TreeNode::getStrVal(fTimeZone);
   }
 
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override

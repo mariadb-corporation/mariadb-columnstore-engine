@@ -48,31 +48,27 @@ std::string Func_rtrim_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 {
   CHARSET_INFO* cs = type.getCharset();
   // The original string
-  const auto& src = fp[0]->data()->getStrVal(row, isNull);
-  if (src.isNull() || src.length() < 1)
-  {
-    isNull = true;
+  const string& src = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-  }
+  if (src.empty() || src.length() == 0)
+    return src;
   // binLen represents the number of bytes in src
   size_t binLen = src.length();
-  const char* pos = src.str();
+  const char* pos = src.c_str();
   const char* end = pos + binLen;
   // strLen = the number of characters in src
   size_t strLen = cs->numchars(pos, end);
 
   // The trim characters.
-  const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull).safeString("") : " ");
+  const string& trim = (fp.size() > 1 ? fp[1]->data()->getStrVal(row, isNull) : " ");
   // binTLen represents the number of bytes in trim
   size_t binTLen = trim.length();
   const char* posT = trim.c_str();
   // strTLen = the number of characters in trim
   size_t strTLen = cs->numchars(posT, posT + binTLen);
   if (strTLen == 0 || strTLen > strLen)
-  {
-    isNull = src.length() < 1;
-    return src.safeString("");
-  }
+    return src;
 
   if (binTLen == 1)
   {

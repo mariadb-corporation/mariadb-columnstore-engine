@@ -55,7 +55,7 @@ dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& 
   dateTime.msecond = 0;
   int64_t val = 0;
   string valStr;
-  const auto& formatStr = parm[1]->data()->getStrVal(row, isNull).safeString("");
+  const string& formatStr = parm[1]->data()->getStrVal(row, isNull);
   int rc = 0;
 
   switch (parm[0]->data()->resultType().colDataType)
@@ -109,7 +109,7 @@ dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& 
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
     {
-      const string& valref = parm[0]->data()->getStrVal(row, isNull).safeString("");
+      const string& valref = parm[0]->data()->getStrVal(row, isNull);
       // decode with provided format
       rc = extractor.extractTime(valref, formatStr, dateTime);
 

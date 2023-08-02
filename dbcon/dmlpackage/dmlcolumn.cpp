@@ -32,17 +32,22 @@ DMLColumn::DMLColumn()
 {
 }
 
-DMLColumn::DMLColumn(std::string name, utils::NullString& value, bool isFromCol,
-                     uint32_t funcScale, bool isNULL)
+DMLColumn::DMLColumn(std::string name, std::string value, bool isFromCol, uint32_t funcScale, bool isNULL)
 {
   fName = name;
-  fColValuesList.push_back(value);
-  fisNULL = isNULL || value.isNull() || (strcasecmp(value.str(), "NULL") == 0);
+  fData = value;
+
+  if ((strcasecmp(value.c_str(), "NULL") == 0) || (value.length() == 0))
+  {
+    isNULL = true;
+  }
+
+  fisNULL = isNULL;
   fIsFromCol = isFromCol;
   fFuncScale = funcScale;
 }
 
-DMLColumn::DMLColumn(std::string name, const std::vector<utils::NullString>& valueList, bool isFromCol,
+DMLColumn::DMLColumn(std::string name, std::vector<std::string>& valueList, bool isFromCol,
                      uint32_t funcScale, bool isNULL)
 {
   fName = name;
@@ -64,17 +69,25 @@ int DMLColumn::read(messageqcpp::ByteStream& bytestream)
   uint32_t vectorSize;
   bytestream >> vectorSize;
 
-  for (uint32_t i = 0; i < vectorSize; i++)
+  if (vectorSize > 0)
   {
-    utils::NullString dataStr;
-    bytestream >> dataStr;
-    //	if ( !fisNULL  && (dataStr.length() == 0 ))
-    //		dataStr = (char) 0;
+    for (uint32_t i = 0; i < vectorSize; i++)
+    {
+      std::string dataStr;
+      bytestream >> dataStr;
+      //	if ( !fisNULL  && (dataStr.length() == 0 ))
+      //		dataStr = (char) 0;
 
-    fColValuesList.push_back(dataStr);
+      fColValuesList.push_back(dataStr);
+    }
   }
+  else
+    bytestream >> fData;  // deprecated.
 
+  if ((fColValuesList.size() < 1) && (fColValuesList.size() > 0))  // deprecated.
+    fData = fColValuesList[0];                                     // deprecated.
 
+  // bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fisNULL);
   bytestream >> reinterpret_cast<messageqcpp::ByteStream::byte&>(fIsFromCol);
   bytestream >> (uint32_t&)fFuncScale;
   return retval;
@@ -88,11 +101,17 @@ int DMLColumn::write(messageqcpp::ByteStream& bytestream)
   uint32_t vectorSize = fColValuesList.size();
   bytestream << vectorSize;
 
-  for (uint32_t i = 0; i < vectorSize; i++)
+  if (vectorSize > 0)
   {
-    bytestream << fColValuesList[i];
+    for (uint32_t i = 0; i < vectorSize; i++)
+    {
+      bytestream << fColValuesList[i];
+    }
   }
+  else
+    bytestream << fData;  // deprecated.
 
+  // bytestream << static_cast<uint8_t>(fisNULL);
   bytestream << static_cast<uint8_t>(fIsFromCol);
   bytestream << (uint32_t)fFuncScale;
   return retval;

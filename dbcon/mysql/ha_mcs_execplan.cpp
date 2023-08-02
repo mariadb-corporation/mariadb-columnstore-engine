@@ -2078,7 +2078,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
       }
 
       if (udf->result_type() == STRING_RESULT)
-        gwip->rcWorkStack.push(new ConstantColumn(buf.ptr())); // XXX: constantcolumn from string = can it be NULL?
+        gwip->rcWorkStack.push(new ConstantColumn(buf.ptr()));
       else
       {
         gwip->rcWorkStack.push(new ConstantColumn(buf.ptr(), ConstantColumn::NUM));
@@ -2930,6 +2930,7 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
     case Item_sum::SUM_BIT_FUNC:
     {
       string funcName = isp->func_name();
+
       if (funcName.compare("bit_and(") == 0)
         ac->aggOp(AggregateColumn::BIT_AND);
       else if (funcName.compare("bit_or(") == 0)
@@ -4831,7 +4832,7 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
         return;
       }
       ConstantColumn* cc;
-      if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->isNull())
+      if ((cc = dynamic_cast<ConstantColumn*>(rt)) && cc->type() == ConstantColumn::NULLDATA)
       {
         // Explicit NULL or a const function that evaluated to NULL
         cc = new ConstantColumnNull();
@@ -5717,13 +5718,13 @@ void gp_walk(const Item* item, void* arg)
             break;
           }
 
-          if (item->result_type() == STRING_RESULT)
+          Item_string* isp = (Item_string*)item;
+
+          if (isp)
           {
-            // dangerous cast here
-            Item* isp = const_cast<Item*>(item);
-            String val, *str = isp->val_str(&val);
-            if (str)
+            if (isp->result_type() == STRING_RESULT)
             {
+              String val, *str = isp->val_str(&val);
               string cval;
 
               if (str->ptr())
@@ -5732,12 +5733,6 @@ void gp_walk(const Item* item, void* arg)
               }
 
               gwip->rcWorkStack.push(new ConstantColumn(cval));
-              (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
-              break;
-            }
-            else
-            {
-              gwip->rcWorkStack.push(new ConstantColumn("", ConstantColumn::NULLDATA));
               (dynamic_cast<ConstantColumn*>(gwip->rcWorkStack.top()))->timeZone(gwip->timeZone);
               break;
             }
@@ -7463,6 +7458,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           collectAllCols(gwi, ifp);
           break;
         }
+
         sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)

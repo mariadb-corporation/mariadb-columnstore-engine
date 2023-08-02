@@ -417,11 +417,14 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
         default:
         {
           auto const str = row.getConstString(fInputIndex);
-          fResult.strVal.dropString();
-          if (!str.isNull())
-            fResult.strVal.assign((const uint8_t*)str.str(), str.length());
+          if (str.eq(utils::ConstString(CPNULLSTRMARK)))
+            isNull = true;
+          else
+            fResult.strVal = str.toString();
 
-          isNull = isNull || fResult.strVal.isNull();
+          // stringColVal is padded with '\0' to colWidth so can't use str.length()
+          if (strlen(fResult.strVal.c_str()) == 0)
+            isNull = true;
 
           break;
         }

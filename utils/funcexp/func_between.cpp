@@ -242,23 +242,21 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const string& val = pm[0]->data()->getStrVal(row, isNull).safeString("");
-      auto charset = datatypes::Charset(ct.charsetNumber);
-      CHARSET_INFO& cs = charset.getCharset();
+      const string& val = pm[0]->data()->getStrVal(row, isNull);
+      CHARSET_INFO& cs = datatypes::Charset(ct.charsetNumber).getCharset();
 
       if (notBetween)
       {
-        if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull).safeString("")) && !isNull)
+        if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
           return true;
 
         isNull = false;
-        return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull).safeString("")) && !isNull);
+        return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
       }
 
-      return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull).safeString("")) &&
-             strLE(cs, val, pm[2]->data()->getStrVal(row, isNull).safeString(""));
+      return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
+             strLE(cs, val, pm[2]->data()->getStrVal(row, isNull));
     }
-    break; // XXX: gcc falsely complains here.
 
     default:
     {
@@ -314,7 +312,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
         cc->result(result);
       }
     }
@@ -330,7 +328,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), resultType.getTimeZone());
+        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal, resultType.getTimeZone());
         cc->result(result);
       }
     }
@@ -346,7 +344,7 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal.safeString(""));
+        result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
         cc->result(result);
       }
     }

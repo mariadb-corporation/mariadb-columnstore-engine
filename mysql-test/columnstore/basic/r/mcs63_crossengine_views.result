@@ -38,7 +38,7 @@ t1_int	t1_char	t2_int	t2_char
 3	ccc	3	iii
 5	eee	5	jjj
 7	gggg	7	llll
-NULL		NULL	NULL
+NULL	NULL	NULL	NULL
 2	bbb	NULL	NULL
 4	ddd	NULL	NULL
 6	fff	NULL	NULL
@@ -63,7 +63,7 @@ select `mcs63_db`.`t1`.`t1_int` AS `t1_int`,`mcs63_db`.`t1`.`t1_char` AS `t1_cha
 SELECT * FROM v4;
 t1_int	t1_char	t2_int	t2_char
 1	aaa	1	hhh
-NULL		NULL	NULL
+NULL	NULL	NULL	NULL
 2	bbb	NULL	NULL
 3	ccc	NULL	NULL
 4	ddd	NULL	NULL
@@ -76,7 +76,7 @@ VIEW_DEFINITION
 select `mcs63_db`.`t1`.`t1_int` AS `t1_int`,`mcs63_db`.`t1`.`t1_char` AS `t1_char`,`mcs63_db`.`t2`.`t2_int` AS `t2_int`,`mcs63_db`.`t2`.`t2_char` AS `t2_char` from (`mcs63_db`.`t2` left join `mcs63_db`.`t1` on(`mcs63_db`.`t1`.`t1_int` = `mcs63_db`.`t2`.`t2_int`))
 SELECT * FROM v5;
 t1_int	t1_char	t2_int	t2_char
-NULL	NULL	NULL	
+NULL	NULL	NULL	NULL
 1	aaa	1	hhh
 3	ccc	3	iii
 5	eee	5	jjj
@@ -90,7 +90,7 @@ VIEW_DEFINITION
 select `mcs63_db`.`t1`.`t1_char` AS `t1_char`,`mcs63_db`.`t2`.`t2_char` AS `t2_char` from (`mcs63_db`.`t2` left join `mcs63_db`.`t1` on(`mcs63_db`.`t1`.`t1_int` = `mcs63_db`.`t2`.`t2_int`))
 SELECT * FROM v6;
 t1_char	t2_char
-NULL	
+NULL	NULL
 aaa	hhh
 ccc	iii
 eee	jjj
@@ -104,7 +104,7 @@ VIEW_DEFINITION
 select `mcs63_db`.`t1`.`t1_int` AS `t1_int`,`mcs63_db`.`t1`.`t1_char` AS `t1_char`,`mcs63_db`.`t2`.`t2_int` AS `t2_int`,`mcs63_db`.`t2`.`t2_char` AS `t2_char` from (`mcs63_db`.`t2` left join `mcs63_db`.`t1` on(`mcs63_db`.`t1`.`t1_int` = `mcs63_db`.`t2`.`t2_int` and `mcs63_db`.`t2`.`t2_int` = 5))
 SELECT * FROM v7;
 t1_int	t1_char	t2_int	t2_char
-NULL	NULL	NULL	
+NULL	NULL	NULL	NULL
 NULL	NULL	1	hhh
 NULL	NULL	3	iii
 5	eee	5	jjj

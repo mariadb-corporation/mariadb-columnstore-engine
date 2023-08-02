@@ -532,16 +532,11 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::nextValue(mcsv1Context* context, Col
     return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
   }
 
-  utils::NullString val;
+  string val;
   if (valIn.compatible(strTypeId))
-    val = valIn.cast<utils::NullString>();
+    val = valIn.cast<string>();
 
-  if (val.isNull())
-  {
-    return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
-  }
-
-  (*map)[val.safeString("")]++;
+  (*map)[val]++;
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -577,7 +572,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::evaluate(mcsv1Context* context, stat
 
   if (map->size() == 0)
   {
-    valOut = utils::NullString();
+    valOut = string();
     return mcsv1_UDAF::SUCCESS;
   }
 
@@ -606,8 +601,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::evaluate(mcsv1Context* context, stat
   if (context->getScale() > 0)
     context->setResultType(execplan::CalpontSystemCatalog::DECIMAL);
 
-  utils::NullString ns(val);
-  valOut = ns;
+  valOut = val;
   return mcsv1_UDAF::SUCCESS;
 }
 
@@ -622,7 +616,6 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::dropValue(mcsv1Context* context, Col
     return mcsv1_UDAF::SUCCESS;  // Ought not happen when UDAF_IGNORE_NULLS is on.
   }
 
-  idbassert(0 && "incorrect logic - does not account for NullString");
   string val = convertAnyTo<string>(valDropped);
 
   --data->fCount;

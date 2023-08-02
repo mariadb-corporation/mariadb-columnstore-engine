@@ -84,6 +84,7 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
     return fConcator;
   }
 
+  EXPORT void getResult(uint8_t*);
   EXPORT uint8_t* getResult();
 
  protected:
@@ -110,7 +111,7 @@ class GroupConcator
   virtual void merge(GroupConcator*) = 0;
   virtual uint8_t* getResultImpl(const std::string& sep) = 0;
   virtual uint8_t* getResult(const std::string& sep);
-  uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull);
+  virtual uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss);
 
   virtual const std::string toString() const;
 
@@ -120,7 +121,7 @@ class GroupConcator
   virtual int64_t lengthEstimate(const rowgroup::Row&);
 
   std::vector<uint32_t> fConcatColumns;
-  std::vector<std::pair<utils::NullString, uint32_t> > fConstCols;
+  std::vector<std::pair<std::string, uint32_t> > fConstCols;
   int64_t fCurrentLength;
   int64_t fGroupConcatLen;
   int64_t fConstantLen;
@@ -141,7 +142,6 @@ class GroupConcatNoOrder : public GroupConcator
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
-  //uint8_t* getResult(const std::string& sep);
 
   const std::string toString() const;
 
@@ -173,7 +173,6 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
   void merge(GroupConcator*);
   using GroupConcator::getResult;
   uint8_t* getResultImpl(const std::string& sep);
-  //uint8_t* getResult(const std::string& sep);
 
   const std::string toString() const;
 

@@ -155,7 +155,7 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const long 
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::BLOB:
-      oss << (char*)(row.getStringField(i).str());
+      oss << (char*)(row.getStringField(i).c_str());
       *cc = new ConstantColumn(oss.str());
       break;
 
@@ -508,7 +508,8 @@ const SRCP doSelectSubquery(CalpontExecutionPlan* ep, SRCP& sc, JobInfo& jobInfo
     // Empty set or null value
     if (cc == NULL)
     {
-      cc = new ConstantColumn("", ConstantColumn::NULLDATA);
+      cc = new ConstantColumn("");
+      cc->type(ConstantColumn::NULLDATA);
     }
 
     rc.reset(cc);

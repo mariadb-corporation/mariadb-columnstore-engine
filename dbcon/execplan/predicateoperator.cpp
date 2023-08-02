@@ -367,14 +367,14 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
   // like operator. both sides are string.
   if (fOp == OP_LIKE || fOp == OP_NOTLIKE)
   {
-    const auto& subject = lop->getStrVal(row, isNull);
+    const std::string& subject = lop->getStrVal(row, isNull);
     if (isNull)
       return false;
-    const auto& pattern = rop->getStrVal(row, isNull);
+    const std::string& pattern = rop->getStrVal(row, isNull);
     if (isNull)
       return false;
-    return datatypes::Charset(cs).like(fOp == OP_NOTLIKE, utils::ConstString(subject.str(), subject.length()),
-                                       utils::ConstString(pattern.str(), pattern.length()));
+    return datatypes::Charset(cs).like(fOp == OP_NOTLIKE, utils::ConstString(subject),
+                                       utils::ConstString(pattern));
   }
 
   // fOpType should have already been set on the connector during parsing
@@ -709,15 +709,11 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
       if (isNull)
         return false;
 
-      const auto& val1 = lop->getStrVal(row, isNull);
+      const std::string& val1 = lop->getStrVal(row, isNull);
       if (isNull)
         return false;
 
-      const auto& val2 = rop->getStrVal(row, isNull);
-      if (isNull)
-        return false;
-
-      return strTrimCompare(val1.safeString(""), val2.safeString(""));
+      return strTrimCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
     }
 
     case execplan::CalpontSystemCatalog::VARBINARY:

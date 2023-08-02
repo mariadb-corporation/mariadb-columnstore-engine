@@ -657,7 +657,7 @@ int Dctnry::insertDctnry2(Signature& sig)
 
   sig.token.bc = 0;
 
-  while (sig.size > 0 || !lbid_in_token)
+  while (sig.size > 0)
   {
     if (sig.size > (m_freeSpace - HDR_UNIT_SIZE))
     {
@@ -819,7 +819,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     {
       if (m_defVal.length() > 0)  // use default string if available
       {
-        pIn = m_defVal.str();
+        pIn = m_defVal.c_str();
         curSig.signature = (unsigned char*)pIn;
         curSig.size = m_defVal.length();
       }
@@ -1059,6 +1059,13 @@ int Dctnry::insertDctnry(const int& sgnature_size, const unsigned char* sgnature
   if (sgnature_size > MAX_BLOB_SIZE)
   {
     return ERR_DICT_SIZE_GT_2G;
+  }
+
+  if (sgnature_size == 0)
+  {
+    WriteEngine::Token nullToken;
+    memcpy(&token, &nullToken, 8);
+    return NO_ERROR;
   }
 
   CommBlock cb;

@@ -31,7 +31,6 @@
 #include "bytestream.h"
 #include "datalist.h"
 #include "elementtype.h"
-#include "nullstring.h"
 
 //#define TC_CHECK_RIDS 1
 
@@ -79,7 +78,7 @@ class TableColumn
     return fIntValues;
   }
 
-  inline const boost::shared_ptr<std::vector<utils::NullString> > getStrValues()
+  inline const boost::shared_ptr<std::vector<std::string> > getStrValues()
   {
     return fStrValues;
   }
@@ -115,7 +114,7 @@ class TableColumn
     fIsNullColumn = fIntValues->empty();
   }
 
-  inline void setStrValues(boost::shared_ptr<std::vector<utils::NullString> > sv)
+  inline void setStrValues(boost::shared_ptr<std::vector<std::string> > sv)
   {
     fStrValues = sv;
     fIsNullColumn = fStrValues->empty();
@@ -136,7 +135,7 @@ class TableColumn
  private:
   execplan::CalpontSystemCatalog::OID fColumnOID;
   boost::shared_ptr<std::vector<uint64_t> > fIntValues;
-  boost::shared_ptr<std::vector<utils::NullString> > fStrValues;
+  boost::shared_ptr<std::vector<std::string> > fStrValues;
   bool fIsNullColumn;
   supportedType fColumnType;
   boost::shared_ptr<messageqcpp::ByteStream> preserialized;

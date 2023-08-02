@@ -90,9 +90,6 @@ class RowDecimalTest : public ::testing::Test
 
     rg.initRow(&r);
     rg.initRow(&rOutMappingCheck);
-    rg.initRow(&rOut);
-    rg.initRow(&sameRow);
-    rg.initRow(&nonequiRow);
     rowSize = r.getSize();
     rg.getRow(0, &r);
 
@@ -145,7 +142,7 @@ class RowDecimalTest : public ::testing::Test
       r.setIntField(s32ValueVector[i], 3);
       r.setIntField(s16ValueVector[i], 4);
       r.setIntField(s8ValueVector[i], 5);
-      r.nextRow();
+      r.nextRow(rowSize);
     }
 
     rowCount = sValueVector.size();
@@ -180,7 +177,7 @@ TEST_F(RowDecimalTest, NonNullValueCheck)
     EXPECT_FALSE(r.isNullValue(3));
     EXPECT_FALSE(r.isNullValue(4));
     EXPECT_FALSE(r.isNullValue(5));
-    r.nextRow();
+    r.nextRow(rowSize);
   }
 }
 
@@ -213,7 +210,7 @@ TEST_F(RowDecimalTest, GetBinaryFieldCheck)
     // EXPECT_EQ(s32ValueVector[i],r.getIntField(3));
     // EXPECT_EQ(r.getIntField(4),s16ValueVector[i]);
     // EXPECT_EQ(r.getIntField(5),s8ValueVector[i]);
-    r.nextRow();
+    r.nextRow(rowSize);
   }
 }
 
@@ -236,7 +233,7 @@ TEST_F(RowDecimalTest, ToStringCheck)
   for (auto& el : exemplarVector)
   {
     EXPECT_EQ(el, r.toString());
-    r.nextRow();
+    r.nextRow(rowSize);
   }
 }
 
@@ -273,7 +270,7 @@ TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
   {
     rOut.setBinaryField_offset(&constVal, 16, offsets[0]);
     rOut.setBinaryField_offset(&constVal, 16, offsets[1]);
-    rOut.nextRow();
+    rOut.nextRow(rowSize);
   }
 
   rgOut.initRow(&rOut);
@@ -294,8 +291,8 @@ TEST_F(RowDecimalTest, CopyBinaryFieldCheck)
     col2Out = rOut.getTSInt128Field(1);
     EXPECT_EQ(col1In.getValue(), col1Out.getValue());
     EXPECT_EQ(col2In.getValue(), col2Out.getValue());
-    r.nextRow();
-    rOut.nextRow();
+    r.nextRow(rowSize);
+    rOut.nextRow(rowSize);
   }
 }
 
@@ -312,11 +309,11 @@ TEST_F(RowDecimalTest, RowEqualsCheck)
     {
       EXPECT_FALSE(r.equals(nonequiRow));
     }
-    r.nextRow();
-    sameRow.nextRow();
+    r.nextRow(rowSize);
+    sameRow.nextRow(rowSize);
     if (i < sValueVector.size() - 1)
     {
-      nonequiRow.nextRow();
+      nonequiRow.nextRow(rowSize);
     }
   }
 }

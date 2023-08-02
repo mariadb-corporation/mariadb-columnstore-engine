@@ -95,7 +95,6 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 #endif
   string str;
   string tmp;
-  bool firstTime = true;
   for (uint32_t i = 1; i < parm.size(); i++)
   {
     stringValue(parm[i], row, isNull, tmp);
@@ -105,20 +104,18 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
       continue;
     }
 
-    if (!firstTime) // XXX: XXX: XXX: concatenation of empty strings will result in empty string.
+    if (!str.empty())
       str += delim;
-    firstTime = false;
 
     // TODO: Work on string reallocation. Use std::string::resize() to
     // grab larger chunks in some intellegent manner.
     str += tmp;
   }
 
-  if (firstTime) {
-    // all arguments are NULL.
+  if (str.empty())
     isNull = true;
-    return str;
-  }
+  else
+    isNull = false;
 
   return str;
 }

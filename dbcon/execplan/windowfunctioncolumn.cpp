@@ -522,18 +522,15 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
           // fallthrough
         default:
         {
-          const auto str = row.getStringField(fInputIndex);
-          if (str.isNull())
-          {
+          const auto str = row.getConstString(fInputIndex);
+          if (str.eq(utils::ConstString(CPNULLSTRMARK)))
             isNull = true;
-            fResult.strVal.dropString();
-          }
           else
-            fResult.strVal.assign(str.unsafeStringRef());
+            fResult.strVal = str.toString();
 
           // stringColVal is padded with '\0' to colWidth so can't use str.length()
-          //if (strlen(fResult.strVal.str()) == 0)
-          //  isNull = true;
+          if (strlen(fResult.strVal.c_str()) == 0)
+            isNull = true;
 
           break;
         }

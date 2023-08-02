@@ -28,11 +28,9 @@ CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
 bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                          CalpontSystemCatalog::ColType& type)
 {
-  const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
-
-  const string_view js = js_ns.unsafeStringRef();
 
 #ifdef MYSQL_GE_1009
   int arrayCounters[JSON_DEPTH_LIMIT];
@@ -45,10 +43,9 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
     if (!isModeConst)
       isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
-    auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
+    string mode = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return false;
-    string mode = mode_ns.unsafeStringRef();
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")

@@ -910,13 +910,13 @@ void XMLJob::fillInXMLDataAsLoaded(execplan::CalpontSystemCatalog::RIDList& colR
 void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
                                          execplan::CalpontSystemCatalog::ColType& colType, JobColumn& col)
 {
-  const NullString col_defaultValue(colType.defaultValue);
+  const std::string col_defaultValue(colType.defaultValue);
 
   if (colType.constraintType == execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
   {
     col.fNotNull = true;
 
-    if (!col_defaultValue.isNull())
+    if (!col_defaultValue.empty())
       col.fWithDefault = true;
   }
   else if (colType.constraintType == execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
@@ -943,7 +943,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::BIGINT:
       {
         errno = 0;
-        col.fDefaultInt = strtoll(col_defaultValue.str(), 0, 10);
+        col.fDefaultInt = strtoll(col_defaultValue.c_str(), 0, 10);
 
         if (errno == ERANGE)
           bDefaultConvertError = true;
@@ -958,7 +958,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::UBIGINT:
       {
         errno = 0;
-        col.fDefaultUInt = strtoull(col_defaultValue.str(), 0, 10);
+        col.fDefaultUInt = strtoull(col_defaultValue.c_str(), 0, 10);
 
         if (errno == ERANGE)
           bDefaultConvertError = true;
@@ -971,11 +971,11 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       {
         if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
         {
-          col.fDefaultWideDecimal = colType.decimal128FromString(col_defaultValue.safeString(), &bDefaultConvertError);
+          col.fDefaultWideDecimal = colType.decimal128FromString(col_defaultValue, &bDefaultConvertError);
         }
         else
         {
-          col.fDefaultInt = Convertor::convertDecimalString(col_defaultValue.str(),
+          col.fDefaultInt = Convertor::convertDecimalString(col_defaultValue.c_str(),
                                                             col_defaultValue.length(), colType.scale);
 
           if (errno == ERANGE)
@@ -988,7 +988,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::DATE:
       {
         int convertStatus;
-        int32_t dt = dataconvert::DataConvert::convertColumnDate(col_defaultValue.str(),
+        int32_t dt = dataconvert::DataConvert::convertColumnDate(col_defaultValue.c_str(),
                                                                  dataconvert::CALPONTDATE_ENUM, convertStatus,
                                                                  col_defaultValue.length());
 
@@ -1003,7 +1003,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       {
         int convertStatus;
         int64_t dt = dataconvert::DataConvert::convertColumnDatetime(
-            col_defaultValue.str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
+            col_defaultValue.c_str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
             col_defaultValue.length());
 
         if (convertStatus != 0)
@@ -1017,7 +1017,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       {
         int convertStatus;
         int64_t dt = dataconvert::DataConvert::convertColumnTimestamp(
-            col_defaultValue.str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
+            col_defaultValue.c_str(), dataconvert::CALPONTDATETIME_ENUM, convertStatus,
             col_defaultValue.length(), fTimeZone);
 
         if (convertStatus != 0)
@@ -1030,7 +1030,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::TIME:
       {
         int convertStatus;
-        int64_t dt = dataconvert::DataConvert::convertColumnTime(col_defaultValue.str(),
+        int64_t dt = dataconvert::DataConvert::convertColumnTime(col_defaultValue.c_str(),
                                                                  dataconvert::CALPONTTIME_ENUM, convertStatus,
                                                                  col_defaultValue.length());
 
@@ -1047,7 +1047,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::UDOUBLE:
       {
         errno = 0;
-        col.fDefaultDbl = strtod(col_defaultValue.str(), 0);
+        col.fDefaultDbl = strtod(col_defaultValue.c_str(), 0);
 
         if (errno == ERANGE)
           bDefaultConvertError = true;

@@ -129,16 +129,14 @@ namespace
     d /= exp10(in.getScale(i));
     os.precision(15);
     os << d;
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getIntField(i);
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeIntToXFloat(const Row& in, Row* out, uint32_t i) 
@@ -208,16 +206,14 @@ namespace
     d /= exp10(in.getScale(i));
     os.precision(15);
     os << d;
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getUintField(i);
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizUintToXFloat(const Row& in, Row* out, uint32_t i) 
@@ -305,8 +301,7 @@ namespace
   void normalizeDateToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::dateToString(in.getUintField(i));
-    utils::NullString ns(d);
-    out->setStringField(ns, i);
+    out->setStringField(d, i);
   }
 
   void normalizeDatetimeToDatetime(const Row& in, Row* out, uint32_t i) 
@@ -356,8 +351,7 @@ namespace
   void normalizeDatetimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::datetimeToString(in.getUintField(i));
-    utils::NullString ns(d);
-    out->setStringField(ns, i);
+    out->setStringField(d, i);
   }
 
   void normalizeTimestampToTimestamp(const Row& in, Row* out, uint32_t i) 
@@ -411,8 +405,7 @@ namespace
   void normalizeTimestampToString(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     string d = DataConvert::timestampToString(in.getUintField(i), fTimeZone);
-    utils::NullString ns(d);
-    out->setStringField(ns, i);
+    out->setStringField(d, i);
   }
 
   void normalizeTimeToTime(const Row& in, Row* out, uint32_t i) 
@@ -423,8 +416,7 @@ namespace
   void normalizeTimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::timeToString(in.getIntField(i));
-    utils::NullString ns(d);
-    out->setStringField(ns, i);
+    out->setStringField(d, i);
   }
 
   void normalizeXFloatToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
@@ -517,8 +509,7 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i) 
@@ -527,8 +518,7 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeXFloatToWideXDecimal(const Row& in, Row* out, uint32_t i) 
@@ -603,8 +593,7 @@ namespace
     ostringstream os;
     os.precision(15);  // to match mysql's output
     os << val;
-    utils::NullString ns(os.str());
-    out->setStringField(ns, i);
+    out->setStringField(os.str(), i);
   }
 
   void normalizeLongDoubleToXDecimalInt128(const Row& in, Row* out, uint32_t i) 
@@ -686,14 +675,14 @@ namespace
     int128_t val128 = 0;
     in.getInt128Field(i, val128);
     datatypes::Decimal dec(0, in.getScale(i), in.getPrecision(i), val128);
-    out->setStringField(dec.toNullString(), i);
+    out->setStringField(dec.toString(), i);
   }
 
   void normalizeXDecimalToString(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     datatypes::Decimal dec(val, in.getScale(i), in.getPrecision(i));
-    out->setStringField(dec.toNullString(), i);
+    out->setStringField(dec.toString(), i);
   }
 
   void normalizeBlobVarbinary(const Row& in, Row* out, uint32_t i) 
@@ -1837,7 +1826,7 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
         case 7:
         case 8: out->setUintField<8>(joblist::CHAR8NULL, col); break;
 
-        default: out->setStringField(nullptr, 0, col); break;
+        default: out->setStringField(joblist::CPNULLSTRMARK, col); break;
       }
 
       break;
@@ -1847,7 +1836,7 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
     case CalpontSystemCatalog::VARBINARY:
       // could use below if zero length and NULL are treated the same
       // out->setVarBinaryField("", col); break;
-      out->setVarBinaryField(nullptr, 0, col);
+      out->setVarBinaryField(joblist::CPNULLSTRMARK, col);
       break;
 
     default:

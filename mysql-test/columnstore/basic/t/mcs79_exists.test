@@ -39,8 +39,8 @@ CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t3 (t3_int INT, t3_char CHAR(5))ENGINE=Innodb;
 CREATE TABLE t4 (t4_int INT, t4_char CHAR(5))ENGINE=Myisam;
-INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
-INSERT INTO t2 VALUES (NULL, NULL),(1, 'eee'),(3, 'ccc'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'eee'),(11, 'nnn');
+INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
+INSERT INTO t2 VALUES (NULL, ''),(1, 'eee'),(3, 'ccc'),(5, 'jjj'),(6, ''),(7, 'lll'),(9, 'eee'),(11, 'nnn');
 INSERT INTO t3 SELECT * FROM t2;
 INSERT INTO t4 SELECT * FROM t1;
 

@@ -49,17 +49,17 @@ int64_t Func_instr::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
   int64_t start0 = 0;
   my_match_t match;
 
-  const auto& str = parm[0]->data()->getStrVal(row, isNull);
-  if (str.isNull())
+  const std::string& str = parm[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return 0;
-  const char* s1 = str.str();
+  const char* s1 = str.c_str();
   uint32_t l1 = (uint32_t)str.length();
 
-  const auto& substr = parm[1]->data()->getStrVal(row, isNull);
-  if (substr.isNull())
+  const std::string& substr = parm[1]->data()->getStrVal(row, isNull);
+  if (isNull)
     return 0;
 
-  const char* s2 = substr.str();
+  const char* s2 = substr.c_str();
   uint32_t l2 = (uint32_t)substr.length();
   if (l2 < 1)
     return start + 1;

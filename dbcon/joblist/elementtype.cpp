@@ -64,73 +64,20 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
   return out;
 }
 
-static ostream& writeRid(std::ostream& out, const uint64_t& rhs)
-{
-  out.write((const char*) (&rhs), sizeof(rhs));
-  return out;
-}
-
-std::istream& operator >>(std::istream& in, utils::NullString& ns)
-{
-  uint8_t isNull;
-  in.read((char*)(&isNull), sizeof(isNull));
-  if (!isNull)
-  {
-    uint16_t len;
-    char t[32768];
-    in.read((char*)(&len), sizeof(len));
-    in.read(t, len);
-    ns.assign((const uint8_t*)t, len);
-  }
-  else
-  {
-    ns.dropString();
-  }
-  return in;
-}
-
-std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
-{
-  uint8_t isNull = ns.isNull();
-  out.write((char*)(&isNull), sizeof(isNull));
-  if (!isNull)
-  {
-    idbassert(ns.length() < 32768);
-    uint16_t len = ns.length();
-    out.write((char*)(&len), sizeof(len));
-    out.write(ns.str(), ns.length());
-  }
-  return out;
-}
-
-// XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented mine's, with
-// slightly different types.
-static istream& readRid(std::istream& in, uint64_t& rhs)
-{
-  in.read((char*)(&rhs), sizeof(rhs));
-  return in;
-}
-
 ostream& operator<<(std::ostream& out, const StringElementType& rhs)
 {
-#if 0
   uint64_t r = rhs.first;
   int16_t dlen = rhs.second.length();
 
   out.write((char*)&r, sizeof(r));
   out.write((char*)&dlen, sizeof(dlen));
   out.write(rhs.second.c_str(), dlen);
-#else
-  writeRid(out, rhs.first);
-  out << rhs.second;
-#endif
 
   return out;
 }
 
 istream& operator>>(std::istream& out, StringElementType& rhs)
 {
-#if 0
   uint64_t r;
   int16_t dlen;
   char d[32768];  // atm 32k is the largest possible val for the length of strings stored
@@ -141,10 +88,6 @@ istream& operator>>(std::istream& out, StringElementType& rhs)
 
   rhs.first = r;
   rhs.second = string(d, dlen);
-#else
-  readRid(out, rhs.first);
-  out >> rhs.second;
-#endif
 
   return out;
 }

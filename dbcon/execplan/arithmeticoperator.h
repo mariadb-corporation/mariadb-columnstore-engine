@@ -109,12 +109,10 @@ class ArithmeticOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override;
 
   using Operator::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
-    bool localIsNull = false;
-    evaluate(row, localIsNull, lop, rop);
-    isNull = isNull || localIsNull;
-    return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
+    evaluate(row, isNull, lop, rop);
+    return TreeNode::getStrVal(fTimeZone);
   }
   using Operator::getIntVal;
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override

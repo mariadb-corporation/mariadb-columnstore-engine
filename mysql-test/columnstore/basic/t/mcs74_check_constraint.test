@@ -14,7 +14,7 @@ USE mcs74_db;
 CREATE TABLE t1(t1_int INT, t1_char CHAR(5), CHECK (t1_int > 0))ENGINE=Columnstore;
 --replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
-INSERT INTO t1 VALUES(NULL, NULL);
+INSERT INTO t1 VALUES(NULL, '');
 INSERT INTO t1 VALUES(1, 'a');
 --error ER_CONSTRAINT_FAILED
 INSERT INTO t1 VALUES(0, 'b');

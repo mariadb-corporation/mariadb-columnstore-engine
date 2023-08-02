@@ -238,7 +238,7 @@ class ParseTree
    **********************************************************************/
 
  public:
-  inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
+  inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
   {
     if (fLeft && fRight)
       return (reinterpret_cast<Operator*>(fData))->getStrVal(row, isNull, fLeft, fRight);

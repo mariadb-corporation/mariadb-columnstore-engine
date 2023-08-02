@@ -38,31 +38,12 @@ class ConstString
   explicit ConstString(const std::string& str) : mStr(str.data()), mLength(str.length())
   {
   }
-  template <typename T>
-  ConstString(const T* value, T nullValue, int colWidth)
-  {
-    if (*value == nullValue)
-    {
-      mStr = nullptr;
-      mLength = 0;
-    }
-    else
-    {
-      mStr = reinterpret_cast<const char*>(value);
-      mLength = colWidth;
-    }
-  }
   const char* str() const
   {
     return mStr;
   }
   const char* end() const
   {
-    // end() should be computed for non-nullptr mStrs, otherwise it is undefined behavior.
-    if (!mStr)
-    {
-      return nullptr;
-    }
     return mStr + mLength;
   }
   size_t length() const
@@ -80,10 +61,6 @@ class ConstString
   }
   bool eq(const ConstString& rhs) const
   {
-    if (!mStr)
-    {
-      return mStr == rhs.mStr;
-    }
     return mLength == rhs.mLength && !memcmp(mStr, rhs.mStr, mLength);
   }
   ConstString& rtrimZero()

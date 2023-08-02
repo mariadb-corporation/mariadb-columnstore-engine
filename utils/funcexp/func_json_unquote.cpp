@@ -22,7 +22,7 @@ CalpontSystemCatalog::ColType Func_json_unquote::operationType(FunctionParm& fp,
 std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
-  const auto js = fp[0]->data()->getStrVal(row, isNull);
+  const string_view js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
@@ -35,7 +35,7 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   json_read_value(&jsEg);
 
   if (unlikely(jsEg.s.error) || jsEg.value_type != JSON_VALUE_STRING)
-    return js.safeString();
+    return js.data();
 
   char* buf = (char*)alloca(jsEg.value_len + 1);
   if ((strLen = json_unescape(cs, jsEg.value, jsEg.value + jsEg.value_len, &my_charset_utf8mb3_general_ci,
@@ -46,6 +46,6 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     return strLen == 0 ? "" : ret;
   }
 
-  return js.safeString("");
+  return js.data();
 }
 }  // namespace funcexp

@@ -3,7 +3,7 @@ CREATE DATABASE mcs180_db;
 USE mcs180_db;
 SET default_storage_engine=Columnstore;
 CREATE TABLE t1 (a CHAR(1), b INT);
-INSERT INTO t1 VALUES (NULL, NULL), ('m', 6), ('N', 5), ('o', 4);
+INSERT INTO t1 VALUES ('', NULL), ('m', 6), ('N', 5), ('o', 4);
 SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (

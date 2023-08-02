@@ -162,7 +162,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
       // Turn on Null flags or skip based on respect nulls
       flags[k] = 0;
-      if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->isNull()))
+      if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->type() == ConstantColumn::NULLDATA))
       {
         if (!bRespectNulls)
         {
@@ -450,11 +450,11 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
           case CalpontSystemCatalog::TEXT:
           case CalpontSystemCatalog::BLOB:
           {
-            utils::NullString valIn;
+            string valIn;
 
             if (cc)
             {
-              valIn = cc->getStrVal(fRow, isNull); // XXX: we probably need to change Distinctmap.
+              valIn = cc->getStrVal(fRow, isNull);
             }
             else
             {
@@ -548,7 +548,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
   static const static_any::any& ullTypeId = (unsigned long long)1;
   static const static_any::any& floatTypeId = (float)1;
   static const static_any::any& doubleTypeId = (double)1;
-  static const std::string typeStr;
+  static const std::string typeStr("");
   static const static_any::any& strTypeId = typeStr;
 
   CDT colDataType = fRow.getColType(colOut);
@@ -661,7 +661,7 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
 
   if (valOut.compatible(strTypeId))
   {
-    strOut = valOut.cast<std::string>();
+    std::string strOut = valOut.cast<std::string>();
     // Convert the string to numeric type, just in case.
     intOut = atol(strOut.c_str());
     uintOut = strtoul(strOut.c_str(), NULL, 10);
@@ -756,12 +756,11 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::BLOB:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (utils::NullString*)NULL);
+        setValue(colDataType, b, e, c, (string*)NULL);
       }
       else
       {
-        utils::NullString nullStrOut(strOut);
-        setValue(colDataType, b, e, c, &nullStrOut);
+        setValue(colDataType, b, e, c, &strOut);
       }
       break;
 
@@ -846,7 +845,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
         // Turn on Null flags or skip based on respect nulls
         flags[k] = 0;
 
-        if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->isNull()))
+        if ((!cc && fRow.isNullValue(colIn) == true) || (cc && cc->type() == ConstantColumn::NULLDATA))
         {
           if (!bRespectNulls)
           {
@@ -1113,11 +1112,11 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
             case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::BLOB:
             {
-              utils::NullString valIn;
+              string valIn;
 
               if (cc)
               {
-                valIn = cc->getStrVal(fRow, isNull); // XXX: the same problem with distinct.
+                valIn = cc->getStrVal(fRow, isNull);
               }
               else
               {
@@ -1128,7 +1127,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
               // Currently, distinct only works on the first parameter.
               if (k == 0 && fDistinct)
               {
-                std::pair<static_any::any, uint64_t> val = make_pair(valIn.isNull() ? nullptr : valIn.safeString(""), 1);
+                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
                 std::pair<DistinctMap::iterator, bool> distinct;
                 distinct = fDistinctMap.insert(val);
                 if (distinct.second == false)
@@ -1139,7 +1138,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                 }
               }
 
-              datum.columnData = valIn.isNull() ? nullptr : valIn.safeString("");
+              datum.columnData = valIn;
               break;
             }
 

@@ -68,15 +68,18 @@ int64_t Func_ifnull::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 
 string Func_ifnull::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType&)
 {
-  const auto& r = parm[0]->data()->getStrVal(row, isNull);
+  if (isNull)
+    return string();
+
+  const string& r = parm[0]->data()->getStrVal(row, isNull);
 
   if (isNull)
   {
     isNull = false;
-    return parm[1]->data()->getStrVal(row, isNull).safeString("");
+    return parm[1]->data()->getStrVal(row, isNull);
   }
 
-  return r.safeString("");
+  return r;
 }
 
 IDB_Decimal Func_ifnull::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,

@@ -106,20 +106,20 @@ long double Func_least::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, b
 std::string Func_least::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  auto leastStr = fp[0]->data()->getStrVal(row, isNull);
+  string leastStr = fp[0]->data()->getStrVal(row, isNull);
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
 
   for (uint32_t i = 1; i < fp.size(); i++)
   {
-    const auto& str1 = fp[i]->data()->getStrVal(row, isNull);
+    const string& str1 = fp[i]->data()->getStrVal(row, isNull);
 
-    if (cs->strnncoll(leastStr.str(), leastStr.length(), str1.str(), str1.length()) > 0)
+    if (cs->strnncoll(leastStr.c_str(), leastStr.length(), str1.c_str(), str1.length()) > 0)
     {
       leastStr = str1;
     }
   }
 
-  return leastStr.safeString("");
+  return leastStr;
 }
 
 IDB_Decimal Func_least::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,

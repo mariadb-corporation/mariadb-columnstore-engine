@@ -263,7 +263,7 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const auto& val = pm[0]->data()->getStrVal(row, isNull);
+      const string& val = pm[0]->data()->getStrVal(row, isNull);
       if (isNull)
         return false;
 
@@ -272,8 +272,8 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
       for (uint32_t i = 1; i < pm.size(); i++)
       {
         isNull = false;
-        const auto& str1 = pm[i]->data()->getStrVal(row, isNull);
-        if (cs->strnncoll(val.str(), val.length(), str1.str(), str1.length()) == 0 && !isNull)
+        const string& str1 = pm[i]->data()->getStrVal(row, isNull);
+        if (cs->strnncoll(val.c_str(), val.length(), str1.c_str(), str1.length()) == 0 && !isNull)
           return true;
 
         if (isNull && isNotIn)

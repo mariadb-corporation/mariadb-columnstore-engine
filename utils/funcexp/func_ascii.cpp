@@ -47,12 +47,12 @@ CalpontSystemCatalog::ColType Func_ascii::operationType(FunctionParm& fp,
 int64_t Func_ascii::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               CalpontSystemCatalog::ColType& op_ct)
 {
-  const auto& str = parm[0]->data()->getStrVal(row, isNull);
+  const string& str = parm[0]->data()->getStrVal(row, isNull);
 
-  if (str.isNull() || str.length() < 1)
+  if (str.empty())
     return 0;
 
-  return (unsigned char)(str.str())[0];
+  return (unsigned char)str[0];
 }
 
 }  // namespace funcexp

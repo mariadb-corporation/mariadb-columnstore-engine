@@ -48,27 +48,21 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 {
   CHARSET_INFO* cs = ct.getCharset();
 
-  const auto& nstr = fp[0]->data()->getStrVal(row, isNull);
-  if (nstr.isNull())
+  const string& str = fp[0]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-
-  const auto& str = nstr.unsafeStringRef();
   size_t strLen = str.length();
 
-  const auto& nfromstr = fp[1]->data()->getStrVal(row, isNull);
-  if (nfromstr.isNull())
+  const string& fromstr = fp[1]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-  const auto& fromstr = nfromstr.unsafeStringRef();
-
   if (fromstr.length() == 0)
     return str;
   size_t fromLen = fromstr.length();
 
-  const auto& ntostr = fp[2]->data()->getStrVal(row, isNull);
-  if (ntostr.isNull())
+  const string& tostr = fp[2]->data()->getStrVal(row, isNull);
+  if (isNull)
     return "";
-  const auto& tostr = ntostr.unsafeStringRef();
-
   size_t toLen = tostr.length();
 
   bool binaryCmp = (cs->state & MY_CS_BINSORT) || !cs->use_mb();
