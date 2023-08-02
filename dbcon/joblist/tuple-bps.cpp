@@ -19,7 +19,7 @@
 //  $Id: tuple-bps.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -77,7 +77,7 @@ using namespace querytele;
 
 #include "columnwidth.h"
 #include "pseudocolumn.h"
-//#define DEBUG 1
+// #define DEBUG 1
 
 extern boost::mutex fileLock_g;
 
@@ -556,14 +556,14 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       throw runtime_error(oss.str());
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       oss << " due to:  " << ex.what();
       throw runtime_error(oss.str());
     }
-    catch(...)
+    catch (...)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
@@ -3365,8 +3365,6 @@ void TupleBPS::abort_nolock()
   if (fDie)
     return;
 
-  std::cout << "ABORT_NO_LOCK:" << toString() << std::endl;
-
   JobStep::abort();
 
   if (fDec && BPPIsAllocated)
@@ -3380,7 +3378,7 @@ void TupleBPS::abort_nolock()
     }
     catch (...)
     {
-      std::cout << "@@@@ UGLY CATCH ... HAPPEN" << __LINE__ <<  uniqueID << std::endl;
+      std::cout << "@@@@ UGLY CATCH ... HAPPEN" << __LINE__ << uniqueID << std::endl;
       // this throws only if there are no PMs left.  If there are none,
       // that is the cause of the abort and that will be reported to the
       // front-end already.  Nothing to do here.

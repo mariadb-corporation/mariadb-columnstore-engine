@@ -956,12 +956,10 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
   uint32_t uniqueId = p->UniqueID;
   std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok = fSessionMessages.find(uniqueId);
-  std::cout << "DEC: addDataToOutput queue " << uniqueId << std::endl;
 
   // The message for a session that doesn't exist.
   if (map_tok == fSessionMessages.end())
   {
-    std::cout << "DEC: addDataToOutput early quit " << uniqueId << std::endl;
     // Here gets the dead session ByteStream that is already removed
     // from DEC queue.
     return;
@@ -1054,7 +1052,6 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
   // EM-PP exchange via the queue.
   if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
   {
-    std::cout << "DEC:write uniqueID " << senderUniqueID << std::endl;
     pushToTheLocalQueueAndNotifyRecv(bs);
     return 0;
   }

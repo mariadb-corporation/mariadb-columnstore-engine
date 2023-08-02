@@ -86,7 +86,6 @@ void FairThreadPool::addJob(const Job& job)
   auto jobsListMapIter = txn2JobsListMap_.find(job.txnIdx_);
   if (jobsListMapIter == txn2JobsListMap_.end())  // there is no txn in the map
   {
-    std::cerr << "addJob new " << job.txnIdx_ << std::endl;
     ThreadPoolJobsList* jobsList = new ThreadPoolJobsList;
     jobsList->push_back(job);
     txn2JobsListMap_[job.txnIdx_] = jobsList;
@@ -96,10 +95,8 @@ void FairThreadPool::addJob(const Job& job)
   {
     if (jobsListMapIter->second->empty())  // there are no jobs for the txn
     {
-      std::cerr << "addJob re-push " << job.txnIdx_ << std::endl;
       weightedTxnsQueue_.push({job.weight_, job.txnIdx_});
     }
-    std::cerr << "addJob add to joblist " << job.txnIdx_ << std::endl;
     jobsListMapIter->second->push_back(job);
   }
 
@@ -109,7 +106,6 @@ void FairThreadPool::addJob(const Job& job)
 void FairThreadPool::removeJobs(uint32_t id)
 {
   std::unique_lock<std::mutex> lk(mutex);
-  std::cerr << "addJob rem " << id << std::endl;
 
   auto txnJobsMapIter = txn2JobsListMap_.begin();
   while (txnJobsMapIter != txn2JobsListMap_.end())
@@ -148,7 +144,6 @@ void FairThreadPool::removeJobs(uint32_t id)
 
 void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue)
 {
-  utils::setThreadName("Idle");
   RunListT runList;  // This is a vector to allow to grab multiple jobs
   RescheduleVecType reschedule;
   bool running = false;
@@ -167,7 +162,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
         // we don't want this one any more.
         if (preferredQueue == PriorityThreadPool::Priority::EXTRA && stopExtra_)
         {
-          std::cerr << "extra ret " << std::endl;
           --extraThreads_;
           return;
         }
@@ -200,7 +194,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 
       if (weightedTxnsQueue_.empty())
       {
-        std::cerr << "empty q 2 " << std::endl;
         newJob.wait(lk);  // might need a lock here
         continue;
       }
@@ -221,7 +214,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       }
 
       lk.unlock();
-      std::cerr << "run txn " << runList[0].txnIdx_ << " id " << runList[0].id_ << std::endl;
 
       running = true;
       jobsRunning_.fetch_add(1, std::memory_order_relaxed);
@@ -233,7 +225,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 
       if (rescheduleJob)
       {
-        std::cerr << "resched " << runList[0].txnIdx_ << " id " << runList[0].id_ << std::endl;
+        std::cerr << "re uid " << runList[0].uniqueID_ << std::endl;
         // to avoid excessive CPU usage waiting for data from storage
         usleep(500);
         addJob(runList[0]);

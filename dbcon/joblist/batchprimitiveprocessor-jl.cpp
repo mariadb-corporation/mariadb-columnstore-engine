@@ -1358,7 +1358,7 @@ void BatchPrimitiveProcessorJL::destroyBPP(ByteStream& bs) const
   bs << (messageqcpp::ByteStream::quadbyte)sessionID;
   bs << (messageqcpp::ByteStream::quadbyte)stepID;
   bs << uniqueID;
-  std::cerr << " destroyBPP bs.length() " << bs.length() << std::endl;
+  std::cerr << " dBPP [" << uniqueID << "]" << std::endl;
 }
 
 void BatchPrimitiveProcessorJL::useJoiners(const vector<std::shared_ptr<joiner::TupleJoiner> >& j)

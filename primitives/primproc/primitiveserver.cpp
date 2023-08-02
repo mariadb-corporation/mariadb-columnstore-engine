@@ -1558,10 +1558,8 @@ struct BPPHandler
   {
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
-    std::cout << "@@@ destroyBPP" << dieTime << std::endl;
     if (bs.length() < sizeof(ISMPacketHeader) + sizeof(sessionID) + sizeof(stepID) + sizeof(uniqueID))
     {
-      std::cout << "@@@ destroyBPP: l " << bs.length() << " " << __LINE__ << std::endl;
       // MCOL-857 We don't appear to have the full packet yet!
       return -1;
     }
@@ -1598,15 +1596,15 @@ struct BPPHandler
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
         // We're not ready for a destroy. Reschedule.
-        std::cerr << "@@@@ destroyBPP: join " << __LINE__ << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@j " << uniqueID << std::endl;
         return -1;
       }
     }
     else
     {
-      cout << "got a destroy for an unknown obj " << uniqueID << endl;
-      std::cerr << "@@@@ destroyBPP: unkn " << __LINE__ << "ID: " << uniqueID << std::endl;
+      // cout << "got a destroy for an unknown obj " << uniqueID << endl;
       bs.rewind();
+      std::cerr << "@@ unk l: " << bs.length() << uniqueID << std::endl;
 
       if (posix_time::second_clock::universal_time() > dieTime)
       {
@@ -1617,11 +1615,11 @@ lk.unlock();
 deleteDJLock(uniqueID);
 return 0;
         */
-        std::cerr << "@@@@ destroyBPP: die " << __LINE__ << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@d " << uniqueID << std::endl;
       }
       else
       {
-        std::cerr << "@@@@ destroyBPP: don't die " << __LINE__ << "ID: " << uniqueID << std::endl;
+        std::cerr << "@@dd " << uniqueID << std::endl;
         return -1;
       }
     }
@@ -1638,7 +1636,8 @@ return 0;
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
-    std::cerr << "@@@@ destroyBPP: " << __LINE__ << "ID: " << uniqueID << std::endl;
+    std::cerr << "@@ q " << uniqueID << std::endl;
+
     return 0;
   }
 
