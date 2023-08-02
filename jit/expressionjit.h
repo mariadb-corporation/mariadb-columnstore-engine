@@ -5,6 +5,8 @@
 #include "returnedcolumn.h"
 #include "arithmeticcolumn.h"
 
+using namespace execplan;
+
 namespace msc_jit
 {
 static JIT& getJITInstance()
@@ -39,38 +41,51 @@ class CompiledColumn : public execplan::ReturnedColumn
  public:
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
   {
-    auto columnList = this->simpleColumnList();
-    return 1;
+    return compiledOperatorInt64.compiled_function(row.getData(), isNull);
   }
 };
-static void compileExpression(const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
+// TODO: Optimize code structure
+static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup::Row& row, bool& isNull)
 {
-  boost::shared_ptr<ArithmeticColumn> alithmeticcolumn =
-      boost::dynamic_pointer_cast<ArithmeticColumn>(expression);
-  if (alithmeticcolumn)
+  for (int i = expression.size() - 1; i >= 0; --i)
   {
-    ParseTree* root = alithmeticcolumn->expression();
-    std::queue<ParseTree*> nodeQueue;
-    nodeQueue.emplace(root);
-    while (!nodeQueue.empty())
+    boost::shared_ptr<ArithmeticColumn> arithmeticcolumn =
+        boost::dynamic_pointer_cast<ArithmeticColumn>(expression[i]);
+    if (arithmeticcolumn)
     {
-      ParseTree* node = nodeQueue.front();
-      nodeQueue.pop();
-      if (!node->isCompilable(row))
+      if (arithmeticcolumn->isCompilable(row))
       {
-        if (node->left() && node->right())
-        {
-          nodeQueue.emplace(node->left());
-          nodeQueue.emplace(node->right());
-        }
+        CompiledOperatorINT64 compiledOperatorInt64 =
+            compileOperator(getJITInstance(), expression[i], row, isNull);
+        expression[i] = boost::make_shared<CompiledColumn>(compiledOperatorInt64, expression[i].get());
       }
       else
       {
-        auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
-        execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
-        CompiledOperatorINT64 compiledOperatorInt64 = compileOperator(getJITInstance(), ptr, row, isNull);
-        auto* compiledColumn = new CompiledColumn(compiledOperatorInt64, c_ptr);
-        node->data(compiledColumn);
+        // TODO: The child nodes have no aliases, further modifications are needed.
+        ParseTree* root = arithmeticcolumn->expression();
+        std::queue<ParseTree*> nodeQueue;
+        nodeQueue.emplace(root);
+        while (!nodeQueue.empty())
+        {
+          ParseTree* node = nodeQueue.front();
+          nodeQueue.pop();
+          if (!node->isCompilable(row))
+          {
+            if (node->left() && node->right())
+            {
+              nodeQueue.emplace(node->left());
+              nodeQueue.emplace(node->right());
+            }
+          }
+          else
+          {
+            auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
+            execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
+            CompiledOperatorINT64 compiledOperatorInt64 = compileOperator(getJITInstance(), ptr, row, isNull);
+            auto* compiledColumn = new CompiledColumn(compiledOperatorInt64, c_ptr);
+            node->data(compiledColumn);
+          }
+        }
       }
     }
   }
