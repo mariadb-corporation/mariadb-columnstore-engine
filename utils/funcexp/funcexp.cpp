@@ -43,7 +43,6 @@ using namespace joblist;
 #endif
 
 #include "mcs_decimal.h"
-#include "expressionjit.h"
 namespace funcexp
 {
 /* static */
@@ -298,11 +297,9 @@ Func* FuncExp::getFunctor(std::string& funcName)
 void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expression)
 {
   bool isNull;
-
   for (uint32_t i = 0; i < expression.size(); i++)
   {
     isNull = false;
-    msc_jit::compileExpression(expression[i], row, isNull);
     //    CompiledOperatorINT64 compiledOperatorInt64 = msc_jit::compileExpression(expression[i], row,
     //    isNull); std::cout << "compiledOperatorInt64: " <<
     //    compiledOperatorInt64.compiled_function(row.getData()) << std::endl;
