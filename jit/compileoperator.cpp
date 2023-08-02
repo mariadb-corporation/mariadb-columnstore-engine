@@ -42,10 +42,8 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
 CompiledOperatorINT64 compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
                                       bool& isNull)
 {
-  std::cout << expression->alias();
   auto compiled_module =
       jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row, isNull); });
-
   auto compiled_function_ptr = reinterpret_cast<JITCompiledOperatorINT64>(
       compiled_module.function_name_to_symbol[expression->alias()]);
   CompiledOperatorINT64 result_compiled_function{.compiled_module = compiled_module,

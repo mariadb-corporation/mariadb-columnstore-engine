@@ -31,7 +31,7 @@
 
 #include "funcexpwrapper.h"
 #include "objectreader.h"
-
+#include "expressionjit.h"
 using namespace messageqcpp;
 using namespace rowgroup;
 using namespace execplan;
@@ -117,7 +117,13 @@ bool FuncExpWrapper::evaluate(Row* r)
   for (i = 0; i < filters.size(); i++)
     if (!fe->evaluate(*r, filters[i].get()))
       return false;
-
+  if (!isCompiled)
+  {
+    // TODO: delete isNull
+    bool isNull = false;
+    msc_jit::compileExpression(rcs, *r, isNull);
+    isCompiled = true;
+  }
   fe->evaluate(*r, rcs);
 
   return true;
