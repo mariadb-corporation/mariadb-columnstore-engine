@@ -1563,6 +1563,11 @@ struct BPPHandler
 
   int destroyBPP(ByteStream& bs, const posix_time::ptime& dieTime)
   {
+    if (posix_time::second_clock::universal_time() > dieTime)
+    {
+      return 0;
+    }
+
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
     if (bs.length() < sizeof(ISMPacketHeader) + sizeof(sessionID) + sizeof(stepID) + sizeof(uniqueID))
