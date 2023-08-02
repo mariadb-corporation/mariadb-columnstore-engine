@@ -40,6 +40,12 @@
 namespace threadpool
 {
 
+// Meta Jobs, e.g. BATCH_PRIMITIVE_CREATE has very small weight if a number of such Jobs
+// stuck in the scheduler queue they will starve the whole queue so that no Job could be run
+// except these meta jobs.
+constexpr const uint32_t RescheduleWeightIncrement = 10000;
+constexpr const uint32_t MetaJobsInitialWeight = 1;
+
 // The idea of this thread pool is to run morsel jobs(primitive job) is to equaly distribute CPU time
 // b/w multiple parallel queries(thread maps morsel to query using txnId). Query(txnId) has its weight
 // stored in PriorityQueue that thread increases before run another morsel for the query. When query is
