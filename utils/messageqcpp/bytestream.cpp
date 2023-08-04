@@ -269,8 +269,14 @@ ByteStream& ByteStream::operator<<(const int128_t& o)
   return *this;
 }
 
+
+constexpr uint64_t NULLSTRING_MARKER = 0xdeadface;
+constexpr uint64_t PLAINSTRING_MARKER = 0xbeefceaf;
+
+
 ByteStream& ByteStream::operator<<(const string& s)
 {
+  *this << PLAINSTRING_MARKER;
   int32_t len = s.size();
 
   *this << len;
@@ -298,8 +304,10 @@ ByteStream& ByteStream::operator<<(const string& s)
 
   return *this;
 }
+
 ByteStream& ByteStream::operator<<(const utils::NullString& s)
 {
+  (*this) << NULLSTRING_MARKER;
   uint8_t isNull = s.isNull();
   (*this) << isNull;
   if (!isNull)
@@ -381,6 +389,14 @@ ByteStream& ByteStream::operator>>(int128_t& o)
 
 ByteStream& ByteStream::operator>>(string& s)
 {
+  uint64_t typemarker = 0;
+  (*this) >> typemarker;
+  if (typemarker != PLAINSTRING_MARKER)
+  {
+    std::cerr << "We tried to deserialize std::string from other type with signature of " << typemarker << std::endl;
+    abort();
+  }
+
   peek(s);
   fCurOutPtr += 4 + s.length();
   return *this;
@@ -388,6 +404,14 @@ ByteStream& ByteStream::operator>>(string& s)
 
 ByteStream& ByteStream::operator>>(utils::NullString& s)
 {
+  uint64_t typemarker = 0;
+  (*this) >> typemarker;
+  if (typemarker != NULLSTRING_MARKER)
+  {
+    std::cerr << "We tried to deserialize Nullstring from other type with signature of " << typemarker << std::endl;
+    abort();
+  }
+
   uint8_t isNull;
   (*this) >> isNull;
   if (isNull)
