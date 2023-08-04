@@ -122,9 +122,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
-  local publish_pkg_url = 'https://cspkg.s3.amazonaws.com/index.html?prefix=' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
-
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
+  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
+  local repo_pkg_url_no_res = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/",
 
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
@@ -190,6 +190,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test001.sh',
   ],
 
+  local mdb_server_versions = ['10.6.4-1', '10.6.5-2', '10.6.7-3', '10.6.8-4', '10.6.9-5', '10.6.11-6', '10.6.12-7'],
+
   local indexes(arr) = std.range(0, std.length(arr) - 1),
 
   regression(name, depends_on):: {
@@ -250,6 +252,36 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sleep 10',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mariadb -e "insert into test.t1 values (2); select * from test.t1"',
     ],
+  },
+  upgrade(version):: {
+    name: 'upgrade-test from ' + version,
+    depends_on: ['smoke'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      UPGRADE_TOKEN: {
+        from_secret: 'es_token',
+      },
+    },
+    commands: [
+      'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name upgrade$${DRONE_BUILD_NUMBER}' + version + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker cp core_dumps/. upgrade$${DRONE_BUILD_NUMBER}' + version + ':/',
+      'docker cp setup-repo.sh upgrade$${DRONE_BUILD_NUMBER}' + version + ':/',
+      if (pkg_format == 'deb' && !(result == "debian12") && !(arch == "arm64" && (version == "10.6.4-1" || version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4")) && !((version == "10.6.4-1" || version == "10.6.8-4") && (result == "debian11" || result == "ubuntu22.04")) && !(result == "ubuntu22.04" && (version == "10.6.5-2" || version == "10.6.7-3"))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_deb.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res +' $${UPGRADE_TOKEN}"',
+      if (std.split(platform, ':')[0] == 'rockylinux' && !(result == "rockylinux9" && (version == "10.6.4-1" || version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4")) && !(result == "rockylinux8" && arch == 'arm64' && (version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4"))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_rpm.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
+    ],
+  },
+  upgradelog:: {
+    name: 'upgradelog',
+    depends_on: ['upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions) - 1]],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'echo',
+    ] + std.map(function(ver) 'docker stop upgrade$${DRONE_BUILD_NUMBER}' + ver + ' && docker rm upgrade$${DRONE_BUILD_NUMBER}' + ver + ' || echo "cleanup upgrade from version ' + ver + ' failure"', mdb_server_versions),
+    when: {
+      status: ['success', 'failure'],
+    },
   },
   mtr:: {
     name: 'mtr',
@@ -642,6 +674,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
                'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-10.1-kvm-rpm-centos74-amd64.rpm',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3-amd64.rpm',
              ],
            },
            {
@@ -668,6 +702,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              },
              commands: [
                'cd /mdb/' + builddir,
+               'ls -la ../',
                'mkdir ' + result,
                "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
                if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
@@ -751,6 +786,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.publish('smokelog')] +
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
+         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+         [pipeline.upgradelog] +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
