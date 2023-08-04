@@ -1458,8 +1458,12 @@ void TupleBPS::run()
   fBPP->setThreadCount(fMaxNumProcessorThreads);
 
   if (doJoin)
+  {
     for (i = 0; i < smallSideCount; i++)
       tjoiners[i]->setThreadCount(fMaxNumProcessorThreads);
+
+    fBPP->setMaxPmJoinResultCount(fMaxPmJoinResultCount);
+  }
 
   if (fe1)
     fBPP->setFEGroup1(fe1, fe1Input);

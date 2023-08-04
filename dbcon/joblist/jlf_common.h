@@ -211,6 +211,7 @@ struct JobInfo
    , wfqLimitStart(0)
    , wfqLimitCount(-1)
    , timeZone(0)
+   , maxPmJoinResultCount(1048576)
   {
   }
   ResourceManager* rm;
@@ -368,6 +369,7 @@ struct JobInfo
   bool djsForceRun;
   bool isDML;
   long timeZone;
+  uint32_t maxPmJoinResultCount;
 
   // This is for tracking any dynamically allocated ParseTree objects
   // in simpleScalarFilterToParseTree() for later deletion in
