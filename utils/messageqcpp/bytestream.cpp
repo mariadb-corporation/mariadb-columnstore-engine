@@ -32,6 +32,9 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/version.hpp>
+
+#include <boost/stacktrace.hpp>
+
 using namespace boost;
 
 #define BYTESTREAM_DLLEXPORT
@@ -394,6 +397,7 @@ ByteStream& ByteStream::operator>>(string& s)
   if (typemarker != PLAINSTRING_MARKER)
   {
     std::cerr << "We tried to deserialize std::string from other type with signature of " << typemarker << std::endl;
+    std::cerr << boost::stacktrace::stacktrace() << std::endl;
     abort();
   }
 
@@ -409,6 +413,7 @@ ByteStream& ByteStream::operator>>(utils::NullString& s)
   if (typemarker != NULLSTRING_MARKER)
   {
     std::cerr << "We tried to deserialize Nullstring from other type with signature of " << typemarker << std::endl;
+    std::cerr << boost::stacktrace::stacktrace() << std::endl;
     abort();
   }
 
