@@ -141,6 +141,10 @@ static MYSQL_THDVAR_ULONG(diskjoin_max_partition_tree_depth, PLUGIN_VAR_RQCMDARG
 static MYSQL_THDVAR_BOOL(diskjoin_force_run, PLUGIN_VAR_RQCMDARG, "Force run for the disk join step.", NULL,
                          NULL, 0);
 
+static MYSQL_THDVAR_ULONG(max_pm_join_result_count, PLUGIN_VAR_RQCMDARG,
+                          "The maximum size of the join result for the single block on BPP.", NULL, NULL,
+                          1048576, 1, ~0U, 1);
+
 static MYSQL_THDVAR_ULONG(um_mem_limit, PLUGIN_VAR_RQCMDARG,
                           "Per user Memory limit(MB). Switch to disk-based JOIN when limit is reached", NULL,
                           NULL, 0, 0, ~0U, 1);
@@ -233,6 +237,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(diskjoin_bucketsize),
                                             MYSQL_SYSVAR(diskjoin_max_partition_tree_depth),
                                             MYSQL_SYSVAR(diskjoin_force_run),
+                                            MYSQL_SYSVAR(max_pm_join_result_count),
                                             MYSQL_SYSVAR(um_mem_limit),
                                             MYSQL_SYSVAR(double_for_decimal_math),
                                             MYSQL_SYSVAR(decimal_overflow_check),
@@ -446,6 +451,15 @@ bool get_diskjoin_force_run(THD* thd)
 void set_diskjoin_force_run(THD* thd, bool value)
 {
   THDVAR(thd, diskjoin_force_run) = value;
+}
+
+ulong get_max_pm_join_result_count(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, max_pm_join_result_count);
+}
+void set_max_pm_join_result_count(THD* thd, ulong value)
+{
+  THDVAR(thd, max_pm_join_result_count) = value;
 }
 
 ulong get_um_mem_limit(THD* thd)

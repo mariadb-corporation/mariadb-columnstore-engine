@@ -32,6 +32,9 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/version.hpp>
+
+#include <boost/stacktrace.hpp>
+
 using namespace boost;
 
 #define BYTESTREAM_DLLEXPORT
@@ -269,8 +272,11 @@ ByteStream& ByteStream::operator<<(const int128_t& o)
   return *this;
 }
 
+constexpr uint64_t PLAINSTRING_MARKER = 0xbeefceaf;
+
 ByteStream& ByteStream::operator<<(const string& s)
 {
+  *this << PLAINSTRING_MARKER;
   int32_t len = s.size();
 
   *this << len;
@@ -371,6 +377,15 @@ ByteStream& ByteStream::operator>>(int128_t& o)
 
 ByteStream& ByteStream::operator>>(string& s)
 {
+  uint64_t typemarker = 0;
+  (*this) >> typemarker;
+  if (typemarker != PLAINSTRING_MARKER)
+  {
+    std::cerr << "We tried to deserialize std::string from other type with signature of " << typemarker << std::endl;
+    std::cerr << boost::stacktrace::stacktrace() << std::endl;
+    abort();
+  }
+
   peek(s);
   fCurOutPtr += 4 + s.length();
   return *this;

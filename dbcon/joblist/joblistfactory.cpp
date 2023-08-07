@@ -2068,6 +2068,7 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm,
     jobInfo.partitionSize = csep->djsPartitionSize();
     jobInfo.djsMaxPartitionTreeDepth = csep->djsMaxPartitionTreeDepth();
     jobInfo.djsForceRun = csep->djsForceRun();
+    jobInfo.maxPmJoinResultCount = csep->maxPmJoinResultCount();
     jobInfo.umMemLimit.reset(new int64_t);
     *(jobInfo.umMemLimit) = csep->umMemLimit();
     jobInfo.isDML = csep->isDML();

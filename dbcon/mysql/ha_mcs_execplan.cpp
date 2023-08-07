@@ -5325,7 +5325,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         // in groupconcat.cpp when ExeMgr processes groupconcat. As a temporary
         // fix, we cap off the max groupconcat length to std::numeric_limits<int32_t>::max().
         // The proper fix would be to change colWidth type to uint32_t.
-        if (isp->max_length <= std::numeric_limits<int32_t>::max())
+        if (isp->max_length <= static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
         {
           ct.colWidth = isp->max_length;
         }
@@ -6637,6 +6637,7 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
   csep->djsPartitionSize(get_diskjoin_bucketsize(gwi.thd) * 1024ULL * 1024);
   csep->djsMaxPartitionTreeDepth(get_diskjoin_max_partition_tree_depth(gwi.thd));
   csep->djsForceRun(get_diskjoin_force_run(gwi.thd));
+  csep->maxPmJoinResultCount(get_max_pm_join_result_count(gwi.thd));
   if (get_um_mem_limit(gwi.thd) == 0)
     csep->umMemLimit(numeric_limits<int64_t>::max());
   else

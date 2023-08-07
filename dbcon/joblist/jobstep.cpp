@@ -91,6 +91,7 @@ JobStep::JobStep(const JobInfo& j)
  , fProgress(0)
  , fStartTime(-1)
  , fTimeZone(j.timeZone)
+ , fMaxPmJoinResultCount(j.maxPmJoinResultCount)
 {
   QueryTeleServerParms tsp;
   string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));
