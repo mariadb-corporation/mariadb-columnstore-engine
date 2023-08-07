@@ -394,15 +394,17 @@ ByteStream& ByteStream::operator>>(string& s)
 {
   uint64_t typemarker = 0;
   (*this) >> typemarker;
+
+  peek(s);
+  fCurOutPtr += 4 + s.length();
   if (typemarker != PLAINSTRING_MARKER)
   {
     std::cerr << "We tried to deserialize std::string from other type with signature of " << typemarker << std::endl;
+    std::cerr << "readed " << s << std::endl;
     std::cerr << boost::stacktrace::stacktrace() << std::endl;
     abort();
   }
 
-  peek(s);
-  fCurOutPtr += 4 + s.length();
   return *this;
 }
 
@@ -410,12 +412,6 @@ ByteStream& ByteStream::operator>>(utils::NullString& s)
 {
   uint64_t typemarker = 0;
   (*this) >> typemarker;
-  if (typemarker != NULLSTRING_MARKER)
-  {
-    std::cerr << "We tried to deserialize Nullstring from other type with signature of " << typemarker << std::endl;
-    std::cerr << boost::stacktrace::stacktrace() << std::endl;
-    abort();
-  }
 
   uint8_t isNull;
   (*this) >> isNull;
@@ -429,6 +425,16 @@ ByteStream& ByteStream::operator>>(utils::NullString& s)
     (*this) >> t;
     s = utils::NullString(t);
   }
+
+
+  if (typemarker != NULLSTRING_MARKER)
+  {
+    std::cerr << "We tried to deserialize Nullstring from other type with signature of " << typemarker << std::endl;
+    std::cerr << "readed " << s.toString() << std::endl;
+    std::cerr << boost::stacktrace::stacktrace() << std::endl;
+    abort();
+  }
+
   return *this;
 }
 
