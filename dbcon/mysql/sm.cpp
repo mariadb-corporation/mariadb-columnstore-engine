@@ -404,8 +404,11 @@ status_t tpl_close(cpsm_tplh_t* ntplh, cpsm_conhdl_t** conn_hdl, QueryStats& sta
 
         try
         {
+          std::cerr << "deserializing query stats try no " << tries << " bs.length(): " << bs.length() << std::endl;
           bs >> hndl->queryStats;
+          std::cerr << "deserializing extended stats try no " << tries << " bs.length(): " << bs.length() << std::endl;
           bs >> hndl->extendedStats;
+          std::cerr << "deserializing mini stats try no " << tries << " bs.length(): " << bs.length() << std::endl;
           bs >> hndl->miniStats;
           stats.unserialize(bs);
           stats.setEndTime();
