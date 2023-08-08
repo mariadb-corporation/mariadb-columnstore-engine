@@ -1,0 +1,1 @@
+CREATE TABLE booltable(col1 BOOLEAN) ENGINE=Columnstore;

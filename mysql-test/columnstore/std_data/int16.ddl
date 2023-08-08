@@ -1,0 +1,1 @@
+CREATE TABLE int16(col1 SMALLINT) ENGINE=Columnstore;

@@ -1,0 +1,1 @@
+CREATE TABLE tstable(col1 TIMESTAMP) ENGINE=Columnstore;

@@ -1084,6 +1084,8 @@ inline uint64_t string_to_ull(const std::string& data, bool& bSaturate)
   return value;
 }
 
+void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal);
+
 template <typename T>
 void number_int_value(const std::string& data, cscDataType typeCode,
                       const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
@@ -1173,6 +1175,10 @@ class DataConvert
   EXPORT static std::string timeToString1(long long timevalue);
   static inline void timeToString1(long long timevalue, char* buf, unsigned int buflen);
 
+
+  EXPORT static int32_t ConvertArrowColumnDate(int32_t dayVal, int& status);
+
+
   /**
    * @brief convert a date column data, represnted as a string, to it's native
    * format. This function is for bulkload to use.
@@ -1190,6 +1196,10 @@ class DataConvert
    * @brief Is specified date valid; used by binary bulk load
    */
   EXPORT static bool isColumnDateValid(int32_t date);
+
+  EXPORT static int64_t convertArrowColumnDatetime(int64_t timeVal, int& status);
+
+
 
   /**
    * @brief convert a datetime column data, represented as a string,
@@ -1230,6 +1240,13 @@ class DataConvert
    */
   EXPORT static int64_t convertColumnTime(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
                                           int& status, unsigned int dataOrgLen);
+
+
+  EXPORT static int64_t convertArrowColumnTime32(int32_t timeVal);
+
+  EXPORT static int64_t convertArrowColumnTime64(int64_t timeVal);
+
+
 
   /**
    * @brief Is specified datetime valid; used by binary bulk load

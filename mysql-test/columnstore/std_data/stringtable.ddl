@@ -1,0 +1,1 @@
+CREATE TABLE stringtable(col1 VARCHAR(2000)) ENGINE=Columnstore;

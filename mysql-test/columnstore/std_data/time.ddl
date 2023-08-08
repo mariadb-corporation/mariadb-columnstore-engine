@@ -1,0 +1,1 @@
+CREATE TABLE time(col1 TIME) ENGINE=Columnstore;

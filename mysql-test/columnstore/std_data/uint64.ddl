@@ -1,0 +1,1 @@
+CREATE TABLE uint64(col1 BIGINT UNSIGNED) ENGINE=Columnstore;

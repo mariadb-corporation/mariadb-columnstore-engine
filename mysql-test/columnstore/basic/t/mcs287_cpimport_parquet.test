@@ -1,0 +1,178 @@
+if (!$MYSQL_TEST_ROOT){
+    skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs287_db;
+--enable_warnings
+
+CREATE DATABASE mcs287_db;
+USE mcs287_db;
+# Create table
+# CREATE TABLE t1(col1 INT, col2 FLOAT, col3 DOUBLE, col4 TIME, col5 VARCHAR(20), col6 TIMESTAMP, col7 DATE) ENGINE=Columnstore;
+CREATE TABLE t1(col1 INT) ENGINE=Columnstore;
+CREATE TABLE t2(col1 FLOAT) ENGINE=Columnstore;
+CREATE TABLE t3(col1 DOUBLE) ENGINE=Columnstore;
+CREATE TABLE t4(col1 TIME) ENGINE=Columnstore;
+CREATE TABLE t5(col1 VARCHAR(2)) ENGINE=Columnstore;
+CREATE TABLE t6(col1 VARCHAR(5)) ENGINE=Columnstore;
+CREATE TABLE t7(col1 VARCHAR(20)) ENGINE=Columnstore;
+CREATE TABLE t8(col1 CHAR(2)) ENGINE=Columnstore;
+CREATE TABLE t9(col1 CHAR(5)) ENGINE=Columnstore;
+CREATE TABLE t10(col1 CHAR(20)) ENGINE=Columnstore;
+CREATE TABLE t11(col1 TIMESTAMP) ENGINE=Columnstore;
+CREATE TABLE t12(col1 DATE) ENGINE=Columnstore;
+CREATE TABLE t13(col1 DATETIME) ENGINE=Columnstore;
+CREATE TABLE t14(col1 SMALLINT) ENGINE=Columnstore;
+CREATE TABLE t15(col1 DECIMAL(9,3)) ENGINE=Columnstore;
+CREATE TABLE t16(col1 BOOLEAN) ENGINE=Columnstore;
+CREATE TABLE t17(col1 BIGINT) ENGINE=Columnstore;
+CREATE TABLE t18(col1 INT UNSIGNED) ENGINE=Columnstore;
+CREATE TABLE t19(col1 SMALLINT UNSIGNED) ENGINE=Columnstore;
+CREATE TABLE t20(col1 TINYINT UNSIGNED) ENGINE=Columnstore;
+CREATE TABLE t21(col1 BIGINT UNSIGNED) ENGINE=Columnstore;
+CREATE TABLE t22(col1 TINYINT) ENGINE=Columnstore;
+
+# Generate data
+--exec mcsParquetGen -d 
+
+
+#Valid data and table
+#--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/test-small-scale.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/int32.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t2 $MTR_SUITE_DIR/../std_data/float.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t2 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t3 $MTR_SUITE_DIR/../std_data/double.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t3 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t4 $MTR_SUITE_DIR/../std_data/time.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t4 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t5 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t5 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t6 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t6 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t7 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+# --exec $MCS_CPIMPORT mcs287_db t7 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t8 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t8 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t9 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t9 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t10 $MTR_SUITE_DIR/../std_data/string.parquet >/dev/null
+# --exec $MCS_CPIMPORT mcs287_db t10 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t11 $MTR_SUITE_DIR/../std_data/ts.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t11 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t12 $MTR_SUITE_DIR/../std_data/date.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t12 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t13 $MTR_SUITE_DIR/../std_data/ts.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t13 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t14 $MTR_SUITE_DIR/../std_data/int16.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t14 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t15 $MTR_SUITE_DIR/../std_data/decimal.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t16 $MTR_SUITE_DIR/../std_data/bool.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t16 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t17 $MTR_SUITE_DIR/../std_data/int64.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t17 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t18 $MTR_SUITE_DIR/../std_data/uint32.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t18 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t19 $MTR_SUITE_DIR/../std_data/uint16.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t19 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t20 $MTR_SUITE_DIR/../std_data/uint8.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t20 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t21 $MTR_SUITE_DIR/../std_data/uint64.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t21 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t22 $MTR_SUITE_DIR/../std_data/int8.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t22 $MTR_SUITE_DIR/../std_data/null.parquet >/dev/null
+
+
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+TRUNCATE t1;
+
+SELECT * FROM t2;
+SELECT COUNT(*) FROM t2;
+TRUNCATE t2;
+
+SELECT * FROM t3;
+SELECT COUNT(*) FROM t3;
+TRUNCATE t3;
+
+SELECT * FROM t4;
+SELECT COUNT(*) FROM t4;
+TRUNCATE t4;
+
+SELECT * FROM t5;
+SELECT COUNT(*) FROM t5;
+TRUNCATE t5;
+
+SELECT * FROM t6;
+SELECT COUNT(*) FROM t6;
+TRUNCATE t6;
+
+SELECT * FROM t7;
+SELECT COUNT(*) FROM t7;
+TRUNCATE t7;
+
+SELECT * FROM t8;
+SELECT COUNT(*) FROM t8;
+TRUNCATE t8;
+
+SELECT * FROM t9;
+SELECT COUNT(*) FROM t9;
+TRUNCATE t9;
+
+SELECT * FROM t10;
+SELECT COUNT(*) FROM t10;
+TRUNCATE t10;
+
+SELECT * FROM t11;
+SELECT COUNT(*) FROM t11;
+TRUNCATE t11;
+
+SELECT * FROM t12;
+SELECT COUNT(*) FROM t12;
+TRUNCATE t12;
+
+SELECT * FROM t13;
+SELECT COUNT(*) FROM t13;
+TRUNCATE t13;
+
+SELECT * FROM t14;
+SELECT COUNT(*) FROM t14;
+TRUNCATE t14;
+
+SELECT * FROM t15;
+SELECT COUNT(*) FROM t15;
+TRUNCATE t15;
+
+SELECT * FROM t16;
+SELECT COUNT(*) FROM t16;
+TRUNCATE t16;
+
+SELECT * FROM t17;
+SELECT COUNT(*) FROM t17;
+TRUNCATE t17;
+
+SELECT * FROM t18;
+SELECT COUNT(*) FROM t18;
+TRUNCATE t18;
+
+SELECT * FROM t19;
+SELECT COUNT(*) FROM t19;
+TRUNCATE t19;
+
+SELECT * FROM t20;
+SELECT COUNT(*) FROM t20;
+TRUNCATE t20;
+
+SELECT * FROM t21;
+SELECT COUNT(*) FROM t21;
+TRUNCATE t21;
+
+SELECT * FROM t22;
+SELECT COUNT(*) FROM t22;
+TRUNCATE t22;
+
+# Clean UP
+DROP DATABASE mcs287_db;

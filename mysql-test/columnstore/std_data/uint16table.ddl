@@ -1,0 +1,1 @@
+CREATE TABLE uint16table(col1 SMALLINT UNSIGNED) ENGINE=Columnstore;
