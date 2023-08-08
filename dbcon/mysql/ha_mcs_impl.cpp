@@ -2668,9 +2668,9 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     ByteStream::quadbyte qb = 1; // Tell PrimProc front session to eat all the rows
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
-    // This is the command to start sending return values. because we previously sent the swallow 
+    // This is the command to start sending return values. because we previously sent the swallow
     // rows command, there won't be anything useful coming back, but it needs this to flush internal queues.
-    qb = 5; // Read the result data. 
+    qb = 5; // Read the result data.
     msg.reset();
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
@@ -2717,7 +2717,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     try
     {
       {
-        bool ask_4_stats = (ci->traceFlags) ? true : false;
+        bool ask_4_stats = (is_pushdown_hand && ci->traceFlags) ? true : false;
         sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats);
       }
 
