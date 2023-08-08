@@ -1851,8 +1851,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         {
           if (column.fWithDefault)
           {
-            int defLen = column.fDefaultChr.size();
-            const char* defData = column.fDefaultChr.c_str();
+            int defLen = column.fDefaultChr.length();
+            const char* defData = column.fDefaultChr.str();
             if (defLen > column.definedWidth)
               memcpy(charTmpBuf, defData, column.definedWidth);
             else

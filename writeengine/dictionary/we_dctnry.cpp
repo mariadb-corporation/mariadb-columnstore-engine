@@ -791,7 +791,7 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, const 
     {
       if (m_defVal.length() > 0)
       {
-        pIn = m_defVal.c_str();
+        pIn = m_defVal.str();
         curSig.signature = (unsigned char*)pIn;
         curSig.size = m_defVal.length();
       }

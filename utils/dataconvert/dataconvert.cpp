@@ -535,21 +535,16 @@ void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision,
   if (columnScale > 0)
   {
     int128_t rangeUp, rangeLow;
-    if (columnPrecision < 19)
+
+    auto precision = 
+        columnPrecision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : columnPrecision;
+    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
     {
-      rangeUp = (int128_t)columnstore_precision[columnPrecision];
+      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                            dataTypeErr);
     }
-    else
-    {
-      auto precision = 
-          columnPrecision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : columnPrecision;
-      if (precision > datatypes::INT128MAXPRECISION || precision < 0)
-      {
-        throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
-                              dataTypeErr);
-      }
-      rangeUp = datatypes::ConversionRangeMaxValue[columnPrecision - 19];
-    }
+    rangeUp = dataconvert::decimalRangeUp<int128_t>(precision);
+    
     rangeLow = -rangeUp;
 
     if (bigllVal > rangeUp)

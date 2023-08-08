@@ -548,8 +548,8 @@ void TableInfo::parquetConvert(std::shared_ptr<arrow::Array> columnData, const J
         {
           if (column.fWithDefault)
           {
-            int defLen = column.fDefaultChr.size();
-            const char* defData = column.fDefaultChr.c_str();
+            int defLen = column.fDefaultChr.length();
+            const char* defData = column.fDefaultChr.str();
             if (defLen > column.definedWidth)
               memcpy(charTmpBuf, defData, column.definedWidth);
             else

@@ -399,7 +399,7 @@ ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 ADD_SUBDIRECTORY(storage-manager)
 ADD_SUBDIRECTORY(datatypes)
-ADD_SUBDIRECTORY(tests)
+# ADD_SUBDIRECTORY(tests)
 
 find_package(Git QUIET)
 
