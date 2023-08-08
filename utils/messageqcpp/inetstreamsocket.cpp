@@ -951,7 +951,6 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
     nleft -= nwritten;
     bufp += nwritten;
   }
-  cerr << "wrote " << nbytes << " bytes in " << ntries << " tries." << endl;
 
   return nbytes;
 }

@@ -405,6 +405,22 @@ status_t tpl_close(cpsm_tplh_t* ntplh, cpsm_conhdl_t** conn_hdl, QueryStats& sta
         try
         {
           std::cerr << "deserializing query stats try no " << tries << " bs.length(): " << bs.length() << std::endl;
+	  {
+		  size_t i;
+		  std::cerr << "printing the buffer\n";
+		  for(i=0;i<bs.length();i++) {
+			  const uint8_t* p = bs.buf();
+			  std::cerr << " " << std::hex << ((int)p[i]) << std::dec;
+			  if ((i % 16) == 15) {
+				  std::cerr << std::endl;
+				  std::flush(std::cerr);
+			  }
+		  }
+		  if ((bs.length() % 16) == 15) {
+			  std::cerr << std::endl;
+			  std::flush(std::cerr);
+		  }
+	  }
           bs >> hndl->queryStats;
           std::cerr << "deserializing extended stats try no " << tries << " bs.length(): " << bs.length() << std::endl;
           bs >> hndl->extendedStats;
