@@ -200,10 +200,10 @@ void TupleHashJoinStep::join()
   joinRan = true;
   jobstepThreadPool.join(mainRunner);
 
-  if (djs)
+  if (djs.size())
   {
-    for (int i = 0; i < (int)djsJoiners.size(); i++)
-      djs[i].join();
+    for (auto& diskJoinStep : djs)
+      diskJoinStep->join();
 
     jobstepThreadPool.join(djsReader);
     jobstepThreadPool.join(djsRelay);
@@ -631,10 +631,10 @@ void TupleHashJoinStep::djsReaderFcn(int index)
   while (more)
     more = fifos[index]->next(it, &rgData);
 
-  for (int i = 0; i < (int)djsJoiners.size(); i++)
+  for (auto& diskJoinStep : djs)
   {
-    fExtendedInfo += djs[i].extendedInfo();
-    fMiniInfo += djs[i].miniInfo();
+    fExtendedInfo += diskJoinStep->extendedInfo();
+    fMiniInfo += diskJoinStep->miniInfo();
   }
 
   outputDL->endOfInput();
@@ -750,7 +750,6 @@ void TupleHashJoinStep::hjRunner()
       outputIt = outputDL->getIterator();
     }
 
-    djs.reset(new DiskJoinStep[smallSideCount]);
     fifos.reset(new boost::shared_ptr<RowGroupDL>[smallSideCount + 1]);
 
     for (i = 0; i <= smallSideCount; i++)
@@ -762,7 +761,8 @@ void TupleHashJoinStep::hjRunner()
     {
       // these link themselves fifos[0]->DSJ[0]->fifos[1]->DSJ[1] ... ->fifos[smallSideCount],
       // THJS puts data into fifos[0], reads it from fifos[smallSideCount]
-      djs[i] = DiskJoinStep(this, i, djsJoinerMap[i], (i == smallSideCount - 1));
+      djs.push_back(std::shared_ptr<DiskJoinStep>(
+          new DiskJoinStep(this, i, djsJoinerMap[i], (i == smallSideCount - 1))));
     }
 
     sl.unlock();
@@ -774,7 +774,7 @@ void TupleHashJoinStep::hjRunner()
         vector<RGData> empty;
         resourceManager->returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
         atomicops::atomicZero(&memUsedByEachJoin[i]);
-        djs[i].loadExistingData(rgData[djsJoinerMap[i]]);
+        djs[i]->loadExistingData(rgData[djsJoinerMap[i]]);
         rgData[djsJoinerMap[i]].swap(empty);
       }
     }
@@ -801,7 +801,7 @@ void TupleHashJoinStep::hjRunner()
       reader = true;
 
       for (i = 0; i < smallSideCount; i++)
-        djs[i].run();
+        djs[i]->run();
     }
     catch (thread_resource_error&)
     {
@@ -883,7 +883,7 @@ void TupleHashJoinStep::hjRunner()
   }
 
   // todo: forwardCPData needs to grab data from djs
-  if (!djs)
+  if (djs.empty())
     forwardCPData();  // this fcn has its own exclusion list
 
   // decide if perform aggregation on PM
@@ -933,7 +933,7 @@ void TupleHashJoinStep::hjRunner()
   {
     largeBPS->useJoiners(tbpsJoiners);
 
-    if (djs)
+    if (djs.size())
       largeBPS->setJoinedResultRG(largeRG + outputRG);
     else
       largeBPS->setJoinedResultRG(outputRG);
@@ -948,7 +948,7 @@ void TupleHashJoinStep::hjRunner()
     For now, the alg is "assume if any joins are done on the UM, fe2 has to go on
     the UM."  The structs and logic aren't in place yet to track all of the tables
     through a joblist. */
-    if (fe2 && !djs)
+    if (fe2 && !djs.size())
     {
       /* Can't do a small outer join when the PM sends back joined rows */
       runFE2onPM = true;
@@ -974,7 +974,7 @@ void TupleHashJoinStep::hjRunner()
     else if (fe2)
       runFE2onPM = false;
 
-    if (!fDelivery && !djs)
+    if (!fDelivery && !djs.size())
     {
       /* connect the largeBPS directly to the next step */
       JobStepAssociation newJsa;
@@ -993,7 +993,7 @@ void TupleHashJoinStep::hjRunner()
     // there are no in-mem UM or PM joins, only disk-joins
     startAdjoiningSteps();
   }
-  else if (!djs)
+  else if (!djs.size())
     // if there's no largeBPS, all joins are either done by DJS or join threads,
     // this clause starts the THJS join threads.
     startJoinThreads();
@@ -1026,7 +1026,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
   else
     deliveredRG = &outputRG;
 
-  if (largeBPS && !djs)
+  if (largeBPS && !djs.size())
   {
     dl = largeDL;
     it = largeIt;
@@ -2044,10 +2044,10 @@ void TupleHashJoinStep::abort()
   JobStep::abort();
   boost::mutex::scoped_lock sl(djsLock);
 
-  if (djs)
+  if (djs.size())
   {
-    for (uint32_t i = 0; i < djsJoiners.size(); i++)
-      djs[i].abort();
+    for (uint32_t i = 0, e = djs.size(); e < i; i++)
+      djs[i]->abort();
   }
 }
 
