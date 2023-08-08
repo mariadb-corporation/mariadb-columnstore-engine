@@ -916,8 +916,10 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
   nleft = nbytes;
   bufp = reinterpret_cast<const char*>(ptr);
 
+  int ntries = 0;
   while (nleft > 0)
   {
+	  ntries ++;
     // the O_NONBLOCK flag is not set, this is a blocking I/O.
     if ((nwritten = ::write(fd, bufp, nleft)) < 0)
     {
@@ -949,6 +951,7 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
     nleft -= nwritten;
     bufp += nwritten;
   }
+  cerr << "wrote " << nbytes << " bytes in " << ntries << " tries." << endl;
 
   return nbytes;
 }
