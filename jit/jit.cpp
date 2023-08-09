@@ -85,7 +85,7 @@ class Arena : private boost::noncopyable
       {
         int res = mprotect(block.base(), block.blockSize(), flag | PROT_READ);
         if (res != 0)
-          throw std::runtime_error("Cannot mprotect memory region");
+          throw std::logic_error("Cannot mprotect memory region");
 
         llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
         invalidate_cache = false;
@@ -93,7 +93,7 @@ class Arena : private boost::noncopyable
 #endif
       int res = mprotect(block.base(), block.blockSize(), flag);
       if (res != 0)
-        throw std::runtime_error("Cannot mprotect memory region");
+        throw std::logic_error("Cannot mprotect memory region");
 
       if (invalidate_cache)
         llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
@@ -174,7 +174,7 @@ class Arena : private boost::noncopyable
     int res = posix_memalign(&buf, page_size, allocate_size);
     if (res != 0)
     {
-      throw std::runtime_error("Cannot allocate memory");
+      throw std::logic_error("Cannot allocate memory");
     }
     blocks.emplace_back(buf, allocate_page_num, page_size);
     blocks_allocated_size.emplace_back(0);
@@ -242,7 +242,7 @@ class JITCompiler
       handleAllErrors(std::move(materialize_err),
                       [&](const llvm::ErrorInfoBase& error_info) { error_message = error_info.message(); });
       // TODO: throw a more specific exception
-      throw std::runtime_error("Failed to materialize module: " + error_message);
+      throw std::logic_error("Failed to materialize module: " + error_message);
     }
     llvm::SmallVector<char, 4096> buffer;
     llvm::raw_svector_ostream ostream(buffer);
@@ -251,7 +251,7 @@ class JITCompiler
     if (target_machine.addPassesToEmitMC(pass_manager, mc_context, ostream))
     {
       // TODO: throw a more specific exception
-      throw std::runtime_error("Failed to create MC pass manager");
+      throw std::logic_error("Failed to create MC pass manager");
     }
     pass_manager.run(module);
 
@@ -282,7 +282,7 @@ class JITSymbolResolver : public llvm::LegacyJITSymbolResolver
     if (address_it == symbol_name_to_symbol_address.end())
     {
       // TODO: throw a more specific exception
-      throw std::runtime_error("Symbol " + symbol_name + " not found");
+      throw std::logic_error("Symbol " + symbol_name + " not found");
     }
 
     auto symbol_address = reinterpret_cast<uint64_t>(address_it->second);
@@ -335,7 +335,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
     handleAllErrors(object_file.takeError(),
                     [&](const llvm::ErrorInfoBase& error_info) { error_message = error_info.message(); });
     // TODO: throw a more specific exception
-    throw std::runtime_error("Failed to create object file: " + error_message);
+    throw std::logic_error("Failed to create object file: " + error_message);
   }
   auto module_memory_manager = std::make_unique<JITModuleMemoryManager>();
   llvm::RuntimeDyld runtime_dynamic_link = {*module_memory_manager, *symbol_resolver};
@@ -356,7 +356,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
     if (!jit_symbol)
     {
       // TODO throw a more specific exception
-      throw std::runtime_error("Failed to find symbol " + function_mangled_name);
+      throw std::logic_error("Failed to find symbol " + function_mangled_name);
     }
     auto* jit_symbol_address = reinterpret_cast<void*>(jit_symbol.getAddress());
     compiled_module.function_name_to_symbol.emplace(std::move(function_name), jit_symbol_address);
@@ -400,7 +400,7 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
   const auto* target = llvm::TargetRegistry::lookupTarget(triple, error);
   if (!target)
   {
-    throw std::runtime_error("Failed to lookup target: " + error);
+    throw std::logic_error("Failed to lookup target: " + error);
   }
   llvm::SubtargetFeatures features;
   llvm::StringMap<bool> feature_map;
@@ -415,7 +415,7 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
                                                      llvm::None, llvm::CodeGenOpt::Aggressive, jit);
 
   if (!target_machine)
-    throw std::runtime_error("Failed to create target machine");
+    throw std::logic_error("Failed to create target machine");
 
   return std::unique_ptr<llvm::TargetMachine>(target_machine);
 }
@@ -426,7 +426,7 @@ void JIT::deleteCompiledModule(JIT::CompiledModule& module)
   auto module_memory_manager_it = module_identifier_to_memory_manager.find(module.identifier);
   if (module_memory_manager_it == module_identifier_to_memory_manager.end())
   {
-    throw std::runtime_error("There is no compiled module with identifier");
+    throw std::logic_error("There is no compiled module with identifier");
   }
   module_identifier_to_memory_manager.erase(module_memory_manager_it);
   compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);

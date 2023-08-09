@@ -26,7 +26,7 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
-//#define NDEBUG
+// #define NDEBUG
 #include <sstream>
 #include <iterator>
 using namespace std;
@@ -1041,6 +1041,99 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
     const_cast<CHARSET_INFO**>(charsets)[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
   return charsets[col];
+}
+
+void Row::compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull, uint32_t colIndex)
+{
+  auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
+  switch (types[colIndex])
+  {
+    case CalpontSystemCatalog::TINYINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<1>(b, dataValue, colIndex),
+                                              b.getInt8(joblist::TINYINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::SMALLINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<2>(b, dataValue, colIndex),
+                                              b.getInt16(joblist::SMALLINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::INT:
+      b.CreateStore(
+          b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, colIndex), b.getInt32(joblist::INTNULL)),
+                     isNullVal),
+          isNull);
+      break;
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, colIndex),
+                                              b.getInt32(joblist::FLOATNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::DATE:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, colIndex),
+                                              b.getInt32(joblist::DATENULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::BIGINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
+                                              b.getInt64(joblist::BIGINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
+                                              b.getInt64(joblist::DOUBLENULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::DATETIME:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
+                                              b.getInt64(joblist::DATETIMENULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::UTINYINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<1>(b, dataValue, colIndex),
+                                              b.getInt8(joblist::UTINYINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::USMALLINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<2>(b, dataValue, colIndex),
+                                              b.getInt16(joblist::USMALLINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::UINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, colIndex),
+                                              b.getInt32(joblist::UINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::UBIGINT:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
+                                              b.getInt64(joblist::UBIGINTNULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    default:
+    {
+      ostringstream os;
+      os << "Row::compileIsNull(): got bad column type (";
+      os << types[colIndex];
+      os << ").  Width=";
+      os << getColumnWidth(colIndex) << endl;
+      throw logic_error(os.str());
+    }
+  }
 }
 
 RowGroup::RowGroup()
