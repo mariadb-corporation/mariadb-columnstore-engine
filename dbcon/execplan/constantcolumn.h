@@ -396,15 +396,65 @@ class ConstantColumn : public ReturnedColumn
   {
     return fResult.doubleVal;
   }
+
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                       rowgroup::Row& row) override{
-    auto ret = b.getInt64(fResult.intVal);
-    return ret;
+                       rowgroup::Row& row) override
+  {
+    auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
+    b.CreateStore(b.CreateOr(b.getInt1(fType == NULLDATA), isNullVal), isNull);
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::TINYINT:
+      {
+        return b.getInt64(fResult.intVal);
+      }
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UTINYINT:
+      {
+        return b.getInt64(fResult.uintVal);
+      }
+
+      case execplan::CalpontSystemCatalog::DOUBLE:
+      case execplan::CalpontSystemCatalog::FLOAT:
+      case execplan::CalpontSystemCatalog::UDOUBLE:
+      case execplan::CalpontSystemCatalog::UFLOAT:
+      {
+        return llvm::ConstantFP::get(b.getDoubleTy(),fResult.doubleVal);
+      }
+      default:
+      {
+        throw std::logic_error("SimpleColumn::compile: unsupported type.");
+      }
+    }
   }
   bool isCompilable(rowgroup::Row& row) override
   {
-    return true;
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::TINYINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UTINYINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::FLOAT:
+      case CalpontSystemCatalog::UFLOAT:
+      case CalpontSystemCatalog::DOUBLE:
+      case CalpontSystemCatalog::UDOUBLE: return true;
+      default: return false;
+    }
   }
 };
 

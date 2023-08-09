@@ -378,14 +378,31 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();
   }
+
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                       rowgroup::Row& row) override{
-    return b.getInt64(0);
-  }
+                       rowgroup::Row& row) override;
+
   bool isCompilable(rowgroup::Row& row) override
   {
-    return false;
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::TINYINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UTINYINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::FLOAT:
+      case CalpontSystemCatalog::UFLOAT:
+      case CalpontSystemCatalog::DOUBLE:
+      case CalpontSystemCatalog::UDOUBLE: return true;
+      default: return false;
+    }
   }
 };
 

@@ -716,5 +716,79 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     }
   }
 }
+llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, Row& row)
+{
+  if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
+  {
+    fInputOffset = row.getOffset(fInputIndex);
+  }
+  // TODO: test unsigned type
+  llvm::Value* result;
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<8>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UBIGINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<8>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<4>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<4>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::SMALLINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<2>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::USMALLINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<2>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::TINYINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<1>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UTINYINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<1>(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+    {
+      result = b.CreateFPExt(row.compileFloatField(b,data,fInputIndex),b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+    {
+      result = row.compileDoubleField(b,data,fInputIndex);
+      break;
+    }
+    default:
+    {
+      throw std::logic_error("SimpleColumn::compile: unsupported type.");
+    }
+  }
+  row.compileIsNull(b,data,isNull,fInputIndex);
+  return result;
+}
 
 }  // namespace execplan
