@@ -440,7 +440,7 @@ if __name__ == '__main__':
             # There were cases when shmem segments belongs to root so
             # explicitly chowns segments.
             if use_systemd:
-                for shm_file in glob.glob('/dev/shm/*'):
+                for shm_file in glob.glob('/dev/shm/@SHMEM_FILE_GLOB@*'):
                     shutil.chown(shm_file, USER, GROUP)
         except subprocess.CalledProcessError as exc:
             logging.error('{} exits with {}.'.format(cmd, exc.returncode))

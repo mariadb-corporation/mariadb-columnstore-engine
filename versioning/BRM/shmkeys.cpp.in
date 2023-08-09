@@ -63,7 +63,7 @@ ShmKeys::ShmKeys()
 string ShmKeys::keyToName(unsigned key)
 {
   ostringstream oss;
-  oss << "MCS-shm-";
+  oss << "@SHMEM_FILE_GLOB@";
   oss << setw(8) << setfill('0') << hex << key;
   return oss.str();
 }

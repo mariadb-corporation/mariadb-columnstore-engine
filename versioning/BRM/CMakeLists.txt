@@ -1,6 +1,9 @@
 
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h" @ONLY)
+
 
 ########### next target ###############
 
