@@ -18,14 +18,14 @@ static JIT& getJITInstance()
 class CompiledColumn : public execplan::ReturnedColumn
 {
  private:
-  CompiledOperatorINT64 compiledOperatorInt64;
+  CompiledOperator compiledOperator;
 
  public:
   CompiledColumn()
   {
   }
-  CompiledColumn(CompiledOperatorINT64 compiledOperatorInt64, ReturnedColumn* expression)
-   : ReturnedColumn(*expression), compiledOperatorInt64(std::move(compiledOperatorInt64))
+  CompiledColumn(CompiledOperator compiledOperator, ReturnedColumn* expression)
+   : ReturnedColumn(*expression), compiledOperator(std::move(compiledOperator))
   {
   }
 
@@ -39,9 +39,21 @@ class CompiledColumn : public execplan::ReturnedColumn
   }
 
  public:
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
-    return compiledOperatorInt64.compiled_function(row.getData(), isNull);
+    return compiledOperator.compiled_function_int64(row.getData(), isNull);
+  }
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return compiledOperator.compiled_function_int64(row.getData(), isNull);
+  }
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return compiledOperator.compiled_function_double(row.getData(), isNull);
+  }
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return compiledOperator.compiled_function_float(row.getData(), isNull);
   }
 };
 // TODO: Optimize code structure
@@ -55,38 +67,38 @@ static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup:
     {
       if (arithmeticcolumn->isCompilable(row))
       {
-        CompiledOperatorINT64 compiledOperatorInt64 =
+        CompiledOperator compiledOperatorInt64 =
             compileOperator(getJITInstance(), expression[i], row, isNull);
         expression[i] = boost::make_shared<CompiledColumn>(compiledOperatorInt64, expression[i].get());
       }
-      else
-      {
-        // TODO: The child nodes have no aliases, further modifications are needed.
-        ParseTree* root = arithmeticcolumn->expression();
-        std::queue<ParseTree*> nodeQueue;
-        nodeQueue.emplace(root);
-        while (!nodeQueue.empty())
-        {
-          ParseTree* node = nodeQueue.front();
-          nodeQueue.pop();
-          if (!node->isCompilable(row))
-          {
-            if (node->left() && node->right())
-            {
-              nodeQueue.emplace(node->left());
-              nodeQueue.emplace(node->right());
-            }
-          }
-          else
-          {
-            auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
-            execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
-            CompiledOperatorINT64 compiledOperatorInt64 = compileOperator(getJITInstance(), ptr, row, isNull);
-            auto* compiledColumn = new CompiledColumn(compiledOperatorInt64, c_ptr);
-            node->data(compiledColumn);
-          }
-        }
-      }
+      //      else
+      //      {
+      //        // TODO: The child nodes have no aliases, further modifications are needed.
+      //        ParseTree* root = arithmeticcolumn->expression();
+      //        std::queue<ParseTree*> nodeQueue;
+      //        nodeQueue.emplace(root);
+      //        while (!nodeQueue.empty())
+      //        {
+      //          ParseTree* node = nodeQueue.front();
+      //          nodeQueue.pop();
+      //          if (!node->isCompilable(row))
+      //          {
+      //            if (node->left() && node->right())
+      //            {
+      //              nodeQueue.emplace(node->left());
+      //              nodeQueue.emplace(node->right());
+      //            }
+      //          }
+      //          else
+      //          {
+      //            auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
+      //            execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
+      //            CompiledOperatorINT64 compiledOperatorInt64 = compileOperator(getJITInstance(), ptr, row,
+      //            isNull); auto* compiledColumn = new CompiledColumn(compiledOperatorInt64, c_ptr);
+      //            node->data(compiledColumn);
+      //          }
+      //        }
+      //      }
     }
   }
 }
