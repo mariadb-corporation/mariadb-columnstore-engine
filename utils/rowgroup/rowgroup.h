@@ -31,7 +31,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -633,6 +633,15 @@ class Row
   UserDataStore* userDataStore;  // For UDAF
 
   friend class RowGroup;
+  // llvm part
+ public:
+  template <int len>
+  inline llvm::Value* compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex) const;
+  void compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull, uint32_t colIndex);
+  inline llvm::Value* compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                        uint32_t colIndex) const;
+  inline llvm::Value* compileDoubleField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                         uint32_t colIndex) const;
 };
 
 inline Row::Pointer Row::getPointer() const
@@ -1401,6 +1410,34 @@ inline bool Row::equals(const Row& r2) const
   return equals(r2, columnCount - 1);
 }
 
+template <int len>
+inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                         uint32_t colIndex) const
+{
+  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
+  switch (len)
+  {
+    case 1: return b.CreateLoad(b.getInt8Ty(), dataPtr);
+    case 2: return b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
+    case 4: return b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
+    case 8: return b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
+    default: throw std::logic_error("Row::compileIntField(): bad length.");
+  }
+}
+
+inline llvm::Value* Row::compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                           uint32_t colIndex) const
+{
+  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
+  return b.CreateLoad(b.getFloatTy(), b.CreateBitCast(dataPtr, b.getFloatTy()->getPointerTo()));
+}
+
+inline llvm::Value* Row::compileDoubleField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                            uint32_t colIndex) const
+{
+  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
+  return b.CreateLoad(b.getDoubleTy(), b.CreateBitCast(dataPtr, b.getDoubleTy()->getPointerTo()));
+}
 /** @brief RowGroup is a lightweight interface for processing packed row data
 
         A RowGroup is an interface for parsing and/or modifying row data as described at the top
@@ -1525,8 +1562,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
-  //convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const;
+  // void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
