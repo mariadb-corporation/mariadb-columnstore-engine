@@ -162,7 +162,7 @@ void generateTimeTable()
 
 void generateStringTable()
 {
-	int reserve_num = 30;
+	const int reserve_num = 30;
   // ----------------- String -------------------------
   arrow::StringBuilder strbuilder;
   PARQUET_THROW_NOT_OK(strbuilder.Reserve(reserve_num));
