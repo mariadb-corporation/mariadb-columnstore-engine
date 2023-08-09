@@ -1605,9 +1605,10 @@ int BulkLoadBuffer::parseColParquet(ColumnInfo& columnInfo)
   unsigned int columnId = columnInfo.id;
   // special judge for `aux` col
 
-  int64_t nullCount;
+  int64_t nullCount = 0;
   if (columnId < fNumberOfColumns - 1)
     nullCount = fParquetBatchParser->column(columnId)->null_count();
+
   if (nRowsParsed > 0)
   {
     if ((columnInfo.column.autoIncFlag) && (nullCount > 0))
