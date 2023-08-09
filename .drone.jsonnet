@@ -49,6 +49,24 @@ local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
                                '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
+                               '&& dnf install -y epel-release ' +
+                               '&& dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                               '&& dnf config-manager --set-enabled epel || : ' + 
+                               '&& dnf config-manager --set-enabled powertools || : ' + 
+                               '&& dnf config-manager --set-enabled crb || : ' + 
+                               '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
+                               '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& dnf install -y arrow-devel ' +
+                               '&& dnf install -y arrow-glib-devel ' + 
+                               '&& dnf install -y arrow-dataset-devel ' + 
+                               '&& dnf install -y arrow-dataset-glib-devel ' +
+                               '&& dnf install -y arrow-acero-devel ' +
+                               '&& dnf install -y arrow-flight-devel ' +
+                               '&& dnf install -y arrow-flight-glib-devel ' +
+                               '&& dnf install -y gandiva-devel ' +
+                               '&& dnf install -y gandiva-glib-devel ' +
+                               '&& dnf install -y parquet-devel ' + 
+                               '&& dnf install -y parquet-glib-devel ' +
                                '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
 
 
