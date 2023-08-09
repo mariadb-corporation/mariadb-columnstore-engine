@@ -229,7 +229,8 @@ class ArithmeticOperator : public Operator
  public:
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
-  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  inline llvm::Value* compileI(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  inline llvm::Value* compileF(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
 
@@ -500,9 +501,34 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                                                 rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
 {
-  return compile(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+  switch (fOperationType.colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+      return compileI(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+      return compileF(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operand type: " << fOperationType.colDataType;
+      throw logging::InvalidArgumentExcept(oss.str());
+    }
+  }
 }
-inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+inline llvm::Value* ArithmeticOperator::compileI(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {
   switch (fOp)
   {
@@ -514,7 +540,30 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
 
     case OP_DIV:
       if (l->getType()->isIntegerTy())
-        throw std::runtime_error("Div not support int");
+        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
+      else
+        return b.CreateFDiv(l, r);
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+inline llvm::Value* ArithmeticOperator::compileF(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateFAdd(l, r);
+
+    case OP_SUB: return b.CreateFSub(l, r);
+
+    case OP_MUL: return b.CreateFMul(l, r);
+
+    case OP_DIV:
+      if (l->getType()->isIntegerTy())
+        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
       else
         return b.CreateFDiv(l, r);
     default:

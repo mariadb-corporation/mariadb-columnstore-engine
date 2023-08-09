@@ -19,7 +19,11 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::TINYINT: return_type = b.getInt64Ty(); break;
-    default: throw std::runtime_error("not support type");
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE: return_type = b.getDoubleTy(); break;
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT: return_type = b.getFloatTy(); break;
+    default: throw logic_error("compileOperator: unsupported type");
   }
   auto* func_type = llvm::FunctionType::get(return_type, {data_type, isNull_type}, false);
   auto* func =
@@ -39,15 +43,42 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   module.print(llvm::outs(), nullptr);
 }
 
-CompiledOperatorINT64 compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
-                                      bool& isNull)
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
+                                 bool& isNull)
 {
   auto compiled_module =
       jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row, isNull); });
-  auto compiled_function_ptr = reinterpret_cast<JITCompiledOperatorINT64>(
-      compiled_module.function_name_to_symbol[expression->alias()]);
-  CompiledOperatorINT64 result_compiled_function{.compiled_module = compiled_module,
-                                                 .compiled_function = compiled_function_ptr};
+  CompiledOperator result_compiled_function{.compiled_module = compiled_module};
+
+  switch (expression->resultType().colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+      result_compiled_function.compiled_function_int64 = reinterpret_cast<JITCompiledOperator<int64_t>>(
+          compiled_module.function_name_to_symbol[expression->alias()]);
+      break;
+    case CalpontSystemCatalog::UBIGINT:
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::USMALLINT:
+    case CalpontSystemCatalog::UTINYINT:
+      result_compiled_function.compiled_function_uint64 = reinterpret_cast<JITCompiledOperator<uint64_t>>(
+          compiled_module.function_name_to_symbol[expression->alias()]);
+      break;
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+      result_compiled_function.compiled_function_double = reinterpret_cast<JITCompiledOperator<double>>(
+          compiled_module.function_name_to_symbol[expression->alias()]);
+      break;
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+      result_compiled_function.compiled_function_float = reinterpret_cast<JITCompiledOperator<float>>(
+          compiled_module.function_name_to_symbol[expression->alias()]);
+    default: throw logic_error("compileOperator: unsupported type");
+  }
 
   return result_compiled_function;
 }
