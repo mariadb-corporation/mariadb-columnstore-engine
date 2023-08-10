@@ -11,6 +11,7 @@
             "processId": "${command:pickProcess}",
             "program": "/usr/bin/controllernode",
             "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
             "additionalSOLibSearchPath": "${workspaceFolder}/lib/",
             "symbolLoadInfo": {
                 "loadAll": true,
@@ -24,6 +25,7 @@
             "processId": "${command:pickProcess}",
             "program": "/usr/bin/DDLProc",
             "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
             "additionalSOLibSearchPath": "${workspaceFolder}/lib/",
             "symbolLoadInfo": {
                 "loadAll": true,
@@ -37,6 +39,7 @@
             "processId": "${command:pickProcess}",
             "program": "/usr/bin/DMLProc",
             "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
             "additionalSOLibSearchPath": "${workspaceFolder}/lib/",
             "symbolLoadInfo": {
                 "loadAll": true,
@@ -50,6 +53,7 @@
             "processId": "${command:pickProcess}",
             "program": "/usr/bin/PrimProc",
             "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
             "additionalSOLibSearchPath": "${workspaceFolder}/lib/",
             "symbolLoadInfo": {
                 "loadAll": true,
@@ -63,6 +67,7 @@
             "processId": "${command:pickProcess}",
             "program": "/usr/bin/WriteEngineServer",
             "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
             "additionalSOLibSearchPath": "${workspaceFolder}/lib/",
             "symbolLoadInfo": {
                 "loadAll": true,
