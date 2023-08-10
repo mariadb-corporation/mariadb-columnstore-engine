@@ -44,7 +44,16 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
                            '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
-                           '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
+                           '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ' +
+                           '&& yum install -y epel-release ' +
+                           '&& yum install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                           '&& yum install -y --enablerepo=epel arrow-devel ' + 
+                           '&& yum install -y --enablerepo=epel arrow-glib-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-dataset-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-dataset-glib-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-acero-devel ' +
+                           '&& yum install -y --enablerepo=epel parquet-devel ' +
+                           '&& yum install -y --enablerepo=epel parquet-glib-devel ';
 
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
