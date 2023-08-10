@@ -89,6 +89,7 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb || : ' + 
                                '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
                                '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& dnf update -y ' +
                                '&& dnf install -y arrow-devel ' +
                                '&& dnf install -y arrow-glib-devel ' + 
                                '&& dnf install -y arrow-dataset-devel ' + 
