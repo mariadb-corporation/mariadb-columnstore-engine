@@ -320,6 +320,8 @@ class RGData
   }
 
  private:
+  uint32_t rowSize = 0; // can't be.
+  uint32_t columnCount = 0; // shouldn't be, but...
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
@@ -2195,6 +2197,7 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
+  idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
   row->setData(
       Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));

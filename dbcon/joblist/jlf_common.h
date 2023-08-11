@@ -197,6 +197,7 @@ struct JobInfo
    , constantCol(CONST_COL_NONE)
    , hasDistinct(false)
    , hasAggregation(false)
+   , hasRollup(false)
    , limitStart(0)
    , limitCount(-1)
    , joinNum(0)
@@ -239,6 +240,7 @@ struct JobInfo
   // aggregation
   bool hasDistinct;
   bool hasAggregation;
+  bool hasRollup;
   std::vector<uint32_t> groupByColVec;
   std::vector<uint32_t> distinctColVec;
   std::vector<uint32_t> expressionVec;

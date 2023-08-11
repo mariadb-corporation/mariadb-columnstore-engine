@@ -114,6 +114,8 @@ TreeNode* ObjectReader::createTreeNode(messageqcpp::ByteStream& b)
 
     case CONSTANTCOLUMN: ret = new ConstantColumn(); break;
 
+    case ROLLUPMARKCOLUMN: ret = new RollupMarkColumn(); break;
+
     case FUNCTIONCOLUMN: ret = new FunctionColumn(); break;
 
     case ROWCOLUMN: ret = new RowColumn(); break;

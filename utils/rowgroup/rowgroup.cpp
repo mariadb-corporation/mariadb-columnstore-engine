@@ -322,6 +322,8 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
 #endif
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 RGData::RGData(const RowGroup& rg)
@@ -341,6 +343,8 @@ RGData::RGData(const RowGroup& rg)
    */
   memset(rowData.get(), 0, rg.getMaxDataSize());
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
@@ -360,6 +364,8 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -372,6 +378,8 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
+  bs << columnCount;
+  bs << rowSize;
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -402,6 +410,14 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   {
     bs >> sig;
     bs >> amount;
+    uint32_t colCountTemp;
+    uint32_t rowSizeTemp;
+    bs >> colCountTemp;
+    bs >> rowSizeTemp;
+    if (rowSize != 0)
+    {
+      idbassert(colCountTemp == columnCount && rowSize == rowSizeTemp);
+    }
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);

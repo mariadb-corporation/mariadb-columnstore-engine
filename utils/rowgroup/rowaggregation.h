@@ -389,7 +389,7 @@ class RowAggregation : public messageqcpp::Serializeable
   RowAggregation();
   RowAggregation(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                  const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {});
+                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {}, bool withRollup = false);
   RowAggregation(const RowAggregation& rhs);
 
   /** @brief RowAggregation default destructor
@@ -422,6 +422,8 @@ class RowAggregation : public messageqcpp::Serializeable
     fRowGroupOut = pRowGroupOut;
     initialize();
   }
+
+  void clearRollup() { fRollupFlag = false; }
 
   /** @brief Define content of data to be joined
    *
@@ -630,6 +632,7 @@ class RowAggregation : public messageqcpp::Serializeable
   joblist::ResourceManager* fRm = nullptr;
   boost::shared_ptr<int64_t> fSessionMemLimit;
   std::unique_ptr<RGData> fCurRGData;
+  bool fRollupFlag = false;
 };
 
 //------------------------------------------------------------------------------
@@ -647,7 +650,7 @@ class RowAggregationUM : public RowAggregation
   }
   RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
-                   boost::shared_ptr<int64_t> sessionMemLimit);
+                   boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUM(const RowAggregationUM& rhs);
 
   /** @brief RowAggregationUM default destructor
@@ -812,7 +815,7 @@ class RowAggregationUMP2 : public RowAggregationUM
   }
   RowAggregationUMP2(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                      const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
-                     boost::shared_ptr<int64_t> sessionMemLimit);
+                     boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUMP2(const RowAggregationUMP2& rhs);
 
   /** @brief RowAggregationUMP2 default destructor
