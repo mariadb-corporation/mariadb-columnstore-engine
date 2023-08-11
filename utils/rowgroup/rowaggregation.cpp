@@ -578,6 +578,7 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
 
   for (uint64_t i = 0; i < pRows->getRowCount(); ++i)
   {
+	  idblog("processing row");
     aggregateRow(rowIn);
     rowIn.nextRow();
   }
