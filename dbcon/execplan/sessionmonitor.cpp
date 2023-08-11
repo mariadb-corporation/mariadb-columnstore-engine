@@ -477,10 +477,7 @@ bool SessionMonitor::isStaleSIDTID(const SIDTIDEntry& a, const MonSIDTIDEntry& b
 
 bool SessionMonitor::isEqualSIDTID(const SIDTIDEntry& a, const MonSIDTIDEntry& b) const
 {
-  if (a.sessionid == b.sessionid && a.txnid.id == b.txnid.id && a.txnid.valid == b.txnid.valid)
-    return true;
-
-  return false;
+  return (a.sessionid == b.sessionid && a.txnid.id == b.txnid.id && a.txnid.valid == b.txnid.valid);
 }
 
 vector<SessionMonitor::MonSIDTIDEntry_t*> SessionMonitor::timedOutTxns()

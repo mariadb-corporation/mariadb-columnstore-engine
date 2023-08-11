@@ -308,10 +308,7 @@ struct cal_connection_info
   bool checkQueryStats(config::Config* cfg)
   {
     std::string qsVal = cfg->getConfig("QueryStats", "Enabled");
-    if (qsVal == "Y" || qsVal == "Y")
-      return true;
-
-    return false;
+    return (qsVal == "Y" || qsVal == "Y");
   }
 
   static bool checkSlave(config::Config* cf = nullptr)

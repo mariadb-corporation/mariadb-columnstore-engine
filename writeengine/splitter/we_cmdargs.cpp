@@ -1286,12 +1286,10 @@ bool WECmdArgs::getPmStatus(int Id)
 
   VecInts::iterator aIt = fPmVec.begin();
 
-  while (aIt != fPmVec.end())
+  for (; aIt != fPmVec.end(); ++aIt)
   {
     if (*aIt == static_cast<unsigned int>(Id))
       return true;
-
-    ++aIt;
   }
 
   return false;

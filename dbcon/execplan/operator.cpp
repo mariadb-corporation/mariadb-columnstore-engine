@@ -241,10 +241,7 @@ void Operator::unserialize(messageqcpp::ByteStream& b)
 
 bool Operator::operator==(const Operator& t) const
 {
-  if (fOp == t.fOp)
-    return true;
-
-  return false;
+  return (fOp == t.fOp);
 }
 
 bool Operator::operator==(const TreeNode* t) const

@@ -28,7 +28,6 @@ using namespace std;
 #include "calpontselectexecutionplan.h"
 #include "rowgroup.h"
 
-
 using namespace boost;
 
 #include "errorids.h"
@@ -535,10 +534,8 @@ bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
   {
     int c = ((*(*i))(fIdbCompare, r1, r2));
 
-    if (c < 0)
-      return true;
-    else if (c > 0)
-      return false;
+    if (c != 0)
+      return (c < 0);
   }
 
   return false;

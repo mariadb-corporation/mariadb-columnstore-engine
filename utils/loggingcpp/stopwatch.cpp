@@ -106,10 +106,7 @@ bool StopWatch::stop(const string& message, const int limit)
 
   fProcessStats[idx].processStop();
 
-  if (fProcessStats[idx].fStopCount >= limit)
-    return true;
-
-  return false;
+  return (fProcessStats[idx].fStopCount >= limit);
 }
 
 void StopWatch::start(const string& message)

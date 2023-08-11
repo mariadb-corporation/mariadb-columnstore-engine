@@ -47,7 +47,6 @@ using namespace std;
 using namespace boost;
 using namespace execplan;
 
-
 namespace
 {
 const std::string INPUT_ERROR_WRONG_NO_COLUMNS = "Data contains wrong number of columns";
@@ -79,13 +78,13 @@ inline void resizeRowDataArray(char** pRowData, unsigned int dataLength, unsigne
 {
   char* tmpRaw = new char[newArrayCapacity];
   memcpy(tmpRaw, *pRowData, dataLength);
-  delete[] * pRowData;
+  delete[] *pRowData;
   *pRowData = tmpRaw;
 }
 
 }  // namespace
 
-//#define DEBUG_TOKEN_PARSING 1
+// #define DEBUG_TOKEN_PARSING 1
 
 namespace WriteEngine
 {
@@ -3297,10 +3296,7 @@ bool BulkLoadBuffer::setColumnStatus(const int& columnId, const Status& status)
   if (status == WriteEngine::PARSE_COMPLETE)
     fParseComplete++;
 
-  if (fParseComplete == fNumberOfColumns)
-    return true;
-
-  return false;
+  return (fParseComplete == fNumberOfColumns);
 }
 
 //------------------------------------------------------------------------------

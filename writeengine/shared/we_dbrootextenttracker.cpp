@@ -55,10 +55,7 @@ DBRootExtentInfo::DBRootExtentInfo(uint16_t dbRoot, uint32_t partition, uint16_t
 //------------------------------------------------------------------------------
 bool DBRootExtentInfo::operator<(const DBRootExtentInfo& entry) const
 {
-  if (fDbRoot < entry.fDbRoot)
-    return true;
-
-  return false;
+  return (fDbRoot < entry.fDbRoot);
 }
 
 //------------------------------------------------------------------------------

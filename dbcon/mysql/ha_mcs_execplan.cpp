@@ -6544,10 +6544,7 @@ bool isMCSTable(TABLE* table_ptr)
   string engineName = table_ptr->s->db_plugin->name.str;
 #endif
 
-  if (engineName == "Columnstore" || engineName == "Columnstore_cache")
-    return true;
-  else
-    return false;
+  return (engineName == "Columnstore" || engineName == "Columnstore_cache");
 }
 
 bool isForeignTableUpdate(THD* thd)
@@ -6597,10 +6594,7 @@ bool isMCSTableDelete(THD* thd)
 
   TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
 
-  if (table_ptr && table_ptr->table && isMCSTable(table_ptr->table))
-    return true;
-
-  return false;
+  return (table_ptr && table_ptr->table && isMCSTable(table_ptr->table));
 }
 
 // This function is different from isForeignTableUpdate()

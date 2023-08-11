@@ -205,10 +205,7 @@ EMEntry& EMEntry::operator=(const EMEntry& e)
 
 bool EMEntry::operator<(const EMEntry& e) const
 {
-  if (range.start < e.range.start)
-    return true;
-
-  return false;
+  return range.start < e.range.start;
 }
 
 /*static*/
@@ -520,9 +517,7 @@ LBID_tFindResult ExtentMapIndexImpl::search3dLayer(PartitionIndexContainerT& par
 bool ExtentMapIndexImpl::isDBRootEmpty(const DBRootT dbroot)
 {
   ExtentMapIndex& extMapIndex = *get();
-  if (dbroot >= extMapIndex.size())
-    return true;
-  return extMapIndex[dbroot].empty();
+  return dbroot >= extMapIndex.size() || extMapIndex[dbroot].empty();
 }
 
 void ExtentMapIndexImpl::deleteDbRoot(const DBRootT dbroot)

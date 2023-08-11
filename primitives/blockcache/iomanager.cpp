@@ -61,7 +61,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <pthread.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 using namespace std;
@@ -191,20 +191,10 @@ struct fdCacheMapLessThan
 {
   bool operator()(const FdEntry& lhs, const FdEntry& rhs) const
   {
-    if (lhs.oid < rhs.oid)
-      return true;
-
-    if (lhs.oid == rhs.oid && lhs.dbroot < rhs.dbroot)
-      return true;
-
-    if (lhs.oid == rhs.oid && lhs.dbroot == rhs.dbroot && lhs.partNum < rhs.partNum)
-      return true;
-
-    if (lhs.oid == rhs.oid && lhs.dbroot == rhs.dbroot && lhs.partNum == rhs.partNum &&
-        lhs.segNum < rhs.segNum)
-      return true;
-
-    return false;
+    return ((lhs.oid < rhs.oid) || (lhs.oid == rhs.oid && lhs.dbroot < rhs.dbroot) ||
+            (lhs.oid == rhs.oid && lhs.dbroot == rhs.dbroot && lhs.partNum < rhs.partNum) ||
+            (lhs.oid == rhs.oid && lhs.dbroot == rhs.dbroot && lhs.partNum == rhs.partNum &&
+             lhs.segNum < rhs.segNum));
   }
 };
 
