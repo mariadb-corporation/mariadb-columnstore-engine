@@ -51,7 +51,7 @@ int MonitorProcMem::fMemPctCheck = 0;
 void MonitorProcMem::operator()() const
 {
   utils::setThreadName("MonitorProcMem");
-  while (1)
+  while (true)
   {
     if (fMaxPct > 0)
     {
@@ -135,7 +135,7 @@ void MonitorProcMem::pause_() const
   rem.tv_sec = 0;
   rem.tv_nsec = 0;
 
-  while (1)
+  while (true)
   {
 
     if (nanosleep(&req, &rem) != 0)

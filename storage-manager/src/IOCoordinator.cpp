@@ -1271,7 +1271,7 @@ std::shared_ptr<uint8_t[]> IOCoordinator::mergeJournal(const char* object, const
   assert(header.get<int>("version") == 1);
 
   // start processing the entries
-  while (1)
+  while (true)
   {
     uint64_t offlen[2];
     int err = ::read(journalFD, &offlen, 16);
@@ -1438,7 +1438,7 @@ int IOCoordinator::mergeJournalInMem_bigJ(std::shared_ptr<uint8_t[]>& objData, s
   assert(header.get<int>("version") == 1);
 
   // start processing the entries
-  while (1)
+  while (true)
   {
     uint64_t offlen[2];
     int err = ::read(journalFD, &offlen, 16);

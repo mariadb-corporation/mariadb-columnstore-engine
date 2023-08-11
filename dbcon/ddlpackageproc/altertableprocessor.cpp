@@ -728,7 +728,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -793,7 +793,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -938,7 +938,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
         fWEClient->write_to_all(bs);
         bsIn.reset(new ByteStream());
 
-        while (1)
+        while (true)
         {
           if (msgRecived == fPMCount)
             break;
@@ -984,7 +984,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
             bsIn.reset(new ByteStream());
             ByteStream::byte tmp8;
 
-            while (1)
+            while (true)
             {
               if (msgRecived == fWEClient->getPmCount())
                 break;
@@ -1183,7 +1183,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     cout << "Alter table drop column sending WE_SVR_DELETE_SYSCOLUMN_ROW to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1249,7 +1249,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
       cout << "Alter table drop column sending WE_SVR_UPDATE_SYSTABLE_AUTO to pm " << pmNum << endl;
 #endif
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -1314,7 +1314,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     cout << "Alter table drop column sending WE_SVR_UPDATE_SYSTABLE_AUTO to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1401,7 +1401,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     bsIn.reset(new ByteStream());
     ByteStream::byte tmp8;
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -1586,7 +1586,7 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1671,7 +1671,7 @@ void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::Calpon
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1862,7 +1862,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
     cout << "Rename table sending WE_SVR_UPDATE_SYSTABLE_TABLENAME to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1926,7 +1926,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
     cout << "Rename table sending WE_SVR_UPDATE_SYSCOLUMN_TABLENAME to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -2145,7 +2145,7 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -2284,7 +2284,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -2396,7 +2396,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
     {
       fWEClient->write(bs, (uint32_t)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);

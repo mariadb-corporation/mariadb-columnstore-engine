@@ -798,7 +798,7 @@ void BulkRollbackMgr::deleteColumn1ExtentsV4(const char* inBuf)
   // reach a partition that has no column segment files to roll back.
   bool useHdfs = IDBPolicy::useHdfs();
 
-  while (1)
+  while (true)
   {
     std::vector<uint32_t> segList;
     std::string dirName;
@@ -1042,7 +1042,7 @@ void BulkRollbackMgr::deleteColumn2ExtentsV4(const char* inBuf)
   // reach a partition that has no column segment files to roll back.
   bool useHdfs = IDBPolicy::useHdfs();
 
-  while (1)
+  while (true)
   {
     std::vector<uint32_t> segList;
     std::string dirName;
@@ -1272,7 +1272,7 @@ void BulkRollbackMgr::deleteDctnryExtentsV4()
   // reach a partition that has no dctnry store segment files to roll back.
   bool useHdfs = IDBPolicy::useHdfs();
 
-  while (1)
+  while (true)
   {
     std::vector<uint32_t> segList;
     std::string dirName;

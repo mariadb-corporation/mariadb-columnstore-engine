@@ -22,7 +22,7 @@
 #include <fstream>
 #include <ctype.h>
 #include <string>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <map>
 #include <boost/scoped_ptr.hpp>
@@ -57,7 +57,7 @@ using namespace messageqcpp;
 using namespace BRM;
 using namespace oam;
 
-//#define PROFILE 1
+// #define PROFILE 1
 namespace dmlpackageprocessor
 {
 // StopWatch timer;
@@ -117,9 +117,9 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackage(dmlpackage
   fWEClient->addQueue(uniqueId);
   execplan::CalpontSystemCatalog::ROPair roPair;
 
-  //#ifdef PROFILE
+  // #ifdef PROFILE
   //	StopWatch timer;
-  //#endif
+  // #endif
   try
   {
     LoggingID logid(DMLLoggingId, fSessionID, txnid.id);
@@ -200,7 +200,6 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_sec = rm_ts.tv_sec;
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
-
 
             try
             {
@@ -742,7 +741,7 @@ bool UpdatePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
     cpackage.write(bytestream);
     fWEClient->write_to_all(bytestream);
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -812,7 +811,7 @@ bool UpdatePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
   }
   else
   {
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
 
@@ -944,7 +943,7 @@ bool UpdatePackageProcessor::receiveAll(DMLResult& result, const uint64_t unique
     ByteStream::quadbyte tmp32;
     uint64_t blocksChanged = 0;
 
-    while (1)
+    while (true)
     {
       if (msgReceived == messagesNotReceived)
         break;

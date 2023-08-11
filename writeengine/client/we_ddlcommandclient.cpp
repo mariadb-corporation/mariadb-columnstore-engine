@@ -67,7 +67,7 @@ uint8_t WE_DDLCommandClient::UpdateSyscolumnNextval(uint32_t columnOid, uint64_t
     fOam.getDbrootPmConfig(dbRoot, pmNum);
     fWEClient->write(command, pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);

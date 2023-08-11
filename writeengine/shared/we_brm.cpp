@@ -619,7 +619,7 @@ int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, const OID sourceOid, IDBDa
       size_t numContiguousBlocksAvaliableForReading = 1;
       size_t tmp = startOffsetInInput;
 
-      while (1)
+      while (true)
       {
         if (numContiguousBlocksAvaliableForReading == spaceAvailableInBuffer)
           break;

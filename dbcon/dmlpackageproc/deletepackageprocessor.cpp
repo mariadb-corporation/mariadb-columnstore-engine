@@ -174,7 +174,6 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
             try
             {
               processID = ::getpid();
@@ -660,7 +659,7 @@ bool DeletePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
   {
     fWEClient->write_to_all(bytestream);
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -723,7 +722,7 @@ bool DeletePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
   }
   else
   {
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
 
@@ -841,7 +840,7 @@ bool DeletePackageProcessor::receiveAll(DMLResult& result, const uint64_t unique
     ByteStream::quadbyte tmp32;
     uint64_t blocksChanged = 0;
 
-    while (1)
+    while (true)
     {
       if (msgReceived == messagesNotReceived)
         break;

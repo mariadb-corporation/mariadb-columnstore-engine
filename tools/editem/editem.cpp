@@ -554,7 +554,7 @@ int extendOids()
     cout << "Enter OID, DBRoot, and Partition#, and Segment# "
             "(separated by spaces): ";
 
-    while (1)
+    while (true)
     {
       cin >> oid >> dbRoot >> partNum >> segNum;
 
@@ -574,11 +574,11 @@ int extendOids()
   }
   else
   {
-    while (1)
+    while (true)
     {
       bool bFinished = false;
 
-      while (1)
+      while (true)
       {
         cout << "Enter OID and column width (separated by spaces); "
                 "0 OID represents end of list: ";
@@ -615,7 +615,7 @@ int extendOids()
 
     vector<CreateStripeColumnExtentsArgOut> newExtents;
 
-    while (1)
+    while (true)
     {
       cout << "Enter DBRoot and partition# (partition "
               "only used for empty DBRoot): ";
@@ -663,7 +663,7 @@ int rollbackExtents(OID_t oid)
     vector<uint16_t> segNums;
     vector<HWM_t> hwms;
 
-    while (1)
+    while (true)
     {
       cout << "Enter DBRoot#, part#, and the number of HWMs to be entered "
               "(separated by spaces): ";
@@ -675,7 +675,7 @@ int rollbackExtents(OID_t oid)
 
     for (unsigned int k = 0; k < hwmCount; k++)
     {
-      while (1)
+      while (true)
       {
         cout << "Enter seg# and HWM for that segment file "
              << "(separated by spaces): ";
@@ -693,7 +693,7 @@ int rollbackExtents(OID_t oid)
   }
   else
   {
-    while (1)
+    while (true)
     {
       cout << "Enter DBRoot#, part#, seg#, and HWM for the last extent "
               "on that DBRoot (separated by spaces): ";
@@ -746,7 +746,7 @@ int editHWM(OID_t oid)
   uint32_t partNum = 0;
   uint16_t segNum = 0;
 
-  while (1)
+  while (true)
   {
     cout << "Enter Partition#, and Segment# (separated by spaces): ";
     cin >> partNum >> segNum;

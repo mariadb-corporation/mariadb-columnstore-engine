@@ -35,7 +35,7 @@ using namespace std;
 #include "markpartitionprocessor.h"
 #include "restorepartitionprocessor.h"
 #include "droppartitionprocessor.h"
-//#define 	SERIALIZE_DDL_DML_CPIMPORT 	1
+// #define 	SERIALIZE_DDL_DML_CPIMPORT 	1
 
 #include "cacheutils.h"
 #include "vss.h"
@@ -837,7 +837,7 @@ int DDLProcessor::commitTransaction(uint32_t txnID, std::string& errorMsg)
   int rc = 0;
   ByteStream::byte tmp8;
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fPMCount)
       break;

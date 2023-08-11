@@ -322,7 +322,7 @@ bool JoinPartition::canConvertToSplitMode()
   std::unordered_map<uint32_t, uint32_t> rowDist;
 
   nextSmallOffset = 0;
-  while (1)
+  while (true)
   {
     uint32_t hash;
     readByteStream(0, &bs);
@@ -399,7 +399,7 @@ int64_t JoinPartition::convertToSplitMode()
   Row& row = smallRow;
   nextSmallOffset = 0;
 
-  while (1)
+  while (true)
   {
     readByteStream(0, &bs);
 
