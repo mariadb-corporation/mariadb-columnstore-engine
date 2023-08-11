@@ -8334,7 +8334,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
     if (withRollup)
     {
-      SRCP rc(new ConstantColumn((int64_t)0x12340000)); 
+      SRCP rc(new MagicColumn(); 
       gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }

@@ -468,4 +468,271 @@ class ConstantColumnTemporal : public ConstantColumn
  */
 std::ostream& operator<<(std::ostream& output, const ConstantColumn& rhs);
 
+class MagicColumn : public ReturnedColumn
+{
+ public:
+
+  /**
+   * ctor
+   */
+  MagicColumn();
+  /**
+   * ctor
+   */
+
+  /**
+   * dtor
+   */
+  virtual ~MagicColumn();
+
+  /**
+   * accessor
+   */
+  inline long timeZone() const
+  {
+    return fTimeZone;
+  }
+  /**
+   * mutator
+   */
+  inline void timeZone(const long timeZone)
+  {
+    fTimeZone = timeZone;
+  }
+  /**
+   * accessor
+   */
+  virtual const std::string data() const override;
+  /**
+   * accessor
+   */
+  virtual void data(const std::string data) override
+  {
+    idbassert(0);
+  }
+  /**
+   * accessor
+   */
+  virtual const std::string toString() const override;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
+  /** return a copy of this pointer
+   *
+   * deep copy of this pointer and return the copy
+   */
+  inline virtual MagicColumn* clone() const override
+  {
+    return new MagicColumn();
+  }
+
+  /*
+   * The serialization interface
+   */
+  /**
+   * serialize
+   */
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  /**
+   * unserialize
+   */
+  virtual void unserialize(messageqcpp::ByteStream&) override;
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  virtual bool operator==(const TreeNode* t) const override
+  {
+    return false;
+  }
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+   */
+  bool operator==(const MagicColumn& t) const
+  {
+    return true;
+  }
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  virtual bool operator!=(const TreeNode* t) const override
+  {
+    return true;
+  }
+
+  /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+   *
+   * Do a deep, strict (as opposed to semantic) equivalence test.
+   * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+   */
+  bool operator!=(const MagicColumn& t) const
+  {
+    return false;
+  }
+
+  virtual bool hasWindowFunc() override
+  {
+    return false;
+  }
+
+  /** Constant column on the filte can always be moved into derived table */
+  virtual void setDerivedTable() override
+  {
+    fDerivedTable = std::string("*");
+  }
+
+  bool isNull() const
+  {
+    return false;
+  }
+
+ private:
+  std::string fData;
+  long fTimeZone;
+
+  /***********************************************************
+   *                  F&E framework                          *
+   ***********************************************************/
+ public:
+  using ReturnedColumn::evaluate;
+  virtual void evaluate(rowgroup::Row& row)
+  {
+  }
+  /**
+   * F&E
+   */
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return true;
+  }
+  /**
+   * F&E
+   */
+  static utils::NullString ns;
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return ns;
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+    return 0x12340000ULL;
+  }
+  /**
+   * F&E
+   */
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return getIntVal(row, isNull);
+  }
+  /**
+   * F&E
+   */
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return getIntVal(row, isNull);
+  }
+  /**
+   * F&E
+   */
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  {
+    return getIntVal(row, isNull);
+  }
+  /**
+   * F&E
+   */
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+    return fResult.decimalVal;
+  }
+  /**
+   * F&E
+   */
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+
+    if (!fResult.valueConverted)
+    {
+      fResult.intVal = dataconvert::DataConvert::stringToDate(fResult.strVal.safeString());
+      fResult.valueConverted = true;
+    }
+
+    return fResult.intVal;
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+
+    if (!fResult.valueConverted)
+    {
+      isNull = isNull || fResult.strVal.isNull();
+      fResult.intVal = dataconvert::DataConvert::stringToDatetime(fResult.strVal.safeString(""));
+      fResult.valueConverted = true;
+    }
+
+    return fResult.intVal;
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+
+    if (!fResult.valueConverted)
+    {
+      isNull = isNull || fResult.strVal.isNull();
+      fResult.intVal = dataconvert::DataConvert::stringToTimestamp(fResult.strVal.safeString(""), fTimeZone);
+      fResult.valueConverted = true;
+    }
+
+    return fResult.intVal;
+  }
+  /**
+   * F&E
+   */
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
+  {
+    isNull = false;
+
+    if (!fResult.valueConverted)
+    {
+      fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal.safeString(""));
+      fResult.valueConverted = true;
+    }
+
+    return fResult.intVal;
+  }
+  /**
+   * F&E
+   */
+  inline float getFloatVal() const
+  {
+    return fResult.floatVal;
+  }
+  /**
+   * F&E
+   */
+  inline double getDoubleVal() const
+  {
+    return fResult.doubleVal;
+  }
+};
+
 }  // namespace execplan
