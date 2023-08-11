@@ -7392,13 +7392,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 #endif
   int rc = 0;
   // rollup is currently not supported
-  if (select_lex.olap == ROLLUP_TYPE)
-  {
-    gwi.fatalParseError = true;
-    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
-    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-    return ER_CHECK_NOT_IMPLEMENTED;
-  }
+  //if (select_lex.olap == ROLLUP_TYPE)
+  //{
+  //  gwi.fatalParseError = true;
+  //  gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
+  //  setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+  //  return ER_CHECK_NOT_IMPLEMENTED;
+  //}
+  bool withRollup = select_lex.olap == ROLLUP_TYPE;
 
   setExecutionParams(gwi, csep);
 
@@ -8330,6 +8331,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       }
       setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
       return ER_CHECK_NOT_IMPLEMENTED;
+    }
+    if (withRollup)
+    {
+      SRCP rc(new ConstantColumn((int64_t)0x12340000)); 
+      gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }
 
