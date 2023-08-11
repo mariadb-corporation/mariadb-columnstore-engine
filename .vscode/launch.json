@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        // attach configs
         {
             "name": "controllernode",
             "type": "cppdbg",
@@ -60,6 +61,7 @@
                 "exceptionList": ""
             },
         },
+
         {
             "name": "WriteEngineServer",
             "type": "cppdbg",
@@ -73,6 +75,65 @@
                 "loadAll": true,
                 "exceptionList": ""
             },
+        },
+
+        //  launch configs
+        {
+            "name": "controllernode Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/controllernode",
+            "args": ["-fg"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            "externalConsole": false,
+        },
+        {
+            "name": "DDLProc Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/DDLProc",
+            "args": ["-fg"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            "externalConsole": false,
+        },
+
+        {
+            "name": "DMLProc Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/DMLProc",
+            "args": ["-fg"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            "externalConsole": false,
+        },
+        {
+            "name": "PrimProc Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/PrimProc",
+            "args": ["-fg"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            "externalConsole": false,
+        },
+
+        {
+            "name": "WriteEngineServer Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/WriteEngineServer",
+            "args": ["-fg"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            "externalConsole": false,
         },
     ]
 }
