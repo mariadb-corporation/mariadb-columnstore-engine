@@ -48,6 +48,7 @@
 
 namespace dbbc
 {
+
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
@@ -144,9 +145,8 @@ class FileBufferMgr
   //   return fbSet.size();
   // }
 
-  /**
-   * @brief
-   **/
+  void takeLocksAndflushCache();
+
   void flushCache();
 
   /**

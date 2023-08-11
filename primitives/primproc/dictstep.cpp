@@ -485,7 +485,9 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
   int64_t l_lbid = 0;
   int64_t o_lbid = 0;
   OldGetSigParams* pt;
-  StringPtr* tmpStrings = new StringPtr[LOGICAL_BLOCK_RIDS];
+  StringPtr* tmpStrings =
+      new StringPtr[LOGICAL_BLOCK_RIDS];  // WIP might be too much given that we know a number of rids
+
   rowgroup::Row r;
   boost::scoped_array<OrderedToken> newRidList;
 
