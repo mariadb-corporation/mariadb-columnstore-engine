@@ -296,6 +296,50 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 
+void MagicColumn::serialize(messageqcpp::ByteStream& b) const
+{
+  b << (ObjectReader::id_t)ObjectReader::MAGICCOLUMN;
+  ReturnedColumn::serialize(b);
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
+  b << static_cast<ByteStream::doublebyte>(fReturnAll);
+  b << (uint64_t)fResult.intVal;
+  b << fResult.uintVal;
+  b << fResult.doubleVal;
+  b << fResult.longDoubleVal;
+  b << fResult.floatVal;
+  b << (uint8_t)fResult.boolVal;
+  b << fResult.strVal;
+  b << (uint64_t)fResult.decimalVal.value;
+  b << fResult.decimalVal.s128Value;
+  b << (uint8_t)fResult.decimalVal.scale;
+  b << (uint8_t)fResult.decimalVal.precision;
+}
+void MagicColumn::unserialize(messageqcpp::ByteStream& b)
+{
+  ObjectReader::checkType(b, ObjectReader::MAGICCOLUMN);
+  ReturnedColumn::unserialize(b);
+  // uint64_t val;
+
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
+  b >> reinterpret_cast<ByteStream::doublebyte&>(fReturnAll);
+  b >> (uint64_t&)fResult.intVal;
+  b >> fResult.uintVal;
+  b >> fResult.doubleVal;
+  b >> fResult.longDoubleVal;
+  b >> fResult.floatVal;
+  b >> (uint8_t&)fResult.boolVal;
+  b >> fResult.strVal;
+  b >> (uint64_t&)fResult.decimalVal.value;
+  b >> fResult.decimalVal.s128Value;
+  b >> (uint8_t&)fResult.decimalVal.scale;
+  b >> (uint8_t&)fResult.decimalVal.precision;
+}
+
+
+
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {
   const ReturnedColumn *rc1, *rc2;

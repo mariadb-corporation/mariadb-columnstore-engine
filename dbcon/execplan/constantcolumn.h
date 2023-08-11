@@ -531,7 +531,9 @@ class MagicColumn : public ReturnedColumn
   /**
    * serialize
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void serialize(messageqcpp::ByteStream&) const override
+  {
+  }
   /**
    * unserialize
    */
