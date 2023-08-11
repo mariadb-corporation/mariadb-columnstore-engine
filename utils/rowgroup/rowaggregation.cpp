@@ -813,7 +813,7 @@ void RowAggregationUM::aggReset()
 void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
-  idblog("agg row. col count " << row.columnCount() << ", probable magic " << row.getIntVal(fGroupByCols.size()));
+  idblog("agg row. col count " << row.getColumnCount() << ", probable magic " << row.getIntField(fGroupByCols.size() - 1));
   // groupby column list is not empty, find the entry.
   if (!fGroupByCols.empty())
   {
