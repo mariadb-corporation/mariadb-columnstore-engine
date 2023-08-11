@@ -375,6 +375,8 @@ IF(NOT TARGET columnstore)
   RETURN()
 ENDIF()
 
+SET (SHMEM_FILE_GLOB "MCS-shm-")
+
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)
 ADD_SUBDIRECTORY(dbcon/execplan)
