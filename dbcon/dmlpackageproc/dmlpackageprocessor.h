@@ -97,7 +97,8 @@ class DMLPackageProcessor
     ACTIVE_TRANSACTION_ERROR,
     TABLE_LOCK_ERROR,
     JOB_ERROR,
-    JOB_CANCELED
+    JOB_CANCELED,
+    DBRM_READ_ONLY
   };
 
   enum DebugLevel /** @brief Debug level type enumeration */

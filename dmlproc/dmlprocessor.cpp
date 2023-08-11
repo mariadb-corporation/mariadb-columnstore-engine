@@ -1387,7 +1387,7 @@ void DMLProcessor::operator()()
           0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
       {
         messageqcpp::ByteStream results;
-        const char* responseMsg = 0;
+        std::string responseMsg;
         bool bReject = false;
 
         // Check to see if we're in write suspended mode
@@ -1431,6 +1431,14 @@ void DMLProcessor::operator()()
               status = DMLPackageProcessor::NOT_ACCEPTING_PACKAGES;
               bReject = true;
             }
+          }
+
+          // MCOL-4988 Check if DBRM is in READ ONLY mode
+          if (fDbrm->isReadWrite() == BRM::ERR_READONLY)
+          {
+            BRM::errString(BRM::ERR_READONLY, responseMsg);
+            status = DMLPackageProcessor::DBRM_READ_ONLY;
+            bReject = true;
           }
 
           if (bReject)
