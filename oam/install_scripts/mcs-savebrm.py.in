@@ -23,6 +23,14 @@ MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
 HALF_A_MINUTE = 30
 LOCALHOST = '127.0.0.1'
+# according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
+LOCALHOSTS = (
+    '127.0.0.1',
+    'localhost', 'localhost.localdomain',
+    'localhost4', 'localhost4.localdomain4',
+    '::1',
+    'localhost6', 'localhost6.localdomain6',
+)
 API_VERSION = '0.4.0'
 API_PORT = '8640'
 
@@ -124,7 +132,7 @@ def is_primary_fallback(current_hostname):
         except:
             pass
     logging.debug('Found hostnames {}.'.format(hostnames))
-    return current_hostname in hostnames
+    return current_hostname in LOCALHOSTS or current_hostname in hostnames
 
 
 def is_node_primary(conf_root):
