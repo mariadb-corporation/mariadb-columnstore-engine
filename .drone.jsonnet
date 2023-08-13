@@ -82,13 +82,14 @@ local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
 
 local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
-                               '&& dnf install -y epel-release ' +
+                               '&& dnf install -y epel-release || dnf install -y oracle-epel-release-el$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1) || dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm' +
                                '&& dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
                                '&& dnf config-manager --set-enabled epel || : ' + 
                                '&& dnf config-manager --set-enabled powertools || : ' + 
                                '&& dnf config-manager --set-enabled crb || : ' + 
                                '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
                                '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || : ' +
                                '&& dnf update -y ' +
                                '&& dnf install -y arrow-devel ' +
                                '&& dnf install -y arrow-glib-devel ' + 
@@ -108,7 +109,7 @@ local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb h
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl && apt install -y -V ca-certificates lsb-release wget && wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && apt update && apt install -y -V libarrow-dev && apt install -y -V libarrow-glib-dev && apt install -y -V libarrow-dataset-dev && apt install -y -V libarrow-dataset-glib-dev && apt install -y -V libarrow-acero-dev && apt install -y -V libarrow-flight-dev && apt install -y -V libarrow-flight-glib-dev && apt install -y -V libgandiva-dev && apt install -y -V libgandiva-glib-dev && apt install -y -V libparquet-dev && apt install -y -V libparquet-glib-dev';
+local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl';
 
 
 local mtr_suite_list = 'basic,bugfixes';
