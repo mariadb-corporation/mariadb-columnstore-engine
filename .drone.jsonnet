@@ -93,8 +93,7 @@ local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf update -y ' +
                                '&& dnf install -y arrow-devel ' +
                                '&& dnf install -y arrow-glib-devel ' + 
-                               '&& dnf install -y arrow-dataset-devel ' + 
-                               '&& dnf install -y arrow-dataset-glib-devel ' +
+
                                '&& dnf install -y arrow-acero-devel ' +
                                '&& dnf install -y arrow-flight-devel ' +
                                '&& dnf install -y arrow-flight-glib-devel ' +
