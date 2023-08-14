@@ -621,11 +621,7 @@ class MagicColumn : public ReturnedColumn
   /**
    * F&E
    */
-  static utils::NullString ns;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
-  {
-    return ns;
-  }
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
   /**
    * F&E
    */
