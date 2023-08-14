@@ -298,6 +298,7 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
 
 MagicColumn::MagicColumn()
 {
+  idblog("magic cloumn created");
   // no-op.
 }
 MagicColumn::~MagicColumn()
