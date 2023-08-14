@@ -121,6 +121,8 @@
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "miDebuggerPath": "${workspaceFolder}/.vscode/sudo_gdb.sh",
+            //  this sets scheduler-locking step
+            // "miDebuggerArgs": "-x ${workspaceFolder}/.vscode/gdb.config",
             "externalConsole": false,
         },
 

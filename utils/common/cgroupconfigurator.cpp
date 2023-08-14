@@ -78,9 +78,21 @@ CGroupConfigurator::CGroupConfigurator()
     cGroupDefined = false;
   else
     cGroupDefined = true;
+  cout << "cGroupDefined is  " << cGroupDefined << endl;
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
+
+  string cGroupVersion_str="";
+  switch(cGroupVersion_){
+    case v1:
+      cGroupVersion_str="v1";
+      break;
+    case v2:
+      cGroupVersion_str="v2";
+      break;
+  }
+  cout << "cGroupVersion_str is  " <<  cGroupVersion_str  << endl;
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -206,7 +218,7 @@ uint64_t CGroupConfigurator::getTotalMemory()
 uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 {
   size_t memTot;
-
+  cout << "reading /proc/meminfo to get  Total mem  "  << endl;
   ifstream in("/proc/meminfo");
   string x;
 
@@ -233,7 +245,9 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   {
     os << "/sys/fs/cgroup/" << cGroupName << "/memory.max";
   }
+
   string filename = os.str();
+  cout << "reading " << filename  << " to  getTotalMemoryFromCGroup "  << endl;
 
   ifstream in(filename.c_str());
 
