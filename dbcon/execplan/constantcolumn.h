@@ -513,9 +513,15 @@ class MagicColumn : public ReturnedColumn
   /**
    * accessor
    */
-  virtual const std::string toString() const override;
+  virtual const std::string toString() const override
+  {
+    return "MagicColumn";
+  }
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toCppCode(IncludeSet& includes) const override
+  {
+    idbassert(0);
+  }
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
