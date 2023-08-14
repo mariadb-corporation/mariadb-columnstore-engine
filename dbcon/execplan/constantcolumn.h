@@ -502,7 +502,10 @@ class MagicColumn : public ReturnedColumn
   /**
    * accessor
    */
-  virtual const std::string data() const override;
+  virtual const std::string data() const override
+  {
+    return "";
+  }
   /**
    * accessor
    */
