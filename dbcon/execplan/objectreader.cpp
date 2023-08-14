@@ -113,6 +113,8 @@ TreeNode* ObjectReader::createTreeNode(messageqcpp::ByteStream& b)
     case ARITHMETICCOLUMN: ret = new ArithmeticColumn(); break;
 
     case CONSTANTCOLUMN: ret = new ConstantColumn(); break;
+    
+    case MAGICCOLUMN: ret = new MagicColumn(); break;
 
     case FUNCTIONCOLUMN: ret = new FunctionColumn(); break;
 
