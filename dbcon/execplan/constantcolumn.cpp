@@ -296,6 +296,10 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 
+MagicColumn::MagicColumn()
+{
+ // no-op.
+}
 void MagicColumn::serialize(messageqcpp::ByteStream& b) const
 {
   b << (ObjectReader::id_t)ObjectReader::MAGICCOLUMN;
