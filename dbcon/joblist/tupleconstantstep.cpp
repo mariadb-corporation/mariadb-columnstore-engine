@@ -12,8 +12,6 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-#include <tr1/unordered_set>
-#include <fstream>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -36,8 +34,6 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "hasher.h"
-#include "stlpoolallocator.h"
 #include "threadnaming.h"
 using namespace utils;
 
@@ -47,9 +43,6 @@ using namespace querytele;
 #include "funcexp.h"
 #include "jobstep.h"
 #include "jlf_common.h"
-#include "tupleconstantstep.h"
-#include "limitedorderby.h"
-
 #include "tupleconstantstep.h"
 
 namespace joblist

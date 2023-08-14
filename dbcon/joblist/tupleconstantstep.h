@@ -14,7 +14,6 @@
 #include <boost/thread/thread.hpp>
 
 #include "jobstep.h"
-#include "limitedorderby.h"
 
 namespace joblist
 {

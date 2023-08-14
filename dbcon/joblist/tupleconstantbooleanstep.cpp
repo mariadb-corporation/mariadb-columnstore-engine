@@ -112,7 +112,6 @@ void TupleConstantBooleanStep::run()
       printCalTrace();
     }
 
-    // Bug 3136, let mini stats to be formatted if traceOn.
     outputDL_->endOfInput();
   }
 }

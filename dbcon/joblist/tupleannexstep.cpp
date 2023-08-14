@@ -241,7 +241,6 @@ void TupleAnnexStep::run()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    // *DRRTUY Make this block conditional
     StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
