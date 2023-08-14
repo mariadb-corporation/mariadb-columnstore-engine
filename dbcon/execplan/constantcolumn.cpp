@@ -346,7 +346,7 @@ void MagicColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 static utils::NullString ns;
-const utils::NullString& MagicColumn::getStrVal(rowgroup::Row& row, bool& isNull) override
+const utils::NullString& MagicColumn::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   return ns;
 }
