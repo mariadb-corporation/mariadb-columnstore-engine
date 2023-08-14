@@ -298,7 +298,11 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
 
 MagicColumn::MagicColumn()
 {
- // no-op.
+  // no-op.
+}
+MagicColumn::~MagicColumn()
+{
+  // no-op
 }
 void MagicColumn::serialize(messageqcpp::ByteStream& b) const
 {
