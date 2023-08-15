@@ -48,9 +48,11 @@ Warnings:
 Note	1265	Data truncated for column 'a' at row 1
 Note	1265	Data truncated for column 'a' at row 2
 Warning	1366	Incorrect integer value: 'error      ' for column `mcs28_db1`.`t1`.`a` at row 3
+Warning	1265	Data truncated for column 'b' at row 3
 Warning	1262	Row 3 was truncated; it contained more data than there were input columns
 Note	1265	Data truncated for column 'a' at row 4
 Warning	1366	Incorrect integer value: 'wrong end  ' for column `mcs28_db1`.`t1`.`a` at row 5
+Warning	1265	Data truncated for column 'b' at row 5
 Warning	1262	Row 5 was truncated; it contained more data than there were input columns
 SELECT * FROM t1 ORDER BY a, b;
 a	b
@@ -63,21 +65,18 @@ TRUNCATE TABLE t1;
 LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata4.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;;
 Warnings:
 Note	1265	Data truncated for column 'a' at row 1
-Note	1265	Data truncated for column 'a' at row 2
-Note	1265	Data truncated for column 'a' at row 3
-Warning	1366	Incorrect integer value: '
-' for column `mcs28_db1`.`t1`.`a` at row 4
-Warning	1261	Row 4 doesn't contain data for all columns
+Warning	1265	Data truncated for column 'b' at row 1
+Warning	1366	Incorrect integer value: '  
+' for column `mcs28_db1`.`t1`.`a` at row 2
+Warning	1261	Row 2 doesn't contain data for all columns
 SELECT * FROM t1 ORDER BY a, b;
 a	b
 0	NULL
-1	row 1
-2	row 2
-3	row 3
+2	 row 2
 SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (
   `a` int(11) DEFAULT NULL,
   `b` char(10) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 DROP DATABASE IF EXISTS mcs28_db1;

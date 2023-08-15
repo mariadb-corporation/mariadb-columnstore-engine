@@ -70,8 +70,6 @@ USE outerjoin;
 --exec if test -f /etc/my.cnf.d/server.cnf; then sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/my.cnf.d/server.cnf; fi
 --exec if test -f etc/mysql/mariadb.conf.d/50.server.cnf; then sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/mysql/mariadb.conf.d/50-server.cnf; fi
 #
-SET GLOBAL columnstore_use_import_for_batchinsert=ON;
-#
 --exec systemctl restart mariadb
 --exec sleep 10
 

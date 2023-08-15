@@ -69,7 +69,7 @@ SELECT
 FROM
 t2;
 l
-我
+?
 SET
 NAMES 'utf8';
 # All should be the Chinese "I" i.e. 我

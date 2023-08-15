@@ -20,7 +20,7 @@ SHOW CREATE TABLE имя_таблицы_в_кодировке_утф8_длино
 Table	Create Table
 имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48	CREATE TABLE `имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48` (
   `имя_поля_в_кодировке_утф8_длиной_больше_чем_45` int(11) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 CREATE VIEW имя_вью_кодировке_утф8_длиной_больше_чем_42 AS SELECT * FROM имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
 SHOW CREATE VIEW  имя_вью_кодировке_утф8_длиной_больше_чем_42;
 View	Create View	character_set_client	collation_connection
