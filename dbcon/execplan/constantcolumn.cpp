@@ -301,6 +301,7 @@ MagicColumn::MagicColumn()
   idblog("magic cloumn created");
   fExpressionId = 0x1122334455667788ULL;
   fResultType.colDataType = CalpontSystemCatalog::INT;
+  fResultType.colWidth = 4;
   // no-op.
 }
 MagicColumn::~MagicColumn()
