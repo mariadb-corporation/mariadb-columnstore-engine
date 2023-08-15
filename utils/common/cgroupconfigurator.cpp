@@ -78,7 +78,7 @@ CGroupConfigurator::CGroupConfigurator()
     cGroupDefined = false;
   else
     cGroupDefined = true;
-  cout << "cGroupDefined is  " << cGroupDefined << endl;
+  cout << __func__ << " cGroupDefined is  " << cGroupDefined << endl;
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
@@ -92,7 +92,7 @@ CGroupConfigurator::CGroupConfigurator()
       cGroupVersion_str="v2";
       break;
   }
-  cout << "cGroupVersion_str is  " <<  cGroupVersion_str  << endl;
+  cout << __func__<< " cGroupVersion_str is  " <<  cGroupVersion_str  << endl;
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -218,7 +218,7 @@ uint64_t CGroupConfigurator::getTotalMemory()
 uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 {
   size_t memTot;
-  cout << "reading /proc/meminfo to get  Total mem  "  << endl;
+  cout << __func__ << "  reading /proc/meminfo "  << endl;
   ifstream in("/proc/meminfo");
   string x;
 
@@ -247,7 +247,7 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   }
 
   string filename = os.str();
-  cout << "reading " << filename  << " to  getTotalMemoryFromCGroup "  << endl;
+  cout << __func__ <<" reading " << filename   << endl;
 
   ifstream in(filename.c_str());
 
@@ -262,6 +262,7 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   {
     RETURN_READ_ERROR(0);
   }
+  cout << "getTotalMemoryFromCGroup : read into memLimitStr " <<  memLimitStr  << endl;
 
   if (cGroupVersion_ == v2 && memLimitStr == "max")
   {
