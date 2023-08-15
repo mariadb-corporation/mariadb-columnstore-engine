@@ -250,6 +250,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
       const ArithmeticColumn* ac = NULL;
       const FunctionColumn* fc = NULL;
       const ConstantColumn* cc = NULL;
+      const MagicColumn* mc = NULL;
       uint64_t eid = -1;
       CalpontSystemCatalog::ColType ct;
       ExpressionStep* es = new ExpressionStep(jobInfo);
@@ -270,6 +271,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
       {
         eid = cc->expressionId();
         ct = cc->resultType();
+      }
+      else if ((mc = dynamic_cast<const MagicColumn*>(retCols[i].get())) != NULL)
+      {
+        eid = mc->expressionId();
+        ct = mc->resultType();
       }
       else
       {
@@ -774,7 +780,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
     {
-      uint64_t eid = 0x1122334455667788ULL;
+      uint64_t eid = mc->expressionId();
       CalpontSystemCatalog::ColType ct = mc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
