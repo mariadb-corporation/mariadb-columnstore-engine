@@ -155,6 +155,24 @@ local testPreparation(platform) =
 
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
+  local parquet_download = '&& dnf install -y epel-release ' +
+                               '&& dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                               '&& dnf config-manager --set-enabled epel || : ' + 
+                               '&& dnf config-manager --set-enabled powertools || : ' + 
+                               '&& dnf config-manager --set-enabled crb || : ' + 
+                               '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
+                               '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& dnf install -y arrow-devel ' +
+                               '&& dnf install -y arrow-glib-devel ' + 
+                               '&& dnf install -y arrow-dataset-devel ' + 
+                               '&& dnf install -y arrow-dataset-glib-devel ' +
+                               '&& dnf install -y arrow-acero-devel ' +
+                               '&& dnf install -y arrow-flight-devel ' +
+                               '&& dnf install -y arrow-flight-glib-devel ' +
+                               '&& dnf install -y gandiva-devel ' +
+                               '&& dnf install -y gandiva-glib-devel ' +
+                               '&& dnf install -y parquet-devel ' + 
+                               '&& dnf install -y parquet-glib-devel '
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local cmapi_path = '/usr/share/columnstore/cmapi',
@@ -279,7 +297,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      if (pkg_format == 'rpm') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
+      if (pkg_format == 'rpm') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng ' + parquet_download + '"' else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} chmod 777 core',
