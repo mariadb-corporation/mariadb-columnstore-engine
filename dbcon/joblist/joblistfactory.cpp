@@ -776,7 +776,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     {
       uint64_t eid = 0x1122334455667788ULL;
       CalpontSystemCatalog::ColType ct = fc->resultType();
-      TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
+      TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
 
