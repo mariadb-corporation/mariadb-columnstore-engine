@@ -860,7 +860,8 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
 
     updateEntry(row, rgContextColl);
     if (z < cnt) {
-      row.setIntField(row.getIntField(cnt), cnt);
+      row.setIntField(row.getIntField(cnt) + 1, cnt);
+      row.setToNull(cnt - 1 - z);
     }
   }
 }
