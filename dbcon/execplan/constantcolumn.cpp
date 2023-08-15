@@ -299,6 +299,7 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
 MagicColumn::MagicColumn()
 {
   idblog("magic cloumn created");
+  fResult.colDataType = calpontsystemcatalog::INT;
   // no-op.
 }
 MagicColumn::~MagicColumn()

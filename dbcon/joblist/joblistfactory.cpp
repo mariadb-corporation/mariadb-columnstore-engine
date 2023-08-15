@@ -699,6 +699,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(groupByCols[i].get());
     const ArithmeticColumn* ac = NULL;
     const FunctionColumn* fc = NULL;
+    const MagicColumn* mc = NULL;
 
     if (sc != NULL)
     {
@@ -759,6 +760,26 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
         projectKeys.push_back(tupleKey);
+    }
+    else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
+    {
+      uint64_t eid = fc->expressionId();
+      CalpontSystemCatalog::ColType ct = fc->resultType();
+      TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
+      uint32_t tupleKey = ti.key;
+      jobInfo.groupByColVec.push_back(tupleKey);
+
+      if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
+        projectKeys.push_back(tupleKey);
+    }
+    else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
+    {
+      uint64_t eid = 0x1122334455667788ULL;
+      CalpontSystemCatalog::ColType ct = fc->resultType();
+      TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
+      uint32_t tupleKey = ti.key;
+      jobInfo.groupByColVec.push_back(tupleKey);
+
     }
     else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
     {
