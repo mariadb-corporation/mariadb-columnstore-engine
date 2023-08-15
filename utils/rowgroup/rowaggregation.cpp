@@ -813,50 +813,56 @@ void RowAggregationUM::aggReset()
 void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
-  idblog("agg row. col count " << row.getColumnCount() << ", probable magic " << row.getIntField(fGroupByCols.size() - 1));
+  uint32_t cnt = fGroupByCols.size() - 1;
+  idblog("agg row. col count " << row.getColumnCount() << ", probable magic " << row.getIntField(cnt));
+  for (uint32_t z = 0; z <= cnt; z++) {
   // groupby column list is not empty, find the entry.
-  if (!fGroupByCols.empty())
-  {
-    bool is_new_row;
-    if (hash != nullptr)
-      is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
-    else
-      is_new_row = fRowAggStorage->getTargetRow(row, fRow);
-
-    if (is_new_row)
+    if (!fGroupByCols.empty())
     {
-      initMapData(row);
-      attachGroupConcatAg();
+      bool is_new_row;
+      if (hash != nullptr)
+        is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
+      else
+        is_new_row = fRowAggStorage->getTargetRow(row, fRow);
 
-      // If there's UDAF involved, reset the user data.
-      if (fOrigFunctionCols)
+      if (is_new_row)
       {
-        // This is a multi-distinct query and fFunctionCols may not
-        // contain all the UDAF we need to reset
-        for (uint64_t i = 0; i < fOrigFunctionCols->size(); i++)
+        initMapData(row);
+        attachGroupConcatAg();
+
+        // If there's UDAF involved, reset the user data.
+        if (fOrigFunctionCols)
         {
-          if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
+          // This is a multi-distinct query and fFunctionCols may not
+          // contain all the UDAF we need to reset
+          for (uint64_t i = 0; i < fOrigFunctionCols->size(); i++)
           {
-            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
-            resetUDAF(rowUDAFColumnPtr, i);
+            if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
+            {
+              auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
+              resetUDAF(rowUDAFColumnPtr, i);
+            }
           }
         }
-      }
-      else
-      {
-        for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+        else
         {
-          if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+          for (uint64_t i = 0; i < fFunctionCols.size(); i++)
           {
-            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
-            resetUDAF(rowUDAFColumnPtr, i);
+            if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+            {
+              auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+              resetUDAF(rowUDAFColumnPtr, i);
+            }
           }
         }
       }
     }
-  }
 
-  updateEntry(row, rgContextColl);
+    updateEntry(row, rgContextColl);
+    if (z < cnt) {
+      row.setIntField(cnt, row.getIntField(cnt));
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
