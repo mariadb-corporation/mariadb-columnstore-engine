@@ -262,7 +262,7 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   {
     RETURN_READ_ERROR(0);
   }
-  cout << "getTotalMemoryFromCGroup : read into memLimitStr " <<  memLimitStr  << endl;
+  cout << __func__<<  " read into memLimitStr " <<  memLimitStr  << endl;
 
   if (cGroupVersion_ == v2 && memLimitStr == "max")
   {
