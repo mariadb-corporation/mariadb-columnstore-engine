@@ -41,6 +41,7 @@ create table if not exists syscolumn (`schema` varchar(128),
                         minvalue varchar(64),
                         `maxvalue` varchar(64),
                         compressiontype integer,
-						nextvalue bigint) engine=columnstore comment='SCHEMA SYNC ONLY';
+                        nextvalue bigint,
+                        charsetnum int not null default 0) engine=columnstore comment='SCHEMA SYNC ONLY';
 
 DELIMITER ;

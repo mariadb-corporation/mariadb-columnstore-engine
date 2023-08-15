@@ -934,7 +934,7 @@ struct ColumnType
   EXPORT int serialize(messageqcpp::ByteStream& bs);
 
   /** @brief For deserialization. */
-  ColumnType() : fCharset(NULL), fExplicitLength(false)
+  ColumnType() : fCharset(NULL), fCollate(NULL), fCharsetNum(0), fExplicitLength(false)
   {
   }
 
@@ -978,6 +978,10 @@ struct ColumnType
 
   /** @brief Column charset (CHAR, VARCHAR and TEXT only) */
   const char* fCharset;
+  /** @brief Column collation (CHAR, VARCHAR and TEXT only) */
+  const char* fCollate;
+  /** @brief Column charset number (CHAR, VARCHAR and TEXT only) */
+  uint32_t fCharsetNum;
 
   /** @brief Is the TEXT column has explicit defined length, ie TEXT(1717) */
   bool fExplicitLength;

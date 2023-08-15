@@ -645,6 +645,10 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
         {
           colTuple.data = colDefPtr->fType->fNextvalue;
         }
+        else if (CHARSETNUM_COL == column.tableColName.column)
+        {
+          colTuple.data = colDefPtr->fType->fCharsetNum;
+        }
         else
         {
           colTuple.data = column.colType.getNullValueForType();
@@ -1030,6 +1034,10 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string& err)
       else if (NEXTVALUE_COL == column.tableColName.column)
       {
         colTuple.data = colDefPtr->fType->fNextvalue;
+      }
+      else if (CHARSETNUM_COL == column.tableColName.column)
+      {
+        colTuple.data = colDefPtr->fType->fCharsetNum;
       }
       else
       {

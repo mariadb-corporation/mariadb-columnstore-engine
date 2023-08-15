@@ -1,0 +1,85 @@
+DROP DATABASE IF EXISTS mcol5005;
+CREATE DATABASE mcol5005;
+USE mcol5005;
+CREATE TABLE t1 (
+a VARCHAR(15) collate utf8mb4_romanian_ci,
+b VARCHAR(15) charset 'utf8mb3',
+c VARCHAR(15),
+d BLOB(15),
+e INT
+) ENGINE=columnstore collate=latin2_croatian_ci;
+ALTER TABLE t1 ADD COLUMN (f VARCHAR(15) collate 'utf8mb4_icelandic_ci');
+ALTER TABLE t1 ADD COLUMN (g VARCHAR(15));
+CREATE TABLE t2 ENGINE=columnstore AS SELECT * FROM t1;
+CREATE TABLE t3 LIKE t1;
+CREATE TABLE t4 (a varchar(15)) ENGINE=InnoDB charset=latin2;
+SHOW CREATE TABLE t4;
+Table	Create Table
+t4	CREATE TABLE `t4` (
+  `a` varchar(15) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin2 COLLATE=latin2_general_ci
+ALTER TABLE t4 ENGINE=columnstore;
+SHOW CREATE TABLE t1;
+Table	Create Table
+t1	CREATE TABLE `t1` (
+  `a` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_romanian_ci DEFAULT NULL,
+  `b` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `c` varchar(15) DEFAULT NULL,
+  `d` tinyblob DEFAULT NULL,
+  `e` int(11) DEFAULT NULL,
+  `f` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_icelandic_ci DEFAULT NULL,
+  `g` varchar(15) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin2 COLLATE=latin2_croatian_ci
+SHOW CREATE TABLE t2;
+Table	Create Table
+t2	CREATE TABLE `t2` (
+  `a` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_romanian_ci DEFAULT NULL,
+  `b` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `c` varchar(15) CHARACTER SET latin2 COLLATE latin2_croatian_ci DEFAULT NULL,
+  `d` tinyblob DEFAULT NULL,
+  `e` int(11) DEFAULT NULL,
+  `f` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_icelandic_ci DEFAULT NULL,
+  `g` varchar(15) CHARACTER SET latin2 COLLATE latin2_croatian_ci DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+SHOW CREATE TABLE t3;
+Table	Create Table
+t3	CREATE TABLE `t3` (
+  `a` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_romanian_ci DEFAULT NULL,
+  `b` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `c` varchar(15) DEFAULT NULL,
+  `d` tinyblob DEFAULT NULL,
+  `e` int(11) DEFAULT NULL,
+  `f` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_icelandic_ci DEFAULT NULL,
+  `g` varchar(15) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin2 COLLATE=latin2_croatian_ci
+SHOW CREATE TABLE t4;
+Table	Create Table
+t4	CREATE TABLE `t4` (
+  `a` varchar(15) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin2 COLLATE=latin2_general_ci
+SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
+WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4');
+schema	tablename	columnname	charsetnum
+mcol5005	t1	a	227
+mcol5005	t1	b	33
+mcol5005	t1	c	27
+mcol5005	t1	d	63
+mcol5005	t1	e	0
+mcol5005	t1	f	225
+mcol5005	t1	g	27
+mcol5005	t2	a	227
+mcol5005	t2	b	33
+mcol5005	t2	c	27
+mcol5005	t2	d	63
+mcol5005	t2	e	0
+mcol5005	t2	f	225
+mcol5005	t2	g	27
+mcol5005	t3	a	227
+mcol5005	t3	b	33
+mcol5005	t3	c	27
+mcol5005	t3	d	63
+mcol5005	t3	e	0
+mcol5005	t3	f	225
+mcol5005	t3	g	27
+mcol5005	t4	a	9
+DROP DATABASE mcol5005;

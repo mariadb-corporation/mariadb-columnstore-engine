@@ -1,0 +1,67 @@
+#
+# MCOL-5005 Add charset number to the calpontsys.syscolumn system
+# catalog table
+#
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+
+#
+# If the calpontsys database does not exist, let's create it.
+# It's possible if we're running mtr without --extern.
+#
+let $calpontsys_exists=`SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='calpontsys' AND TABLE_NAME='syscolumn';`;
+--disable_query_log
+if (!$calpontsys_exists)
+{
+  --exec $MYSQL < $MCS_SYSCATALOG_MYSQL_SQL
+  use test;
+}
+--enable_query_log
+
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5005;
+--enable_warnings
+
+CREATE DATABASE mcol5005;
+
+USE mcol5005;
+
+CREATE TABLE t1 (
+  a VARCHAR(15) collate utf8mb4_romanian_ci,
+  b VARCHAR(15) charset 'utf8mb3',
+  c VARCHAR(15),
+  d BLOB(15),
+  e INT
+) ENGINE=columnstore collate=latin2_croatian_ci;
+
+ALTER TABLE t1 ADD COLUMN (f VARCHAR(15) collate 'utf8mb4_icelandic_ci');
+ALTER TABLE t1 ADD COLUMN (g VARCHAR(15));
+
+CREATE TABLE t2 ENGINE=columnstore AS SELECT * FROM t1;
+
+CREATE TABLE t3 LIKE t1;
+
+CREATE TABLE t4 (a varchar(15)) ENGINE=InnoDB charset=latin2;
+SHOW CREATE TABLE t4;
+ALTER TABLE t4 ENGINE=columnstore;
+
+SHOW CREATE TABLE t1;
+SHOW CREATE TABLE t2;
+SHOW CREATE TABLE t3;
+SHOW CREATE TABLE t4;
+
+SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
+WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4');
+
+DROP DATABASE mcol5005;
+
+
+--disable_query_log
+if (!$calpontsys_exists)
+{
+  drop table calpontsys.systable restrict;
+  drop table calpontsys.syscolumn restrict;
+  drop database calpontsys;
+}
+--enable_query_log
