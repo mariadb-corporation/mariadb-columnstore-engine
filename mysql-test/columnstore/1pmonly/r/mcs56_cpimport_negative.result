@@ -4,10 +4,13 @@ USE mcs56_db;
 CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
 
 Check for the correct error message:
+1
 DROP DATABASE IF EXISTS nonexist_db;
 DROP DATABASE IF EXISTS nonexist_tbl;
 
 Check for the correct error message:
+2
 
 Check for the correct error message:
+2
 DROP DATABASE mcs56_db;
