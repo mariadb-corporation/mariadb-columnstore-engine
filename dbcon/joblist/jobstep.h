@@ -335,6 +335,7 @@ class JobStep
     fTraceFlags = flags;
   }
   JSTimeStamp dlTimes;
+  void setTimesAndPrintTrace(bool setFirst);
 
   const std::string& extendedInfo() const
   {
@@ -566,4 +567,3 @@ typedef boost::shared_ptr<JobStepAssociation> JobStepAssociationSPtr;
 typedef boost::shared_ptr<JobStep> SJSTEP;
 
 }  // namespace joblist
-

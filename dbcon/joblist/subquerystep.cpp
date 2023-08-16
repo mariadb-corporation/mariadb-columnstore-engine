@@ -19,7 +19,7 @@
 //  $Id: subquerystep.cpp 6370 2010-03-18 02:58:09Z xlou $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -423,12 +423,7 @@ void SubAdapterStep::execute()
     while (more)
       more = fInputDL->next(fInputIterator, &rgDataIn);
 
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
+  setTimesAndPrintTrace(false);
 
   sts.msg_type = StepTeleStats::ST_SUMMARY;
   sts.total_units_of_work = sts.units_of_work_completed = 1;

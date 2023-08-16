@@ -104,13 +104,7 @@ void TupleConstantBooleanStep::run()
     if (outputDL_ == NULL)
       throw logic_error("Output is not a RowGroup data list.");
 
-    if (traceOn())
-    {
-      dlTimes.setFirstReadTime();
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
+    setTimesAndPrintTrace(true);
 
     outputDL_->endOfInput();
   }
@@ -124,13 +118,7 @@ uint32_t TupleConstantBooleanStep::nextBand(messageqcpp::ByteStream& bs)
   rowGroupOut_.setStatus(status());
   rowGroupOut_.serializeRGData(bs);
 
-  if (traceOn())
-  {
-    dlTimes.setFirstReadTime();
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
+  setTimesAndPrintTrace(true);
 
   return 0;
 }

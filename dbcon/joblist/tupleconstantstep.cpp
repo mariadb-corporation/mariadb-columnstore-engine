@@ -401,15 +401,7 @@ void TupleConstantStep::execute()
   StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, rowsReturned_);
   postStepSummaryTele(sts);
 
-  if (traceOn())
-  {
-    if (dlTimes.FirstReadTime().tv_sec == 0)
-      dlTimes.setFirstReadTime();
-
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
+  setTimesAndPrintTrace(dlTimes.FirstReadTime().tv_sec == 0);
 }
 
 void TupleConstantStep::fillInConstants(const rowgroup::Row& rowIn, rowgroup::Row& rowOut)

@@ -308,13 +308,7 @@ void TupleConstantOnlyStep::execute()
   postStepSummaryTele(sts);
 
   // Bug 3136, let mini stats to be formatted if traceOn.
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
-
+  setTimesAndPrintTrace(false);
   endOfResult_ = true;
   outputDL_->endOfInput();
 }
@@ -399,12 +393,7 @@ uint32_t TupleConstantOnlyStep::nextBand(messageqcpp::ByteStream& bs)
     rowGroupOut_.setStatus(status());
     rowGroupOut_.serializeRGData(bs);
 
-    if (traceOn())
-    {
-      dlTimes.setLastReadTime();
-      dlTimes.setEndOfInputTime();
-      printCalTrace();
-    }
+    setTimesAndPrintTrace(false);
   }
 
   return rowCount;

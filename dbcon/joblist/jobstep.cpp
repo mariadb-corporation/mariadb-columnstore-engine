@@ -199,6 +199,19 @@ bool JobStep::traceOn() const
   return fTraceFlags & execplan::CalpontSelectExecutionPlan::TRACE_LOG;
 }
 
+void setTimesAndPrintTrace(bool setFirst)
+{
+  if (traceOn())
+  {
+    if (setFirst)
+      dlTimes.setFirstReadTime();
+
+    dlTimes.setLastReadTime();
+    dlTimes.setEndOfInputTime();
+    printCalTrace();
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 // DESCRIPTION:
 //  The m() rethrows a query runtime exception and handles it across
