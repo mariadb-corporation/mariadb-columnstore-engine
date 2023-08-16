@@ -17,12 +17,12 @@ insert into t3 values ("one"), ("two"), ("three");
 insert into t4 values ("one"), ("two"), ("three");
 
 set session columnstore_max_pm_join_result_count=1;
-select * from t1, t2 where t1.a = t2.a;
-select * from t3, t4 where t3.a = t4.a;
+select * from t1, t2 where t1.a = t2.a order by t1.a, t2.a;
+select * from t3, t4 where t3.a = t4.a order by t3.a, t4.a;
 
 set session columnstore_max_pm_join_result_count=1048576;
-select * from t1, t2 where t1.a = t2.a;
-select * from t3, t4 where t3.a = t4.a;
+select * from t1, t2 where t1.a = t2.a order by t1.a, t2.a;
+select * from t3, t4 where t3.a = t4.a order by t3.a, t4.a;
 
 --disable_warnings
 DROP DATABASE mcol_5522;
