@@ -34,13 +34,13 @@ SHOW CREATE TABLE t2;
 Table	Create Table
 t2	CREATE TABLE `t2` (
   `a` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_romanian_ci DEFAULT NULL,
-  `b` varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `b` varchar(15) DEFAULT NULL,
   `c` varchar(15) CHARACTER SET latin2 COLLATE latin2_croatian_ci DEFAULT NULL,
   `d` tinyblob DEFAULT NULL,
   `e` int(11) DEFAULT NULL,
   `f` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_icelandic_ci DEFAULT NULL,
   `g` varchar(15) CHARACTER SET latin2 COLLATE latin2_croatian_ci DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SHOW CREATE TABLE t3;
 Table	Create Table
 t3	CREATE TABLE `t3` (
