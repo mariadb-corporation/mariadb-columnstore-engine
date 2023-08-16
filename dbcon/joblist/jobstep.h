@@ -335,6 +335,10 @@ class JobStep
     fTraceFlags = flags;
   }
   JSTimeStamp dlTimes;
+  virtual void printCalTrace()
+  {
+  }
+
   void setTimesAndPrintTrace(bool setFirst);
 
   const std::string& extendedInfo() const

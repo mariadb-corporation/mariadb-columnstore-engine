@@ -199,7 +199,7 @@ bool JobStep::traceOn() const
   return fTraceFlags & execplan::CalpontSelectExecutionPlan::TRACE_LOG;
 }
 
-void setTimesAndPrintTrace(bool setFirst)
+void JobStep::setTimesAndPrintTrace(bool setFirst)
 {
   if (traceOn())
   {
