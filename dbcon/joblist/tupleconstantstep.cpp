@@ -342,7 +342,7 @@ uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
 
 void TupleConstantStep::execute()
 {
-  utils::setThreadName("TACS");
+  utils::setThreadName("TCS");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
@@ -494,7 +494,7 @@ void TupleConstantStep::printCalTrace()
 void TupleConstantStep::formatMiniStats()
 {
   ostringstream oss;
-  oss << "TACS ";
+  oss << "TCS ";
   oss << "UM "
       << "- "
       << "- "
