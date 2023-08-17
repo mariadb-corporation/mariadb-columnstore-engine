@@ -5437,6 +5437,7 @@ idblog("threadedAggregateRowGroups");
           for (uint32_t i = 0; i < fNumOfBuckets; i++)
           {
             fAggregators[i].reset(fAggregator->clone());
+	    fAggregators[i]->clearRollup();
             fAggregators[i]->setInputOutput(fRowGroupIn, &fRowGroupOuts[i]);
           }
         }

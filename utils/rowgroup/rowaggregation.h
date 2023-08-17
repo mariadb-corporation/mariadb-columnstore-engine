@@ -423,6 +423,8 @@ class RowAggregation : public messageqcpp::Serializeable
     initialize();
   }
 
+  void clearRollup() { fRollupFlag = false; }
+
   /** @brief Define content of data to be joined
    *
    *    This method must be call after setInputOutput() for PM hashjoin case.
@@ -630,6 +632,7 @@ class RowAggregation : public messageqcpp::Serializeable
   joblist::ResourceManager* fRm = nullptr;
   boost::shared_ptr<int64_t> fSessionMemLimit;
   std::unique_ptr<RGData> fCurRGData;
+  bool fRollupFlag = true;
 };
 
 //------------------------------------------------------------------------------
