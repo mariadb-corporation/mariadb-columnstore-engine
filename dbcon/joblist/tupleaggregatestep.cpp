@@ -5502,6 +5502,7 @@ idblog("threadedAggregateRowGroups");
         bool done = false;
         fill(&bucketDone[0], &bucketDone[fNumOfBuckets], false);
 
+	  idblog("multidist is " << (multiDist ? "present" : "absent"));
         while (!fEndOfResult && !done && !cancelled())
         {
           bool didWork = false;
@@ -5509,7 +5510,6 @@ idblog("threadedAggregateRowGroups");
 
           // each thread starts from its own bucket for better distribution
           uint32_t shift = (rgVecShift++) % fNumOfBuckets;
-	  idblog("multidist is " << ((int)multiDist));
           for (uint32_t ci = 0; ci < fNumOfBuckets && !cancelled(); ci++)
           {
             uint32_t c = (ci + shift) % fNumOfBuckets;
