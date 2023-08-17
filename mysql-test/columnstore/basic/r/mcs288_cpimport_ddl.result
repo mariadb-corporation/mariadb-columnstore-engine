@@ -1,74 +1,8 @@
 DROP DATABASE IF EXISTS mcs288_db;
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/int32.parquet
-Successfully generate int32table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/float.parquet
-Successfully generate floattable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/double.parquet
-Successfully generate doubletable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/time.parquet
-Successfully generate timetable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/string.parquet
-Successfully generate stringtable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/ts.parquet
-Successfully generate tstable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/date.parquet
-Successfully generate datetable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/int16.parquet
-Successfully generate int16table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/decimal.parquet
-Successfully generate decimaltable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/bool.parquet
-Successfully generate booltable.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/int64.parquet
-Successfully generate int64table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/uint32.parquet
-Successfully generate uint32table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/uint16.parquet
-Successfully generate uint16table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/uint8.parquet
-Successfully generate uint8table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/uint64.parquet
-Successfully generate uint64table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/int8.parquet
-Successfully generate int8table.ddl
-Reading /root/server/storage/columnstore/columnstore/mysql-test/columnstore/basic/../std_data/null.parquet
-Not allowed data type
-File type not supported
-Please input source parquet file and target ddl file
 CREATE DATABASE mcs288_db;
 USE mcs288_db;
 SHOW TABLES;
 Tables_in_mcs288_db
-booltable
-datetable
-decimaltable
-doubletable
-floattable
-int16table
-int32table
-int64table
-int8table
-stringtable
-timetable
-tstable
-uint16table
-uint32table
-uint64table
-uint8table
-TRUNCATE int32table;
-TRUNCATE floattable;
-TRUNCATE doubletable;
-TRUNCATE timetable;
-TRUNCATE stringtable;
-TRUNCATE tstable;
-TRUNCATE datetable;
-TRUNCATE int16table;
-TRUNCATE decimaltable;
-TRUNCATE booltable;
-TRUNCATE int64table;
-TRUNCATE uint32table;
-TRUNCATE uint16table;
-TRUNCATE uint8table;
-TRUNCATE uint64table;
-TRUNCATE int8table;
+teststable
+TRUNCATE teststable;
 DROP DATABASE mcs288_db;

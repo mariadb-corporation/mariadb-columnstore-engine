@@ -1,1 +1,0 @@
-CREATE TABLE uint8table(col1 TINYINT UNSIGNED) ENGINE=Columnstore;

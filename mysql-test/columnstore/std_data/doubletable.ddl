@@ -1,1 +1,0 @@
-CREATE TABLE doubletable(col1 DOUBLE) ENGINE=Columnstore;

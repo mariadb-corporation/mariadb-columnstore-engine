@@ -1,1 +1,0 @@
-CREATE TABLE date(col1 DATE) ENGINE=Columnstore;

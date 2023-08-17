@@ -1,1 +1,0 @@
-CREATE TABLE timetable(col1 TIME) ENGINE=Columnstore;

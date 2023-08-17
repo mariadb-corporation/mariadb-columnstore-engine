@@ -1,1 +1,0 @@
-CREATE TABLE int64(col1 BIGINT) ENGINE=Columnstore;

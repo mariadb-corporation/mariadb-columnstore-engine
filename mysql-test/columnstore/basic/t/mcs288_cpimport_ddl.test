@@ -8,67 +8,25 @@ if (!$MYSQL_TEST_ROOT){
 DROP DATABASE IF EXISTS mcs288_db;
 --enable_warnings
 
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int32.parquet $MTR_SUITE_DIR/../std_data/int32table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/float.parquet $MTR_SUITE_DIR/../std_data/floattable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/double.parquet $MTR_SUITE_DIR/../std_data/doubletable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/time.parquet $MTR_SUITE_DIR/../std_data/timetable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/string.parquet $MTR_SUITE_DIR/../std_data/stringtable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/ts.parquet $MTR_SUITE_DIR/../std_data/tstable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/date.parquet $MTR_SUITE_DIR/../std_data/datetable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int16.parquet $MTR_SUITE_DIR/../std_data/int16table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/decimal.parquet $MTR_SUITE_DIR/../std_data/decimaltable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/bool.parquet $MTR_SUITE_DIR/../std_data/booltable.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int64.parquet $MTR_SUITE_DIR/../std_data/int64table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/uint32.parquet $MTR_SUITE_DIR/../std_data/uint32table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/uint16.parquet $MTR_SUITE_DIR/../std_data/uint16table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/uint8.parquet $MTR_SUITE_DIR/../std_data/uint8table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/uint64.parquet $MTR_SUITE_DIR/../std_data/uint64table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int8.parquet $MTR_SUITE_DIR/../std_data/int8table.ddl
---exec parquetDDL $MTR_SUITE_DIR/../std_data/null.parquet $MTR_SUITE_DIR/../std_data/null.ddl
+--disable_result_log
+--exec mcs_parquet_gen -a
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/tests.parquet $MTR_SUITE_DIR/../std_data/teststable.ddl
 # wrong file type
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int8.par $MTR_SUITE_DIR/../std_data/int8table.ddl
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/int8.par $MTR_SUITE_DIR/../std_data/int8table.ddl
 # wrong file num
---exec parquetDDL $MTR_SUITE_DIR/../std_data/int8.parquet
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/tests.parquet
+--enable_result_log
 
 # Create table
 CREATE DATABASE mcs288_db;
 
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/int32table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/floattable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/doubletable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/timetable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/stringtable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/tstable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/datetable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/int16table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/decimaltable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/booltable.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/int64table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/uint32table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/uint16table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/uint8table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/uint64table.ddl >/dev/null
---exec mariadb mcs288_db < $MTR_SUITE_DIR/../std_data/int8table.ddl >/dev/null
-
+--exec $MYSQL mcs288_db < $MTR_SUITE_DIR/../std_data/teststable.ddl >/dev/null
 USE mcs288_db;
 SHOW TABLES;
 
-TRUNCATE int32table;
-TRUNCATE floattable;
-TRUNCATE doubletable;
-TRUNCATE timetable;
-TRUNCATE stringtable;
-TRUNCATE tstable;
-TRUNCATE datetable;
-TRUNCATE int16table;
-TRUNCATE decimaltable;
-TRUNCATE booltable;
-TRUNCATE int64table;
-TRUNCATE uint32table;
-TRUNCATE uint16table;
-TRUNCATE uint8table;
-TRUNCATE uint64table;
-TRUNCATE int8table;
-
+TRUNCATE teststable;
 # Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/tests.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/nulls.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/teststable.ddl
 DROP DATABASE mcs288_db;

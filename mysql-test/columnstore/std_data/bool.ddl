@@ -1,1 +1,0 @@
-CREATE TABLE bool(col1 BOOLEAN) ENGINE=Columnstore;

@@ -1,1 +1,0 @@
-CREATE TABLE uint32(col1 INT UNSIGNED) ENGINE=Columnstore;

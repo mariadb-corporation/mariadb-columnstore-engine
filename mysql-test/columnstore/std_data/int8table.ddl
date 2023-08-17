@@ -1,1 +1,0 @@
-CREATE TABLE int8table(col1 TINYINT) ENGINE=Columnstore;

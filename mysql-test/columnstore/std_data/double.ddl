@@ -1,1 +1,0 @@
-CREATE TABLE double(col1 DOUBLE) ENGINE=Columnstore;
