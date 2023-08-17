@@ -510,7 +510,7 @@ RowAggregation::RowAggregation()
  , fOrigFunctionCols(nullptr)
 {
 	auto currentStacktrace = std::string(); //std::stacktrace::current();
-	idblog("default constructor. trace: " << std::to_string(currentStacktrace));
+	idblog("default constructor. trace: " << (currentStacktrace));
 }
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
@@ -525,7 +525,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fSessionMemLimit(std::move(sl))
 {
 	auto cst = std::string(); //std::stacktrace::current();
-	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << std::to_string(cst));
+	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst));
   fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
   fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
 }
@@ -542,7 +542,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fSessionMemLimit(rhs.fSessionMemLimit)
 {
 	auto cst = std::string(); //std::stacktrace::current();
-	  idblog("construct from other row agg, trace: " << std::to_string(cst));
+	  idblog("construct from other row agg, trace: " << (cst));
   fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
   fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
 }
