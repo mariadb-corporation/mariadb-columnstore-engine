@@ -47,7 +47,7 @@ INCLUDE(CheckCXXSourceCompiles)
 FIND_PACKAGE(Boost 1.81.0 COMPONENTS chrono filesystem program_options regex system thread)
 
 IF (NOT Boost_FOUND OR Boost_VERSION VERSION_GREATER 1.76.99)
-  MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
+  MY_CHECK_CXX_COMPILER_FLAG("-std=c++23")
 ENDIF()
 
 IF (have_CXX__std_c__20)
