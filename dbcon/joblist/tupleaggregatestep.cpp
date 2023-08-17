@@ -5308,7 +5308,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   uint32_t rgVecShift = float(fNumOfBuckets) / fNumOfThreads * threadID;
 
   RowAggregationMultiDistinct* multiDist = nullptr;
-
+idblog("threadedAggregateRowGroups");
   if (!fDoneAggregate)
   {
     if (fInputJobStepAssociation.outSize() == 0)
@@ -5509,6 +5509,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 
           // each thread starts from its own bucket for better distribution
           uint32_t shift = (rgVecShift++) % fNumOfBuckets;
+	  idblog("multidist is " << ((int)multidist));
           for (uint32_t ci = 0; ci < fNumOfBuckets && !cancelled(); ci++)
           {
             uint32_t c = (ci + shift) % fNumOfBuckets;
