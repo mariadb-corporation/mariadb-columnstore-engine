@@ -507,6 +507,7 @@ RowAggregation::RowAggregation()
  , fSmallSideCount(0)
  , fOrigFunctionCols(nullptr)
 {
+	idblog("default constructor");
 }
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
@@ -661,6 +662,7 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 //------------------------------------------------------------------------------
 void RowAggregation::initialize(bool hasGroupConcat)
 {
+	idblog("initializing");
   // Calculate the length of the hashmap key.
   fAggMapKeyCount = fGroupByCols.size();
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
@@ -756,6 +758,7 @@ void RowAggregation::initialize(bool hasGroupConcat)
 //------------------------------------------------------------------------------
 void RowAggregation::aggReset()
 {
+	idblog("resetting");
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
