@@ -5480,6 +5480,7 @@ idblog("threadedAggregateRowGroups");
         }
         else
         {
+		idblog("passing rgDatas, their size is " << rgDatas.size());
           for (uint32_t c = 0; c < rgDatas.size(); c++)
           {
             fRowGroupIns[threadID].setData(&rgDatas[c]);
@@ -5524,7 +5525,10 @@ idblog("threadedAggregateRowGroups");
                   dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())
                       ->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
                 else
+		{
+			idblog("we are adding a row, c " << c);
                   fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
+		}
               }
               catch (...)
               {
