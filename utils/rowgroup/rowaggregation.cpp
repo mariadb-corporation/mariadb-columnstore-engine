@@ -2349,6 +2349,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
 //------------------------------------------------------------------------------
 void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
 {
+	idblog("dumping the result");
   uint32_t sz = 0;
   messageqcpp::ByteStream rgdbs;
   while (auto rgd = fRowAggStorage->getNextRGData())
@@ -2368,6 +2369,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
   }
   bs << sz;
   bs.append(rgdbs.buf(), rgdbs.length());
+	idblog("result with " << sz << " rgdatas was dumped.");
 }
 
 void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)
