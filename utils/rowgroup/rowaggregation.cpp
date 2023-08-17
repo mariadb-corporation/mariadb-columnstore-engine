@@ -520,6 +520,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fRm(rm)
  , fSessionMemLimit(std::move(sl))
 {
+	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << "func cols");
   fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
   fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
 }
@@ -535,6 +536,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fRm(rhs.fRm)
  , fSessionMemLimit(rhs.fSessionMemLimit)
 {
+	  idblog("construct from other row agg");
   fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
   fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
 }
