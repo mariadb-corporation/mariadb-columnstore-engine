@@ -30,6 +30,10 @@ add_executable(PrimProc ${PrimProc_SRCS})
 
 add_dependencies(PrimProc loggingcpp)
 target_include_directories(PrimProc PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
+find_package(Arrow)
+message(STATUS "Arrow version: ${ARROW_VERSION}")
+message(STATUS "Arrow SO version: ${ARROW_FULL_SO_VERSION}")
+include_directories(${ARROW_INCLUDE_DIR})
+target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor Arrow::arrow_shared)
 
 install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)

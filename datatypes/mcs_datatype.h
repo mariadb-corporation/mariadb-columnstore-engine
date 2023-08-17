@@ -19,6 +19,7 @@
 
 #include <sstream>
 #include <boost/any.hpp>
+#include <arrow/array.h>
 #include "exceptclasses.h"
 #include "conststring.h"
 #include "mcs_numeric_limits.h"
@@ -163,6 +164,32 @@ struct WidthToSIntegralType<16> : _WidthToSIntegralType<16, int128_t>
 {
 };
 
+template <int W, typename T = arrow::Int16Array>
+struct _WidthToArrowArray
+{
+  typedef T type;
+};
+
+template <int W>
+struct WidthToArrowArray : _WidthToArrowArray<W>
+{
+};
+template <>
+struct WidthToArrowArray<1> : _WidthToArrowArray<1, arrow::Int8Array>
+{
+};
+template <> 
+struct WidthToArrowArray<2> : _WidthToArrowArray<2, arrow::Int16Array>
+{
+};
+template <>
+struct WidthToArrowArray<4> : _WidthToArrowArray<4, arrow::Int32Array>
+{
+};
+template <>
+struct WidthToArrowArray<8> : _WidthToArrowArray<8, arrow::Int64Array>
+{
+};
 class SystemCatalog
 {
  public:

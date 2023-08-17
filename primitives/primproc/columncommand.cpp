@@ -348,6 +348,8 @@ void ColumnCommand::_process_OT_BOTH_wAbsRids()
     bpp->absRids[i] = ridPos[i] + bpp->baseRid;
     values[i] = valuesPos[i];
   }
+
+  //TODO add support to arrow buffer
 }
 
 template <>
@@ -367,6 +369,8 @@ void ColumnCommand::_process_OT_BOTH_wAbsRids<16>()
     bpp->absRids[i] = ridPos[i] + bpp->baseRid;
     datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &valuesPos[i]);
   }
+
+  //TODO add support to arrow buffer
 }
 
 template <int W>
@@ -384,6 +388,9 @@ void ColumnCommand::_process_OT_BOTH()
     bpp->relRids[i] = ridPos[i];
     values[i] = valuesPos[i];
   }
+
+  bpp->addValueToBuffer<W, T>(lbid, valuesPos, outMsg->NVALS);
+  bpp->addRidToBuffer(lbid, ridPos, outMsg->NVALS);
 }
 
 template <>
@@ -401,6 +408,9 @@ void ColumnCommand::_process_OT_BOTH<16>()
     bpp->relRids[i] = ridPos[i];
     datatypes::TSInt128::assignPtrPtr(&wide128Values[i], &valuesPos[i]);
   }
+
+  bpp->addValueToBuffer<16, int128_t>(lbid, (int128_t*)(outMsg + 1), outMsg->NVALS);
+  bpp->addRidToBuffer(lbid, ridPos, outMsg->NVALS);
 }
 
 void ColumnCommand::process_OT_BOTH()
@@ -453,6 +463,7 @@ void ColumnCommand::_process_OT_DATAVALUE()
   T* arr = (T*)(outMsg + 1);
   for (size_t i = 0; i < outMsg->NVALS; ++i)
     values[i] = arr[i];
+  bpp->addValueToBuffer<W, T>(lbid, arr, outMsg->NVALS);
 }
 
 template <>
@@ -460,6 +471,7 @@ void ColumnCommand::_process_OT_DATAVALUE<8>()
 {
   bpp->ridCount = outMsg->NVALS;
   memcpy(values, outMsg + 1, outMsg->NVALS << 3);
+  bpp->addValueToBuffer<8, int64_t>(lbid, (int64_t*)(outMsg + 1), outMsg->NVALS);
 }
 
 template <>
@@ -467,6 +479,7 @@ void ColumnCommand::_process_OT_DATAVALUE<16>()
 {
   bpp->ridCount = outMsg->NVALS;
   memcpy(wide128Values, outMsg + 1, outMsg->NVALS << 4);
+  bpp->addValueToBuffer<16, int128_t>(lbid, (int128_t*)(outMsg + 1), outMsg->NVALS);
 }
 
 void ColumnCommand::process_OT_DATAVALUE()

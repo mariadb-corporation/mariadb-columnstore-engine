@@ -79,14 +79,15 @@ install_deps()
         libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev \
         libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git \
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
-        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev
+        liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev \
+        libarrow-dev
 
     elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
         if [[ "$OS_VERSION" == "7" ]]; then
             yum -y install cmake3 epel-release centos-release-scl
             CMAKE_BIN_NAME=cmake3
             CTEST_BIN_NAME=ctest3
-        else
+        else    
             yum -y install cmake
         fi
         if [ $OS = 'Rocky' ]; then
@@ -97,7 +98,8 @@ install_deps()
         && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
         && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
         && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel install lzo-devel xz-devel lz4-devel bzip2-devel \
-        && yum -y install pcre2-devel
+        && yum -y install pcre2-devel \
+        && yum install -y --enablerepo=epel arrow-devel
     fi
 }
 

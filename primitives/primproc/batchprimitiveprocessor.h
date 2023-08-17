@@ -35,6 +35,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <tr1/unordered_map>
 #include <boost/thread.hpp>
+#include <arrow/api.h>
 
 #include "errorcodes.h"
 #include "serializeable.h"
@@ -259,7 +260,7 @@ class BatchPrimitiveProcessor
     int64_t maxVal;
   };
   bool cpDataFromDictScan;
-
+ 
   uint64_t lbidForCP;
   bool hasWideColumnOut;
   uint8_t wideColumnWidthOut;
@@ -437,6 +438,104 @@ class BatchPrimitiveProcessor
   uint64_t valuesLBID;
   bool initiatedByEM_;
   uint32_t weight_;
+
+  /* add arrow buffers */
+  std::vector<std::shared_ptr<arrow::Field>> valueFields;
+  std::vector<std::shared_ptr<arrow::Array>> valueArrays;
+  std::vector<std::shared_ptr<arrow::ResizableBuffer>> valueBuffers;
+  std::vector<std::shared_ptr<arrow::Field>> ridFields;
+  std::vector<std::shared_ptr<arrow::UInt16Array>> ridArrays;
+  std::vector<std::shared_ptr<arrow::ResizableBuffer>> ridBuffers;
+
+
+  template <int W, typename T>
+  void addValueToBuffer(uint64_t lbid, const T* values, primitives::NVALSType size)
+  {
+    if (W == 16) 
+    {
+      // TODO: add support for 16-byte values (int128_t)
+      cerr << "BatchPrimitiveProcessor::addValueToBuffer: W=" << W << " not supported" << endl;
+      return;
+    }
+
+    using AT = typename datatypes::WidthToArrowArray<W>::type;
+
+    std::shared_ptr<arrow::ResizableBuffer> buffer;
+    std::shared_ptr<AT> array;
+    size_t i = 0;
+
+    string fieldName = std::to_string(lbid);
+    while (i < valueFields.size()) 
+    {
+      if (valueFields[i]->name() == fieldName) 
+      {
+        break;
+      }
+      i++;
+    }
+    if (i == valueFields.size())
+    {
+      buffer = arrow::AllocateResizableBuffer(W * size).ValueOrDie();
+      valueBuffers.push_back(buffer);
+    }
+    else 
+    {
+      buffer = valueBuffers[i];
+    }
+
+    arrow::Status status = buffer->Reserve(W * size);
+    if (!status.ok()) 
+    {
+      throw std::runtime_error("Failed to reserve buffer for RIDs");
+    }
+    memcpy(buffer->mutable_data(), values, W * size);
+    array = std::make_shared<AT>(size, buffer);
+    
+    if (i == valueFields.size())
+    {
+      valueFields.push_back(arrow::field(fieldName, array->type()));
+    }
+
+    valueArrays.push_back(array);
+  }
+
+  void addRidToBuffer(uint64_t lbid, const uint16_t* rids, primitives::NVALSType size)
+  {
+    using AT = typename arrow::UInt16Array;
+
+    std::shared_ptr<arrow::ResizableBuffer> buffer;
+    std::shared_ptr<AT> array;
+    size_t i = 0;
+
+    string fieldName = std::to_string(lbid);
+    while (i < ridFields.size()) 
+    {
+      if (ridFields[i]->name() == fieldName) 
+      {
+        break;
+      }
+      i++;
+    }
+    if (i == ridFields.size())
+    {
+      ridFields.push_back(arrow::field(fieldName, arrow::uint16()));
+      buffer = arrow::AllocateResizableBuffer(2 * size, arrow::default_memory_pool()).ValueOrDie();
+      ridBuffers.push_back(buffer);
+    }
+    else 
+    {
+      buffer = ridBuffers[i];
+    }
+
+    arrow::Status status = buffer->Reserve(2 * size);
+    if (!status.ok()) 
+    {
+      throw std::runtime_error("Failed to reserve buffer for RIDs");
+    }
+    memcpy(buffer->mutable_data(), rids, 2 * size);
+    array = std::make_shared<AT>(size, buffer); 
+    ridArrays.push_back(array);
+  }
 
   static const uint64_t maxResultCount = 1048576;  // 2^20
   friend class Command;

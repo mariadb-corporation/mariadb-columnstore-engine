@@ -46,6 +46,8 @@ using namespace std;
 #include <boost/shared_ptr.hpp>
 using namespace boost;
 
+#include <arrow/api.h>
+
 #include "bpp.h"
 #include "primitiveserver.h"
 #include "errorcodes.h"
