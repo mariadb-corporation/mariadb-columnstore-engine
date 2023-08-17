@@ -1743,6 +1743,7 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
 //------------------------------------------------------------------------------
 void RowAggregation::mergeEntries(const Row& rowIn)
 {
+	idblog("merging entries");
   for (uint64_t i = 0; i < fFunctionCols.size(); i++)
   {
     int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
