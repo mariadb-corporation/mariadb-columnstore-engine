@@ -453,38 +453,6 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 }
 
 
-
-void BulkLoad::spawnWorkersParquet()
-{
-  // int current_thread = 0;
-
-  int tableId = 0;
-
-  // Loop to select and read the next table
-
-  // while (true)
-  // {
-  //   tableId = 0;
-
-  //   // if ((tableId = lockTableForRead(current_thread)) == -1)
-  //   // {
-  //   //   fLog.logMsg(
-  //   //     "BulkLoad::ReadOperation No more tables "
-  //   //     "available for processing. Read thread ",
-  //   //   MSGLVL_INFO2);
-  //   //   return;
-  //   // }
-
-  //   // for every table, read parquet file
-  //   int rc = fTableInfo[tableId].readParquetData();
-  //   if (rc == NO_ERROR)
-  //     break;
-  // }
-  int rc = fTableInfo[tableId].readParquetData();
-  std::cout << rc << std::endl;
-  std::cout << "it's all done" << std::endl;
-}
-
 //------------------------------------------------------------------------------
 // DESCRIPTION:
 //    Spawns and joins the Read and Parsing threads to import the data.
@@ -1193,14 +1161,7 @@ int BulkLoad::processJob()
 
   startTimer();
 
-  if (LOAD_FILE == FILE_PARQUET)
-  {
-    spawnWorkersParquet();
-  }
-  else
-  {
-    spawnWorkers();
-  }
+  spawnWorkers();
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {

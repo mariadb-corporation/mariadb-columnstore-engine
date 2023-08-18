@@ -1662,10 +1662,6 @@ int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnDat
 {
   long long truncCount = 0;
 
-  // if ((curCol.colDataType == WR_VARBINARY) || (curCol.colType == WR_BLOB))
-  // {
-
-  // }
   int rc = fStore->insertDctnryParquet(columnData, totalRow, id, tokenBuf, truncCount);
   if (rc != NO_ERROR)
   {

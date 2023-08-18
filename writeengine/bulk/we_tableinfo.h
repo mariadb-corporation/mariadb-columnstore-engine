@@ -183,7 +183,6 @@ class TableInfo : public WeUIDGID
   
   std::shared_ptr<arrow::RecordBatchReader> fParquetReader;
   std::unique_ptr<parquet::arrow::FileReader> fReader;
-  // arrow::RecordBatchIterator fParquetIter;
   //--------------------------------------------------------------------------
   // Private Functions
   //--------------------------------------------------------------------------
@@ -387,32 +386,9 @@ class TableInfo : public WeUIDGID
    */
   int readTableData();
 
-  // /** @brief parse parquet data
-  // */
-  // int parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
-
-  // /** @brief parse parquet data
-  // */
-  int parseParquetDict(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
-
-  int parseParquetCol(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, unsigned int cbs, int64_t bs, int batchProcessed);
-  // /** @brief parse parquet data
-  // */
-  // int parseParquet(std::shared_ptr<arrow::RecordBatch> batch, unsigned int k, int bs);
-
-  void parquetConvert(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue);
-
-  /** @brief Read the parquet file data into the memory
-   */
-  int readParquetData();
- 
   /** @brief parse method
    */
   int parseColumn(const int& columnId, const int& bufferId, double& processingTime);
-
-  /** @brief update the buffer status for column(parquet)
-  */
-  int setParseCompleteParquet();
 
   /** @brief update the buffer status for column
    */

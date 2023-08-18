@@ -66,7 +66,7 @@ std::string convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::
     }
     case arrow::Type::type::STRING:
     {
-      //TODO: varchar here and what about the length
+      //varchar here and what about the length
       // or maybe here we need to load this column data to get the maximum length
       // return "TINYINT";
       return "VARCHAR(2000)";
@@ -97,13 +97,9 @@ std::string convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::
     {
       return "TIME";
     }
-    // case arrow::Type::type::TIME64:
-    // {
-    //   return "TIME";
-    // }
     case arrow::Type::type::DECIMAL128:
     {
-      // TODO:get precision and scale
+      // get precision and scale
       std::shared_ptr<arrow::DecimalType> fType = std::static_pointer_cast<arrow::DecimalType>(dataType);
       int32_t fPrecision = fType->precision();
       int32_t fScale = fType->scale();
@@ -178,11 +174,9 @@ int main(int argc, char** argv)
   }
 
   std::string targetPth;
-  // std::cout << argc << std::endl;
   std::string tableName;
   std::string::size_type startBase = ddlFile.rfind('/');
   targetPth.assign(argv[2], startBase + 1);
-  // std::cout << targetPth << std::endl;
   tableName.assign(argv[2] + startBase + 1, endBase - startBase - 1);
   std::cout << "Reading " + parquetFile << std::endl;
   generateDDL(parquetFile, targetPth, tableName);

@@ -54,13 +54,6 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-
-enum LOADFILE
-{
-  FILE_TEXT,
-  FILE_PARQUET
-};
-
 /** Class BulkLoad */
 class BulkLoad : public FileOp
 {
@@ -219,7 +212,6 @@ class BulkLoad : public FileOp
   timeval fEndTime;                              // job end time
   double fTotalTime;                             // elapsed time for current phase
   std::vector<std::string> fCmdLineImportFiles;  // Import Files from cmd line
-  LOADFILE LOAD_FILE;                            // Import Files type
   BulkModeType fBulkMode;                        // Distributed bulk mode (1,2, or 3)
   std::string fBRMRptFileName;                   // Name of distributed mode rpt file
   bool fbTruncationAsError;                      // Treat string truncation as error
@@ -251,10 +243,6 @@ class BulkLoad : public FileOp
 
   // Spawn the worker threads.
   void spawnWorkers();
-
-  // Handle parquet file single-threaded
-  void spawnWorkersParquet();
-
 
   // Checks if all tables have the status set
   bool allTablesDone(Status status);
@@ -319,7 +307,6 @@ inline void BulkLoad::addToCmdLineImportFileList(const std::string& importFile)
 {
   if (importFile.rfind(".parquet") != std::string::npos)
   {
-    // LOAD_FILE = FILE_PARQUET;
     setImportDataMode(IMPORT_DATA_PARQUET);
   }
   fCmdLineImportFiles.push_back(importFile);
