@@ -411,8 +411,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 5G"',
       //'docker exec -t regressin$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 2G"',
       //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=regression$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup memory"',
-      'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "cat /sys/fs/cgroup/memory/memory.limit_in_bytes"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup memory"',
+      'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "cat /sys/fs/cgroup/memory/memory.limit_in_bytes"',
       // start mariadb and mariadb-columnstore services
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl start mariadb',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} systemctl restart mariadb-columnstore',
