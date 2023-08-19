@@ -123,8 +123,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
 
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
-  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
-  local repo_pkg_url_no_res = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/",
+  local publish_pkg_url = 'https://cspkg.s3.amazonaws.com/index.html?prefix=' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+  local repo_pkg_url_no_res = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/',
 
   local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
   local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
@@ -225,6 +225,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       path: '/var/run/docker.sock',
     },
   },
+  supersmoke:: {
+    name: 'supersmoke',
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      'docker exec -t smoke$${DRONE_BUILD_NUMBER} cat /sys/fs/cgroup/memory/memory.limit_in_bytes',
+    ],
+  },
   smoke:: {
     name: 'smoke',
     depends_on: ['publish pkg'],
@@ -268,8 +277,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name upgrade$${DRONE_BUILD_NUMBER}' + version + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
       'docker cp core_dumps/. upgrade$${DRONE_BUILD_NUMBER}' + version + ':/',
       'docker cp setup-repo.sh upgrade$${DRONE_BUILD_NUMBER}' + version + ':/',
-      if (pkg_format == 'deb' && !(result == "debian12") && !(arch == "arm64" && (version == "10.6.4-1" || version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4")) && !((version == "10.6.4-1" || version == "10.6.8-4") && (result == "debian11" || result == "ubuntu22.04")) && !(result == "ubuntu22.04" && (version == "10.6.5-2" || version == "10.6.7-3"))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_deb.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res +' $${UPGRADE_TOKEN}"',
-      if (std.split(platform, ':')[0] == 'rockylinux' && !(result == "rockylinux9" && (version == "10.6.4-1" || version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4")) && !(result == "rockylinux8" && arch == 'arm64' && (version == "10.6.5-2" || version == "10.6.7-3" || version == "10.6.8-4"))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_rpm.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
+      if (pkg_format == 'deb' && !(result == 'debian12') && !(arch == 'arm64' && (version == '10.6.4-1' || version == '10.6.5-2' || version == '10.6.7-3' || version == '10.6.8-4')) && !((version == '10.6.4-1' || version == '10.6.8-4') && (result == 'debian11' || result == 'ubuntu22.04')) && !(result == 'ubuntu22.04' && (version == '10.6.5-2' || version == '10.6.7-3'))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_deb.sh ' + version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
+      if (std.split(platform, ':')[0] == 'rockylinux' && !(result == 'rockylinux9' && (version == '10.6.4-1' || version == '10.6.5-2' || version == '10.6.7-3' || version == '10.6.8-4')) && !(result == 'rockylinux8' && arch == 'arm64' && (version == '10.6.5-2' || version == '10.6.7-3' || version == '10.6.8-4'))) then 'docker exec -t upgrade$${DRONE_BUILD_NUMBER}' + version + ' bash -c "./upgrade_setup_rpm.sh ' + version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
     ],
   },
   upgradelog:: {
@@ -640,157 +649,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
-  steps: [
-           {
-             name: 'submodules',
-             image: 'alpine/git',
-             commands: [
-               'git submodule update --init --recursive',
-               'git config cmake.update-submodules no',
-               'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
-             ],
-           },
-           {
-             name: 'clone-mdb',
-             image: 'alpine/git',
-             volumes: [pipeline._volumes.mdb],
-             environment: {
-               SERVER_REF: '${SERVER_REF:-' + server + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
-               SERVER_SHA: '${SERVER_SHA:-' + server + '}',
-             },
-             commands: [
-               'echo $$SERVER_REF',
-               'echo $$SERVER_REMOTE',
-               'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
-               'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
-               'git reset --hard $$SERVER_SHA',
-               'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
-               'git config cmake.update-submodules no',
-               'rm -rf storage/columnstore/columnstore',
-               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
-               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-10.1-kvm-rpm-centos74-amd64.rpm',
-               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3-amd64.rpm',
-             ],
-           },
-           {
-             name: 'build',
-             depends_on: ['clone-mdb'],
-             image: img,
-             volumes: [pipeline._volumes.mdb],
-             environment: {
-               DEBIAN_FRONTEND: 'noninteractive',
-               DEB_BUILD_OPTIONS: 'parallel=4',
-               DH_BUILD_DDEBS: '1',
-               BUILDPACKAGE_FLAGS: '-b',  // Save time and produce only binary packages, not source
-               AWS_ACCESS_KEY_ID: {
-                 from_secret: 'aws_access_key_id',
-               },
-               AWS_SECRET_ACCESS_KEY: {
-                 from_secret: 'aws_secret_access_key',
-               },
-               SCCACHE_BUCKET: 'cs-sccache',
-               SCCACHE_S3_USE_SSL: 'true',
-               SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
-               //SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
-               //SCCACHE_LOG: 'debug',
-             },
-             commands: [
-               'cd /mdb/' + builddir,
-               'ls -la ../',
-               'mkdir ' + result,
-               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
-               if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
-               // Remove Debian build flags that could prevent ColumnStore from building
-               "sed -i '/-DPLUGIN_COLUMNSTORE=NO/d' debian/rules",
-               // Disable dh_missing strict check for missing files
-               'sed -i s/--fail-missing/--list-missing/ debian/rules',
-               // Tweak debian packaging stuff
-               'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
-               "sed -i 's/Depends: galera.*/Depends:/' debian/control",
-               'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
-               // Install build dependencies for deb
-               if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
-               // Change plugin_maturity level
-               // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
-               if (pkg_format == 'deb') then 'apt update -y && apt install -y curl' else if (platform == 'rockylinux:9') then 'yum install -y curl-minimal' else 'yum install -y curl',
-               get_sccache,
-               testPreparation(platform),
-               // disable LTO for 22.04 for now
-               if (platform == 'ubuntu:22.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
-               platformMap(platform, arch),
-               'sccache --show-stats',
-               // move engine and cmapi packages to one dir to make a repo
-               'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
-               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-               // list storage manager binary
-               'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
-             ],
-           },
-           {
-             name: 'unittests',
-             depends_on: ['build'],
-             image: img,
-             volumes: [pipeline._volumes.mdb],
-             environment: {
-               DEBIAN_FRONTEND: 'noninteractive',
-             },
-             commands: [
-               'cd /mdb/' + builddir,
-               testPreparation(platform),
-               testRun(platform),
-             ],
-           },
-           {
-             name: 'pkg',
-             depends_on: ['unittests'],
-             image: 'alpine/git',
-             when: {
-               status: ['success', 'failure'],
-             },
-             volumes: [pipeline._volumes.mdb],
-             commands: [
-               'cd /mdb/' + builddir,
-               'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
-               'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
-               'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
-               'mv buildinfo.txt ./%s/' % result,
-               'yes | cp -vr ./%s/. /drone/src/%s/' % [result, result],
-               'ls -l /drone/src/' + result,
-               'echo "check columnstore package:"',
-               'ls -l /drone/src/%s | grep columnstore' % result,
-             ],
-           },
-         ] +
-         [pipeline.cmapipython] + [pipeline.cmapibuild] +
-         [pipeline.publish('cmapi build')] +
-         [pipeline.publish()] +
-         [
-           {
-             name: 'publish pkg url',
-             depends_on: ['publish pkg'],
-             image: 'alpine/git',
-             commands: [
-               "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
-             ],
-           },
-         ] +
-         (if (event == 'cron') then [pipeline.publish('pkg latest', 'latest')] else []) +
-         [pipeline.smoke] +
-         [pipeline.smokelog] +
-         [pipeline.publish('smokelog')] +
-         [pipeline.cmapitest] +
-         [pipeline.cmapilog] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         [pipeline.upgradelog] +
-         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
-         (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
-         [pipeline.prepare_regression] +
-         [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
-         [pipeline.regressionlog] +
-         [pipeline.publish('regressionlog')] +
-         (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
+  steps: [pipeline.supersmoke],
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
