@@ -35,6 +35,8 @@
 #include <iostream>
 using namespace std;
 
+
+
 #include "bytestream.h"
 #include "brmtypes.h"
 #include "extentmap.h"  // for DICT_COL_WIDTH
@@ -745,6 +747,365 @@ int Dctnry::insertDctnry2(Signature& sig)
   return NO_ERROR;
 }
 
+int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOffset, int& startPos,
+                          int& totalUseSize, CommBlock& cb, bool& next, long long& truncCount,
+                          const CHARSET_INFO* cs, const WriteEngine::ColType& weType)
+{
+  if (cs->mbmaxlen > 1)
+  {
+    // For TEXT columns, we truncate based on the number of bytes,
+    // and not based on the number of characters, as for CHAR/VARCHAR
+    // columns in the else block.
+    if (weType == WriteEngine::WR_TEXT)
+    {
+      if (curSig.size > m_colWidth)
+      {
+        uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
+        curSig.size = m_colWidth - truncate_point;
+        truncCount++;
+      }
+    }
+    else
+    {
+      const char* start = (const char*) curSig.signature;
+      const char* end = (const char*)(curSig.signature + curSig.size);
+      size_t numChars = cs->numchars(start, end);
+      size_t maxCharLength = m_colWidth / cs->mbmaxlen;
+
+      if (numChars > maxCharLength)
+      {
+        MY_STRCOPY_STATUS status;
+        cs->well_formed_char_length(start, end, maxCharLength, &status);
+        curSig.size = status.m_source_end_pos - start;
+        truncCount++;
+      }
+    }
+  }
+  else // cs->mbmaxlen == 1
+  {
+    if (curSig.size > m_colWidth)
+    {
+      curSig.size = m_colWidth;
+      truncCount++;
+    }
+  }
+
+  //...Search for the string in our string cache
+  // if it fits into one block (< 8KB)
+  if (curSig.size <= MAX_SIGNATURE_SIZE)
+  {
+    // Stats::startParseEvent("getTokenFromArray");
+    found = getTokenFromArray(curSig);
+
+    if (found)
+    {
+      memcpy(pOut + outOffset, &curSig.token, 8);
+      outOffset += 8;
+      startPos++;
+      // Stats::stopParseEvent("getTokenFromArray");
+      return NO_ERROR;
+    }
+
+    // Stats::stopParseEvent("getTokenFromArray");
+  }
+
+  totalUseSize = m_totalHdrBytes + curSig.size;
+
+  //...String not found in cache, so proceed.
+  //   If room is available in current block then insert into block.
+  // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
+  if (((totalUseSize <= m_freeSpace - HDR_UNIT_SIZE) ||
+       ((curSig.size > 8176) && (m_freeSpace > HDR_UNIT_SIZE))) &&
+      (m_curOp < (MAX_OP_COUNT - 1)))
+  {
+    RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
+    m_curBlock.state = BLK_WRITE;
+    memcpy(pOut + outOffset, &curSig.token, 8);
+    outOffset += 8;
+    startPos++;
+    found = true;
+
+    //...If we have reached limit for the number of strings allowed in
+    //   a block, then we write the current block so that we can start
+    //   another block.
+    if (m_curOp >= MAX_OP_COUNT - 1)
+    {
+#ifdef PROFILE
+      Stats::stopParseEvent(WE_STATS_PARSE_DCT);
+#endif
+      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      m_curBlock.state = BLK_READ;
+      next = true;
+    }
+
+    //...Add string to cache, if we have not exceeded cache limit
+    // Don't cache big blobs
+    if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+    {
+      addToStringCache(curSig);
+    }
+  }
+  else  //...No room for this string in current block, so we write
+        //   out the current block, so we can start another block
+  {
+#ifdef PROFILE
+    Stats::stopParseEvent(WE_STATS_PARSE_DCT);
+#endif
+    RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+    m_curBlock.state = BLK_READ;
+    next = true;
+    found = false;
+  }  // if m_freeSpace
+
+  //..."next" flag is used to indicate that we need to advance to the
+  //   next block in the store file.
+  if (next)
+  {
+    memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
+    memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
+    m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
+    m_curBlock.state = BLK_WRITE;
+    m_curOp = 0;
+    next = false;
+    m_lastFbo++;
+    m_curFbo = m_lastFbo;
+
+    //...Expand current extent if it is an abbreviated initial extent
+    if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
+    {
+      RETURN_ON_ERROR(expandDctnryExtent());
+    }
+
+    //...Allocate a new extent if we have reached the last block in the
+    //   current extent.
+    if (m_curFbo == m_numBlocks)
+    {
+      // last block
+      LBID_t startLbid;
+
+      // Add an extent.
+      RETURN_ON_ERROR(
+          createDctnry(m_dctnryOID, m_colWidth, m_dbRoot, m_partition, m_segment, startLbid, false));
+
+      if (m_logger)
+      {
+        std::ostringstream oss;
+        oss << "Add dictionary extent OID-" << m_dctnryOID << "; DBRoot-" << m_dbRoot << "; part-"
+            << m_partition << "; seg-" << m_segment << "; hwm-" << m_curFbo << "; LBID-" << startLbid
+            << "; file-" << m_segFileName;
+        m_logger->logMsg(oss.str(), MSGLVL_INFO2);
+      }
+
+      m_curLbid = startLbid;
+
+      // now seek back to the curFbo, after adding an extent
+      // @bug5769 For uncompressed only;
+      // ChunkManager manages the file offset for the compression case
+      if (m_compressionType == 0)
+      {
+#ifdef PROFILE
+        Stats::startParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
+#endif
+        long long byteOffset = m_curFbo;
+        byteOffset *= BYTE_PER_BLOCK;
+        RETURN_ON_ERROR(setFileOffset(m_dFile, byteOffset));
+#ifdef PROFILE
+        Stats::stopParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
+#endif
+      }
+    }
+    else
+    {
+      // LBIDs are numbered collectively and consecutively within an
+      // extent, so within an extent we can derive the LBID by simply
+      // incrementing it rather than having to go back to BRM to look
+      // up the LBID for each FBO.
+      m_curLbid++;
+    }
+
+#ifdef PROFILE
+    Stats::startParseEvent(WE_STATS_PARSE_DCT);
+#endif
+    m_curBlock.lbid = m_curLbid;
+
+    //..."found" flag indicates whether the string was already found
+    //   "or" added to the end of the previous block.  If false, then
+    //   we need to add the string to the new block.
+    if (!found)
+    {
+      RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
+      m_curBlock.state = BLK_WRITE;
+      memcpy(pOut + outOffset, &curSig.token, 8);
+      outOffset += 8;
+      startPos++;
+
+      //...Add string to cache, if we have not exceeded cache limit
+      if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+      {
+        addToStringCache(curSig);
+      }
+    }
+  }  // if next
+
+  return NO_ERROR;
+}
+
+/*******************************************************************************
+ * Description:
+ * Used by bulk import to insert batch of parquet strings into this store file.
+ * Function assumes that the file is already positioned to the current block.
+ * 
+ * PARAMETERS:
+ *    input
+ *       columnData - arrow array containing input strings
+ *       startRowIdx - start position for current batch parquet data
+ *       totalRow - number of rows in "buf"
+ *       col - column of strings to be parsed from "buf"
+ *    output
+ *       tokenBuf   - tokens assigned to inserted strings
+ * 
+ * RETURN:
+ *    success     - successfully write the header to block
+ *    failure     - it did not write the header to block
+ ******************************************************************************/
+int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx,
+                                const int totalRow, const int col, char* tokenBuf,
+                                long long& truncCount, const CHARSET_INFO* cs,
+                                const WriteEngine::ColType& weType)
+{
+#ifdef PROFILE
+  Stats::startParseEvent(WE_STATS_PARSE_DCT);
+#endif
+  int startPos = 0;
+  int totalUseSize = 0;
+
+  int outOffset = 0;
+  const char* pIn;
+  char* pOut = tokenBuf;
+  Signature curSig;
+  bool found = false;
+  bool next = false;
+  CommBlock cb;
+  cb.file.oid = m_dctnryOID;
+  cb.file.pFile = m_dFile;
+  WriteEngine::Token nullToken;
+
+  bool isNonNullArray = true;
+  std::shared_ptr<arrow::BinaryArray> binaryArray;
+  std::shared_ptr<arrow::FixedSizeBinaryArray> fixedSizeBinaryArray;
+
+  if (columnData->type_id() != arrow::Type::type::FIXED_SIZE_BINARY)
+    binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+  else
+    fixedSizeBinaryArray = std::static_pointer_cast<arrow::FixedSizeBinaryArray>(columnData);
+
+  // check if this column data imported is NULL array or not
+  if (columnData->type_id() == arrow::Type::type::NA)
+    isNonNullArray = false;
+  
+  //...Loop through all the rows for the specified column
+  while (startPos < totalRow)
+  {
+    found = false;
+    void* curSigPtr = static_cast<void*>(&curSig);
+    memset(curSigPtr, 0, sizeof(curSig));
+
+    // if this column is not null data
+    if (isNonNullArray)
+    {
+      const uint8_t* data;
+      
+      // if (binaryArray != nullptr)
+      // {
+      //   data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+      // }
+      // else
+      // {
+      //   data = fixedSizeBinaryArray->GetValue(startPos + startRowIdx);
+      //   std::shared_ptr<arrow::DataType> tType = fixedSizeBinaryArray->type();
+      //   curSig.size = tType->byte_width();
+      // }
+
+      // comment this line and uncomment the above will reproduce the error
+      data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+
+      const char* dataPtr = reinterpret_cast<const char*>(data);
+
+      // Strip trailing null bytes '\0' (by adjusting curSig.size) if import-
+      // ing in binary mode.  If entire string is binary zeros, then we treat
+      // as a NULL value.
+      if (curSig.size > 0)
+      {
+        const char* fld = dataPtr;
+        int kk = curSig.size - 1;
+
+        for (; kk >= 0; kk--)
+        {
+          if (fld[kk] != '\0')
+            break;
+        }
+        curSig.size = kk + 1;
+      }
+
+      // Read thread should validate against max size so that the entire row
+      // can be rejected up front.  Once we get here in the parsing thread,
+      // it is too late to reject the row.  However, as a precaution, we
+      // still check against max size & set to null token if needed.
+      if ((curSig.size == 0) || (curSig.size > MAX_BLOB_SIZE))
+      {
+        if (m_defVal.length() > 0)  // use default string if available
+        {
+          pIn = m_defVal.str();
+          curSig.signature = (unsigned char*)pIn;
+          curSig.size = m_defVal.length();
+        }
+        else
+        {
+          memcpy(pOut + outOffset, &nullToken, 8);
+          outOffset += 8;
+          startPos++;
+          continue;
+        }
+      }
+      else
+      {
+        pIn = dataPtr;
+        curSig.signature = (unsigned char*)pIn;
+      }
+    }
+    else
+    {
+      curSig.size = 0;
+
+      if (m_defVal.length() > 0)  // use default string if available
+      {
+        pIn = m_defVal.str();
+        curSig.signature = (unsigned char*)pIn;
+        curSig.size = m_defVal.length();
+      }
+      else
+      {
+        memcpy(pOut + outOffset, &nullToken, 8);
+        outOffset += 8;
+        startPos++;
+        continue;
+      }
+    }
+
+    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next, truncCount,
+                                  cs, weType));
+  }
+
+#ifdef PROFILE
+  Stats::stopParseEvent(WE_STATS_PARSE_DCT);
+#endif
+  // Done
+  // If any data leftover and not written by subsequent call to
+  // insertDctnry(), then it will be written by closeDctnry().
+  
+  return NO_ERROR;
+}
+
 /*******************************************************************************
  * Description:
  * Used by bulk import to insert collection of strings into this store file.
@@ -838,201 +1199,8 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       curSig.signature = (unsigned char*)pIn;
     }
 
-    if (cs->mbmaxlen > 1)
-    {
-      // For TEXT columns, we truncate based on the number of bytes,
-      // and not based on the number of characters, as for CHAR/VARCHAR
-      // columns in the else block.
-      if (weType == WriteEngine::WR_TEXT)
-      {
-        if (curSig.size > m_colWidth)
-        {
-          uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
-          curSig.size = m_colWidth - truncate_point;
-          truncCount++;
-        }
-      }
-      else
-      {
-        const char* start = (const char*) curSig.signature;
-        const char* end = (const char*)(curSig.signature + curSig.size);
-        size_t numChars = cs->numchars(start, end);
-        size_t maxCharLength = m_colWidth / cs->mbmaxlen;
-
-        if (numChars > maxCharLength)
-        {
-          MY_STRCOPY_STATUS status;
-          cs->well_formed_char_length(start, end, maxCharLength, &status);
-          curSig.size = status.m_source_end_pos - start;
-          truncCount++;
-        }
-      }
-    }
-    else // cs->mbmaxlen == 1
-    {
-      if (curSig.size > m_colWidth)
-      {
-        curSig.size = m_colWidth;
-        truncCount++;
-      }
-    }
-
-    //...Search for the string in our string cache
-    // if it fits into one block (< 8KB)
-    if (curSig.size <= MAX_SIGNATURE_SIZE)
-    {
-      // Stats::startParseEvent("getTokenFromArray");
-      found = getTokenFromArray(curSig);
-
-      if (found)
-      {
-        memcpy(pOut + outOffset, &curSig.token, 8);
-        outOffset += 8;
-        startPos++;
-        // Stats::stopParseEvent("getTokenFromArray");
-        continue;
-      }
-
-      // Stats::stopParseEvent("getTokenFromArray");
-    }
-
-    totalUseSize = m_totalHdrBytes + curSig.size;
-
-    //...String not found in cache, so proceed.
-    //   If room is available in current block then insert into block.
-    // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
-    if (((totalUseSize <= m_freeSpace - HDR_UNIT_SIZE) ||
-         ((curSig.size > 8176) && (m_freeSpace > HDR_UNIT_SIZE))) &&
-        (m_curOp < (MAX_OP_COUNT - 1)))
-    {
-      RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
-      m_curBlock.state = BLK_WRITE;
-      memcpy(pOut + outOffset, &curSig.token, 8);
-      outOffset += 8;
-      startPos++;
-      found = true;
-
-      //...If we have reached limit for the number of strings allowed in
-      //   a block, then we write the current block so that we can start
-      //   another block.
-      if (m_curOp >= MAX_OP_COUNT - 1)
-      {
-#ifdef PROFILE
-        Stats::stopParseEvent(WE_STATS_PARSE_DCT);
-#endif
-        RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
-        m_curBlock.state = BLK_READ;
-        next = true;
-      }
-
-      //...Add string to cache, if we have not exceeded cache limit
-      // Don't cache big blobs
-      if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
-      {
-        addToStringCache(curSig);
-      }
-    }
-    else  //...No room for this string in current block, so we write
-          //   out the current block, so we can start another block
-    {
-#ifdef PROFILE
-      Stats::stopParseEvent(WE_STATS_PARSE_DCT);
-#endif
-      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
-      m_curBlock.state = BLK_READ;
-      next = true;
-      found = false;
-    }  // if m_freeSpace
-
-    //..."next" flag is used to indicate that we need to advance to the
-    //   next block in the store file.
-    if (next)
-    {
-      memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
-      memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
-      m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
-      m_curBlock.state = BLK_WRITE;
-      m_curOp = 0;
-      next = false;
-      m_lastFbo++;
-      m_curFbo = m_lastFbo;
-
-      //...Expand current extent if it is an abbreviated initial extent
-      if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
-      {
-        RETURN_ON_ERROR(expandDctnryExtent());
-      }
-
-      //...Allocate a new extent if we have reached the last block in the
-      //   current extent.
-      if (m_curFbo == m_numBlocks)
-      {
-        // last block
-        LBID_t startLbid;
-
-        // Add an extent.
-        RETURN_ON_ERROR(
-            createDctnry(m_dctnryOID, m_colWidth, m_dbRoot, m_partition, m_segment, startLbid, false));
-
-        if (m_logger)
-        {
-          std::ostringstream oss;
-          oss << "Add dictionary extent OID-" << m_dctnryOID << "; DBRoot-" << m_dbRoot << "; part-"
-              << m_partition << "; seg-" << m_segment << "; hwm-" << m_curFbo << "; LBID-" << startLbid
-              << "; file-" << m_segFileName;
-          m_logger->logMsg(oss.str(), MSGLVL_INFO2);
-        }
-
-        m_curLbid = startLbid;
-
-        // now seek back to the curFbo, after adding an extent
-        // @bug5769 For uncompressed only;
-        // ChunkManager manages the file offset for the compression case
-        if (m_compressionType == 0)
-        {
-#ifdef PROFILE
-          Stats::startParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
-#endif
-          long long byteOffset = m_curFbo;
-          byteOffset *= BYTE_PER_BLOCK;
-          RETURN_ON_ERROR(setFileOffset(m_dFile, byteOffset));
-#ifdef PROFILE
-          Stats::stopParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
-#endif
-        }
-      }
-      else
-      {
-        // LBIDs are numbered collectively and consecutively within an
-        // extent, so within an extent we can derive the LBID by simply
-        // incrementing it rather than having to go back to BRM to look
-        // up the LBID for each FBO.
-        m_curLbid++;
-      }
-
-#ifdef PROFILE
-      Stats::startParseEvent(WE_STATS_PARSE_DCT);
-#endif
-      m_curBlock.lbid = m_curLbid;
-
-      //..."found" flag indicates whether the string was already found
-      //   "or" added to the end of the previous block.  If false, then
-      //   we need to add the string to the new block.
-      if (!found)
-      {
-        RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
-        m_curBlock.state = BLK_WRITE;
-        memcpy(pOut + outOffset, &curSig.token, 8);
-        outOffset += 8;
-        startPos++;
-
-        //...Add string to cache, if we have not exceeded cache limit
-        if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
-        {
-          addToStringCache(curSig);
-        }
-      }
-    }  // if next
+    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next, truncCount,
+                                  cs, weType));
   }    // end while
 
 #ifdef PROFILE

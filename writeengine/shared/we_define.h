@@ -113,7 +113,7 @@ const int ERR_COMPBASE = 1650;      // Compression errors
 const int ERR_AUTOINCBASE = 1700;   // Auto-increment errors
 const int ERR_BLKCACHEBASE = 1750;  // Block cache flush errors
 const int ERR_METABKUPBASE = 1800;  // Backup bulk meta file errors
-
+const int ERR_PARQUETBASE = 1850;   // Parquet importing errors
 //--------------------------------------------------------------------------
 // Generic error
 //--------------------------------------------------------------------------
@@ -152,6 +152,7 @@ const int ERR_FILE_GLOBBING = ERR_FILEBASE + 19;        // Error globbing a file
 const int ERR_FILE_EOF = ERR_FILEBASE + 20;             // EOF
 const int ERR_FILE_CHOWN = ERR_FILEBASE + 21;           // EOF
 const int ERR_INTERNAL = ERR_FILEBASE + 22;             // EOF
+const int ERR_FILE_TYPE_DIFF = ERR_FILEBASE + 23;       // Files import type are different
 
 //--------------------------------------------------------------------------
 // XML level error
@@ -388,6 +389,11 @@ const int ERR_METADATABKUP_COMP_WRITE_BULK_BKUP =
 const int ERR_METADATABKUP_COMP_READ_BULK_BKUP =
     ERR_METABKUPBASE + 7;                                       // Error reading from backup chunk file */
 const int ERR_METADATABKUP_COMP_RENAME = ERR_METABKUPBASE + 8;  // Error renaming chunk file */
+
+//--------------------------------------------------------------------------
+// Parquet errors when importing
+//--------------------------------------------------------------------------
+const int ERR_PARQUET_AUX = ERR_PARQUETBASE + 1;    // Error when creating aux column for parquet file
 
 //------------------------------------------------------------------------------
 // Class used to convert an error code to a corresponding error message string
