@@ -25,6 +25,12 @@
 #include "we_bulkload.h"
 #undef WE_BULKLOAD_DLLEXPORT
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <climits>
@@ -446,6 +452,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 
   return NO_ERROR;
 }
+
 
 //------------------------------------------------------------------------------
 // DESCRIPTION:

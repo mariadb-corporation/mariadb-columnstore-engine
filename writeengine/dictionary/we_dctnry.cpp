@@ -35,6 +35,8 @@
 #include <iostream>
 using namespace std;
 
+
+
 #include "bytestream.h"
 #include "brmtypes.h"
 #include "extentmap.h"  // for DICT_COL_WIDTH
@@ -742,6 +744,212 @@ int Dctnry::insertDctnry2(Signature& sig)
 
   sig.size = origSigSize;
   sig.signature = origSig;
+  return NO_ERROR;
+}
+
+
+int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, const int totalRow, const int col, char* tokenBuf, long long& truncCount)
+{
+  int startPos = 0;
+  int totalUseSize = 0;
+
+  bool found = false;
+  Signature curSig;
+  const char* pIn;
+  char* pOut = tokenBuf;
+  int outOffset = 0;
+  bool next = false;
+  CommBlock cb;
+  cb.file.oid = m_dctnryOID;
+  cb.file.pFile = m_dFile;
+  WriteEngine::Token nullToken;
+  auto binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+
+  while (startPos < totalRow)
+  {
+    found = false;
+    void* curSigPtr = static_cast<void*>(&curSig);
+    memset(curSigPtr, 0, sizeof(curSig));
+
+    const uint8_t* data = binaryArray->GetValue(startPos, &curSig.size);
+    const char* dataPtr = reinterpret_cast<const char*>(data);
+
+    if (curSig.size > 0)
+    {
+      const char* fld = dataPtr;
+      int kk = curSig.size - 1;
+
+      for (; kk >= 0; kk--)
+      {
+        if (fld[kk] != '\0')
+          break;
+      }
+      curSig.size = kk + 1;
+    }
+
+    if ((curSig.size == 0) || (curSig.size > MAX_BLOB_SIZE))
+    {
+      if (m_defVal.length() > 0)
+      {
+        pIn = m_defVal.str();
+        curSig.signature = (unsigned char*)pIn;
+        curSig.size = m_defVal.length();
+      }
+      else
+      {
+        memcpy(pOut + outOffset, &nullToken, 8);
+        outOffset += 8;
+        startPos++;
+        continue;
+      }
+    }
+    else
+    {
+      pIn = dataPtr;
+      curSig.signature = (unsigned char*)pIn;
+    }
+
+    if (curSig.size > m_colWidth)
+    {
+      uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
+      curSig.size = m_colWidth - truncate_point;
+      ++truncCount;
+    }
+
+    if (curSig.size <= MAX_SIGNATURE_SIZE)
+    {
+      found = getTokenFromArray(curSig);
+
+      if (found)
+      {
+        memcpy(pOut + outOffset, &curSig.token, 8);
+        outOffset += 8;
+        startPos++;
+        continue;
+      }
+    }
+    totalUseSize = m_totalHdrBytes + curSig.size;
+
+    if (((totalUseSize <= m_freeSpace - HDR_UNIT_SIZE) ||
+         ((curSig.size > 8176) && (m_freeSpace > HDR_UNIT_SIZE))) &&
+         (m_curOp < (MAX_OP_COUNT - 1)))
+    {
+      RETURN_ON_ERROR(insertDctnry2(curSig));
+      m_curBlock.state = BLK_WRITE;
+      memcpy(pOut + outOffset, &curSig.token, 8);
+      outOffset += 8;
+      startPos++;
+      found = true;
+
+      if (m_curOp >= MAX_OP_COUNT - 1)
+      {
+        RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+        m_curBlock.state = BLK_READ;
+        next = true;
+      }
+
+      if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+      {
+        addToStringCache(curSig);
+      }
+    }
+    else
+    {
+      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      m_curBlock.state = BLK_READ;
+      next = true;
+      found = false;
+    }
+
+    if (next)
+    {
+      memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
+      memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
+      m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
+      m_curBlock.state = BLK_WRITE;
+      m_curOp = 0;
+      next = false;
+      m_lastFbo++;
+      m_curFbo = m_lastFbo;
+
+      //...Expand current extent if it is an abbreviated initial extent
+      if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
+      {
+        RETURN_ON_ERROR(expandDctnryExtent());
+      }
+
+      //...Allocate a new extent if we have reached the last block in the
+      //   current extent.
+      if (m_curFbo == m_numBlocks)
+      {
+        // last block
+        LBID_t startLbid;
+
+        // Add an extent.
+        RETURN_ON_ERROR(
+            createDctnry(m_dctnryOID, m_colWidth, m_dbRoot, m_partition, m_segment, startLbid, false));
+
+        if (m_logger)
+        {
+          std::ostringstream oss;
+          oss << "Add dictionary extent OID-" << m_dctnryOID << "; DBRoot-" << m_dbRoot << "; part-"
+              << m_partition << "; seg-" << m_segment << "; hwm-" << m_curFbo << "; LBID-" << startLbid
+              << "; file-" << m_segFileName;
+          m_logger->logMsg(oss.str(), MSGLVL_INFO2);
+        }
+
+        m_curLbid = startLbid;
+
+        // now seek back to the curFbo, after adding an extent
+        // @bug5769 For uncompressed only;
+        // ChunkManager manages the file offset for the compression case
+        if (m_compressionType == 0)
+        {
+#ifdef PROFILE
+          Stats::startParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
+#endif
+          long long byteOffset = m_curFbo;
+          byteOffset *= BYTE_PER_BLOCK;
+          RETURN_ON_ERROR(setFileOffset(m_dFile, byteOffset));
+#ifdef PROFILE
+          Stats::stopParseEvent(WE_STATS_PARSE_DCT_SEEK_EXTENT_BLK);
+#endif
+        }
+      }
+      else
+      {
+        // LBIDs are numbered collectively and consecutively within an
+        // extent, so within an extent we can derive the LBID by simply
+        // incrementing it rather than having to go back to BRM to look
+        // up the LBID for each FBO.
+        m_curLbid++;
+      }
+
+#ifdef PROFILE
+      Stats::startParseEvent(WE_STATS_PARSE_DCT);
+#endif
+      m_curBlock.lbid = m_curLbid;
+
+      //..."found" flag indicates whether the string was already found
+      //   "or" added to the end of the previous block.  If false, then
+      //   we need to add the string to the new block.
+      if (!found)
+      {
+        RETURN_ON_ERROR(insertDctnry2(curSig));  // m_freeSpace updated!
+        m_curBlock.state = BLK_WRITE;
+        memcpy(pOut + outOffset, &curSig.token, 8);
+        outOffset += 8;
+        startPos++;
+
+        //...Add string to cache, if we have not exceeded cache limit
+        if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+        {
+          addToStringCache(curSig);
+        }
+      }
+    }  // if next
+  }
+
   return NO_ERROR;
 }
 

@@ -1,0 +1,8 @@
+DROP DATABASE IF EXISTS mcs288_db;
+CREATE DATABASE mcs288_db;
+USE mcs288_db;
+SHOW TABLES;
+Tables_in_mcs288_db
+teststable
+TRUNCATE teststable;
+DROP DATABASE mcs288_db;

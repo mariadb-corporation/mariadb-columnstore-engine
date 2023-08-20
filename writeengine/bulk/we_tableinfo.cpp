@@ -55,6 +55,19 @@ using namespace querytele;
 #include "oamcache.h"
 #include "cacheutils.h"
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/io/file.h>
+#include <parquet/stream_reader.h>
+using namespace execplan;
+
+#include "utils_utf8.h"  // utf8_truncate_point()
+
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -153,6 +166,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fRejectErrCnt(0)
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
+ , fParquetReader(NULL)
 {
   fBuffers.clear();
   fColumns.clear();
@@ -259,6 +273,7 @@ bool TableInfo::lockForRead(const int& locker)
   return false;
 }
 
+
 //------------------------------------------------------------------------------
 // Loop thru reading the import file(s) assigned to this TableInfo object.
 //------------------------------------------------------------------------------
@@ -266,24 +281,45 @@ int TableInfo::readTableData()
 {
   RID validTotalRows = 0;
   RID totalRowsPerInputFile = 0;
+  int64_t totalRowsParquet = 0;
   int filesTBProcessed = fLoadFileList.size();
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
-
-  if (fHandle == NULL)
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
   {
-    fFileName = fLoadFileList[fileCounter];
-    int rc = openTableFile();
-
-    if (rc != NO_ERROR)
+    if (fHandle == NULL)
     {
-      // Mark the table status as error and exit.
-      boost::mutex::scoped_lock lock(fSyncUpdatesTI);
-      fStatusTI = WriteEngine::ERR;
-      return rc;
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFile();
+
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+
+      fileCounter++;
     }
 
-    fileCounter++;
+  }
+  else
+  {
+    if (fParquetReader == NULL)
+    {
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFileParquet(totalRowsParquet);
+      fileCounter++;
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+    }
+
   }
 
   timeval readStart;
@@ -427,8 +463,15 @@ int TableInfo::readTableData()
     }
     else
     {
-      readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
-                                                validTotalRows, fColumns, allowedErrCntThisCall);
+      if (fImportDataMode != IMPORT_DATA_PARQUET)
+      {
+        readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
+                                                  validTotalRows, fColumns, allowedErrCntThisCall);
+      }
+      else
+      {
+        readRc = fBuffers[readBufNo].fillFromFileParquet(totalRowsPerInputFile, validTotalRows);
+      }
     }
 
     if (readRc != NO_ERROR)
@@ -530,7 +573,7 @@ int TableInfo::readTableData()
       fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
       // bufferCount++;
-      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)))
+      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) || (totalRowsPerInputFile == (RID)totalRowsParquet))
       {
         timeval readFinished;
         gettimeofday(&readFinished, NULL);
@@ -567,7 +610,15 @@ int TableInfo::readTableData()
         if (fileCounter < filesTBProcessed)
         {
           fFileName = fLoadFileList[fileCounter];
-          int rc = openTableFile();
+          int rc;
+          if (fImportDataMode != IMPORT_DATA_PARQUET)
+          {
+            rc = openTableFile();
+          }
+          else
+          {
+            rc = openTableFileParquet(totalRowsParquet);
+          }
 
           if (rc != NO_ERROR)
           {
@@ -661,6 +712,7 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
 
   return rc;
 }
+
 
 //------------------------------------------------------------------------------
 // Mark the specified column (columnId) in the specified buffer (bufferId) as
@@ -1252,6 +1304,27 @@ void TableInfo::addColumn(ColumnInfo* info)
   fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width, info->column.dataType);
 }
 
+ 
+int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
+{
+  if (fParquetReader != NULL)
+    return NO_ERROR;
+  std::shared_ptr<arrow::io::ReadableFile> infile;
+  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
+  PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
+  //TODO: batch_size set here as hyperparameter
+  fReader->set_batch_size(10);
+  PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 10, &totalRowsParquet));
+  PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
+  // initialize fBuffers batch source
+  for (int i = 0; i < fReadBufCount; ++i)
+  {
+    fBuffers[i].setParquetReader(fParquetReader);
+  }
+  return NO_ERROR;
+ 
+}
+ 
 //------------------------------------------------------------------------------
 // Open the file corresponding to fFileName so that we can import it's contents.
 // A buffer is also allocated and passed to setvbuf().

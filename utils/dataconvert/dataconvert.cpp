@@ -40,6 +40,7 @@ using namespace boost::algorithm;
 
 #include "joblisttypes.h"
 
+#include <chrono>
 #define DATACONVERT_DLLEXPORT
 #include "dataconvert.h"
 #undef DATACONVERT_DLLEXPORT
@@ -481,6 +482,80 @@ void number_int_value(const string& data, cscDataType typeCode,
 
       if (saturate)
         *saturate = true;
+    }
+  }
+}
+
+void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal)
+{
+  int128_t leftPart = bigllVal, rightPart;
+  for (int i = 0; i < fScale; i++)
+  {
+    // bigllVal
+    leftPart /= 10;
+  }
+  // int128_t tPart = leftPart;
+  for (int i = 0; i < fScale; i++)
+  {
+    leftPart *= 10;
+  }
+  rightPart = bigllVal - leftPart;
+
+  // apply the scale
+  if (columnScale > fScale)
+  {
+    for (int i = 0; i < columnScale - fScale; i++)
+    {
+      rightPart *= 10;
+      leftPart *= 10;
+    }
+  }
+  else
+  {
+    for (int i = 0; i < fScale - columnScale; i++)
+    {
+      leftPart /= 10;
+      rightPart /= 10;
+    }
+  }
+
+  bigllVal = leftPart + rightPart;
+  // is column.width always 16?
+  // if (LIKELY(column.width == 16))
+  // {
+  int128_t tmp;
+  utils::int128Min(tmp);
+  if (bigllVal < tmp + 2)  // + 2 for NULL and EMPTY values
+  {
+    bigllVal = tmp + 2;
+    *bSatVal = true;
+  }
+  // }
+
+  if (columnScale > 0)
+  {
+    int128_t rangeUp, rangeLow;
+
+    auto precision = 
+        columnPrecision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : columnPrecision;
+    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
+    {
+      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
+                            dataTypeErr);
+    }
+    rangeUp = dataconvert::decimalRangeUp<int128_t>(precision);
+    
+    rangeLow = -rangeUp;
+
+    if (bigllVal > rangeUp)
+    {
+      bigllVal = rangeUp;
+      *bSatVal = true;
+    }
+    else if (bigllVal < rangeLow)
+    {
+      bigllVal = rangeLow;
+      *bSatVal = true;
     }
   }
 }
@@ -1574,6 +1649,43 @@ boost::any DataConvert::StringToTimestamp(const datatypes::ConvertFromStringPara
   return value;
 }
 
+
+int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
+{
+  int inYear;
+  int inMonth;
+  int inDay;
+  int32_t value = 0;
+
+  dayVal = (long long)dayVal;
+  int64_t secondsSinceEpoch = dayVal * 86400;
+  std::chrono::seconds duration(secondsSinceEpoch);
+
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::localtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+
+  if (isDateValid(inDay, inMonth, inYear))
+  {
+    Date aDay;
+    aDay.year = inYear;
+    aDay.month = inMonth;
+    aDay.day = inDay;
+    memcpy(&value, &aDay, 4);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
+
+}
+
 //------------------------------------------------------------------------------
 // Convert date string to binary date.  Used by BulkLoad.
 //------------------------------------------------------------------------------
@@ -1658,6 +1770,50 @@ bool DataConvert::isColumnDateValid(int32_t date)
   void* dp = static_cast<void*>(&d);
   memcpy(dp, &date, sizeof(int32_t));
   return (isDateValid(d.day, d.month, d.year));
+}
+
+int64_t DataConvert::convertArrowColumnDatetime(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+
+  std::chrono::milliseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::localtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = (duration.count() % 1000) * 1000;
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    DateTime aDatetime;
+    aDatetime.year = inYear;
+    aDatetime.month = inMonth;
+    aDatetime.day = inDay;
+    aDatetime.hour = inHour;
+    aDatetime.minute = inMinute;
+    aDatetime.second = inSecond;
+    aDatetime.msecond = inMicrosecond;
+
+    memcpy(&value, &aDatetime, 8);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
 }
 
 //------------------------------------------------------------------------------
@@ -1973,6 +2129,116 @@ int64_t DataConvert::convertColumnTimestamp(const char* dataOrg, CalpontDateTime
 
   return value;
 }
+
+
+int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
+{
+  int64_t value = 0;
+  // convert millisecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000;
+  // inHour %= 24;
+  inMinute = (timeVal - inHour * 3600000) / 60000;
+  // inMinute %= 60;
+  inSecond = (timeVal - inHour * 3600000 - inMinute * 60000) / 1000;
+  // inSecond %= 60;
+  inMicrosecond = (timeVal - inHour * 3600000 - inMinute * 60000 - inSecond * 1000) * 1000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+  }
+  return value;
+}
+
+int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
+{
+  int64_t value = 0;
+  // convert macrosecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000000;
+  // inHour %= 24;
+  inMinute = (timeVal - inHour * 3600000000) / 60000000;
+  // inMinute %= 60;
+  inSecond = (timeVal - inHour * 3600000000 - inMinute * 60000000) / 1000000;
+  // inSecond %= 60;
+  inMicrosecond = timeVal - inHour * 3600000000 - inMinute * 60000000 - inSecond * 1000000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+  }
+  return value;
+}
+
 
 //------------------------------------------------------------------------------
 // Convert time string to binary time.  Used by BulkLoad.
