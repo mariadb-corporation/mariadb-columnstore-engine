@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <type_traits>
+#include <chrono>
 #include "mcs_decimal.h"
 using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
@@ -1573,6 +1574,44 @@ boost::any DataConvert::StringToTimestamp(const datatypes::ConvertFromStringPara
 }
 
 //------------------------------------------------------------------------------
+// Convert date32 parquet data to binary date.  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
+{
+  int inYear;
+  int inMonth;
+  int inDay;
+  int32_t value = 0;
+
+  int64_t secondsSinceEpoch = dayVal;
+  secondsSinceEpoch *= 86400;
+  std::chrono::seconds duration(secondsSinceEpoch);
+
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::localtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+
+  if (isDateValid(inDay, inMonth, inYear))
+  {
+    Date aDay;
+    aDay.year = inYear;
+    aDay.month = inMonth;
+    aDay.day = inDay;
+    memcpy(&value, &aDay, 4);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
+}
+
+//------------------------------------------------------------------------------
 // Convert date string to binary date.  Used by BulkLoad.
 //------------------------------------------------------------------------------
 int32_t DataConvert::convertColumnDate(const char* dataOrg, CalpontDateTimeFormat dateFormat, int& status,
@@ -1656,6 +1695,100 @@ bool DataConvert::isColumnDateValid(int32_t date)
   void* dp = static_cast<void*>(&d);
   memcpy(dp, &date, sizeof(int32_t));
   return (isDateValid(d.day, d.month, d.year));
+}
+
+//------------------------------------------------------------------------------
+// Convert timestamp parquet data to binary datetime(millisecond).  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnDatetime(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+
+  std::chrono::milliseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::gmtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = duration.count() % 1000;
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    DateTime aDatetime;
+    aDatetime.year = inYear;
+    aDatetime.month = inMonth;
+    aDatetime.day = inDay;
+    aDatetime.hour = inHour;
+    aDatetime.minute = inMinute;
+    aDatetime.second = inSecond;
+    aDatetime.msecond = inMicrosecond;
+
+    memcpy(&value, &aDatetime, 8);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
+}
+
+//------------------------------------------------------------------------------
+// Convert timestamp parquet data to binary datetime(millisecond).  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnDatetimeUs(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+
+  std::chrono::microseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::gmtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = duration.count() % 1000000;
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    DateTime aDatetime;
+    aDatetime.year = inYear;
+    aDatetime.month = inMonth;
+    aDatetime.day = inDay;
+    aDatetime.hour = inHour;
+    aDatetime.minute = inMinute;
+    aDatetime.second = inSecond;
+    aDatetime.msecond = inMicrosecond;
+
+    memcpy(&value, &aDatetime, 8);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
 }
 
 //------------------------------------------------------------------------------
@@ -1795,6 +1928,127 @@ int64_t DataConvert::convertColumnDatetime(const char* dataOrg, CalpontDateTimeF
     status = -1;
   }
 
+  return value;
+}
+
+//------------------------------------------------------------------------------
+// Convert timestamp parquet data to binary timestamp.  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnTimestamp(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+
+  std::chrono::milliseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::gmtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = duration.count() % 1000;
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    MySQLTime m_time;
+    m_time.year = inYear;
+    m_time.month = inMonth;
+    m_time.day = inDay;
+    m_time.hour = inHour;
+    m_time.minute = inMinute;
+    m_time.second = inSecond;
+    m_time.second_part = inMicrosecond;
+
+    bool isValid = true;
+    int64_t seconds = mySQLTimeToGmtSec(m_time, 0, isValid);
+
+    if (!isValid)
+    {
+      status = -1;
+      return value;
+    }
+
+    TimeStamp timestamp;
+    timestamp.second = seconds;
+    timestamp.msecond = m_time.second_part;
+
+    memcpy(&value, &timestamp, 8);
+  }
+  else
+  {
+    status = -1;
+  }
+  return value;
+}
+
+//------------------------------------------------------------------------------
+// Convert timestamp parquet data to binary timestamp.  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnTimestampUs(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  int inYear;
+  int inMonth;
+  int inDay;
+  int inHour;
+  int inMinute;
+  int inSecond;
+  int inMicrosecond;
+  
+  std::chrono::microseconds duration(timeVal);
+  std::chrono::system_clock::time_point timePoint(duration);
+
+  std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
+  std::tm* timeInfo = std::gmtime(&ttime);
+
+  inYear = timeInfo->tm_year + 1900;
+  inMonth = timeInfo->tm_mon + 1;
+  inDay = timeInfo->tm_mday;
+  inHour = timeInfo->tm_hour;
+  inMinute = timeInfo->tm_min;
+  inSecond = timeInfo->tm_sec;
+  inMicrosecond = static_cast<int>(duration.count() % 1000000);
+
+  if (isDateValid(inDay, inMonth, inYear) && isDateTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    MySQLTime m_time;
+    m_time.year = inYear;
+    m_time.month = inMonth;
+    m_time.day = inDay;
+    m_time.hour = inHour;
+    m_time.minute = inMinute;
+    m_time.second = inSecond;
+    m_time.second_part = inMicrosecond;
+
+    bool isValid = true;
+    int64_t seconds = mySQLTimeToGmtSec(m_time, 0, isValid);
+
+    if (!isValid)
+    {
+      status = -1;
+      return value;
+    }
+
+    TimeStamp timestamp;
+    timestamp.second = seconds;
+    timestamp.msecond = m_time.second_part;
+
+    memcpy(&value, &timestamp, 8);
+  }
+  else
+  {
+    status = -1;
+  }
   return value;
 }
 
@@ -1971,6 +2225,123 @@ int64_t DataConvert::convertColumnTimestamp(const char* dataOrg, CalpontDateTime
 
   return value;
 }
+
+//------------------------------------------------------------------------------
+// Convert time32 parquet data to binary time.  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal, int& status)
+{
+  int64_t value = 0;
+  // convert millisecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000;
+  inMinute = (timeVal - inHour * 3600000) / 60000;
+  inSecond = (timeVal - inHour * 3600000 - inMinute * 60000) / 1000;
+  inMicrosecond = timeVal - inHour * 3600000 - inMinute * 60000 - inSecond * 1000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+
+    // If neither of the above match then we return a 0 time
+
+    status = -1;
+  }
+  return value;
+}
+
+//------------------------------------------------------------------------------
+// Convert time64 parquet data to binary time.  Used by BulkLoad.
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal, int& status)
+{
+  int64_t value = 0;
+  // convert macrosecond to time
+  int inHour, inMinute, inSecond, inMicrosecond;
+  inHour = inMinute = inSecond = inMicrosecond = 0;
+  bool isNeg = false;
+  if (timeVal < 0)
+    isNeg = true;
+  inHour = timeVal / 3600000000;
+  inMinute = (timeVal - inHour * 3600000000) / 60000000;
+  inSecond = (timeVal - inHour * 3600000000 - inMinute * 60000000) / 1000000;
+  inMicrosecond = timeVal - inHour * 3600000000 - inMinute * 60000000 - inSecond * 1000000;
+  if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
+  {
+    Time atime;
+    atime.hour = inHour;
+    atime.minute = inMinute;
+    atime.second = inSecond;
+    atime.msecond = inMicrosecond;
+    atime.is_neg = isNeg;
+
+    memcpy(&value, &atime, 8);
+  }
+  else
+  {
+    // Emulate MariaDB's time saturation
+    if (inHour > 838)
+    {
+      Time atime;
+      atime.hour = 838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+    else if (inHour < -838)
+    {
+      Time atime;
+      atime.hour = -838;
+      atime.minute = 59;
+      atime.second = 59;
+      atime.msecond = 999999;
+      atime.is_neg = false;
+      memcpy(&value, &atime, 8);
+    }
+
+    // If neither of the above match then we return a 0 time
+
+    status = -1;
+  }
+  return value;
+}
+
 
 //------------------------------------------------------------------------------
 // Convert time string to binary time.  Used by BulkLoad.

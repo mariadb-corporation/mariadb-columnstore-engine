@@ -40,7 +40,11 @@ set(cpimport.bin_SRCS cpimport.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
 add_dependencies(cpimport.bin marias3)
-target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
 
+target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
+FIND_PACKAGE(Arrow)
+FIND_PACKAGE(Parquet)
+target_link_libraries(cpimport.bin arrow)
+target_link_libraries(cpimport.bin parquet)
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
