@@ -1,0 +1,36 @@
+DROP DATABASE IF EXISTS mcol_5505_parquet_ddl;
+CREATE DATABASE mcol_5505_parquet_ddl;
+USE mcol_5505_parquet_ddl;
+SHOW CREATE TABLE parquet_test_table;
+Table	Create Table
+parquet_test_table	CREATE TABLE `parquet_test_table` (
+  `col1` int(11) DEFAULT NULL,
+  `col2` bigint(20) DEFAULT NULL,
+  `col3` float DEFAULT NULL,
+  `col4` double DEFAULT NULL,
+  `col5` time(3) DEFAULT NULL,
+  `col6` varchar(2000) DEFAULT NULL,
+  `col7` varchar(2000) DEFAULT NULL,
+  `col8` varchar(2000) DEFAULT NULL,
+  `col9` varchar(2000) DEFAULT NULL,
+  `col10` varchar(2000) DEFAULT NULL,
+  `col11` varchar(2000) DEFAULT NULL,
+  `col12` timestamp(3) NULL DEFAULT NULL,
+  `col13` date DEFAULT NULL,
+  `col14` timestamp(3) NULL DEFAULT NULL,
+  `col15` smallint(6) DEFAULT NULL,
+  `col16` tinyint(4) DEFAULT NULL,
+  `col17` decimal(9,3) DEFAULT NULL,
+  `col18` int(10) unsigned DEFAULT NULL,
+  `col19` smallint(5) unsigned DEFAULT NULL,
+  `col20` tinyint(3) unsigned DEFAULT NULL,
+  `col21` bigint(20) unsigned DEFAULT NULL,
+  `col22` tinyint(1) DEFAULT NULL,
+  `col23` decimal(38,10) DEFAULT NULL,
+  `col24` time(6) DEFAULT NULL,
+  `col25` timestamp(6) NULL DEFAULT NULL,
+  `col26` timestamp(6) NULL DEFAULT NULL,
+  `col27` varbinary(8000) DEFAULT NULL,
+  `col28` char(4) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+DROP DATABASE mcol_5505_parquet_ddl;
