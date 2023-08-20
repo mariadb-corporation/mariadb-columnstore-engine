@@ -30,6 +30,16 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
+#include <parquet/exception.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/io/file.h>
+#include <parquet/stream_reader.h>
+
 #include <libmarias3/marias3.h>
 
 #include "we_type.h"
@@ -170,7 +180,9 @@ class TableInfo : public WeUIDGID
   oam::OamCache* fOamCachePtr;              // OamCache: ptr is copyable
   boost::uuids::uuid fJobUUID;              // Job UUID
   std::vector<BRM::LBID_t> fDictFlushBlks;  // dict blks to be flushed from cache
-
+  
+  std::shared_ptr<arrow::RecordBatchReader> fParquetReader;
+  std::unique_ptr<parquet::arrow::FileReader> fReader;
   //--------------------------------------------------------------------------
   // Private Functions
   //--------------------------------------------------------------------------
@@ -183,6 +195,7 @@ class TableInfo : public WeUIDGID
   int finishBRM();                       // Finish reporting updates for BRM
   void freeProcessingBuffers();          // Free up Processing Buffers
   bool isBufferAvailable(bool report);   // Is tbl buffer available for reading
+  int openTableFileParquet(int64_t &totalRowsParquet);
   int openTableFile();                   // Open data file and set the buffer
   void reportTotals(double elapsedSec);  // Report summary totals
   void sleepMS(long int ms);             // Sleep method

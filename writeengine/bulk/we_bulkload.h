@@ -305,6 +305,10 @@ class BulkLoad : public FileOp
 //------------------------------------------------------------------------------
 inline void BulkLoad::addToCmdLineImportFileList(const std::string& importFile)
 {
+  if (importFile.rfind(".parquet") != std::string::npos)
+  {
+    setImportDataMode(IMPORT_DATA_PARQUET);
+  }
   fCmdLineImportFiles.push_back(importFile);
 }
 
