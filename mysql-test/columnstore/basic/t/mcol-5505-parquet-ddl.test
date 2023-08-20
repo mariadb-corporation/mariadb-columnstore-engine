@@ -1,0 +1,33 @@
+#
+# check mcs_parquet_ddl tool
+# Author: Bin Ruan, binruan0227@gmail.com
+#
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5505_parquet_ddl;
+--enable_warnings
+
+--disable_result_log
+--exec mcs_parquet_gen -a -f $MTR_SUITE_DIR/../std_data
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/tests.parquet $MTR_SUITE_DIR/../std_data/parquet_test_table.ddl
+# Wrong source file type
+--error 3
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/int8.par $MTR_SUITE_DIR/../std_data/int8table.ddl
+# Wrong number of argument files
+--error 4
+--exec mcs_parquet_ddl $MTR_SUITE_DIR/../std_data/tests.parquet
+--enable_result_log
+
+# Create table
+CREATE DATABASE mcol_5505_parquet_ddl;
+
+--exec $MYSQL mcol_5505_parquet_ddl < $MTR_SUITE_DIR/../std_data/parquet_test_table.ddl >/dev/null
+USE mcol_5505_parquet_ddl;
+SHOW CREATE TABLE parquet_test_table;
+
+# Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/tests.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/nulls.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/parquet_test_table.ddl
+DROP DATABASE mcol_5505_parquet_ddl;
