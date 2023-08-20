@@ -44,16 +44,63 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
                            '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
-                           '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
+                           '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ' +
+                           '&& yum install -y epel-release ' +
+                           '&& yum install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                           '&& yum install -y --enablerepo=epel arrow-devel ' + 
+                           '&& yum install -y --enablerepo=epel arrow-glib-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-dataset-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-dataset-glib-devel ' +
+                           '&& yum install -y --enablerepo=epel arrow-acero-devel ' +
+                           '&& yum install -y --enablerepo=epel parquet-devel ' +
+                           '&& yum install -y --enablerepo=epel parquet-glib-devel ';
+
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
                                '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
+                               '&& dnf install -y epel-release ' +
+                               '&& dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                               '&& dnf config-manager --set-enabled epel || : ' + 
+                               '&& dnf config-manager --set-enabled powertools || : ' + 
+                               '&& dnf config-manager --set-enabled crb || : ' + 
+                               '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
+                               '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& dnf install -y arrow-devel ' +
+                               '&& dnf install -y arrow-glib-devel ' + 
+                               '&& dnf install -y arrow-dataset-devel ' + 
+                               '&& dnf install -y arrow-dataset-glib-devel ' +
+                               '&& dnf install -y arrow-acero-devel ' +
+                               '&& dnf install -y arrow-flight-devel ' +
+                               '&& dnf install -y arrow-flight-glib-devel ' +
+                               '&& dnf install -y gandiva-devel ' +
+                               '&& dnf install -y gandiva-glib-devel ' +
+                               '&& dnf install -y parquet-devel ' + 
+                               '&& dnf install -y parquet-glib-devel ' +
                                '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
 
 
 local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
+                               '&& dnf install -y epel-release || dnf install -y oracle-epel-release-el$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1) || dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm' +
+                               '&& dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm ' +
+                               '&& dnf config-manager --set-enabled epel || : ' + 
+                               '&& dnf config-manager --set-enabled powertools || : ' + 
+                               '&& dnf config-manager --set-enabled crb || : ' + 
+                               '&& dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : ' + 
+                               '&& dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || : ' +
+                               '&& subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || : ' +
+                               '&& dnf update -y ' +
+                               '&& dnf install -y arrow-devel ' +
+                               '&& dnf install -y arrow-glib-devel ' + 
+
+                               '&& dnf install -y arrow-acero-devel ' +
+                               '&& dnf install -y arrow-flight-devel ' +
+                               '&& dnf install -y arrow-flight-glib-devel ' +
+                               '&& dnf install -y gandiva-devel ' +
+                               '&& dnf install -y gandiva-glib-devel ' +
+                               '&& dnf install -y parquet-devel ' + 
+                               '&& dnf install -y parquet-glib-devel ' +
                                '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
 
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
@@ -61,7 +108,7 @@ local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb h
 
 local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
 local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
+local bootstrap_deps = "apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl && apt install -y -V ca-certificates lsb-release wget && wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && apt update && apt install -y -V libarrow-dev && apt install -y -V libarrow-glib-dev && apt install -y -V libarrow-dataset-dev && apt install -y -V libarrow-dataset-glib-dev && apt install -y -V libarrow-acero-dev && apt install -y -V libarrow-flight-dev && apt install -y -V libarrow-flight-glib-dev && apt install -y -V libgandiva-dev && apt install -y -V libgandiva-glib-dev && apt install -y -V libparquet-dev && apt install -y -V libparquet-glib-dev";
 
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
@@ -230,7 +277,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      if (pkg_format == 'rpm') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
+      if (pkg_format == 'rpm') then "docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c 'yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng && dnf install -y epel-release && dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm && dnf config-manager --set-enabled epel || : && dnf config-manager --set-enabled powertools || : && dnf config-manager --set-enabled crb || : && dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : && dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :&& dnf install -y arrow-devel  && dnf install -y arrow-glib-devel && dnf install -y arrow-dataset-devel && dnf install -y arrow-dataset-glib-devel && dnf install -y arrow-acero-devel && dnf install -y arrow-flight-devel && dnf install -y arrow-flight-glib-devel && dnf install -y gandiva-devel && dnf install -y gandiva-glib-devel && dnf install -y parquet-devel && dnf install -y parquet-glib-devel'" else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} chmod 777 core',
@@ -262,7 +309,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
+      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then "docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c 'yum install -y wget tar lz4 procps-ng && dnf install -y epel-release && dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm && dnf config-manager --set-enabled epel || : && dnf config-manager --set-enabled powertools || : && dnf config-manager --set-enabled crb || : && dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : && dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :&& dnf install -y arrow-devel  && dnf install -y arrow-glib-devel && dnf install -y arrow-dataset-devel && dnf install -y arrow-dataset-glib-devel && dnf install -y arrow-acero-devel && dnf install -y arrow-flight-devel && dnf install -y arrow-flight-glib-devel && dnf install -y gandiva-devel && dnf install -y gandiva-glib-devel && dnf install -y parquet-devel && dnf install -y parquet-glib-devel'",
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mkdir core',
@@ -353,7 +400,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
       'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      if (pkg_format == 'rpm') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar findutils lz4 wget which rsyslog hostname procps-ng elfutils"' else 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool procps wget findutils gawk gdb rsyslog hostname g++ elfutils"',
+      if (pkg_format == 'rpm') then "docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c 'yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar findutils lz4 wget which rsyslog hostname procps-ng elfutils && dnf install -y epel-release && dnf install -y https://apache.jfrog.io/artifactory/arrow/almalinux/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm && dnf config-manager --set-enabled epel || : && dnf config-manager --set-enabled powertools || : && dnf config-manager --set-enabled crb || : && dnf config-manager --set-enabled ol$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)_codeready_builder || : && dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :&& dnf install -y arrow-devel  && dnf install -y arrow-glib-devel && dnf install -y arrow-dataset-devel && dnf install -y arrow-dataset-glib-devel && dnf install -y arrow-acero-devel && dnf install -y arrow-flight-devel && dnf install -y arrow-flight-glib-devel && dnf install -y gandiva-devel && dnf install -y gandiva-glib-devel && dnf install -y parquet-devel && dnf install -y parquet-glib-devel'" else 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool procps wget findutils gawk gdb rsyslog hostname g++ elfutils"',
       if (platform == 'centos:7') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y sysvinit-tools"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} mkdir core',

@@ -1,0 +1,56 @@
+if (!$MYSQL_TEST_ROOT){
+    skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs287_db;
+--enable_warnings
+
+CREATE DATABASE mcs287_db;
+USE mcs287_db;
+# Create table
+# CREATE TABLE t1(col1 INT, col2 FLOAT, col3 DOUBLE, col4 TIME, col5 VARCHAR(20), col6 TIMESTAMP, col7 DATE) ENGINE=Columnstore;
+SET time_zone = '+8:00';
+Create TABLE t1(
+    col1 INT,
+    col2 BIGINT,
+    col3 FLOAT,
+    col4 DOUBLE,
+    col5 TIME,
+    col6 VARCHAR(2),
+    col7 VARCHAR(5),
+    col8 VARCHAR(20),
+    col9 CHAR(2),
+    col10 CHAR(5),
+    col11 CHAR(20),
+    col12 TIMESTAMP,
+    col13 DATE,
+    col14 DATETIME,
+    col15 SMALLINT,
+    col16 TINYINT,
+    col17 DECIMAL(9,3),
+    col18 INT UNSIGNED,
+    col19 SMALLINT UNSIGNED,
+    col20 TINYINT UNSIGNED,
+    col21 BIGINT UNSIGNED,
+    col22 BOOLEAN
+) ENGINE=Columnstore;
+
+# Generate data
+--exec mcs_parquet_gen -a
+
+
+#Valid data and table
+--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/tests.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/nulls.parquet >/dev/null
+
+SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+TRUNCATE t1;
+
+# Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/tests.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/nulls.parquet
+DROP DATABASE mcs287_db;
