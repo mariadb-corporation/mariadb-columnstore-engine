@@ -210,7 +210,8 @@ uint64_t CGroupConfigurator::getTotalMemory()
       ret = getTotalMemoryFromProc();
   }
 
-  cout << "Total mem available is " << ret << endl;
+  cout <<__func__ << " Total mem available (bytes) " << ret << endl;
+  cout <<__func__ << " Total mem available (gib) " << ret/(1024ULL * 1024ULL * 1024ULL) << endl;
   totalMemory = ret;
   return totalMemory;
 }
