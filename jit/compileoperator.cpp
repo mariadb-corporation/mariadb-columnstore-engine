@@ -5,7 +5,7 @@
 namespace execplan
 {
 // TODO: change row to llvm param
-void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row, bool& isNull)
+void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row)
 {
   auto columns = expression.get()->simpleColumnList();
   llvm::IRBuilder<> b(module.getContext());
@@ -43,11 +43,10 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   module.print(llvm::outs(), nullptr);
 }
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
-                                 bool& isNull)
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
 {
   auto compiled_module =
-      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row, isNull); });
+      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
   CompiledOperator result_compiled_function{.compiled_module = compiled_module};
 
   switch (expression->resultType().colDataType)
