@@ -871,6 +871,15 @@ void XMLJob::fillInXMLDataAsLoaded(execplan::CalpontSystemCatalog::RIDList& colR
       col.compressionType = colType.compressionType;
       col.dctnry.fCompressionType = colType.compressionType;
 
+      if (colType.charsetNumber != 0)
+      {
+        col.cs = &datatypes::Charset(colType.charsetNumber).getCharset();
+      }
+      else
+      {
+        col.cs = &my_charset_latin1;
+      }
+
       if (colType.autoincrement)
         col.autoIncFlag = true;
       else

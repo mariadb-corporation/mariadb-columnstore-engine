@@ -1697,7 +1697,7 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
   Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif
 
-  int rc = fStore->insertDctnry(buf, pos, totalRow, id, tokenBuf, truncCount);
+  int rc = fStore->insertDctnry(buf, pos, totalRow, id, tokenBuf, truncCount, column.cs);
 
   if (rc != NO_ERROR)
   {

@@ -1,0 +1,44 @@
+DROP DATABASE IF EXISTS mcol_4931;
+CREATE DATABASE mcol_4931;
+USE mcol_4931;
+CREATE TABLE t1 (
+a VARCHAR(15) collate 'utf8mb4_croatian_ci',
+b CHAR(15) collate 'utf8mb4_croatian_ci',
+c VARCHAR(2),
+d CHAR(2)
+)ENGINE=columnstore default charset=utf8mb4;
+CREATE TABLE t2 (
+a VARCHAR(15) collate 'latin2_hungarian_ci',
+b CHAR(15) collate 'latin2_hungarian_ci',
+c VARCHAR(2),
+d CHAR(2)
+)ENGINE=columnstore default charset=latin2;
+LOAD DATA INFILE "DATADIR/mcol4931_1.txt" IGNORE INTO TABLE t1 charset utf8mb4 FIELDS TERMINATED BY "," ENCLOSED BY '"';;
+Warnings:
+Warning	1265	Data truncated for column 'a' at row 1
+Warning	1265	Data truncated for column 'b' at row 1
+Warning	1265	Data truncated for column 'c' at row 1
+Warning	1265	Data truncated for column 'd' at row 1
+LOAD DATA INFILE "DATADIR/mcol4931_2.txt" IGNORE INTO TABLE t2 charset latin2 FIELDS TERMINATED BY "," ENCLOSED BY '"';;
+Warnings:
+Warning	1265	Data truncated for column 'a' at row 1
+Warning	1265	Data truncated for column 'b' at row 1
+Warning	1265	Data truncated for column 'c' at row 1
+Warning	1265	Data truncated for column 'd' at row 1
+SELECT * FROM t1;
+a	b	c	d
+König-abcd-Stra	König-abcd-Stra	Kö	Kö
+König-abcd-Stra	König-abcd-Stra	Kö	Kö
+SELECT CHAR_LENGTH(a), LENGTHB(a), CHAR_LENGTH(b), LENGTHB(b), CHAR_LENGTH(c), LENGTHB(c), CHAR_LENGTH(d), LENGTHB(d) FROM t1;
+CHAR_LENGTH(a)	LENGTHB(a)	CHAR_LENGTH(b)	LENGTHB(b)	CHAR_LENGTH(c)	LENGTHB(c)	CHAR_LENGTH(d)	LENGTHB(d)
+15	16	15	16	2	3	2	3
+15	16	15	16	2	3	2	3
+SELECT * FROM t2;
+a	b	c	d
+abcdefghijklmno	abcdefghijklmno	ab	ab
+abcdefghijklmno	abcdefghijklmno	ab	ab
+SELECT CHAR_LENGTH(a), LENGTHB(a), CHAR_LENGTH(b), LENGTHB(b), CHAR_LENGTH(c), LENGTHB(c), CHAR_LENGTH(d), LENGTHB(d) FROM t2;
+CHAR_LENGTH(a)	LENGTHB(a)	CHAR_LENGTH(b)	LENGTHB(b)	CHAR_LENGTH(c)	LENGTHB(c)	CHAR_LENGTH(d)	LENGTHB(d)
+15	15	15	15	2	2	2	2
+15	15	15	15	2	2	2	2
+DROP DATABASE mcol_4931;
