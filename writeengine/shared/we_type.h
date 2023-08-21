@@ -40,6 +40,7 @@
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "nullstring.h"
+#include "collation.h" // For CHARSET_INFO struct
 
 #undef EXPORT
 #undef DELETE
@@ -410,6 +411,7 @@ struct JobColumn /** @brief Job Column Structure */
   double fDefaultDbl;              /** @brief Dbl/Flt column default */
   int128_t fDefaultWideDecimal;    /** @brief Wide decimal column default */
   utils::NullString fDefaultChr;   /** @brief Char column default */
+  const CHARSET_INFO* cs;          /** @brief character set info for the column */
   JobColumn()
    : mapOid(0)
    , dataType(execplan::CalpontSystemCatalog::INT)
@@ -435,6 +437,7 @@ struct JobColumn /** @brief Job Column Structure */
    , fDefaultUInt(0)
    , fDefaultDbl(0.0)
    , fDefaultWideDecimal(0)
+   , cs(nullptr)
   {
   }
   JobColumn(const std::string& colName_, OID mapOid_, const std::string& typeName_,
@@ -466,6 +469,7 @@ struct JobColumn /** @brief Job Column Structure */
    , fDefaultUInt(defaultUInt_)
    , fDefaultDbl(0.0)
    , fDefaultWideDecimal(0)
+   , cs(nullptr)
   {
     dctnry.fCompressionType = dctnryCompressionType_;
   }

@@ -553,8 +553,9 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   string autoincrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextVal = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
   string nullable = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NULLABLE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -572,6 +573,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   col[14] = new SimpleColumn(autoincrement, fSessionID);
   col[15] = new SimpleColumn(nextVal, fSessionID);
   col[16] = new SimpleColumn(nullable, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -609,13 +611,15 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   colMap.insert(CMVT_(nextVal, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nullable, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   // ignore returnedcolumn, because it's not read by Joblist for now
   csep.returnedCols(returnedColumnList);
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   // Filters
@@ -709,6 +713,8 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
         ct.constraintType = NOTNULL_CONSTRAINT;
       }
     }
+    else if ((*it)->ColumnOID() == oid[17])
+      ct.charsetNumber = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_DEFAULTVAL)
     {
       ct.defaultValue = ((*it)->GetStringData(0));
@@ -1077,8 +1083,9 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   string compressionType = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoincrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextvalue = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -1096,6 +1103,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   col[14] = new SimpleColumn(compressionType, fSessionID);
   col[15] = new SimpleColumn(autoincrement, fSessionID);
   col[16] = new SimpleColumn(nextvalue, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -1134,14 +1142,16 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   colMap.insert(CMVT_(autoincrement, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextvalue, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
 
   csep.columnMapNonStatic(colMap);
 
   // ignore returnedcolumn, because it's not read by Joblist for now
   csep.returnedCols(returnedColumnList);
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   // Filters
@@ -1231,6 +1241,8 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     }
     else if ((*it)->ColumnOID() == oid[16])
       ct.nextvalue = ((*it)->GetData(0));
+    else if ((*it)->ColumnOID() == oid[17])
+      ct.charsetNumber = ((*it)->GetData(0));
 
     ct.columnOID = Oid;
   }
@@ -3055,8 +3067,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   string compressiontype = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoIncrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextVal = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -3074,6 +3087,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   col[14] = new SimpleColumn(compressiontype, fSessionID);
   col[15] = new SimpleColumn(autoIncrement, fSessionID);
   col[16] = new SimpleColumn(nextVal, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -3111,15 +3125,17 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   colMap.insert(CMVT_(autoIncrement, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextVal, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(col[1]->clone());
   returnedColumnList.push_back(srcp);
   csep.returnedCols(returnedColumnList);
 
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   oid[12] = DICTOID_SYSCOLUMN_COLNAME;
@@ -3302,6 +3318,11 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
         ctList[i].nextvalue = ((*it)->GetData(i));
+    }
+    else if ((*it)->ColumnOID() == oid[17])
+    {
+      for (int i = 0; i < (*it)->dataCount(); i++)
+        ctList[i].charsetNumber = ((*it)->GetData(i));
     }
   }
 
@@ -5546,8 +5567,9 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   string compressiontype = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoinc = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextval = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -5565,6 +5587,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   col[14] = new SimpleColumn(compressiontype, fSessionID);
   col[15] = new SimpleColumn(autoinc, fSessionID);
   col[16] = new SimpleColumn(nextval, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -5603,15 +5626,17 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   colMap.insert(CMVT_(autoinc, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextval, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(col[1]->clone());
   returnedColumnList.push_back(srcp);
   csep.returnedCols(returnedColumnList);
 
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   oid[12] = DICTOID_SYSCOLUMN_COLNAME;
@@ -5804,6 +5829,11 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
         ctList[i].nextvalue = ((*it)->GetData(i));
+    }
+    else if ((*it)->ColumnOID() == oid[17])
+    {
+      for (int i = 0; i < (*it)->dataCount(); i++)
+        ctList[i].charsetNumber = ((*it)->GetData(i));
     }
   }
 

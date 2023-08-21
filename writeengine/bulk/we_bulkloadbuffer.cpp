@@ -43,8 +43,6 @@
 
 #include "joblisttypes.h"
 
-#include "utils_utf8.h"  // utf8_truncate_point()
-
 using namespace std;
 using namespace boost;
 using namespace execplan;
@@ -515,14 +513,32 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
         // from storing characters beyond the column's defined width.
         // It contains the column definition width rather than the bytes
         // on disk (e.g. 5 for a varchar(5) instead of 8).
-        if (fieldLength > column.definedWidth)
+        if (column.cs->mbmaxlen > 1)
         {
-          uint8_t truncate_point = utf8::utf8_truncate_point(field, column.definedWidth);
-          memcpy(charTmpBuf, field, column.definedWidth - truncate_point);
-          bufStats.satCount++;
+          const CHARSET_INFO* cs = column.cs;
+          const char* start = (const char*) field;
+          const char* end = (const char*)(field + fieldLength);
+          size_t numChars = cs->numchars(start, end);
+          size_t maxCharLength = column.definedWidth / cs->mbmaxlen;
+
+          if (numChars > maxCharLength)
+          {
+            MY_STRCOPY_STATUS status;
+            cs->well_formed_char_length(start, end, maxCharLength, &status);
+            fieldLength = status.m_source_end_pos - start;
+            bufStats.satCount++;
+          }
         }
-        else
-          memcpy(charTmpBuf, field, fieldLength);
+        else // cs->mbmaxlen == 1
+        {
+          if (fieldLength > column.definedWidth)
+          {
+            fieldLength = column.definedWidth;
+            bufStats.satCount++;
+          }
+        }
+
+        memcpy(charTmpBuf, field, fieldLength);
       }
 
       // Swap byte order before comparing character string

@@ -48,7 +48,6 @@ using namespace BRM;
 #include "IDBPolicy.h"
 #include "cacheutils.h"
 using namespace idbdatafile;
-#include "utils_utf8.h"  // utf8_truncate_point()
 #include "checks.h"
 
 namespace
@@ -764,7 +763,7 @@ int Dctnry::insertDctnry2(Signature& sig)
  *    failure    - it did not  write the header to block
  ******************************************************************************/
 int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col, char* tokenBuf,
-                         long long& truncCount)
+                         long long& truncCount, const CHARSET_INFO* cs)
 {
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_PARSE_DCT);
@@ -837,12 +836,28 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       curSig.signature = (unsigned char*)pIn;
     }
 
-    // @Bug 2565: Truncate any strings longer than schema's column width
-    if (curSig.size > m_colWidth)
+    if (cs->mbmaxlen > 1)
     {
-      uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
-      curSig.size = m_colWidth - truncate_point;
-      ++truncCount;
+      const char* start = (const char*) curSig.signature;
+      const char* end = (const char*)(curSig.signature + curSig.size);
+      size_t numChars = cs->numchars(start, end);
+      size_t maxCharLength = m_colWidth / cs->mbmaxlen;
+
+      if (numChars > maxCharLength)
+      {
+        MY_STRCOPY_STATUS status;
+        cs->well_formed_char_length(start, end, maxCharLength, &status);
+        curSig.size = status.m_source_end_pos - start;
+        truncCount++;
+      }
+    }
+    else // cs->mbmaxlen == 1
+    {
+      if (curSig.size > m_colWidth)
+      {
+        curSig.size = m_colWidth;
+        truncCount++;
+      }
     }
 
     //...Search for the string in our string cache
