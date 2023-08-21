@@ -78,7 +78,7 @@ CGroupConfigurator::CGroupConfigurator()
     cGroupDefined = false;
   else
     cGroupDefined = true;
-  cout << __func__ << " cGroupDefined is  " << cGroupDefined << endl;
+  cout << __func__ << " cGroupDefined " << cGroupDefined << endl;
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
@@ -92,7 +92,7 @@ CGroupConfigurator::CGroupConfigurator()
       cGroupVersion_str="v2";
       break;
   }
-  cout << __func__<< " cGroupVersion_str is  " <<  cGroupVersion_str  << endl;
+  cout << __func__<< " cGroupVersion_str " <<  cGroupVersion_str  << endl;
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -210,8 +210,7 @@ uint64_t CGroupConfigurator::getTotalMemory()
       ret = getTotalMemoryFromProc();
   }
 
-  cout <<__func__ << " Total mem available (bytes) " << ret << endl;
-  cout <<__func__ << " Total mem available (gib) " << ret/(1024ULL * 1024ULL * 1024ULL) << endl;
+  cout <<__func__ << " Total mem available (bytes) " << ret << " (GIB) " << ret/GIB << endl;
   totalMemory = ret;
   return totalMemory;
 }
@@ -287,11 +286,15 @@ uint64_t CGroupConfigurator::getFreeMemory()
 {
   uint64_t ret;
   if (!cGroupDefined)
+  {
     ret = getFreeMemoryFromProc();
+    cout <<__func__<< " : returned from getFreeMemoryFromProc " << ret << " (GIB) " << ret/GIB  << endl;
+
+  }
   else
   {
     uint64_t usage = getMemUsageFromCGroup();
-    cout << "usage " << usage << endl;
+    cout << __func__<<  " : returned from  getMemUsageFromCGroup : usage " << usage  << " (GIB) " << usage/GIB  << endl;
 
     if (usage == 0)
       ret = getFreeMemoryFromProc();
