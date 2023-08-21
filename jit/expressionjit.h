@@ -57,7 +57,7 @@ class CompiledColumn : public execplan::ReturnedColumn
   }
 };
 // TODO: Optimize code structure
-static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup::Row& row, bool& isNull)
+static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup::Row& row)
 {
   for (int i = expression.size() - 1; i >= 0; --i)
   {
@@ -68,7 +68,7 @@ static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup:
       if (arithmeticcolumn->isCompilable(row))
       {
         CompiledOperator compiledOperatorInt64 =
-            compileOperator(getJITInstance(), expression[i], row, isNull);
+            compileOperator(getJITInstance(), expression[i], row);
         expression[i] = boost::make_shared<CompiledColumn>(compiledOperatorInt64, expression[i].get());
       }
       //      else

@@ -18,8 +18,7 @@ struct CompiledOperator
   JITCompiledOperator<float> compiled_function_float;
 };
 
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row,
-                                 bool& isNull);
+CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row);
 
 }
 #endif  // MARIADB_COMPILEOPERATOR_H

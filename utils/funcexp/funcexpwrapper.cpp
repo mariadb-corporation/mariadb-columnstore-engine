@@ -119,9 +119,7 @@ bool FuncExpWrapper::evaluate(Row* r)
       return false;
   if (!isCompiled)
   {
-    // TODO: delete isNull
-    bool isNull = false;
-    msc_jit::compileExpression(rcs, *r, isNull);
+    msc_jit::compileExpression(rcs, *r);
     isCompiled = true;
   }
   fe->evaluate(*r, rcs);
