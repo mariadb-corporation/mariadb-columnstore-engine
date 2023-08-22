@@ -1901,43 +1901,81 @@ void ExtentMap::save(const string& filename)
   releaseEMEntryTable(READ);
 }
 
+// This routine takes shmem RWLock in appropriate mode.
+MSTEntry* ExtentMap::_getTableLock(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    return fMST.getTable_read(table);
+  }
+  // WRITE/NONE op
+  auto result = fMST.getTable_write(table);
+  lockedState = true;
+  return result;
+}
+
+// This routine upgrades shmem RWlock mode if needed.
+void ExtentMap::_getTableLockUpgradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    fMST.getTable_upgrade(table);
+    lockedState = true;
+  }
+}
+
+// This routine downgrades shmem RWlock if it was previously upgraded.
+void ExtentMap::_getTableLockDowngradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    // Look releaseEMEntryTable() for the explanation why lockedState is set before the lock is downgraded.
+    lockedState = false;
+    fMST.getTable_downgrade(table);
+  }
+}
+
 /* always returns holding the EM lock, and with the EM seg mapped */
 void ExtentMap::grabEMEntryTable(OPS op)
 {
   boost::mutex::scoped_lock lk(mutex);
+  fEMRBTreeShminfo = _getTableLock(op, emLocked, MasterSegmentTable::EMTable);
 
-  if (op == READ)
-  {
-    fEMRBTreeShminfo = fMST.getTable_read(MasterSegmentTable::EMTable);
-  }
-  else
-  {
-    fEMRBTreeShminfo = fMST.getTable_write(MasterSegmentTable::EMTable);
-    emLocked = true;
-  }
+  // if (op == READ)
+  // {
+  //   fEMRBTreeShminfo = fMST.getTable_read(MasterSegmentTable::EMTable);
+  // }
+  // else
+  // {
+  //   fEMRBTreeShminfo = fMST.getTable_write(MasterSegmentTable::EMTable);
+  //   emLocked = true;
+  // }
 
   if (!fPExtMapRBTreeImpl || fPExtMapRBTreeImpl->key() != (uint32_t)fEMRBTreeShminfo->tableShmkey)
   {
+    _getTableLockUpgradeIfNeeded(op, emLocked, MasterSegmentTable::EMTable);
+
     if (fEMRBTreeShminfo->allocdSize == 0)
     {
-      if (op == READ)
-      {
-        fMST.getTable_upgrade(MasterSegmentTable::EMTable);
-        emLocked = true;
+      growEMShmseg();
+      // if (op == READ)
+      // {
+      //   fMST.getTable_upgrade(MasterSegmentTable::EMTable);
+      //   emLocked = true;
 
-        if (fEMRBTreeShminfo->allocdSize == 0)
-        {
-          growEMShmseg();
-        }
+      //   if (fEMRBTreeShminfo->allocdSize == 0)
+      //   {
+      //     growEMShmseg();
+      //   }
 
-        // Has to be done holding the write lock.
-        emLocked = false;
-        fMST.getTable_downgrade(MasterSegmentTable::EMTable);
-      }
-      else
-      {
-        growEMShmseg();
-      }
+      //   // Has to be done holding the write lock.
+      //   emLocked = false;
+      //   fMST.getTable_downgrade(MasterSegmentTable::EMTable);
+      // }
+      // else
+      // {
+      //   growEMShmseg();
+      // }
     }
     else
     {
@@ -1951,6 +1989,7 @@ void ExtentMap::grabEMEntryTable(OPS op)
         throw runtime_error("ExtentMap cannot create RBTree in shared memory segment");
       }
     }
+    _getTableLockDowngradeIfNeeded(op, emLocked, MasterSegmentTable::EMTable);
   }
   else
   {
