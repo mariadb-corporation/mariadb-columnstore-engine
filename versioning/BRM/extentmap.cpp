@@ -293,7 +293,9 @@ std::mutex ExtentMapIndexImpl::fInstanceMutex_;
 ExtentMapIndexImpl* ExtentMapIndexImpl::fInstance_ = nullptr;
 
 /*static*/
-ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly)
+ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly,
+                                                               bool& emIndexLocked,
+                                                               const MasterSegmentTable* emIndexSegTable)
 {
   std::lock_guard<std::mutex> lock(fInstanceMutex_);
 
@@ -301,7 +303,17 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
   {
     if (size != fInstance_->getShmemSize())
     {
+      if (emIndexSegTable)
+      {
+        emIndexSegTable->getTable_upgrade(MasterSegmentTable::EMIndex);
+        emIndexLocked = true;
+      }
       fInstance_->fBRMManagedShmMemImpl_.remap();
+      if (emIndexSegTable)
+      {
+        emIndexLocked = false;
+        emIndexSegTable->getTable_downgrade(MasterSegmentTable::EMIndex);
+      }
     }
 
     return fInstance_;
@@ -2080,10 +2092,12 @@ void ExtentMap::grabEMIndex(OPS op)
     }
     else
     {
+      const bool isReadOnly = false;
       // Sending down current Managed Shmem size. If EMIndexImpl instance size doesn't match
       // fEMIndexShminfo->allocdSize makeExtentMapIndexImpl will remap managed shmem segment.
       fPExtMapIndexImpl_ =
-          ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+          ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize,
+                                                     isReadOnly, emIndexLocked, op == READ ? &fMST : nullptr);
 
       if (r_only)
         fPExtMapIndexImpl_->makeReadOnly();
@@ -2092,8 +2106,10 @@ void ExtentMap::grabEMIndex(OPS op)
   else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
   {
     fPExtMapIndexImpl_->refreshShm();
+    const bool isReadOnly = false;
     fPExtMapIndexImpl_ =
-        ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+        ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize,
+                                                   isReadOnly, emIndexLocked, op == READ ? &fMST : nullptr);
   }
 }
 
@@ -2231,7 +2247,7 @@ void ExtentMap::growEMIndexShmseg(const size_t suggestedSize)
   if (!fPExtMapIndexImpl_)
   {
     fPExtMapIndexImpl_ =
-        ExtentMapIndexImpl::makeExtentMapIndexImpl(fixedManagedSegmentKey, allocSize, r_only);
+        ExtentMapIndexImpl::makeExtentMapIndexImpl(fixedManagedSegmentKey, allocSize, r_only, emIndexLocked);
   }
   else
   {

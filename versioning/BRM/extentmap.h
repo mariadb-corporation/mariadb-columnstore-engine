@@ -367,7 +367,8 @@ class ExtentMapIndexImpl
  public:
   ~ExtentMapIndexImpl(){};
 
-  static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+  static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly, bool& emIndexLocked,
+                                                    const MasterSegmentTable* emIndexSegTable = nullptr);
   static void refreshShm()
   {
     if (fInstance_)
