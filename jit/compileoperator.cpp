@@ -18,7 +18,13 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::TINYINT: return_type = b.getInt64Ty(); break;
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::UBIGINT:
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::USMALLINT:
+    case CalpontSystemCatalog::UTINYINT:
+      return_type = b.getInt64Ty(); break;
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE: return_type = b.getDoubleTy(); break;
     case execplan::CalpontSystemCatalog::FLOAT:
@@ -40,6 +46,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
 
   // Print the IR
   llvm::verifyFunction(*func);
+  // TODO: remove this line
   module.print(llvm::outs(), nullptr);
 }
 
