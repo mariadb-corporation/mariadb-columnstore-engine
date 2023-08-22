@@ -363,11 +363,14 @@ disable_plugins_for_bootstrap()
 {
     find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
     find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
+    find /etc -type f -exec sed -i 's/columnstore_use_import_for_batchinsert = ON//g' {} +
 }
 
 enable_columnstore_back()
 {
     echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
+    sed -i '/\[mysqld\]/a\plugin-load-add=ha_columnstore.so' $CONFIG_DIR/columnstore.cnf
+    sed -i '/plugin-load-add=ha_columnstore.so/a\columnstore_use_import_for_batchinsert = ON' $CONFIG_DIR/columnstore.cnf
 }
 
 fix_config_files()
