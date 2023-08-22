@@ -2080,20 +2080,54 @@ void ExtentMap::grabEMIndex(OPS op)
     }
     else
     {
-      // Sending down current Managed Shmem size. If EMIndexImpl instance size doesn't match
-      // fEMIndexShminfo->allocdSize makeExtentMapIndexImpl will remap managed shmem segment.
-      fPExtMapIndexImpl_ =
-          ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+      if (op == READ)
+      {
+        fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
+        emIndexLocked = true;
 
-      if (r_only)
-        fPExtMapIndexImpl_->makeReadOnly();
+        // Sending down current Managed Shmem size. If EMIndexImpl instance size doesn't match
+        // fEMIndexShminfo->allocdSize makeExtentMapIndexImpl will remap managed shmem segment.
+        fPExtMapIndexImpl_ = ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(),
+                                                                        fEMIndexShminfo->allocdSize);
+
+        if (r_only)
+          fPExtMapIndexImpl_->makeReadOnly();
+
+        emIndexLocked = false;
+        fMST.getTable_downgrade(MasterSegmentTable::EMIndex);
+      }
+      else
+      {
+        fPExtMapIndexImpl_ = ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(),
+                                                                        fEMIndexShminfo->allocdSize);
+
+        if (r_only)
+          fPExtMapIndexImpl_->makeReadOnly();
+      }
     }
   }
   else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
   {
-    fPExtMapIndexImpl_->refreshShm();
-    fPExtMapIndexImpl_ =
-        ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+    if (op == READ)
+    {
+      fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
+      emIndexLocked = true;
+
+      fPExtMapIndexImpl_->refreshShm();
+
+      fPExtMapIndexImpl_ =
+          ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+
+      emIndexLocked = false;
+      fMST.getTable_downgrade(MasterSegmentTable::EMIndex);
+    }
+    else
+    {
+      fPExtMapIndexImpl_->refreshShm();
+
+      fPExtMapIndexImpl_ =
+          ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
+    }
   }
 }
 

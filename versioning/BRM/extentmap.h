@@ -372,6 +372,8 @@ class ExtentMapIndexImpl
   {
     if (fInstance_)
     {
+      // effectively umpas a mapped managed shmem segment changing the segment VA address
+      // when mapped next time.
       delete fInstance_;
       fInstance_ = nullptr;
     }
