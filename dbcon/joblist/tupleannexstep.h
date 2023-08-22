@@ -73,10 +73,6 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   {
     fOrderBy = lob;
   }
-  void addConstant(TupleConstantStep* tcs)
-  {
-    fConstant = tcs;
-  }
   void setDistinct()
   {
     fDistinct = true;
@@ -162,7 +158,6 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   bool fParallelOp;
 
   LimitedOrderBy* fOrderBy;
-  TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;
   JobList* fJobList;

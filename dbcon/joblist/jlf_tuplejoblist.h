@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include "calpontsystemcatalog.h"
 #include "joblist.h"
 #include "jlf_common.h"

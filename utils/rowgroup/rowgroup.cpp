@@ -31,7 +31,6 @@
 #include <iterator>
 using namespace std;
 
-
 #include <numeric>
 
 #include "bytestream.h"
@@ -48,8 +47,6 @@ using namespace execplan;
 namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
-
-
 
 StringStore::~StringStore()
 {
@@ -302,7 +299,6 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
   // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
@@ -312,7 +308,6 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
 
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
@@ -618,7 +613,7 @@ string Row::toCSV() const
 
 void Row::setToNull(uint32_t colIndex)
 {
-  setNullMark(colIndex, true); // mark as null.
+  setNullMark(colIndex, true);  // mark as null.
   switch (types[colIndex])
   {
     case CalpontSystemCatalog::TINYINT: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
@@ -641,11 +636,11 @@ void Row::setToNull(uint32_t colIndex)
       *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::DATENULL);
       break;
 
-      case CalpontSystemCatalog::BIGINT:
-        if (precision[colIndex] != MagicPrecisionForCountAgg)
-          *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
-        else  // work around for count() in outer join result.
-          *((uint64_t*)&data[offsets[colIndex]]) = 0;
+    case CalpontSystemCatalog::BIGINT:
+      if (precision[colIndex] != MagicPrecisionForCountAgg)
+        *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
+      else  // work around for count() in outer join result.
+        *((uint64_t*)&data[offsets[colIndex]]) = 0;
 
       break;
 
@@ -656,9 +651,13 @@ void Row::setToNull(uint32_t colIndex)
       *((long double*)&data[offsets[colIndex]]) = joblist::LONGDOUBLENULL;
       break;
 
-    case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL; break;
+    case CalpontSystemCatalog::DATETIME:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL;
+      break;
 
-    case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL; break;
+    case CalpontSystemCatalog::TIMESTAMP:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL;
+      break;
 
     case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMENULL; break;
 
@@ -692,9 +691,7 @@ void Row::setToNull(uint32_t colIndex)
         case 7:
         case 8: *((uint64_t*)&data[offsets[colIndex]]) = joblist::CHAR8NULL; break;
 
-        default:
-          setNullMark(colIndex, true);
-          break;
+        default: setNullMark(colIndex, true); break;
       }
 
       break;
@@ -727,7 +724,9 @@ void Row::setToNull(uint32_t colIndex)
 
     case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
 
-    case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL; break;
+    case CalpontSystemCatalog::USMALLINT:
+      *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL;
+      break;
 
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[colIndex]]) = joblist::UINTNULL; break;
@@ -736,8 +735,8 @@ void Row::setToNull(uint32_t colIndex)
 
     default:
       ostringstream os;
-      os << "Row::initToNull(): got bad column type (" << types[colIndex] << ").  Width=" << getColumnWidth(colIndex)
-         << endl;
+      os << "Row::initToNull(): got bad column type (" << types[colIndex]
+         << ").  Width=" << getColumnWidth(colIndex) << endl;
       os << toString();
       throw logic_error(os.str());
   }
@@ -846,8 +845,8 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
-//      if (data[offsets[colIndex]] == 0)  // empty string
-//        return true;
+      //      if (data[offsets[colIndex]] == 0)  // empty string
+      //        return true;
 
       switch (len)
       {
@@ -1096,7 +1095,6 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
-
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1142,6 +1140,21 @@ RowGroup::~RowGroup()
 
 void RowGroup::resetRowGroup(uint64_t rid)
 {
+  *((uint32_t*)&data[rowCountOffset]) = 0;
+  *((uint64_t*)&data[baseRidOffset]) = rid;
+  *((uint16_t*)&data[statusOffset]) = 0;
+  *((uint32_t*)&data[dbRootOffset]) = 0;
+
+  if (strings)
+    strings->clear();
+}
+
+void RowGroup::setDataAndResetRowGroup(RGData* rgd, uint64_t rid)
+{
+  data = rgd->rowData.get();
+  strings = rgd->strings.get();
+  rgData = rgd;
+
   *((uint32_t*)&data[rowCountOffset]) = 0;
   *((uint64_t*)&data[baseRidOffset]) = rid;
   *((uint16_t*)&data[statusOffset]) = 0;

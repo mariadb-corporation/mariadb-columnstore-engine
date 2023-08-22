@@ -79,7 +79,7 @@ using namespace logging;
 #include "tuplehashjoin.h"
 #include "tupleunion.h"
 #include "expressionstep.h"
-#include "tupleconstantstep.h"
+#include "tupleconstantbooleanstep.h"
 
 #include "jlf_common.h"
 #include "jlf_subquery.h"
@@ -306,14 +306,10 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
     case CalpontSystemCatalog::USMALLINT: v = boost::any_cast<uint16_t>(anyVal); break;
 
     case CalpontSystemCatalog::MEDINT:
-    case CalpontSystemCatalog::INT:
-      v = boost::any_cast<int32_t>(anyVal);
-      break;
+    case CalpontSystemCatalog::INT: v = boost::any_cast<int32_t>(anyVal); break;
 
     case CalpontSystemCatalog::UMEDINT:
-    case CalpontSystemCatalog::UINT:
-      v = boost::any_cast<uint32_t>(anyVal);
-      break;
+    case CalpontSystemCatalog::UINT: v = boost::any_cast<uint32_t>(anyVal); break;
 
     case CalpontSystemCatalog::BIGINT: v = boost::any_cast<long long>(anyVal); break;
 
@@ -772,7 +768,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
       // data list for column 1 step 1 (pcolstep) output
       AnyDataListSPtr spdl11(new AnyDataList());
 
-
       JobStepAssociation outJs1;
       outJs1.outAdd(spdl11);
       pcs1->outputAssociation(outJs1);
@@ -832,7 +827,6 @@ const JobStepVector doColFilter(const SimpleColumn* sc1, const SimpleColumn* sc2
       // extra steps for string column greater than eight bytes -- from token to string
       // data list for column 1 step 1 (pcolstep) output
       AnyDataListSPtr spdl11(new AnyDataList());
-
 
       JobStepAssociation outJs1;
       outJs1.outAdd(spdl11);

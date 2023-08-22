@@ -548,11 +548,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
 
   fDoneAggregate = true;
 
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-  }
+  setTimesAndPrintTrace(false);
 }
 
 uint32_t TupleAggregateStep::nextBand_singleThread(messageqcpp::ByteStream& bs)
@@ -5265,11 +5261,7 @@ void TupleAggregateStep::aggregateRowGroups()
   while (more)
     more = dlIn->next(fInputIter, &rgData);
 
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-  }
+  setTimesAndPrintTrace(false);
 }
 
 void TupleAggregateStep::threadedAggregateFinalize(uint32_t threadID)
@@ -5579,11 +5571,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   fMutex.unlock();
   locked = false;
 
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-  }
+  setTimesAndPrintTrace(false);
 }
 
 void TupleAggregateStep::doAggregate_singleThread()

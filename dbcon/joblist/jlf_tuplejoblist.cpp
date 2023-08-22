@@ -19,14 +19,15 @@
 //  $Id: jlf_tuplejoblist.cpp 9728 2013-07-26 22:08:20Z xlou $
 
 // Cross engine needs to be at the top due to MySQL includes
+#include <cstdint>
 #define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 #include <iostream>
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -63,6 +64,8 @@ using namespace dataconvert;
 #include "tupleaggregatestep.h"
 #include "tupleannexstep.h"
 #include "tupleconstantstep.h"
+#include "tupleconstantbooleanstep.h"
+#include "tupleconstantonlystep.h"
 #include "tuplehashjoin.h"
 #include "tuplehavingstep.h"
 #include "tupleunion.h"
@@ -514,13 +517,8 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     tas->setMaxThreads(jobInfo.orderByThreads);
   }
 
-  if (jobInfo.constantCol == CONST_COL_EXIST)
-    tas->addConstant(new TupleConstantStep(jobInfo));
-
   if (jobInfo.hasDistinct)
     tas->setDistinct();
-
-  //    }
 
   if (jobInfo.annexStep)
   {
@@ -554,6 +552,38 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     querySteps.push_back(jobInfo.annexStep);
     dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get())->initialize(rg2, jobInfo);
     deliverySteps[CNX_VTABLE_ID] = jobInfo.annexStep;
+  }
+
+  if (jobInfo.constantCol == CONST_COL_EXIST)
+  {
+    SJSTEP acs(new TupleConstantStep(jobInfo));
+
+    TupleAnnexStep* as = dynamic_cast<TupleAnnexStep*>(deliverySteps[CNX_VTABLE_ID].get());
+    RowGroup rg2 = as->getDeliveredRowGroup();
+
+    if (jobInfo.trace)
+      cout << "Output RowGroup 2: " << rg2.toString() << endl;
+
+    AnyDataListSPtr spdlIn(new AnyDataList());
+    RowGroupDL* dlIn;
+    dlIn = new RowGroupDL(1, jobInfo.fifoSize);
+    dlIn->OID(CNX_VTABLE_ID);
+    spdlIn->rowGroupDL(dlIn);
+    JobStepAssociation jsaIn;
+    jsaIn.outAdd(spdlIn);
+    dynamic_cast<JobStep*>(as)->outputAssociation(jsaIn);
+    acs->inputAssociation(jsaIn);
+    AnyDataListSPtr spdlOut(new AnyDataList());
+    RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+    dlOut->OID(CNX_VTABLE_ID);
+    spdlOut->rowGroupDL(dlOut);
+    JobStepAssociation jsaOut;
+    jsaOut.outAdd(spdlOut);
+    acs->outputAssociation(jsaOut);
+
+    querySteps.push_back(acs);
+    dynamic_cast<TupleConstantStep*>(acs.get())->initialize(rg2, jobInfo);
+    deliverySteps[CNX_VTABLE_ID] = acs;
   }
 
   // Check if constant false
@@ -703,9 +733,6 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
 
     if (it->get()->isDictCol() && !tokenOnly)
     {
-      //			if (jobInfo.trace && bps->tableOid() >= 3000)
-      //				cout << "1 setting project BPP for " << tbps->toString() << " with "
-      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString() << endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -1876,7 +1903,6 @@ void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(con
       if ((tableKey1 == joinEdge.first && tableKey2 == joinEdge.second) ||
           (tableKey1 == joinEdge.second && tableKey2 == joinEdge.first))
       {
-
         if (jobInfo.trace)
           std::cout << "Erase matched join step with keys: " << tableKey1 << " <-> " << tableKey2
                     << std::endl;
@@ -2130,9 +2156,8 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
-            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b) {
-              return a.second < b.second;
-            });
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
+            { return a.second < b.second; });
 
   // For each weighted adjacent node.
   for (const auto& adjNodeWeighted : adjacentListWeighted)
@@ -4376,7 +4401,7 @@ void makeNoTableJobStep(JobStepVector& querySteps, JobStepVector& projectSteps,
   querySteps.clear();
   projectSteps.clear();
   deliverySteps.clear();
-  querySteps.push_back(TupleConstantStep::addConstantStep(jobInfo));
+  querySteps.push_back(joblist::addConstantStep(jobInfo));
   deliverySteps[CNX_VTABLE_ID] = querySteps.back();
 }
 }  // namespace
