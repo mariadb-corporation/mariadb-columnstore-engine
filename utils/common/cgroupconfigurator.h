@@ -66,6 +66,7 @@ class CGroupConfigurator
   const  uint64_t GIB = 1024ULL * 1024ULL * 1024ULL;
   bool printedWarning = false;
   enum CGroupVersions cGroupVersion_;
+  unsigned int logCounter = 0;
 };
 
 }  // namespace utils
