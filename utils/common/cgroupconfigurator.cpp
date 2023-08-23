@@ -288,13 +288,13 @@ uint64_t CGroupConfigurator::getFreeMemory()
   if (!cGroupDefined)
   {
     ret = getFreeMemoryFromProc();
-    cout <<__func__<< " : returned from getFreeMemoryFromProc " << ret << " (GIB) " << ret/GIB  << endl;
+    // cout <<__func__<< " : returned from getFreeMemoryFromProc " << ret << " (GIB) " << ret/GIB  << endl;
 
   }
   else
   {
     uint64_t usage = getMemUsageFromCGroup();
-    cout << __func__<<  " : returned from  getMemUsageFromCGroup : usage " << usage  << " (GIB) " << usage/GIB  << endl;
+    // cout << __func__<<  " : returned from  getMemUsageFromCGroup : usage " << usage  << " (GIB) " << usage/GIB  << endl;
 
     if (usage == 0)
       ret = getFreeMemoryFromProc();
