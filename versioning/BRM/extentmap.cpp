@@ -2074,44 +2074,17 @@ void ExtentMap::_releaseTable(const OPS op, std::atomic<bool>& lockedState, cons
 
 void ExtentMap::releaseEMEntryTable(OPS op)
 {
-  if (op == READ)
-  {
-    fMST.releaseTable_read(MasterSegmentTable::EMTable);
-  }
-  else
-  {
-    // Note: Technically we should mark it unlocked after it's unlocked,
-    // however, that's a race condition. The only reason the up operation
-    // here will fail is if the underlying semaphore doesn't exist anymore
-    // or there is a locking logic error somewhere else.  Either way,
-    // declaring the EM unlocked here is OK. Same with all similar assignments.
-    emLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMTable);
-  }
+  _releaseTable(op, emLocked, MasterSegmentTable::EMTable);
 }
 
 void ExtentMap::releaseFreeList(OPS op)
 {
-  if (op == READ)
-    fMST.releaseTable_read(MasterSegmentTable::EMFreeList);
-  else
-  {
-    flLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMFreeList);
-  }
+  _releaseTable(op, flLocked, MasterSegmentTable::EMFreeList);
 }
 
 void ExtentMap::releaseEMIndex(OPS op)
 {
-  if (op == READ)
-  {
-    fMST.releaseTable_read(MasterSegmentTable::EMIndex);
-  }
-  else
-  {
-    emIndexLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMIndex);
-  }
+  _releaseTable(op, emIndexLocked, MasterSegmentTable::EMIndex);
 }
 
 key_t ExtentMap::chooseEMShmkey()
