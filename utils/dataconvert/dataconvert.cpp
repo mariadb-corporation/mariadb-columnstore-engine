@@ -1787,7 +1787,7 @@ int64_t DataConvert::convertArrowColumnDatetime(int64_t timeVal, int& status)
   std::chrono::system_clock::time_point timePoint(duration);
 
   std::time_t ttime = std::chrono::system_clock::to_time_t(timePoint);
-  std::tm* timeInfo = std::localtime(&ttime);
+  std::tm* timeInfo = std::gmtime(&ttime);
 
   inYear = timeInfo->tm_year + 1900;
   inMonth = timeInfo->tm_mon + 1;
