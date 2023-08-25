@@ -417,7 +417,7 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
     if (rowSize != 0)
     {
       idblog("checking our current settings and deserialized settings. our colCount " << colCount << ", deserialized " << colCountTemp << ", our row size " << rowSize << "and deserialized " << rowSizeTemp);
-      idbassert(colCountTemp == colCount && rowSize = rowSizeTemp);
+      idbassert(colCountTemp == columnCount && rowSize = rowSizeTemp);
     }
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
