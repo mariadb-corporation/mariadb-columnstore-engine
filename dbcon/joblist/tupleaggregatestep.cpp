@@ -955,6 +955,7 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
   spdl->rowGroupDL(dl);
   jsa.outAdd(spdl);
 
+  idblog("seting input association");
   spjs->inputAssociation(jsa);  // Aggregate input
 
   // Previous step output
