@@ -2198,7 +2198,7 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
-  idbassert(colCount == row->getColumnCount() && rowSize == row->getRowSize());
+  idbassert(columnCount == row->getColumnCount() && rowSize == row->getRowSize());
   uint32_t size = row->getSize();
   row->setData(
       Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
