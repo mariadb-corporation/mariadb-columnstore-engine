@@ -1,0 +1,33 @@
+if (!$MYSQL_TEST_ROOT){
+    skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs289_db;
+--enable_warnings
+
+CREATE DATABASE mcs289_db;
+USE mcs289_db;
+# Create table
+# CREATE TABLE t1(col1 INT, col2 VARCHAR(20), col3 TIMESTAMP) ENGINE=Columnstore;
+Create TABLE t1(
+    col1 INT,
+    col2 TIMESTAMP,
+    col3 VARCHAR(20)
+) ENGINE=Columnstore;
+
+# Generate data
+--exec mcs_parquet_gen -l
+
+
+#Valid data and table
+--exec $MCS_CPIMPORT mcs289_db t1 $MTR_SUITE_DIR/../std_data/10MRows.parquet >/dev/null
+
+SELECT COUNT(*) FROM t1;
+TRUNCATE t1;
+
+# Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/10MRows.parquet
+DROP DATABASE mcs289_db;
