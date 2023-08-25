@@ -838,7 +838,7 @@ void generateAllTable()
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/tests.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 1000));
 
   // null file
   arrow::NullBuilder nullBuilder;
@@ -905,11 +905,69 @@ void generateAllTable()
 
 }
 
+
+void generateLargeTable()
+{
+  // int32
+  arrow::Int32Builder builder;
+  int64_t reserve_num = 1000000;
+  PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
+  std::vector<bool> validity(reserve_num, true);
+  std::vector<int32_t> values;
+  for (int32_t i = 0; i < reserve_num; i++)
+    values.push_back(i);
+  PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
+  std::shared_ptr<arrow::Array> array;
+  PARQUET_THROW_NOT_OK(builder.Finish(&array));
+
+  // timestamp
+  arrow::TimestampBuilder tsbuilder(arrow::timestamp(arrow::TimeUnit::MILLI), arrow::default_memory_pool());
+  PARQUET_THROW_NOT_OK(tsbuilder.Reserve(reserve_num));
+  std::vector<bool> tsvalidity(reserve_num, true);
+  std::vector<int64_t> tsvalues;
+  for (int64_t i = 0; i < reserve_num; i++)
+    tsvalues.push_back(i * 10000000);
+  PARQUET_THROW_NOT_OK(tsbuilder.AppendValues(tsvalues, tsvalidity));
+  std::shared_ptr<arrow::Array> tsarray;
+  PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
+
+
+  // string
+  arrow::StringBuilder strbuilder;
+  PARQUET_THROW_NOT_OK(strbuilder.Reserve(reserve_num));
+  std::vector<std::string> values1;
+  for (int64_t i = reserve_num-1; i >= 0; i--)
+  {
+    values1.push_back(std::string("hhhh"));
+    // std::cout << i << std::endl;
+  }
+  PARQUET_THROW_NOT_OK(strbuilder.AppendValues(values1));
+  std::shared_ptr<arrow::Array> strarray;
+  PARQUET_THROW_NOT_OK(strbuilder.Finish(&strarray));
+
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+    arrow::field("col1", arrow::int32()),
+    arrow::field("col2", arrow::timestamp(arrow::TimeUnit::MILLI)),
+		arrow::field("col3", arrow::utf8())
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array, tsarray, strarray});
+	// std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/10MRows.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 1000));
+
+}
+
 int main(int argc, char** argv)
 {
   int32_t option;
 
-  while ((option = getopt(argc, argv, "ad")) != EOF)
+  while ((option = getopt(argc, argv, "adl")) != EOF)
   {
     switch (option)
     {
@@ -921,6 +979,12 @@ int main(int argc, char** argv)
       case 'a':
       {
         generateAllTable();
+        break;
+      }
+      case 'l':
+      {
+        generateLargeTable();
+        break;
       }
     }
   }
