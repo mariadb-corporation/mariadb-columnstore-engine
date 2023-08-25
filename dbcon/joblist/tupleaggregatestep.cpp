@@ -5526,7 +5526,7 @@ idblog("threadedAggregateRowGroups");
                       ->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
                 else
 		{
-			idblog("we are adding a row, c " << c);
+			//idblog("we are adding a row, c " << c);
                   fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
 		}
               }
