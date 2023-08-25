@@ -904,7 +904,10 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
     if (distinctAgg == true)
       prep2PhasesDistinctAggregate(jobInfo, rgs, aggs);
     else
+    {
+	    idblog("preparing 2 phase aggregate");
       prep2PhasesAggregate(jobInfo, rgs, aggs);
+    }
   }
 
   if (tbps != NULL)
@@ -934,6 +937,7 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
   }
   else
   {
+	  idblog("resetting with tuple aggregation step");
     aggUM = dynamic_pointer_cast<RowAggregationUM>(aggs[0]);
     spjs.reset(new TupleAggregateStep(aggUM, rgs[1], rgs[0], jobInfo));
   }
