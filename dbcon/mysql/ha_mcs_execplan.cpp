@@ -8661,7 +8661,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->groupByCols(gwi.groupByCols);
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);
-  idblog("number of group by columns is " << gi.groupByCols.size() << ", returned cols number is " << gi.returnedCols.size());
+  idblog("number of group by columns is " << gwi.groupByCols.size() << ", returned cols number is " << gwi.returnedCols.size());
   csep->columnMap(gwi.columnMap);
   csep->having(havingFilter);
   csep->derivedTableList(gwi.derivedTbList);
