@@ -825,6 +825,9 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
 {
   uint32_t cnt = fRollupFlag ? fGroupByCols.size() : 1;
   idblog("agg row. col count " << row.getColumnCount() << ", cnt " << cnt << ", fRollupFlag " << ((int)fRollupFlag));
+  for (uint32_t qq = 0; qq < row.getColumnCount(); qq++) {
+    idblog("  row agg: col " << qq << ", width " << row.getColumnWidth(qq));
+  }
   for (uint32_t z = 0; z < cnt; z++) {
   // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
