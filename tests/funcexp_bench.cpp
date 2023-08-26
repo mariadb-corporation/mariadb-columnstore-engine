@@ -322,7 +322,7 @@ public:
         if (len == testWidth)
           return;
         fe.resetReturnedColumns();
-        string exp = "col1 + 2 + col2";
+        string exp = "col1 * 2 + col2";
         tn1 = new SimpleColumn_INT<len>();
         (reinterpret_cast<ReturnedColumn*>(tn1))->inputIndex(0);
         pt1 = new ParseTree(tn1);
