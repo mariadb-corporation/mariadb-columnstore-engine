@@ -15,7 +15,25 @@ USE mcs289_db;
 Create TABLE t1(
     col1 INT,
     col2 TIMESTAMP,
-    col3 VARCHAR(20)
+    col3 CHAR(6)
+) ENGINE=Columnstore;
+
+Create TABLE t2(
+    col1 INT,
+    col2 TIMESTAMP,
+    col3 CHAR(6)
+) ENGINE=Columnstore;
+
+Create TABLE t3(
+    col1 INT,
+    col2 TIMESTAMP,
+    col3 CHAR(6)
+) ENGINE=Columnstore;
+
+Create TABLE t4(
+    col1 INT,
+    col2 TIMESTAMP,
+    col3 CHAR(6)
 ) ENGINE=Columnstore;
 
 # Generate data
@@ -23,11 +41,31 @@ Create TABLE t1(
 
 
 #Valid data and table
---exec $MCS_CPIMPORT mcs289_db t1 $MTR_SUITE_DIR/../std_data/10MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs289_db t1 $MTR_SUITE_DIR/../std_data/1MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs289_db t2 $MTR_SUITE_DIR/../std_data/10MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs289_db t3 $MTR_SUITE_DIR/../std_data/50MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcs289_db t4 $MTR_SUITE_DIR/../std_data/100MRows.parquet >/dev/null
 
+SELECT * FROM t1 ORDER BY col1 LIMIT 5;
 SELECT COUNT(*) FROM t1;
+
+SELECT * FROM t2 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t2;
+
+SELECT * FROM t3 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t3;
+
+SELECT * FROM t4 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t4;
+
 TRUNCATE t1;
+TRUNCATE t2;
+TRUNCATE t3;
+TRUNCATE t4;
 
 # Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/1MRows.parquet
 --exec rm $MTR_SUITE_DIR/../std_data/10MRows.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/50MRows.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/100MRows.parquet
 DROP DATABASE mcs289_db;

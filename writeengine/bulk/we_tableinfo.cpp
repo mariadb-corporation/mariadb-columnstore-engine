@@ -1313,8 +1313,8 @@ int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
   PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
   PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
   //TODO: batch_size set here as hyperparameter
-  fReader->set_batch_size(10);
-  PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 10, &totalRowsParquet));
+  fReader->set_batch_size(1000);
+  PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 1000, &totalRowsParquet));
   PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
   // initialize fBuffers batch source
   for (int i = 0; i < fReadBufCount; ++i)
