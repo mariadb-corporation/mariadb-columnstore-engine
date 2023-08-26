@@ -906,11 +906,11 @@ void generateAllTable()
 }
 
 
-void generateLargeTable()
+void generateLargeTable(int64_t reserve_num, std::string rowNum)
 {
   // int32
   arrow::Int32Builder builder;
-  int64_t reserve_num = 1000000;
+  // int64_t reserve_num = 1000000;
   PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
   std::vector<bool> validity(reserve_num, true);
   std::vector<int32_t> values;
@@ -958,10 +958,40 @@ void generateLargeTable()
   arrow::MemoryPool* pool = arrow::default_memory_pool();
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
-      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/10MRows.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 1000));
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/" + rowNum + "MRows.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 100000));
 
 }
+
+void generateLargeIntTable(int64_t reserve_num, std::string rowNum)
+{
+  // int32
+  arrow::Int32Builder builder;
+  // int64_t reserve_num = 1000000;
+  PARQUET_THROW_NOT_OK(builder.Reserve(reserve_num));
+  std::vector<bool> validity(reserve_num, true);
+  std::vector<int32_t> values;
+  for (int32_t i = 0; i < reserve_num; i++)
+    values.push_back(i);
+  PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
+  std::shared_ptr<arrow::Array> array;
+  PARQUET_THROW_NOT_OK(builder.Finish(&array));
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({
+    arrow::field("col1", arrow::int32())
+  });
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+	// std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/" + rowNum + "MRows.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 100000));
+
+}
+
 
 int main(int argc, char** argv)
 {
@@ -983,7 +1013,10 @@ int main(int argc, char** argv)
       }
       case 'l':
       {
-        generateLargeTable();
+        generateLargeTable(1000000, "1");
+        generateLargeTable(10000000, "10");
+        generateLargeTable(50000000, "50");
+        generateLargeTable(100000000, "100");
         break;
       }
     }
