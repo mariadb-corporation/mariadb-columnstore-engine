@@ -2973,6 +2973,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
     {
       uint32_t key = jobInfo.groupByColVec[i];
+      idblog("group by col vec key is " << key << ", i is " << i);
 
       if (projColPosMap.find(key) == projColPosMap.end())
       {
@@ -3061,6 +3062,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
       RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
 
+      idblog("aggOp is " << ((int)aggOp);
       // skip on PM if this is a constant
       if (aggOp == ROWAGG_CONSTANT)
         continue;
