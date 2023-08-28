@@ -828,6 +828,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
   for (uint32_t qq = 0; qq < row.getColumnCount(); qq++) {
     idblog("  row agg: col " << qq << ", width " << row.getColumnWidth(qq));
   }
+  cnt = 1;
   for (uint32_t z = 0; z < cnt; z++) {
   // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
@@ -872,7 +873,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     }
 
     updateEntry(row, rgContextColl);
-    if (z + 1 < cnt) {
+    if (0 && (z + 1 < cnt)) {
       row.setIntField(row.getIntField(cnt - 1) + 1, cnt - 1);
       idblog("null-ing column #" << (cnt - 2 - z));
       row.setToNull(cnt - 2 - z);
