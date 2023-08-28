@@ -3063,7 +3063,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
       RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
 
-      idblog("aggOp is " << ((int)aggOp);
+      idblog("aggOp is " << ((int)aggOp));
       // skip on PM if this is a constant
       if (aggOp == ROWAGG_CONSTANT)
         continue;
