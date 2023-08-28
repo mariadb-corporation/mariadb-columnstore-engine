@@ -2895,6 +2895,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>& rowgroups,
                                               vector<SP_ROWAGG_t>& aggregators)
 {
+	idblog("yes, ew are in prep2PhasesAgg");
   // check if there are any aggregate columns
   // a vector that has the aggregate function to be done by PM
   vector<pair<uint32_t, int>> aggColVec;
@@ -3740,6 +3741,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<RowGroup>& rowgroups,
                                                       vector<SP_ROWAGG_t>& aggregators)
 {
+	idblog("are ew in distinct????");
   // check if there are any aggregate columns
   // a vector that has the aggregate function to be done by PM
   vector<pair<uint32_t, int>> aggColVec, aggNoDistColVec;
