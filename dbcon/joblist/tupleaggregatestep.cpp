@@ -3429,6 +3429,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
       if (it != aggFuncMap.end())
       {
+	      idblog("i is " << i << ", is found in aggFuncMap");
         colPm = it->second;
         oidsAggUm.push_back(oidsAggPm[colPm]);
         keysAggUm.push_back(retKey);
@@ -3538,6 +3539,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         }
       }
 
+      idblog("i " << i << "returned col vec [i] . second is " << ((int)returnedColVec[i].second));
       // update groupby vector if the groupby column is a returned column
       if (returnedColVec[i].second == 0)
       {
@@ -5317,7 +5319,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   uint32_t rgVecShift = float(fNumOfBuckets) / fNumOfThreads * threadID;
 
   RowAggregationMultiDistinct* multiDist = nullptr;
-idblog("threadedAggregateRowGroups");
   if (!fDoneAggregate)
   {
     if (fInputJobStepAssociation.outSize() == 0)
@@ -5489,7 +5490,6 @@ idblog("threadedAggregateRowGroups");
         }
         else
         {
-		idblog("passing rgDatas, their size is " << rgDatas.size());
           for (uint32_t c = 0; c < rgDatas.size(); c++)
           {
             fRowGroupIns[threadID].setData(&rgDatas[c]);
@@ -5513,7 +5513,6 @@ idblog("threadedAggregateRowGroups");
         bool done = false;
         fill(&bucketDone[0], &bucketDone[fNumOfBuckets], false);
 
-	  idblog("multidist is " << (multiDist ? "present" : "absent"));
         while (!fEndOfResult && !done && !cancelled())
         {
           bool didWork = false;
@@ -5535,7 +5534,6 @@ idblog("threadedAggregateRowGroups");
                       ->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
                 else
 		{
-			//idblog("we are adding a row, c " << c);
                   fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
 		}
               }
