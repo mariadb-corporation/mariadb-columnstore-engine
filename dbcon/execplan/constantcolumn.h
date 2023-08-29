@@ -374,8 +374,8 @@ class ConstantColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                       rowgroup::Row& row) override
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType& dataType) override
   {
     auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
     b.CreateStore(b.CreateOr(b.getInt1(fType == NULLDATA), isNullVal), isNull);

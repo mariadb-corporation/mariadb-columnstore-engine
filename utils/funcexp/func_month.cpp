@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <llvm/IR/IRBuilder.h>
 using namespace std;
 
 #include "functor_int.h"

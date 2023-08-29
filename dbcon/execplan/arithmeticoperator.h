@@ -213,7 +213,8 @@ class ArithmeticOperator : public Operator
 
  public:
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
+                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
+                              CalpontSystemCatalog::ColDataType& dataType) override;
   inline llvm::Value* compileI(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline llvm::Value* compileF(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
@@ -439,7 +440,8 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 }
 
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
+                                                CalpontSystemCatalog::ColDataType& dataType)
 {
   switch (fOperationType.colDataType)
   {
@@ -453,13 +455,15 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
-      return compileI(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+      return compileI(b, lop->compile(b, data, isNull, row, dataType),
+                      rop->compile(b, data, isNull, row, dataType));
 
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UDOUBLE:
     case execplan::CalpontSystemCatalog::UFLOAT:
-      return compileF(b, lop->compile(b, data, isNull, row), rop->compile(b, data, isNull, row));
+      return compileF(b, lop->compile(b, data, isNull, row, dataType),
+                      rop->compile(b, data, isNull, row, dataType));
     default:
     {
       std::ostringstream oss;

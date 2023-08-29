@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <llvm/IR/IRBuilder.h>
 using namespace std;
 
 #include "functor_int.h"
@@ -140,6 +141,49 @@ int64_t Func_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   }
 
   return -1;
+}
+
+bool Func_day::isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
+{
+  switch (colType.colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::DATETIME:
+      return true;
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::TIME:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL: return false;
+    default: return false;
+  }
+}
+
+llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               rowgroup::Row& row, FunctionParm& fp,
+                               execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  llvm::Value* val;
+  CalpontSystemCatalog::ColDataType dataType;
+  switch (fp[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+      dataType = CalpontSystemCatalog::INT;
+      val = fp[0]->compile(b, data, isNull, row, dataType);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 6), 0x3f), b.getInt32Ty());
+    case CalpontSystemCatalog::DATETIME:
+      dataType = CalpontSystemCatalog::INT;
+      val = fp[0]->compile(b, data, isNull, row, dataType);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
+    default: throw ::logic_error("Func_day::compile: unsupported type");
+  }
 }
 
 }  // namespace funcexp

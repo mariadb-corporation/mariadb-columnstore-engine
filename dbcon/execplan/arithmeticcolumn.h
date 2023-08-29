@@ -278,10 +278,10 @@ class ArithmeticColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                       rowgroup::Row& row) override
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType& dataType) override
   {
-    return fExpression->compile(b, data, isNull, row);
+    return fExpression->compile(b, data, isNull, row, dataType);
   }
   bool isCompilable(rowgroup::Row& row) override
   {

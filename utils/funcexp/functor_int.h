@@ -179,6 +179,11 @@ class Func_day : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_minute class

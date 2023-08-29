@@ -366,8 +366,8 @@ class SimpleColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                       rowgroup::Row& row) override;
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType& dataType) override;
 
   bool isCompilable(rowgroup::Row& row) override
   {
@@ -390,6 +390,12 @@ class SimpleColumn : public ReturnedColumn
       default: return false;
     }
   }
+
+ private:
+  llvm::Value* compileInt(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileUint(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileFloat(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileDouble(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;

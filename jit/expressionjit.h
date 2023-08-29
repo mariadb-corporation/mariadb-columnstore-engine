@@ -67,9 +67,8 @@ static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup:
     {
       if (arithmeticcolumn->isCompilable(row))
       {
-        CompiledOperator compiledOperatorInt64 =
-            compileOperator(getJITInstance(), expression[i], row);
-        expression[i] = boost::make_shared<CompiledColumn>(compiledOperatorInt64, expression[i].get());
+        CompiledOperator compiledOperator = compileOperator(getJITInstance(), expression[i], row);
+        expression[i] = boost::make_shared<CompiledColumn>(compiledOperator, expression[i].get());
       }
       //      else
       //      {
@@ -99,6 +98,14 @@ static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup:
       //          }
       //        }
       //      }
+    }
+    else
+    {
+      if (expression[i]->isCompilable(row))
+      {
+        CompiledOperator compiledOperator = compileOperator(getJITInstance(), expression[i], row);
+        expression[i] = boost::make_shared<CompiledColumn>(compiledOperator, expression[i].get());
+      }
     }
   }
 }

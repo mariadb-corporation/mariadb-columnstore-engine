@@ -87,7 +87,7 @@ class Func
   /**
    * Determine whether compilation is supported
    * */
-  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType) const
+  virtual bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
   {
     return false;
   }
@@ -97,17 +97,12 @@ class Func
    * to the implementation function for implementation
    *
    * */
-  llvm::Value* compile() const
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               rowgroup::Row& row, FunctionParm& fp,
+                               execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     return nullptr;
   }
-
-//  virtual bool isCompilableImpl() const
-//  {
-//    return false;
-//  }
-//
-//  virtual llvm::Value* compileImpl() const = 0;
 
   virtual bool fix(execplan::FunctionColumn& col) const
   {

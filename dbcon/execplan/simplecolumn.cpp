@@ -697,78 +697,338 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     }
   }
 }
-llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, Row& row)
+llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                   rowgroup::Row& row, CalpontSystemCatalog::ColDataType& dataType)
+{
+  switch (dataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT: return compileInt(b, data, isNull, row);
+    case CalpontSystemCatalog::UBIGINT:
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::USMALLINT:
+    case CalpontSystemCatalog::UTINYINT: return compileUint(b, data, isNull, row);
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT: return compileFloat(b, data, isNull, row);
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE: return compileDouble(b, data, isNull, row);
+    default:
+    {
+      throw std::logic_error("SimpleColumn::compile: unsupported data type.");
+    }
+  }
+}
+llvm::Value* SimpleColumn::compileInt(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, Row& row)
 {
   if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
   {
     fInputOffset = row.getOffset(fInputIndex);
   }
-  // TODO: test unsigned type
+
   llvm::Value* result;
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::BIGINT:
     {
-      result = b.CreateSIToFP(row.compileIntField<8>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileIntField<8>(b, data, fInputIndex);
       break;
     }
+    case CalpontSystemCatalog::DATETIME:
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::UBIGINT:
     {
-      result = b.CreateUIToFP(row.compileIntField<8>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileUintField<8>(b, data, fInputIndex);
       break;
     }
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     {
-      result = b.CreateSIToFP(row.compileIntField<4>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileIntField<4>(b, data, fInputIndex);
       break;
     }
+    case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     {
-      result = b.CreateUIToFP(row.compileIntField<4>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileUintField<4>(b, data, fInputIndex);
       break;
     }
 
     case CalpontSystemCatalog::SMALLINT:
     {
-      result = b.CreateSIToFP(row.compileIntField<2>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileIntField<2>(b, data, fInputIndex);
       break;
     }
     case CalpontSystemCatalog::USMALLINT:
     {
-      result = b.CreateUIToFP(row.compileIntField<2>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileUintField<2>(b, data, fInputIndex);
       break;
     }
 
     case CalpontSystemCatalog::TINYINT:
     {
-      result = b.CreateSIToFP(row.compileIntField<1>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileIntField<1>(b, data, fInputIndex);
       break;
     }
     case CalpontSystemCatalog::UTINYINT:
     {
-      result = b.CreateUIToFP(row.compileIntField<1>(b,data,fInputIndex),b.getDoubleTy());
+      result = row.compileUintField<1>(b, data, fInputIndex);
       break;
     }
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
     {
-      result = b.CreateFPExt(row.compileFloatField(b,data,fInputIndex),b.getDoubleTy());
+      result = b.CreateFPToSI(row.compileFloatField(b, data, fInputIndex), b.getInt64Ty());
       break;
     }
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
     {
-      result = row.compileDoubleField(b,data,fInputIndex);
+      result = b.CreateFPToSI(row.compileDoubleField(b, data, fInputIndex), b.getInt64Ty());
       break;
     }
     default:
     {
-      throw std::logic_error("SimpleColumn::compile: unsupported type.");
+      throw std::logic_error("SimpleColumn::compileInt: unsupported type.");
     }
   }
-  row.compileIsNull(b,data,isNull,fInputIndex);
+
+  row.compileIsNull(b, data, isNull, fInputIndex);
+  return result;
+}
+
+llvm::Value* SimpleColumn::compileUint(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, Row& row)
+{
+  if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
+  {
+    fInputOffset = row.getOffset(fInputIndex);
+  }
+
+  llvm::Value* result;
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    {
+      result = row.compileIntField<8>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::UBIGINT:
+    {
+      result = row.compileUintField<8>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    {
+      result = row.compileIntField<4>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    {
+      result = row.compileUintField<4>(b, data, fInputIndex);
+      break;
+    }
+
+    case CalpontSystemCatalog::SMALLINT:
+    {
+      result = row.compileIntField<2>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::USMALLINT:
+    {
+      result = row.compileUintField<2>(b, data, fInputIndex);
+      break;
+    }
+
+    case CalpontSystemCatalog::TINYINT:
+    {
+      result = row.compileIntField<1>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::UTINYINT:
+    {
+      result = row.compileUintField<1>(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+    {
+      result = b.CreateFPToUI(row.compileFloatField(b, data, fInputIndex), b.getInt64Ty());
+      break;
+    }
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+    {
+      result = b.CreateFPToUI(row.compileDoubleField(b, data, fInputIndex), b.getInt64Ty());
+      break;
+    }
+    default:
+    {
+      throw std::logic_error("SimpleColumn::compileUint: unsupported type.");
+    }
+  }
+
+  row.compileIsNull(b, data, isNull, fInputIndex);
+  return result;
+}
+
+llvm::Value* SimpleColumn::compileFloat(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                        Row& row)
+{
+  if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
+  {
+    fInputOffset = row.getOffset(fInputIndex);
+  }
+
+  llvm::Value* result;
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<8>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::UBIGINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<8>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<4>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<4>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::SMALLINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<2>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::USMALLINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<2>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::TINYINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<1>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::UTINYINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<1>(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+    {
+      result = row.compileFloatField(b, data, fInputIndex);
+      break;
+    }
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+    {
+      result = b.CreateFPTrunc(row.compileDoubleField(b, data, fInputIndex), b.getFloatTy());
+      break;
+    }
+    default:
+    {
+      throw std::logic_error("SimpleColumn::compileFloat: unsupported type.");
+    }
+  }
+
+  row.compileIsNull(b, data, isNull, fInputIndex);
+  return result;
+}
+
+llvm::Value* SimpleColumn::compileDouble(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                         Row& row)
+{
+  if (UNLIKELY((int)(fInputOffset == (uint32_t)-1)))
+  {
+    fInputOffset = row.getOffset(fInputIndex);
+  }
+
+  llvm::Value* result;
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<8>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UBIGINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<8>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<4>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UINT:
+    case CalpontSystemCatalog::UMEDINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<4>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::SMALLINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<2>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::USMALLINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<2>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+
+    case CalpontSystemCatalog::TINYINT:
+    {
+      result = b.CreateSIToFP(row.compileIntField<1>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::UTINYINT:
+    {
+      result = b.CreateUIToFP(row.compileIntField<1>(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+    {
+      result = b.CreateFPExt(row.compileFloatField(b, data, fInputIndex), b.getDoubleTy());
+      break;
+    }
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
+    {
+      result = row.compileDoubleField(b, data, fInputIndex);
+      break;
+    }
+    default:
+    {
+      throw std::logic_error("SimpleColumn::compileDouble: unsupported type.");
+    }
+  }
+
+  row.compileIsNull(b, data, isNull, fInputIndex);
   return result;
 }
 

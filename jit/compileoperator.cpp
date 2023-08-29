@@ -14,21 +14,21 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   auto* isNull_type = b.getInt1Ty()->getPointerTo();
   switch (expression->resultType().colDataType)
   {
-    case execplan::CalpontSystemCatalog::BIGINT:
-    case execplan::CalpontSystemCatalog::INT:
-    case execplan::CalpontSystemCatalog::MEDINT:
-    case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UTINYINT:
       return_type = b.getInt64Ty(); break;
-    case execplan::CalpontSystemCatalog::DOUBLE:
-    case execplan::CalpontSystemCatalog::UDOUBLE: return_type = b.getDoubleTy(); break;
-    case execplan::CalpontSystemCatalog::FLOAT:
-    case execplan::CalpontSystemCatalog::UFLOAT: return_type = b.getFloatTy(); break;
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE: return_type = b.getDoubleTy(); break;
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT: return_type = b.getFloatTy(); break;
     default: throw logic_error("compileOperator: unsupported type");
   }
   auto* func_type = llvm::FunctionType::get(return_type, {data_type, isNull_type}, false);
@@ -40,7 +40,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   llvm::Value* isNull_ptr = args++;
   auto* entry = llvm::BasicBlock::Create(b.getContext(), "entry", func);
   b.SetInsertPoint(entry);
-  auto* ret = expression->compile(b, data_ptr, isNull_ptr, row);
+  auto* ret = expression->compile(b, data_ptr, isNull_ptr, row, expression->resultType().colDataType);
 
   b.CreateRet(ret);
 
@@ -58,11 +58,12 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
 
   switch (expression->resultType().colDataType)
   {
-    case execplan::CalpontSystemCatalog::BIGINT:
-    case execplan::CalpontSystemCatalog::INT:
-    case execplan::CalpontSystemCatalog::MEDINT:
-    case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::DATE:
       result_compiled_function.compiled_function_int64 = reinterpret_cast<JITCompiledOperator<int64_t>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
       break;
@@ -74,13 +75,13 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
       result_compiled_function.compiled_function_uint64 = reinterpret_cast<JITCompiledOperator<uint64_t>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
       break;
-    case execplan::CalpontSystemCatalog::DOUBLE:
-    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE:
       result_compiled_function.compiled_function_double = reinterpret_cast<JITCompiledOperator<double>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
       break;
-    case execplan::CalpontSystemCatalog::FLOAT:
-    case execplan::CalpontSystemCatalog::UFLOAT:
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
       result_compiled_function.compiled_function_float = reinterpret_cast<JITCompiledOperator<float>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
     default: throw logic_error("compileOperator: unsupported type");

@@ -637,6 +637,8 @@ class Row
  public:
   template <int len>
   inline llvm::Value* compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex) const;
+  template <int len>
+  inline llvm::Value* compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex) const;
   void compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull, uint32_t colIndex);
   inline llvm::Value* compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
                                         uint32_t colIndex) const;
@@ -1415,14 +1417,45 @@ inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* data
                                          uint32_t colIndex) const
 {
   auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
+  llvm::Value* result;
   switch (len)
   {
-    case 1: return b.CreateLoad(b.getInt8Ty(), dataPtr);
-    case 2: return b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
-    case 4: return b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
-    case 8: return b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
+    case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr); break;
+    case 2:
+      result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
+      break;
+    case 4:
+      result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
+      break;
+    case 8:
+      result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
+      break;
     default: throw std::logic_error("Row::compileIntField(): bad length.");
   }
+  return b.CreateSExt(result, b.getInt64Ty());
+}
+
+template <int len>
+inline llvm::Value* Row::compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
+                                          uint32_t colIndex) const
+{
+  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
+  llvm::Value* result;
+  switch (len)
+  {
+    case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr); break;
+    case 2:
+      result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
+      break;
+    case 4:
+      result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
+      break;
+    case 8:
+      result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
+      break;
+    default: throw std::logic_error("Row::compileIntField(): bad length.");
+  }
+  return b.CreateZExt(result, b.getInt64Ty());
 }
 
 inline llvm::Value* Row::compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
@@ -1562,8 +1595,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const;
-  // void convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL)
+  // const; void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
