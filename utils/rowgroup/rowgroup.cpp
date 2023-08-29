@@ -1049,6 +1049,12 @@ void Row::compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Valu
                                isNullVal),
                     isNull);
       break;
+    case CalpontSystemCatalog::DATE:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, colIndex),
+                                              b.getInt32(joblist::DATENULL)),
+                               isNullVal),
+                    isNull);
+      break;
     case CalpontSystemCatalog::BIGINT:
       b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
                                               b.getInt64(joblist::BIGINTNULL)),
@@ -1059,6 +1065,12 @@ void Row::compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Valu
     case CalpontSystemCatalog::UDOUBLE:
       b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
                                               b.getInt64(joblist::DOUBLENULL)),
+                               isNullVal),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::DATETIME:
+      b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, colIndex),
+                                              b.getInt64(joblist::DATETIMENULL)),
                                isNullVal),
                     isNull);
       break;
