@@ -3159,6 +3159,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         case ROWAGG_SUM:
         case ROWAGG_AVG:
         {
+		idblog("avg");
           if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
               typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
               typeProj[colProj] == CalpontSystemCatalog::BLOB ||
@@ -3185,11 +3186,12 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           colAggPm++;
         }
 
-          // PM: put the count column for avg next to the sum
-          // let fall through to add a count column for average function
-          if (aggOp != ROWAGG_AVG)
-            break;
-          /* fall through */
+        // PM: put the count column for avg next to the sum
+        // let fall through to add a count column for average function
+        if (aggOp != ROWAGG_AVG)
+          break;
+	idblog("fell through");
+        /* fall through */
 
         case ROWAGG_COUNT_ASTERISK:
         case ROWAGG_COUNT_COL_NAME:
@@ -3443,6 +3445,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       // not a direct hit -- a returned column is not already in the RG from PMs
       else
       {
+	      idblog(" is is " << i << " and it is not found in aggFuncMap");
         bool returnColMissing = true;
 
         // check if a SUM or COUNT covered by AVG
@@ -3453,6 +3456,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
           if (it != aggFuncMap.end())
           {
+		  idblog("false alarm");
             // false alarm
             returnColMissing = false;
 
@@ -3469,6 +3473,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
             }
             else
             {
+		    idblog("count handled by average");
               // leave the count() to avg
               aggOp = ROWAGG_COUNT_NO_OP;
 
@@ -3486,6 +3491,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), retKey) !=
                  jobInfo.expressionVec.end())
         {
+		idblog("point 1");
           // a function on aggregation
           TupleInfo ti = getTupleInfo(retKey, jobInfo);
           oidsAggUm.push_back(ti.oid);
@@ -3514,6 +3520,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         }
         else if (aggOp == ROWAGG_CONSTANT)
         {
+		idblog("constant");
           TupleInfo ti = getTupleInfo(retKey, jobInfo);
           oidsAggUm.push_back(ti.oid);
           keysAggUm.push_back(retKey);
@@ -3569,8 +3576,11 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
         // a duplicate group by column
         if (dupGroupbyIndex != -1)
+	{
+		idblog("dup column");
           functionVecUm.push_back(SP_ROWAGG_FUNC_t(
               new RowAggFunctionCol(ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, outIdx, dupGroupbyIndex)));
+	}
       }
       else
       {
