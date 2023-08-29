@@ -284,6 +284,9 @@ class SimpleColumn : public ReturnedColumn
   virtual void evaluate(rowgroup::Row& row, bool& isNull);
   virtual void evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType);
 
+  template <SIMD_TYPE simdType>
+  void _evaluateSimd(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount);
+
   virtual simd::vi128_t getIntSimdVal(vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, uint32_t offset, uint32_t batchCount, SIMD_TYPE simdType)
   {
     evaluateSimd(colList, colWidth, colData, offset, batchCount, simdType);

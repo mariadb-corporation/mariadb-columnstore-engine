@@ -87,6 +87,10 @@ class FuncExp
    */
   void evaluate(rowgroup::Row& row, execplan::SRCP& expressions);
 
+  
+  template <SIMD_TYPE simdType>
+  void _evaluateSimd(execplan::SRCP& expression, vector<uint32_t> &colList, vector<uint32_t> &colWidth, vector<vector<uint8_t>> &colData, vector<uint8_t> &retCol, uint32_t offset, uint32_t batchCount);
+
   /**
    * @brief evaluate compressed F&E columns using SIMD
    * @param row the beginning row of current batch, used to store the result

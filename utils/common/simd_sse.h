@@ -68,6 +68,59 @@ using vi128d_t = __m128d;
 using int128_t = __int128;
 using MT = uint16_t;
 
+const uint32_t VECTOR_WIDTH = 128U;
+
+template <SIMD_TYPE T, typename IT = void>
+struct _SimdTypeToIntegralType
+{
+  typedef IT type;
+};
+
+template <SIMD_TYPE T>
+struct SimdTypeToIntegralType : _SimdTypeToIntegralType<T>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_INT8> : _SimdTypeToIntegralType<SIMD_INT8, int8_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_INT16> : _SimdTypeToIntegralType<SIMD_INT16, int16_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_INT32> : _SimdTypeToIntegralType<SIMD_INT32, int32_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_INT64> : _SimdTypeToIntegralType<SIMD_INT64, int64_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_UINT8> : _SimdTypeToIntegralType<SIMD_UINT8, uint8_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_UINT16> : _SimdTypeToIntegralType<SIMD_UINT16, uint16_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_UINT32> : _SimdTypeToIntegralType<SIMD_UINT32, uint32_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_UINT64> : _SimdTypeToIntegralType<SIMD_UINT64, uint64_t>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_FLOAT> : _SimdTypeToIntegralType<SIMD_FLOAT, float>
+{
+};
+template <>
+struct SimdTypeToIntegralType<SIMD_DOUBLE> : _SimdTypeToIntegralType<SIMD_DOUBLE, double>
+{
+};
+
 // These ugly wrappers are used to allow to use __m128* as template class parameter argument
 struct vi128_wr
 {
@@ -2139,6 +2192,8 @@ inline vi128d_t set_2x64d(double x)
 {
   return _mm_set1_pd(x);
 }
+
+
 
 }  // namespace simd
 
