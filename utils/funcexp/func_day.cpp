@@ -171,16 +171,13 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   llvm::Value* val;
-  CalpontSystemCatalog::ColDataType dataType;
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
-      dataType = CalpontSystemCatalog::INT;
-      val = fp[0]->compile(b, data, isNull, row, dataType);
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 6), 0x3f), b.getInt32Ty());
     case CalpontSystemCatalog::DATETIME:
-      dataType = CalpontSystemCatalog::INT;
-      val = fp[0]->compile(b, data, isNull, row, dataType);
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
     default: throw ::logic_error("Func_day::compile: unsupported type");
   }
