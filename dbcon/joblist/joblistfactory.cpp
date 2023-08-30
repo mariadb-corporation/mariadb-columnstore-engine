@@ -898,6 +898,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       }
     }
   }
+  idblog("(2) retCols size " << retCols.size());
 
   map<uint32_t, CalpontSystemCatalog::OID> dictMap;  // bug 1853, the tupleKey - dictoid map
 
@@ -1246,6 +1247,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
         {
+		idblog("arithmetic column");
           if (ac->aggColumnList().size() > 0)
             hasAggCols = true;
           if (ac->windowfunctionColumnList().size() > 0)
@@ -1253,6 +1255,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         }
         else if (dynamic_cast<const MagicColumn*>(srcp.get()) != NULL)
         {
+		idblog("magic column");
         }
         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         {
@@ -1286,7 +1289,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         tupleKey = ti.key;
 
         if (hasAggCols && !hasWndCols)
+	{
+		idblog("pushing into exxpr vec");
           jobInfo.expressionVec.push_back(tupleKey);
+	}
       }
 
       // add to project list
@@ -1350,7 +1356,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       *it = make_pair(tupleKey, op);
     }
   }
-
+idblog("pcv size " << pcv.size());
   return doProject(pcv, jobInfo);
 }
 
