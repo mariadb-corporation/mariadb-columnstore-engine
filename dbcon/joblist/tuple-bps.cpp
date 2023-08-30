@@ -3108,6 +3108,7 @@ void TupleBPS::setFE1Input(const RowGroup& feInput)
 void TupleBPS::setFcnExpGroup2(const boost::shared_ptr<funcexp::FuncExpWrapper>& fe,
                                const rowgroup::RowGroup& rg, bool runFE2onPM)
 {
+	idblog("setting fcn exp group2, fe is " << (fe.get() ? "not NULL" : "NULL"));
   fe2 = fe;
   fe2Output = rg;
   checkDupOutputColumns(rg);
