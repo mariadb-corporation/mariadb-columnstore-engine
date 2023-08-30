@@ -325,6 +325,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(spjs.get());
   TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(spjs.get());
   SubAdapterStep* sas = dynamic_cast<SubAdapterStep*>(spjs.get());
+  idblog("bps is " << (bps ? "not NULL" : "NULL") << ", thjs is " << (thjs ? "not NULL" : "NULL"));
 
   if (!bps && !thjs && !sas)
     throw runtime_error("Bad last step");
