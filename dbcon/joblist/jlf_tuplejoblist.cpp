@@ -364,6 +364,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   // evaluate the returned/groupby expressions if any
   JobStepVector& expSteps = jobInfo.returnedExpressions;
 
+  idblog("expsteps.size() is " << expSteps.size());
   if (expSteps.size() > 0)
   {
     // create a RG has the keys not in rg0
