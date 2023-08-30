@@ -780,11 +780,13 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
     {
+#if 0
       uint64_t eid = mc->expressionId();
       CalpontSystemCatalog::ColType ct = mc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
+#endif
 
     }
     else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
