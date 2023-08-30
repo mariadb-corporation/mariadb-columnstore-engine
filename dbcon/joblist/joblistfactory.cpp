@@ -1251,8 +1251,12 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           if (ac->windowfunctionColumnList().size() > 0)
             hasWndCols = true;
         }
+        else if (dynamic_cast<const MagicColumn*>(srcp.get()) != NULL)
+        {
+        }
         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         {
+		idblog("function column");
           if (fc->aggColumnList().size() > 0)
             hasAggCols = true;
           if (fc->windowfunctionColumnList().size() > 0)
