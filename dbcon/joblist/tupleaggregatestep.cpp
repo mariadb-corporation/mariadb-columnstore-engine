@@ -3725,6 +3725,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
   for (uint64_t i = 0; i < oidsAggUm.size(); i++)
     posAggUm.push_back(posAggUm[i] + widthAggUm[i]);
 
+  idblog("oidsAggUm.size() is " << oidsAggUm.size());
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
   SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
