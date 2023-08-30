@@ -338,7 +338,7 @@ class FunctionColumn : public ReturnedColumn
   // JIT part
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
-                       CalpontSystemCatalog::ColDataType& dataType) override
+                       CalpontSystemCatalog::ColDataType dataType) override
   {
     return fFunctor->compile(b, data, isNull, row, fFunctionParms, fOperationType);
   }

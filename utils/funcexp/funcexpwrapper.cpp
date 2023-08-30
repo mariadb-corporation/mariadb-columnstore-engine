@@ -119,7 +119,14 @@ bool FuncExpWrapper::evaluate(Row* r)
       return false;
   if (!isCompiled)
   {
-    msc_jit::compileExpression(rcs, *r);
+    try
+    {
+      msc_jit::compileExpression(rcs, *r);
+    }
+    catch (const std::logic_error& e)
+    {
+      std::cout << "Skip JIT, caught logic_error:" << e.what() << std::endl;
+    }
     isCompiled = true;
   }
   fe->evaluate(*r, rcs);
