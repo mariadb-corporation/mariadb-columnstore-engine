@@ -565,6 +565,7 @@ RowAggregation::~RowAggregation()
 //------------------------------------------------------------------------------
 void RowAggregation::addRowGroup(const RowGroup* pRows)
 {
+	idblog("addRowGroup");
   // no group by == no map, everything done in fRow
   if (fGroupByCols.empty())
   {

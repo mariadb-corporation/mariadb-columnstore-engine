@@ -3653,6 +3653,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     {
       if (k->second->fAuxColumnIndex == (uint32_t)-1)
       {
+	      idblog("adding the aux column!");
         k->second->fAuxColumnIndex = lastCol++;
         oidsAggUm.push_back(jobInfo.keyInfo->tupleKeyVec[k->first].fId);
         keysAggUm.push_back(k->first);
