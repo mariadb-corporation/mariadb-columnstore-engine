@@ -291,7 +291,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 
       if (retCols[i]->windowfunctionColumnList().size() > 0)
         jobInfo.expressionVec.push_back(key);
-      else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
+      else if (!mc && find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
                jobInfo.expressionVec.end())
       {
         jobInfo.returnedExpressions.push_back(sjstep);
