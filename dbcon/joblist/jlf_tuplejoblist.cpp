@@ -417,6 +417,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     // last step can be tbps (no join) or thjs, either one can have a group 3 expression
     if (bps || thjs)
     {
+	    idblog("bps || thjs");
       tjs->setOutputRowGroup(rg01);
       tjs->setFcnExpGroup3(exps);
       tjs->setFE23Output(rg1);
