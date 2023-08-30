@@ -88,7 +88,7 @@ class SimpleColumn_INT : public SimpleColumn
 
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
-                       CalpontSystemCatalog::ColDataType& dataType) override
+                       CalpontSystemCatalog::ColDataType dataType) override
   {
     auto offset = row.getOffset(fInputIndex);
     auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), data, offset);

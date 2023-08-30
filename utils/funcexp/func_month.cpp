@@ -141,6 +141,43 @@ int64_t Func_month::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 
   return -1;
 }
-
+bool Func_month::isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
+{
+  switch (colType.colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::DATETIME:
+      return true;
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::TIME:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL: return false;
+    default: return false;
+  }
+}
+llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               rowgroup::Row& row, FunctionParm& fp,
+                               execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  llvm::Value* val;
+  switch (fp[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 12), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::DATETIME:
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    default: throw ::logic_error("Func_month::compile: unsupported type");
+  }
+}
 }  // namespace funcexp
 // vim:ts=4 sw=4:

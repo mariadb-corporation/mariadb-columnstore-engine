@@ -214,7 +214,7 @@ class ArithmeticOperator : public Operator
  public:
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                              CalpontSystemCatalog::ColDataType& dataType) override;
+                              CalpontSystemCatalog::ColDataType dataType) override;
   inline llvm::Value* compileI(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline llvm::Value* compileF(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
@@ -441,7 +441,7 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                                                 rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                                                CalpontSystemCatalog::ColDataType& dataType)
+                                                CalpontSystemCatalog::ColDataType dataType)
 {
   switch (fOperationType.colDataType)
   {

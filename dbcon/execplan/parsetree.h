@@ -319,7 +319,7 @@ class ParseTree
 
  public:
   llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
-                       CalpontSystemCatalog::ColDataType& dataType)
+                       CalpontSystemCatalog::ColDataType dataType)
   {
     if (fLeft && fRight)
     {

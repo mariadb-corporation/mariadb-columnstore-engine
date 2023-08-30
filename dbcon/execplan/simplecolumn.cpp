@@ -698,7 +698,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
   }
 }
 llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                   rowgroup::Row& row, CalpontSystemCatalog::ColDataType& dataType)
+                                   rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType)
 {
   switch (dataType)
   {

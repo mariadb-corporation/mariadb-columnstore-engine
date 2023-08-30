@@ -125,7 +125,7 @@ class PredicateOperator : public Operator
  public:
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                              CalpontSystemCatalog::ColDataType& dataType) override;
+                              CalpontSystemCatalog::ColDataType dataType) override;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
 };
 
@@ -182,7 +182,7 @@ inline bool PredicateOperator::numericCompare(const result_t op1, const result_t
 
 inline llvm::Value* PredicateOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                                               CalpontSystemCatalog::ColDataType& dataType)
+                                               CalpontSystemCatalog::ColDataType dataType)
 {
   return compile(b, lop->compile(b, data, isNull, row, dataType), rop->compile(b, data, isNull, row, dataType));
 }

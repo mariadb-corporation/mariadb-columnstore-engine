@@ -325,7 +325,7 @@ class TreeNode
     return fResult.intVal;
   }
   virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType& dataType)
+                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType)
   {
     return fResult.compiledBlock;
   }
