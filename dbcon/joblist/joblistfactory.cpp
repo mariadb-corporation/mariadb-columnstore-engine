@@ -780,13 +780,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
     {
-#if 0
       uint64_t eid = mc->expressionId();
       CalpontSystemCatalog::ColType ct = mc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
-#endif
 
     }
     else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
@@ -812,6 +810,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   // process the returned columns
   RetColsVector& retCols = jobInfo.projectionCols;
   SRCP srcp;
+  idblog("retCols size " << retCols.size());
 
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
@@ -826,7 +825,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
       {
-        if (dynamic_cast<const ConstantColumn*>(j->get()) == NULL)
+        if (dynamic_cast<const ConstantColumn*>(j->get()) == NULL && dynamic_cast<const MagicColumn*>(j->get()) != NULL)
           retCols.push_back(*j);
       }
 
