@@ -699,6 +699,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
   for (uint64_t i = 0; i < groupByCols.size(); i++)
   {
+	  idblog("pushing into pcv");
     pcv.push_back(groupByCols[i]);
     lastGroupByPos++;
 
@@ -806,6 +807,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       throw logic_error(errmsg.str());
     }
   }
+	  idblog("pushing into pcv loop ended");
 
   // process the returned columns
   RetColsVector& retCols = jobInfo.projectionCols;
@@ -1136,6 +1138,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
           if (keyIt == projectKeys.end())
           {
+		  idblog("keyIt == projectKeys.end(), first one");
             RetColsVector::iterator it = pcv.end();
 
             if (doDistinct)
@@ -1300,6 +1303,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       if (keyIt == projectKeys.end())
       {
+		idblog("keyIt == projectKeys.end()");
         RetColsVector::iterator it = pcv.end();
 
         if (doDistinct)
@@ -1315,6 +1319,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if (pos >= lastGroupByPos)
         {
+		idblog("pos >= lastGroupByPos");
           pcv[pos] = pcv[lastGroupByPos];
           pcv[lastGroupByPos] = srcp;
           projectKeys[pos] = projectKeys[lastGroupByPos];
