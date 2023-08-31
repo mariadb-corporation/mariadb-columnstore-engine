@@ -906,6 +906,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
+	  idblog("at i = " << i << " reCols.size() = " << retCols.size());
     srcp = retCols[i];
     const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
     AggregateColumn* aggc = dynamic_cast<AggregateColumn*>(srcp.get());
@@ -1138,7 +1139,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
           if (keyIt == projectKeys.end())
           {
-		  idblog("keyIt == projectKeys.end(), first one");
+		  idblog("keyIt == projectKeys.end(), first one. projectKeys.size = " << projectKeys.size());
             RetColsVector::iterator it = pcv.end();
 
             if (doDistinct)
