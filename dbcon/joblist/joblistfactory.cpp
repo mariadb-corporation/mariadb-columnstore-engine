@@ -820,7 +820,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
       {
-        if (dynamic_cast<const ConstantColumn*>(j->get()) == NULL && dynamic_cast<const MagicColumn*>(j->get()) != NULL)
+        if (dynamic_cast<const ConstantColumn*>(j->get()) == NULL)
           retCols.push_back(*j);
       }
 
