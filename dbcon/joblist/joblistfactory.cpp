@@ -789,7 +789,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
-
+      if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
+        projectKeys.push_back(tupleKey);
     }
     else
     {
