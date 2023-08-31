@@ -874,7 +874,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     }
 
     updateEntry(row, rgContextColl);
-    if (0 && (z + 1 < cnt)) {
+    if ((z + 1 < cnt)) {
       row.setIntField(row.getIntField(cnt - 1) + 1, cnt - 1);
       idblog("null-ing column #" << (cnt - 2 - z));
       row.setToNull(cnt - 2 - z);
