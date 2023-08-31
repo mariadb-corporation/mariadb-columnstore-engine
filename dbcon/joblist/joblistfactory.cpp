@@ -743,6 +743,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       TupleInfo ti(setTupleInfo(ct, gbOid, jobInfo, tblOid, sc, alias));
       uint32_t tupleKey = ti.key;
 
+      idblog("tuple key " << tupleKey << ", i " << i);
       if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
         projectKeys.push_back(tupleKey);
 
@@ -770,6 +771,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
     {
+	    idblog("function column at " << i);
       uint64_t eid = fc->expressionId();
       CalpontSystemCatalog::ColType ct = fc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
@@ -781,23 +783,13 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
     {
+	    idblog("skipping magic column at " << i);
       uint64_t eid = mc->expressionId();
       CalpontSystemCatalog::ColType ct = mc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
 
-    }
-    else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
-    {
-      uint64_t eid = fc->expressionId();
-      CalpontSystemCatalog::ColType ct = fc->resultType();
-      TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
-      uint32_t tupleKey = ti.key;
-      jobInfo.groupByColVec.push_back(tupleKey);
-
-      if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
-        projectKeys.push_back(tupleKey);
     }
     else
     {
