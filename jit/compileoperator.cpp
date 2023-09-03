@@ -4,11 +4,20 @@
 
 namespace execplan
 {
-// TODO: change row to llvm param
+
+void compileExternalFunction(llvm::Module& module, llvm::IRBuilder<>& b)
+{
+  auto* func_intToDatetime_type =
+      llvm::FunctionType::get(b.getInt64Ty(), {b.getInt64Ty(), b.getInt1Ty()->getPointerTo()}, false);
+  llvm::Function::Create(func_intToDatetime_type, llvm::Function::ExternalLinkage,
+                         "dataconvert::DataConvert::intToDatetime", module);
+}
+
 void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row)
 {
   auto columns = expression.get()->simpleColumnList();
   llvm::IRBuilder<> b(module.getContext());
+  compileExternalFunction(module, b);
   llvm::Type* return_type;
   auto* data_type = b.getInt8Ty()->getPointerTo();
   auto* isNull_type = b.getInt1Ty()->getPointerTo();
@@ -23,8 +32,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::USMALLINT:
-    case CalpontSystemCatalog::UTINYINT:
-      return_type = b.getInt64Ty(); break;
+    case CalpontSystemCatalog::UTINYINT: return_type = b.getInt64Ty(); break;
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE: return_type = b.getDoubleTy(); break;
     case CalpontSystemCatalog::FLOAT:
