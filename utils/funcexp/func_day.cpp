@@ -149,17 +149,16 @@ bool Func_day::isCompilable(const execplan::CalpontSystemCatalog::ColType& colTy
   {
     case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::DATETIME:
-      return true;
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT: return true;
     case CalpontSystemCatalog::TIMESTAMP:
     case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
-    case CalpontSystemCatalog::BIGINT:
-    case CalpontSystemCatalog::MEDINT:
-    case CalpontSystemCatalog::SMALLINT:
-    case CalpontSystemCatalog::TINYINT:
-    case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::DECIMAL:
     case CalpontSystemCatalog::UDECIMAL: return false;
     default: return false;
@@ -171,6 +170,7 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   llvm::Value* val;
+  llvm::Function* func;
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
@@ -178,6 +178,21 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 6), 0x3f), b.getInt32Ty());
     case CalpontSystemCatalog::DATETIME:
       val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::intToDatetime");
+      if (!func)
+      {
+        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::intToDatetime function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
     default: throw ::logic_error("Func_day::compile: unsupported type");
   }
