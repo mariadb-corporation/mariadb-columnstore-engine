@@ -4,14 +4,28 @@
 #include "compileoperator.h"
 #include "returnedcolumn.h"
 #include "arithmeticcolumn.h"
+#include "dataconvert.h"
 
 using namespace execplan;
 
 namespace msc_jit
 {
+
+static bool initialized = false;
+
+static void init(JIT& jit)
+{
+  jit.registerExternalSymbol("dataconvert::DataConvert::intToDatetime",
+                             reinterpret_cast<void*>(&dataconvert::DataConvert::intToDatetime));
+}
+
 static JIT& getJITInstance()
 {
   static JIT jit;
+  if (!initialized)
+  {
+    init(jit);
+  }
   return jit;
 }
 
