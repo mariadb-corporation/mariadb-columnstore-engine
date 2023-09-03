@@ -27,7 +27,6 @@
 #include <llvm/ADT/None.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 
-#include <boost/noncopyable.hpp>
 namespace msc_jit
 {
 // Arena Memory pool for JIT
