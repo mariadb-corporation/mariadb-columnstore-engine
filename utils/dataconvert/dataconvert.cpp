@@ -3275,7 +3275,7 @@ int64_t DataConvert::stringToTime(const string& data)
   return getSInt64LE((const char*)&atime);
 }
 
-int64_t DataConvert::timestampToInt(long long timestampvalue, long timeZone)
+int64_t DataConvert::timestampValueToInt(long long timestampvalue, long timeZone)
 {
   TimeStamp timestamp(timestampvalue);
   return intToDatetime(timestamp.convertToMySQLint(timeZone));

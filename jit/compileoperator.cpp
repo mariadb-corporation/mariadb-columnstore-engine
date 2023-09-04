@@ -11,6 +11,10 @@ void compileExternalFunction(llvm::Module& module, llvm::IRBuilder<>& b)
       llvm::FunctionType::get(b.getInt64Ty(), {b.getInt64Ty(), b.getInt1Ty()->getPointerTo()}, false);
   llvm::Function::Create(func_intToDatetime_type, llvm::Function::ExternalLinkage,
                          "dataconvert::DataConvert::intToDatetime", module);
+  auto* func_timestampValueToInt_type =
+      llvm::FunctionType::get(b.getInt64Ty(), {b.getInt64Ty(), b.getInt64Ty()}, false);
+  llvm::Function::Create(func_timestampValueToInt_type, llvm::Function::ExternalLinkage,
+                         "dataconvert::DataConvert::timestampValueToInt", module);
 }
 
 void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row)
