@@ -1295,7 +1295,7 @@ class DataConvert
   EXPORT static int64_t timeToInt(const std::string& time);
   EXPORT static int64_t stringToTime(const std::string& data);
   // convert integer to datetime
-  EXPORT static int64_t timestampToInt(long long timestampvalue, long timeZone);
+  EXPORT static int64_t timestampValueToInt(long long timestampvalue, long timeZone);
   // bug4388, union type conversion
   EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
                                          const datatypes::SystemCatalog::TypeHolderStd& type);
