@@ -217,10 +217,10 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
       }
     case CalpontSystemCatalog::TIMESTAMP:
       func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
-          "dataconvert::DataConvert::timestampToInt");
+          "dataconvert::DataConvert::timestampValueToInt");
       if (!func)
       {
-        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampToInt function not found");
+        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampValueToInt function not found");
       }
       val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
                                 b.getInt64(op_ct.getTimeZone())});
