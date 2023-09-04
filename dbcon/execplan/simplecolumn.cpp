@@ -725,7 +725,9 @@ llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
-    case CalpontSystemCatalog::TINYINT: return compileInt(b, data, isNull, row);
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::TIMESTAMP:
+      return compileInt(b, data, isNull, row);
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
