@@ -2004,7 +2004,7 @@ int64_t DataConvert::convertArrowColumnTimestampUs(int64_t timeVal, int& status)
   int inMinute;
   int inSecond;
   int inMicrosecond;
-  
+
   std::chrono::microseconds duration(timeVal);
   std::chrono::system_clock::time_point timePoint(duration);
 
@@ -2341,7 +2341,6 @@ int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal, int& status)
   }
   return value;
 }
-
 
 //------------------------------------------------------------------------------
 // Convert time string to binary time.  Used by BulkLoad.
@@ -3274,6 +3273,18 @@ int64_t DataConvert::stringToTime(const string& data)
   atime.msecond = msec;
   atime.is_neg = isNeg;
   return getSInt64LE((const char*)&atime);
+}
+
+int64_t DataConvert::timestampToInt(long long timestampvalue, long timeZone)
+{
+  TimeStamp timestamp(timestampvalue);
+  return intToDatetime(timestamp.convertToMySQLint(timeZone));
+}
+
+int64_t DataConvert::timestampToInt(long long timestampvalue, long timeZone)
+{
+  TimeStamp timestamp(timestampvalue);
+  return intToDatetime(timestamp.convertToMySQLint(timeZone));
 }
 
 void DataConvert::joinColTypeForUnion(datatypes::TypeHolderStd& unionedType,
