@@ -17,6 +17,7 @@ static void init(JIT& jit)
 {
   jit.registerExternalSymbol("dataconvert::DataConvert::intToDatetime",
                              reinterpret_cast<void*>(&dataconvert::DataConvert::intToDatetime));
+  initialized = true;
 }
 
 static JIT& getJITInstance()

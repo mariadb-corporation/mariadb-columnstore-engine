@@ -400,7 +400,9 @@ class SimpleColumn : public ReturnedColumn
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT:
       case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE: return true;
+      case CalpontSystemCatalog::UDOUBLE: 
+      case CalpontSystemCatalog::TIMESTAMP:
+        return true;
       default: return false;
     }
   }

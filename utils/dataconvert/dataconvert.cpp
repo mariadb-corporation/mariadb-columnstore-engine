@@ -2907,6 +2907,12 @@ int64_t DataConvert::stringToTime(const string& data)
   return getSInt64LE((const char*)&atime);
 }
 
+int64_t DataConvert::timestampToInt(long long timestampvalue, long timeZone)
+{
+  TimeStamp timestamp(timestampvalue);
+  return intToDatetime(timestamp.convertToMySQLint(timeZone));
+}
+
 void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
                                       const datatypes::SystemCatalog::TypeHolderStd& type, unsigned int& rc)
 {

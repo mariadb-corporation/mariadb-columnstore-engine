@@ -153,14 +153,14 @@ bool Func_day::isCompilable(const execplan::CalpontSystemCatalog::ColType& colTy
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
     case CalpontSystemCatalog::TINYINT:
-    case CalpontSystemCatalog::INT: return true;
-    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    case CalpontSystemCatalog::TIMESTAMP: return true;
     case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARCHAR:
-    case CalpontSystemCatalog::DECIMAL:
-    case CalpontSystemCatalog::UDECIMAL: return false;
+    case CalpontSystemCatalog::VARCHAR: return false;
     default: return false;
   }
 }
@@ -191,6 +191,39 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
         throw ::logic_error("Func_day::compile: dataconvert::DataConvert::intToDatetime function not found");
       }
       val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (fp[0]->data()->resultType().scale == 0)
+      {
+        func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+            "dataconvert::DataConvert::intToDatetime");
+        if (!func)
+        {
+          throw ::logic_error(
+              "Func_day::compile: dataconvert::DataConvert::intToDatetime function not found");
+        }
+        val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+        b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                      isNull);
+        return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
+      }
+      else
+      {
+        b.CreateStore(b.getTrue(), isNull);
+        return b.getInt64(-1);
+      }
+    case CalpontSystemCatalog::TIMESTAMP:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::timestampToInt");
+      if (!func)
+      {
+        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampToInt function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
+                                b.getInt64(op_ct.getTimeZone())});
       b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                     isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
