@@ -508,6 +508,7 @@ RowAggregation::RowAggregation()
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
  , fOrigFunctionCols(nullptr)
+ , fRollupFlag(false)
 {
 	auto currentStacktrace = std::string(); //std::stacktrace::current();
 	idblog("default constructor. trace: " << (currentStacktrace));
@@ -515,7 +516,7 @@ RowAggregation::RowAggregation()
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                               joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl)
+                               joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl, bool withRollup)
  : fRowGroupOut(nullptr)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
@@ -523,6 +524,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fOrigFunctionCols(nullptr)
  , fRm(rm)
  , fSessionMemLimit(std::move(sl))
+ , fRollupFlag(withRollup);
 {
 	auto cst = std::string(); //std::stacktrace::current();
 	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst));
@@ -540,6 +542,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fOrigFunctionCols(nullptr)
  , fRm(rhs.fRm)
  , fSessionMemLimit(rhs.fSessionMemLimit)
+ , fRollupFlag(rhs.fRollupFlag)
 {
 	auto cst = std::string(); //std::stacktrace::current();
 	  idblog("construct from other row agg, trace: " << (cst));
