@@ -470,7 +470,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   b << timeZone;
   b << fPron;
-  b << fWithRollup;
+  b << (uint8_t)fWithRollup;
 }
 
 void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
@@ -673,7 +673,8 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   fTimeZone = timeZone;
   b >> fPron;
   utils::Pron::instance().pron(fPron);
-  b >> fWithRollup;
+  b >> tmp8;
+  fWithRollup = tmp8;
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const
