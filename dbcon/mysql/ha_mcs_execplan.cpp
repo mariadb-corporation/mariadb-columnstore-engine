@@ -8660,6 +8660,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   csep->groupByCols(gwi.groupByCols);
   csep->withRollup(withRollup);
+  idblog("csep withRollup is " << ((int)csep->withRollup()));
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);
   idblog("number of group by columns is " << gwi.groupByCols.size() << ", returned cols number is " << gwi.returnedCols.size());
