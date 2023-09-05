@@ -524,7 +524,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fOrigFunctionCols(nullptr)
  , fRm(rm)
  , fSessionMemLimit(std::move(sl))
- , fRollupFlag(withRollup);
+ , fRollupFlag(withRollup)
 {
 	auto cst = std::string(); //std::stacktrace::current();
 	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst));
