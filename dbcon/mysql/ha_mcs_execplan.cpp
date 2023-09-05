@@ -7097,14 +7097,15 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     filters = extractCommonLeafConjunctionsToRoot(filters);
   }
 
-  uint64_t limit = get_max_in_limit_query_length(gwi.thd);
+  uint64_t limit = get_max_allowed_in_values(gwi.thd);
 
   if (filters && !checkFiltersLimit(filters, limit))
   {
     gwi.fatalParseError = true;
     setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED,
-             "long in clauses. Query exceeds max_in_limit_query_length threshold: consider changing the "
-             "value via SET @var_name := value;",
+             " in clauses of this length. Number of values in the IN clause exceeded "
+             "columnstore_max_allowed_in_values "
+             "threshold.",
              gwi);
     return ER_CHECK_NOT_IMPLEMENTED;
   }

@@ -219,8 +219,8 @@ static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S
                         NULL, NULL, "");
 static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
 
-static MYSQL_THDVAR_ULONG(max_in_limit_query_length, PLUGIN_VAR_RQCMDARG,
-                          "The maximum length of the entries in the IN uery clause.", NULL, NULL, 6000, 1,
+static MYSQL_THDVAR_ULONG(max_allowed_in_values, PLUGIN_VAR_RQCMDARG,
+                          "The maximum length of the entries in the IN query clause.", NULL, NULL, 6000, 1,
                           ~0U, 1);
 
 st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
@@ -263,7 +263,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(s3_secret),
                                             MYSQL_SYSVAR(s3_region),
                                             MYSQL_SYSVAR(pron),
-                                            MYSQL_SYSVAR(max_in_limit_query_length),
+                                            MYSQL_SYSVAR(max_allowed_in_values),
                                             NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
@@ -660,11 +660,11 @@ void set_s3_region(THD* thd, char* value)
   THDVAR(thd, s3_region) = value;
 }
 
-ulong get_max_in_limit_query_length(THD* thd)
+ulong get_max_allowed_in_values(THD* thd)
 {
-  return (thd == NULL) ? 0 : THDVAR(thd, max_in_limit_query_length);
+  return (thd == NULL) ? 0 : THDVAR(thd, max_allowed_in_values);
 }
-void set_max_in_limit_query_length(THD* thd, ulong value)
+void set_max_allowed_in_values(THD* thd, ulong value)
 {
-  THDVAR(thd, max_in_limit_query_length) = value;
+  THDVAR(thd, max_allowed_in_values) = value;
 }
