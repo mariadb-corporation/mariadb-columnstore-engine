@@ -8659,6 +8659,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                           gwi.additionalRetCols.end());
 
   csep->groupByCols(gwi.groupByCols);
+  csep->withRollup(withRollup);
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);
   idblog("number of group by columns is " << gwi.groupByCols.size() << ", returned cols number is " << gwi.returnedCols.size());
@@ -8914,6 +8915,7 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC, gp_walk_info& 
   return result;
 }
 
+// XXX: need to trigger that somehow.
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_group_info& gi, bool isUnion)
 {
 #ifdef DEBUG_WALK_COND

@@ -151,7 +151,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   CalpontSelectExecutionPlan(const ReturnedColumnList& returnedCols, ParseTree* filters,
                              const SelectList& subSelects, const GroupByColumnList& groupByCols,
                              ParseTree* having, const OrderByColumnList& orderByCols, const std::string alias,
-                             const int location, const bool dependent);
+                             const int location, const bool dependent, const bool withRollup);
 
   CalpontSelectExecutionPlan(const std::string data);
 
@@ -242,6 +242,18 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   void groupByCols(const GroupByColumnList& groupByCols)
   {
     fGroupByCols = groupByCols;
+  }
+
+  /**
+   * Subtotals.
+   */
+  bool withRollup() const
+  {
+    return fWithRollup;
+  }
+  void withRollup(bool withRollup)
+  {
+    fWithRollup = withRollup;
   }
 
   /**
@@ -860,6 +872,10 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * A list of group by columns
    */
   GroupByColumnList fGroupByCols;
+  /**
+   * A flag to compute subtotals.
+   */
+  bool fWithRollup = false;
   /**
    * A tree of having clause condition associated with group by clause
    */

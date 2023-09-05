@@ -697,6 +697,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   const CalpontSelectExecutionPlan::GroupByColumnList& groupByCols = csep->groupByCols();
   uint64_t lastGroupByPos = 0;
 
+  jobInfo.hasRollup = csep->withRollup();
+
   for (uint64_t i = 0; i < groupByCols.size(); i++)
   {
 	  idblog("pushing into pcv");
@@ -1705,7 +1707,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobS
   }
 
   // special case, select without a table, like: select 1;
-  if (jobInfo.constantCol == CONST_COL_ONLY)
+  if (jobInfo.constantCol == CONST_COL_ONLY) // XXX: WITH ROLLUP
     return;
 
   // If there are no filters (select * from table;) then add one simple scan

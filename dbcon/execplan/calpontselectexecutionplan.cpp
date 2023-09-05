@@ -100,7 +100,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location)
 CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
     const ReturnedColumnList& returnedCols, ParseTree* filters, const SelectList& subSelects,
     const GroupByColumnList& groupByCols, ParseTree* having, const OrderByColumnList& orderByCols,
-    const string alias, const int location, const bool dependent)
+    const string alias, const int location, const bool dependent, const bool withRollup)
  : fReturnedCols(returnedCols)
  , fFilters(filters)
  , fSubSelects(subSelects)
@@ -111,7 +111,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
  , fLocation(location)
  , fDependent(dependent)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
-
+ , fWithRollup(withRollup)
 {
   fUuid = QueryTeleClient::genUUID();
 }
