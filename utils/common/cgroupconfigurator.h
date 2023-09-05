@@ -67,6 +67,7 @@ class CGroupConfigurator
   bool printedWarning = false;
   enum CGroupVersions cGroupVersion_;
   unsigned int logCounter = 0;
+  static constexpr unsigned int logMemoryPeriod = 5000;
 };
 
 }  // namespace utils

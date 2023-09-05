@@ -288,7 +288,7 @@ uint64_t CGroupConfigurator::getFreeMemory()
   if (!cGroupDefined)
   {
     ret = getFreeMemoryFromProc();
-    if (logCounter++ % 1000 == 0)
+    if (logCounter++ % logMemoryPeriod == 0)
       cout <<__func__<< " : returned from getFreeMemoryFromProc " << ret << " (GIB) " << ret/GIB  << endl;
 
   }
