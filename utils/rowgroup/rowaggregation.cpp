@@ -1620,6 +1620,7 @@ void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
 
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   bs << timeZone;
+  bs << (int8_t)fRollupFlag;
 }
 
 //------------------------------------------------------------------------------
@@ -1667,6 +1668,9 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   messageqcpp::ByteStream::octbyte timeZone;
   bs >> timeZone;
   fTimeZone = timeZone;
+  uint8_t tmp8;
+  bs >> tmp8;
+  fRollupFlag = tmp8;
 }
 
 //------------------------------------------------------------------------------
