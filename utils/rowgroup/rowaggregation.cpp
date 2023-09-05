@@ -511,7 +511,9 @@ RowAggregation::RowAggregation()
  , fRollupFlag(false)
 {
 	auto currentStacktrace = std::string(); //std::stacktrace::current();
-	idblog("default constructor. trace: " << (currentStacktrace));
+	char t[100];
+	sprintf(t, "%p", this);
+	idblog("default constructor. trace: " << (currentStacktrace) << ", pointer " << t);
 }
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
@@ -527,7 +529,9 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fRollupFlag(withRollup)
 {
 	auto cst = std::string(); //std::stacktrace::current();
-	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst));
+	char t[100];
+	sprintf(t, "%p", this);
+	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst) << ", pointer " << t);
   fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
   fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
 }
@@ -828,7 +832,9 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
   uint32_t cnt = fRollupFlag ? fGroupByCols.size() : 1;
-  idblog("agg row. col count " << row.getColumnCount() << ", cnt " << cnt << ", fRollupFlag " << ((int)fRollupFlag));
+  char t[100];
+  sprintf(t, "%p", this);
+  idblog("agg row. col count " << row.getColumnCount() << ", cnt " << cnt << ", fRollupFlag " << ((int)fRollupFlag) << ", pointer " << t);
   for (uint32_t qq = 0; qq < row.getColumnCount(); qq++) {
     idblog("  row agg: col " << qq << ", width " << row.getColumnWidth(qq));
   }
