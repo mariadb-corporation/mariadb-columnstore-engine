@@ -4506,7 +4506,7 @@ RowAggregationDistinct::RowAggregationDistinct(const vector<SP_ROWAGG_GRPBY_t>& 
                                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                joblist::ResourceManager* r,
                                                boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUMP2(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+ : RowAggregationUMP2(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, false)
 {
 }
 
