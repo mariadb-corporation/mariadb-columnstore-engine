@@ -2398,8 +2398,8 @@ void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)
 //------------------------------------------------------------------------------
 RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                    const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
+ : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
  , fHasAvg(false)
  , fHasStatsFunc(false)
  , fHasUDAF(false)
@@ -4115,8 +4115,8 @@ bool RowAggregationUM::nextRowGroup()
 //------------------------------------------------------------------------------
 RowAggregationUMP2::RowAggregationUMP2(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                        const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
+ : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
 {
 }
 

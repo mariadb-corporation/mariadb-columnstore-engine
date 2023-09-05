@@ -650,7 +650,7 @@ class RowAggregationUM : public RowAggregation
   }
   RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
-                   boost::shared_ptr<int64_t> sessionMemLimit);
+                   boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUM(const RowAggregationUM& rhs);
 
   /** @brief RowAggregationUM default destructor
