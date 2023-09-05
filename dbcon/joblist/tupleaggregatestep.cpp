@@ -4826,7 +4826,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
   SP_ROWAGG_UM_t rowAggUm(
-      new RowAggregationUMP2(groupByUm, functionNoDistVec, jobInfo.rm, jobInfo.umMemLimiti, false));
+      new RowAggregationUMP2(groupByUm, functionNoDistVec, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAggUm->timeZone(jobInfo.timeZone);
 
   posAggDist.push_back(2);  // rid
