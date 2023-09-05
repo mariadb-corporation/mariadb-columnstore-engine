@@ -3728,7 +3728,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
   idblog("jobinfo's iwth rollup is " << ((int)jobInfo.hasRollup));
-  SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit, jobInfo.hasRollup));
+  SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAggUm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgUm);
   aggregators.push_back(rowAggUm);
@@ -3740,7 +3740,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgPm(oidsAggPm.size(), posAggPm, oidsAggPm, keysAggPm, typeAggPm, csNumAggPm, scaleAggPm,
                    precisionAggPm, jobInfo.stringTableThreshold);
-  SP_ROWAGG_PM_t rowAggPm(new RowAggregation(groupByPm, functionVecPm));
+  SP_ROWAGG_PM_t rowAggPm(new RowAggregation(groupByPm, functionVecPm, nullptr, nullptr, jobInfo.hasRollup));
   rowAggPm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgPm);
   aggregators.push_back(rowAggPm);
