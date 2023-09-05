@@ -698,6 +698,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   uint64_t lastGroupByPos = 0;
 
   jobInfo.hasRollup = csep->withRollup();
+  idblog("csep withRollup is " << ((int)csep->withRollup()) << ", hasRollup is " << ((int)jobInfo.hasRollup));
 
   for (uint64_t i = 0; i < groupByCols.size(); i++)
   {
