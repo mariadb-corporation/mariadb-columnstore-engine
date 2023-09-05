@@ -1610,6 +1610,9 @@ void RowAggregation::endOfInput()
 //------------------------------------------------------------------------------
 void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
 {
+  char t[100];
+  sprintf(t, "%p", this);
+  idblog("serializing, pointer " << t << ", fRollupFlag " << ((int)fRollupFlag));
   // groupby
   uint64_t groupbyCount = fGroupByCols.size();
   bs << groupbyCount;
@@ -1677,6 +1680,9 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   uint8_t tmp8;
   bs >> tmp8;
   fRollupFlag = tmp8;
+  char t[100];
+  sprintf(t, "%p", this);
+  idblog("deserializing, pointer " << t << ", fRollupFlag " << ((int)fRollupFlag));
 }
 
 //------------------------------------------------------------------------------
