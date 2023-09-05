@@ -78,9 +78,21 @@ CGroupConfigurator::CGroupConfigurator()
     cGroupDefined = false;
   else
     cGroupDefined = true;
+  cout << __func__ << " cGroupDefined (from getConfig)" << cGroupDefined << endl;
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
+
+  string cGroupVersion_str="";
+  switch(cGroupVersion_){
+    case v1:
+      cGroupVersion_str="v1";
+      break;
+    case v2:
+      cGroupVersion_str="v2";
+      break;
+  }
+  cout << __func__<< " cGroupVersion_str " <<  cGroupVersion_str  << endl;
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -198,7 +210,7 @@ uint64_t CGroupConfigurator::getTotalMemory()
       ret = getTotalMemoryFromProc();
   }
 
-  cout << "Total mem available is " << ret << endl;
+  cout <<__func__ << " Total mem available (bytes) " << ret << " (GIB) " << ret/GIB << endl;
   totalMemory = ret;
   return totalMemory;
 }
@@ -206,7 +218,7 @@ uint64_t CGroupConfigurator::getTotalMemory()
 uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 {
   size_t memTot;
-
+  cout << __func__ << "  reading /proc/meminfo "  << endl;
   ifstream in("/proc/meminfo");
   string x;
 
@@ -233,7 +245,9 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   {
     os << "/sys/fs/cgroup/" << cGroupName << "/memory.max";
   }
+
   string filename = os.str();
+  cout << __func__ <<" reading " << filename   << endl;
 
   ifstream in(filename.c_str());
 
@@ -248,6 +262,7 @@ uint64_t CGroupConfigurator::getTotalMemoryFromCGroup()
   {
     RETURN_READ_ERROR(0);
   }
+  cout << __func__<<  " read into memLimitStr " <<  memLimitStr  << endl;
 
   if (cGroupVersion_ == v2 && memLimitStr == "max")
   {
@@ -271,11 +286,17 @@ uint64_t CGroupConfigurator::getFreeMemory()
 {
   uint64_t ret;
   if (!cGroupDefined)
+  {
     ret = getFreeMemoryFromProc();
+    if (logCounter++ % logMemoryPeriod == 0)
+      cout <<__func__<< " : returned from getFreeMemoryFromProc " << ret << " (GIB) " << ret/GIB  << endl;
+
+  }
   else
   {
     uint64_t usage = getMemUsageFromCGroup();
-    cout << "usage " << usage << endl;
+    if (logCounter++ % 1000 == 0)
+      cout << __func__<<  " : returned from  getMemUsageFromCGroup : usage " << usage  << " (GIB) " << usage/GIB  << endl;
 
     if (usage == 0)
       ret = getFreeMemoryFromProc();
