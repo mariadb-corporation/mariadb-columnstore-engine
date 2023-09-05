@@ -48,6 +48,7 @@
 #include "MonitorProcMem.h"
 #include "dataconvert.h"
 #include "mcsconfig.h"
+#include "mariadb_my_sys.h"
 
 using namespace std;
 using namespace WriteEngine;
@@ -1002,6 +1003,9 @@ int main(int argc, char** argv)
 {
   setupSignalHandlers();
 
+  // Initialize the charset library
+  MY_INIT(argv[0]);
+
   // Set locale language
   const char* pLoc = setlocale(LC_ALL, "");
   if (pLoc)
@@ -1315,6 +1319,9 @@ int main(int argc, char** argv)
 
     rc = ERR_UNKNOWN;
   }
+
+  // Free up resources allocated by MY_INIT() above.
+  my_end(0);
 
   //--------------------------------------------------------------------------
   // Log end of job to INFO log

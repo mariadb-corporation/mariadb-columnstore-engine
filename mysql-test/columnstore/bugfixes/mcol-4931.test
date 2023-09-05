@@ -1,0 +1,57 @@
+#
+# MCOL-4931 Make cpimport charset aware
+#
+
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
+--source ../include/have_columnstore.inc
+
+let $DATADIR=`SELECT @@datadir`;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_4931;
+--enable_warnings
+
+CREATE DATABASE mcol_4931;
+USE mcol_4931;
+
+CREATE TABLE t1 (
+  a VARCHAR(15) collate 'utf8mb4_croatian_ci',
+  b CHAR(15) collate 'utf8mb4_croatian_ci',
+  c VARCHAR(2),
+  d CHAR(2)
+)ENGINE=columnstore default charset=utf8mb4;
+
+CREATE TABLE t2 (
+  a VARCHAR(15) collate 'latin2_hungarian_ci',
+  b CHAR(15) collate 'latin2_hungarian_ci',
+  c VARCHAR(2),
+  d CHAR(2)
+)ENGINE=columnstore default charset=latin2;
+
+--exec rm -f $DATADIR/mcol4931_1.txt
+--exec rm -f $DATADIR/mcol4931_2.txt
+--exec echo "\"König-abcd-Straße\",\"König-abcd-Straße\",\"König-abcd-Straße\",\"König-abcd-Straße\"" > $DATADIR/mcol4931_1.txt
+--exec echo "\"abcdefghijklmnopq\",\"abcdefghijklmnopq\",\"abcdefghijklmnopq\",\"abcdefghijklmnopq\"" > $DATADIR/mcol4931_2.txt
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE "$DATADIR/mcol4931_1.txt" IGNORE INTO TABLE t1 charset utf8mb4 FIELDS TERMINATED BY "," ENCLOSED BY '"';
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA INFILE "$DATADIR/mcol4931_2.txt" IGNORE INTO TABLE t2 charset latin2 FIELDS TERMINATED BY "," ENCLOSED BY '"';
+
+--disable_result_log
+--exec $MCS_CPIMPORT -s',' -E'"' mcol_4931 t1 '$DATADIR/mcol4931_1.txt';
+--exec $MCS_CPIMPORT -s',' -E'"' mcol_4931 t2 '$DATADIR/mcol4931_2.txt';
+--enable_result_log
+
+SELECT * FROM t1;
+SELECT CHAR_LENGTH(a), LENGTHB(a), CHAR_LENGTH(b), LENGTHB(b), CHAR_LENGTH(c), LENGTHB(c), CHAR_LENGTH(d), LENGTHB(d) FROM t1;
+
+SELECT * FROM t2;
+SELECT CHAR_LENGTH(a), LENGTHB(a), CHAR_LENGTH(b), LENGTHB(b), CHAR_LENGTH(c), LENGTHB(c), CHAR_LENGTH(d), LENGTHB(d) FROM t2;
+
+# Clean UP
+--exec rm -f $DATADIR/mcol4931_1.txt
+--exec rm -f $DATADIR/mcol4931_2.txt
+DROP DATABASE mcol_4931;
