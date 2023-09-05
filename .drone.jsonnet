@@ -533,6 +533,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   cmapipython:: {
     name: 'cmapi python',
+    depends_on: ['clone-mdb'],
     image: img,
     volumes: [pipeline._volumes.mdb],
     environment: {
@@ -562,10 +563,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'cd cmapi',
-      if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev',
+      if (platform == 'rockylinux:9') then 'dnf install -y yum-utils && dnf config-manager --set-enabled devel && dnf update -y',
+      if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils redhat-lsb-core' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev lsb-release',
       if (platform == 'centos:7') then 'yum install -y epel-release && yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake',
       './cleanup.sh',
-      'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
+      'cmake -D' + std.asciiUpper(pkg_format) + '=1 -DSERVER_DIR=/mdb/' + builddir + ' . && make package',
       'mkdir ./' + result,
       'mv -v *.%s ./%s/' % [pkg_format, result],
       if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
