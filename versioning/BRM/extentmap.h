@@ -34,7 +34,7 @@
 #include <tr1/unordered_map>
 #include <mutex>
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/functional/hash.hpp>  //boost::hash
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -1174,6 +1174,11 @@ class ExtentMap : public Undoable
   bool fDebug;
 
   int _markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
+
+  MSTEntry* _getTableLock(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _getTableLockUpgradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _getTableLockDowngradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _releaseTable(const OPS op, std::atomic<bool>& lockedState, const int table);
 
   template <typename T>
   void load(T* in);
