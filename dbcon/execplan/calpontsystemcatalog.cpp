@@ -6146,18 +6146,6 @@ void CalpontSystemCatalog::checkSysCatVer()
   }
 }
 
-CalpontSystemCatalog::ColType::ColType()
- : constraintType(NO_CONSTRAINT)
- , colPosition(-1)
- , compressionType(NO_COMPRESSION)
- , columnOID(0)
- , autoincrement(0)
- , nextvalue(0)
- , cs(NULL)
-{
-  charsetNumber = default_charset_info->number;
-}
-
 CalpontSystemCatalog::ColType::ColType(const ColType& rhs) : TypeHolderStd(rhs)
 {
   constraintType = rhs.constraintType;
