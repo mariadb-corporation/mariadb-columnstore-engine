@@ -382,6 +382,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
         execplan::AUX_COL_WIDTH, execplan::AUX_COL_WIDTH,
         execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_COMPRESSION_TYPE,
         execplan::AUX_COL_MINVALUE, execplan::AUX_COL_MAXVALUE, true, 1);
+      curColumn.fFldColRelation = BULK_FLDCOL_COLUMN_DEFAULT;
       curJob.jobTableList[i].colList.push_back(curColumn);
       JobFieldRef fieldRef(BULK_FLDCOL_COLUMN_DEFAULT, curJob.jobTableList[i].colList.size() - 1);
       curJob.jobTableList[i].fFldRefs.push_back(fieldRef);
