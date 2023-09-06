@@ -215,22 +215,22 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   struct ColType : public datatypes::SystemCatalog::TypeHolderStd
   {
-    ConstraintType constraintType;
+    ConstraintType constraintType = NO_CONSTRAINT;
     DictOID ddn;
     NullString defaultValue;
-    int32_t colPosition;  // temporally put here. may need to have ColInfo struct later
-    int32_t compressionType;
-    OID columnOID;
-    bool autoincrement;  // set to true if  SYSCOLUMN autoincrement is �y�
-    uint64_t nextvalue;  // next autoincrement value
-    uint32_t charsetNumber;
-    const CHARSET_INFO* cs;
+    int32_t colPosition = -1;  // temporally put here. may need to have ColInfo struct later
+    int32_t compressionType = NO_COMPRESSION;
+    OID columnOID = 0;
+    bool autoincrement = 0;  // set to true if  SYSCOLUMN autoincrement is �y�
+    uint64_t nextvalue = 0;  // next autoincrement value
+    uint32_t charsetNumber = default_charset_info->number;
+    const CHARSET_INFO* cs = nullptr;
 
    private:
     long timeZone;
 
    public:
-    ColType();
+    ColType() = default;
     ColType(const ColType& rhs);
     ColType(int32_t colWidth_, int32_t scale_, int32_t precision_,
             const ConstraintType& constraintType_, const DictOID& ddn_, int32_t colPosition_,
