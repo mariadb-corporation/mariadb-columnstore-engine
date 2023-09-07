@@ -325,7 +325,6 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(spjs.get());
   TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(spjs.get());
   SubAdapterStep* sas = dynamic_cast<SubAdapterStep*>(spjs.get());
-  idblog("bps is " << (bps ? "not NULL" : "NULL") << ", thjs is " << (thjs ? "not NULL" : "NULL"));
 
   if (!bps && !thjs && !sas)
     throw runtime_error("Bad last step");
@@ -364,7 +363,6 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   // evaluate the returned/groupby expressions if any
   JobStepVector& expSteps = jobInfo.returnedExpressions;
 
-  idblog("expsteps.size() is " << expSteps.size());
   if (expSteps.size() > 0)
   {
     // create a RG has the keys not in rg0
@@ -419,7 +417,8 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     // last step can be tbps (no join) or thjs, either one can have a group 3 expression
     if (bps || thjs)
     {
-	    idblog("bps || thjs");
+      // this part may set FE2 (setFE23Output()) and may affect behavior of PrimProc's
+      // batchprimitiveprocessor's execute() function when processing aggregates.
       tjs->setOutputRowGroup(rg01);
       tjs->setFcnExpGroup3(exps);
       tjs->setFE23Output(rg1);
@@ -433,6 +432,9 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   }
   else
   {
+    // this may change behavior in the primproc side, look into
+    // a primitives/prim-proc/batchprimitiveprocessor.
+    // This is especially important for aggregation.
     if (thjs && thjs->hasFcnExpGroup2())
       thjs->setFE23Output(rg1);
     else

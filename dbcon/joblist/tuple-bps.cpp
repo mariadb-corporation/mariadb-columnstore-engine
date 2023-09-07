@@ -3108,7 +3108,10 @@ void TupleBPS::setFE1Input(const RowGroup& feInput)
 void TupleBPS::setFcnExpGroup2(const boost::shared_ptr<funcexp::FuncExpWrapper>& fe,
                                const rowgroup::RowGroup& rg, bool runFE2onPM)
 {
-	idblog("setting fcn exp group2, fe is " << (fe.get() ? "not NULL" : "NULL"));
+  // the presence of fe2 changes rogroup format hich is used in PrimProc.
+  // please be aware, if you are modifying several parts of the system.
+  // the relevant part is in primimities/prim-proc/batchprimitiveprocessor,
+  // execute() function, a branch where aggregation is handled.
   fe2 = fe;
   fe2Output = rg;
   checkDupOutputColumns(rg);

@@ -510,10 +510,6 @@ RowAggregation::RowAggregation()
  , fOrigFunctionCols(nullptr)
  , fRollupFlag(false)
 {
-	auto currentStacktrace = std::string(); //std::stacktrace::current();
-	char t[100];
-	sprintf(t, "%p", this);
-	idblog("default constructor. trace: " << (currentStacktrace) << ", pointer " << t);
 }
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
@@ -528,10 +524,6 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fSessionMemLimit(std::move(sl))
  , fRollupFlag(withRollup)
 {
-	auto cst = std::string(); //std::stacktrace::current();
-	char t[100];
-	sprintf(t, "%p", this);
-	  idblog("construct from cols: " << rowAggGroupByCols.size() << " group by cols, " << rowAggFunctionCols.size() << " func cols, trace: " << (cst) << ", pointer " << t);
   fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
   fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
 }
@@ -548,8 +540,6 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fSessionMemLimit(rhs.fSessionMemLimit)
  , fRollupFlag(rhs.fRollupFlag)
 {
-	auto cst = std::string(); //std::stacktrace::current();
-	  idblog("construct from other row agg, trace: " << (cst));
   fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
   fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
 }
@@ -572,7 +562,6 @@ RowAggregation::~RowAggregation()
 //------------------------------------------------------------------------------
 void RowAggregation::addRowGroup(const RowGroup* pRows)
 {
-	idblog("addRowGroup");
   // no group by == no map, everything done in fRow
   if (fGroupByCols.empty())
   {
@@ -594,7 +583,6 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
 
   for (uint64_t i = 0; i < pRows->getRowCount(); ++i)
   {
-	  idblog("processing row");
     aggregateRow(rowIn);
     rowIn.nextRow();
   }
@@ -675,7 +663,6 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 //------------------------------------------------------------------------------
 void RowAggregation::initialize(bool hasGroupConcat)
 {
-	idblog("initializing");
   // Calculate the length of the hashmap key.
   fAggMapKeyCount = fGroupByCols.size();
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
@@ -771,7 +758,6 @@ void RowAggregation::initialize(bool hasGroupConcat)
 //------------------------------------------------------------------------------
 void RowAggregation::aggReset()
 {
-	idblog("resetting");
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
@@ -832,12 +818,6 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
   uint32_t cnt = fRollupFlag ? fGroupByCols.size() : 1;
-  char t[100];
-  sprintf(t, "%p", this);
-  idblog("agg row. col count " << row.getColumnCount() << ", cnt " << cnt << ", fRollupFlag " << ((int)fRollupFlag) << ", pointer " << t);
-  for (uint32_t qq = 0; qq < row.getColumnCount(); qq++) {
-    idblog("  row agg: col " << qq << ", width " << row.getColumnWidth(qq));
-  }
   for (uint32_t z = 0; z < cnt; z++) {
   // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
@@ -884,7 +864,6 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     updateEntry(row, rgContextColl);
     if ((z + 1 < cnt)) {
       row.setIntField(row.getIntField(cnt - 1) + 1, cnt - 1);
-      idblog("null-ing column #" << (cnt - 2 - z));
       row.setToNull(cnt - 2 - z);
     }
   }
@@ -1610,9 +1589,6 @@ void RowAggregation::endOfInput()
 //------------------------------------------------------------------------------
 void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
 {
-  char t[100];
-  sprintf(t, "%p", this);
-  idblog("serializing, pointer " << t << ", fRollupFlag " << ((int)fRollupFlag));
   // groupby
   uint64_t groupbyCount = fGroupByCols.size();
   bs << groupbyCount;
@@ -1680,9 +1656,6 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   uint8_t tmp8;
   bs >> tmp8;
   fRollupFlag = tmp8;
-  char t[100];
-  sprintf(t, "%p", this);
-  idblog("deserializing, pointer " << t << ", fRollupFlag " << ((int)fRollupFlag));
 }
 
 //------------------------------------------------------------------------------
@@ -1767,7 +1740,6 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
 //------------------------------------------------------------------------------
 void RowAggregation::mergeEntries(const Row& rowIn)
 {
-	idblog("merging entries");
   for (uint64_t i = 0; i < fFunctionCols.size(); i++)
   {
     int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
@@ -2379,7 +2351,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
 //------------------------------------------------------------------------------
 void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
 {
-	idblog("dumping the result");
   uint32_t sz = 0;
   messageqcpp::ByteStream rgdbs;
   while (auto rgd = fRowAggStorage->getNextRGData())
@@ -2399,7 +2370,6 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
   }
   bs << sz;
   bs.append(rgdbs.buf(), rgdbs.length());
-	idblog("result with " << sz << " rgdatas was dumped.");
 }
 
 void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)

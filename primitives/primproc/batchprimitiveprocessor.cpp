@@ -1672,8 +1672,8 @@ void BatchPrimitiveProcessor::execute()
         {
           *serialized << (uint8_t)1;  // the "count this msg" var
 
-	  idblog("fe2 is not null " << (fe2 ? "yes, not NULL" : "NULL"));
-
+	  // see TupleBPS::setFcnExpGroup2() and where it gets called.
+	  // it sets fe2 there, on the other side of communication.
           RowGroup& toAggregate = (fe2 ? fe2Output : outputRG);
           // toAggregate.convertToInlineDataInPlace();
 

@@ -905,7 +905,6 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
       prep2PhasesDistinctAggregate(jobInfo, rgs, aggs);
     else
     {
-	    idblog("preparing 2 phase aggregate");
       prep2PhasesAggregate(jobInfo, rgs, aggs);
     }
   }
@@ -937,7 +936,6 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
   }
   else
   {
-	  idblog("resetting with tuple aggregation step");
     aggUM = dynamic_pointer_cast<RowAggregationUM>(aggs[0]);
     spjs.reset(new TupleAggregateStep(aggUM, rgs[1], rgs[0], jobInfo));
   }
@@ -955,7 +953,6 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
   spdl->rowGroupDL(dl);
   jsa.outAdd(spdl);
 
-  idblog("seting input association");
   spjs->inputAssociation(jsa);  // Aggregate input
 
   // Previous step output
@@ -2895,7 +2892,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>& rowgroups,
                                               vector<SP_ROWAGG_t>& aggregators)
 {
-	idblog("yes, ew are in prep2PhasesAgg");
   // check if there are any aggregate columns
   // a vector that has the aggregate function to be done by PM
   vector<pair<uint32_t, int>> aggColVec;
@@ -2974,7 +2970,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
     {
       uint32_t key = jobInfo.groupByColVec[i];
-      idblog("group by col vec key is " << key << ", i is " << i);
 
       if (projColPosMap.find(key) == projColPosMap.end())
       {
@@ -3063,7 +3058,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
       RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
 
-      idblog("aggOp is " << ((int)aggOp));
       // skip on PM if this is a constant
       if (aggOp == ROWAGG_CONSTANT)
         continue;
@@ -3159,7 +3153,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         case ROWAGG_SUM:
         case ROWAGG_AVG:
         {
-		idblog("avg");
           if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
               typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
               typeProj[colProj] == CalpontSystemCatalog::BLOB ||
@@ -3190,7 +3183,9 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         // let fall through to add a count column for average function
         if (aggOp != ROWAGG_AVG)
           break;
-	idblog("fell through");
+	// The AVG aggregation has a special treatment everywhere.
+	// This is so because AVG(column) is a SUM(column)/COUNT(column)
+	// and these aggregations can be utilized by AVG, if present.
         /* fall through */
 
         case ROWAGG_COUNT_ASTERISK:
@@ -3431,7 +3426,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
       if (it != aggFuncMap.end())
       {
-	      idblog("i is " << i << ", is found in aggFuncMap");
         colPm = it->second;
         oidsAggUm.push_back(oidsAggPm[colPm]);
         keysAggUm.push_back(retKey);
@@ -3445,7 +3439,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       // not a direct hit -- a returned column is not already in the RG from PMs
       else
       {
-	      idblog(" is is " << i << " and it is not found in aggFuncMap");
         bool returnColMissing = true;
 
         // check if a SUM or COUNT covered by AVG
@@ -3456,7 +3449,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
           if (it != aggFuncMap.end())
           {
-		  idblog("false alarm");
             // false alarm
             returnColMissing = false;
 
@@ -3473,7 +3465,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
             }
             else
             {
-		    idblog("count handled by average");
               // leave the count() to avg
               aggOp = ROWAGG_COUNT_NO_OP;
 
@@ -3491,7 +3482,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), retKey) !=
                  jobInfo.expressionVec.end())
         {
-		idblog("point 1");
           // a function on aggregation
           TupleInfo ti = getTupleInfo(retKey, jobInfo);
           oidsAggUm.push_back(ti.oid);
@@ -3520,7 +3510,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         }
         else if (aggOp == ROWAGG_CONSTANT)
         {
-		idblog("constant");
           TupleInfo ti = getTupleInfo(retKey, jobInfo);
           oidsAggUm.push_back(ti.oid);
           keysAggUm.push_back(retKey);
@@ -3546,7 +3535,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         }
       }
 
-      idblog("i " << i << "returned col vec [i] . second is " << ((int)returnedColVec[i].second));
       // update groupby vector if the groupby column is a returned column
       if (returnedColVec[i].second == 0)
       {
@@ -3577,7 +3565,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         // a duplicate group by column
         if (dupGroupbyIndex != -1)
 	{
-		idblog("dup column");
           functionVecUm.push_back(SP_ROWAGG_FUNC_t(
               new RowAggFunctionCol(ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, outIdx, dupGroupbyIndex)));
 	}
@@ -3653,7 +3640,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     {
       if (k->second->fAuxColumnIndex == (uint32_t)-1)
       {
-	      idblog("adding the aux column!");
         k->second->fAuxColumnIndex = lastCol++;
         oidsAggUm.push_back(jobInfo.keyInfo->tupleKeyVec[k->first].fId);
         keysAggUm.push_back(k->first);
@@ -3727,7 +3713,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
-  idblog("jobinfo's iwth rollup is " << ((int)jobInfo.hasRollup));
   SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAggUm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgUm);
@@ -3755,7 +3740,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<RowGroup>& rowgroups,
                                                       vector<SP_ROWAGG_t>& aggregators)
 {
-	idblog("are ew in distinct????");
   // check if there are any aggregate columns
   // a vector that has the aggregate function to be done by PM
   vector<pair<uint32_t, int>> aggColVec, aggNoDistColVec;

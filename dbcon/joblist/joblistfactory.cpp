@@ -698,11 +698,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   uint64_t lastGroupByPos = 0;
 
   jobInfo.hasRollup = csep->withRollup();
-  idblog("csep withRollup is " << ((int)csep->withRollup()) << ", hasRollup is " << ((int)jobInfo.hasRollup));
 
   for (uint64_t i = 0; i < groupByCols.size(); i++)
   {
-	  idblog("pushing into pcv");
     pcv.push_back(groupByCols[i]);
     lastGroupByPos++;
 
@@ -746,7 +744,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       TupleInfo ti(setTupleInfo(ct, gbOid, jobInfo, tblOid, sc, alias));
       uint32_t tupleKey = ti.key;
 
-      idblog("tuple key " << tupleKey << ", i " << i);
       if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
         projectKeys.push_back(tupleKey);
 
@@ -774,7 +771,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((fc = dynamic_cast<const FunctionColumn*>(groupByCols[i].get())) != NULL)
     {
-	    idblog("function column at " << i);
       uint64_t eid = fc->expressionId();
       CalpontSystemCatalog::ColType ct = fc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, fc->alias(), jobInfo));
@@ -786,7 +782,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     }
     else if ((mc = dynamic_cast<const MagicColumn*>(groupByCols[i].get())) != NULL)
     {
-	    idblog("skipping magic column at " << i);
       uint64_t eid = mc->expressionId();
       CalpontSystemCatalog::ColType ct = mc->resultType();
       TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
@@ -803,12 +798,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       throw logic_error(errmsg.str());
     }
   }
-	  idblog("pushing into pcv loop ended");
 
   // process the returned columns
   RetColsVector& retCols = jobInfo.projectionCols;
   SRCP srcp;
-  idblog("retCols size " << retCols.size());
 
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
@@ -896,13 +889,11 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       }
     }
   }
-  idblog("(2) retCols size " << retCols.size());
 
   map<uint32_t, CalpontSystemCatalog::OID> dictMap;  // bug 1853, the tupleKey - dictoid map
 
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
-	  idblog("at i = " << i << " reCols.size() = " << retCols.size());
     srcp = retCols[i];
     const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
     AggregateColumn* aggc = dynamic_cast<AggregateColumn*>(srcp.get());
@@ -922,6 +913,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
     if (aggc)
     {
+      if (jobInfo.hasRollup)
+      {
+        throw runtime_error("GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used");
+      }
       GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(retCols[i].get());
 
       if (gcc != NULL)
@@ -1135,7 +1130,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
           if (keyIt == projectKeys.end())
           {
-		  idblog("keyIt == projectKeys.end(), first one. projectKeys.size = " << projectKeys.size());
             RetColsVector::iterator it = pcv.end();
 
             if (doDistinct)
@@ -1247,7 +1241,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
         {
-		idblog("arithmetic column");
           if (ac->aggColumnList().size() > 0)
             hasAggCols = true;
           if (ac->windowfunctionColumnList().size() > 0)
@@ -1255,11 +1248,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         }
         else if (dynamic_cast<const MagicColumn*>(srcp.get()) != NULL)
         {
-		idblog("magic column");
         }
         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         {
-		idblog("function column");
           if (fc->aggColumnList().size() > 0)
             hasAggCols = true;
           if (fc->windowfunctionColumnList().size() > 0)
@@ -1290,7 +1281,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if (hasAggCols && !hasWndCols)
 	{
-		idblog("pushing into exxpr vec");
           jobInfo.expressionVec.push_back(tupleKey);
 	}
       }
@@ -1300,7 +1290,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       if (keyIt == projectKeys.end())
       {
-		idblog("keyIt == projectKeys.end()");
         RetColsVector::iterator it = pcv.end();
 
         if (doDistinct)
@@ -1316,7 +1305,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if (pos >= lastGroupByPos)
         {
-		idblog("pos >= lastGroupByPos");
           pcv[pos] = pcv[lastGroupByPos];
           pcv[lastGroupByPos] = srcp;
           projectKeys[pos] = projectKeys[lastGroupByPos];
@@ -1358,7 +1346,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       *it = make_pair(tupleKey, op);
     }
   }
-idblog("pcv size " << pcv.size());
+
   return doProject(pcv, jobInfo);
 }
 
