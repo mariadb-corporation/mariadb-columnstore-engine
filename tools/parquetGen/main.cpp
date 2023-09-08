@@ -332,7 +332,6 @@ void generateDecimalTable()
 	// write to file
   arrow::MemoryPool* pool = arrow::default_memory_pool();
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
-	//TODO: revise the path
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/decimal.parquet"));
   PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
@@ -776,12 +775,6 @@ void generateAllTable()
 
   // null(19 cols except varchar(20) and char(20) and timestamp)
 
-
-
-
-
-
-
   // make schema
   // 22 cols
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
@@ -847,7 +840,6 @@ void generateAllTable()
   std::shared_ptr<arrow::Array> nullarray;
   PARQUET_THROW_NOT_OK(nullBuilder.Finish(&nullarray));
 
-
 	std::shared_ptr<arrow::Schema> schema1 = arrow::schema({
 		arrow::field("col1", arrow::null()),
 		arrow::field("col2", arrow::null()),
@@ -902,7 +894,6 @@ void generateAllTable()
       outfile1, arrow::io::FileOutputStream::Open("../storage/columnstore/columnstore/mysql-test/columnstore/std_data/nulls.parquet"));
   PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table1, pool, outfile1, 3));
 
-
 }
 
 
@@ -931,7 +922,6 @@ void generateLargeTable(int64_t reserve_num, std::string rowNum)
   std::shared_ptr<arrow::Array> tsarray;
   PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
 
-
   // string
   arrow::StringBuilder strbuilder;
   PARQUET_THROW_NOT_OK(strbuilder.Reserve(reserve_num));
@@ -945,14 +935,12 @@ void generateLargeTable(int64_t reserve_num, std::string rowNum)
   std::shared_ptr<arrow::Array> strarray;
   PARQUET_THROW_NOT_OK(strbuilder.Finish(&strarray));
 
-
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({
     arrow::field("col1", arrow::int32()),
     arrow::field("col2", arrow::timestamp(arrow::TimeUnit::MILLI)),
 		arrow::field("col3", arrow::utf8())
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array, tsarray, strarray});
-	// std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
 	// write to file
   arrow::MemoryPool* pool = arrow::default_memory_pool();
@@ -981,7 +969,6 @@ void generateLargeIntTable(int64_t reserve_num, std::string rowNum)
     arrow::field("col1", arrow::int32())
   });
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
-	// std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {array});
 
 	// write to file
   arrow::MemoryPool* pool = arrow::default_memory_pool();
@@ -997,7 +984,7 @@ int main(int argc, char** argv)
 {
   int32_t option;
 
-  while ((option = getopt(argc, argv, "adl")) != EOF)
+  while ((option = getopt(argc, argv, "abcdls")) != EOF)
   {
     switch (option)
     {
@@ -1017,6 +1004,21 @@ int main(int argc, char** argv)
         generateLargeTable(10000000, "10");
         generateLargeTable(50000000, "50");
         generateLargeTable(100000000, "100");
+        break;
+      }
+      case 'b':
+      {
+        generateNullTable();
+        break;
+      }
+      case 's':
+      {
+        generateStringTable();
+        break;
+      }
+      case 'c':
+      {
+        generateDecimalTable();
         break;
       }
     }
