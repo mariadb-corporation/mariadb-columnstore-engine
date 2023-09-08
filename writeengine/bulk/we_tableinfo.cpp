@@ -55,19 +55,9 @@ using namespace querytele;
 #include "oamcache.h"
 #include "cacheutils.h"
 
-#include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
-#include <parquet/arrow/writer.h>
 #include <parquet/exception.h>
-#include <arrow/result.h>
-#include <arrow/status.h>
-#include <arrow/io/file.h>
-#include <parquet/stream_reader.h>
-using namespace execplan;
-
-#include "utils_utf8.h"  // utf8_truncate_point()
-
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -167,6 +157,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
  , fParquetReader(NULL)
+ , fReader(nullptr)
 {
   fBuffers.clear();
   fColumns.clear();
@@ -273,7 +264,6 @@ bool TableInfo::lockForRead(const int& locker)
   return false;
 }
 
-
 //------------------------------------------------------------------------------
 // Loop thru reading the import file(s) assigned to this TableInfo object.
 //------------------------------------------------------------------------------
@@ -281,7 +271,8 @@ int TableInfo::readTableData()
 {
   RID validTotalRows = 0;
   RID totalRowsPerInputFile = 0;
-  int64_t totalRowsParquet = 0;
+  int64_t totalRowsParquet = 0;   // totalRowsParquet to be used in later function
+                                  // needs int64_t type
   int filesTBProcessed = fLoadFileList.size();
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
@@ -299,10 +290,8 @@ int TableInfo::readTableData()
         fStatusTI = WriteEngine::ERR;
         return rc;
       }
-
       fileCounter++;
     }
-
   }
   else
   {
@@ -310,7 +299,6 @@ int TableInfo::readTableData()
     {
       fFileName = fLoadFileList[fileCounter];
       int rc = openTableFileParquet(totalRowsParquet);
-      fileCounter++;
       if (rc != NO_ERROR)
       {
         // Mark the table status as error and exit.
@@ -318,6 +306,7 @@ int TableInfo::readTableData()
         fStatusTI = WriteEngine::ERR;
         return rc;
       }
+      fileCounter++;
     }
 
   }
@@ -455,23 +444,23 @@ int TableInfo::readTableData()
     // validTotalRows is ongoing total of valid rows read for all files
     //   pertaining to this DB table.
     int readRc;
-    if (fReadFromS3)
+    if (fImportDataMode != IMPORT_DATA_PARQUET)
     {
-      readRc = fBuffers[readBufNo].fillFromMemory(fBuffers[prevReadBuf], fFileBuffer, fS3ReadLength,
-                                                  &fS3ParseLength, totalRowsPerInputFile, validTotalRows,
-                                                  fColumns, allowedErrCntThisCall);
-    }
-    else
-    {
-      if (fImportDataMode != IMPORT_DATA_PARQUET)
+      if (fReadFromS3)
+      {
+        readRc = fBuffers[readBufNo].fillFromMemory(fBuffers[prevReadBuf], fFileBuffer, fS3ReadLength,
+                                                    &fS3ParseLength, totalRowsPerInputFile, validTotalRows,
+                                                    fColumns, allowedErrCntThisCall);
+      }
+      else
       {
         readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
                                                   validTotalRows, fColumns, allowedErrCntThisCall);
       }
-      else
-      {
-        readRc = fBuffers[readBufNo].fillFromFileParquet(totalRowsPerInputFile, validTotalRows);
-      }
+    }
+    else
+    {
+      readRc = fBuffers[readBufNo].fillFromFileParquet(totalRowsPerInputFile, validTotalRows);
     }
 
     if (readRc != NO_ERROR)
@@ -712,7 +701,6 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
 
   return rc;
 }
-
 
 //------------------------------------------------------------------------------
 // Mark the specified column (columnId) in the specified buffer (bufferId) as
@@ -1310,12 +1298,30 @@ int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
   if (fParquetReader != NULL)
     return NO_ERROR;
   std::shared_ptr<arrow::io::ReadableFile> infile;
-  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
-  PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
-  //TODO: batch_size set here as hyperparameter
-  fReader->set_batch_size(1000);
-  PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 1000, &totalRowsParquet));
-  PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
+  try
+  {
+    PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
+    PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
+    fReader->set_batch_size(1000);
+    PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 1000, &totalRowsParquet));
+    PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
+  }
+  catch (std::exception& ex)
+  {
+    ostringstream oss;
+    oss << "Error opening import file " << fFileName << ".";
+    fLog->logMsg(oss.str(), ERR_FILE_OPEN, MSGLVL_ERROR);
+
+    return ERR_FILE_OPEN;
+  }
+  catch (...)
+  {
+    ostringstream oss;
+    oss << "Error opening import file " << fFileName << ".";
+    fLog->logMsg(oss.str(), ERR_FILE_OPEN, MSGLVL_ERROR);
+
+    return ERR_FILE_OPEN;
+  }
   // initialize fBuffers batch source
   for (int i = 0; i < fReadBufCount; ++i)
   {
@@ -1404,24 +1410,32 @@ int TableInfo::openTableFile()
 //------------------------------------------------------------------------------
 void TableInfo::closeTableFile()
 {
-  if (fHandle)
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
   {
-    // If reading from stdin, we don't delete the buffer out from under
-    // the file handle, because stdin is still open.  This will cause a
-    // memory leak, but when using stdin, we can only read in 1 table.
-    // So it's not like we will be leaking multiple buffers for several
-    // tables over the life of the job.
-    if (!fReadFromStdin)
+    if (fHandle)
     {
-      fclose(fHandle);
-      delete[] fFileBuffer;
+      // If reading from stdin, we don't delete the buffer out from under
+      // the file handle, because stdin is still open.  This will cause a
+      // memory leak, but when using stdin, we can only read in 1 table.
+      // So it's not like we will be leaking multiple buffers for several
+      // tables over the life of the job.
+      if (!fReadFromStdin)
+      {
+        fclose(fHandle);
+        delete[] fFileBuffer;
+      }
+  
+      fHandle = 0;
     }
-
-    fHandle = 0;
+    else if (ms3)
+    {
+      ms3_free((uint8_t*)fFileBuffer);
+    }
   }
-  else if (ms3)
+  else
   {
-    ms3_free((uint8_t*)fFileBuffer);
+    fReader.reset();
+    fParquetReader.reset();
   }
 }
 

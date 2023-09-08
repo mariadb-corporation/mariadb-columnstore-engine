@@ -25,12 +25,6 @@
 #include "we_bulkload.h"
 #undef WE_BULKLOAD_DLLEXPORT
 
-#include <arrow/api.h>
-#include <arrow/io/api.h>
-#include <parquet/arrow/reader.h>
-#include <parquet/arrow/writer.h>
-#include <parquet/exception.h>
-
 #include <cmath>
 #include <cstdlib>
 #include <climits>
@@ -452,7 +446,6 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 
   return NO_ERROR;
 }
-
 
 //------------------------------------------------------------------------------
 // DESCRIPTION:
@@ -1216,6 +1209,32 @@ int BulkLoad::manageImportDataFileList(Job& job, int tableNo, TableInfo* tableIn
 {
   std::vector<std::string> loadFilesList;
   bool bUseStdin = false;
+
+  // Check if all the import files are parquet file
+  bool isParquet = false;
+  for (unsigned int i = 0; i < fCmdLineImportFiles.size(); i++)
+  {
+    if (fCmdLineImportFiles[i].rfind(".parquet") != std::string::npos)
+    {
+      if (!isParquet)
+        isParquet = true;
+    }
+    else
+    {
+      if (isParquet)
+      {
+        ostringstream oss;
+        oss << "Import files exist parquet file while not all of them are parquet files.";
+        fLog.logMsg(oss.str(), ERR_FILE_TYPE_DIFF, MSGLVL_ERROR);
+        return ERR_FILE_TYPE_DIFF;
+      }
+    }
+  }
+
+  if (isParquet)
+  {
+    setImportDataMode(IMPORT_DATA_PARQUET);
+  }
 
   // Take loadFileName from command line argument override "if" one exists,
   // else we take from the Job xml file
