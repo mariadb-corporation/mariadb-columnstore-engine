@@ -60,8 +60,6 @@
 //#define NDEBUG
 #include "mcs_decimal.h"
 
-#include <stacktrace>
-
 using namespace std;
 using namespace boost;
 using namespace dataconvert;

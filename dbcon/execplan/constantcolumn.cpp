@@ -298,7 +298,7 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
 
 MagicColumn::MagicColumn()
 {
-  fExpressionId = 0x1122334455667788ULL;
+  fExpressionId = 0x55667788ULL;
   fResultType.colDataType = CalpontSystemCatalog::INT;
   fResultType.colWidth = 4;
   // no-op.
