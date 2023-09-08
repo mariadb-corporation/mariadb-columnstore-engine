@@ -1657,12 +1657,24 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
   return rc;
 }
 
-
-int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, const int totalRow, char* tokenBuf)
+//--------------------------------------------------------------------------------------
+// Update dictionary store file with string column parquet data, and return the assigned
+// tokens (tokenbuf) to be stored in the corresponding column token file.
+//--------------------------------------------------------------------------------------
+int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow, char* tokenBuf)
 {
   long long truncCount = 0;
 
-  int rc = fStore->insertDctnryParquet(columnData, totalRow, id, tokenBuf, truncCount);
+#ifdef PROFILE
+  Stats::startParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+  boost::mutex::scoped_lock lock(fDictionaryMutex);
+#ifdef PROFILE
+  Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+
+  int rc = fStore->insertDctnryParquet(columnData, tokenPos, totalRow, id, tokenBuf, truncCount);
+
   if (rc != NO_ERROR)
   {
     WErrorCodes ec;
@@ -1674,7 +1686,9 @@ int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnDat
     fpTableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
     return rc;
   }
+
   incSaturatedCnt(truncCount);
+  
   return NO_ERROR;
 }
 

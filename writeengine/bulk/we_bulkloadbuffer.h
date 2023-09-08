@@ -31,10 +31,6 @@
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
 #include <arrow/api.h>
-#include <arrow/io/api.h>
-#include <parquet/arrow/reader.h>
-#include <parquet/arrow/writer.h>
-#include <parquet/exception.h>
 namespace WriteEngine
 {
 class Log;
@@ -87,9 +83,10 @@ class BulkLoadBuffer
 
   char* fOverflowBuf;      // Overflow data held for next buffer
   unsigned fOverflowSize;  // Current size of fOverflowBuf
-  std::shared_ptr<arrow::RecordBatch> fParquetBatch;
-  std::shared_ptr<arrow::RecordBatch> fParquetBatchParser;
-  std::shared_ptr<::arrow::RecordBatchReader> fParquetReader;
+
+  std::shared_ptr<arrow::RecordBatch> fParquetBatch;          // Batch of parquet file to be parsed
+  std::shared_ptr<arrow::RecordBatch> fParquetBatchParser;    // for temporary use by parser
+  std::shared_ptr<::arrow::RecordBatchReader> fParquetReader; // Reader for read batches of parquet data
   // Information about the locker and status for each column in this buffer.
   // Note that TableInfo::fSyncUpdatesTI mutex is used to synchronize
   // access to fColumnLocks and fParseComplete from both read and parse
@@ -180,11 +177,19 @@ class BulkLoadBuffer
   void convert(char* field, int fieldLength, bool nullFlag, unsigned char* output, const JobColumn& column,
                BLBufferStats& bufStats);
 
+  /** @brief Parse a batch of parquet data in read buffer for a nonDictionary column
+   */
   int parseColParquet(ColumnInfo& columnInfo);
 
-  int parseDictParquet(ColumnInfo& columnInfo);
-  
-  void convertParquet(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue);
+  /** @brief Convert batch parquet data depending upon the data type
+   */
+  void convertParquet(std::shared_ptr<arrow::Array> columnData, unsigned char* buf, const JobColumn& column,
+                      BLBufferStats& bufStats, RID& lastInputRowInExtent, ColumnInfo& columnInfo,
+                      bool& updateCPInfoPendingFlag, ColumnBufferSection* section);
+
+
+  inline void updateCPMinMax(ColumnInfo& columnInfo, RID& lastInputRowInExtent, BLBufferStats& bufStats,
+                                           bool& updateCPInfoPendingFlag, ColumnBufferSection* section, uint32_t curRow);
   /** @brief Copy the overflow data
    */
   void copyOverflow(const BulkLoadBuffer& buffer);
@@ -289,7 +294,8 @@ class BulkLoadBuffer
                      size_t* parse_length, RID& totalReadRows, RID& correctTotalRows,
                      const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
 
-
+  /** @brief Read the batch data into the buffer
+   */
   int fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows);
 
   /** @brief Read the table data into the buffer

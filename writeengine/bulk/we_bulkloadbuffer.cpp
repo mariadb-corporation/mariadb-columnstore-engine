@@ -45,10 +45,8 @@
 
 #include "utils_utf8.h"  // utf8_truncate_point()
 
-#include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
-#include <parquet/arrow/writer.h>
 #include <parquet/exception.h>
 
 using namespace std;
@@ -121,16 +119,9 @@ BulkLoadBuffer::BulkLoadBuffer(unsigned numberOfCols, unsigned bufferSize, Log* 
  , fTimeZone(dataconvert::systemTimeZoneOffset())
  , fFixedBinaryRecLen(0)
 {
-  // if (fImportDataMode == IMPORT_DATA_PARQUET)
-  // {
-  //   // TODO:parquet code here
-  //   continue;
-  // }
-  // else
-  // {
-  //   fData = new char[bufferSize];
-  // }
-  fData = new char[bufferSize];
+  // if it's non-parquet case, initialize the fData
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
+    fData = new char[bufferSize];
   fOverflowBuf = NULL;
   fStatusBLB = WriteEngine::NEW;
   fNumberOfColumns = numberOfCols;
@@ -1537,7 +1528,6 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
   memcpy(output, pVal, width);
 }
 
-
 //------------------------------------------------------------------------------
 // Parse the contents of the Read buffer based on whether it is a dictionary
 // column or not.
@@ -1555,6 +1545,7 @@ int BulkLoadBuffer::parse(ColumnInfo& columnInfo)
     boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
     fTotalReadRowsParser = fTotalReadRows;
     fStartRowParser = fStartRow;
+    
     if (fImportDataMode != IMPORT_DATA_PARQUET)
     {
       fDataParser = fData;
@@ -1564,6 +1555,7 @@ int BulkLoadBuffer::parse(ColumnInfo& columnInfo)
     {
       fParquetBatchParser = fParquetBatch;
     }
+
     fStartRowForLoggingParser = fStartRowForLogging;
     fAutoIncGenCountParser = fAutoIncGenCount;
   }
@@ -1575,17 +1567,15 @@ int BulkLoadBuffer::parse(ColumnInfo& columnInfo)
   // If this is the first batch of rows, create the starting DB file
   // if this PM did not have a DB file (delayed file creation).
   RETURN_ON_ERROR(columnInfo.createDelayedFileIfNeeded(fTableName));
-  if (fImportDataMode != IMPORT_DATA_PARQUET)
+
+  if (columnInfo.column.colType == COL_TYPE_DICT)
   {
-    if (columnInfo.column.colType == COL_TYPE_DICT)
-      rc = parseDict(columnInfo);
-    else
-      rc = parseCol(columnInfo);
+    rc = parseDict(columnInfo);
   }
   else
   {
-    if (columnInfo.column.colType == COL_TYPE_DICT)
-      rc = parseDictParquet(columnInfo);
+    if (fImportDataMode != IMPORT_DATA_PARQUET)
+      rc = parseCol(columnInfo);
     else
       rc = parseColParquet(columnInfo);
   }
@@ -1596,85 +1586,94 @@ int BulkLoadBuffer::parse(ColumnInfo& columnInfo)
 int BulkLoadBuffer::parseColParquet(ColumnInfo& columnInfo)
 {
   int rc = NO_ERROR;
-  ColumnBufferSection* section = 0;
+  
+  // Parse the data and fill up a buffer; which is written to output file
   uint32_t nRowsParsed;
+
+  if (fLog->isDebug(DEBUG_2))
+  {
+    ostringstream oss;
+    oss << "ColResSecIn:  OID-" << columnInfo.column.mapOid << "; StartRID/Rows: " << fStartRowParser << " "
+        << fTotalReadRowsParser;
+    fLog->logMsg(oss.str(), MSGLVL_INFO2);
+  }
+
+  ColumnBufferSection* section = 0;
   RID lastInputRowInExtent;
-  int numRows = fParquetBatchParser->num_rows();
   RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(fStartRowParser, fTotalReadRowsParser, nRowsParsed,
                                                            &section, lastInputRowInExtent));
   unsigned int columnId = columnInfo.id;
 
   int64_t nullCount = 0;
-  if (columnId < fNumberOfColumns - 1)
+  bool isNonAuxColumn = columnId < fNumberOfColumns - 1;
+  if (isNonAuxColumn)
+  {
     nullCount = fParquetBatchParser->column(columnId)->null_count();
+  }
 
   if (nRowsParsed > 0)
   {
+#ifdef PROFILE
+    Stats::startParseEvent(WE_STATS_PARSE_COL);
+#endif
+
+    // Reserve auto-increment numbers we need to generate
     if ((columnInfo.column.autoIncFlag) && (nullCount > 0))
     {
       rc = columnInfo.reserveAutoIncNums(nullCount, fAutoIncNextValue);
+
+      if (rc != NO_ERROR)
+      {
+        WErrorCodes ec;
+        ostringstream oss;
+        oss << "parseCol: error generating auto-increment values "
+               "for table-"
+            << fTableName << ", column-" << columnInfo.column.colName << "; OID-" << columnInfo.column.mapOid
+            << "; " << ec.errorString(rc);
+        fLog->logMsg(oss.str(), rc, MSGLVL_ERROR);
+        BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+        return rc;
+      }
     }
 
-    unsigned char* buf = new unsigned char[numRows * columnInfo.column.width];
+    // create a buffer for the size of the rows being written.
+    unsigned char* buf = new unsigned char[fTotalReadRowsParser * columnInfo.column.width];
 
+    // Initialize min/max buffer values.  We initialize to a sufficient
+    // range to force the first value to automatically update the range.
+    // If we are managing char data, minBufferVal and maxBufferVal are
+    // maintained in reverse byte order to facilitate string comparisons
     BLBufferStats bufStats(columnInfo.column.dataType);
     bool updateCPInfoPendingFlag = false;
+
+    // Point column data in one batch
     std::shared_ptr<arrow::Array> columnData;
+
     // not aux column
-    if (columnId < fNumberOfColumns - 1)
+    if (isNonAuxColumn)
+    {
       columnData = fParquetBatch->column(columnId);
+    }
     else  // aux column
     {
-      arrow::NullBuilder nullBuilder;
-      PARQUET_THROW_NOT_OK(nullBuilder.Reserve(numRows));
-      PARQUET_THROW_NOT_OK(nullBuilder.AppendNulls(numRows));
-      PARQUET_THROW_NOT_OK(nullBuilder.Finish(&columnData));
+      try
+      {
+        arrow::NullBuilder nullBuilder;
+        PARQUET_THROW_NOT_OK(nullBuilder.Reserve(fTotalReadRowsParser));
+        PARQUET_THROW_NOT_OK(nullBuilder.AppendNulls(fTotalReadRowsParser));
+        PARQUET_THROW_NOT_OK(nullBuilder.Finish(&columnData));
+      }
+      catch (std::exception& ex)
+      {
+        ostringstream oss;
+        oss << "Error in creating aux column when importing.";
+        fLog->logMsg(oss.str(), ERR_PARQUET_AUX, MSGLVL_ERROR);
+
+        return ERR_PARQUET_AUX;
+      }
     }
-    convertParquet(columnData, columnInfo.column, bufStats, buf, numRows, fAutoIncNextValue);
     
-    updateCPInfoPendingFlag = true;
-
-    if (columnInfo.column.width <= 8)
-    {
-      columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
-                              columnInfo.column.dataType, columnInfo.column.width);
-    }
-    else
-    {
-      columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
-                              columnInfo.column.dataType, columnInfo.column.width);
-    }
-
-    lastInputRowInExtent += columnInfo.rowsPerExtent();
-
-    if (isUnsigned(columnInfo.column.dataType))
-    {
-      if (columnInfo.column.width <= 8)
-      {
-        bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
-        bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
-      }
-      else
-      {
-        bufStats.bigMinBufferVal = -1;
-        bufStats.bigMaxBufferVal = 0;
-      }
-      updateCPInfoPendingFlag = false;
-    }
-    else
-    {
-      if (columnInfo.column.width <= 8)
-      {
-        bufStats.minBufferVal = MAX_BIGINT;
-        bufStats.maxBufferVal = MIN_BIGINT;
-      }
-      else
-      {
-        utils::int128Max(bufStats.bigMinBufferVal);
-        utils::int128Min(bufStats.bigMaxBufferVal);
-      }
-      updateCPInfoPendingFlag = false;
-    }
+    convertParquet(columnData, buf, columnInfo.column, bufStats, lastInputRowInExtent, columnInfo, updateCPInfoPendingFlag, section);
 
     if (updateCPInfoPendingFlag)
     {
@@ -1690,61 +1689,67 @@ int BulkLoadBuffer::parseColParquet(ColumnInfo& columnInfo)
       }
     }
 
-    if (bufStats.satCount)
+    if (bufStats.satCount)  // @bug 3504: increment row saturation count
     {
+      // If we don't want to allow saturated values for auto inc columns.
+      // then this is where we handle it.  Too late to reject a single
+      // row from the parsing thread, so we abort the job.
+      // if (columnInfo.column.autoIncFlag)
+      //{
+      //    rc = ERR_AUTOINC_USER_OUT_OF_RANGE;
+      //    WErrorCodes ec;
+      //    ostringstream oss;
+      //    oss << "parseCol: error with auto-increment values "
+      //        "for table-" << fTableName <<
+      //        ", column-" << columnInfo.column.colName <<
+      //        "; OID-" << columnInfo.column.mapOid <<
+      //        "; " << ec.errorString(rc);
+      //    fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
+      //    return rc;
+      //}
       columnInfo.incSaturatedCnt(bufStats.satCount);
     }
 
-    section->write(buf, numRows);
+    section->write(buf, fTotalReadRowsParser);
     delete[] buf;
+#ifdef PROFILE
+    Stats::stopParseEvent(WE_STATS_PARSE_COL);
+#endif
+
+    // TODO MCOL-641 Add support here.
+    if (fLog->isDebug(DEBUG_2))
+    {
+      ostringstream oss;
+      RID rid1 = section->startRowId();
+      RID rid2 = section->endRowId();
+      oss << "ColRelSecOut: OID-" << columnInfo.column.mapOid << "; StartRID/Rows2: " << rid1 << " "
+          << (rid2 - rid1) + 1 << "; startOffset: " << section->getStartOffset()
+          << "; lastExtentRow: " << lastInputRowInExtent;
+      parseColLogMinMax(oss, columnInfo.column.dataType, bufStats.minBufferVal, bufStats.maxBufferVal);
+
+      fLog->logMsg(oss.str(), MSGLVL_INFO2);
+    }
 
     RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
   }
   return rc;
 }
 
-int BulkLoadBuffer::parseDictParquet(ColumnInfo& columnInfo)
-{
-  int rc = NO_ERROR;
-  ColumnBufferSection* section = 0;
-  RID lastInputRowInExtent = 0;
-  uint32_t nRowsParsed;
-  RETURN_ON_ERROR(columnInfo.fColBufferMgr->reserveSection(fStartRowParser, fTotalReadRowsParser, nRowsParsed,
-                                                           &section, lastInputRowInExtent));
-  int columnId = columnInfo.id;
-  if (nRowsParsed > 0)
-  {
-    char* tokenBuf = new char[nRowsParsed * 8];
-    std::shared_ptr<arrow::Array> columnData = fParquetBatchParser->column(columnId);
-    rc = columnInfo.updateDctnryStoreParquet(columnData, nRowsParsed, tokenBuf);
-    if (rc == NO_ERROR)
-    {
-      section->write(tokenBuf, nRowsParsed);
-      delete[] tokenBuf;
-
-      RETURN_ON_ERROR(columnInfo.fColBufferMgr->releaseSection(section));
-    }
-    else
-    {
-      delete[] tokenBuf;
-    }
-  }
-  return rc;
-}
-
 //-----------------------------------------------------------------------------------
 // Convert arrow/parquet column data
-// columnData         (in) - the input column data of one batch
-// column             (in) - the column information
+// columnData                          (in) - the input column data of one batch
+// column                              (in) - the column information
 // bufStats:
-// minBufferVal       (in/out) - ongoing min value for the Read buffer we are parsing
-// maxBufferVal       (in/out) - ongoing max value for the Read buffer we are parsing
-// satCount           (in/out) - ongoing saturation row count for buffer being parsed
-// buf                (out) - the parsed values take from columnData
-// cbs                (in) - current batch size(row number)
-// fAutoIncNextValue  (in) - first auto increment number of this batch
+// minBufferVal                        (in/out) - ongoing min value for the Read buffer we are parsing
+// maxBufferVal                        (in/out) - ongoing max value for the Read buffer we are parsing
+// satCount                            (in/out) - ongoing saturation row count for buffer being parsed
+// buf                                 (out) - the parsed values take from columnData
+// fTotalReadRowsParser                (in) - current batch size(row number)
+// fAutoIncNextValue                   (in) - first auto increment number of this batch
 //-----------------------------------------------------------------------------------
-void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, const JobColumn& column, BLBufferStats& bufStats, unsigned char* buf, unsigned int cbs, uint64_t& fAutoIncNextValue)
+void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, unsigned char* buf, const JobColumn& column,
+                                    BLBufferStats& bufStats, RID& lastInputRowInExtent, ColumnInfo& columnInfo,
+                                    bool& updateCPInfoPendingFlag, ColumnBufferSection* section)
 {
   char biVal;
   int iVal;
@@ -1775,9 +1780,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     case WriteEngine::WR_FLOAT:
     {
       const float* dataPtr = columnData->data()->GetValues<float>(1);
-      for (uint32_t i = 0; i < cbs; i++)
+
+      for (uint32_t i = 0; i < fTotalReadRowsParser; i++)
       {
         void* p = buf + i * width;
+        updateCPInfoPendingFlag = true;
+
         if (columnData->IsNull(i))
         {
           if (column.fWithDefault)
@@ -1789,8 +1797,6 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           {
             tmp32 = joblist::FLOATNULL;
             pVal = &tmp32;
-            memcpy(p, pVal, width);
-            continue;
           }
         }
         else
@@ -1798,6 +1804,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           float minFltSat = column.fMinDblSat;
           float maxFltSat = column.fMaxDblSat;
           memcpy(&fVal, dataPtr + i, width);
+
           if (fVal > maxFltSat)
           {
             fVal = maxFltSat;
@@ -1808,9 +1815,16 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
             fVal = minFltSat;
             bufStats.satCount++;
           }
+
           pVal = &fVal;
         }
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -1821,9 +1835,11 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     case WriteEngine::WR_DOUBLE:
     {
       const double* dataPtr = columnData->data()->GetValues<double>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (column.fWithDefault)
@@ -1835,26 +1851,34 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           {
             tmp64 = joblist::DOUBLENULL;
             pVal = &tmp64;
-            memcpy(p, pVal, width);
-            continue;
           }
         }
         else
         {
           memcpy(&dVal, dataPtr + i, width);
+          
+          if (dVal > column.fMaxDblSat)
+          {
+            dVal = column.fMaxDblSat;
+            bufStats.satCount++;
+          }
+          else if (dVal < column.fMinDblSat)
+          {
+            dVal = column.fMinDblSat;
+            bufStats.satCount++;
+          }
+
+          pVal = &dVal;
         }
-        if (dVal > column.fMaxDblSat)
-        {
-          dVal = column.fMaxDblSat;
-          bufStats.satCount++;
-        }
-        else if (dVal < column.fMinDblSat)
-        {
-          dVal = column.fMinDblSat;
-          bufStats.satCount++;
-        }
-        pVal = &dVal;
+
+
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -1866,16 +1890,19 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     {
       auto binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
       int tokenLen;
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         char charTmpBuf[MAX_COLUMN_BOUNDARY + 1] = {0};
         void* p = buf + width * i;
+
         if (columnData->IsNull(i))
         {
           if (column.fWithDefault)
           {
             int defLen = column.fDefaultChr.length();
             const char* defData = column.fDefaultChr.str();
+
             if (defLen > column.definedWidth)
               memcpy(charTmpBuf, defData, column.definedWidth);
             else
@@ -1898,6 +1925,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         {
           const uint8_t* data = binaryArray->GetValue(i, &tokenLen);
           const char* dataPtr = reinterpret_cast<const char*>(data);
+
           if (tokenLen > column.definedWidth)
           {
             uint8_t truncate_point = utf8::utf8_truncate_point(dataPtr, column.definedWidth);
@@ -1924,6 +1952,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
 
         pVal = charTmpBuf;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -1934,12 +1968,13 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     case WriteEngine::WR_SHORT:
     {
       long long origVal;
-      // use char type here
       const short* dataPtr = columnData->data()->GetValues<short>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         bool bSatVal = false;
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -1958,7 +1993,6 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           }
           else
           {
-            // fill 1 temporarily
             origVal = fAutoIncNextValue++;
           }
         }
@@ -1999,6 +2033,11 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         pVal = &siVal;
         memcpy(p, pVal, width);
         
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2010,10 +2049,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     {
       int64_t origVal = 0;
       const uint16_t* dataPtr = columnData->data()->GetValues<uint16_t>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         bool bSatVal = false;
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -2064,6 +2105,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         usiVal = origVal;
         pVal = &usiVal;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2078,10 +2125,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
       // if use int8_t here, it will take 8 bool value of parquet array
       std::shared_ptr<arrow::BooleanArray> boolArray = std::static_pointer_cast<arrow::BooleanArray>(columnData);
       const int8_t* dataPtr = columnData->data()->GetValues<int8_t>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         bool bSatVal = false;
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -2125,6 +2174,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         if (origVal < column.fMinIntSat)
         {
           origVal = column.fMinIntSat;
+          bSatVal = true;
         }
         else if (origVal > static_cast<int64_t>(column.fMaxIntSat))
         {
@@ -2145,6 +2195,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         biVal = origVal;
         pVal = &biVal;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2155,13 +2211,17 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     case WriteEngine::WR_UBYTE:
     {
       int64_t origVal = 0;
+
+      // special handling for aux column to fix segmentation error
       if (columnData->type_id() != arrow::Type::type::NA)
       {
         const uint8_t* dataPtr = columnData->data()->GetValues<uint8_t>(1);
-        for (unsigned int i = 0; i < cbs; i++)
+
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           bool bSatVal = false;
           void* p = buf + i * width;
+
           if (columnData->IsNull(i))
           {
             if (!column.autoIncFlag)
@@ -2213,14 +2273,23 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           ubiVal = origVal;
           pVal = &ubiVal;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
       else
       {
-        for (unsigned int i = 0; i < cbs; i++)
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           bool bSatVal = false;
           void* p = buf + i * width;
+
+          // this condition is for aux column which is default null
+          // no auto increment here
           if (column.fWithDefault)
           {
             origVal = static_cast<int64_t>(column.fDefaultUInt);
@@ -2232,6 +2301,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
             memcpy(p, pVal, width);
             continue;
           }
+
           if (origVal < column.fMinIntSat)
           {
             origVal = column.fMinIntSat;
@@ -2257,6 +2327,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           ubiVal = origVal;
           pVal = &ubiVal;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
 
@@ -2273,10 +2349,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           column.dataType != CalpontSystemCatalog::TIME)
       {
         const long long *dataPtr = columnData->data()->GetValues<long long>(1);
-        for (unsigned int i = 0; i < cbs; i++)
+
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           void *p = buf + i * width;
           bool bSatVal = false;
+
           if (columnData->IsNull(i))
           {
             if (!column.autoIncFlag)
@@ -2335,6 +2413,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
 
           pVal = &llVal;
           memcpy(p, pVal, width);
+        
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
       else if (column.dataType == CalpontSystemCatalog::TIME)
@@ -2345,9 +2429,11 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         if (columnData->type_id() == arrow::Type::type::TIME32 || columnData->type_id() == arrow::Type::type::NA)
         {
           std::shared_ptr<arrow::Time32Array> timeArray = std::static_pointer_cast<arrow::Time32Array>(columnData);
-          for (unsigned int i = 0; i < cbs; i++)
+          
+          for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
           {
             void *p = buf + i * width;
+
             if (columnData->IsNull(i))
             {
               if (column.fWithDefault)
@@ -2369,21 +2455,31 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
               llDate = dataconvert::DataConvert::convertArrowColumnTime32(timeVal);
 
             }
+
             if (llDate < bufStats.minBufferVal)
               bufStats.minBufferVal = llDate;
             if (llDate > bufStats.maxBufferVal)
               bufStats.maxBufferVal = llDate;
+            
             pVal = &llDate;
             memcpy(p, pVal, width);
+
+            if ((fStartRowParser + i) == lastInputRowInExtent)
+            {
+              updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                             section, i);
+            }
           }
         }
         // if it's time64, unit is microsecond, int64
         else if (columnData->type_id() == arrow::Type::type::TIME64)
         {
           std::shared_ptr<arrow::Time64Array> timeArray = std::static_pointer_cast<arrow::Time64Array>(columnData);
-          for (unsigned int i = 0; i < cbs; i++)
+          
+          for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
           {
             void *p = buf + i * width;
+
             if (columnData->IsNull(i))
             {
               if (column.fWithDefault)
@@ -2405,12 +2501,20 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
               llDate = dataconvert::DataConvert::convertArrowColumnTime64(timeVal);
 
             }
+
             if (llDate < bufStats.minBufferVal)
               bufStats.minBufferVal = llDate;
             if (llDate > bufStats.maxBufferVal)
               bufStats.maxBufferVal = llDate;
+
             pVal = &llDate;
             memcpy(p, pVal, width);
+
+            if ((fStartRowParser + i) == lastInputRowInExtent)
+            {
+              updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                             section, i);
+            }
           }
         }
       }
@@ -2419,11 +2523,13 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         // timestamp conversion here
         // default column type is TIMESTAMP
         // default unit is millisecond
-        std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
-        for (unsigned int i = 0; i < cbs; i++)
+        std::shared_ptr<arrow::TimestampArray> timeStampArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
+        
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           // bool bSatVal = false;
           void *p = buf + i * width;
+
           if (columnData->IsNull(i))
           {
             if (column.fWithDefault)
@@ -2440,26 +2546,35 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           }
           else
           {
-            int64_t timeVal = timeArray->Value(i);
-            llDate = timeVal;
+            llDate = timeStampArray->Value(i);
           }
+
           if (llDate < bufStats.minBufferVal)
             bufStats.minBufferVal = llDate;
           if (llDate > bufStats.maxBufferVal)
             bufStats.maxBufferVal = llDate;
+
           pVal = &llDate;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
       else
       {
         // datetime conversion here
         // default column type is TIMESTAMP
-        std::shared_ptr<arrow::TimestampArray> timeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
-        for (unsigned int i = 0; i < cbs; i++)
+        std::shared_ptr<arrow::TimestampArray> dateTimeArray = std::static_pointer_cast<arrow::TimestampArray>(columnData);
+        
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           int rc = 0;
           void *p = buf + i * width;
+
           if (columnData->IsNull(i))
           {
             if (column.fWithDefault)
@@ -2476,9 +2591,10 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           }
           else
           {
-            int64_t timeVal = timeArray->Value(i);
+            int64_t timeVal = dateTimeArray->Value(i);
             llDate = dataconvert::DataConvert::convertArrowColumnDatetime(timeVal, rc);
           }
+
           if (rc == 0)
           {
             if (llDate < bufStats.minBufferVal)
@@ -2492,8 +2608,15 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
             llDate = 0;
             bufStats.satCount++;
           }
+
           pVal = &llDate;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
 
       }
@@ -2505,16 +2628,15 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     //----------------------------------------------------------------------
     case WriteEngine::WR_BINARY:
     {
-      // Parquet does not have data type with 128 byte
       std::shared_ptr<arrow::Decimal128Array> decimalArray = std::static_pointer_cast<arrow::Decimal128Array>(columnData);
       std::shared_ptr<arrow::DecimalType> fType = std::static_pointer_cast<arrow::DecimalType>(decimalArray->type());
       const int128_t* dataPtr = decimalArray->data()->GetValues<int128_t>(1);
 
-
-      for (unsigned int i = 0; i < cbs; i++)
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         void* p = buf + i * width;
         bool bSatVal = false;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -2538,13 +2660,13 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         }
         else
         {
-          // compare parquet data precision and scale with table column precision and scale
-          
-          // Get int and frac part
+          // data imported should match the column data type, so directly
+          // copy data here
           memcpy(&bigllVal, dataPtr + i, sizeof(int128_t));
-
-
         }
+
+        // Parquet data imported should fit its precision and
+        // scale, so the data won't saturate
         if (bSatVal)
           bufStats.satCount++;
 
@@ -2556,6 +2678,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         
         pVal = &bigllVal;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2566,10 +2694,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     case WriteEngine::WR_ULONGLONG:
     {
       const uint64_t* dataPtr = columnData->data()->GetValues<uint64_t>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         bool bSatVal = false;
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -2595,6 +2725,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         {
           memcpy(&ullVal, dataPtr+i, width);
         }
+
         if (ullVal > column.fMaxIntSat)
         {
           ullVal = column.fMaxIntSat;
@@ -2611,6 +2742,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
 
         pVal = &ullVal;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2623,10 +2760,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
     {
       int64_t origVal;
       const uint32_t* dataPtr = columnData->data()->GetValues<uint32_t>(1);
-      for (unsigned int i = 0; i < cbs; i++)
+
+      for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
         bool bSatVal = false;
         void* p = buf + i * width;
+
         if (columnData->IsNull(i))
         {
           if (!column.autoIncFlag)
@@ -2652,6 +2791,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         {
           origVal = *(dataPtr + i);
         }
+
         if (origVal < column.fMinIntSat)
         {
           origVal = column.fMinIntSat;
@@ -2678,6 +2818,12 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
         uiVal = origVal;
         pVal = &uiVal;
         memcpy(p, pVal, width);
+
+        if ((fStartRowParser + i) == lastInputRowInExtent)
+        {
+          updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                         section, i);
+        }
       }
       break;
     }
@@ -2692,11 +2838,13 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
       if (column.dataType != CalpontSystemCatalog::DATE)
       {
         const int* dataPtr = columnData->data()->GetValues<int>(1);
-        for (unsigned int i = 0; i < cbs; i++)
+        long long origVal;
+
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           bool bSatVal = false;
           void* p = buf + i * width;
-          long long origVal;
+
           if (columnData->IsNull(i))
           {
             if (!column.autoIncFlag)
@@ -2742,6 +2890,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
             origVal = static_cast<int64_t>(column.fMaxIntSat);
             bSatVal = true;
           }
+
           if (bSatVal)
             bufStats.satCount++;
 
@@ -2754,16 +2903,24 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           iVal = (int)origVal;
           pVal = &iVal;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
       else
       {
         // date conversion here
-        std::shared_ptr<arrow::Date32Array> timeArray = std::static_pointer_cast<arrow::Date32Array>(columnData);
-        for (unsigned int i = 0; i < cbs; i++)
+        std::shared_ptr<arrow::Date32Array> dateArray = std::static_pointer_cast<arrow::Date32Array>(columnData);
+        
+        for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
           int rc = 0;
           void* p = buf + i * width;
+
           if (columnData->IsNull(i))
           {
             if (column.fWithDefault)
@@ -2780,9 +2937,10 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
           }
           else
           {
-            int32_t dayVal = timeArray->Value(i);
+            int32_t dayVal = dateArray->Value(i);
             iDate = dataconvert::DataConvert::ConvertArrowColumnDate(dayVal, rc);
           }
+
           if (rc == 0)
           {
             if (iDate < bufStats.minBufferVal)
@@ -2796,11 +2954,76 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, co
             iDate = 0;
             bufStats.satCount++;
           }
+
           pVal = &iDate;
           memcpy(p, pVal, width);
+
+          if ((fStartRowParser + i) == lastInputRowInExtent)
+          {
+            updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
+                           section, i);
+          }
         }
       }
     }
+  }
+}
+
+inline void BulkLoadBuffer::updateCPMinMax(ColumnInfo& columnInfo, RID& lastInputRowInExtent, BLBufferStats& bufStats,
+                                           bool& updateCPInfoPendingFlag, ColumnBufferSection* section, uint32_t curRow)
+{
+  if (columnInfo.column.width <= 8)
+  {
+    columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.minBufferVal, bufStats.maxBufferVal,
+                            columnInfo.column.dataType, columnInfo.column.width);
+  }
+  else
+  {
+    columnInfo.updateCPInfo(lastInputRowInExtent, bufStats.bigMinBufferVal, bufStats.bigMaxBufferVal,
+                            columnInfo.column.dataType, columnInfo.column.width);
+  }
+
+  // TODO MCOL-641 Add support here.
+  if (fLog->isDebug(DEBUG_2))
+  {
+    ostringstream oss;
+    oss << "ColRelSecOut: OID-" << columnInfo.column.mapOid
+        << "; StartRID/Rows1: " << section->startRowId() << " " << curRow + 1
+        << "; lastExtentRow: " << lastInputRowInExtent;
+    parseColLogMinMax(oss, columnInfo.column.dataType, bufStats.minBufferVal, bufStats.maxBufferVal);
+
+    fLog->logMsg(oss.str(), MSGLVL_INFO2);
+  }
+
+  lastInputRowInExtent += columnInfo.rowsPerExtent();
+
+  if (isUnsigned(columnInfo.column.dataType))
+  {
+    if (columnInfo.column.width <= 8)
+    {
+      bufStats.minBufferVal = static_cast<int64_t>(MAX_UBIGINT);
+      bufStats.maxBufferVal = static_cast<int64_t>(MIN_UBIGINT);
+    }
+    else
+    {
+      bufStats.bigMinBufferVal = -1;
+      bufStats.bigMaxBufferVal = 0;
+    }
+    updateCPInfoPendingFlag = false;
+  }
+  else
+  {
+    if (columnInfo.column.width <= 8)
+    {
+      bufStats.minBufferVal = MAX_BIGINT;
+      bufStats.maxBufferVal = MIN_BIGINT;
+    }
+    else
+    {
+      utils::int128Max(bufStats.bigMinBufferVal);
+      utils::int128Min(bufStats.bigMaxBufferVal);
+    }
+    updateCPInfoPendingFlag = false;
   }
 }
 
@@ -3193,7 +3416,6 @@ int BulkLoadBuffer::parseDict(ColumnInfo& columnInfo)
         return rc;
     }
   }
-  // git test
   return rc;
 }
 
@@ -3226,9 +3448,19 @@ int BulkLoadBuffer::parseDictSection(ColumnInfo& columnInfo, int tokenPos, RID s
   {
     char* tokenBuf = new char[nRowsParsed * 8];
 
-    // Pass fDataParser data and fTokensParser meta data to dictionary
-    // to be parsed and tokenized, with tokens returned in tokenBuf.
-    rc = columnInfo.updateDctnryStore(fDataParser, &fTokensParser[tokenPos], nRowsParsed, tokenBuf);
+    if (fImportDataMode != IMPORT_DATA_PARQUET)
+    {
+      // Pass fDataParser data and fTokensParser meta data to dictionary
+      // to be parsed and tokenized, with tokens returned in tokenBuf.
+      rc = columnInfo.updateDctnryStore(fDataParser, &fTokensParser[tokenPos], nRowsParsed, tokenBuf);
+    }
+    else
+    {
+      // Pass columnData and tokenPos data to dictionary to be parsed and tokenized
+      // with tokens returned in tokenBuf.
+      std::shared_ptr<arrow::Array> columnData = fParquetBatchParser->column(columnInfo.id);
+      rc = columnInfo.updateDctnryStoreParquet(columnData, tokenPos, nRowsParsed, tokenBuf);
+    }
 
     if (rc == NO_ERROR)
     {
@@ -3372,16 +3604,26 @@ int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const ch
 
 int BulkLoadBuffer::fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows)
 {
-  PARQUET_THROW_NOT_OK(fParquetReader->ReadNext(&fParquetBatch));
-  totalReadRows += fParquetBatch->num_rows();
-  fStartRow = correctTotalRows;
-  correctTotalRows += fParquetBatch->num_rows();
-  fTotalReadRows = fParquetBatch->num_rows();
-  // TODO:record total rows read already
+  boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
+  reset();
+
+  try
+  {
+    PARQUET_THROW_NOT_OK(fParquetReader->ReadNext(&fParquetBatch));
+    fStartRow = correctTotalRows;
+    fStartRowForLogging = totalReadRows;
+    fTotalReadRows = fParquetBatch->num_rows();
+    fTotalReadRowsForLog = fParquetBatch->num_rows();
+    totalReadRows += fTotalReadRowsForLog;
+    correctTotalRows += fTotalReadRows;
+  }
+  catch (std::exception& ex)
+  {
+    return ERR_FILE_READ_IMPORT;
+  }
 
   return NO_ERROR;
 }
-
 
 //------------------------------------------------------------------------------
 // Read the next set of rows from the input import file (for the specified
