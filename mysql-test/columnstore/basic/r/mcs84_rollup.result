@@ -41,4 +41,8 @@ NULL	1	2	2.0000	2	2	1	1
 2	NULL	13	6.5000	6	7	2	2
 2	3	13	6.5000	6	7	2	2
 NULL	NULL	1	1.0000	1	1	1	2
+SELECT key1, key2, GROUP_CONCAT(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+ERROR HY000: Internal error: GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used
+SELECT key1, key2, JSON_ARRAYAGG(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+ERROR HY000: Internal error: GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used
 DROP DATABASE IF EXISTS mcs84_db;
