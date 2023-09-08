@@ -30,11 +30,11 @@ SELECT year, SUM(sales) FROM booksales GROUP BY year ORDER BY year;
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
 
 # WITH ROLLUP not supported yet. MCOL-678
---error 1178
+--sorted_result
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
---error 1178
+--sorted_result
 SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
---error 1178
+--sorted_result
 SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
 
 # Clean up
