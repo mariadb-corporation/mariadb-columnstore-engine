@@ -913,14 +913,14 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
     if (aggc)
     {
-      if (jobInfo.hasRollup)
-      {
-        throw runtime_error("GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used");
-      }
       GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(retCols[i].get());
 
       if (gcc != NULL)
       {
+        if (jobInfo.hasRollup)
+        {
+          throw runtime_error("GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used");
+        }
         jobInfo.groupConcatCols.push_back(retCols[i]);
 
         uint64_t eid = gcc->expressionId();
