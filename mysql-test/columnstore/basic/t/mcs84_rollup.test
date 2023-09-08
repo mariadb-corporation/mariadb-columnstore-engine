@@ -45,6 +45,7 @@ INSERT INTO three_cols(key1, key2, value) VALUES
 , (   2,    3,    6)
 , (   2,    3,    7);
 
+--sorted_result
 SELECT key1, key2, SUM(value), AVG(value), MIN(value), MAX(value), COUNT(value), COUNT(*) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
 
 --error 1815
