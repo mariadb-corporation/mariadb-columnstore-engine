@@ -860,7 +860,10 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     }
 
     updateEntry(row, rgContextColl);
+    // these quantities are unsigned and comparing z and cnt - 1 can be incorrect
+    // because cnt can be zero.
     if ((z + 1 < cnt)) {
+idblog(" mark is " << std::hex << row.getIntField(cnt - 1));
       row.setIntField(row.getIntField(cnt - 1) + 1, cnt - 1);
       row.setToNull(cnt - 2 - z);
     }
