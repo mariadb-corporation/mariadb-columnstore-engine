@@ -68,7 +68,7 @@ systemctl restart mcs-<process_name>
 
 Sometimes Zombie/Defunct processes can cause problems, e.g. when one PrimProc process has become defunct, a new one has been started, but MariaDB still attaches to the defunct process. Refer to [here](https://www.linuxjournal.com/content/how-kill-zombie-processes-linux) for ways to kill Zombie processes. Sometimes a restart of the development machine can be the quickest way to resolve this problem, however.
 
-## Development Setup with Local Linux VM for M1 Macs
+## Development Setup with Local Linux VM for ARM-based Macs
 
 As MCS only supports Linux-based operating systems, everyone working on a MacOS or Windows system will need some way to access a Linux system. This guide is written and tested for a M1 Mac, but will probably be easily adaptable to other operating systems.
 
