@@ -291,7 +291,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
 
       if (retCols[i]->windowfunctionColumnList().size() > 0)
         jobInfo.expressionVec.push_back(key);
-      else if (!mc && find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
+      else if (find(jobInfo.expressionVec.begin(), jobInfo.expressionVec.end(), key) ==
                jobInfo.expressionVec.end())
       {
         jobInfo.returnedExpressions.push_back(sjstep);
@@ -788,7 +788,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       uint32_t tupleKey = ti.key;
       jobInfo.groupByColVec.push_back(tupleKey);
       if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
+      {
+	      idblog("ew should not push magic coumn into projection");
         projectKeys.push_back(tupleKey);
+      }
     }
     else
     {
@@ -1248,6 +1251,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         }
         else if (dynamic_cast<const MagicColumn*>(srcp.get()) != NULL)
         {
+		idblog("doing nothing for magic column");
         }
         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         {

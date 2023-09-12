@@ -631,7 +631,7 @@ class MagicColumn : public ReturnedColumn
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
-    return 0x12340000ULL;
+    return 0x12340000UL;
   }
   /**
    * F&E
