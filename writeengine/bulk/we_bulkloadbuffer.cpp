@@ -1818,7 +1818,9 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
           pVal = &fVal;
         }
+
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -1871,8 +1873,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           pVal = &dVal;
         }
 
-
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -1888,8 +1890,14 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     //----------------------------------------------------------------------
     case WriteEngine::WR_CHAR:
     {
-      auto binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+      std::shared_ptr<arrow::BinaryArray> binaryArray;
+      std::shared_ptr<arrow::FixedSizeBinaryArray> fixedSizeBinaryArray;
       int tokenLen;
+
+      if (columnData->type_id() != arrow::Type::type::FIXED_SIZE_BINARY)
+        binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+      else
+        fixedSizeBinaryArray = std::static_pointer_cast<arrow::FixedSizeBinaryArray>(columnData);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -1923,7 +1931,18 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         }
         else
         {
-          const uint8_t* data = binaryArray->GetValue(i, &tokenLen);
+          const uint8_t* data;
+          if (binaryArray != nullptr)
+          {
+            data = binaryArray->GetValue(i, &tokenLen);
+          }
+          else
+          {
+            data = fixedSizeBinaryArray->GetValue(i);
+            std::shared_ptr<arrow::DataType> tType = fixedSizeBinaryArray->type();
+            tokenLen = tType->byte_width();
+          }
+
           const char* dataPtr = reinterpret_cast<const char*>(data);
 
           if (tokenLen > column.definedWidth)
@@ -1952,6 +1971,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
         pVal = charTmpBuf;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2032,7 +2052,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         siVal = origVal;
         pVal = &siVal;
         memcpy(p, pVal, width);
-        
+        updateCPInfoPendingFlag = true;
+
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
           updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
@@ -2105,6 +2126,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         usiVal = origVal;
         pVal = &usiVal;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2195,6 +2217,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         biVal = origVal;
         pVal = &biVal;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2273,6 +2296,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           ubiVal = origVal;
           pVal = &ubiVal;
           memcpy(p, pVal, width);
+          updateCPInfoPendingFlag = true;
 
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
@@ -2327,6 +2351,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           ubiVal = origVal;
           pVal = &ubiVal;
           memcpy(p, pVal, width);
+          updateCPInfoPendingFlag = true;
 
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
@@ -2413,7 +2438,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
           pVal = &llVal;
           memcpy(p, pVal, width);
-        
+          updateCPInfoPendingFlag = true;
+
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
             updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
@@ -2424,6 +2450,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
       else if (column.dataType == CalpontSystemCatalog::TIME)
       {
         // time conversion here
+        int rc = 0;
+
         // for parquet, there are two time type, time32 and time64
         // if it's time32, unit is millisecond, int32
         if (columnData->type_id() == arrow::Type::type::TIME32 || columnData->type_id() == arrow::Type::type::NA)
@@ -2452,17 +2480,26 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
             {
               // timeVal is millisecond since midnight
               int32_t timeVal = timeArray->Value(i);
-              llDate = dataconvert::DataConvert::convertArrowColumnTime32(timeVal);
+              llDate = dataconvert::DataConvert::convertArrowColumnTime32(timeVal, rc);
 
             }
 
-            if (llDate < bufStats.minBufferVal)
-              bufStats.minBufferVal = llDate;
-            if (llDate > bufStats.maxBufferVal)
-              bufStats.maxBufferVal = llDate;
+            if (rc == 0)
+            {
+              if (llDate < bufStats.minBufferVal)
+                bufStats.minBufferVal = llDate;
+
+              if (llDate > bufStats.maxBufferVal)
+                bufStats.maxBufferVal = llDate;
+            }
+            else
+            {
+              bufStats.satCount++;
+            }
             
             pVal = &llDate;
             memcpy(p, pVal, width);
+            updateCPInfoPendingFlag = true;
 
             if ((fStartRowParser + i) == lastInputRowInExtent)
             {
@@ -2498,17 +2535,26 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
             {
               // timeVal is macrosecond since midnight
               int64_t timeVal = timeArray->Value(i);
-              llDate = dataconvert::DataConvert::convertArrowColumnTime64(timeVal);
+              llDate = dataconvert::DataConvert::convertArrowColumnTime64(timeVal, rc);
 
             }
 
-            if (llDate < bufStats.minBufferVal)
-              bufStats.minBufferVal = llDate;
-            if (llDate > bufStats.maxBufferVal)
-              bufStats.maxBufferVal = llDate;
+            if (rc == 0)
+            {
+              if (llDate < bufStats.minBufferVal)
+                bufStats.minBufferVal = llDate;
+
+              if (llDate > bufStats.maxBufferVal)
+                bufStats.maxBufferVal = llDate;
+            }
+            else
+            {
+              bufStats.satCount++;
+            }
 
             pVal = &llDate;
             memcpy(p, pVal, width);
+            updateCPInfoPendingFlag = true;
 
             if ((fStartRowParser + i) == lastInputRowInExtent)
             {
@@ -2556,7 +2602,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
           pVal = &llDate;
           memcpy(p, pVal, width);
-
+          updateCPInfoPendingFlag = true;
+          
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
             updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,
@@ -2611,6 +2658,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
           pVal = &llDate;
           memcpy(p, pVal, width);
+          updateCPInfoPendingFlag = true;
 
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
@@ -2678,6 +2726,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         
         pVal = &bigllVal;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2742,6 +2791,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
         pVal = &ullVal;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2818,6 +2868,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         uiVal = origVal;
         pVal = &uiVal;
         memcpy(p, pVal, width);
+        updateCPInfoPendingFlag = true;
 
         if ((fStartRowParser + i) == lastInputRowInExtent)
         {
@@ -2903,6 +2954,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           iVal = (int)origVal;
           pVal = &iVal;
           memcpy(p, pVal, width);
+          updateCPInfoPendingFlag = true;
 
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
@@ -2957,7 +3009,8 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
           pVal = &iDate;
           memcpy(p, pVal, width);
-
+          updateCPInfoPendingFlag = true;
+          
           if ((fStartRowParser + i) == lastInputRowInExtent)
           {
             updateCPMinMax(columnInfo, lastInputRowInExtent, bufStats, updateCPInfoPendingFlag,

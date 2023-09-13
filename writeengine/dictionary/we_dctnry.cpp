@@ -956,7 +956,13 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
   WriteEngine::Token nullToken;
 
   bool isNonNullArray = true;
-  auto binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+  std::shared_ptr<arrow::BinaryArray> binaryArray;
+  std::shared_ptr<arrow::FixedSizeBinaryArray> fixedSizeBinaryArray;
+
+  if (columnData->type_id() != arrow::Type::type::FIXED_SIZE_BINARY)
+    binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
+  else
+    fixedSizeBinaryArray = std::static_pointer_cast<arrow::FixedSizeBinaryArray>(columnData);
 
   // check if this column data imported is NULL array or not
   if (columnData->type_id() == arrow::Type::type::NA)
@@ -972,7 +978,22 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
     // if this column is not null data
     if (isNonNullArray)
     {
-      const uint8_t* data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+      const uint8_t* data;
+      
+      // if (binaryArray != nullptr)
+      // {
+      //   data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+      // }
+      // else
+      // {
+      //   data = fixedSizeBinaryArray->GetValue(startPos + startRowIdx);
+      //   std::shared_ptr<arrow::DataType> tType = fixedSizeBinaryArray->type();
+      //   curSig.size = tType->byte_width();
+      // }
+
+      // comment this line and uncomment the above will reproduce the error
+      data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+
       const char* dataPtr = reinterpret_cast<const char*>(data);
 
       // Strip trailing null bytes '\0' (by adjusting curSig.size) if import-
