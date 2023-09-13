@@ -1,3 +1,7 @@
+#
+# Check the parquet support for different data types
+# Author: Bin Ruan, binruan0227@gmail.com
+#
 if (!$MYSQL_TEST_ROOT){
     skip Should be run by root to execute cpimport;
 }
@@ -5,13 +9,12 @@ if (!$MYSQL_TEST_ROOT){
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
-DROP DATABASE IF EXISTS mcs287_db;
+DROP DATABASE IF EXISTS mcol_5505_cpimport_parquet;
 --enable_warnings
 
-CREATE DATABASE mcs287_db;
-USE mcs287_db;
+CREATE DATABASE mcol_5505_cpimport_parquet;
+USE mcol_5505_cpimport_parquet;
 # Create table
-# CREATE TABLE t1(col1 INT, col2 FLOAT, col3 DOUBLE, col4 TIME, col5 VARCHAR(20), col6 TIMESTAMP, col7 DATE) ENGINE=Columnstore;
 SET time_zone = '+8:00';
 Create TABLE t1(
     col1 INT,
@@ -35,22 +38,27 @@ Create TABLE t1(
     col19 SMALLINT UNSIGNED,
     col20 TINYINT UNSIGNED,
     col21 BIGINT UNSIGNED,
-    col22 BOOLEAN
+    col22 BOOLEAN,
+    col23 DECIMAL(38,10),
+    col24 TIME(6),
+    col25 TIMESTAMP(6),
+    col26 DATETIME(6),
+    col27 CHAR(4),
+    col28 CHAR(4)
 ) ENGINE=Columnstore;
 
 # Generate data
---exec mcs_parquet_gen -a
+--exec mcs_parquet_gen -a -f $MTR_SUITE_DIR/../std_data
 
 
 #Valid data and table
---exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/tests.parquet >/dev/null
---exec $MCS_CPIMPORT mcs287_db t1 $MTR_SUITE_DIR/../std_data/nulls.parquet >/dev/null
+--exec $MCS_CPIMPORT mcol_5505_cpimport_parquet t1 $MTR_SUITE_DIR/../std_data/tests.parquet >/dev/null
+--exec $MCS_CPIMPORT mcol_5505_cpimport_parquet t1 $MTR_SUITE_DIR/../std_data/nulls.parquet >/dev/null
 
 SELECT * FROM t1;
 SELECT COUNT(*) FROM t1;
-TRUNCATE t1;
 
 # Clean UP
 --exec rm $MTR_SUITE_DIR/../std_data/tests.parquet
 --exec rm $MTR_SUITE_DIR/../std_data/nulls.parquet
-DROP DATABASE mcs287_db;
+DROP DATABASE mcol_5505_cpimport_parquet;

@@ -6,96 +6,140 @@
 #include <parquet/arrow/reader.h>
 #include <vector>
 #include <fstream>
+#include <unistd.h>
 
-void getSchema(std::string filePth, std::shared_ptr<arrow::Schema>* parquetSchema)
+enum STATUS_CODE
+{
+  NO_ERROR,
+  EMPTY_FIELD,
+  UNSUPPORTED_DATA_TYPE,
+  UNSUPPORTED_FILE_TYPE,
+  FILE_NUM_ERROR
+};
+
+/**
+ * print the usage information
+*/
+static void usage()
+{
+  std::cout << "usage: " << std::endl;
+  std::cout << "Reading parquet then output its corresponding .ddl file." << std::endl;
+  std::cout << "mcs_parquet_ddl [input_parquet_file] [output_ddl_file]" << std::endl;
+}
+
+/**
+ * get the schema of the parquet file
+*/
+void getSchema(std::string filePath, std::shared_ptr<arrow::Schema>* parquetSchema)
 {
   std::shared_ptr<arrow::io::ReadableFile> infile;
-  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filePth, arrow::default_memory_pool()));
+  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filePath, arrow::default_memory_pool()));
   std::unique_ptr<parquet::arrow::FileReader> reader;
   PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
   PARQUET_THROW_NOT_OK(reader->GetSchema(parquetSchema));
+  PARQUET_THROW_NOT_OK(infile->Close());
 }
 
-std::string convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typeId)
+/**
+ * convert arrow data type id to corresponding columnstore type string
+*/
+int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typeId, std::string& colType)
 {
   switch (typeId)
   {
     case arrow::Type::type::BOOL:
     {
-      return "BOOLEAN";
+      colType = "BOOLEAN";
+      break;
     }
     case arrow::Type::type::UINT8:
     {
-      return "TINYINT UNSIGNED";
+      colType = "TINYINT UNSIGNED";
+      break;
     }
     case arrow::Type::type::INT8:
     {
-      return "TINYINT";
+      colType = "TINYINT";
+      break;
     }
     case arrow::Type::type::UINT16:
     {
-      return "SMALLINT UNSIGNED";
+      colType = "SMALLINT UNSIGNED";
+      break;
     }
     case arrow::Type::type::INT16:
     {
-      return "SMALLINT";
+      colType = "SMALLINT";
+      break;
     }
     case arrow::Type::type::UINT32:
     {
-      return "INT UNSIGNED";
+      colType = "INT UNSIGNED";
+      break;
     }
     case arrow::Type::type::INT32:
     {
-      return "INT";
+      colType = "INT";
+      break;
     }
     case arrow::Type::type::UINT64:
     {
-      return "BIGINT UNSIGNED";
+      colType = "BIGINT UNSIGNED";
+      break;
     }
     case arrow::Type::type::INT64:
     {
-      return "BIGINT";
+      colType = "BIGINT";
+      break;
     }
     case arrow::Type::type::FLOAT:
     {
-      return "FLOAT";
+      colType = "FLOAT";
+      break;
     }
     case arrow::Type::type::DOUBLE:
     {
-      return "DOUBLE";
+      colType = "DOUBLE";
+      break;
     }
     case arrow::Type::type::STRING:
     {
-      //varchar here and what about the length
-      // or maybe here we need to load this column data to get the maximum length
-      // return "TINYINT";
-      return "VARCHAR(2000)";
+      // set 2000 as the maximum length and VARCHAR as column type
+      colType = "VARCHAR(2000)";
+      break;
     }
     case arrow::Type::type::BINARY:
     {
-      return "VARCHAR(8000)";
+      // set 8000 as the maximum length and VARCHAR as column type
+      colType = "VARCHAR(8000) character set 'binary'";
+      break;
     }
     case arrow::Type::type::FIXED_SIZE_BINARY:
     {
       std::shared_ptr<arrow::FixedSizeBinaryType> fType = std::static_pointer_cast<arrow::FixedSizeBinaryType>(dataType);
       int byteWidth = fType->byte_width();
-      return "CHAR(" + std::to_string(byteWidth) + ")";
+      colType = "CHAR(" + std::to_string(byteWidth) + ")";
+      break;
     }
     case arrow::Type::type::DATE32:
     {
-      return "DATE";
+      colType = "DATE";
+      break;
     }
     case arrow::Type::type::DATE64:
     {
-      return "DATE";
+      colType = "DATE";
+      break;
     }
     case arrow::Type::type::TIMESTAMP:
     {
-      return "TIMESTAMP";
+      colType = "TIMESTAMP";
+      break;
     }
     case arrow::Type::type::TIME32:
     {
-      return "TIME";
+      colType = "TIME";
+      break;
     }
     case arrow::Type::type::DECIMAL128:
     {
@@ -103,61 +147,92 @@ std::string convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::
       std::shared_ptr<arrow::DecimalType> fType = std::static_pointer_cast<arrow::DecimalType>(dataType);
       int32_t fPrecision = fType->precision();
       int32_t fScale = fType->scale();
-
-      return "DECIMAL(" + std::to_string(fPrecision) + "," + std::to_string(fScale) + ")";
+      colType = "DECIMAL(" + std::to_string(fPrecision) + "," + std::to_string(fScale) + ")";
+      break;
     }
     default:
-      break;
+    {
+      return UNSUPPORTED_DATA_TYPE;
+    }
   }
-  return "FAULT";
+  return NO_ERROR;
 }
 
-void generateDDL(std::string filePth, std::string targetPth, std::string tableName)
+/**
+ * main function to generate DDL file
+*/
+int generateDDL(std::string filePath, std::string targetPath, std::string tableName)
 {
   std::shared_ptr<arrow::Schema> parquetSchema;
-  getSchema(filePth, &parquetSchema);
+  getSchema(filePath, &parquetSchema);
   std::vector<std::string> parquetCols;
   std::vector<std::string> parquetTypes;
-
+  int rc = NO_ERROR;
   int fieldsNum = parquetSchema->num_fields();
+
+  if (fieldsNum == 0)
+  {
+    return EMPTY_FIELD;
+  }
+
   for (int i = 0; i < fieldsNum; i++)
   {
     const std::shared_ptr<arrow::Field> tField = parquetSchema->field(i);
     const std::string tName = tField->name();
+    std::string colType;
     auto tType = tField->type();
     parquetCols.push_back(tName);
-    std::string colType = convert2mcs(tType, tType->id());
-    if (colType == "FAULT")
+    rc = convert2mcs(tType, tType->id(), colType);
+
+    if (rc != NO_ERROR)
     {
-      // emit fault error
-      std::cout << "Not allowed data type" << std::endl;
-      return;
+      std::cout << "Not allowed data type: " << tName << std::endl;
+      return rc;
     }
+
     parquetTypes.push_back(colType);
   }
-  std::string str1 = "CREATE TABLE " + tableName + "(";
+
+  std::string str1 = "CREATE TABLE " + tableName + "(\n";
   std::string str2 = ") ENGINE=Columnstore;";
+
   for (int i = 0; i < fieldsNum; i++)
   {
-    str1 += parquetCols[i] + " " + parquetTypes[i] + (i == fieldsNum-1 ? "" : ",");
+    str1 += parquetCols[i] + " " + parquetTypes[i] + (i == fieldsNum-1 ? "\n" : ",\n");
   }
+
   str1 += str2;
-  std::ofstream outfile(targetPth + tableName + ".ddl");
+  std::ofstream outfile(targetPath + tableName + ".ddl");
   outfile << str1;
   outfile.close();
   std::cout << "Successfully generate " + tableName + ".ddl" << std::endl;
-  return;
+  return rc;
 }
 
 int main(int argc, char** argv)
 {
+  int32_t option;
+
+  while ((option = getopt(argc, argv, "h")) != EOF)
+  {
+    switch (option)
+    {
+      case 'h':
+      case '?':
+      default:
+        usage();
+        return (option == 'h' ? 0 : -1);
+        break;
+    }
+  }
+
   // parquet file argv[1]
   // ddl file argv[2]
   // input parameter should be 3 (no more than 3 also)
-  if (argc < 3)
+  if (argc != 3)
   {
     std::cout << "Please input source parquet file and target ddl file" << std::endl;
-    return 0;
+    return FILE_NUM_ERROR;
   }
   std::string parquetFile(argv[1]);
   std::string ddlFile(argv[2]);
@@ -170,15 +245,22 @@ int main(int argc, char** argv)
       ddlFile.substr(endBase + 1) != "ddl")
   {
     std::cout << "File type not supported" << std::endl;
-    return 0;
+    usage();
+    return UNSUPPORTED_FILE_TYPE;
   }
 
-  std::string targetPth;
+  std::string targetPath;
   std::string tableName;
   std::string::size_type startBase = ddlFile.rfind('/');
-  targetPth.assign(argv[2], startBase + 1);
+  targetPath.assign(argv[2], startBase + 1);
   tableName.assign(argv[2] + startBase + 1, endBase - startBase - 1);
   std::cout << "Reading " + parquetFile << std::endl;
-  generateDDL(parquetFile, targetPth, tableName);
-  return 0;
+  int rc = generateDDL(parquetFile, targetPath, tableName);
+
+  if (rc != NO_ERROR)
+  {
+    std::cout << "Input parquet file illegal: no data field" << std::endl;
+  }
+
+  return rc;
 }
