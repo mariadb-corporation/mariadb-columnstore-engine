@@ -1084,8 +1084,6 @@ inline uint64_t string_to_ull(const std::string& data, bool& bSaturate)
   return value;
 }
 
-void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal);
-
 template <typename T>
 void number_int_value(const std::string& data, cscDataType typeCode,
                       const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
@@ -1241,12 +1239,15 @@ class DataConvert
   EXPORT static int64_t convertColumnTime(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
                                           int& status, unsigned int dataOrgLen);
 
+  /**
+   * @brief convert millisecond data to it's native format. This function is for bulkload to use.
+   */
+  EXPORT static int64_t convertArrowColumnTime32(int32_t timeVal, int& status);
 
-  EXPORT static int64_t convertArrowColumnTime32(int32_t timeVal);
-
-  EXPORT static int64_t convertArrowColumnTime64(int64_t timeVal);
-
-
+  /**
+   * @brief convert microsecond data to it's native format. This function is for bulkload to use.
+   */
+  EXPORT static int64_t convertArrowColumnTime64(int64_t timeVal, int& status);
 
   /**
    * @brief Is specified datetime valid; used by binary bulk load

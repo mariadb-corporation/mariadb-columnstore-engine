@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <type_traits>
+#include <chrono>
 #include "mcs_decimal.h"
 using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
@@ -40,7 +41,6 @@ using namespace boost::algorithm;
 
 #include "joblisttypes.h"
 
-#include <chrono>
 #define DATACONVERT_DLLEXPORT
 #include "dataconvert.h"
 #undef DATACONVERT_DLLEXPORT
@@ -482,80 +482,6 @@ void number_int_value(const string& data, cscDataType typeCode,
 
       if (saturate)
         *saturate = true;
-    }
-  }
-}
-
-void parquet_int_value(int128_t& bigllVal, int columnScale, int columnPrecision, int fScale, int fPrecision, bool* bSatVal)
-{
-  int128_t leftPart = bigllVal, rightPart;
-  for (int i = 0; i < fScale; i++)
-  {
-    // bigllVal
-    leftPart /= 10;
-  }
-  // int128_t tPart = leftPart;
-  for (int i = 0; i < fScale; i++)
-  {
-    leftPart *= 10;
-  }
-  rightPart = bigllVal - leftPart;
-
-  // apply the scale
-  if (columnScale > fScale)
-  {
-    for (int i = 0; i < columnScale - fScale; i++)
-    {
-      rightPart *= 10;
-      leftPart *= 10;
-    }
-  }
-  else
-  {
-    for (int i = 0; i < fScale - columnScale; i++)
-    {
-      leftPart /= 10;
-      rightPart /= 10;
-    }
-  }
-
-  bigllVal = leftPart + rightPart;
-  // is column.width always 16?
-  // if (LIKELY(column.width == 16))
-  // {
-  int128_t tmp;
-  utils::int128Min(tmp);
-  if (bigllVal < tmp + 2)  // + 2 for NULL and EMPTY values
-  {
-    bigllVal = tmp + 2;
-    *bSatVal = true;
-  }
-  // }
-
-  if (columnScale > 0)
-  {
-    int128_t rangeUp, rangeLow;
-
-    auto precision = 
-        columnPrecision == rowgroup::MagicPrecisionForCountAgg ? datatypes::INT128MAXPRECISION : columnPrecision;
-    if (precision > datatypes::INT128MAXPRECISION || precision < 0)
-    {
-      throw QueryDataExcept("Unsupported precision " + std::to_string(precision) + " converting DECIMAL ",
-                            dataTypeErr);
-    }
-    rangeUp = dataconvert::decimalRangeUp<int128_t>(precision);
-    
-    rangeLow = -rangeUp;
-
-    if (bigllVal > rangeUp)
-    {
-      bigllVal = rangeUp;
-      *bSatVal = true;
-    }
-    else if (bigllVal < rangeLow)
-    {
-      bigllVal = rangeLow;
-      *bSatVal = true;
     }
   }
 }
@@ -1657,8 +1583,8 @@ int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
   int inDay;
   int32_t value = 0;
 
-  dayVal = (long long)dayVal;
-  int64_t secondsSinceEpoch = dayVal * 86400;
+  int64_t secondsSinceEpoch = dayVal;
+  secondsSinceEpoch *= 86400;
   std::chrono::seconds duration(secondsSinceEpoch);
 
   std::chrono::system_clock::time_point timePoint(duration);
@@ -1683,7 +1609,6 @@ int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
     status = -1;
   }
   return value;
-
 }
 
 //------------------------------------------------------------------------------
@@ -2131,7 +2056,7 @@ int64_t DataConvert::convertColumnTimestamp(const char* dataOrg, CalpontDateTime
 }
 
 
-int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
+int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal, int& status)
 {
   int64_t value = 0;
   // convert millisecond to time
@@ -2141,11 +2066,8 @@ int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
   if (timeVal < 0)
     isNeg = true;
   inHour = timeVal / 3600000;
-  // inHour %= 24;
   inMinute = (timeVal - inHour * 3600000) / 60000;
-  // inMinute %= 60;
   inSecond = (timeVal - inHour * 3600000 - inMinute * 60000) / 1000;
-  // inSecond %= 60;
   inMicrosecond = (timeVal - inHour * 3600000 - inMinute * 60000 - inSecond * 1000) * 1000;
   if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
   {
@@ -2181,11 +2103,15 @@ int64_t DataConvert::convertArrowColumnTime32(int32_t timeVal)
       atime.is_neg = false;
       memcpy(&value, &atime, 8);
     }
+
+    // If neither of the above match then we return a 0 time
+
+    status = -1;
   }
   return value;
 }
 
-int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
+int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal, int& status)
 {
   int64_t value = 0;
   // convert macrosecond to time
@@ -2195,11 +2121,8 @@ int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
   if (timeVal < 0)
     isNeg = true;
   inHour = timeVal / 3600000000;
-  // inHour %= 24;
   inMinute = (timeVal - inHour * 3600000000) / 60000000;
-  // inMinute %= 60;
   inSecond = (timeVal - inHour * 3600000000 - inMinute * 60000000) / 1000000;
-  // inSecond %= 60;
   inMicrosecond = timeVal - inHour * 3600000000 - inMinute * 60000000 - inSecond * 1000000;
   if (isTimeValid(inHour, inMinute, inSecond, inMicrosecond))
   {
@@ -2235,6 +2158,10 @@ int64_t DataConvert::convertArrowColumnTime64(int64_t timeVal)
       atime.is_neg = false;
       memcpy(&value, &atime, 8);
     }
+
+    // If neither of the above match then we return a 0 time
+
+    status = -1;
   }
   return value;
 }
