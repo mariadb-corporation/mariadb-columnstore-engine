@@ -13,7 +13,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 # Update with your own fork of MariaDB Server and MariaDB ColumnStore if needed.
 MARIA_DB_SERVER_REPOSITORY = "https://github.com/MariaDB/server.git"
-MCS_REPOSITORY = "https://github.com/phoeinx/mariadb-columnstore-engine.git"
+MCS_REPOSITORY = "https://github.com/mariadb-corporation/mariadb-columnstore-engine.git"
 
 # Set provider for the VM.
 # PROVIDER = :virtualbox # default - if you don't have installed a specific provider use this one.
