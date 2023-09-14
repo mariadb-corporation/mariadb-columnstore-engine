@@ -2573,7 +2573,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
         
         for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
-          // bool bSatVal = false;
+          int rc = 0;
           void *p = buf + i * width;
 
           if (columnData->IsNull(i))
@@ -2592,13 +2592,23 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           }
           else
           {
-            llDate = timeStampArray->Value(i);
+            int64_t timeVal = timeStampArray->Value(i);
+            llDate = dataconvert::DataConvert::convertArrowColumnTimestamp(timeVal, rc);
           }
 
-          if (llDate < bufStats.minBufferVal)
-            bufStats.minBufferVal = llDate;
-          if (llDate > bufStats.maxBufferVal)
-            bufStats.maxBufferVal = llDate;
+          if (rc == 0)
+          {
+            if (llDate < bufStats.minBufferVal)
+              bufStats.minBufferVal = llDate;
+
+            if (llDate > bufStats.maxBufferVal)
+              bufStats.maxBufferVal = llDate;
+          }
+          else
+          {
+            llDate = 0;
+            bufStats.satCount++;
+          }
 
           pVal = &llDate;
           memcpy(p, pVal, width);
