@@ -133,12 +133,31 @@ int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typ
     }
     case arrow::Type::type::TIMESTAMP:
     {
-      colType = "TIMESTAMP";
+      std::shared_ptr<arrow::TimestampType> fType = std::static_pointer_cast<arrow::TimestampType>(dataType);
+
+      if (fType->unit() == arrow::TimeUnit::MILLI)
+        colType = "TIMESTAMP(3)";
+      else if (fType->unit() == arrow::TimeUnit::MICRO)
+        colType = "TIMESTAMP(6)";
+      else
+        return UNSUPPORTED_DATA_TYPE;
+
       break;
     }
     case arrow::Type::type::TIME32:
     {
-      colType = "TIME";
+      colType = "TIME(3)";
+      break;
+    }
+    case arrow::Type::type::TIME64:
+    {
+      std::shared_ptr<arrow::Time64Type> fType = std::static_pointer_cast<arrow::Time64Type>(dataType);
+
+      if (fType->unit() == arrow::TimeUnit::MICRO)
+        colType = "TIME(6)";
+      else
+        return UNSUPPORTED_DATA_TYPE;
+        
       break;
     }
     case arrow::Type::type::DECIMAL128:

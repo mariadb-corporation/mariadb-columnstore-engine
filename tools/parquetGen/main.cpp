@@ -178,6 +178,35 @@ void generateTimeTable(std::string fileDir)
 }
 
 /**
+ * generate one parquet file with TIME64(microsecond) data type
+*/
+void generateTime64Table(std::string fileDir)
+{
+	int64_t reserve_num = 30;
+  arrow::Time64Builder time64builder(arrow::time64(arrow::TimeUnit::MICRO), arrow::default_memory_pool());
+  // int reserve_num = 500;
+  PARQUET_THROW_NOT_OK(time64builder.Reserve(reserve_num));
+  std::vector<bool> time64validity(reserve_num, true);
+  std::vector<int64_t> time64values;
+  for (int64_t i = 0; i < reserve_num; i++)
+    time64values.push_back(i*3605001);
+  PARQUET_THROW_NOT_OK(time64builder.AppendValues(time64values, time64validity));
+  std::shared_ptr<arrow::Array> time64array;
+  PARQUET_THROW_NOT_OK(time64builder.Finish(&time64array));
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({arrow::field("col1", arrow::time64(arrow::TimeUnit::MICRO))});
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {time64array});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open(fileDir + "/time64.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(outfile->Close());
+}
+
+/**
  * generate one parquet file with STRING data type
 */
 void generateStringTable(std::string fileDir)
@@ -246,7 +275,7 @@ void generateStringTable(std::string fileDir)
 }
 
 /**
- * generate one parquet file with TIMESTAMP data type
+ * generate one parquet file with TIMESTAMP data type(millisecond)
 */
 void generateTimestampTable(std::string fileDir)
 {
@@ -257,12 +286,41 @@ void generateTimestampTable(std::string fileDir)
   std::vector<bool> tsvalidity(reserve_num, true);
   std::vector<int64_t> tsvalues;
   for (int64_t i = 0; i < reserve_num; i++)
-    tsvalues.push_back(i * 10000000);
+    tsvalues.push_back(i * 10000001);
   PARQUET_THROW_NOT_OK(tsbuilder.AppendValues(tsvalues, tsvalidity));
   std::shared_ptr<arrow::Array> tsarray;
   PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
 
 	std::shared_ptr<arrow::Schema> schema = arrow::schema({arrow::field("col1", arrow::timestamp(arrow::TimeUnit::MILLI))});
+	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {tsarray});
+
+	// write to file
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::FileOutputStream> outfile;
+  PARQUET_ASSIGN_OR_THROW(
+      outfile, arrow::io::FileOutputStream::Open(fileDir + "/ts.parquet"));
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(outfile->Close());
+}
+
+/**
+ * generate one parquet file with TIMESTAMP data type(microsecond)
+*/
+void generateTimestampUsTable(std::string fileDir)
+{
+	int reserve_num = 30;
+  // ----------------- Timestamp -------------------------
+  arrow::TimestampBuilder tsbuilder(arrow::timestamp(arrow::TimeUnit::MICRO), arrow::default_memory_pool());
+  PARQUET_THROW_NOT_OK(tsbuilder.Reserve(reserve_num));
+  std::vector<bool> tsvalidity(reserve_num, true);
+  std::vector<int64_t> tsvalues;
+  for (int64_t i = 0; i < reserve_num; i++)
+    tsvalues.push_back(i * 10000000001);
+  PARQUET_THROW_NOT_OK(tsbuilder.AppendValues(tsvalues, tsvalidity));
+  std::shared_ptr<arrow::Array> tsarray;
+  PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
+
+	std::shared_ptr<arrow::Schema> schema = arrow::schema({arrow::field("col1", arrow::timestamp(arrow::TimeUnit::MICRO))});
 	std::shared_ptr<arrow::Table> table = arrow::Table::Make(schema, {tsarray});
 
 	// write to file
@@ -667,17 +725,28 @@ void generateAllTable(std::string fileDir)
   std::shared_ptr<arrow::Array> doubleArray;
   PARQUET_THROW_NOT_OK(doubleBuilder.Finish(&doubleArray));
 
-  // time
+  // time32
   arrow::Time32Builder time32builder(arrow::time32(arrow::TimeUnit::MILLI), arrow::default_memory_pool());
-  // int reserve_num = 500;
   PARQUET_THROW_NOT_OK(time32builder.Reserve(reserve_num));
   std::vector<bool> time32validity(reserve_num, true);
   std::vector<int32_t> time32values;
   for (int32_t i = 0; i < reserve_num; i++)
-    time32values.push_back(i*3605000);
+    time32values.push_back(i*3605001);
   PARQUET_THROW_NOT_OK(time32builder.AppendValues(time32values, time32validity));
   std::shared_ptr<arrow::Array> time32array;
   PARQUET_THROW_NOT_OK(time32builder.Finish(&time32array));
+
+  // time64(microsecond)
+	int64_t reserve_num64 = 30;
+  arrow::Time64Builder time64builder(arrow::time64(arrow::TimeUnit::MICRO), arrow::default_memory_pool());
+  PARQUET_THROW_NOT_OK(time64builder.Reserve(reserve_num64));
+  std::vector<bool> time64validity(reserve_num, true);
+  std::vector<int64_t> time64values;
+  for (int64_t i = 0; i < reserve_num64; i++)
+    time64values.push_back(i*3605000001);
+  PARQUET_THROW_NOT_OK(time64builder.AppendValues(time64values, time64validity));
+  std::shared_ptr<arrow::Array> time64array;
+  PARQUET_THROW_NOT_OK(time64builder.Finish(&time64array));
 
   // string
   arrow::StringBuilder strbuilder;
@@ -686,7 +755,6 @@ void generateAllTable(std::string fileDir)
   std::vector<std::string> values1;
   for (int64_t i = reserve_num-1; i >= 0; i--)
   {
-    // values1.push_back(std::string("hhhh"));
     validity1[i] = 1;
   }
 
@@ -726,16 +794,27 @@ void generateAllTable(std::string fileDir)
   std::shared_ptr<arrow::Array> strarray;
   PARQUET_THROW_NOT_OK(strbuilder.Finish(&strarray));
 
-  // timestamp
+  // timestamp(millisecond)
   arrow::TimestampBuilder tsbuilder(arrow::timestamp(arrow::TimeUnit::MILLI), arrow::default_memory_pool());
   PARQUET_THROW_NOT_OK(tsbuilder.Reserve(reserve_num));
   std::vector<bool> tsvalidity(reserve_num, true);
   std::vector<int64_t> tsvalues;
   for (int64_t i = 0; i < reserve_num; i++)
-    tsvalues.push_back(i * 10000000);
+    tsvalues.push_back(i * 10000001);
   PARQUET_THROW_NOT_OK(tsbuilder.AppendValues(tsvalues, tsvalidity));
   std::shared_ptr<arrow::Array> tsarray;
   PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
+
+  // timestamp(microsecond)
+  arrow::TimestampBuilder tsbuilder1(arrow::timestamp(arrow::TimeUnit::MICRO), arrow::default_memory_pool());
+  PARQUET_THROW_NOT_OK(tsbuilder1.Reserve(reserve_num));
+  std::vector<bool> tsvalidity1(reserve_num, true);
+  std::vector<int64_t> tsvalues1;
+  for (int64_t i = 0; i < reserve_num; i++)
+    tsvalues1.push_back(i * 10000000001);
+  PARQUET_THROW_NOT_OK(tsbuilder1.AppendValues(tsvalues1, tsvalidity1));
+  std::shared_ptr<arrow::Array> tsarray1;
+  PARQUET_THROW_NOT_OK(tsbuilder1.Finish(&tsarray1));
 
   // datetime
   arrow::Date32Builder date32builder;
@@ -951,9 +1030,9 @@ void generateAllTable(std::string fileDir)
     arrow::field("col21", arrow::uint64()),
 		arrow::field("col22", arrow::boolean()),
     arrow::field("col23", arrow::decimal128(38, 10)),
-    arrow::field("col24", arrow::time32(arrow::TimeUnit::MILLI)),
-    arrow::field("col25", arrow::timestamp(arrow::TimeUnit::MILLI)),
-    arrow::field("col26", arrow::timestamp(arrow::TimeUnit::MILLI)),
+    arrow::field("col24", arrow::time64(arrow::TimeUnit::MICRO)),
+    arrow::field("col25", arrow::timestamp(arrow::TimeUnit::MICRO)),
+    arrow::field("col26", arrow::timestamp(arrow::TimeUnit::MICRO)),
     arrow::field("col27", arrow::binary()),
     arrow::field("col28", arrow::fixed_size_binary(4))
   });
@@ -981,9 +1060,9 @@ void generateAllTable(std::string fileDir)
     uint64Array,
     boolArray,
     decimalArray1,
-    time32array,
-    tsarray,
-    tsarray,
+    time64array,
+    tsarray1,
+    tsarray1,
     binaryArray,
     fixedSizeArray
     });
@@ -1028,7 +1107,7 @@ void generateAllTable(std::string fileDir)
 		arrow::field("col22", arrow::null()),
     arrow::field("col23", arrow::null()),
     arrow::field("col24", arrow::null()),
-    arrow::field("col25", arrow::timestamp(arrow::TimeUnit::MILLI)),
+    arrow::field("col25", arrow::timestamp(arrow::TimeUnit::MICRO)),
     arrow::field("col26", arrow::timestamp(arrow::TimeUnit::MILLI)),
     arrow::field("col27", arrow::null()),
     arrow::field("col28", arrow::null())
@@ -1058,7 +1137,7 @@ void generateAllTable(std::string fileDir)
     nullarray,
     nullarray,
     nullarray,
-    tsarray,
+    tsarray1,
     tsarray,
     nullarray,
     nullarray
@@ -1094,7 +1173,7 @@ void generateLargeTable(int64_t reserve_num, std::string rowNum, std::string fil
   std::vector<bool> tsvalidity(reserve_num, true);
   std::vector<int64_t> tsvalues;
   for (int64_t i = 0; i < reserve_num; i++)
-    tsvalues.push_back(i * 10000000);
+    tsvalues.push_back(i * 10000001);
   PARQUET_THROW_NOT_OK(tsbuilder.AppendValues(tsvalues, tsvalidity));
   std::shared_ptr<arrow::Array> tsarray;
   PARQUET_THROW_NOT_OK(tsbuilder.Finish(&tsarray));
