@@ -2611,7 +2611,16 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           else
           {
             int64_t timeVal = timeStampArray->Value(i);
-            llDate = dataconvert::DataConvert::convertArrowColumnTimestamp(timeVal, rc);
+            std::shared_ptr<arrow::TimestampType> fType = std::static_pointer_cast<arrow::TimestampType>(columnData->type());
+            
+            if (fType->unit() == arrow::TimeUnit::MILLI)
+            {
+              llDate = dataconvert::DataConvert::convertArrowColumnTimestamp(timeVal, rc);
+            }
+            else
+            {
+              llDate = dataconvert::DataConvert::convertArrowColumnTimestampUs(timeVal, rc);
+            }
           }
 
           if (rc == 0)
@@ -2667,7 +2676,16 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           else
           {
             int64_t timeVal = dateTimeArray->Value(i);
-            llDate = dataconvert::DataConvert::convertArrowColumnDatetime(timeVal, rc);
+            std::shared_ptr<arrow::TimestampType> fType = std::static_pointer_cast<arrow::TimestampType>(columnData->type());
+
+            if (fType->unit() == arrow::TimeUnit::MILLI)
+            {
+              llDate = dataconvert::DataConvert::convertArrowColumnDatetime(timeVal, rc);
+            }
+            else
+            {
+              llDate = dataconvert::DataConvert::convertArrowColumnDatetimeUs(timeVal, rc);
+            }
           }
 
           if (rc == 0)
