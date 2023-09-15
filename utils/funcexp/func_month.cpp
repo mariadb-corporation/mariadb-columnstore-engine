@@ -147,27 +147,27 @@ bool Func_month::isCompilable(const execplan::CalpontSystemCatalog::ColType& col
   {
     case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::DATETIME:
-      return true;
     case CalpontSystemCatalog::TIMESTAMP:
-    case CalpontSystemCatalog::TIME:
-    case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::DECIMAL:
-    case CalpontSystemCatalog::UDECIMAL: return false;
+    case CalpontSystemCatalog::UDECIMAL: return true;
+    case CalpontSystemCatalog::TIME:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR: return false;
     default: return false;
   }
 }
 llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, FunctionParm& fp,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                                 rowgroup::Row& row, FunctionParm& fp,
+                                 execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   llvm::Value* val;
+  llvm::Function* func;
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
@@ -176,6 +176,56 @@ llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::
     case CalpontSystemCatalog::DATETIME:
       val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::timestampValueToInt");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
+                                b.getInt64(op_ct.getTimeZone())});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::intToDatetime");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (fp[0]->data()->resultType().scale == 0)
+      {
+        func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+            "dataconvert::DataConvert::intToDatetime");
+        if (!func)
+        {
+          throw ::logic_error(
+              "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+        }
+        val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+        b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                      isNull);
+        return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+      }
+      else
+      {
+        b.CreateStore(b.getTrue(), isNull);
+        return b.getInt64(-1);
+      }
     default: throw ::logic_error("Func_month::compile: unsupported type");
   }
 }

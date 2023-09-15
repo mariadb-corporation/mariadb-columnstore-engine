@@ -386,9 +386,11 @@ class SimpleColumn : public ReturnedColumn
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT:
       case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE: 
+      case CalpontSystemCatalog::UDOUBLE:
       case CalpontSystemCatalog::TIMESTAMP:
-        return true;
+      case CalpontSystemCatalog::DATE:
+      case CalpontSystemCatalog::DATETIME:
+      case CalpontSystemCatalog::TIME: return true;
       default: return false;
     }
   }
@@ -397,7 +399,8 @@ class SimpleColumn : public ReturnedColumn
   llvm::Value* compileInt(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
   llvm::Value* compileUint(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
   llvm::Value* compileFloat(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
-  llvm::Value* compileDouble(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileDouble(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                             rowgroup::Row& row);
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;
