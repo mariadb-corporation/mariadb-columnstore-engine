@@ -242,14 +242,15 @@ llvm::Value* Func_hour::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::V
     case CalpontSystemCatalog::TIME:
       val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIME);
       isTime = true;
+      break;
     default: throw ::logic_error("Func_month::compile: unsupported type");
   }
   if (isTime)
   {
-    llvm::Value* mask = b.CreateSelect(b.CreateAnd(b.CreateLShr(valm, 40), 0x800),
+    llvm::Value* mask = b.CreateSelect(b.CreateAnd(b.CreateLShr(val, 40), 0x800),
                                        b.getInt64(0xfffffffffffff000), b.getInt64(0));
-    b.CreateIsNeg()b.CreateNeg()
-    val = abs(mask | ((val >> 40) & 0xfff));
+    llvm::Value* value = b.CreateOr(mask, b.CreateAnd(b.CreateLShr(val, 40), 0xfff));
+    return b.CreateSelect(b.CreateIsNotNeg(value), value, b.CreateNeg(value));
   }
   else
   {
