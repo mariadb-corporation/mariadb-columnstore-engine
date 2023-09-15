@@ -179,6 +179,18 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
     case CalpontSystemCatalog::DATETIME:
       val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
+    case CalpontSystemCatalog::TIMESTAMP:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::timestampValueToInt");
+      if (!func)
+      {
+        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
+                                b.getInt64(op_ct.getTimeZone())});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
@@ -215,18 +227,6 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
         b.CreateStore(b.getTrue(), isNull);
         return b.getInt64(-1);
       }
-    case CalpontSystemCatalog::TIMESTAMP:
-      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
-          "dataconvert::DataConvert::timestampValueToInt");
-      if (!func)
-      {
-        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampValueToInt function not found");
-      }
-      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
-                                b.getInt64(op_ct.getTimeZone())});
-      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
-                    isNull);
-      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
     default: throw ::logic_error("Func_day::compile: unsupported type");
   }
 }
