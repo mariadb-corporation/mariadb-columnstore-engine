@@ -1208,6 +1208,14 @@ class DataConvert
   EXPORT static int64_t convertArrowColumnDatetime(int64_t timeVal, int& status);
 
   /**
+   * @brief convert parquet datetime data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing microsecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnDatetimeUs(int64_t timeVal, int& status);
+
+  /**
    * @brief convert a datetime column data, represented as a string,
    * to it's native format. This function is for bulkload to use.
    *
@@ -1221,13 +1229,21 @@ class DataConvert
                                               int& status, unsigned int dataOrgLen);
 
   /**
-   * @brief convert parquet timestamp data to its native format. This function is for bulkload to use.
+   * @brief convert parquet timestamp data(millisecond) to its native format. This function is for bulkload to use.
    * 
    * @param dayVal the input data representing millisecond from unix epoch
    * @param status 0 - success, -1 - fail
    */
   EXPORT static int64_t convertArrowColumnTimestamp(int64_t timeVal, int& status);
-  
+
+  /**
+   * @brief convert parquet timestamp data(microsecond) to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing millisecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnTimestampUs(int64_t timeVal, int& status);
+ 
   /**
    * @brief convert a timestamp column data, represented as a string,
    * to it's native format. This function is for bulkload to use.

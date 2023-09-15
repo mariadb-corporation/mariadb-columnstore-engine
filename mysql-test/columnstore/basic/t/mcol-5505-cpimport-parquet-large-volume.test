@@ -16,10 +16,9 @@ CREATE DATABASE mcol_5505_parquet_large_volume;
 USE mcol_5505_parquet_large_volume;
 SET time_zone = '+8:00';
 # Create table
-# CREATE TABLE t1(col1 INT, col2 VARCHAR(20), col3 TIMESTAMP) ENGINE=Columnstore;
 Create TABLE t1(
     col1 INT,
-    col2 TIMESTAMP,
+    col2 TIMESTAMP(3),
     col3 CHAR(6),
     col4 DECIMAL(38,10),
     col5 DOUBLE,
@@ -28,7 +27,7 @@ Create TABLE t1(
 
 Create TABLE t2(
     col1 INT,
-    col2 TIMESTAMP,
+    col2 TIMESTAMP(3),
     col3 CHAR(6),
     col4 DECIMAL(38,10),
     col5 DOUBLE,
@@ -37,7 +36,7 @@ Create TABLE t2(
 
 Create TABLE t3(
     col1 INT,
-    col2 TIMESTAMP,
+    col2 TIMESTAMP(3),
     col3 CHAR(6),
     col4 DECIMAL(38,10),
     col5 DOUBLE,
@@ -46,7 +45,7 @@ Create TABLE t3(
 
 Create TABLE t4(
     col1 INT,
-    col2 TIMESTAMP,
+    col2 TIMESTAMP(3),
     col3 CHAR(6),
     col4 DECIMAL(38,10),
     col5 DOUBLE,
