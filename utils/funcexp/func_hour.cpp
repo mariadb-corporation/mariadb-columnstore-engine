@@ -155,4 +155,105 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
   return val;
 }
 
+bool Func_hour::isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
+{
+  switch (colType.colDataType)
+  {
+    case CalpontSystemCatalog::TIME:
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::DATETIME:
+    case CalpontSystemCatalog::TIMESTAMP:
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL: return true;
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARCHAR: return false;
+    default: return false;
+  }
+}
+llvm::Value* Func_hour::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                rowgroup::Row& row, FunctionParm& fp,
+                                execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  llvm::Value* val;
+  llvm::Function* func;
+  bool isTime = false;
+  switch (fp[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+    case CalpontSystemCatalog::DATETIME:
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::DATETIME);
+      break;
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::timestampValueToInt");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
+                                b.getInt64(op_ct.getTimeZone())});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::intToDatetime");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+      }
+      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      break;
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (fp[0]->data()->resultType().scale == 0)
+      {
+        func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+            "dataconvert::DataConvert::intToDatetime");
+        if (!func)
+        {
+          throw ::logic_error(
+              "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+        }
+        val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+        b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                      isNull);
+      }
+      else
+      {
+        b.CreateStore(b.getTrue(), isNull);
+        val = b.getInt64(-1);
+      }
+      break;
+    case CalpontSystemCatalog::TIME:
+      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIME);
+      isTime = true;
+    default: throw ::logic_error("Func_month::compile: unsupported type");
+  }
+  if (isTime)
+  {
+    llvm::Value* mask = b.CreateSelect(b.CreateAnd(b.CreateLShr(valm, 40), 0x800),
+                                       b.getInt64(0xfffffffffffff000), b.getInt64(0));
+    b.CreateIsNeg()b.CreateNeg()
+    val = abs(mask | ((val >> 40) & 0xfff));
+  }
+  else
+  {
+    return b.CreateAnd(b.CreateLShr(val, 32), 0x3f);
+  }
+}
 }  // namespace funcexp
