@@ -186,7 +186,7 @@
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
 		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
-		<TotalUmMemory>25%</TotalUmMemory>
+		<TotalUmMemory>500M</TotalUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>
@@ -211,10 +211,10 @@
 		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
 	<RowAggregation>
-		<!-- <RowAggrThreads>4</RowAggrThreads> --> <!-- Default value is the number of cores -->
+		<RowAggrThreads>1</RowAggrThreads><!-- Default value is the number of cores -->
 		<!-- <RowAggrBuckets>32</RowAggrBuckets> --> <!-- Default value is number of cores * 4 -->
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
-		<AllowDiskBasedAggregation>N</AllowDiskBasedAggregation>
+		<AllowDiskBasedAggregation>Y</AllowDiskBasedAggregation>
 	</RowAggregation>
 	<CrossEngineSupport>
 		<Host>127.0.0.1</Host>
