@@ -343,12 +343,11 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
   fNumOfBuckets = fRm->aggNumBuckets();
   fNumOfRowGroups = fRm->aggNumRowGroups();
 
-  // auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
-  //  fNumOfBuckets =
-  //      calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups,
-  //      fRowGroupIn.getRowSize(),
-  //                          fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
-  fNumOfBuckets = 2;
+  auto memLimit = std::min(fRm->availableMemory(), *fSessionMemLimit);
+  fNumOfBuckets =
+      calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups, fRowGroupIn.getRowSize(),
+                          fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
+
   fNumOfThreads = std::min(fNumOfThreads, fNumOfBuckets);
 
   fMemUsage.reset(new uint64_t[fNumOfThreads]);
