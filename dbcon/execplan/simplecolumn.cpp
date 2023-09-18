@@ -725,11 +725,11 @@ llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
-    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::TINYINT: return compileInt(b, data, isNull, row);
     case CalpontSystemCatalog::TIMESTAMP:
     case CalpontSystemCatalog::DATETIME:
     case CalpontSystemCatalog::DATE:
-    case CalpontSystemCatalog::TIME: return compileInt(b, data, isNull, row);
+    case CalpontSystemCatalog::TIME: return b.CreateIntCast(compileUint(b, data, isNull, row),b.getInt64Ty(),true);
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
