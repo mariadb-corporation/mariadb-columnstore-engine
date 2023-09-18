@@ -1,5 +1,3 @@
-#ifndef MARIADB_COMPILEOPERATOR_H
-#define MARIADB_COMPILEOPERATOR_H
 #include "jit.h"
 #include "returnedcolumn.h"
 #include "simplecolumn.h"
@@ -20,5 +18,4 @@ struct CompiledOperator
 
 CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row);
 
-}
-#endif  // MARIADB_COMPILEOPERATOR_H
+}  // namespace execplan
