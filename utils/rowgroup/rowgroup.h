@@ -636,9 +636,11 @@ class Row
   // llvm part
  public:
   template <int len>
-  inline llvm::Value* compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex) const;
+  inline llvm::Value* compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
+                                      bool isInt64 = true) const;
   template <int len>
-  inline llvm::Value* compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex) const;
+  inline llvm::Value* compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
+                                       bool isUint64 = true) const;
   void compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull, uint32_t colIndex);
   inline llvm::Value* compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
                                         uint32_t colIndex) const;
@@ -1413,8 +1415,8 @@ inline bool Row::equals(const Row& r2) const
 }
 
 template <int len>
-inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                         uint32_t colIndex) const
+inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
+                                         bool isInt64) const
 {
   auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
   llvm::Value* result;
@@ -1432,12 +1434,12 @@ inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* data
       break;
     default: throw std::logic_error("Row::compileIntField(): bad length.");
   }
-  return b.CreateSExt(result, b.getInt64Ty());
+  return isInt64 ? b.CreateSExt(result, b.getInt64Ty()) : result;
 }
 
 template <int len>
-inline llvm::Value* Row::compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                          uint32_t colIndex) const
+inline llvm::Value* Row::compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
+                                          bool isUint64) const
 {
   auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
   llvm::Value* result;
@@ -1455,7 +1457,7 @@ inline llvm::Value* Row::compileUintField(llvm::IRBuilder<>& b, llvm::Value* dat
       break;
     default: throw std::logic_error("Row::compileIntField(): bad length.");
   }
-  return b.CreateZExt(result, b.getInt64Ty());
+  return isUint64 ? b.CreateZExt(result, b.getInt64Ty()) : result;
 }
 
 inline llvm::Value* Row::compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
