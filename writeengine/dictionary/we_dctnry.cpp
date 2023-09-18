@@ -49,6 +49,7 @@ using namespace BRM;
 #include "cacheutils.h"
 using namespace idbdatafile;
 #include "checks.h"
+#include "utils_utf8.h" // for utf8_truncate_point()
 
 namespace
 {
@@ -763,7 +764,8 @@ int Dctnry::insertDctnry2(Signature& sig)
  *    failure    - it did not  write the header to block
  ******************************************************************************/
 int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col, char* tokenBuf,
-                         long long& truncCount, const CHARSET_INFO* cs)
+                         long long& truncCount, const CHARSET_INFO* cs,
+                         const WriteEngine::ColType& weType)
 {
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_PARSE_DCT);
@@ -838,17 +840,32 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 
     if (cs->mbmaxlen > 1)
     {
-      const char* start = (const char*) curSig.signature;
-      const char* end = (const char*)(curSig.signature + curSig.size);
-      size_t numChars = cs->numchars(start, end);
-      size_t maxCharLength = m_colWidth / cs->mbmaxlen;
-
-      if (numChars > maxCharLength)
+      // For TEXT columns, we truncate based on the number of bytes,
+      // and not based on the number of characters, as for CHAR/VARCHAR
+      // columns in the else block.
+      if (weType == WriteEngine::WR_TEXT)
       {
-        MY_STRCOPY_STATUS status;
-        cs->well_formed_char_length(start, end, maxCharLength, &status);
-        curSig.size = status.m_source_end_pos - start;
-        truncCount++;
+        if (curSig.size > m_colWidth)
+        {
+          uint8_t truncate_point = utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
+          curSig.size = m_colWidth - truncate_point;
+          truncCount++;
+        }
+      }
+      else
+      {
+        const char* start = (const char*) curSig.signature;
+        const char* end = (const char*)(curSig.signature + curSig.size);
+        size_t numChars = cs->numchars(start, end);
+        size_t maxCharLength = m_colWidth / cs->mbmaxlen;
+
+        if (numChars > maxCharLength)
+        {
+          MY_STRCOPY_STATUS status;
+          cs->well_formed_char_length(start, end, maxCharLength, &status);
+          curSig.size = status.m_source_end_pos - start;
+          truncCount++;
+        }
       }
     }
     else // cs->mbmaxlen == 1
