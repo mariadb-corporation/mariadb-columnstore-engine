@@ -168,7 +168,8 @@ class Dctnry : public DbFileOp
    * @param tokenBuf  - (output) list of tokens for the parsed strings
    */
   EXPORT int insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col,
-                          char* tokenBuf, long long& truncCount, const CHARSET_INFO* cs);
+                          char* tokenBuf, long long& truncCount, const CHARSET_INFO* cs,
+                          const WriteEngine::ColType& weType);
 
   /**
    * @brief Update dictionary store with tokenized strings (for DDL/DML use)
