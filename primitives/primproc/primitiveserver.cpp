@@ -1325,9 +1325,14 @@ struct BPPHandler
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "got a doAbort msg for an unknown key " << key << endl;
         return 0;
+      }
       else
+      {
         return -1;
+      }
     }
 
     scoped.unlock();
@@ -1499,9 +1504,14 @@ struct BPPHandler
     else
     {
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "got a addJoinerToBPP msg for an unknown key " << uniqueID << endl;
         return 0;
+      }
       else
+      {
         return -1;
+      }
     }
   }
 
@@ -1522,11 +1532,15 @@ struct BPPHandler
 
     if (!bppv)
     {
-      // cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
         return 0;
+      }
       else
+      {
         return -1;
+      }
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
@@ -1538,9 +1552,14 @@ struct BPPHandler
       if (err == -1)
       {
         if (posix_time::second_clock::universal_time() > dieTime)
+        {
+          cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
           return 0;
+        }
         else
+        {
           return -1;
+        }
       }
     }
     bppv->get()[0]->doneSendingJoinerData();
@@ -1561,6 +1580,7 @@ struct BPPHandler
     // The if block below works around the issue.
     if (posix_time::second_clock::universal_time() > dieTime)
     {
+      cout << "got a destroyBPP msg for an unknown" << endl;
       return 0;
     }
 
@@ -1963,11 +1983,13 @@ struct ReadThread
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "E_J: " << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "D: " << id << std::endl;
           functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
@@ -2011,6 +2033,8 @@ struct ReadThread
           functor.reset(new BPPSeeder(sbs, writeLock, outIos, processorThreads, ptTrace));
           BPPSeeder* bpps = dynamic_cast<BPPSeeder*>(functor.get());
           id = bpps->getID();
+          std::cout << "R: " << id << std::endl;
+
           priority = bpps->priority();
           const uint8_t* buf = sbs->buf();
           const uint32_t pos = sizeof(ISMPacketHeader) - 2;
