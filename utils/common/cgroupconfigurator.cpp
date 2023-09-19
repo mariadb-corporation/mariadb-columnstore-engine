@@ -78,21 +78,12 @@ CGroupConfigurator::CGroupConfigurator()
     cGroupDefined = false;
   else
     cGroupDefined = true;
-  cout << __func__ << " cGroupDefined (from getConfig)" << cGroupDefined << endl;
+
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
 
-  string cGroupVersion_str="";
-  switch(cGroupVersion_){
-    case v1:
-      cGroupVersion_str="v1";
-      break;
-    case v2:
-      cGroupVersion_str="v2";
-      break;
-  }
-  cout << __func__<< " cGroupVersion_str " <<  cGroupVersion_str  << endl;
+
 }
 
 CGroupConfigurator::~CGroupConfigurator()
@@ -210,7 +201,19 @@ uint64_t CGroupConfigurator::getTotalMemory()
       ret = getTotalMemoryFromProc();
   }
 
-  cout <<__func__ << " Total mem available (bytes) " << ret << " (GIB) " << ret/GIB << endl;
+  cout << __func__ << " cGroupDefined (from getConfig) " << cGroupDefined << endl;
+  string cGroupVersion_str="";
+  switch(cGroupVersion_){
+    case v1:
+      cGroupVersion_str="v1";
+      break;
+    case v2:
+      cGroupVersion_str="v2";
+      break;
+  }
+  cout << __func__ << " cGroupVersion_str " <<  cGroupVersion_str  << endl;
+
+  cout << __func__ << " Total mem available (bytes) " << ret << " (GIB) " << ret/GIB << endl;
   totalMemory = ret;
   return totalMemory;
 }
