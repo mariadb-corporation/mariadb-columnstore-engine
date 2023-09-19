@@ -444,7 +444,40 @@ void TableLockInfo::deserialize(istream& i)
   dbrootList.resize(dbrootListSize);
 
   for (uint32_t j = 0; j < dbrootListSize; j++)
-    i.read((char*)&dbrootList[j], 4);
+    i.read((char*)&dbrootList[j], sizeof(uint32_t));
+}
+
+uint32_t TableLockInfo::getInternalSize() const
+{
+  const uint32_t nameLen = ownerName.length();
+  const uint32_t dbrootListSize = dbrootList.size();
+  return (32 + sizeof(time_t) + nameLen + (dbrootListSize * sizeof(uint32_t)));
+}
+
+void TableLockInfo::serializeElement(char* buffer, const char* src, const uint32_t size, uint32_t& offset)
+{
+  std::memcpy(&buffer[offset], src, size);
+  offset += size;
+}
+
+void TableLockInfo::serialize(char* buffer, uint32_t& offset)
+{
+  const uint32_t nameLen = ownerName.length();
+  const uint32_t dbrootListSize = dbrootList.size();
+
+  serializeElement(buffer, (char*)&id, 8, offset);
+  serializeElement(buffer, (char*)&tableOID, 4, offset);
+  serializeElement(buffer, (char*)&ownerPID, 4, offset);
+  serializeElement(buffer, (char*)&state, 4, offset);
+  serializeElement(buffer, (char*)&ownerSessionID, 4, offset);
+  serializeElement(buffer, (char*)&ownerTxnID, 4, offset);
+  serializeElement(buffer, (char*)&creationTime, sizeof(time_t), offset);
+  serializeElement(buffer, (char*)&nameLen, 2, offset);
+  serializeElement(buffer, (char*)ownerName.c_str(), nameLen, offset);
+  serializeElement(buffer, (char*)&dbrootListSize, 2, offset);
+
+  for (uint32_t j = 0; j < dbrootListSize; j++)
+    serializeElement(buffer, (char*)&dbrootList[j], sizeof(uint32_t), offset);
 }
 
 void TableLockInfo::serialize(IDBDataFile* o) const
