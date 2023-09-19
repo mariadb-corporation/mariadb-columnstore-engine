@@ -6043,7 +6043,7 @@ void CalpontSystemCatalog::buildSysColinfomap()
   fColinfomap[OID_SYSCOLUMN_PRECISION] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
     notDict, colPosition++, compressionType, OID_SYSCOLUMN_PRECISION, INT);
 
-  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(1, scale, precision, NO_CONSTRAINT,
+  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(4, scale, precision, NO_CONSTRAINT,
     notDict, colPosition++, compressionType, OID_SYSCOLUMN_AUTOINC, CHAR);
 
   fColinfomap[OID_SYSCOLUMN_DISTCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
