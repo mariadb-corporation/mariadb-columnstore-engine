@@ -593,7 +593,7 @@ TEST_P(ParseTreeComparatorTest, CompareContains)
   auto filter = std::make_unique<execplan::ParseTree>(new execplan::SimpleFilter(
       GetParam().filter, execplan::SimpleFilter::ForTestPurposesWithoutColumnsOIDS{}));
 
-  ASSERT_EQ(GetParam().contains, container.contains(filter));
+  ASSERT_EQ(GetParam().contains, container.count(filter)!=0);
 }
 
 INSTANTIATE_TEST_SUITE_P(
