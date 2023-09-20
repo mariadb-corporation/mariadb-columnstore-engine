@@ -20,6 +20,7 @@
 #include "tuplehashjoin.h"
 #include "joinpartition.h"
 #include "threadnaming.h"
+#include <mutex>
 
 #pragma once
 

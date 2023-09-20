@@ -68,6 +68,13 @@ if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
 fi
 
 
+disable_git_restore_frozen_revision()
+{
+    cd $MDB_SOURCE_PATH
+    git config submodule.storage/columnstore/columnstore.update none
+    cd - > /dev/null
+}
+
 select_branch()
 {
     cd $SCRIPT_LOCATION
@@ -84,9 +91,6 @@ select_branch()
         fi
 
         message "Turning off Columnstore submodule auto update via gitconfig"
-        cd $MDB_SOURCE_PATH
-        git config submodule.storage/columnstore/columnstore.update none
-        cd - > /dev/null
     fi
 
     cd - > /dev/null
@@ -528,6 +532,8 @@ generate_svgs()
         done
     fi
 }
+
+disable_git_restore_frozen_revision
 
 select_branch
 
