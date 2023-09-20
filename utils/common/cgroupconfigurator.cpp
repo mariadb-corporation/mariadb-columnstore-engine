@@ -191,27 +191,17 @@ uint64_t CGroupConfigurator::getTotalMemory()
   if (totalMemory != 0)
     return totalMemory;
 
+  cout << __func__ << " cGroupDefined (from getConfig) " << cGroupDefined << endl;
   if (!cGroupDefined)
     ret = getTotalMemoryFromProc();
   else
   {
+    cout << __func__ << " cGroupVersion " <<  ((cGroupVersion_ == v2) ? std::string("v2") : std::string("v1"))  << endl;
     ret = getTotalMemoryFromCGroup();
 
     if (ret == 0 || ret == std::numeric_limits<uint64_t>::max())
       ret = getTotalMemoryFromProc();
   }
-
-  cout << __func__ << " cGroupDefined (from getConfig) " << cGroupDefined << endl;
-  string cGroupVersion_str="";
-  switch(cGroupVersion_){
-    case v1:
-      cGroupVersion_str="v1";
-      break;
-    case v2:
-      cGroupVersion_str="v2";
-      break;
-  }
-  cout << __func__ << " cGroupVersion_str " <<  cGroupVersion_str  << endl;
 
   cout << __func__ << " Total mem available (bytes) " << ret << " (GIB) " << ret/GIB << endl;
   totalMemory = ret;
