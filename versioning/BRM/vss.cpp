@@ -1280,6 +1280,70 @@ void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
   }
 }
 
+// void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
+// {
+//   int bucket, index, prev;
+//   LBID_t lastLBID, lbid;
+
+// #ifdef BRM_DEBUG
+
+//   if (range.start < 0)
+//   {
+//     log("VSS::removeEntriesFromDB(): lbids must be positive.", logging::LOG_TYPE_DEBUG);
+//     throw invalid_argument("VSS::removeEntriesFromDB(): lbids must be positive.");
+//   }
+
+//   if (range.size < 1)
+//   {
+//     log("VSS::removeEntriesFromDB(): size must be > 0", logging::LOG_TYPE_DEBUG);
+//     throw invalid_argument("VSS::removeEntriesFromDB(): size must be > 0");
+//   }
+
+// #endif
+
+//   makeUndoRecord(vss, sizeof(VSSShmsegHeader));
+
+//   lastLBID = range.start + range.size - 1;
+
+//   for (lbid = range.start; lbid <= lastLBID; lbid++)
+//   {
+//     bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+
+//     for (prev = -1, index = hashBuckets[bucket]; index != -1; index = storage[index].next)
+//     {
+//       if (storage[index].lbid == lbid)
+//       {
+//         if (storage[index].vbFlag && use_vbbm)
+//           vbbm.removeEntry(storage[index].lbid, storage[index].verID);
+
+//         makeUndoRecord(&storage[index], sizeof(VSSEntry));
+//         storage[index].lbid = -1;
+
+//         if (prev == -1)
+//         {
+//           makeUndoRecord(&hashBuckets[bucket], sizeof(int));
+//           hashBuckets[bucket] = storage[index].next;
+//         }
+//         else
+//         {
+//           makeUndoRecord(&storage[prev], sizeof(VSSEntry));
+//           storage[prev].next = storage[index].next;
+//         }
+
+//         vss->currentSize--;
+
+//         if (storage[index].locked && (vss->lockedEntryCount > 0))
+//           vss->lockedEntryCount--;
+
+//         if (index < vss->LWM)
+//           vss->LWM = index;
+//       }
+//       else
+//         prev = index;
+//     }
+//   }
+// }
+
 // This traverses the vss hash map searching for the first lbid match.
 optLbidVersion VSS::removeEntryFromDB(const LBID_t& lbid)
 {

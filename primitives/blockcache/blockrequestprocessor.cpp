@@ -199,7 +199,6 @@ int BlockRequestProcessor::getBlock(const BRM::LBID_t& lbid, const BRM::QueryCon
   }
 
   wasCached = false;
-  std::cout << "BRP::getBlock(): LBID=" << lbid << " ver=" << ver << " txn=" << txn << std::endl;
   fileRequest rqstBlk(lbid, ver, vbFlg, txn, compType, (uint8_t*)bufferPtr, insertIntoCache);
   check(rqstBlk);
 

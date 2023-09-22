@@ -253,11 +253,11 @@ void ColumnCommandJL::setLBID(uint64_t rid, uint32_t dbRoot)
     {
       lbid = extents[i].range.start + (blockNum * colWidth);
       currentExtentIndex = i;
-      ostringstream os;
-      os << "CCJL: rid=" << rid << "; dbroot=" << dbRoot << "; partitionNum=" << partNum
-         << "; segmentNum=" << segNum << "; extentNum = " << (int)extentNum << "; blockNum = " << blockNum
-         << "; OID=" << OID << " LBID=" << lbid;
-      cout << os.str() << endl;
+      // ostringstream os;
+      // os << "CCJL: rid=" << rid << "; dbroot=" << dbRoot << "; partitionNum=" << partNum
+      //    << "; segmentNum=" << segNum << "; extentNum = " << (int)extentNum << "; blockNum = " << blockNum
+      //    << "; OID=" << OID << " LBID=" << lbid;
+      // cout << os.str() << endl;
       break;
     }
   }

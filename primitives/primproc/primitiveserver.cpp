@@ -495,24 +495,24 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
   if (LBIDTrace)
     stats.touchedLBID(lbid, pthread_self(), sessionID);
 
-  // if (vssCache)
-  // {
-  //   it = vssCache->find(lbid);
+  if (vssCache)
+  {
+    it = vssCache->find(lbid);
 
-  //   if (it != vssCache->end())
-  //   {
-  //     VSSData& vd = it->second;
-  //     ver = vd.verID;
-  //     flg = vd.vbFlag;
-  //     rc = vd.returnCode;
-  //   }
-  // }
+    if (it != vssCache->end())
+    {
+      VSSData& vd = it->second;
+      ver = vd.verID;
+      flg = vd.vbFlag;
+      rc = vd.returnCode;
+    }
+  }
 
-  // if (!vssCache || it == vssCache->end())
-  rc = brm->vssLookup((BRM::LBID_t)lbid, v, txn, &ver, &flg);
+  if (!vssCache || it == vssCache->end())
+    rc = brm->vssLookup((BRM::LBID_t)lbid, v, txn, &ver, &flg);
 
   v.currentScn = ver;
-  cout << "VSS l/u: l=" << lbid << " v=" << ver << " t=" << txn << " flg=" << flg << " rc: " << rc << endl;
+  // cout << "VSS l/u: l=" << lbid << " v=" << ver << " t=" << txn << " flg=" << flg << " rc: " << rc << endl;
 
   // if this block is locked by this session, don't cache it, just read it directly from disk
   if (txn > 0 && ver == txn && !flg && !noVB)
@@ -853,7 +853,6 @@ struct AsynchLoader
     uint32_t rCount = 0;
     char buf[BLOCK_SIZE];
 
-    cout << "asynch started " << pthread_self() << " l: " << lbid << endl;
     try
     {
       loadBlock(lbid, ver, txn, compType, buf, &cached, &rCount, LBIDTrace, true, vssCache);
@@ -927,21 +926,21 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
   BRM::VER_t ver;
   VSSCache::iterator it;
 
-  // if (vssCache)
-  // {
-  //   it = vssCache->find(lbid);
+  if (vssCache)
+  {
+    it = vssCache->find(lbid);
 
-  //   if (it != vssCache->end())
-  //   {
-  //     // cout << "async: vss cache hit on " << lbid << endl;
-  //     VSSData& vd = it->second;
-  //     ver = vd.verID;
-  //     vbFlag = vd.vbFlag;
-  //   }
-  // }
+    if (it != vssCache->end())
+    {
+      // cout << "async: vss cache hit on " << lbid << endl;
+      VSSData& vd = it->second;
+      ver = vd.verID;
+      vbFlag = vd.vbFlag;
+    }
+  }
 
-  // if (!vssCache || it == vssCache->end())
-  brm->vssLookup((BRM::LBID_t)lbid, c, txn, &ver, &vbFlag);
+  if (!vssCache || it == vssCache->end())
+    brm->vssLookup((BRM::LBID_t)lbid, c, txn, &ver, &vbFlag);
 
   if (bc.exists(lbid, ver))
     return;

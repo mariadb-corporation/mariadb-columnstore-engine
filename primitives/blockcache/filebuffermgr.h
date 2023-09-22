@@ -211,14 +211,14 @@ class FileBufferMgr
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
-  // mutable boost::mutex fWLock;
-  std::mutex fWLocks[MagicNumber];
+  std::mutex fBufferWLock;
+  std::array<std::mutex, MagicNumber> fWLocks;
 
   // mutable filebuffer_uset_t fbSet;
-  filebuffer_uset_t fbSets[MagicNumber];
+  std::array<filebuffer_uset_t, MagicNumber> fbSets;
 
   // mutable filebuffer_list_t fbList;        // rename this
-  filebuffer_list_t fbLists[MagicNumber];  // rename this
+  std::array<filebuffer_list_t, MagicNumber> fbLists;  // rename this
 
   uint32_t fCacheSize;
   std::vector<size_t> fCacheSizes;
@@ -226,7 +226,7 @@ class FileBufferMgr
   FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
   // emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
-  emptylist_t fEmptyPoolsSlots[MagicNumber];  // keep track of FBPool slots that can be reused
+  std::array<emptylist_t, MagicNumber> fEmptyPoolsSlots;  // keep track of FBPool slots that can be reused
 
   // void depleteCache();
   void depleteCache(const size_t bucket);
