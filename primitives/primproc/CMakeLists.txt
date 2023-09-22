@@ -30,6 +30,6 @@ add_executable(PrimProc ${PrimProc_SRCS})
 
 add_dependencies(PrimProc loggingcpp)
 target_include_directories(PrimProc PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
+target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor ${jit_LIB_SRCS})
 
 install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
