@@ -1,0 +1,20 @@
+SET default_storage_engine=columnstore;
+DROP DATABASE IF EXISTS mcol5572;
+CREATE DATABASE mcol5572;
+USE mcol5572;
+create table foo (col1 int) engine=columnstore;
+insert into foo values ( 1 ), ( 2 ), ( 3 ), ( 4 ), ( 5 );
+Alter table foo add column newcol bigint comment 'autoincrement';
+select callastinsertid('foo');
+callastinsertid('foo')
+5
+select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoincrement = 'y' and `schema`='mcol5572' and tablename='foo';
+tablename	autoincrement	nextvalue
+foo	y	6
+select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoincrement != 'n' and `schema`='mcol5572' and tablename='foo';
+tablename	autoincrement	nextvalue
+foo	y	6
+select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoincrement = 'n' and `schema`='mcol5572' and tablename='foo';
+tablename	autoincrement	nextvalue
+foo	n	1
+DROP DATABASE mcol5572;

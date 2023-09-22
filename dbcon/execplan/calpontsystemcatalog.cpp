@@ -6043,7 +6043,12 @@ void CalpontSystemCatalog::buildSysColinfomap()
   fColinfomap[OID_SYSCOLUMN_PRECISION] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
     notDict, colPosition++, compressionType, OID_SYSCOLUMN_PRECISION, INT);
 
-  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(1, scale, precision, NO_CONSTRAINT,
+  // please note that column width specified in table creation is 1.
+  // we specify 4 because we use strnxfrm in filtering and it may convert
+  // data to, well, unsigned long int (my_cw_t type). But, all of the
+  // contemporary character sets have weights up to 32-bit, thus, here we
+  // specify 4-byte width which ill be enough for time being.
+  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(4, scale, precision, NO_CONSTRAINT,
     notDict, colPosition++, compressionType, OID_SYSCOLUMN_AUTOINC, CHAR);
 
   fColinfomap[OID_SYSCOLUMN_DISTCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
