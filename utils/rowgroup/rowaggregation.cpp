@@ -4070,10 +4070,34 @@ bool RowAggregationUM::nextRowGroup()
   fCurRGData = fRowAggStorage->getNextRGData();
   bool more = static_cast<bool>(fCurRGData);
 
+  if (!more)
+  {
+    std::cout << "dummy breakpoint" << std::endl;
+  }
+
   if (more)
   {
     // load the top result set
     fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  // TODO: Fix this hack.
+  if (fRowAggStorage->hasGenerations())
+  {
+    finalAggregation();
+  }
+  std::unique_ptr<RGData> rgdata;
+  bool more = fRowAggStorage->getNextOutputRGData(rgdata);
+
+  if (more)
+  {
+    // load the top result set
+    fRowGroupOut->setData(rgdata.get());
   }
 
   return more;

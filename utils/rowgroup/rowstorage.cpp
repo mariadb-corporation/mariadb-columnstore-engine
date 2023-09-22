@@ -694,6 +694,157 @@ class RowGroupStorage
     return {};
   }
 
+  /** @brief Used to output all aggregation results from memory and disk. Returns next RGData, load from older
+   * generation or disk if necessary. Skips finalized rows as they would contain duplicate results.
+   * @returns pointer to the next RGData or empty pointer if there is nothing
+   */
+  bool getNextOutputRGData(std::unique_ptr<RGData>& rgdata)
+  {
+    // iterate over generations. TODO: should we do this here or like in append logic in RowAggStorage?
+    // ah we probably need to reset storage and can't do that when we are the storage
+    // -> iterate over generations in RowAggStorage
+    if (UNLIKELY(fRGDatas.empty()))
+    {
+      fMM->release();
+      return false;
+    }
+    while (!fRGDatas.empty())
+    {
+      // get last RGData
+      uint64_t rgid = fRGDatas.size() - 1;
+      rgdata = std::move(fRGDatas[rgid]);
+      fRGDatas.pop_back();
+
+      // TODO: what exactly are those values? Bitwise int vector something.
+      uint64_t fgid = rgid * fMaxRows / 64;
+      uint64_t tgid = fgid + fMaxRows / 64;
+
+      if (fFinalizedRows.size() <= fgid)
+      {
+        // There are no finalized rows in this RGData. We can just return it.
+        // Load from disk if necessary and unlink DumpFile).
+        if (!rgdata)
+        {
+          loadRG(rgid, rgdata, true);
+        }
+        return true;
+      }
+
+      // There could be finalized rows in this RGData
+      if (tgid >= fFinalizedRows.size())
+        fFinalizedRows.resize(tgid + 1, 0ULL);
+
+      // check if all rows are finalized / there are rows to process
+      bool hasReturnRows = false;
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if (fFinalizedRows[i] != ~0ULL)
+        {
+          // Not all rows are finalized, we have to return parts of this RGData
+          hasReturnRows = true;
+          break;
+        }
+      }
+
+      // if yes, unlink DumpFile and try to return next RGData
+      // if not, load and continue processing
+      if (!rgdata)
+      {
+        if (hasReturnRows)
+        {
+          // load and continue processing
+          loadRG(rgid, rgdata, true);
+        }
+        else
+        {
+          // All rows are finalized. Unlink and continue search for return RGData
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+      }
+      else
+      {
+        // in memory
+        if (!hasReturnRows)
+        {
+          continue;
+        }
+      }
+
+      // We have loaded RGData with return rows and potentially finalized rows, such that
+      //  we need to compact.
+      //  assumption: this shifts data within RGData such that it compacts the non finalized rows
+      //  move next non-finalized rows on finalized row positions
+      //
+      uint64_t pos = 0;
+      uint64_t opos = 0;
+      fRowGroupOut->setData(rgdata.get());
+
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
+          break;
+        uint64_t mask = ~fFinalizedRows[i];
+        if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
+        {
+          mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
+        }
+        opos = (i - fgid) * 64;
+
+        // do something with a full block?
+        if (mask == ~0ULL)
+        {
+          if (LIKELY(pos != opos))
+            moveRows(rgdata.get(), pos, opos, 64);
+          pos += 64;
+          continue;
+        }
+
+        if (mask == 0)
+          continue;
+
+        while (mask != 0)
+        {
+          // assmp.: find position until block full of not finalized rows?
+          size_t b = __builtin_ffsll(mask);
+          size_t e = __builtin_ffsll(~(mask >> b)) + b;
+          if (UNLIKELY(e >= 64))
+            mask = 0;
+          else
+            mask >>= e;
+          if (LIKELY(pos != opos + b - 1))
+            moveRows(rgdata.get(), pos, opos + b - 1, e - b);
+          pos += e - b;
+          opos += e;
+        }
+        --opos;
+      }
+
+      // assmp.:: nothing got shifted at all -> all rows must be finalized? (but shouldn't it be the
+      // other way around?) if all rows finalized remove RGData and file and don't give it out why would
+      // we check this here again? see: fRowGroupOut->setRowCount(pos); -> pos is the number of valid
+      // rows, interesting
+      if (pos == 0)
+      {
+        fLRU->remove(rgid);
+        unlink(makeRGFilename(rgid).c_str());  // TODO: do we still have to unlink?
+        continue;
+      }
+
+      // set RGData with number of not finalized rows
+      fRowGroupOut->setData(rgdata.get());
+      fRowGroupOut->setRowCount(pos);
+      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+      // why do we release the memory if we just loaded something?, or are we realesing for file
+      // managment?
+      fMM->release(memSz);
+      unlink(makeRGFilename(rgid).c_str());  // TODO: do we still have to unlink?
+      fLRU->remove(rgid);                    // TODO: do we have to do that? is there a benefit?
+      return true;
+    }
+    return false;
+  }
+
   void initRow(Row& row) const
   {
     fRowGroupOut->initRow(&row);
@@ -1064,10 +1215,14 @@ class RowGroupStorage
 
         if (!rgdata)
         {
+          // TODO: why do we not remove it from LRUCache here?
           unlink(makeRGFilename(rgid).c_str());
           continue;
         }
 
+        // assumption: this shifts data within RGData such that it compacts the non finalized rows
+        // move next non-finalized rows on finalized row positions
+        //
         uint64_t pos = 0;
         uint64_t opos = 0;
         fRowGroupOut->setData(rgdata.get());
@@ -1081,6 +1236,8 @@ class RowGroupStorage
             mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
           }
           opos = (i - fgid) * 64;
+
+          // do something with a full block?
           if (mask == ~0ULL)
           {
             if (LIKELY(pos != opos))
@@ -1094,6 +1251,7 @@ class RowGroupStorage
 
           while (mask != 0)
           {
+            // assmp.: find position until block full of not finalized rows?
             size_t b = __builtin_ffsll(mask);
             size_t e = __builtin_ffsll(~(mask >> b)) + b;
             if (UNLIKELY(e >= 64))
@@ -1108,6 +1266,10 @@ class RowGroupStorage
           --opos;
         }
 
+        // assmp.:: nothing got shifted at all -> all rows must be finalized? (but shouldn't it be the
+        // other way around?) if all rows finalized remove RGData and file and don't give it out why would
+        // we check this here again? see: fRowGroupOut->setRowCount(pos); -> pos is the number of valid
+        // rows, interesting
         if (pos == 0)
         {
           fLRU->remove(rgid);
@@ -1115,6 +1277,7 @@ class RowGroupStorage
           continue;
         }
 
+        // set RGData with number of not finalized rows
         fRowGroupOut->setData(rgdata.get());
         fRowGroupOut->setRowCount(pos);
       }
@@ -1123,14 +1286,19 @@ class RowGroupStorage
       {
         fRowGroupOut->setData(rgdata.get());
         int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+        // why do we release the memory if we just loaded something?, or are we realesing for file
+        // managment?
         fMM->release(memSz);
         unlink(makeRGFilename(rgid).c_str());
       }
       else
       {
+        // assmp. must be full block of data with only not-finalized rows, didn't get loaded and also not
+        // discarded
         fname = makeRGFilename(rgid);
       }
-      fLRU->remove(rgid);
+      fLRU->remove(rgid);  // TODO: why? if we are compeletly dissolving this storage, what does it help?
+      // isn't it only added cost?
       return true;
     }
     return false;
@@ -1737,6 +1905,40 @@ void RowAggStorage::append(RowAggStorage& other)
     other.fGeneration = gen;
     other.fStorage.reset(other.fStorage->clone(gen));
   }
+}
+
+// TODO: make this output specific!
+bool RowAggStorage::getNextOutputRGData(std::unique_ptr<RGData>& rgdata)
+{
+  // TODO: defensive needed if only for output?
+  if (!fStorage)
+  {
+    return {};
+  }
+
+  cleanup();
+  freeData();
+
+  // TODO: Loop probably not needed.
+  int32_t gen = fGeneration;
+  while (gen >= 0)
+  {
+    // for each generation get all output rg datas
+    bool moreInGeneration = fStorage->getNextOutputRGData(rgdata);
+    if (moreInGeneration)
+    {
+      // found RGData in Generation, return it
+      return true;
+    }
+    if (fGeneration == 0)
+    {
+      break;
+    }
+    gen--;
+    fGeneration--;
+    fStorage.reset(fStorage->clone(fGeneration));
+  }
+  return false;
 }
 
 std::unique_ptr<RGData> RowAggStorage::getNextRGData()

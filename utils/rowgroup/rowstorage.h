@@ -97,6 +97,8 @@ class RowAggStorage
    */
   std::unique_ptr<RGData> getNextRGData();
 
+  bool getNextOutputRGData(std::unique_ptr<RGData>& rgdata);
+
   /** @brief TODO
    *
    * @param mergeFunc
