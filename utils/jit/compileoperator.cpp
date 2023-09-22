@@ -46,7 +46,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   auto* func_type = llvm::FunctionType::get(return_type, {data_type, isNull_type}, false);
   auto* func =
       llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, expression->alias(), module);
-
+  func->setDoesNotThrow();
   auto* args = func->args().begin();
   llvm::Value* data_ptr = args++;
   llvm::Value* isNull_ptr = args++;
@@ -56,10 +56,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
 
   b.CreateRet(ret);
 
-  // Print the IR
   llvm::verifyFunction(*func);
-  // TODO: remove this line
-  module.print(llvm::outs(), nullptr);
 }
 
 CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
