@@ -1,0 +1,6 @@
+IF (RPM)
+    SET (CPACK_DEBIAN_PACKAGE_DEPENDS "mariadb-columnstore-cmapi")
+ENDIF()
+IF (DEB)
+    SET (PACK_RPM_PACKAGE_REQUIRES "MariaDB-columnstore-cmapi")
+ENDIF()

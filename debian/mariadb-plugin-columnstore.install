@@ -30,8 +30,6 @@ usr/bin/editem
 usr/bin/idbmeminfo
 usr/bin/load_brm
 usr/bin/loop_process_starter.sh
-usr/bin/mariadb-columnstore-start.sh
-usr/bin/mariadb-columnstore-stop.sh
 usr/bin/mcs-savebrm.py
 usr/bin/mcs-loadbrm.py
 usr/bin/mcs-stop-controllernode.sh

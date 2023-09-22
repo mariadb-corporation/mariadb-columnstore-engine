@@ -1,3 +1,5 @@
+#!/bin/bash
+
 SEC_TO_WAIT=15
 echo -n "Waiting CMAPI to finish startup"
 success=false

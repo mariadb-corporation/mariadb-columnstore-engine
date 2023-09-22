@@ -131,6 +131,7 @@ INCLUDE(columnstore_version)
 INCLUDE(misc)
 INCLUDE(boost)
 INCLUDE(thrift)
+include(cmapi_dependency)
 
 FIND_PACKAGE(BISON)
 IF (NOT BISON_FOUND)

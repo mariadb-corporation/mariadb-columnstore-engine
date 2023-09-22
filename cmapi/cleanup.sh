@@ -8,6 +8,7 @@ rm -rf  \
     *.service \
     prerm \
     postinst \
+    conffiles \
     CMakeCache.txt \
     CMakeFiles \
     CMakeScripts \

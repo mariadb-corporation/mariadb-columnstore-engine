@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
 
-systemctl stop ${SYSTEMD_UNIT_NAME}
+running_systemd() {
+    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+
+if [ $(running_systemd) -eq 0 ]; then
+    systemctl stop ${SYSTEMD_UNIT_NAME}
+else
+    echo "Not using systemd or it doesn't exist, need to stop ${SYSTEMD_UNIT_NAME} process directly"
+    kill $(pidof ${SYSTEMD_UNIT_NAME}) > /dev/null
+    sleep 3
+    kill -9 $(pidof ${SYSTEMD_UNIT_NAME}) > /dev/null
+fi
+
 
 find ${CMAPI_DIR} -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 
-systemctl disable ${SYSTEMD_UNIT_NAME}
 
-systemctl unmask ${SYSTEMD_ENGINE_UNIT_NAME}
+if [ $(running_systemd) -eq 0 ]; then
+    systemctl disable ${SYSTEMD_UNIT_NAME}
+else
+    echo "Not using systemd or it doesn't exist, no need to disable ${SYSTEMD_UNIT_NAME}"
+fi
