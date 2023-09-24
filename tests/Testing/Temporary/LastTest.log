@@ -1,0 +1,2447 @@
+Start testing: Jun 20 17:11 UTC
+----------------------------------------------------------
+1/85 Testing: columnstore:RowDecimalTest.NonNullValueCheck
+1/85 Test: columnstore:RowDecimalTest.NonNullValueCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.NonNullValueCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.NonNullValueCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.NonNullValueCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.NonNullValueCheck
+[       OK ] RowDecimalTest.NonNullValueCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.NonNullValueCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.NonNullValueCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/85 Testing: columnstore:RowDecimalTest.InitToNullAndIsNullValueCheck
+2/85 Test: columnstore:RowDecimalTest.InitToNullAndIsNullValueCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.InitToNullAndIsNullValueCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.InitToNullAndIsNullValueCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.InitToNullAndIsNullValueCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.InitToNullAndIsNullValueCheck
+[       OK ] RowDecimalTest.InitToNullAndIsNullValueCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.InitToNullAndIsNullValueCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.InitToNullAndIsNullValueCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/85 Testing: columnstore:RowDecimalTest.GetBinaryFieldCheck
+3/85 Test: columnstore:RowDecimalTest.GetBinaryFieldCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.GetBinaryFieldCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.GetBinaryFieldCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.GetBinaryFieldCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.GetBinaryFieldCheck
+[       OK ] RowDecimalTest.GetBinaryFieldCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.GetBinaryFieldCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.GetBinaryFieldCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/85 Testing: columnstore:RowDecimalTest.ToStringCheck
+4/85 Test: columnstore:RowDecimalTest.ToStringCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.ToStringCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.ToStringCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.ToStringCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.ToStringCheck
+[       OK ] RowDecimalTest.ToStringCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.ToStringCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.ToStringCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/85 Testing: columnstore:RowDecimalTest.ToCSVCheck
+5/85 Test: columnstore:RowDecimalTest.ToCSVCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.ToCSVCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.ToCSVCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.ToCSVCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.ToCSVCheck
+[       OK ] RowDecimalTest.ToCSVCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.ToCSVCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.ToCSVCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/85 Testing: columnstore:RowDecimalTest.ApplyMappingCheck
+6/85 Test: columnstore:RowDecimalTest.ApplyMappingCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.ApplyMappingCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.ApplyMappingCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.ApplyMappingCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.ApplyMappingCheck
+[       OK ] RowDecimalTest.ApplyMappingCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.ApplyMappingCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.ApplyMappingCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/85 Testing: columnstore:RowDecimalTest.CopyBinaryFieldCheck
+7/85 Test: columnstore:RowDecimalTest.CopyBinaryFieldCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.CopyBinaryFieldCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.CopyBinaryFieldCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.CopyBinaryFieldCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.CopyBinaryFieldCheck
+[       OK ] RowDecimalTest.CopyBinaryFieldCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.CopyBinaryFieldCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.CopyBinaryFieldCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/85 Testing: columnstore:RowDecimalTest.RowEqualsCheck
+8/85 Test: columnstore:RowDecimalTest.RowEqualsCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/rowgroup_tests" "--gtest_filter=RowDecimalTest.RowEqualsCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RowDecimalTest.RowEqualsCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RowDecimalTest.RowEqualsCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RowDecimalTest
+[ RUN      ] RowDecimalTest.RowEqualsCheck
+[       OK ] RowDecimalTest.RowEqualsCheck (1 ms)
+[----------] 1 test from RowDecimalTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RowDecimalTest.RowEqualsCheck" end time: Jun 20 17:11 UTC
+"columnstore:RowDecimalTest.RowEqualsCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/85 Testing: columnstore:*/ParseTreeTest.Rewrite/*
+9/85 Test: columnstore:*/ParseTreeTest.Rewrite/*
+Command: "/root/server/storage/columnstore/columnstore/bin/rewritetest" "--gtest_filter=*/ParseTreeTest.Rewrite/*"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:*/ParseTreeTest.Rewrite/*" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = */ParseTreeTest.Rewrite/*
+[==========] Running 26 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 26 tests from TreeRewrites/ParseTreeTest
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_1
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_1 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_2
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_2 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_3
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_3 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_4
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_4 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_5
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_5 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_6
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_6 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_7
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_7 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_8
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_8 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_9
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_9 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_10
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_10 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_11
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_11 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_12
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_12 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_13
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_13 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_14
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_14 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_15
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_15 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_16
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_16 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_17
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_17 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_18
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_18 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_19
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_19 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_20
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_20 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_21
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_21 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_22
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_22 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_23
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_23 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_27
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_27 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/Query_28
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/Query_28 (0 ms)
+[ RUN      ] TreeRewrites/ParseTreeTest.Rewrite/TPCH_19
+[       OK ] TreeRewrites/ParseTreeTest.Rewrite/TPCH_19 (2 ms)
+[----------] 26 tests from TreeRewrites/ParseTreeTest (10 ms total)
+
+[----------] Global test environment tear-down
+[==========] 26 tests from 1 test suite ran. (10 ms total)
+[  PASSED  ] 26 tests.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:*/ParseTreeTest.Rewrite/*" end time: Jun 20 17:11 UTC
+"columnstore:*/ParseTreeTest.Rewrite/*" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/85 Testing: columnstore:*/ParseTreeComparatorTest.CompareContains/*
+10/85 Test: columnstore:*/ParseTreeComparatorTest.CompareContains/*
+Command: "/root/server/storage/columnstore/columnstore/bin/rewritetest" "--gtest_filter=*/ParseTreeComparatorTest.CompareContains/*"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:*/ParseTreeComparatorTest.CompareContains/*" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = */ParseTreeComparatorTest.CompareContains/*
+[==========] Running 6 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 6 tests from Comparator/ParseTreeComparatorTest
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverse1
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverse1 (0 ms)
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverse2
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverse2 (0 ms)
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverseOpposite
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverseOpposite (0 ms)
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverseOpposite2
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleInverseOpposite2 (0 ms)
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleContains
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleContains (0 ms)
+[ RUN      ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleNotContains
+[       OK ] Comparator/ParseTreeComparatorTest.CompareContains/SimpleNotContains (0 ms)
+[----------] 6 tests from Comparator/ParseTreeComparatorTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 1 test suite ran. (1 ms total)
+[  PASSED  ] 6 tests.
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:*/ParseTreeComparatorTest.CompareContains/*" end time: Jun 20 17:11 UTC
+"columnstore:*/ParseTreeComparatorTest.CompareContains/*" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/85 Testing: columnstore:Decimal.compareCheckInt64
+11/85 Test: columnstore:Decimal.compareCheckInt64
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.compareCheckInt64"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.compareCheckInt64" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.compareCheckInt64
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.compareCheckInt64
+[       OK ] Decimal.compareCheckInt64 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.compareCheckInt64" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.compareCheckInt64" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/85 Testing: columnstore:Decimal.compareCheckInt128
+12/85 Test: columnstore:Decimal.compareCheckInt128
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.compareCheckInt128"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.compareCheckInt128" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.compareCheckInt128
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.compareCheckInt128
+[       OK ] Decimal.compareCheckInt128 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.compareCheckInt128" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.compareCheckInt128" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/85 Testing: columnstore:Decimal.compareCheckInt64_Int128
+13/85 Test: columnstore:Decimal.compareCheckInt64_Int128
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.compareCheckInt64_Int128"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.compareCheckInt64_Int128" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.compareCheckInt64_Int128
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.compareCheckInt64_Int128
+[       OK ] Decimal.compareCheckInt64_Int128 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.compareCheckInt64_Int128" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.compareCheckInt64_Int128" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/85 Testing: columnstore:Decimal.additionNoOverflowCheck
+14/85 Test: columnstore:Decimal.additionNoOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.additionNoOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.additionNoOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.additionNoOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.additionNoOverflowCheck
+[       OK ] Decimal.additionNoOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.additionNoOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.additionNoOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/85 Testing: columnstore:Decimal.divisionNoOverflowCheck
+15/85 Test: columnstore:Decimal.divisionNoOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.divisionNoOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.divisionNoOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.divisionNoOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.divisionNoOverflowCheck
+[       OK ] Decimal.divisionNoOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.divisionNoOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.divisionNoOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/85 Testing: columnstore:Decimal.divisionWithOverflowCheck
+16/85 Test: columnstore:Decimal.divisionWithOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.divisionWithOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.divisionWithOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.divisionWithOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.divisionWithOverflowCheck
+[       OK ] Decimal.divisionWithOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.divisionWithOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.divisionWithOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/85 Testing: columnstore:Decimal.additionWithOverflowCheck
+17/85 Test: columnstore:Decimal.additionWithOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.additionWithOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.additionWithOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.additionWithOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.additionWithOverflowCheck
+[       OK ] Decimal.additionWithOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.additionWithOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.additionWithOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/85 Testing: columnstore:Decimal.subtractionNoOverflowCheck
+18/85 Test: columnstore:Decimal.subtractionNoOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.subtractionNoOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.subtractionNoOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.subtractionNoOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.subtractionNoOverflowCheck
+[       OK ] Decimal.subtractionNoOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.subtractionNoOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.subtractionNoOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/85 Testing: columnstore:Decimal.subtractionWithOverflowCheck
+19/85 Test: columnstore:Decimal.subtractionWithOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.subtractionWithOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.subtractionWithOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.subtractionWithOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.subtractionWithOverflowCheck
+[       OK ] Decimal.subtractionWithOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.subtractionWithOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.subtractionWithOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/85 Testing: columnstore:Decimal.multiplicationNoOverflowCheck
+20/85 Test: columnstore:Decimal.multiplicationNoOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.multiplicationNoOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.multiplicationNoOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.multiplicationNoOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.multiplicationNoOverflowCheck
+[       OK ] Decimal.multiplicationNoOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.multiplicationNoOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.multiplicationNoOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/85 Testing: columnstore:Decimal.multiplicationWithOverflowCheck
+21/85 Test: columnstore:Decimal.multiplicationWithOverflowCheck
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.multiplicationWithOverflowCheck"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.multiplicationWithOverflowCheck" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.multiplicationWithOverflowCheck
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.multiplicationWithOverflowCheck
+[       OK ] Decimal.multiplicationWithOverflowCheck (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.multiplicationWithOverflowCheck" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.multiplicationWithOverflowCheck" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/85 Testing: columnstore:Decimal.DecimalToStringCheckScale0
+22/85 Test: columnstore:Decimal.DecimalToStringCheckScale0
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.DecimalToStringCheckScale0"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.DecimalToStringCheckScale0" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.DecimalToStringCheckScale0
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.DecimalToStringCheckScale0
+[       OK ] Decimal.DecimalToStringCheckScale0 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.DecimalToStringCheckScale0" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.DecimalToStringCheckScale0" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/85 Testing: columnstore:Decimal.DecimalToStringCheckScale10
+23/85 Test: columnstore:Decimal.DecimalToStringCheckScale10
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.DecimalToStringCheckScale10"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.DecimalToStringCheckScale10" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.DecimalToStringCheckScale10
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.DecimalToStringCheckScale10
+[       OK ] Decimal.DecimalToStringCheckScale10 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.DecimalToStringCheckScale10" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.DecimalToStringCheckScale10" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/85 Testing: columnstore:Decimal.DecimalToStringCheckScale38
+24/85 Test: columnstore:Decimal.DecimalToStringCheckScale38
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.DecimalToStringCheckScale38"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.DecimalToStringCheckScale38" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.DecimalToStringCheckScale38
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.DecimalToStringCheckScale38
+[       OK ] Decimal.DecimalToStringCheckScale38 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.DecimalToStringCheckScale38" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.DecimalToStringCheckScale38" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/85 Testing: columnstore:Decimal.DecimalToStringCheckScale37
+25/85 Test: columnstore:Decimal.DecimalToStringCheckScale37
+Command: "/root/server/storage/columnstore/columnstore/bin/mcs_decimal_tests" "--gtest_filter=Decimal.DecimalToStringCheckScale37"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:Decimal.DecimalToStringCheckScale37" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Decimal.DecimalToStringCheckScale37
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Decimal
+[ RUN      ] Decimal.DecimalToStringCheckScale37
+[       OK ] Decimal.DecimalToStringCheckScale37 (0 ms)
+[----------] 1 test from Decimal (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:Decimal.DecimalToStringCheckScale37" end time: Jun 20 17:11 UTC
+"columnstore:Decimal.DecimalToStringCheckScale37" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/85 Testing: columnstore:DataConvertTest.Strtoll128
+26/85 Test: columnstore:DataConvertTest.Strtoll128
+Command: "/root/server/storage/columnstore/columnstore/bin/dataconvert_tests" "--gtest_filter=DataConvertTest.Strtoll128"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:DataConvertTest.Strtoll128" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = DataConvertTest.Strtoll128
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from DataConvertTest
+[ RUN      ] DataConvertTest.Strtoll128
+[       OK ] DataConvertTest.Strtoll128 (0 ms)
+[----------] 1 test from DataConvertTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:DataConvertTest.Strtoll128" end time: Jun 20 17:11 UTC
+"columnstore:DataConvertTest.Strtoll128" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/85 Testing: columnstore:DataConvertTest.NumberIntValue
+27/85 Test: columnstore:DataConvertTest.NumberIntValue
+Command: "/root/server/storage/columnstore/columnstore/bin/dataconvert_tests" "--gtest_filter=DataConvertTest.NumberIntValue"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:DataConvertTest.NumberIntValue" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = DataConvertTest.NumberIntValue
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from DataConvertTest
+[ RUN      ] DataConvertTest.NumberIntValue
+[       OK ] DataConvertTest.NumberIntValue (1 ms)
+[----------] 1 test from DataConvertTest (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:DataConvertTest.NumberIntValue" end time: Jun 20 17:11 UTC
+"columnstore:DataConvertTest.NumberIntValue" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/85 Testing: columnstore:DataConvertTest.ConvertColumnData
+28/85 Test: columnstore:DataConvertTest.ConvertColumnData
+Command: "/root/server/storage/columnstore/columnstore/bin/dataconvert_tests" "--gtest_filter=DataConvertTest.ConvertColumnData"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:DataConvertTest.ConvertColumnData" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = DataConvertTest.ConvertColumnData
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from DataConvertTest
+[ RUN      ] DataConvertTest.ConvertColumnData
+[       OK ] DataConvertTest.ConvertColumnData (0 ms)
+[----------] 1 test from DataConvertTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:DataConvertTest.ConvertColumnData" end time: Jun 20 17:11 UTC
+"columnstore:DataConvertTest.ConvertColumnData" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/85 Testing: columnstore:RebuildEMTest.File2OidCheckFileFormatTest
+29/85 Test: columnstore:RebuildEMTest.File2OidCheckFileFormatTest
+Command: "/root/server/storage/columnstore/columnstore/bin/rebuild_em_tests" "--gtest_filter=RebuildEMTest.File2OidCheckFileFormatTest"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RebuildEMTest.File2OidCheckFileFormatTest" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RebuildEMTest.File2OidCheckFileFormatTest
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RebuildEMTest
+[ RUN      ] RebuildEMTest.File2OidCheckFileFormatTest
+[       OK ] RebuildEMTest.File2OidCheckFileFormatTest (0 ms)
+[----------] 1 test from RebuildEMTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RebuildEMTest.File2OidCheckFileFormatTest" end time: Jun 20 17:11 UTC
+"columnstore:RebuildEMTest.File2OidCheckFileFormatTest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/85 Testing: columnstore:RebuildEMTest.File2OidCalculationTest
+30/85 Test: columnstore:RebuildEMTest.File2OidCalculationTest
+Command: "/root/server/storage/columnstore/columnstore/bin/rebuild_em_tests" "--gtest_filter=RebuildEMTest.File2OidCalculationTest"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:RebuildEMTest.File2OidCalculationTest" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = RebuildEMTest.File2OidCalculationTest
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RebuildEMTest
+[ RUN      ] RebuildEMTest.File2OidCalculationTest
+[       OK ] RebuildEMTest.File2OidCalculationTest (2 ms)
+[----------] 1 test from RebuildEMTest (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:RebuildEMTest.File2OidCalculationTest" end time: Jun 20 17:11 UTC
+"columnstore:RebuildEMTest.File2OidCalculationTest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/85 Testing: columnstore:CompressionTest.LZ4CanCompress
+31/85 Test: columnstore:CompressionTest.LZ4CanCompress
+Command: "/root/server/storage/columnstore/columnstore/bin/compression_tests" "--gtest_filter=CompressionTest.LZ4CanCompress"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:CompressionTest.LZ4CanCompress" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = CompressionTest.LZ4CanCompress
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from CompressionTest
+[ RUN      ] CompressionTest.LZ4CanCompress
+[       OK ] CompressionTest.LZ4CanCompress (0 ms)
+[----------] 1 test from CompressionTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:CompressionTest.LZ4CanCompress" end time: Jun 20 17:11 UTC
+"columnstore:CompressionTest.LZ4CanCompress" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/85 Testing: columnstore:CompressionTest.LZvsSnappyUnique
+32/85 Test: columnstore:CompressionTest.LZvsSnappyUnique
+Command: "/root/server/storage/columnstore/columnstore/bin/compression_tests" "--gtest_filter=CompressionTest.LZvsSnappyUnique"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:CompressionTest.LZvsSnappyUnique" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = CompressionTest.LZvsSnappyUnique
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from CompressionTest
+[ RUN      ] CompressionTest.LZvsSnappyUnique
+Permutations generated for: abcdefghi
+LZ ratio: 1.80741
+Snappy ratio: 2.15695
+Permutations generated for: aaadefghi
+LZ ratio: 3.96567
+Snappy ratio: 3.17589
+Permutations generated for: aaaaafghi
+LZ ratio: 25.2806
+Snappy ratio: 8.07503
+Permutations generated for: aaaaaaahi
+LZ ratio: 85.6455
+Snappy ratio: 12.5782
+Permutations generated for: aaaaaaaaj
+LZ ratio: 18.5962
+Snappy ratio: 14.8415
+[       OK ] CompressionTest.LZvsSnappyUnique (607 ms)
+[----------] 1 test from CompressionTest (607 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (608 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.72 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:CompressionTest.LZvsSnappyUnique" end time: Jun 20 17:11 UTC
+"columnstore:CompressionTest.LZvsSnappyUnique" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan1Byte
+33/85 Test: columnstore:ColumnScanFilterTest.ColumnScan1Byte
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan1Byte"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan1Byte
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan1Byte
+[       OK ] ColumnScanFilterTest.ColumnScan1Byte (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan1ByteVectorized
+34/85 Test: columnstore:ColumnScanFilterTest.ColumnScan1ByteVectorized
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan1ByteVectorized"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteVectorized" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan1ByteVectorized
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan1ByteVectorized
+[       OK ] ColumnScanFilterTest.ColumnScan1ByteVectorized (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteVectorized" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteVectorized" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan2Bytes
+35/85 Test: columnstore:ColumnScanFilterTest.ColumnScan2Bytes
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan2Bytes"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan2Bytes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan2Bytes
+[       OK ] ColumnScanFilterTest.ColumnScan2Bytes (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4Bytes
+36/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4Bytes
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4Bytes"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4Bytes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4Bytes
+[       OK ] ColumnScanFilterTest.ColumnScan4Bytes (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes
+37/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan2Bytes1EqFilter
+38/85 Test: columnstore:ColumnScanFilterTest.ColumnScan2Bytes1EqFilter
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan2Bytes1EqFilter"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes1EqFilter" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan2Bytes1EqFilter
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan2Bytes1EqFilter
+[       OK ] ColumnScanFilterTest.ColumnScan2Bytes1EqFilter (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes1EqFilter" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan2Bytes1EqFilter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingRID
+39/85 Test: columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingRID
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan1ByteUsingRID"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingRID" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan1ByteUsingRID
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan1ByteUsingRID
+[       OK ] ColumnScanFilterTest.ColumnScan1ByteUsingRID (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingRID" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingRID" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs
+40/85 Test: columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs
+[       OK ] ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan1ByteUsingMultipleRIDs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+41/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4Bytes1EqFilter
+41/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4Bytes1EqFilter
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4Bytes1EqFilter"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes1EqFilter" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4Bytes1EqFilter
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4Bytes1EqFilter
+[       OK ] ColumnScanFilterTest.ColumnScan4Bytes1EqFilter (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes1EqFilter" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes1EqFilter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs
+42/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs
+[       OK ] ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesUsingMultipleRIDs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+43/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4Bytes2Filters
+43/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4Bytes2Filters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4Bytes2Filters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2Filters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4Bytes2Filters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4Bytes2Filters
+[       OK ] ColumnScanFilterTest.ColumnScan4Bytes2Filters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2Filters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2Filters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes1EqFilter
+44/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes1EqFilter
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes1EqFilter"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes1EqFilter" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes1EqFilter
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes1EqFilter
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes1EqFilter (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes1EqFilter" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes1EqFilter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+45/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs
+45/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs
+[       OK ] ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesUsingMultipleRIDs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2CompFilters
+46/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2CompFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes2CompFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2CompFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes2CompFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes2CompFilters
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes2CompFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2CompFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2CompFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+47/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFilters
+47/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes2EqFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes2EqFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes2EqFilters
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes2EqFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+48/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID
+48/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRID" time elapsed: 00:00:00
+----------------------------------------------------------
+
+49/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid
+49/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2FiltersRIDOutputRid" time elapsed: 00:00:00
+----------------------------------------------------------
+
+50/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth
+50/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth
+[       OK ] ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8Bytes2EqFiltersRIDOutputBoth" time elapsed: 00:00:00
+----------------------------------------------------------
+
+51/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan1Byte2CompFilters
+51/85 Test: columnstore:ColumnScanFilterTest.ColumnScan1Byte2CompFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan1Byte2CompFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte2CompFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan1Byte2CompFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan1Byte2CompFilters
+[       OK ] ColumnScanFilterTest.ColumnScan1Byte2CompFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte2CompFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan1Byte2CompFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+52/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID
+52/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID
+[==========] Running 0 tests from 0 test suites.
+[==========] 0 tests from 0 test suites ran. (0 ms total)
+[  PASSED  ] 0 tests.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4Bytes2CompFiltersOutputRID" time elapsed: 00:00:00
+----------------------------------------------------------
+
+53/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters
+53/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters
+[       OK ] ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesDouble2CompFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+54/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth
+54/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth
+[       OK ] ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesFloat2CompFiltersOutputBoth" time elapsed: 00:00:00
+----------------------------------------------------------
+
+55/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth
+55/85 Test: columnstore:ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth
+[       OK ] ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan4BytesNegFloat2CompFiltersOutputBoth" time elapsed: 00:00:00
+----------------------------------------------------------
+
+56/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters
+56/85 Test: columnstore:ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters
+[       OK ] ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan8BytesNegDouble2CompFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+57/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan16Bytes
+57/85 Test: columnstore:ColumnScanFilterTest.ColumnScan16Bytes
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan16Bytes"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan16Bytes
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan16Bytes
+[       OK ] ColumnScanFilterTest.ColumnScan16Bytes (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+58/85 Testing: columnstore:ColumnScanFilterTest.ColumnScan16Bytes2CompFilters
+58/85 Test: columnstore:ColumnScanFilterTest.ColumnScan16Bytes2CompFilters
+Command: "/root/server/storage/columnstore/columnstore/bin/column_scan_filter_tests" "--gtest_filter=ColumnScanFilterTest.ColumnScan16Bytes2CompFilters"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes2CompFilters" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = ColumnScanFilterTest.ColumnScan16Bytes2CompFilters
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ColumnScanFilterTest
+[ RUN      ] ColumnScanFilterTest.ColumnScan16Bytes2CompFilters
+[       OK ] ColumnScanFilterTest.ColumnScan16Bytes2CompFilters (0 ms)
+[----------] 1 test from ColumnScanFilterTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes2CompFilters" end time: Jun 20 17:11 UTC
+"columnstore:ColumnScanFilterTest.ColumnScan16Bytes2CompFilters" time elapsed: 00:00:00
+----------------------------------------------------------
+
+59/85 Testing: columnstore:SimdProcessorTypedTest/*.SimdFilterProcessor_simd128
+59/85 Test: columnstore:SimdProcessorTypedTest/*.SimdFilterProcessor_simd128
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTypedTest/*.SimdFilterProcessor_simd128"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTypedTest/*.SimdFilterProcessor_simd128" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTypedTest/*.SimdFilterProcessor_simd128
+[==========] Running 8 tests from 8 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTypedTest/0, where TypeParam = unsigned long
+[ RUN      ] SimdProcessorTypedTest/0.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/0.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/0 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/1, where TypeParam = unsigned int
+[ RUN      ] SimdProcessorTypedTest/1.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/1.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/1 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/2, where TypeParam = unsigned short
+[ RUN      ] SimdProcessorTypedTest/2.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/2.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/2 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/3, where TypeParam = unsigned char
+[ RUN      ] SimdProcessorTypedTest/3.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/3.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/3 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/4, where TypeParam = long
+[ RUN      ] SimdProcessorTypedTest/4.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/4.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/4 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/5, where TypeParam = int
+[ RUN      ] SimdProcessorTypedTest/5.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/5.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/5 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/6, where TypeParam = short
+[ RUN      ] SimdProcessorTypedTest/6.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/6.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/6 (0 ms total)
+
+[----------] 1 test from SimdProcessorTypedTest/7, where TypeParam = signed char
+[ RUN      ] SimdProcessorTypedTest/7.SimdFilterProcessor_simd128
+[       OK ] SimdProcessorTypedTest/7.SimdFilterProcessor_simd128 (0 ms)
+[----------] 1 test from SimdProcessorTypedTest/7 (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 8 tests from 8 test suites ran. (0 ms total)
+[  PASSED  ] 8 tests.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTypedTest/*.SimdFilterProcessor_simd128" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTypedTest/*.SimdFilterProcessor_simd128" time elapsed: 00:00:00
+----------------------------------------------------------
+
+60/85 Testing: columnstore:SimdProcessorTest.Int8
+60/85 Test: columnstore:SimdProcessorTest.Int8
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Int8"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Int8" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Int8
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Int8
+[       OK ] SimdProcessorTest.Int8 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Int8" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Int8" time elapsed: 00:00:00
+----------------------------------------------------------
+
+61/85 Testing: columnstore:SimdProcessorTest.Uint8
+61/85 Test: columnstore:SimdProcessorTest.Uint8
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Uint8"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Uint8" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Uint8
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Uint8
+[       OK ] SimdProcessorTest.Uint8 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Uint8" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Uint8" time elapsed: 00:00:00
+----------------------------------------------------------
+
+62/85 Testing: columnstore:SimdProcessorTest.Int16
+62/85 Test: columnstore:SimdProcessorTest.Int16
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Int16"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Int16" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Int16
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Int16
+[       OK ] SimdProcessorTest.Int16 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Int16" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Int16" time elapsed: 00:00:00
+----------------------------------------------------------
+
+63/85 Testing: columnstore:SimdProcessorTest.Uint16
+63/85 Test: columnstore:SimdProcessorTest.Uint16
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Uint16"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Uint16" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Uint16
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Uint16
+[       OK ] SimdProcessorTest.Uint16 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Uint16" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Uint16" time elapsed: 00:00:00
+----------------------------------------------------------
+
+64/85 Testing: columnstore:SimdProcessorTest.Int32
+64/85 Test: columnstore:SimdProcessorTest.Int32
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Int32"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Int32" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Int32
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Int32
+[       OK ] SimdProcessorTest.Int32 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Int32" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Int32" time elapsed: 00:00:00
+----------------------------------------------------------
+
+65/85 Testing: columnstore:SimdProcessorTest.Uint32
+65/85 Test: columnstore:SimdProcessorTest.Uint32
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Uint32"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Uint32" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Uint32
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Uint32
+[       OK ] SimdProcessorTest.Uint32 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Uint32" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Uint32" time elapsed: 00:00:00
+----------------------------------------------------------
+
+66/85 Testing: columnstore:SimdProcessorTest.Int64
+66/85 Test: columnstore:SimdProcessorTest.Int64
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Int64"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Int64" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Int64
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Int64
+[       OK ] SimdProcessorTest.Int64 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Int64" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Int64" time elapsed: 00:00:00
+----------------------------------------------------------
+
+67/85 Testing: columnstore:SimdProcessorTest.Uint64
+67/85 Test: columnstore:SimdProcessorTest.Uint64
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Uint64"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Uint64" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Uint64
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Uint64
+[       OK ] SimdProcessorTest.Uint64 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Uint64" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Uint64" time elapsed: 00:00:00
+----------------------------------------------------------
+
+68/85 Testing: columnstore:SimdProcessorTest.Float64
+68/85 Test: columnstore:SimdProcessorTest.Float64
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Float64"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Float64" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Float64
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Float64
+[       OK ] SimdProcessorTest.Float64 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Float64" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Float64" time elapsed: 00:00:00
+----------------------------------------------------------
+
+69/85 Testing: columnstore:SimdProcessorTest.Float32
+69/85 Test: columnstore:SimdProcessorTest.Float32
+Command: "/root/server/storage/columnstore/columnstore/bin/simd_processors" "--gtest_filter=SimdProcessorTest.Float32"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:SimdProcessorTest.Float32" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = SimdProcessorTest.Float32
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SimdProcessorTest
+[ RUN      ] SimdProcessorTest.Float32
+[       OK ] SimdProcessorTest.Float32 (0 ms)
+[----------] 1 test from SimdProcessorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:SimdProcessorTest.Float32" end time: Jun 20 17:11 UTC
+"columnstore:SimdProcessorTest.Float32" time elapsed: 00:00:00
+----------------------------------------------------------
+
+70/85 Testing: columnstore:FairThreadPoolTest.FairThreadPoolAdd
+70/85 Test: columnstore:FairThreadPoolTest.FairThreadPoolAdd
+Command: "/root/server/storage/columnstore/columnstore/bin/fair_threadpool_test" "--gtest_filter=FairThreadPoolTest.FairThreadPoolAdd"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:FairThreadPoolTest.FairThreadPoolAdd" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = FairThreadPoolTest.FairThreadPoolAdd
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from FairThreadPoolTest
+[ RUN      ] FairThreadPoolTest.FairThreadPoolAdd
+FairThreadPool started 1 thread/-s.
+[       OK ] FairThreadPoolTest.FairThreadPoolAdd (351 ms)
+[----------] 1 test from FairThreadPoolTest (351 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (351 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.47 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:FairThreadPoolTest.FairThreadPoolAdd" end time: Jun 20 17:11 UTC
+"columnstore:FairThreadPoolTest.FairThreadPoolAdd" time elapsed: 00:00:00
+----------------------------------------------------------
+
+71/85 Testing: columnstore:FairThreadPoolTest.FairThreadPoolRemove
+71/85 Test: columnstore:FairThreadPoolTest.FairThreadPoolRemove
+Command: "/root/server/storage/columnstore/columnstore/bin/fair_threadpool_test" "--gtest_filter=FairThreadPoolTest.FairThreadPoolRemove"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:FairThreadPoolTest.FairThreadPoolRemove" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = FairThreadPoolTest.FairThreadPoolRemove
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from FairThreadPoolTest
+[ RUN      ] FairThreadPoolTest.FairThreadPoolRemove
+FairThreadPool started 1 thread/-s.
+[       OK ] FairThreadPoolTest.FairThreadPoolRemove (251 ms)
+[----------] 1 test from FairThreadPoolTest (251 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (251 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.37 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:FairThreadPoolTest.FairThreadPoolRemove" end time: Jun 20 17:11 UTC
+"columnstore:FairThreadPoolTest.FairThreadPoolRemove" time elapsed: 00:00:00
+----------------------------------------------------------
+
+72/85 Testing: columnstore:FairThreadPoolTest.FairThreadPoolCleanUp
+72/85 Test: columnstore:FairThreadPoolTest.FairThreadPoolCleanUp
+Command: "/root/server/storage/columnstore/columnstore/bin/fair_threadpool_test" "--gtest_filter=FairThreadPoolTest.FairThreadPoolCleanUp"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:FairThreadPoolTest.FairThreadPoolCleanUp" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = FairThreadPoolTest.FairThreadPoolCleanUp
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from FairThreadPoolTest
+[ RUN      ] FairThreadPoolTest.FairThreadPoolCleanUp
+FairThreadPool started 1 thread/-s.
+[       OK ] FairThreadPoolTest.FairThreadPoolCleanUp (251 ms)
+[----------] 1 test from FairThreadPoolTest (251 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (251 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.36 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:FairThreadPoolTest.FairThreadPoolCleanUp" end time: Jun 20 17:11 UTC
+"columnstore:FairThreadPoolTest.FairThreadPoolCleanUp" time elapsed: 00:00:00
+----------------------------------------------------------
+
+73/85 Testing: columnstore:FairThreadPoolTest.FairThreadPoolReschedule
+73/85 Test: columnstore:FairThreadPoolTest.FairThreadPoolReschedule
+Command: "/root/server/storage/columnstore/columnstore/bin/fair_threadpool_test" "--gtest_filter=FairThreadPoolTest.FairThreadPoolReschedule"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:FairThreadPoolTest.FairThreadPoolReschedule" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = FairThreadPoolTest.FairThreadPoolReschedule
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from FairThreadPoolTest
+[ RUN      ] FairThreadPoolTest.FairThreadPoolReschedule
+FairThreadPool started 1 thread/-s.
+[       OK ] FairThreadPoolTest.FairThreadPoolReschedule (251 ms)
+[----------] 1 test from FairThreadPoolTest (251 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (251 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.36 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:FairThreadPoolTest.FairThreadPoolReschedule" end time: Jun 20 17:11 UTC
+"columnstore:FairThreadPoolTest.FairThreadPoolReschedule" time elapsed: 00:00:00
+----------------------------------------------------------
+
+74/85 Testing: columnstore:comparators_tests
+74/85 Test: columnstore:comparators_tests
+Command: "/root/server/storage/columnstore/columnstore/bin/comparators_tests"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:comparators_tests" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+.
+------------------------------------------------------------
+UTINYINT 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: NULL 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: NULL  < [    0]: 0: 42  is true
+[    0]: 0: NULL  < [    0]: 0: NULL  is true
+
+------------------------------------------------------------
+USMALLINT 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: NULL 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: NULL  < [    0]: 0: 42  is true
+[    0]: 0: NULL  < [    0]: 0: NULL  is true
+
+------------------------------------------------------------
+UINT 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: NULL 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: NULL  < [    0]: 0: 42  is true
+[    0]: 0: NULL  < [    0]: 0: NULL  is true
+
+------------------------------------------------------------
+UBIGINT 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: NULL 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: NULL  < [    0]: 0: 42  is true
+[    0]: 0: NULL  < [    0]: 0: NULL  is true
+
+------------------------------------------------------------
+UBIGINT 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: -1 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: -1  < [    0]: 0: 42  is false
+F..
+------------------------------------------------------------
+DECIMAL 
+r1 [    0]: 0: 42  r2 [    0]: 0: 43  r3 [    0]: 0: NULL 
+[    0]: 0: 42  < [    0]: 0: 43  is true
+[    0]: 0: 43  < [    0]: 0: 42  is false
+[    0]: 0: 43  < [    0]: 0: 43  is false
+[    0]: 0: NULL  < [    0]: 0: 42  is true
+[    0]: 0: NULL  < [    0]: 0: NULL  is true
+
+
+
+!!!FAILURES!!!
+Test Results:
+Run:  3   Failures: 1   Errors: 0
+
+
+1) test: FilterDriver::INT_TEST (F) line: 388 /root/server/storage/columnstore/columnstore/tests/comparators-tests.cpp
+assertion failed
+- Expression: result == true
+
+
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Failed.
+"columnstore:comparators_tests" end time: Jun 20 17:11 UTC
+"columnstore:comparators_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+75/85 Testing: mpark_patterns:Aggregate.LRef
+75/85 Test: mpark_patterns:Aggregate.LRef
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.LRef"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.LRef" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.LRef
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.LRef
+[       OK ] Aggregate.LRef (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.LRef" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.LRef" time elapsed: 00:00:00
+----------------------------------------------------------
+
+76/85 Testing: mpark_patterns:Aggregate.ConstLRef
+76/85 Test: mpark_patterns:Aggregate.ConstLRef
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.ConstLRef"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.ConstLRef" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.ConstLRef
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.ConstLRef
+[       OK ] Aggregate.ConstLRef (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.ConstLRef" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.ConstLRef" time elapsed: 00:00:00
+----------------------------------------------------------
+
+77/85 Testing: mpark_patterns:Aggregate.RRef
+77/85 Test: mpark_patterns:Aggregate.RRef
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.RRef"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.RRef" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.RRef
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.RRef
+[       OK ] Aggregate.RRef (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.RRef" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.RRef" time elapsed: 00:00:00
+----------------------------------------------------------
+
+78/85 Testing: mpark_patterns:Aggregate.Empty
+78/85 Test: mpark_patterns:Aggregate.Empty
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.Empty"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.Empty" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.Empty
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.Empty
+[       OK ] Aggregate.Empty (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.Empty" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.Empty" time elapsed: 00:00:00
+----------------------------------------------------------
+
+79/85 Testing: mpark_patterns:Aggregate.OneChar
+79/85 Test: mpark_patterns:Aggregate.OneChar
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.OneChar"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.OneChar" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.OneChar
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.OneChar
+[       OK ] Aggregate.OneChar (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.OneChar" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.OneChar" time elapsed: 00:00:00
+----------------------------------------------------------
+
+80/85 Testing: mpark_patterns:Aggregate.OneInt
+80/85 Test: mpark_patterns:Aggregate.OneInt
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.OneInt"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.OneInt" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.OneInt
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.OneInt
+[       OK ] Aggregate.OneInt (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.OneInt" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.OneInt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+81/85 Testing: mpark_patterns:Aggregate.TwoChars
+81/85 Test: mpark_patterns:Aggregate.TwoChars
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.TwoChars"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.TwoChars" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.TwoChars
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.TwoChars
+[       OK ] Aggregate.TwoChars (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.TwoChars" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.TwoChars" time elapsed: 00:00:00
+----------------------------------------------------------
+
+82/85 Testing: mpark_patterns:Aggregate.TwoInts
+82/85 Test: mpark_patterns:Aggregate.TwoInts
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.TwoInts"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.TwoInts" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.TwoInts
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.TwoInts
+[       OK ] Aggregate.TwoInts (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.TwoInts" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.TwoInts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+83/85 Testing: mpark_patterns:Aggregate.ThreeChars
+83/85 Test: mpark_patterns:Aggregate.ThreeChars
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.ThreeChars"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.ThreeChars" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.ThreeChars
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.ThreeChars
+[       OK ] Aggregate.ThreeChars (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.ThreeChars" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.ThreeChars" time elapsed: 00:00:00
+----------------------------------------------------------
+
+84/85 Testing: mpark_patterns:Aggregate.FourChars
+84/85 Test: mpark_patterns:Aggregate.FourChars
+Command: "/root/server/storage/columnstore/columnstore/bin/patterns_test" "--gtest_filter=Aggregate.FourChars"
+Directory: /root/server/storage/columnstore/columnstore/tests
+"mpark_patterns:Aggregate.FourChars" start time: Jun 20 17:11 UTC
+Output:
+----------------------------------------------------------
+Running main() from /root/server/storage/columnstore/columnstore/external/Source/googletest/googletest/src/gtest_main.cc
+Note: Google Test filter = Aggregate.FourChars
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Aggregate
+[ RUN      ] Aggregate.FourChars
+[       OK ] Aggregate.FourChars (0 ms)
+[----------] 1 test from Aggregate (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"mpark_patterns:Aggregate.FourChars" end time: Jun 20 17:11 UTC
+"mpark_patterns:Aggregate.FourChars" time elapsed: 00:00:00
+----------------------------------------------------------
+
+85/85 Testing: columnstore:brm_em_standalone
+85/85 Test: columnstore:brm_em_standalone
+Command: ""
+Directory: /root/server/storage/columnstore/columnstore/tests
+"columnstore:brm_em_standalone" start time: 
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"columnstore:brm_em_standalone" end time: Jun 20 17:11 UTC
+"columnstore:brm_em_standalone" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jun 20 17:11 UTC

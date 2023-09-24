@@ -630,7 +630,7 @@ bool TupleAggregateStep::nextDeliveredRowGroup()
 {
   for (; fBucketNum < fNumOfBuckets; fBucketNum++)
   {
-    while (fAggregators[fBucketNum]->nextRowGroup())
+    while (fAggregators[fBucketNum]->nextOutputRowGroup())
     {
       fAggregators[fBucketNum]->finalize();
       fRowGroupDelivered.setData(fAggregators[fBucketNum]->getOutputRowGroup()->getRGData());

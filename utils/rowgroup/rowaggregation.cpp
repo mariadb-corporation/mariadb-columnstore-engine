@@ -4086,11 +4086,7 @@ bool RowAggregationUM::nextRowGroup()
 
 bool RowAggregationUM::nextOutputRowGroup()
 {
-  // TODO: Fix this hack.
-  if (fRowAggStorage->hasGenerations())
-  {
-    finalAggregation();
-  }
+  // TODO: Fix this hack. Prbly not needed for multi-threading?
   std::unique_ptr<RGData> rgdata;
   bool more = fRowAggStorage->getNextOutputRGData(rgdata);
 
@@ -4098,6 +4094,9 @@ bool RowAggregationUM::nextOutputRowGroup()
   {
     // load the top result set
     fRowGroupOut->setData(rgdata.get());
+    Row* printRow = new Row();
+    fRowGroupOut->getRow(0, printRow);
+    std::cout << "RowAggregationUM::nextOutputRowGroup() " << printRow->toString() << std::endl;
   }
 
   return more;
