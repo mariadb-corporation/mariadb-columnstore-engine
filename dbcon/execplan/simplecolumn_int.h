@@ -92,29 +92,10 @@ class SimpleColumn_INT : public SimpleColumn
                        CalpontSystemCatalog::ColDataType dataType) override
   {
     auto offset = row.getOffset(fInputIndex);
-    auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), data, offset);
+    CalpontSystemCatalog::ColDataType colType = row.getColType(fInputIndex);
     llvm::Value* result;
-    auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
-    switch (len)
-    {
-      case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr);
-        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt8(joblist::TINYINTNULL)), isNullVal), isNull);
-        break;
-      case 2:
-        result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
-        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt16(joblist::SMALLINTNULL)), isNullVal), isNull);
-        break;
-      case 4:
-        result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
-        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt32(joblist::INTNULL)), isNullVal), isNull);
-        break;
-      case 8:
-        result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
-        b.CreateStore(b.CreateOr(b.CreateICmpEQ(result, b.getInt64(joblist::BIGINTNULL)), isNullVal), isNull);
-        break;
-      default: throw std::logic_error("Row::getIntField(): bad length.");
-    }
-    return result;
+    msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
+    return msc_jit::CompileHelper::compileIntField<len>(b, data, offset);
   }
   bool isCompilable(rowgroup::Row& row) override
   {
