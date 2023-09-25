@@ -32,6 +32,7 @@
 
 #include "treenode.h"
 #include "calpontsystemcatalog.h"
+#include "compilehelper.h"
 
 namespace messageqcpp
 {
