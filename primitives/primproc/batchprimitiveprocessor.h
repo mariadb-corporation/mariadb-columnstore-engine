@@ -54,7 +54,7 @@
 #include "bppsendthread.h"
 #include "columnwidth.h"
 
-//#define PRIMPROC_STOPWATCH
+// #define PRIMPROC_STOPWATCH
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"
 #endif
@@ -89,6 +89,7 @@ class NeedToRestartJob : public std::runtime_error
   }
 };
 
+// int index = 0;
 class BatchPrimitiveProcessor
 {
  public:
@@ -306,6 +307,12 @@ class BatchPrimitiveProcessor
   boost::shared_array<int> rgMap;          // maps input cols to output cols
   boost::shared_array<int> projectionMap;  // maps the projection steps to the output RG
   bool hasRowGroup;
+  long calTime = 0;
+  long curMaxTime = 0;
+  bool firstCalculate = true;
+  int calculateCount = 0;
+  int calculateTime = 0;
+  int remainCount = 0;
 
   /* Rowgroups + join */
   typedef std::tr1::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
@@ -416,6 +423,11 @@ class BatchPrimitiveProcessor
 
   /* To support a smaller memory footprint when idle */
   static const uint64_t maxIdleBufferSize = 16 * 1024 * 1024;  // arbitrary
+  static int index;
+  static int forindex;
+  static int lastindex;
+  static bool compile_flag;
+  static bool is_cache;
   void allocLargeBuffers();
   void freeLargeBuffers();
 

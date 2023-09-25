@@ -14,13 +14,17 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-#ifndef HA_MCS_PUSH
-#define HA_MCS_PUSH
+#pragma once
 
 #define PREFER_MY_CONFIG_H
 #include "idb_mysql.h"
 #include "ha_mcs.h"
 #include "ha_mcs_sysvars.h"
+#include "ha_mcs_common.h"
+
+// This undef is necessary to avoid conflict with the macro defined in llvm
+// used for JIT.
+#undef MB
 #define NEED_CALPONT_EXTERNS
 #include "ha_mcs_impl.h"
 #include "ha_mcs_impl_if.h"
@@ -152,12 +156,12 @@ class ha_columnstore_select_handler : public select_handler
   // This will be used to restore to the original state later in case
   // query execution fails using the select_handler.
   cal_impl_if::TableOuterJoinMap tableOuterJoinMap;
-  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel_lex);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX_UNIT* sel_unit);
+  ha_columnstore_select_handler(THD* thd_arg, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit);
   ~ha_columnstore_select_handler();
   int init_scan() override;
   int next_row() override;
   int end_scan() override;
   bool prepare() override;
 };
-
-#endif

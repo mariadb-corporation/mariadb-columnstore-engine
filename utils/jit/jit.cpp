@@ -15,7 +15,8 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/MC/SubtargetFeature.h>
-#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/TargetRegistry.h>
+// WIP #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>
@@ -313,6 +314,7 @@ JIT::JIT()
 
 JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
 {
+  std::lock_guard<std::mutex> lock(jit_lock);
   auto module = createModuleForCompilation();
   compile_function(*module);
   auto module_info = compileModule(std::move(module));

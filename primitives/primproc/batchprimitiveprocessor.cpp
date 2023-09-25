@@ -32,11 +32,13 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <cstring>
-//#define NDEBUG
+#include "adaptive.h"
+// #define NDEBUG
 #include <cassert>
 #include <string>
 #include <sstream>
 #include <set>
+#include <pthread.h>
 #include <stdlib.h>
 using namespace std;
 
@@ -613,7 +615,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
   {
     uint64_t key;
     uint32_t value;
-  } * arr;
+  }* arr;
 #pragma pack(pop)
 
   /* skip the header */
@@ -1620,7 +1622,7 @@ void BatchPrimitiveProcessor::execute()
       }
 
       /* 7/7/09 PL: I Changed the projection alg to reduce block touches when there's
-       a join.  The key columns get projected first, the join is executed to further
+       ajoin.  The key columns get projected first, the join is executed to further
       reduce the ridlist, then the rest of the columns get projected */
 
       if (!doJoin)
@@ -1638,19 +1640,36 @@ void BatchPrimitiveProcessor::execute()
             projectSteps[j]->projectIntoRowGroup(outputRG, projectionMap[j]);
 #endif
           }
-
-          //				else
-          //					cout << "   no target found for OID " << projectSteps[j]->getOID() <<
-          //endl;
         }
         if (fe2)
         {
           /* functionize this -> processFE2() */
+          forindex = index;
+          if (forindex != lastindex)
+          {
+            if (!fe2->containCache())
+            {
+              compile_flag = !compile_flag;
+              is_cache = false;
+            }
+            else
+            {
+              is_cache = true;
+            }
+            lastindex = forindex;
+            cout << "compile_flag:" << compile_flag << " contain cache:" << is_cache << endl;
+          }
           fe2Output.resetRowGroup(baseRid);
           fe2Output.getRow(0, &fe2Out);
           fe2Input->getRow(0, &fe2In);
 
+          auto start = std::chrono::steady_clock::now();
           // cerr << "input row: " << fe2In.toString() << endl;
+          //          if (!firstCalculate)
+          //          {
+          //            fe2->openCompiled = JitAdaptive::EvaluateResult(calculateCount, calculateCount, 3);
+          //          }
+          fe2->openCompiled = compile_flag;
           for (j = 0; j < outputRG.getRowCount(); j++, fe2In.nextRow())
           {
             if (fe2->evaluate(&fe2In))
@@ -1660,6 +1679,49 @@ void BatchPrimitiveProcessor::execute()
               fe2Out.setRid(fe2In.getRelRid());
               fe2Output.incRowCount();
               fe2Out.nextRow();
+            }
+            else
+            {
+              std::cout << " false failed" << std::endl;
+              // cerr << "   failed." << endl;
+            }
+          }
+          auto end = std::chrono::steady_clock::now();
+          if (firstCalculate)
+          {
+            firstCalculate = false;
+            calculateCount = outputRG.getRowCount();
+            calculateTime = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+          }
+          if (outputRG.getRowCount() > 0)
+          {
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+            // 打印时间差
+            calTime += duration.count();
+            if (is_cache)
+            {
+              ofstream outfile;
+              outfile.open("/home/nuc/data/cache.txt");
+              outfile << calTime << endl;
+            }
+            else
+            {
+              if (compile_flag)
+              {
+                ofstream outfile;
+                outfile.open("/home/nuc/data/jit.txt");
+                outfile << calTime << endl;
+                ofstream outfile1;
+                outfile1.open("/home/nuc/data/enable.txt");
+                outfile << compile_flag << endl;
+              }
+              else
+              {
+                ofstream outfile;
+                outfile.open("/home/nuc/data/execute.txt");
+                outfile << calTime << endl;
+              }
             }
           }
 
@@ -1689,17 +1751,17 @@ void BatchPrimitiveProcessor::execute()
 
           if ((currentBlockOffset + 1) == count)  // @bug4507, 8k
           {
-            fAggregator->loadResult(*serialized);            // @bug4507, 8k
-          }                                                  // @bug4507, 8k
+            fAggregator->loadResult(*serialized);  // @bug4507, 8k
+          }  // @bug4507, 8k
           else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
           {
             fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
-          }                                          // @bug4507, 8k
-          else                                       // @bug4507, 8k
+          }  // @bug4507, 8k
+          else  // @bug4507, 8k
           {
             fAggregator->loadResult(*serialized);  // @bug4507, 8k
             fAggregator->aggReset();               // @bug4507, 8k
-          }                                        // @bug4507, 8k
+          }  // @bug4507, 8k
         }
 
         if (!fAggregator && !fe2)
@@ -1821,17 +1883,17 @@ void BatchPrimitiveProcessor::execute()
 
                 if ((currentBlockOffset + 1) == count && moreRGs == false && startRid == 0)  // @bug4507, 8k
                 {
-                  fAggregator->loadResult(*serialized);            // @bug4507, 8k
-                }                                                  // @bug4507, 8k
+                  fAggregator->loadResult(*serialized);  // @bug4507, 8k
+                }  // @bug4507, 8k
                 else if (utils::MonitorProcMem::isMemAvailable())  // @bug4507, 8k
                 {
                   fAggregator->loadEmptySet(*serialized);  // @bug4507, 8k
-                }                                          // @bug4507, 8k
-                else                                       // @bug4507, 8k
+                }  // @bug4507, 8k
+                else  // @bug4507, 8k
                 {
                   fAggregator->loadResult(*serialized);  // @bug4507, 8k
                   fAggregator->aggReset();               // @bug4507, 8k
-                }                                        // @bug4507, 8k
+                }  // @bug4507, 8k
               }
               else
               {
@@ -2220,6 +2282,12 @@ void BatchPrimitiveProcessor::makeResponse()
   // 		" touchedBlocks=" << touchedBlocks << endl;
 }
 
+int BatchPrimitiveProcessor::index = 0;
+int BatchPrimitiveProcessor::forindex = 0;
+int BatchPrimitiveProcessor::lastindex = 0;
+bool BatchPrimitiveProcessor::compile_flag = true;
+bool BatchPrimitiveProcessor::is_cache = false;
+
 int BatchPrimitiveProcessor::operator()()
 {
   utils::setThreadName("PPBatchPrimProc");
@@ -2239,8 +2307,10 @@ int BatchPrimitiveProcessor::operator()()
   if (fAggregator && currentBlockOffset == 0)  // @bug4507, 8k
     fAggregator->aggReset();                   // @bug4507, 8k
 
+  index++;
   for (; currentBlockOffset < count; currentBlockOffset++)
   {
+    forindex = index;
     if (!(sessionID & 0x80000000))  // can't do this with syscat queries
     {
       if (sendThread->aborted())
@@ -2274,6 +2344,13 @@ int BatchPrimitiveProcessor::operator()()
     stopwatch->stop("BPP() execute");
 #else
     execute();
+//    ofstream fout("/home/nuc/pythonProject/a.txt");
+//    streambuf* coutbuf = cout.rdbuf(fout.rdbuf());
+//    if (calTime > curMaxTime)
+//    {
+//      curMaxTime = calTime;
+//      cout << calTime << endl;
+//    }
 #endif
 
     if (projectCount == 0 && ot != ROW_GROUP)

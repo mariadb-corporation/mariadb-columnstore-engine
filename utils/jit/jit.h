@@ -23,6 +23,7 @@ class JIT
     std::unordered_map<std::string, void*> function_name_to_symbol;
   };
   CompiledModule compileModule(std::function<void(llvm::Module&)> compile_function);
+  std::unordered_map<std::string, CompiledModule> compiledModuleCache;
   void deleteCompiledModule(CompiledModule& module);
   void registerExternalSymbol(const std::string& symbol_name, void* address);
 

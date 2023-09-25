@@ -1,5 +1,7 @@
 #include "compileoperator.h"
 #include "llvm/IR/Verifier.h"
+#include <llvm/Support/raw_ostream.h>  // 确保包含了这个头文件
+#include <llvm/Support/FileSystem.h>   // 确保包含了这个头文件
 #include "rowgroup.h"
 
 namespace execplan
@@ -57,14 +59,52 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   b.CreateRet(ret);
 
   llvm::verifyFunction(*func);
+
+  std::error_code EC;
+  llvm::raw_fd_ostream outfile("/home/nuc/data/ir.txt", EC, llvm::sys::fs::OF_Text);
+  if (EC)
+  {
+    llvm::errs() << "Could not open file: " << EC.message();
+    return;
+  }
+  module.print(outfile, nullptr);
 }
 
 CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
 {
-  auto compiled_module =
-      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
-  CompiledOperator result_compiled_function{.compiled_module = compiled_module};
+  string key = colDataTypeToString(expression->resultType().colDataType) + expression->alias();
 
+  msc_jit::JIT::CompiledModule compiled_module;
+  if (CompiledOperatorCache::getInstance().cache.find(key) !=
+      CompiledOperatorCache::getInstance().cache.end())
+  {
+    compiled_module = CompiledOperatorCache::getInstance().cache[key];
+  }
+  else
+  {
+    // 获取第一个时间点
+    //    auto start = std::chrono::steady_clock::now();
+    compiled_module =
+        jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
+    //    // 获取第二个时间点
+    //    auto end = std::chrono::steady_clock::now();
+    //    // 计算时间差
+    //    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    //
+    //    // 打印时间差
+    //    std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
+    CompiledOperatorCache::getInstance().cache[key] = compiled_module;
+  }
+  //  auto compiled_module =
+  //      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
+
+  CompiledOperator result_compiled_function{.compiled_module = compiled_module};
+  //  std::unordered_map<std::string, msc_jit::JIT::CompiledModule> cache1 =
+  //      CompiledOperatorCache::getInstance().cache;
+
+  //  auto compiled_module =
+  //      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
+  //  CompiledOperator result_compiled_function{.compiled_module = compiled_module};
   switch (expression->resultType().colDataType)
   {
     case CalpontSystemCatalog::BIGINT:
@@ -93,6 +133,7 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
     case CalpontSystemCatalog::UFLOAT:
       result_compiled_function.compiled_function_float = reinterpret_cast<JITCompiledOperator<float>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
+      break;
     default: throw logic_error("compileOperator: unsupported type");
   }
 
