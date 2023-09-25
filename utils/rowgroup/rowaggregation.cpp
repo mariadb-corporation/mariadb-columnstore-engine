@@ -4070,11 +4070,6 @@ bool RowAggregationUM::nextRowGroup()
   fCurRGData = fRowAggStorage->getNextRGData();
   bool more = static_cast<bool>(fCurRGData);
 
-  if (!more)
-  {
-    std::cout << "dummy breakpoint" << std::endl;
-  }
-
   if (more)
   {
     // load the top result set
@@ -4086,17 +4081,12 @@ bool RowAggregationUM::nextRowGroup()
 
 bool RowAggregationUM::nextOutputRowGroup()
 {
-  // TODO: Fix this hack. Prbly not needed for multi-threading?
   std::unique_ptr<RGData> rgdata;
   bool more = fRowAggStorage->getNextOutputRGData(rgdata);
 
   if (more)
   {
-    // load the top result set
     fRowGroupOut->setData(rgdata.get());
-    Row* printRow = new Row();
-    fRowGroupOut->getRow(0, printRow);
-    std::cout << "RowAggregationUM::nextOutputRowGroup() " << printRow->toString() << std::endl;
   }
 
   return more;
