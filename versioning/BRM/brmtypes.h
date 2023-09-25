@@ -254,7 +254,12 @@ struct TableLockInfo : public messageqcpp::Serializeable
   EXPORT void deserialize(messageqcpp::ByteStream& bs);
   EXPORT void serialize(idbdatafile::IDBDataFile*) const;
   EXPORT void deserialize(idbdatafile::IDBDataFile*);
+  EXPORT void serialize(char* buffer, uint32_t& offset);
+  EXPORT uint32_t getInternalSize() const;
   bool operator<(const TableLockInfo&) const;
+
+ private:
+  void serializeElement(char* buffer, const char* src, const uint32_t size, uint32_t& offset);
 };
 
 /// A Serializeable version of InlineLBIDRange
