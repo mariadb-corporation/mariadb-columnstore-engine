@@ -1941,10 +1941,6 @@ bool RowAggStorage::getNextOutputRGData(std::unique_ptr<RGData>& rgdata)
     if (moreInGeneration)
     {
       fRowGroupOut->setData(rgdata.get());
-      Row printRow = Row();
-      fRowGroupOut->getRow(0, &printRow);
-      std::cout << "RowAggStorage::getNextOutputRGData: " << printRow.toString() << std::endl;
-      // found RGData in Generation, return it
       return true;
     }
 
@@ -1967,45 +1963,8 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
   }
   cleanup();
   freeData();
-  // return fStorage->getNextRGData();
 
-  // count number of rowgroups per generation
-  // auto gen = this->fGeneration;
-  // auto origGen = gen;
-  // auto RGSum = 0;
-  // for (int32_t i = gen; i >= 0; i--)
-  // {
-  //   auto numRGs = fStorage->fRGDatas.size();
-  //   std::cout << "Number of rowgroups in generation " << gen << ": " << numRGs << std::endl;
-  //   RGSum += numRGs;
-  //   fGeneration = gen;
-  //   // fStorage.reset(fStorage->clone(gen));
-  // }
-  // std::cout << "Total number of rowgroups: " << RGSum << std::endl;
-
-  // fGeneration = origGen;
-  // fStorage.reset(fStorage->clone(origGen));
-
-  while (true)
-  {
-    // std::cout << this->fGeneration << std::endl;
-    auto curData = fStorage->getNextRGData();
-    if (curData)
-    {
-      return curData;
-    }
-
-    if (this->fGeneration == 0)
-    {
-      return {};
-    }
-    else
-    {
-      this->fGeneration--;
-      fStorage.reset(fStorage->clone(this->fGeneration));
-      return fStorage->getNextRGData();
-    }
-  }
+  return fStorage->getNextRGData();
 }
 
 void RowAggStorage::freeData()
