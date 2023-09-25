@@ -26,7 +26,7 @@
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
 //
 
-//#define NDEBUG
+// #define NDEBUG
 #include <sstream>
 #include <iterator>
 using namespace std;
