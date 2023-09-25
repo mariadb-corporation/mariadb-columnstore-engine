@@ -634,19 +634,6 @@ private:
   UserDataStore* userDataStore = nullptr;  // For UDAF
 
   friend class RowGroup;
-  // llvm part
- public:
-  template <int len>
-  inline llvm::Value* compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
-                                      bool isInt64 = true) const;
-  template <int len>
-  inline llvm::Value* compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
-                                       bool isUint64 = true) const;
-  void compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull, uint32_t colIndex);
-  inline llvm::Value* compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                        uint32_t colIndex) const;
-  inline llvm::Value* compileDoubleField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                         uint32_t colIndex) const;
 };
 
 inline Row::Pointer Row::getPointer() const
@@ -1441,65 +1428,6 @@ inline bool Row::equals(const Row& r2) const
   return equals(r2, columnCount - 1);
 }
 
-template <int len>
-inline llvm::Value* Row::compileIntField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
-                                         bool isInt64) const
-{
-  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
-  llvm::Value* result;
-  switch (len)
-  {
-    case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr); break;
-    case 2:
-      result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
-      break;
-    case 4:
-      result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
-      break;
-    case 8:
-      result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
-      break;
-    default: throw std::logic_error("Row::compileIntField(): bad length.");
-  }
-  return isInt64 ? b.CreateSExt(result, b.getInt64Ty()) : result;
-}
-
-template <int len>
-inline llvm::Value* Row::compileUintField(llvm::IRBuilder<>& b, llvm::Value* dataValue, uint32_t colIndex,
-                                          bool isUint64) const
-{
-  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
-  llvm::Value* result;
-  switch (len)
-  {
-    case 1: result = b.CreateLoad(b.getInt8Ty(), dataPtr); break;
-    case 2:
-      result = b.CreateLoad(b.getInt16Ty(), b.CreateBitCast(dataPtr, b.getInt16Ty()->getPointerTo()));
-      break;
-    case 4:
-      result = b.CreateLoad(b.getInt32Ty(), b.CreateBitCast(dataPtr, b.getInt32Ty()->getPointerTo()));
-      break;
-    case 8:
-      result = b.CreateLoad(b.getInt64Ty(), b.CreateBitCast(dataPtr, b.getInt64Ty()->getPointerTo()));
-      break;
-    default: throw std::logic_error("Row::compileIntField(): bad length.");
-  }
-  return isUint64 ? b.CreateZExt(result, b.getInt64Ty()) : result;
-}
-
-inline llvm::Value* Row::compileFloatField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                           uint32_t colIndex) const
-{
-  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
-  return b.CreateLoad(b.getFloatTy(), b.CreateBitCast(dataPtr, b.getFloatTy()->getPointerTo()));
-}
-
-inline llvm::Value* Row::compileDoubleField(llvm::IRBuilder<>& b, llvm::Value* dataValue,
-                                            uint32_t colIndex) const
-{
-  auto* dataPtr = b.CreateConstInBoundsGEP1_64(b.getInt8Ty(), dataValue, offsets[colIndex]);
-  return b.CreateLoad(b.getDoubleTy(), b.CreateBitCast(dataPtr, b.getDoubleTy()->getPointerTo()));
-}
 /** @brief RowGroup is a lightweight interface for processing packed row data
 
         A RowGroup is an interface for parsing and/or modifying row data as described at the top
