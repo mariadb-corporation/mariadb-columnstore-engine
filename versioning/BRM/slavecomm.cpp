@@ -191,6 +191,7 @@ SlaveComm::SlaveComm()
   slave = std::make_unique<SlaveDBRMNode>();
 }
 
+
 void SlaveComm::stop()
 {
   die = true;
@@ -1927,8 +1928,7 @@ void SlaveComm::do_confirm()
   {
     if (!currentSaveFile)
     {
-      currentSaveFile.reset(
-          IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0));
+      currentSaveFile.reset(IDBDataFile::open(IDBPolicy::getType(tmp.c_str(), IDBPolicy::WRITEENG), tmp.c_str(), "wb", 0));
     }
 
     if (currentSaveFile == NULL)
@@ -1951,8 +1951,7 @@ void SlaveComm::do_confirm()
     if (err < (int)relative.length())
     {
       ostringstream os;
-      os << "WorkerComm: currentfile write() returned " << err << " file pointer is "
-         << currentSaveFile.get();
+      os << "WorkerComm: currentfile write() returned " << err << " file pointer is " << currentSaveFile.get();
 
       if (err < 0)
         os << " errno: " << strerror(errno);
@@ -1967,7 +1966,7 @@ void SlaveComm::do_confirm()
 
     ;
     journalh.reset(IDBDataFile::open(IDBPolicy::getType(journalName.c_str(), IDBPolicy::WRITEENG),
-                                     journalName.c_str(), "w+b", 0));
+                                 journalName.c_str(), "w+b", 0));
 
     if (!journalh)
       throw runtime_error("Could not open the BRM journal for writing!");
@@ -2183,16 +2182,11 @@ void SlaveComm::saveDelta()
 {
   try
   {
-    const uint32_t deltaLen = delta.length();
-    const uint32_t bufferSize = sizeof(deltaLen) + deltaLen;
-    std::unique_ptr<char[]> buffer(new char[bufferSize]);
-    uint32_t offset = 0;
-    std::memcpy(&buffer[offset], (char*)&deltaLen, sizeof(deltaLen));
-    offset += sizeof(deltaLen);
-    std::memcpy(&buffer[offset], (char*)delta.buf(), deltaLen);
+    uint32_t len = delta.length();
 
     journalh->seek(0, SEEK_END);
-    journalh->write((const char*)buffer.get(), bufferSize);
+    journalh->write((const char*)&len, sizeof(len));
+    journalh->write((const char*)delta.buf(), delta.length());
     journalh->flush();
     journalCount++;
   }
@@ -2332,3 +2326,4 @@ void SlaveComm::do_dmlReleaseLBIDRanges(ByteStream& msg)
 }
 
 }  // namespace BRM
+
