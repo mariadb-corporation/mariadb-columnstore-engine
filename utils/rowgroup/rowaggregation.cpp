@@ -4081,12 +4081,11 @@ bool RowAggregationUM::nextRowGroup()
 
 bool RowAggregationUM::nextOutputRowGroup()
 {
-  std::unique_ptr<RGData> rgdata;
-  bool more = fRowAggStorage->getNextOutputRGData(rgdata);
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
 
   if (more)
   {
-    fRowGroupOut->setData(rgdata.get());
+    fRowGroupOut->setData(fCurRGData.get());
   }
 
   return more;
