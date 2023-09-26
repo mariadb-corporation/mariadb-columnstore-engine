@@ -296,6 +296,66 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 
+RollupMarkColumn::RollupMarkColumn()
+{
+  fExpressionId = 0x55667788ULL;
+  fResultType.colDataType = CalpontSystemCatalog::INT;
+  fResultType.colWidth = 4;
+  // no-op.
+}
+RollupMarkColumn::~RollupMarkColumn()
+{
+  // no-op
+}
+void RollupMarkColumn::serialize(messageqcpp::ByteStream& b) const
+{
+  b << (ObjectReader::id_t)ObjectReader::ROLLUPMARKCOLUMN;
+  ReturnedColumn::serialize(b);
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
+  b << static_cast<ByteStream::doublebyte>(fReturnAll);
+  b << (uint64_t)fResult.intVal;
+  b << fResult.uintVal;
+  b << fResult.doubleVal;
+  b << fResult.longDoubleVal;
+  b << fResult.floatVal;
+  b << (uint8_t)fResult.boolVal;
+  b << fResult.strVal;
+  b << (uint64_t)fResult.decimalVal.value;
+  b << fResult.decimalVal.s128Value;
+  b << (uint8_t)fResult.decimalVal.scale;
+  b << (uint8_t)fResult.decimalVal.precision;
+}
+void RollupMarkColumn::unserialize(messageqcpp::ByteStream& b)
+{
+  ObjectReader::checkType(b, ObjectReader::ROLLUPMARKCOLUMN);
+  ReturnedColumn::unserialize(b);
+  // uint64_t val;
+
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
+  b >> reinterpret_cast<ByteStream::doublebyte&>(fReturnAll);
+  b >> (uint64_t&)fResult.intVal;
+  b >> fResult.uintVal;
+  b >> fResult.doubleVal;
+  b >> fResult.longDoubleVal;
+  b >> fResult.floatVal;
+  b >> (uint8_t&)fResult.boolVal;
+  b >> fResult.strVal;
+  b >> (uint64_t&)fResult.decimalVal.value;
+  b >> fResult.decimalVal.s128Value;
+  b >> (uint8_t&)fResult.decimalVal.scale;
+  b >> (uint8_t&)fResult.decimalVal.precision;
+}
+static utils::NullString ns;
+const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& row, bool& isNull)
+{
+  return ns;
+}
+
+
+
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {
   const ReturnedColumn *rc1, *rc2;

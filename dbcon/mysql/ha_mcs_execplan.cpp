@@ -7392,13 +7392,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 #endif
   int rc = 0;
   // rollup is currently not supported
-  if (select_lex.olap == ROLLUP_TYPE)
-  {
-    gwi.fatalParseError = true;
-    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
-    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-    return ER_CHECK_NOT_IMPLEMENTED;
-  }
+  bool withRollup = select_lex.olap == ROLLUP_TYPE;
 
   setExecutionParams(gwi, csep);
 
@@ -8331,6 +8325,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
       return ER_CHECK_NOT_IMPLEMENTED;
     }
+    if (withRollup)
+    {
+      SRCP rc(new RollupMarkColumn());
+      gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
+    }
   }
 
   // ORDER BY processing
@@ -8653,6 +8652,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                           gwi.additionalRetCols.end());
 
   csep->groupByCols(gwi.groupByCols);
+  csep->withRollup(withRollup);
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);
   csep->columnMap(gwi.columnMap);
@@ -8907,13 +8907,15 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC, gp_walk_info& 
   return result;
 }
 
+// XXX: need to trigger that somehow.
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_group_info& gi, bool isUnion)
 {
 #ifdef DEBUG_WALK_COND
   cerr << "getGroupPlan()" << endl;
 #endif
 
-  // rollup is currently not supported
+  // XXX: rollup is currently not supported (not tested) in this part.
+  //      but this is not triggered in any of tests.
   if (select_lex.olap == ROLLUP_TYPE)
   {
     gwi.fatalParseError = true;

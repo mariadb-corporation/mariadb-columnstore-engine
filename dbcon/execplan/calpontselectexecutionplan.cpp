@@ -93,6 +93,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location)
  ,  // 100MB mem usage for disk based join,
  fUMMemLimit(numeric_limits<int64_t>::max())
  , fIsDML(false)
+ , fWithRollup(false)
 {
   fUuid = QueryTeleClient::genUUID();
 }
@@ -100,7 +101,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location)
 CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
     const ReturnedColumnList& returnedCols, ParseTree* filters, const SelectList& subSelects,
     const GroupByColumnList& groupByCols, ParseTree* having, const OrderByColumnList& orderByCols,
-    const string alias, const int location, const bool dependent)
+    const string alias, const int location, const bool dependent, const bool withRollup)
  : fReturnedCols(returnedCols)
  , fFilters(filters)
  , fSubSelects(subSelects)
@@ -111,7 +112,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
  , fLocation(location)
  , fDependent(dependent)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
-
+ , fWithRollup(withRollup)
 {
   fUuid = QueryTeleClient::genUUID();
 }
@@ -119,6 +120,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
 CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(string data)
  : fData(data)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
+ , fWithRollup(false)
 {
   fUuid = QueryTeleClient::genUUID();
 }
@@ -470,6 +472,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   b << timeZone;
   b << fPron;
+  b << (uint8_t)fWithRollup;
 }
 
 void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
@@ -672,6 +675,8 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   fTimeZone = timeZone;
   b >> fPron;
   utils::Pron::instance().pron(fPron);
+  b >> tmp8;
+  fWithRollup = tmp8;
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const

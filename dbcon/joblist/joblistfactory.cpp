@@ -250,6 +250,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
       const ArithmeticColumn* ac = NULL;
       const FunctionColumn* fc = NULL;
       const ConstantColumn* cc = NULL;
+      const RollupMarkColumn* mc = NULL;
       uint64_t eid = -1;
       CalpontSystemCatalog::ColType ct;
       ExpressionStep* es = new ExpressionStep(jobInfo);
@@ -270,6 +271,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
       {
         eid = cc->expressionId();
         ct = cc->resultType();
+      }
+      else if ((mc = dynamic_cast<const RollupMarkColumn*>(retCols[i].get())) != NULL)
+      {
+        eid = mc->expressionId();
+        ct = mc->resultType();
       }
       else
       {
@@ -549,7 +555,13 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     {
       // skip constant columns
       if (dynamic_cast<ConstantColumn*>(i->get()) != NULL)
+      {
+        if (csep->withRollup())
+	{
+          throw runtime_error("constant GROUP BY columns are not supported when WITH ROLLUP is used");
+	}
         continue;
+      }
 
       ReturnedColumn* rc = i->get();
       SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
@@ -691,6 +703,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   const CalpontSelectExecutionPlan::GroupByColumnList& groupByCols = csep->groupByCols();
   uint64_t lastGroupByPos = 0;
 
+  jobInfo.hasRollup = csep->withRollup();
+
   for (uint64_t i = 0; i < groupByCols.size(); i++)
   {
     pcv.push_back(groupByCols[i]);
@@ -699,6 +713,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(groupByCols[i].get());
     const ArithmeticColumn* ac = NULL;
     const FunctionColumn* fc = NULL;
+    const RollupMarkColumn* mc = NULL;
 
     if (sc != NULL)
     {
@@ -770,6 +785,18 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
         projectKeys.push_back(tupleKey);
+    }
+    else if ((mc = dynamic_cast<const RollupMarkColumn*>(groupByCols[i].get())) != NULL)
+    {
+      uint64_t eid = mc->expressionId();
+      CalpontSystemCatalog::ColType ct = mc->resultType();
+      TupleInfo ti(setExpTupleInfo(ct, eid, mc->alias(), jobInfo));
+      uint32_t tupleKey = ti.key;
+      jobInfo.groupByColVec.push_back(tupleKey);
+      if (find(projectKeys.begin(), projectKeys.end(), tupleKey) == projectKeys.end())
+      {
+        projectKeys.push_back(tupleKey);
+      }
     }
     else
     {
@@ -898,6 +925,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
       if (gcc != NULL)
       {
+        if (jobInfo.hasRollup)
+        {
+          throw runtime_error("GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used");
+        }
         jobInfo.groupConcatCols.push_back(retCols[i]);
 
         uint64_t eid = gcc->expressionId();
@@ -1223,6 +1254,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           if (ac->windowfunctionColumnList().size() > 0)
             hasWndCols = true;
         }
+        else if (dynamic_cast<const RollupMarkColumn*>(srcp.get()) != NULL)
+        {
+        }
         else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
         {
           if (fc->aggColumnList().size() > 0)
@@ -1254,7 +1288,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         tupleKey = ti.key;
 
         if (hasAggCols && !hasWndCols)
+        {
           jobInfo.expressionVec.push_back(tupleKey);
+        }
       }
 
       // add to project list
@@ -1668,7 +1704,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobS
   }
 
   // special case, select without a table, like: select 1;
-  if (jobInfo.constantCol == CONST_COL_ONLY)
+  if (jobInfo.constantCol == CONST_COL_ONLY) // XXX: WITH ROLLUP
     return;
 
   // If there are no filters (select * from table;) then add one simple scan

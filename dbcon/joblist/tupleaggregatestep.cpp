@@ -904,7 +904,9 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
     if (distinctAgg == true)
       prep2PhasesDistinctAggregate(jobInfo, rgs, aggs);
     else
+    {
       prep2PhasesAggregate(jobInfo, rgs, aggs);
+    }
   }
 
   if (tbps != NULL)
@@ -1501,7 +1503,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit));
+  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAgg->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRG);
   aggregators.push_back(rowAgg);
@@ -2594,7 +2596,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec1, jobInfo.rm, jobInfo.umMemLimit));
+  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec1, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAgg->timeZone(jobInfo.timeZone);
 
   posAggDist.push_back(2);  // rid
@@ -2861,7 +2863,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
         // construct sub-aggregator
         SP_ROWAGG_UM_t subAgg(
-            new RowAggregationUM(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
+            new RowAggregationUM(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit, false));
         subAgg->timeZone(jobInfo.timeZone);
         subAgg->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
@@ -3177,11 +3179,14 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
           colAggPm++;
         }
 
-          // PM: put the count column for avg next to the sum
-          // let fall through to add a count column for average function
-          if (aggOp != ROWAGG_AVG)
-            break;
-          /* fall through */
+        // PM: put the count column for avg next to the sum
+        // let fall through to add a count column for average function
+        if (aggOp != ROWAGG_AVG)
+          break;
+        // The AVG aggregation has a special treatment everywhere.
+        // This is so because AVG(column) is a SUM(column)/COUNT(column)
+        // and these aggregations can be utilized by AVG, if present.
+        /* fall through */
 
         case ROWAGG_COUNT_ASTERISK:
         case ROWAGG_COUNT_COL_NAME:
@@ -3559,8 +3564,10 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
         // a duplicate group by column
         if (dupGroupbyIndex != -1)
+        {
           functionVecUm.push_back(SP_ROWAGG_FUNC_t(
               new RowAggFunctionCol(ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, outIdx, dupGroupbyIndex)));
+        }
       }
       else
       {
@@ -3706,7 +3713,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
+  SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAggUm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgUm);
   aggregators.push_back(rowAggUm);
@@ -3718,7 +3725,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
   RowGroup aggRgPm(oidsAggPm.size(), posAggPm, oidsAggPm, keysAggPm, typeAggPm, csNumAggPm, scaleAggPm,
                    precisionAggPm, jobInfo.stringTableThreshold);
-  SP_ROWAGG_PM_t rowAggPm(new RowAggregation(groupByPm, functionVecPm));
+  SP_ROWAGG_PM_t rowAggPm(new RowAggregation(groupByPm, functionVecPm, nullptr, nullptr, jobInfo.hasRollup));
   rowAggPm->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRgPm);
   aggregators.push_back(rowAggPm);
@@ -4803,7 +4810,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
   RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, csNumAggUm, scaleAggUm,
                    precisionAggUm, jobInfo.stringTableThreshold);
   SP_ROWAGG_UM_t rowAggUm(
-      new RowAggregationUMP2(groupByUm, functionNoDistVec, jobInfo.rm, jobInfo.umMemLimit));
+      new RowAggregationUMP2(groupByUm, functionNoDistVec, jobInfo.rm, jobInfo.umMemLimit, false));
   rowAggUm->timeZone(jobInfo.timeZone);
 
   posAggDist.push_back(2);  // rid
@@ -5061,7 +5068,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
 
         // construct sub-aggregator
         SP_ROWAGG_UM_t subAgg(
-            new RowAggregationUMP2(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
+            new RowAggregationUMP2(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit, false));
         subAgg->timeZone(jobInfo.timeZone);
 
         // add to rowAggDist
@@ -5308,7 +5315,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   uint32_t rgVecShift = float(fNumOfBuckets) / fNumOfThreads * threadID;
 
   RowAggregationMultiDistinct* multiDist = nullptr;
-
   if (!fDoneAggregate)
   {
     if (fInputJobStepAssociation.outSize() == 0)
@@ -5437,6 +5443,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
           for (uint32_t i = 0; i < fNumOfBuckets; i++)
           {
             fAggregators[i].reset(fAggregator->clone());
+            fAggregators[i]->clearRollup();
             fAggregators[i]->setInputOutput(fRowGroupIn, &fRowGroupOuts[i]);
           }
         }
@@ -5522,7 +5529,9 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                   dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())
                       ->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
                 else
+                {
                   fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
+                }
               }
               catch (...)
               {

@@ -506,12 +506,13 @@ RowAggregation::RowAggregation()
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
  , fOrigFunctionCols(nullptr)
+ , fRollupFlag(false)
 {
 }
 
 RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                               joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl)
+                               joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl, bool withRollup)
  : fRowGroupOut(nullptr)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
@@ -519,6 +520,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
  , fOrigFunctionCols(nullptr)
  , fRm(rm)
  , fSessionMemLimit(std::move(sl))
+ , fRollupFlag(withRollup)
 {
   fGroupByCols.assign(rowAggGroupByCols.begin(), rowAggGroupByCols.end());
   fFunctionCols.assign(rowAggFunctionCols.begin(), rowAggFunctionCols.end());
@@ -534,6 +536,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fOrigFunctionCols(nullptr)
  , fRm(rhs.fRm)
  , fSessionMemLimit(rhs.fSessionMemLimit)
+ , fRollupFlag(rhs.fRollupFlag)
 {
   fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
   fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
@@ -812,49 +815,67 @@ void RowAggregationUM::aggReset()
 void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
+  uint32_t cnt = fRollupFlag ? fGroupByCols.size() : 1;
+  for (uint32_t z = 0; z < cnt; z++) {
   // groupby column list is not empty, find the entry.
-  if (!fGroupByCols.empty())
-  {
-    bool is_new_row;
-    if (hash != nullptr)
-      is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
-    else
-      is_new_row = fRowAggStorage->getTargetRow(row, fRow);
-
-    if (is_new_row)
+    if (!fGroupByCols.empty())
     {
-      initMapData(row);
-      attachGroupConcatAg();
+      bool is_new_row;
+      if (hash != nullptr)
+        is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
+      else
+        is_new_row = fRowAggStorage->getTargetRow(row, fRow);
 
-      // If there's UDAF involved, reset the user data.
-      if (fOrigFunctionCols)
+      if (is_new_row)
       {
-        // This is a multi-distinct query and fFunctionCols may not
-        // contain all the UDAF we need to reset
-        for (uint64_t i = 0; i < fOrigFunctionCols->size(); i++)
+        initMapData(row);
+        attachGroupConcatAg();
+
+        // If there's UDAF involved, reset the user data.
+        if (fOrigFunctionCols)
         {
-          if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
+          // This is a multi-distinct query and fFunctionCols may not
+          // contain all the UDAF we need to reset
+          for (uint64_t i = 0; i < fOrigFunctionCols->size(); i++)
           {
-            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
-            resetUDAF(rowUDAFColumnPtr, i);
+            if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
+            {
+              auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
+              resetUDAF(rowUDAFColumnPtr, i);
+            }
           }
         }
-      }
-      else
-      {
-        for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+        else
         {
-          if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+          for (uint64_t i = 0; i < fFunctionCols.size(); i++)
           {
-            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
-            resetUDAF(rowUDAFColumnPtr, i);
+            if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+            {
+              auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+              resetUDAF(rowUDAFColumnPtr, i);
+            }
           }
         }
       }
     }
-  }
 
-  updateEntry(row, rgContextColl);
+    updateEntry(row, rgContextColl);
+    // these quantities are unsigned and comparing z and cnt - 1 can be incorrect
+    // because cnt can be zero.
+    if ((z + 1 < cnt)) {
+      // if we are rolling up, we mark appropriate field as NULL and also increment
+      // value in the "mark" column, so that we can differentiate between data and
+      // various rollups.
+      row.setIntField(row.getIntField(cnt - 1) + 1, cnt - 1);
+      // cnt is number of columns in GROUP BY with mark included:
+      // year, store, MARK - cnt is 3, we have two columns to mark as NULL.
+      // z=0 will NULL store, z=1 will NULL year. We will not NULL MARK as
+      // z=2 does not satisfy z+1 < cnt.
+      // In other ords, the "z" counter goes from 0 to cnt-2, see the "if"
+      // condition above.Thus, least value of cnt - 2 - z is zero,
+      row.setToNull(cnt - 2 - z);
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -1593,6 +1614,7 @@ void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
 
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   bs << timeZone;
+  bs << (int8_t)fRollupFlag;
 }
 
 //------------------------------------------------------------------------------
@@ -1640,6 +1662,9 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   messageqcpp::ByteStream::octbyte timeZone;
   bs >> timeZone;
   fTimeZone = timeZone;
+  uint8_t tmp8;
+  bs >> tmp8;
+  fRollupFlag = tmp8;
 }
 
 //------------------------------------------------------------------------------
@@ -2368,8 +2393,8 @@ void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)
 //------------------------------------------------------------------------------
 RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                    const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
+ : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
  , fHasAvg(false)
  , fHasStatsFunc(false)
  , fHasUDAF(false)
@@ -4085,8 +4110,8 @@ bool RowAggregationUM::nextRowGroup()
 //------------------------------------------------------------------------------
 RowAggregationUMP2::RowAggregationUMP2(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                        const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
+ : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
 {
 }
 
@@ -4476,7 +4501,7 @@ RowAggregationDistinct::RowAggregationDistinct(const vector<SP_ROWAGG_GRPBY_t>& 
                                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                joblist::ResourceManager* r,
                                                boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUMP2(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+ : RowAggregationUMP2(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, false)
 {
 }
 
@@ -4675,7 +4700,7 @@ RowAggregationSubDistinct::RowAggregationSubDistinct(const vector<SP_ROWAGG_GRPB
                                                      const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                      joblist::ResourceManager* r,
                                                      boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+ : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, false)
 {
   fKeyOnHeap = false;
 }

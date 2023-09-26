@@ -417,6 +417,8 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     // last step can be tbps (no join) or thjs, either one can have a group 3 expression
     if (bps || thjs)
     {
+      // this part may set FE2 (setFE23Output()) and may affect behavior of PrimProc's
+      // batchprimitiveprocessor's execute() function when processing aggregates.
       tjs->setOutputRowGroup(rg01);
       tjs->setFcnExpGroup3(exps);
       tjs->setFE23Output(rg1);
@@ -430,6 +432,9 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   }
   else
   {
+    // this may change behavior in the primproc side, look into
+    // a primitives/prim-proc/batchprimitiveprocessor.
+    // This is especially important for aggregation.
     if (thjs && thjs->hasFcnExpGroup2())
       thjs->setFE23Output(rg1);
     else
