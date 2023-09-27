@@ -45,8 +45,8 @@ load_default_backup_variables()
 
     # Configurable Paths
     cs_metadata=$(grep ^metadata_path $STORAGEMANGER_CNF | cut -d "=" -f 2 | tr -d " ")
-	cs_journal=$(grep ^journal_path $STORAGEMANGER_CNF  | cut -d "=" -f 2 | tr -d " ")
-	cs_cache=$(grep -A25 "\[Cache\]" $STORAGEMANGER_CNF | grep ^path | cut -d "=" -f 2 | tr -d " ")
+    cs_journal=$(grep ^journal_path $STORAGEMANGER_CNF  | cut -d "=" -f 2 | tr -d " ")
+    cs_cache=$(grep -A25 "\[Cache\]" $STORAGEMANGER_CNF | grep ^path | cut -d "=" -f 2 | tr -d " ")
 
     # What storage topogoly is being used by Columnstore - found in /etc/columnstore/storagemanager.cnf
     # Options: "LocalStorage" or "S3" 
@@ -101,7 +101,7 @@ load_default_backup_variables()
     xtra_cmd_args=""
 
     # Used by on premise S3 vendors
-    # Example: "127.0.0.1:9001"
+    # Example: "http://127.0.0.1:8000"
     s3_url=""
 
     # Tracks if flush read lock has been run
@@ -141,7 +141,7 @@ parse_backup_variables()
                 shift # past argument
                 shift # past value
                 ;;
-            -url| --s3-endpoint)
+            -url| --endpoint-url)
                 s3_url="$2"
                 shift # past argument
                 shift # past value
@@ -234,7 +234,7 @@ print_backup_help_text()
         -bd   | --backup_destination     if the directory is 'Local' or 'Remote' to this script
         -scp                             scp connection to remote server if -bd 'Remote'
         -bb   | --backup_bucket          bucket name for where to save S3 backups
-        -url  | --s3-endpoint            onprem url to s3 storage api example: 127.0.0.1:9001
+        -url  | --endpoint-url           onprem url to s3 storage api example: http://127.0.0.1:8000
         -s    | --storage                the storage used by columnstore data 'LocalStorage' or 'S3'
         -i    | --incremental            adds columnstore deltas to an existing full backup
         -P    | --parallel               number of parallel rsync threads to run
@@ -258,7 +258,7 @@ print_backup_help_text()
         S3 Examples:  
             ./columnstore_backup.sh -bb s3://my-cs-backups -s S3
             ./columnstore_backup.sh -bb gs://my-cs-backups -s S3 --incremental 02-18-2022
-            ./columnstore_backup.sh -bb s3://my-premise-bucket -s S3 -url 127.0.0.1:9001
+            ./columnstore_backup.sh -bb s3://my-premise-bucket -s S3 -url http://127.0.0.1:8000
             
         Cron Example:
         */30 * * * *  root  bash /root/columnstore_backup.sh -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
@@ -422,7 +422,7 @@ validation_prechecks_for_backup()
 
         # Adjust s3api flags for onpremise/custom endpoints
         add_s3_api_flags=""
-        if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --s3-endpoint $s3_url"; fi;
+        if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --endpoint-url $s3_url"; fi;
         
     
         # Validate addtional relevant arguments for S3
@@ -684,14 +684,14 @@ handle_early_exit_on_backup()
 {   
     skip_read_unlock=${2:-false}
     if ! $skip_read_unlock; then clearReadLock; fi;
-    printf "\nBackup Failed: $1"
+    printf "\nBackup Failed: $1\n"
     alert $1
     exit 1;
 }
 
 handle_early_exit_on_restore()
 {
-    printf "\nRestore Failed: $1"
+    printf "\nRestore Failed: $1\n"
     alert $1
     exit 1;
 }
@@ -1045,6 +1045,7 @@ run_backup()
             extra_flags=""
             if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
             if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
+            if [ ! -z "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
             echo "./columnstore_backup.sh restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
@@ -1107,7 +1108,7 @@ load_default_restore_variables()
     new_secret=''
 
     # Used by on premise S3 vendors
-    # Example: "127.0.0.1:9001"
+    # Example: "http://127.0.0.1:8000"
     s3_url=""
 
     # Number of DBroots 
@@ -1172,7 +1173,7 @@ parse_restore_variables()
                 shift # past argument
                 shift # past value
                 ;;
-            -url| --s3-endpoint)
+            -url| --endpoint-url)
                 s3_url="$2"
                 shift # past argument
                 shift # past value
@@ -1269,7 +1270,7 @@ print_restore_help_text()
         -dbs | --dbroots                Number of database roots in the backup
         -scp                            scp connection to remote server if -bd 'Remote'
         -bb  | --backup_bucket          bucket name for where to find the S3 backups
-        -url | --s3-endpoint            Onprem url to s3 storage api example: 127.0.0.1:9001
+        -url | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
         -s   | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -pm  | --nodeid                 Forces the handling of the restore as this node as opposed to whats detected on disk
         -nb  | --new_bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
@@ -1289,7 +1290,7 @@ print_restore_help_text()
         
         S3 Storage Examples:
             ./columnstore_backup.sh restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
-            ./columnstore_backup.sh restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url 127.0.0.1:9001
+            ./columnstore_backup.sh restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
             ./columnstore_backup.sh restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
     ";
 }
@@ -1351,7 +1352,7 @@ validation_prechecks_for_restore() {
 
     # Adjust s3api flags for onpremise/custom endpoints
     add_s3_api_flags=""
-    if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --s3-endpoint $s3_url"; fi
+    if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --endpoint-url $s3_url"; fi
 
     # If remote backup - Validate that scp works 
     if [ $backup_destination == "Remote" ]; then
