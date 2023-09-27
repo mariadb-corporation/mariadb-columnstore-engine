@@ -4547,7 +4547,8 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  fAggregator->finalAggregation();  // TODO: figure out how to move this to tupleaggregatestep.cpp
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextOutputRowGroup())
   {
     fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
 
@@ -4559,6 +4560,7 @@ void RowAggregationDistinct::doDistinctAggregation()
     {
       aggregateRow(rowIn);
     }
+    // fRowAggStorage->dump(); TODO: check if there are cases where this might be necessary
   }
 }
 
