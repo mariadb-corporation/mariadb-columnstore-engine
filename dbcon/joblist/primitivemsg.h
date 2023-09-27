@@ -334,7 +334,7 @@ struct ColRequestHeaderDataType : public datatypes::Charset
   {
   }
   ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType& rhs)
-   : Charset(rhs.charsetNumber)
+   : Charset(rhs.columnOID == execplan::OID_SYSCOLUMN_AUTOINC ? default_charset_info->number : rhs.charsetNumber)
    , CompType(rhs.compressionType)
    , DataSize(rhs.colWidth)
    , DataType(rhs.colDataType)
