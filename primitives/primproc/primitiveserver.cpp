@@ -1553,7 +1553,7 @@ struct BPPHandler
       {
         if (posix_time::second_clock::universal_time() > dieTime)
         {
-          cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
+          cout << "drop a joiner message by timeout " << uniqueID << endl;
           return 0;
         }
         else
@@ -1568,7 +1568,7 @@ struct BPPHandler
     more intelligent scheduling.  Once the join data is received, BPPV will
     start letting jobs run and create more BPP instances on demand. */
 
-    atomicops::atomicMb();  // make sure the joinDataReceived assignment doesn't migrate upward...
+    // atomicops::atomicMb();  // make sure the joinDataReceived assignment doesn't migrate upward...
     bppv->joinDataReceived = true;
     return 0;
   }
@@ -1995,6 +1995,7 @@ struct ReadThread
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "A: " << id << std::endl;
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
         FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);

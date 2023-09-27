@@ -27,6 +27,7 @@
 #include <map>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
+#include <type_traits>
 #include <unordered_map>
 #include <boost/thread.hpp>
 
@@ -66,7 +67,7 @@ class BPPV
   }
   void abort();
   bool aborted();
-  volatile bool joinDataReceived;
+  std::atomic<bool> joinDataReceived = false;
 
  private:
   std::vector<boost::shared_ptr<BatchPrimitiveProcessor> > v;
