@@ -2034,7 +2034,6 @@ struct ReadThread
           functor.reset(new BPPSeeder(sbs, writeLock, outIos, processorThreads, ptTrace));
           BPPSeeder* bpps = dynamic_cast<BPPSeeder*>(functor.get());
           id = bpps->getID();
-          std::cout << "R: " << id << std::endl;
 
           priority = bpps->priority();
           const uint8_t* buf = sbs->buf();
@@ -2042,7 +2041,8 @@ struct ReadThread
           txnId = *((uint32_t*)&buf[pos + 2]);
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
-          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
+          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
+          std::cout << "R: " << id << " " << weight << std::endl;
         }
         FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         procPoolPtr->addJob(job);
