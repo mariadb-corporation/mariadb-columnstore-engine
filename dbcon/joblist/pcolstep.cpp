@@ -88,6 +88,14 @@ pColStep::pColStep(CalpontSystemCatalog::OID o, CalpontSystemCatalog::OID t,
   int err, i;
   uint32_t mask;
 
+  // MCOL-5572 Force the charset on the autoincrement column
+  // of calpontsys.syscolumn syscat table to be latin1.
+  if (fOid == execplan::OID_SYSCOLUMN_AUTOINC)
+  {
+    const CHARSET_INFO* cs = &my_charset_latin1;
+    fColType.charsetNumber = cs->number;
+  }
+
   if (fOid < 1000)
     throw runtime_error("pColStep: invalid column");
 
