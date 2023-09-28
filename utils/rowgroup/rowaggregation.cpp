@@ -4552,6 +4552,13 @@ void RowAggregationDistinct::doDistinctAggregation()
   {
     fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
 
+    if (fFunctionCols.size() == 1 && fFunctionCols[0]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)
+    {
+      const auto colOut = fFunctionCols[0]->fOutputColumnIndex;
+      fRow.setUintField<8>(fRow.getUintField<8>(colOut) + fRowGroupIn.getRowCount(), colOut);
+      continue;
+    }
+
     Row rowIn;
     fRowGroupIn.initRow(&rowIn);
     fRowGroupIn.getRow(0, &rowIn);
