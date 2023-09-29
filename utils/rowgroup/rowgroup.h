@@ -2197,8 +2197,7 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
-  // commented due MCOL-5583 TODO: investigate, why this invariant can be broken
-  // idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
+  idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
   row->setData(
       Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));

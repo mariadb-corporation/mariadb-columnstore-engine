@@ -414,9 +414,17 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
     uint32_t rowSizeTemp;
     bs >> colCountTemp;
     bs >> rowSizeTemp;
-    if (rowSize != 0)
+    if (rowSize != 0 || columnCount != 0)
     {
-      idbassert(colCountTemp == columnCount && rowSize == rowSizeTemp);
+      idbassert(rowSize == rowSizeTemp && colCountTemp == columnCount);
+    }
+    else
+    {
+      // if deserializing into an empty RGData created by default constructor
+      // which sets columnCount = 0 and rowSize = 0, set columnCount and rowSize
+      // from deserialized bytestream
+      columnCount = colCountTemp;
+      rowSize = rowSizeTemp;
     }
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
