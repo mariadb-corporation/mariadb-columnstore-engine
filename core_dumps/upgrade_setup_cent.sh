@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source ../build/utils.sh
+
 set -xeuo pipefail
 
 VERSION="$1"
@@ -16,6 +18,9 @@ yum -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-
 
 systemctl start mariadb
 systemctl start mariadb-columnstore
+
+INITIAL_VERSION=$(mariadb -e "select @@version;")
+
 bash -c "./upgrade_data.sh"
 bash -c "./upgrade_verify.sh"
 
@@ -33,4 +38,14 @@ EOF
 cd /
 
 yum -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
-bash -c "./upgrade_verify.sh"
+UPGRADED_VERSION=$(mariadb -e "select @@version;")
+
+if [[ "$INITIAL_VERSION" == "$UPGRADED_VERSION" ]]; then
+  error "The upgrade didn't happen!"
+  exit 1
+else
+  message_splitted "The upgrade from "$INITIAL_VERSION" to "$UPGRADED_VERSION" succeded!"
+  bash -c "./upgrade_verify.sh"
+fi
+
+
