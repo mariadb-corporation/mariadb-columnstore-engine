@@ -70,14 +70,28 @@ void TableLockServer::save()
   if (!out)
     throw runtime_error("TableLockServer::save():  could not open save file");
 
-  out->write((char*)&count, 4);
+  uint32_t bufferSize = 4;
+  for (const auto& lock : locks)
+    bufferSize += lock.second.getInternalSize();
+
+  std::unique_ptr<char[]> buffer(new char[bufferSize]);
+  uint32_t offset = 0;
+  std::memcpy(&buffer[offset], (char*)&count, 4);
+  offset += 4;
 
   for (it = locks.begin(); it != locks.end(); ++it)
-  {
-    if (!out)
-      throw runtime_error("TableLockServer::save():  could not write save file");
+    it->second.serialize(buffer.get(), offset);
 
-    it->second.serialize(out.get());
+  uint32_t writtenSize = 0;
+  uint32_t sizeToWrite = bufferSize;
+  while (writtenSize != bufferSize)
+  {
+    uint32_t ret = out->write(&buffer[writtenSize], sizeToWrite);
+    if (!ret)
+      throw runtime_error("TableLockServer::save():  could not write to the file");
+
+    writtenSize += ret;
+    sizeToWrite -= ret;
   }
 }
 
