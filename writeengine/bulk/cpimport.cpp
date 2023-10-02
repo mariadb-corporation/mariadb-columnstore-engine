@@ -207,7 +207,6 @@ void handleControlC(int i)
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
 
-
 //------------------------------------------------------------------------------
 // If error occurs during startup, this function is called to log the specified
 // message and terminate the process.
@@ -1058,6 +1057,7 @@ int main(int argc, char** argv)
   bool bRollback = false;
   bool bForce = false;
   int rc = NO_ERROR;
+  uint32_t cpimportJob = 0;
   std::string exceptionMsg;
   TASK task;  // track tasks being performed
   // set this upfront
@@ -1270,6 +1270,16 @@ int main(int argc, char** argv)
       new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK));
     }
 
+    rc = BRMWrapper::getInstance()->newCpimportJob(cpimportJob);
+    if (rc != NO_ERROR)
+    {
+      WErrorCodes ec;
+      std::ostringstream oss;
+      oss << "Error in creating new cpimport job on Controller node; " << ec.errorString(rc)
+          << "; cpimport is terminating.";
+      startupError(oss.str(), false);
+    }
+
     //--------------------------------------------------------------------------
     // This is the real business
     //--------------------------------------------------------------------------
@@ -1320,6 +1330,7 @@ int main(int argc, char** argv)
     rc = ERR_UNKNOWN;
   }
 
+  BRMWrapper::getInstance()->finishCpimportJob(cpimportJob);
   // Free up resources allocated by MY_INIT() above.
   my_end(0);
 

@@ -115,6 +115,13 @@ void do_status()
   errMsg(err);
 }
 
+void start_readonly()
+{
+  int err;
+  err = dbrm.startReadOnly();
+  errMsg(err);
+}
+
 void do_sysstatus()
 {
   int err;
@@ -172,6 +179,8 @@ int main(int argc, char** argv)
     set_readonly(false);
   else if (cmd == "reload")
     do_reload();
+  else if (cmd == "startreadonly")
+    start_readonly();
   else if (cmd == "sysstatus")
     do_sysstatus();
   else

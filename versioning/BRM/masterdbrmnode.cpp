@@ -477,6 +477,15 @@ void MasterDBRMNode::msgProcessor()
       case GET_UNCOMMITTED_LBIDS: doGetUncommittedLbids(msg, p); continue;
     }
 
+    switch (cmd)
+    {
+      case NEW_CPIMPORT_JOB: doNewCpimportJob(p); continue;
+
+      case FINISH_CPIMPORT_JOB: doFinishCpimportJob(msg, p); continue;
+
+      case START_READONLY: doStartReadOnly(p->sock); continue;
+    }
+
     /* Process TableLock calls */
     switch (cmd)
     {
@@ -1150,10 +1159,47 @@ void MasterDBRMNode::doResume(messageqcpp::IOSocket* sock)
   }
 }
 
+void MasterDBRMNode::doStartReadOnly(messageqcpp::IOSocket* sock)
+{
+#ifdef BRM_VERBOSE
+  cout << "doStartReadonly" << endl;
+#endif
+  ByteStream reply;
+
+  // Spawn a new thread and detach it, we cannot block `msgProcessor`.
+  std::thread readonlyAdjuster(
+      [this]()
+      {
+        std::unique_lock lk(cpimportMutex);
+        if (sm.getCpimportJobsCount() != 0)
+        {
+          waitToFinishJobs = true;
+          // Wait until all cpimort jobs are done.
+          cpimportJobsCond.wait(lk, [this]() { return sm.getCpimportJobsCount() == 0; });
+          setReadOnly(true);
+          waitToFinishJobs = false;
+        }
+        else
+        {
+          setReadOnly(true);
+        }
+      });
+
+  readonlyAdjuster.detach();
+
+  reply << (uint8_t)ERR_OK;
+  try
+  {
+    sock->write(reply);
+  }
+  catch (exception&)
+  {
+  }
+}
+
 void MasterDBRMNode::doSetReadOnly(messageqcpp::IOSocket* sock, bool b)
 {
   ByteStream reply;
-
   setReadOnly(b);
   reply << (uint8_t)ERR_OK;
 
@@ -1356,6 +1402,103 @@ void MasterDBRMNode::doSysCatVerID(ByteStream& msg, ThreadParams* p)
   catch (exception&)
   {
   }
+}
+
+void MasterDBRMNode::doNewCpimportJob(ThreadParams* p)
+{
+#ifdef BRM_VERBOSE
+  std::cerr << "doNewCpimportJob" << std::endl;
+#endif
+  ByteStream reply;
+  uint32_t jobId;
+
+  std::unique_lock lk(cpimportMutex);
+  // That means that controller node is waiting untill all active cpimport jobs are done.
+  // We cannot block `msgProcessor` and cannot create a new job, so exit with `readonly` code.
+  if (waitToFinishJobs)
+  {
+    reply << (uint8_t)ERR_READONLY;
+    try
+    {
+      p->sock->write(reply);
+    }
+    catch (...)
+    {
+    }
+    return;
+  }
+
+  try
+  {
+    jobId = sm.newCpimportJob();
+  }
+  catch (exception&)
+  {
+    reply.reset();
+    reply << (uint8_t)ERR_FAILURE;
+    try
+    {
+      p->sock->write(reply);
+    }
+    catch (...)
+    {
+    }
+
+    return;
+  }
+
+  reply << (uint8_t)ERR_OK;
+  reply << (uint32_t)jobId;
+  try
+  {
+    p->sock->write(reply);
+  }
+  catch (exception&)
+  {
+  }
+}
+
+void MasterDBRMNode::doFinishCpimportJob(ByteStream& msg, ThreadParams* p)
+{
+#ifdef BRM_VERBOSE
+  std::cout << "doFinishCpimportJob" << std::endl;
+#endif
+  ByteStream reply;
+  uint32_t cpimportJob;
+  uint8_t cmd;
+  std::unique_lock lk(cpimportMutex);
+
+  msg >> cmd;
+  msg >> cpimportJob;
+  try
+  {
+    sm.finishCpimortJob(cpimportJob);
+  }
+  catch (exception&)
+  {
+    reply << (uint8_t)ERR_FAILURE;
+    try
+    {
+      p->sock->write(reply);
+    }
+    catch (...)
+    {
+    }
+
+    return;
+  }
+
+  reply << (uint8_t)ERR_OK;
+  try
+  {
+    p->sock->write(reply);
+  }
+  catch (...)
+  {
+  }
+
+  if (waitToFinishJobs && sm.getCpimportJobsCount() == 0)
+    cpimportJobsCond.notify_one();
 }
 
 void MasterDBRMNode::doNewTxnID(ByteStream& msg, ThreadParams* p)

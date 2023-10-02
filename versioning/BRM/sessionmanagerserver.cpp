@@ -34,6 +34,7 @@
 #include <string>
 #include <stdexcept>
 #include <limits>
+#include <unordered_set>
 using namespace std;
 
 #include <boost/thread/mutex.hpp>
@@ -256,6 +257,22 @@ const QueryContext SessionManagerServer::sysCatVerID()
   return ret;
 }
 
+uint32_t SessionManagerServer::newCpimportJob()
+{
+  std::unique_lock lk(cpimportMutex);
+  activeCpimportJobs.insert(cpimportJobId);
+  auto ret = cpimportJobId;
+  ++cpimportJobId;
+  return ret;
+}
+
+void SessionManagerServer::finishCpimortJob(uint32_t jobId)
+{
+  std::unique_lock lk(cpimportMutex);
+  if (activeCpimportJobs.count(jobId))
+    activeCpimportJobs.erase(jobId);
+}
+
 const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool isDDL)
 {
   TxnID ret;  // ctor must set valid = false
@@ -381,6 +398,12 @@ void SessionManagerServer::clearSystemState(uint32_t state)
 
   systemState &= ~state;
   saveSystemState();
+}
+
+uint32_t SessionManagerServer::getCpimportJobsCount()
+{
+  std::unique_lock lk(cpimportMutex);
+  return activeCpimportJobs.size();
 }
 
 uint32_t SessionManagerServer::getTxnCount()
