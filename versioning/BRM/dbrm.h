@@ -753,6 +753,8 @@ class DBRM
   /* SessionManager interface */
   EXPORT const QueryContext verID();
   EXPORT const QueryContext sysCatVerID();
+  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT void finishCpimportJob(uint32_t jobId);
   EXPORT const TxnID newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL = false);
   EXPORT void committed(BRM::TxnID& txnid);
   EXPORT void rolledback(BRM::TxnID& txnid);
@@ -826,6 +828,8 @@ class DBRM
   EXPORT int resume() DBRM_THROW;
   EXPORT int forceReload() DBRM_THROW;
   EXPORT int setReadOnly(bool b) DBRM_THROW;
+  EXPORT int startReadOnly() DBRM_THROW;
+  EXPORT int forceClearCpimportJobs() DBRM_THROW;
   EXPORT int isReadWrite() throw();
 
   EXPORT bool isEMEmpty() throw();
