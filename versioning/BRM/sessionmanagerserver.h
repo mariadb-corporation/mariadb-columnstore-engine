@@ -27,8 +27,9 @@
 #pragma once
 
 #include <map>
+#include <condition_variable>
 
-
+#include <unordered_set>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 
@@ -38,7 +39,6 @@
 #include "atomicops.h"
 
 #define EXPORT
-
 
 namespace BRM
 {
@@ -145,6 +145,15 @@ class SessionManagerServer
    * @return The new transaction ID.
    */
   EXPORT const TxnID newTxnID(const SID session, bool block = true, bool isDDL = false);
+
+  // Adds a new job into `active` cpimport job list and return id of that job.
+  EXPORT uint32_t newCpimportJob();
+
+  // Removes the given `jobId` from `active` cpimort job list.
+  EXPORT void finishCpimortJob(uint32_t jobId);
+
+  // Clears all active cpimport jobs.
+  EXPORT void clearAllCpimportJobs();
 
   /** @brief Record that a transaction has been committed
    *
@@ -253,6 +262,9 @@ class SessionManagerServer
    */
   EXPORT uint32_t getTxnCount();
 
+
+  EXPORT uint32_t getCpimportJobsCount();
+
  private:
   SessionManagerServer(const SessionManagerServer&);
   SessionManagerServer& operator=(const SessionManagerServer&);
@@ -277,9 +289,12 @@ class SessionManagerServer
   boost::mutex mutex;
   boost::condition_variable condvar;  // used to synthesize a semaphore
   uint32_t semValue;
+
+  std::unordered_set<uint32_t> activeCpimportJobs;
+  uint32_t cpimportJobId{0};
+  std::mutex cpimportMutex;
 };
 
 }  // namespace BRM
-
 
 #undef EXPORT
