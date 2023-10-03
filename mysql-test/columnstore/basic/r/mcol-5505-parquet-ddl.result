@@ -15,9 +15,9 @@ parquet_test_table	CREATE TABLE `parquet_test_table` (
   `col9` varchar(2000) DEFAULT NULL,
   `col10` varchar(2000) DEFAULT NULL,
   `col11` varchar(2000) DEFAULT NULL,
-  `col12` timestamp(3) NULL DEFAULT NULL,
+  `col12` timestamp(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
   `col13` date DEFAULT NULL,
-  `col14` timestamp(3) NULL DEFAULT NULL,
+  `col14` timestamp(3) NOT NULL DEFAULT '0000-00-00 00:00:00.000',
   `col15` smallint(6) DEFAULT NULL,
   `col16` tinyint(4) DEFAULT NULL,
   `col17` decimal(9,3) DEFAULT NULL,
@@ -28,9 +28,9 @@ parquet_test_table	CREATE TABLE `parquet_test_table` (
   `col22` tinyint(1) DEFAULT NULL,
   `col23` decimal(38,10) DEFAULT NULL,
   `col24` time(6) DEFAULT NULL,
-  `col25` timestamp(6) NULL DEFAULT NULL,
-  `col26` timestamp(6) NULL DEFAULT NULL,
+  `col25` timestamp(6) NOT NULL DEFAULT '0000-00-00 00:00:00.000000',
+  `col26` timestamp(6) NOT NULL DEFAULT '0000-00-00 00:00:00.000000',
   `col27` varbinary(8000) DEFAULT NULL,
   `col28` char(4) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 DROP DATABASE mcol_5505_parquet_ddl;

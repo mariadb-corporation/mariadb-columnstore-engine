@@ -39,7 +39,7 @@ void generateIntTable(std::string fileDir)
   for (int32_t i = 0; i < reserve_num-1; i++)
     values.push_back(i);
 
-  values.push_back(2147483648);
+  values.push_back(static_cast<int32_t>(2147483648));
   PARQUET_THROW_NOT_OK(builder.AppendValues(values, validity));
   std::shared_ptr<arrow::Array> array;
   PARQUET_THROW_NOT_OK(builder.Finish(&array));
@@ -144,7 +144,7 @@ void generateDoubleTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/double.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -173,7 +173,7 @@ void generateTimeTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/time.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -202,7 +202,7 @@ void generateTime64Table(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/time64.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -270,7 +270,7 @@ void generateStringTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/string.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -299,7 +299,7 @@ void generateTimestampTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/ts.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -328,7 +328,7 @@ void generateTimestampUsTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/ts.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -357,7 +357,7 @@ void generateDateTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/date.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -386,7 +386,7 @@ void generateInt16Table(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/int16.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -416,7 +416,7 @@ void generateInt8Table(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/int8.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -445,7 +445,7 @@ void generateDecimalTable(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/decimal.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -508,7 +508,7 @@ void generateUint16Table(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/uint16.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -537,7 +537,7 @@ void generateUint8Table(std::string fileDir)
   std::shared_ptr<arrow::io::FileOutputStream> outfile;
   PARQUET_ASSIGN_OR_THROW(
       outfile, arrow::io::FileOutputStream::Open(fileDir + "/uint8.parquet"));
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));	
+  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, pool, outfile, 3));
   PARQUET_THROW_NOT_OK(outfile->Close());
 }
 
@@ -670,7 +670,7 @@ void generateAllTable(std::string fileDir)
   PARQUET_THROW_NOT_OK(boolBuilder.AppendValues(boolValues, boolValidity));
   std::shared_ptr<arrow::Array> boolArray;
   PARQUET_THROW_NOT_OK(boolBuilder.Finish(&boolArray));
-  
+
   // int32
   arrow::Int32Builder int32Builder;
   PARQUET_THROW_NOT_OK(int32Builder.Reserve(reserve_num));
@@ -681,7 +681,7 @@ void generateAllTable(std::string fileDir)
   std::vector<int32_t> int32Values;
   for (int32_t i = 0; i < reserve_num-1; i++)
     int32Values.push_back(i);
-  int32Values.push_back(2147483648);
+  int32Values.push_back(static_cast<int32_t>(2147483648));
   PARQUET_THROW_NOT_OK(int32Builder.AppendValues(int32Values, int32Validity));
   std::shared_ptr<arrow::Array> int32Array;
   PARQUET_THROW_NOT_OK(int32Builder.Finish(&int32Array));
@@ -994,7 +994,7 @@ void generateAllTable(std::string fileDir)
   PARQUET_THROW_NOT_OK(binaryBuilder.AppendValues(binaryValues, binaryValidity));
   std::shared_ptr<arrow::Array> binaryArray;
   PARQUET_THROW_NOT_OK(binaryBuilder.Finish(&binaryArray));
-  
+
   // fixed_size_binary_array
   auto tfixedSizeType = arrow::FixedSizeBinaryType::Make(4);
   PARQUET_ASSIGN_OR_THROW(auto fixedSizeType, tfixedSizeType);

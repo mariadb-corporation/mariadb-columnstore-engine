@@ -49,6 +49,9 @@ using namespace BRM;
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "cacheutils.h"
+
+#include <arrow/api.h>
+
 using namespace idbdatafile;
 #include "checks.h"
 #include "utils_utf8.h" // for utf8_truncate_point()
@@ -748,7 +751,8 @@ int Dctnry::insertDctnry2(Signature& sig)
 }
 
 
-int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, const int totalRow, const int col, char* tokenBuf, long long& truncCount)
+int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx, const int totalRow,
+                                 const int col, char* tokenBuf, long long& truncCount)
 {
   int startPos = 0;
   int totalUseSize = 0;
