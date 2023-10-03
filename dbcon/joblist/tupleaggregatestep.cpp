@@ -393,7 +393,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         rowGroupIn->initRow(&rowIn);
         auto* subDistAgg = dynamic_cast<RowAggregationUM*>(multiDist->subAggregators()[j].get());
 
-        while (subDistAgg->nextRowGroup())
+        while (subDistAgg->nextOutputRowGroup())
         {
           rowGroupIn = (multiDist->subAggregators()[j]->getOutputRowGroup());
           rgDataVec.emplace_back(subDistAgg->moveCurrentRGData());
@@ -417,7 +417,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
       rowGroupIn->initRow(&rowIn);
       auto* subAgg = dynamic_cast<RowAggregationUM*>(aggDist->aggregator().get());
 
-      while (subAgg->nextRowGroup())
+      while (subAgg->nextOutputRowGroup())
       {
         rowGroupIn->setData(aggDist->aggregator()->getOutputRowGroup()->getRGData());
         rgDataVec.emplace_back(subAgg->moveCurrentRGData());
@@ -572,7 +572,7 @@ bool TupleAggregateStep::nextDeliveredRowGroup()
 {
   for (; fBucketNum < fNumOfBuckets; fBucketNum++)
   {
-    while (fAggregators[fBucketNum]->nextRowGroup())
+    while (fAggregators[fBucketNum]->nextOutputRowGroup())
     {
       fAggregators[fBucketNum]->finalize();
       fRowGroupDelivered.setData(fAggregators[fBucketNum]->getOutputRowGroup()->getRGData());
