@@ -37,9 +37,15 @@
 #include "bytestream.h"
 #include "nullstring.h"
 
-#include <arrow/api.h>
+
 
 #define EXPORT
+
+
+namespace arrow
+{
+  class Array;
+}
 
 /** Namespace WriteEngine */
 namespace WriteEngine
@@ -162,7 +168,7 @@ class Dctnry : public DbFileOp
   /**
    * @brief Insert signature value to a file block and return token/pointer
    * (for Bulk use)
-   * 
+   *
    * @param columnData  - arrow array containing strings to be parsed
    * @param startRowIdx - start position for current batch parquet data
    * @param totalRow    - total number of rows in buf
@@ -172,7 +178,7 @@ class Dctnry : public DbFileOp
   EXPORT int insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx, const int totalRow,
                                  const int col, char* tokenBuf, long long& truncCount,
                                  const CHARSET_INFO* cs, const WriteEngine::ColType& weType);
-  
+
   /**
    * @brief Insert a signature value to a file block and return token/pointer
    * (for Bulk use)

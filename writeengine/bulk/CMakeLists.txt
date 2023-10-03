@@ -30,7 +30,7 @@ add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
-target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
+target_link_libraries(we_bulk ${NETSNMP_LIBRARIES} parquet)
 
 REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 
@@ -42,9 +42,5 @@ add_executable(cpimport.bin ${cpimport.bin_SRCS})
 add_dependencies(cpimport.bin marias3)
 
 target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
-FIND_PACKAGE(Arrow)
-FIND_PACKAGE(Parquet)
-target_link_libraries(cpimport.bin arrow)
-target_link_libraries(cpimport.bin parquet)
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
