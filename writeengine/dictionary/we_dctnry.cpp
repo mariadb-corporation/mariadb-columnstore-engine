@@ -49,6 +49,9 @@ using namespace BRM;
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "cacheutils.h"
+
+#include <arrow/api.h>
+
 using namespace idbdatafile;
 #include "checks.h"
 #include "utils_utf8.h" // for utf8_truncate_point()
