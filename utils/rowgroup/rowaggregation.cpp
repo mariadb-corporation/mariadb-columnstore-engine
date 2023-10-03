@@ -4566,7 +4566,8 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  fAggregator->finalAggregation();  // TODO: Perhaps move somewhere else?
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextOutputRowGroup())
   {
     fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
 
