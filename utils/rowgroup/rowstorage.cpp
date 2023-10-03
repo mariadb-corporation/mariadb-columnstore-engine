@@ -666,6 +666,156 @@ class RowGroupStorage
     }
   }
 
+  /** @brief Used to output aggregation results from memory and disk in the current generation in the form of
+   * RGData. Returns next RGData, loads from disk if necessary. Skips finalized rows as they would contain
+   * duplicate results, compacts actual rows into start of RGData and adapts number of rows transmitted in
+   * RGData.
+   * @returns A pointer to the next RGData or an empty pointer if there are no more RGDatas in this
+   * generation.
+   */
+  bool getNextOutputRGData(std::unique_ptr<RGData>& rgdata)
+  {
+    if (UNLIKELY(fRGDatas.empty()))
+    {
+      fMM->release();
+      return false;
+    }
+
+    while (!fRGDatas.empty())
+    {
+      uint64_t rgid = fRGDatas.size() - 1;
+      rgdata = std::move(fRGDatas[rgid]);
+      fRGDatas.pop_back();
+
+      // Calculate from first and last uint64_t entry in fFinalizedRows BitMap
+      // which contains information about rows in the RGData.
+      uint64_t fgid = rgid * fMaxRows / 64;
+      uint64_t tgid = fgid + fMaxRows / 64;
+
+      if (fFinalizedRows.size() <= fgid)
+      {
+        // There are no finalized rows in this RGData. We can just return it.
+        // Load from disk if necessary and unlink DumpFile.
+        if (!rgdata)
+        {
+          loadRG(rgid, rgdata, true);
+        }
+        return true;
+      }
+
+      if (tgid >= fFinalizedRows.size())
+        fFinalizedRows.resize(tgid + 1, 0ULL);
+
+      // Check if there are rows to process
+      bool hasReturnRows = false;
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if (fFinalizedRows[i] != ~0ULL)
+        {
+          // Not all rows are finalized, we have to return at least parts of this RGData
+          hasReturnRows = true;
+          break;
+        }
+      }
+
+      if (rgdata)
+      {
+        // RGData is currently in memory
+        if (!hasReturnRows)
+        {
+          // All rows are finalized, don't return this RGData
+          continue;
+        }
+      }
+      else
+      {
+        if (hasReturnRows)
+        {
+          // Load RGData from disk, unlink dump file and continue processing
+          loadRG(rgid, rgdata, true);
+        }
+        else
+        {
+          // All rows are finalized. Unlink dump file and continue search for return RGData
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+      }
+
+      // TODO: Finish comments (make statements out of assumptions)
+      // assumption: this shifts data within RGData such that it compacts the non finalized rows
+      // move next non-finalized rows on finalized row positions
+      //
+      uint64_t pos = 0;
+      uint64_t opos = 0;
+      fRowGroupOut->setData(rgdata.get());
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
+          break;
+        uint64_t mask = ~fFinalizedRows[i];
+        if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
+        {
+          mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
+        }
+        opos = (i - fgid) * 64;
+
+        if (mask == ~0ULL)
+        {
+          if (LIKELY(pos != opos))
+            moveRows(rgdata.get(), pos, opos, 64);
+          pos += 64;
+          continue;
+        }
+
+        if (mask == 0)
+          continue;
+
+        while (mask != 0)
+        {
+          // assmp.: find position until block full of not finalized rows?
+          size_t b = __builtin_ffsll(mask);
+          size_t e = __builtin_ffsll(~(mask >> b)) + b;
+          if (UNLIKELY(e >= 64))
+            mask = 0;
+          else
+            mask >>= e;
+          if (LIKELY(pos != opos + b - 1))
+            moveRows(rgdata.get(), pos, opos + b - 1, e - b);
+          pos += e - b;
+          opos += e;
+        }
+        --opos;
+      }
+
+      // assmp.:: nothing got shifted at all -> all rows must be finalized? (but shouldn't it be the
+      // other way around?) if all rows finalized remove RGData and file and don't give it out why would
+      // we check this here again? see: fRowGroupOut->setRowCount(pos); -> pos is the number of valid
+      // rows, interesting
+      if (pos == 0)
+      {
+        fLRU->remove(rgid);
+        unlink(makeRGFilename(rgid).c_str());
+        continue;
+      }
+
+      // set RGData with number of not finalized rows which have been compacted at front of RGData
+      fRowGroupOut->setData(rgdata.get());
+      fRowGroupOut->setRowCount(pos);
+      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+
+      // TODO: why do we release the memory if we just loaded something?, or are we realesing for file
+      // managment?
+      fMM->release(memSz);
+      unlink(makeRGFilename(rgid).c_str());
+
+      fLRU->remove(rgid);  // TODO: why? if we are compeletly dissolving this storage, what does it help?
+      // isn't it only added cost?
+      return true;
+    }
+    return false;
+  }
+
   /** @brief Returns next RGData, load it from disk if necessary.
    *
    * @returns pointer to the next RGData or empty pointer if there is nothing
@@ -1746,6 +1896,44 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
   cleanup();
   freeData();
   return fStorage->getNextRGData();
+}
+
+bool RowAggStorage::getNextOutputRGData(std::unique_ptr<RGData>& rgdata)
+{
+  // TODO: defensive needed if only for output?
+  if (!fStorage)
+  {
+    return {};
+  }
+
+  cleanup();
+  freeData();
+
+  // fGeneration is an unsigned int, we need a signed int for a comparison >= 0
+  int32_t gen = fGeneration;
+  while (gen >= 0)
+  {
+    bool moreInGeneration = fStorage->getNextOutputRGData(rgdata);
+
+    if (moreInGeneration)
+    {
+      fRowGroupOut->setData(rgdata.get());
+      return true;
+    }
+
+    // all generations have been emptied
+    if (fGeneration == 0)
+    {
+      break;
+    }
+
+    // current generation has no more RGDatas to return
+    // load earlier generation and continue with returning its RGDatas
+    gen--;
+    fGeneration--;
+    fStorage.reset(fStorage->clone(fGeneration));
+  }
+  return false;
 }
 
 void RowAggStorage::freeData()
