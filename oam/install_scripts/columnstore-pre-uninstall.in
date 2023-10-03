@@ -35,11 +35,7 @@ systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
-    PROGS='PrimProc ExeMgr DMLProc DDLProc WriteEngineServer StorageManager controllernode workernode'
-    kill $(pidof $PROGS) > /dev/null
-    sleep 3
-    kill -9 $(pidof $PROGS) > /dev/null
-    clearShm  > /dev/null 2>&1
+    mcs cluster stop
 fi
 
 if [ -n "$(pgrep -x ProcMon)" ] || [ -n "$(pgrep -x ProcMgr)" ];then
@@ -149,4 +145,3 @@ echo " "
 echo "MariaDB Columnstore uninstall completed"
 
 exit 0
-

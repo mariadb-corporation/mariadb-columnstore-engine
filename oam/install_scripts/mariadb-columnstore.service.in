@@ -1,13 +1,14 @@
 [Unit]
 Description=mariadb-columnstore
 After=network.target
+Requires=mariadb-columnstore-cmapi.service
 
 [Service]
 Type=oneshot
 
 # Execute a dummy program
-ExecStart=@ENGINE_BINDIR@/mariadb-columnstore-start.sh
-ExecStop=@ENGINE_BINDIR@/mariadb-columnstore-stop.sh
+ExecStart=@ENGINE_BINDIR@/mcs cluster status
+ExecStop=@ENGINE_BINDIR@/mcs cluster stop
 
 # This service shall be considered active after start
 RemainAfterExit=yes
