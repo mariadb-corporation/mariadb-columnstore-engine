@@ -18,4 +18,5 @@ add_library(messageqcpp STATIC ${messageqcpp_LIB_SRCS})
 
 add_dependencies(messageqcpp loggingcpp)
 
-install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+#We don't isntall static library
+#install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
