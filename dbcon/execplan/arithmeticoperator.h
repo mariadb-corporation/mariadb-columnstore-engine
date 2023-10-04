@@ -239,15 +239,15 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 
     case execplan::CalpontSystemCatalog::UBIGINT:
       uint64_t x, y;
-      if (lop->operationType().isSigned())
+      if (lop->data()->operationType().isSigned())
       {
         int64_t xx = lop->getIntVal(row, isNull);
 	if (xx < 0) {
           Message::Args args;
           args.add("operator +");
           args.add(xx);
-          unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
-          throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+          unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+          throw logging::IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	x = xx;
       }
@@ -255,15 +255,15 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       {
         x = lop->getUintVal(row, isNull);
       }
-      if (rop->operationType().isSigned())
+      if (rop->data()->operationType().isSigned())
       {
         int64_t yy = rop->getIntVal(row, isNull);
 	if (yy < 0) {
           Message::Args args;
           args.add("operator +");
           args.add(yy);
-          unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
-          throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+          unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+          throw logging::IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	y = yy;
       }
