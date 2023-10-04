@@ -10,7 +10,7 @@ USE std_test_db;
 create table t1 (
         col_signed tinyint,
         col_unsigned tinyint unsigned
-);--engine=columnstore;
+); #engine=columnstore;
 
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/tinyint_range.tbl' INTO TABLE t1 FIELDS TERMINATED BY '|';
