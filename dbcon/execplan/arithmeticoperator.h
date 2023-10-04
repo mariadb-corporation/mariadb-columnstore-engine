@@ -243,7 +243,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       {
         int64_t xx = lop->getIntVal(row, isNull);
 	if (xx < 0) {
-          Message::Args args;
+          logging::Message::Args args;
           args.add("operator +");
           args.add(xx);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
@@ -259,7 +259,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       {
         int64_t yy = rop->getIntVal(row, isNull);
 	if (yy < 0) {
-          Message::Args args;
+          logging::Message::Args args;
           args.add("operator +");
           args.add(yy);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
