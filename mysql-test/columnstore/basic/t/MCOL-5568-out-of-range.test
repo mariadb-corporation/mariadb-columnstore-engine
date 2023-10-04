@@ -1,0 +1,109 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5568;
+--enable_warnings
+
+CREATE DATABASE MCOL5568;
+
+USE MCOL5568;
+
+CREATE TABLE test_mult (
+
+indemnity_paid INT(11),
+
+n_clms TINYINT(3) UNSIGNED
+
+) ENGINE=COLUMNSTORE;
+
+INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
+
+# not an error.
+SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult;
+
+CREATE TABLE test_mult2 (
+
+indemnity_paid TINYINT,
+
+n_clms TINYINT UNSIGNED
+
+) ENGINE=COLUMNSTORE;
+
+INSERT INTO test_mult2 (indemnity_paid, n_clms) VALUES (-10, 1);
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult2;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult2;
+
+# not an error.
+SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult2;
+
+CREATE TABLE test_mult3 (
+
+indemnity_paid SMALLINT,
+
+n_clms TINYINT UNSIGNED
+
+) ENGINE=COLUMNSTORE;
+
+INSERT INTO test_mult3 (indemnity_paid, n_clms) VALUES (-10, 1);
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult3;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult3;
+
+# not an error.
+SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult3;
+
+CREATE TABLE test_mult4 (
+
+indemnity_paid INTEGER,
+
+n_clms TINYINT UNSIGNED
+
+) ENGINE=COLUMNSTORE;
+
+INSERT INTO test_mult4 (indemnity_paid, n_clms) VALUES (-10, 1);
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult4;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult4;
+
+# not an error.
+SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult4;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, n_clms * indemnity_paid FROM test_mult4;
+
+# an error.
+--error 1815
+SELECT indemnity_paid, n_clms, n_clms + indemnity_paid FROM test_mult4;
+
+# not an error.
+SELECT indemnity_paid, n_clms, n_clms + (indemnity_paid + 9) FROM test_mult4;
+
+# an error again.
+--error 1815
+SELECT indemnity_paid, n_clms, n_clms - 2 FROM test_mult4;
+
+DROP DATABASE MCOL5568;
+
