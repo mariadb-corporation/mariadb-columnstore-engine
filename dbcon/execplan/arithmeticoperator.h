@@ -247,7 +247,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
           args.add("operator +");
           args.add(xx);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-          throw logging::IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	x = xx;
       }
@@ -263,7 +263,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
           args.add("operator +");
           args.add(yy);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-          throw logging::IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	y = yy;
       }
