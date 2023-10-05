@@ -430,7 +430,7 @@ class ConstantColumnUInt : public ConstantColumn
   ConstantColumnUInt(uint64_t val, int8_t scale, uint8_t precision)
    : ConstantColumn(val, ConstantColumn::NUM, scale, precision)
   {
-	  idblog("uint constructor");
+	  idblog("uint constructor. val " << val);
   }
 };
 

@@ -196,6 +196,7 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
   fConstval.assign(oss.str());
   fData = oss.str();
   fResult.strVal.assign(fData);
+  idblog("constructing from uint64_t, val " << val);
   fResult.intVal = (int64_t)val;
   fResult.uintVal = val;
   fResult.floatVal = (float)fResult.uintVal;
