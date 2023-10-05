@@ -3283,6 +3283,7 @@ static ConstantColumn* newConstantColumnNotNullUsingValNativeNoTz(Item* item, gp
                                       (uint8_t)item->decimal_precision());
       ValStrStdString str(item);
       DBUG_ASSERT(!str.isNull());
+      // XXX: here?
       return new ConstantColumnSInt(colType_MysqlToIDB(item), str, (int64_t)item->val_int());
     }
     case STRING_RESULT:
@@ -3353,6 +3354,7 @@ static ConstantColumn* newConstantColumnMaybeNullFromValStrNoTz(const Item* item
     case TIME_RESULT:
     case INT_RESULT:
     case REAL_RESULT:
+			// XXX: below???
     case ROW_RESULT: return new ConstantColumnNum(colType_MysqlToIDB(item), valStr);
   }
   return nullptr;

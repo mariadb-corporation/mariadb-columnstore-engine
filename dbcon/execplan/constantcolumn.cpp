@@ -58,7 +58,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
   // decimal for constant should be constructed by the caller and call the decimal constructor
   fResult.decimalVal = datatypes::Decimal(fResult.intVal, 0, 18, (int128_t)fResult.intVal);
   // @bug 3381, default null item to integer type.
-  if (fType == ConstantColumn::NULLDATA)
+  if (fType == ConstantColumn::NULLDATA || fType == ConstantColumn::NUM)
   {
     if (fResult.uintVal > (uint64_t)MAX_BIGINT)
     {
