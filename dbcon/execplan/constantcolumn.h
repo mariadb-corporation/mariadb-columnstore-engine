@@ -99,6 +99,7 @@ class ConstantColumn : public ReturnedColumn
    */
   inline void type(unsigned int type)
   {
+	  idblog("assigning type!!!!!");
     fType = type;
   }
   /**
