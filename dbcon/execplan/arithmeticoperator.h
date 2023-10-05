@@ -239,7 +239,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 
     case execplan::CalpontSystemCatalog::UBIGINT:
       uint64_t x, y;
-      if (lop->data()->operationType().isSignedInteger())
+      if (lop->data()->resultType().isSignedInteger())
       {
         int64_t xx = lop->getIntVal(row, isNull);
 	if (xx < 0) {
@@ -255,7 +255,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       {
         x = lop->getUintVal(row, isNull);
       }
-      if (rop->data()->operationType().isSignedInteger())
+      if (rop->data()->resultType().isSignedInteger())
       {
         int64_t yy = rop->getIntVal(row, isNull);
 	if (yy < 0) {
