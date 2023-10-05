@@ -58,10 +58,12 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
   // decimal for constant should be constructed by the caller and call the decimal constructor
   fResult.decimalVal = datatypes::Decimal(fResult.intVal, 0, 18, (int128_t)fResult.intVal);
   // @bug 3381, default null item to integer type.
+  idblog("before type correction");
   if (fType == ConstantColumn::NULLDATA || fType == ConstantColumn::NUM)
   {
     if (fResult.uintVal > (uint64_t)MAX_BIGINT)
     {
+  idblog("type correction");
       fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
     }
     else
@@ -178,6 +180,11 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) : ReturnedColumn(),
   fResult.decimalVal = datatypes::Decimal(fResult.intVal, 0, 0, (int128_t)fResult.intVal);
   fResultType.colDataType = CalpontSystemCatalog::BIGINT;
   fResultType.colWidth = 8;
+  if (fResult.uintVal > (uint64_t)MAX_BIGINT)
+  {
+  idblog("type correction");
+      fResultType.colDataType = CalpontSystemCatalog::UBIGINT;
+  }
 }
 
 ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint8_t precision)
