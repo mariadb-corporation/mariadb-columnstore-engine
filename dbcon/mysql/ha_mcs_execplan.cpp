@@ -3273,17 +3273,19 @@ class ValStrStdString : public string
 static ConstantColumn* newConstantColumnNotNullUsingValNativeNoTz(Item* item, gp_walk_info& gwi)
 {
   DBUG_ASSERT(item->const_item());
-
+idblog("newConstantColumnNotNullUsingValNativeNoTz");
   switch (item->cmp_type())
   {
     case INT_RESULT:
     {
+	    idblog("newConstantColumnNotNullUsingValNativeNoTz, int result, " << (item->unsigned_flag ? "unsigned" : "signed"));
       if (item->unsigned_flag)
         return new ConstantColumnUInt((uint64_t)item->val_uint(), (int8_t)item->decimal_scale(),
                                       (uint8_t)item->decimal_precision());
       ValStrStdString str(item);
       DBUG_ASSERT(!str.isNull());
       // XXX: here?
+      idblog("str: " << str);
       return new ConstantColumnSInt(colType_MysqlToIDB(item), str, (int64_t)item->val_int());
     }
     case STRING_RESULT:
@@ -3395,7 +3397,7 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
 ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
   ReturnedColumn* rc = NULL;
-
+idblog("building returned column");
   if (gwi.thd)
   {
     // if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command ==
@@ -3424,6 +3426,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
     case Item::CONST_ITEM:
     {
+	    idblog("building constant column");
       rc = buildConstantColumnNotNullUsingValNative(item, gwi);
       break;
     }
@@ -3658,6 +3661,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
         if (rc)
           lhs = new ParseTree(rc);
       }
+      idblog("building rhs");
       rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
 
       if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
