@@ -99,7 +99,6 @@ class ConstantColumn : public ReturnedColumn
    */
   inline void type(unsigned int type)
   {
-	  idblog("assigning type!!!!!");
     fType = type;
   }
   /**
@@ -431,7 +430,6 @@ class ConstantColumnUInt : public ConstantColumn
   ConstantColumnUInt(uint64_t val, int8_t scale, uint8_t precision)
    : ConstantColumn(val, ConstantColumn::NUM, scale, precision)
   {
-	  idblog("uint constructor. val " << val);
   }
 };
 
@@ -441,7 +439,6 @@ class ConstantColumnSInt : public ConstantColumn
   ConstantColumnSInt(const CalpontSystemCatalog::ColType& type, const std::string& str, int64_t val)
    : ConstantColumn(str, val, ConstantColumn::NUM)
   {
-	  idblog("assigning type - this is stupid!!!");
     resultType(type);
   }
 };

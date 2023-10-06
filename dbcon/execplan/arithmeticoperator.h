@@ -239,36 +239,37 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 
     case execplan::CalpontSystemCatalog::UBIGINT:
       uint64_t x, y;
-      if (lop->data()->resultType().isSignedInteger())
+      bool signedLeft = lop->data()->resultType().isSignedInteger();
+      bool signedRight = rop->data()->resultType().isSignedInteger();
+      if (signedLeft && !signedRight)
       {
         int64_t xx = lop->getIntVal(row, isNull);
 	if (xx < 0) {
           logging::Message::Args args;
-          args.add("operator +");
+          args.add("\"+\"");
           args.add((double)xx);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
           throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	x = xx;
+        y = rop->getUintVal(row, isNull);
       }
-      else
-      {
-        x = lop->getUintVal(row, isNull);
-      }
-      if (rop->data()->resultType().isSignedInteger())
+      else if (!signedLeft && signedRight)
       {
         int64_t yy = rop->getIntVal(row, isNull);
 	if (yy < 0) {
           logging::Message::Args args;
-          args.add("operator +");
+          args.add("\"+\"");
           args.add((double)yy);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
           throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
 	y = yy;
+        x = lop->getUintVal(row, isNull);
       }
       else
       {
+        x = lop->getUintVal(row, isNull);
         y = rop->getUintVal(row, isNull);
       }
       fResult.uintVal = execute(x, y, isNull);
