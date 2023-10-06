@@ -103,6 +103,7 @@ load_default_backup_variables()
     # Used by on premise S3 vendors
     # Example: "http://127.0.0.1:8000"
     s3_url=""
+    no_verify_ssl=false
 
     # Tracks if flush read lock has been run
     read_lock=false
@@ -121,6 +122,9 @@ parse_backup_variables()
     while [[ $# -gt 0 ]]; do
         key="$1"
         case $key in
+            backup)
+                shift # past argument
+                ;;
             -bl|--backuplocation)
                 backup_location="$2"
                 shift # past argument
@@ -205,6 +209,10 @@ parse_backup_variables()
                 ;;
             -q    | --quiet)
                 quiet=true
+                shift # past argument
+                ;;
+            --no-verify-ssl)
+                no_verify_ssl=true 
                 shift # past argument
                 ;;
             -h|--help)
@@ -422,8 +430,8 @@ validation_prechecks_for_backup()
 
         # Adjust s3api flags for onpremise/custom endpoints
         add_s3_api_flags=""
-        if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --endpoint-url $s3_url"; fi;
-        
+        if [ ! -z "$s3_url" ];  then add_s3_api_flags+=" --endpoint-url $s3_url"; fi;
+        if $no_verify_ssl; then add_s3_api_flags+=" --no-verify-ssl"; fi;
     
         # Validate addtional relevant arguments for S3
         if [ -z "$backup_bucket" ]; then echo "Invalid --backup_bucket: $backup_bucket - is empty"; exit 1; fi
@@ -1110,6 +1118,7 @@ load_default_restore_variables()
     # Used by on premise S3 vendors
     # Example: "http://127.0.0.1:8000"
     s3_url=""
+    no_verify_ssl=false
 
     # Number of DBroots 
     # Integer usually 1 or 3
@@ -1134,8 +1143,8 @@ load_default_restore_variables()
     STORAGEMANAGER_PATH="/var/lib/columnstore/storagemanager"
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     cs_metadata=$(grep ^metadata_path $STORAGEMANGER_CNF | cut -d "=" -f 2 | tr -d " ")
-	cs_journal=$(grep ^journal_path $STORAGEMANGER_CNF  | cut -d "=" -f 2 | tr -d " ")
-	cs_cache=$(grep -A25 "\[Cache\]" $STORAGEMANGER_CNF | grep ^path | cut -d "=" -f 2 | tr -d " ")
+    cs_journal=$(grep ^journal_path $STORAGEMANGER_CNF  | cut -d "=" -f 2 | tr -d " ")
+    cs_cache=$(grep -A25 "\[Cache\]" $STORAGEMANGER_CNF | grep ^path | cut -d "=" -f 2 | tr -d " ")
 }
 
 parse_restore_variables()
@@ -1242,6 +1251,10 @@ parse_restore_variables()
                 ;;
             -q    | --quiet)
                 quiet=true
+                shift # past argument
+                ;;
+            --no-verify-ssl)
+                no_verify_ssl=true 
                 shift # past argument
                 ;;
             -h|--help)
@@ -1352,7 +1365,8 @@ validation_prechecks_for_restore() {
 
     # Adjust s3api flags for onpremise/custom endpoints
     add_s3_api_flags=""
-    if [ ! -z "$s3_url" ];  then add_s3_api_flags=" --endpoint-url $s3_url"; fi
+    if [ ! -z "$s3_url" ];  then add_s3_api_flags+=" --endpoint-url $s3_url"; fi
+    if $no_verify_ssl; then add_s3_api_flags+=" --no-verify-ssl"; fi;
 
     # If remote backup - Validate that scp works 
     if [ $backup_destination == "Remote" ]; then
@@ -1585,6 +1599,184 @@ run_restore()
     fi
 }
 
+load_default_dbrm_variables() {
+     # Default variables
+    backup_base_name="dbrm_backup"
+    backup_interval_minutes=90
+    retention_days=7
+    backup_location=/tmp/dbrm_backups
+    STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
+    storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
+    mode="once"
+}
+
+print_dbrm_backup_help_text() {
+    echo "
+    Columnstore DBRM Backup
+
+        -m   | --mode              'loop' or 'once' ; Determines if this script runs in a forever loop sleeping -i minutes or just once 
+        -i   | --interval          Number of minutes to sleep when --mode loop 
+        -r   | --retention_days    Number of days of dbrm backups to retain - script will delete based on last update file time
+        -p   | --path              path of where to save the dbrm backups on disk
+
+        Default: ./columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups
+
+        Examples:
+            ./columnstore_backup.sh dbrm_backup --mode loop --interval 90 --retention_days 7 --path /mnt/dbrm_backups
+            
+        Cron Example:
+        */30 * * * *  root  bash /root/columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+    ";
+}
+
+parse_dbrms_variables() {
+
+    # Dynamic Arguments
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+        case $key in
+            dbrm_backup)
+                shift # past argument
+                ;;
+            -i|--interval)
+                backup_interval_minutes="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -r|--retention_days)
+                retention_days="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -p|--path)
+                backup_location="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -m|--mode)
+                mode="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -h|--help|-help|help)
+                print_dbrm_backup_help_text;
+                exit 1;
+                ;;
+            *)  # unknown option
+                printf "\nunknown flag: $1\n"
+                print_dbrm_backup_help_text
+                exit 1;
+        esac
+    done
+
+    backup_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
+    if [ "$storage" == "S3" ]; then 
+        backup_dir="/var/lib/columnstore/storagemanager"
+    fi
+}
+
+is_numerical_or_decimal() {
+    local input="$1"
+
+    # Regular expression to match numerical or decimal values
+    if [[ $input =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        return 0
+    else
+        echo "The value '$input' is not numerical or decimal."
+        exit 2;
+    fi
+}
+
+validation_prechecks_for_dbrm_backup() {
+
+    # Confirm storage not empty
+    if [ -z "$storage" ]; then printf "[!] Empty storage: \ncheck: grep -m 1 \"^service = \" \$STORAGEMANGER_CNF | awk '{print \$3}' \n\n"; fi;
+
+    # Check mode type
+    errors=""
+    case $mode in
+        once)
+             errors+="" ;;
+        loop)
+             errors+="" ;;
+        *)  # unknown option
+            printf "\nunknown mode: $mode\n"
+            printf "Only 'once' & 'loop' allowed\n\n"
+            print_dbrm_backup_help_text
+            exit 2;
+    esac
+
+    # Check numbers
+    is_numerical_or_decimal "$backup_interval_minutes"
+    is_numerical_or_decimal "$retention_days"
+
+    # Check backup location exists
+    if [ ! -d $backup_location ]; then 
+        echo "[+] Created: $backup_location"
+        mkdir $backup_location; 
+    fi;
+
+    # Confirm bucket connection
+    if [ "$storage" == "S3" ]; then
+        if ! testS3Connection 1>/dev/null 2>/dev/null; then
+            printf "\n[!] Failed testS3Connection\n\n"
+            exit 1;
+        fi
+    fi;
+}
+
+process_dbrm_backup() {
+
+    load_default_dbrm_variables
+    parse_dbrms_variables "$@";
+
+    # print variables
+    printf "\n[+] Inputs
+    CS Storage: $storage
+    Source:     $backup_dir
+    Backups:    $backup_location
+    Interval:   $backup_interval_minutes minutes
+    Retention:  $retention_days day(s)
+    Mode:       $mode\n"
+
+    validation_prechecks_for_dbrm_backup
+
+    sleep_seconds=$((backup_interval_minutes * 60));
+    while true; do
+        # Create a new backup directory
+        timestamp=$(date +%Y%m%d%H%M%S)
+        backup_folder="$backup_location/${backup_base_name}_${timestamp}"
+        mkdir -p "$backup_folder"
+        
+        # Copy files to the backup directory
+        cp -arp "$backup_dir"/* "$backup_folder"
+
+        # aaa
+        if [ "$storage" == "S3" ]; then 
+            # smcat em files to disk
+            mkdir $backup_folder/dbrms/
+            smls /data1/systemFiles/dbrm 2>/dev/null > $backup_folder/dbrms/dbrms.txt
+            smcat /data1/systemFiles/dbrm/BRM_saves_current  2>/dev/null > $backup_folder/dbrms/BRM_saves_current
+            smcat /data1/systemFiles/dbrm/BRM_saves_em 2>/dev/null > $backup_folder/dbrms/BRM_saves_em
+            smcat /data1/systemFiles/dbrm/BRM_saves_journal 2>/dev/null > $backup_folder/dbrms/BRM_saves_journal
+            smcat /data1/systemFiles/dbrm/BRM_saves_vbbm 2>/dev/null > $backup_folder/dbrms/BRM_saves_vbbm
+            smcat /data1/systemFiles/dbrm/BRM_saves_vss 2>/dev/null > $backup_folder/dbrms/BRM_saves_vss
+        fi
+        
+        # Clean up old backups
+        # example: find /tmp/dbrmBackups/ -maxdepth 1 -type d -name "dbrm_backup_*" -mtime +1 -exec rm -r {} \;
+        find "$backup_location" -maxdepth 1 -type d -name "${backup_base_name}_*" -mtime +$retention_days -exec rm -r {} \;
+
+        printf "[+] Created: $backup_folder\n"
+        if [ "$mode" == "once" ]; then  break;  fi;
+
+        printf "[+] Sleeping ... $sleep_seconds seconds\n"
+        sleep "$sleep_seconds"
+    done
+
+    printf "[+] Complete\n\n"
+}
+
 
 process_backup()
 {
@@ -1610,17 +1802,22 @@ process_restore()
 }
 
 case "$1" in
-	'help' | '--help' | '-h') 	
-		echo "Printing both backup and restore help text"
+    'help' | '--help' | '-help' | '-h') 	
+        # TODO - simplify top level help text
+        echo "Printing both backup and restore help text"
         print_backup_help_text;
         print_restore_help_text;
-		;;
-	'restore') 	
-		process_restore "$@";
-		;;
+        print_dbrm_backup_help_text;
+        ;;
+    'dbrm_backup') 	
+        process_dbrm_backup "$@";
+        ;;
+    'restore') 	
+        process_restore "$@";
+        ;;
     *) 
-		process_backup "$@";
-		;;
+        process_backup "$@";
+        ;;
 esac
 
 exit 0;
