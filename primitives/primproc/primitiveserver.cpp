@@ -2022,7 +2022,7 @@ struct ReadThread
           txnId = *((uint32_t*)&buf[pos + 2]);
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
-          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
+          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
         }
         FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         procPoolPtr->addJob(job);
