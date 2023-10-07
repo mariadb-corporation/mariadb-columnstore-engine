@@ -1983,19 +1983,19 @@ struct ReadThread
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "E_J: " << id << std::endl;
+          //std::cout << "E_J: " << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "D: " << id << std::endl;
+          //std::cout << "D: " << id << std::endl;
           functor.reset(new BPPHandler::Destroy(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ABORT)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "A: " << id << std::endl;
+          //std::cout << "A: " << id << std::endl;
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
         FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
@@ -2042,7 +2042,7 @@ struct ReadThread
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
           weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
-          std::cout << "R: " << id << " " << weight << std::endl;
+          //std::cout << "R: " << id << " " << weight << std::endl;
         }
         FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         procPoolPtr->addJob(job);
@@ -2367,7 +2367,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
           {
             if (sbs->length() == 0)
             {
-              std::cout << "PPSHServerThr got an empty ByteStream." << std::endl;
+              //std::cout << "PPSHServerThr got an empty ByteStream." << std::endl;
               continue;
             }
             idbassert(sbs->length() >= sizeof(ISMPacketHeader));
