@@ -1211,6 +1211,7 @@ struct BPPHandler
       }
 
       fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+      fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(key);
     }
 
     scoped.unlock();
@@ -1233,6 +1234,9 @@ struct BPPHandler
   {
     LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
+      // There are issues with
+      // This is to let this last joiner message to stay longer in the threadpool.
+      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
@@ -1270,6 +1274,8 @@ struct BPPHandler
   {
     AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
+      // This is to let this joiner message to stay longer in the threadpool.
+      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
@@ -1324,16 +1330,21 @@ struct BPPHandler
     }
     else
     {
-      bs.rewind();
-
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        std::cout << "doAbort: job for key " << key << " has been killed." << std::endl;
         return 0;
+      }
       else
+      {
+        bs.rewind();
         return -1;
+      }
     }
 
     scoped.unlock();
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+    fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(key);
     return 0;
   }
 
@@ -1356,7 +1367,10 @@ struct BPPHandler
       return 0;
     }
     else
+    {
+      bs.rewind();
       return -1;
+    }
   }
 
   void createBPP(ByteStream& bs)
@@ -1404,7 +1418,7 @@ struct BPPHandler
     bppKeys.push_back(key);
     bool newInsert;
     newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
-    // cout << "creating BPP # " << key << endl;
+    cout << "CB " << key << " " << newInsert << endl;
     scoped.unlock();
 
     if (!newInsert)
@@ -1435,24 +1449,6 @@ struct BPPHandler
       return it->second;
     else
       return SBPPV();
-
-    /*
-                    do
-                    {
-                            if (++failCount == maxFailCount) {
-                                    //cout << "grabBPPs couldn't find the BPPs for " << uniqueID << endl;
-                                    return ret;
-                                    //throw logic_error("grabBPPs couldn't find the unique ID");
-                            }
-                            scoped.unlock();
-                            usleep(5000);
-                            scoped.lock();
-                            it = bppMap.find(uniqueID);
-                    } while (it == bppMap.end());
-
-                    ret = it->second;
-                    return ret;
-    */
   }
 
   inline shared_mutex& getDJLock(uint32_t uniqueID)
@@ -1490,18 +1486,27 @@ struct BPPHandler
     buf = bs.buf();
     /* the uniqueID is after the ISMPacketHeader, sessionID, and stepID */
     uniqueID = *((const uint32_t*)&buf[sizeof(ISMPacketHeader) + 2 * sizeof(uint32_t)]);
+    std::cout << "AJ1 " << uniqueID;
+
     bppv = grabBPPs(uniqueID);
 
     if (bppv)
     {
+      std::cout << "AJ2 " << uniqueID;
+
       shared_lock<shared_mutex> lk(getDJLock(uniqueID));
       bppv->get()[0]->addToJoiner(bs);
       return 0;
     }
     else
     {
+      std::cout << "AJ3 " << uniqueID;
+
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "addJoinerToBPP: job for id " << uniqueID << " has been killed." << endl;
         return 0;
+      }
       else
         return -1;
     }
@@ -1519,53 +1524,54 @@ struct BPPHandler
     buf = bs.buf();
     /* the uniqueID is after the ISMPacketHeader, sessionID, and stepID */
     uniqueID = *((const uint32_t*)&buf[sizeof(ISMPacketHeader) + 2 * sizeof(uint32_t)]);
-
+    std::cout << "EOJ1 " << uniqueID;
     bppv = grabBPPs(uniqueID);
 
     if (!bppv)
     {
-      // cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "LastJoiner: job for unknown id " << uniqueID << " has been killed." << endl;
         return 0;
+      }
       else
+      {
         return -1;
+      }
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-
+    std::cout << "EOJ2 " << uniqueID;
+    cout.flush();
     for (i = 0; i < bppv->get().size(); i++)
     {
       err = bppv->get()[i]->endOfJoiner();
 
       if (err == -1)
       {
+        std::cout << std::endl;
         if (posix_time::second_clock::universal_time() > dieTime)
+        {
+          cout << "LastJoiner: job for id " << uniqueID
+               << " has been killed waiting for joiner messages for too long." << endl;
           return 0;
+        }
         else
           return -1;
       }
     }
-    bppv->get()[0]->doneSendingJoinerData();
+    std::cout << " finished" << std::endl;
 
     /* Note: some of the duplicate/run/join sync was moved to the BPPV class to do
     more intelligent scheduling.  Once the join data is received, BPPV will
     start letting jobs run and create more BPP instances on demand. */
 
-    atomicops::atomicMb();  // make sure the joinDataReceived assignment doesn't migrate upward...
     bppv->joinDataReceived = true;
     return 0;
   }
 
   int destroyBPP(ByteStream& bs, const posix_time::ptime& dieTime)
   {
-    // This is a corner case that damages bs so its length becomes less than a header length.
-    // The damaged bs doesn't pass the if that checks bs at least has header + 3x int32_t.
-    // The if block below works around the issue.
-    if (posix_time::second_clock::universal_time() > dieTime)
-    {
-      return 0;
-    }
-
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
 
@@ -1608,39 +1614,33 @@ struct BPPHandler
       {
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
-        // We're not ready for a destroy. Reschedule.
+        // We're not ready for a destroy. Reschedule to wait
+        // for all joiners to arrive.
+        // TODO there might be no joiners if the query is canceled.
+        // The memory will leak.
+        // Rewind to the beginning of ByteStream buf b/c of the advance above.
+        bs.rewind();
         return -1;
       }
     }
     else
     {
-      // cout << "got a destroy for an unknown obj " << uniqueID << endl;
-      bs.rewind();
-
       if (posix_time::second_clock::universal_time() > dieTime)
       {
-        // XXXPAT: going to let this fall through and delete jobs for
-        // uniqueID if there are any.  Not clear what the downside is.
-        /*
-lk.unlock();
-deleteDJLock(uniqueID);
-return 0;
-        */
+        cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
+             << endl;
+        // If for some reason there are jobs for this uniqueID that arrived later
+        // they won't leave PP thread pool staying there forever.
       }
       else
+      {
+        bs.rewind();
         return -1;
+      }
     }
 
-    // 			cout << "  destroy: new size is " << bppMap.size() << endl;
-    /*
-                    if (sessionID & 0x80000000)
-                            cerr << "destroyed BPP instances for sessionID " << (int)
-                            (sessionID ^ 0x80000000) << " stepID "<< stepID << " (syscat)\n";
-                    else
-                            cerr << "destroyed BPP instances for sessionID " << sessionID <<
-                            " stepID "<< stepID << endl;
-    */
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
+    fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
     return 0;
@@ -1709,7 +1709,10 @@ class DictionaryOp : public FairThreadPool::Functor
       bs->rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "DictionaryOp::operator(): job has been killed." << endl;
         return 0;
+      }
     }
 
     return ret;
@@ -1787,7 +1790,10 @@ class DestroyEqualityFilter : public DictionaryOp
       return 0;
     }
     else
+    {
+      // WIP
       return -1;
+    }
   }
 };
 
@@ -1925,7 +1931,8 @@ struct ReadThread
   }
 
   static void dispatchPrimitive(SBS sbs, boost::shared_ptr<BPPHandler>& fBPPHandler,
-                                boost::shared_ptr<threadpool::FairThreadPool>& procPoolPtr,
+                                boost::shared_ptr<threadpool::FairThreadPool> procPool,
+                                std::shared_ptr<threadpool::PriorityThreadPool> OOBProcPool,
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
                                 const bool ptTrace)
   {
@@ -1945,8 +1952,9 @@ struct ReadThread
         const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
         const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
         const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
-        const uint32_t weight = threadpool::MetaJobsInitialWeight;
         const uint32_t priority = 0;
+        uint32_t weight = threadpool::MetaJobsInitialWeight;
+
         uint32_t id = 0;
         boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
@@ -1963,6 +1971,7 @@ struct ReadThread
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
         {
+          // weight += 10000;
           functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
@@ -1980,8 +1989,8 @@ struct ReadThread
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
-        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
-        procPoolPtr->addJob(job);
+        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
+        OOBProcPool->addJob(job);
         break;
       }
 
@@ -2022,10 +2031,18 @@ struct ReadThread
           txnId = *((uint32_t*)&buf[pos + 2]);
           stepID = *((uint32_t*)&buf[pos + 6]);
           uniqueID = *((uint32_t*)&buf[pos + 10]);
-          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]);
+          weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
         }
-        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-        procPoolPtr->addJob(job);
+        if (hdr && hdr->flags & IS_SYSCAT)
+        {
+          PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          OOBProcPool->addJob(job);
+        }
+        else
+        {
+          FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          procPool->addJob(job);
+        }
 
         break;
       }
@@ -2049,7 +2066,8 @@ struct ReadThread
   void operator()()
   {
     utils::setThreadName("PPReadThread");
-    boost::shared_ptr<threadpool::FairThreadPool> procPoolPtr = fPrimitiveServerPtr->getProcessorThreadPool();
+    auto procPool = fPrimitiveServerPtr->getProcessorThreadPool();
+    auto OOBProcPool = fPrimitiveServerPtr->getOOBProcessorThreadPool();
     SBS bs;
     UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2140,7 +2158,7 @@ struct ReadThread
 
             default: break;
           }
-          dispatchPrimitive(bs, fBPPHandler, procPoolPtr, outIos, writeLock,
+          dispatchPrimitive(bs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
                             fPrimitiveServerPtr->ProcessorThreads(), fPrimitiveServerPtr->PTTrace());
         }
         else  // bs.length() == 0
@@ -2282,6 +2300,9 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
 
   fProcessorPool.reset(new threadpool::FairThreadPool(fProcessorWeight, highPriorityThreads,
                                                       medPriorityThreads, lowPriorityThreads, 0));
+  // We're not using either the priority or the job-clustering features, just need a threadpool
+  // that can reschedule jobs, and an unlimited non-blocking queue
+  fOOBPool.reset(new threadpool::PriorityThreadPool(1, 5, 0, 0, 1));
 
   asyncCounter = 0;
 
@@ -2338,7 +2359,8 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
         // These empty SPs have "same-host" messaging semantics.
         SP_UM_IOSOCK outIos(nullptr);
         SP_UM_MUTEX writeLock(nullptr);
-        auto procPoolPtr = this->getProcessorThreadPool();
+        auto procPool = this->getProcessorThreadPool();
+        auto OOBProcPool = this->getOOBProcessorThreadPool();
         boost::shared_ptr<BPPHandler> fBPPHandler(new BPPHandler(this));
         for (;;)
         {
@@ -2352,7 +2374,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
             }
             idbassert(sbs->length() >= sizeof(ISMPacketHeader));
 
-            ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPoolPtr, outIos, writeLock,
+            ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
                                           this->ProcessorThreads(), this->PTTrace());
           }
         }
@@ -2369,7 +2391,6 @@ BPPV::BPPV(PrimitiveServer* ps)
   sendThread->setProcessorPool(ps->getProcessorThreadPool());
   v.reserve(BPPCount);
   pos = 0;
-  joinDataReceived = false;
 }
 
 BPPV::~BPPV()
@@ -2408,27 +2429,6 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 {
   uint32_t size = v.size();
   uint32_t i = 0;
-
-#if 0
-
-    // This block of code scans for the first available BPP instance,
-    // makes BPPSeeder reschedule it if none are available. Relies on BPP instance
-    // being preallocated.
-    for (i = 0; i < size; i++)
-    {
-        uint32_t index = (i + pos) % size;
-
-        if (!(v[index]->busy()))
-        {
-            pos = (index + 1) % size;
-            v[index]->busy(true);
-            return v[index];
-        }
-    }
-
-    // They're all busy, make threadpool reschedule the job
-    return boost::shared_ptr<BatchPrimitiveProcessor>();
-#endif
 
   // This block of code creates BPP instances if/when they are needed
 
