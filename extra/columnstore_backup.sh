@@ -289,7 +289,7 @@ print_backup_help_text()
             ./columnstore_backup.sh -bb s3://my-premise-bucket -s S3 -url http://127.0.0.1:8000
             
         Cron Example:
-        */30 * * * *  root  bash /root/columnstore_backup.sh -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
+        */60 */24 * * *  root  bash /root/columnstore_backup.sh -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
     ";
 }
 
@@ -1656,7 +1656,7 @@ print_dbrm_backup_help_text() {
             ./columnstore_backup.sh dbrm_backup --mode loop --interval 90 --retention_days 7 --path /mnt/dbrm_backups
             
         Cron Example:
-        */30 * * * *  root  bash /root/columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+        */60 */3 * * * root  bash /root/columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
     ";
 }
 
