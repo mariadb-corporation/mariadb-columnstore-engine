@@ -265,21 +265,19 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
         int128_t result = execute(x, y, isNull);
 	if (!isNull && (result > MAX_UBIGINT || result < 0))
 	{
-          if (xx < 0) {
-            logging::Message::Args args;
-	    std::string func = "<unknown>";
-	    switch (fOp)
-	    {
-              case OP_ADD: func = "\"+\""; break;
-	      case OP_SUB: func = "\"-\""; break;
-	      case OP_MUL: func = "\"*\""; break;
-	      case OP_DIV: func = "\"/\""; break;
-              default: break;
-	    }
-            args.add((double)result);
-            unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-            throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-          }
+          logging::Message::Args args;
+	  std::string func = "<unknown>";
+	  switch (fOp)
+	  {
+            case OP_ADD: func = "\"+\""; break;
+	    case OP_SUB: func = "\"-\""; break;
+	    case OP_MUL: func = "\"*\""; break;
+	    case OP_DIV: func = "\"/\""; break;
+            default: break;
+	  }
+          args.add((double)result);
+          unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
 	}
         fResult.uintVal = (uint64_t)result;
       }
