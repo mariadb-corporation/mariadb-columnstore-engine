@@ -274,6 +274,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
               case OP_SUB; func = "\"-\""; break;
               case OP_MUL; func = "\"*\""; break;
               case OP_DIV; func = "\"/\""; break;
+              default: break;
 	    }
             args.add((double)result);
             unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
