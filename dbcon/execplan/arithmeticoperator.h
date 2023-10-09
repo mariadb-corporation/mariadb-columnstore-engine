@@ -270,10 +270,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 	    std::string func = "<unknown>";
 	    switch (fOp)
 	    {
-              case OP_ADD; func = "\"+\""; break;
-              case OP_SUB; func = "\"-\""; break;
-              case OP_MUL; func = "\"*\""; break;
-              case OP_DIV; func = "\"/\""; break;
+              case OP_ADD: func = "\"+\""; break;
+	      case OP_SUB: func = "\"-\""; break;
+	      case OP_MUL: func = "\"*\""; break;
+	      case OP_DIV: func = "\"/\""; break;
               default: break;
 	    }
             args.add((double)result);
