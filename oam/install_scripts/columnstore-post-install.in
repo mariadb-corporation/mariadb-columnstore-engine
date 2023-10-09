@@ -312,6 +312,9 @@ if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
   fi
   if [ -z "$MCS_S3_BUCKET" ] || [[ -z "$MCS_S3_ACCESS_KEY_ID" && -z "$MCS_S3_ROLE_NAME" ]] || [[ -z "$MCS_S3_SECRET_ACCESS_KEY" && -z "$MCS_S3_ROLE_NAME" ]]; then
     echo "Using local storage."
+      @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
+      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
+      @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
   else
       @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
       @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
