@@ -15,6 +15,26 @@
 ########################################################################
 
 start=`date +%s`
+
+print_action_help_text() {
+    echo "
+    Columnstore Backup
+    
+    Actions:
+
+        backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
+        restore                 Restore a backup taken with this script
+        dbrm_backup             Quick hot backup of internal columnstore metadata
+
+    Documentation:
+        bash $0 <action> help
+
+    Example:
+        bash $0 backup help
+    "
+}
+
+
 load_default_backup_variables()
 {
 
@@ -215,7 +235,7 @@ parse_backup_variables()
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
-            -h|--help)
+            -h|--help|-help|help)
                 print_backup_help_text;
                 exit 1;
                 ;;
@@ -336,7 +356,7 @@ check_for_dependancies()
         cloud="aws"
         
         # Critical argument for S3 - determine which cloud
-        if [ -z "$backup_bucket" ]; then handle_failed_dependencies "\n undefined --backup_bucket: $backup_bucket \nfor examples see: ./$0 --help\n"; fi
+        if [ -z "$backup_bucket" ]; then handle_failed_dependencies "\n undefined --backup_bucket: $backup_bucket \nfor examples see: ./$0 backup --help\n"; fi
         if [[ $backup_bucket == gs://* ]]; then
             cloud="gcp"; protocol="gs";
         elif [[ $backup_bucket == s3://* ]]; then
@@ -522,7 +542,7 @@ issue_write_locks()
 
 }
 
-save_extentmap() 
+run_save_brm() 
 {
 
     if $skip_save_brm || [ $pm != "pm1" ] || ! $columnstore_online || [ $mode == "indirect" ]; then return; fi;
@@ -535,11 +555,22 @@ save_extentmap()
         cp -R $DBRM_PATH/* $tmpDir
     elif [ $storage == "S3" ]; then 
         cp -R $STORAGEMANAGER_PATH/* $tmpDir
-       
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_em > $tmpDir/BRM_saves_em $xtra_cmd_args"
+
+        # Base Set
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_journal > $tmpDir/BRM_saves_journal $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_em > $tmpDir/BRM_saves_em $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_vbbm > $tmpDir/BRM_saves_vbbm $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_vss > $tmpDir/BRM_saves_vss $xtra_cmd_args"
+
+        # A Set
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_em > $tmpDir/BRM_savesA_em $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vbbm > $tmpDir/BRM_savesA_vbbm $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vss > $tmpDir/BRM_savesA_vss $xtra_cmd_args"
+        
+        # B Set
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_em > $tmpDir/BRM_savesB_em $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vbbm > $tmpDir/BRM_savesB_vbbm $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vss > $tmpDir/BRM_savesB_vss $xtra_cmd_args"
     fi
 
     printf "[+] Saving BRMs... \n"
@@ -1257,7 +1288,7 @@ parse_restore_variables()
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
-            -h|--help)
+            -h|--help|-help|help)
                 print_restore_help_text;
                 exit 1;
                 ;;
@@ -1786,7 +1817,7 @@ process_backup()
     check_for_dependancies "backup";
     validation_prechecks_for_backup;
     issue_write_locks;
-    save_extentmap;
+    run_save_brm;
     run_backup;
 
 }
@@ -1803,11 +1834,10 @@ process_restore()
 
 case "$1" in
     'help' | '--help' | '-help' | '-h') 	
-        # TODO - simplify top level help text
-        echo "Printing both backup and restore help text"
-        print_backup_help_text;
-        print_restore_help_text;
-        print_dbrm_backup_help_text;
+        print_action_help_text
+        ;;
+    'backup') 
+        process_backup "$@";
         ;;
     'dbrm_backup') 	
         process_dbrm_backup "$@";
