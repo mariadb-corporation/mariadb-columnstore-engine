@@ -4,13 +4,13 @@ USE MCOL5568;
 CREATE TABLE test_mult (
 indemnity_paid INT(11),
 n_clms TINYINT(3) UNSIGNED
-+) ENGINE=COLUMNSTORE;
+) ENGINE=COLUMNSTORE;
 INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
 ERROR HY000: Internal error: MCS-2053: The result is out of range for function "*" using value(s): -10.000000 1.000000
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
 ERROR HY000: Internal error: MCS-2053: The result is out of range for function "+" using value(s): -10.000000 1.000000
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult;
-indemnity_paid n_clms  (indemnity_paid + 9) + n_clms
+indemnity_paid	n_clms	(indemnity_paid + 9) + n_clms
 -10	1	0
 DROP DATABASE MCOL5568;
