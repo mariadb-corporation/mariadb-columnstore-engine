@@ -275,6 +275,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 	    case OP_DIV: func = "\"/\""; break;
             default: break;
 	  }
+	  args.add(func);
           args.add((double)result);
           unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
           throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
