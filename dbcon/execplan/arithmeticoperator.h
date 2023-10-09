@@ -263,7 +263,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
           y = (int128_t)rop->getUintVal(row, isNull);
         }
         int128_t result = execute(x, y, isNull);
-	if (!isNull && result > MAX_UBIGINT || result < 0)
+	if (!isNull && (result > MAX_UBIGINT || result < 0))
 	{
           if (xx < 0) {
             logging::Message::Args args;
