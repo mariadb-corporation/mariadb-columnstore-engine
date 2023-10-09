@@ -17,12 +17,14 @@ n_clms TINYINT(3) UNSIGNED
 INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 
 # an error.
+-error 1815
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
 
 # an error.
+-error 1815
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
 
-# an error.
+# not an error.
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult;
 
 DROP DATABASE MCOL5568;
