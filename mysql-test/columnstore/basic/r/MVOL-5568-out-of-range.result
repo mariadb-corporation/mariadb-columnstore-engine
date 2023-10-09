@@ -1,0 +1,11 @@
+DROP DATABASE IF EXISTS MCOL5568;
+CREATE DATABASE MCOL5568;
+USE MCOL5568;
+CREATE TABLE test_mult (
+indemnity_paid INT(11),
+n_clms TINYINT(3) UNSIGNED
+) ENGINE=INNODB;
+INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
+SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
+SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
+DROP DATABASE MCOL5568;
