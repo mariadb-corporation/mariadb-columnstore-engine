@@ -19,8 +19,11 @@ INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 # an error.
 #SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
 
-# can be an error
-SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
+# an error.
+#SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
+
+# an error.
+SELECT indemnity_paid, n_clms, (indemnity_paid + 10) + n_clms FROM test_mult;
 
 DROP DATABASE MCOL5568;
 
