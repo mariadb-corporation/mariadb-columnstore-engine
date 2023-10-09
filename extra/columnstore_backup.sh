@@ -15,7 +15,7 @@
 ########################################################################
 
 start=`date +%s`
-
+action=$1
 print_action_help_text() {
     echo "
     Columnstore Backup
@@ -557,6 +557,7 @@ run_save_brm()
         cp -R $STORAGEMANAGER_PATH/* $tmpDir
 
         # Base Set
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_current > $tmpDir/BRM_saves_current $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_journal > $tmpDir/BRM_saves_journal $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_em > $tmpDir/BRM_saves_em $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_saves_vbbm > $tmpDir/BRM_saves_vbbm $xtra_cmd_args"
@@ -1788,10 +1789,16 @@ process_dbrm_backup() {
             mkdir $backup_folder/dbrms/
             smls /data1/systemFiles/dbrm 2>/dev/null > $backup_folder/dbrms/dbrms.txt
             smcat /data1/systemFiles/dbrm/BRM_saves_current  2>/dev/null > $backup_folder/dbrms/BRM_saves_current
-            smcat /data1/systemFiles/dbrm/BRM_saves_em 2>/dev/null > $backup_folder/dbrms/BRM_saves_em
             smcat /data1/systemFiles/dbrm/BRM_saves_journal 2>/dev/null > $backup_folder/dbrms/BRM_saves_journal
+            smcat /data1/systemFiles/dbrm/BRM_saves_em 2>/dev/null > $backup_folder/dbrms/BRM_saves_em
             smcat /data1/systemFiles/dbrm/BRM_saves_vbbm 2>/dev/null > $backup_folder/dbrms/BRM_saves_vbbm
             smcat /data1/systemFiles/dbrm/BRM_saves_vss 2>/dev/null > $backup_folder/dbrms/BRM_saves_vss
+            smcat /data1/systemFiles/dbrm/BRM_savesA_em 2>/dev/null > $backup_folder/dbrms/BRM_savesA_em
+            smcat /data1/systemFiles/dbrm/BRM_savesA_vbbm 2>/dev/null > $backup_folder/dbrms/BRM_savesA_vbbm
+            smcat /data1/systemFiles/dbrm/BRM_savesA_vss 2>/dev/null > $backup_folder/dbrms/BRM_savesA_vss
+            smcat /data1/systemFiles/dbrm/BRM_savesB_em 2>/dev/null > $backup_folder/dbrms/BRM_savesB_em
+            smcat /data1/systemFiles/dbrm/BRM_savesB_vbbm 2>/dev/null > $backup_folder/dbrms/BRM_savesB_vbbm
+            smcat /data1/systemFiles/dbrm/BRM_savesB_vss 2>/dev/null > $backup_folder/dbrms/BRM_savesB_vss
         fi
         
         # Clean up old backups
@@ -1832,7 +1839,7 @@ process_restore()
     run_restore;
 }
 
-case "$1" in
+case "$action" in
     'help' | '--help' | '-help' | '-h') 	
         print_action_help_text
         ;;
@@ -1846,7 +1853,8 @@ case "$1" in
         process_restore "$@";
         ;;
     *) 
-        process_backup "$@";
+        printf "\nunknown action: $action\n" 
+        print_action_help_text
         ;;
 esac
 
