@@ -31,6 +31,7 @@
 
 #include "operator.h"
 #include "parsetree.h"
+#include "datatypes.h"
 
 namespace messageqcpp
 {
@@ -239,41 +240,47 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 
     case execplan::CalpontSystemCatalog::UBIGINT:
       {
-        uint64_t x, y;
+        // XXX: this is bandaid solution for specific customer case (MCOL-5568).
+	// Despite that I tried to implement a proper solution: to have operations
+	// performed using int128_t amd then check the result.
+        int128_t x, y;
         bool signedLeft = lop->data()->resultType().isSignedInteger();
         bool signedRight = rop->data()->resultType().isSignedInteger();
-        if (signedLeft && !signedRight)
+        if (signedLeft)
         {
-          int64_t xx = lop->getIntVal(row, isNull);
-          if (xx < 0) {
-            logging::Message::Args args;
-            args.add("\"+\"");
-            args.add((double)xx);
-            unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-            throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-          }
-          x = xx;
-          y = rop->getUintVal(row, isNull);
+          x = (int128_t)lop->getIntVal(row, isNull);
         }
-        else if (!signedLeft && signedRight)
+	else
+	{
+          x = (int128_t)lop->getUintVal(row, isNull);
+	}
+        if (signedRight)
         {
-          int64_t yy = rop->getIntVal(row, isNull);
-          if (yy < 0) {
-            logging::Message::Args args;
-            args.add("\"+\"");
-            args.add((double)yy);
-            unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-            throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-          }
-          y = yy;
-          x = lop->getUintVal(row, isNull);
+          y = (int128_t)rop->getIntVal(row, isNull);
         }
         else
         {
-          x = lop->getUintVal(row, isNull);
-          y = rop->getUintVal(row, isNull);
+          y = (int128_t)rop->getUintVal(row, isNull);
         }
-        fResult.uintVal = execute(x, y, isNull);
+        int128_t result = execute(x, y, isNull);
+	if (!isNull && result > UBIGINT_MAX || result < 0)
+	{
+          if (xx < 0) {
+            logging::Message::Args args;
+	    std::string func = "<unknown>";
+	    switch (fOp)
+	    {
+              case OP_ADD; func = "\"+\""; break;
+              case OP_SUB; func = "\"-\""; break;
+              case OP_MUL; func = "\"*\""; break;
+              case OP_DIV; func = "\"/\""; break;
+	    }
+            args.add((double)result);
+            unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+            throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+          }
+	}
+        fResult.uintVal = (uint64_t)result;
       }
       break;
     case execplan::CalpontSystemCatalog::UINT:
