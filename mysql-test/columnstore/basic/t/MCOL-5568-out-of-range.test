@@ -17,11 +17,11 @@ n_clms TINYINT(3) UNSIGNED
 INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 
 # an error.
--error 1815
+--error 1815
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
 
 # an error.
--error 1815
+--error 1815
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
 
 # not an error.
