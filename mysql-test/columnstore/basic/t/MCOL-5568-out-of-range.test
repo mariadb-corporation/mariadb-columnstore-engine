@@ -12,7 +12,7 @@ indemnity_paid INT(11),
 
 n_clms TINYINT(3) UNSIGNED
 
-) ENGINE=INNODB;
+) ENGINE=COLUMNSTORE;
 
 INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 
