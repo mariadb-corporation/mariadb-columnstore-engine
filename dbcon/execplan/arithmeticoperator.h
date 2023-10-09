@@ -31,7 +31,7 @@
 
 #include "operator.h"
 #include "parsetree.h"
-#include "datatypes.h"
+#include "mcs_datatypes.h"
 
 namespace messageqcpp
 {
