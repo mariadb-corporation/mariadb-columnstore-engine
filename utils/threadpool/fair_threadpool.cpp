@@ -228,7 +228,7 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
       {
         // to avoid excessive CPU usage waiting for data from storage
         usleep(500);
-        runList[0].weight_ += runList[0].weight_;
+        runList[0].weight_ += (runList[0].weight_) ? runList[0].weight_ : 100000;
         addJob(runList[0]);
       }
     }

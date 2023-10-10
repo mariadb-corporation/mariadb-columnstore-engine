@@ -1945,8 +1945,9 @@ struct ReadThread
         const uint32_t txnId = *((uint32_t*)&buf[pos + 2]);
         const uint32_t stepID = *((uint32_t*)&buf[pos + 6]);
         const uint32_t uniqueID = *((uint32_t*)&buf[pos + 10]);
-        const uint32_t weight = threadpool::MetaJobsInitialWeight;
         const uint32_t priority = 0;
+        uint32_t weight = threadpool::MetaJobsInitialWeight;
+
         uint32_t id = 0;
         boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
@@ -1963,6 +1964,7 @@ struct ReadThread
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
         {
+          weight += 10000;
           functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
