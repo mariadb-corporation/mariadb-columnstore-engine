@@ -61,11 +61,11 @@ void errMsg(int err)
       cout << endl;
       break;
 
-    case ERR_NETWORK: cout << "Failure: an unspecific communication error." << endl; break;
+    case ERR_NETWORK: cout << "NETWORK_FAILURE" << endl; break;
 
-    case ERR_TIMEOUT: cout << "Failure: controller node timed out." << endl; break;
+    case ERR_TIMEOUT: cout << "TIMEOUT" << endl; break;
 
-    case ERR_READONLY: cout << "DBRM is currently Read Only!" << endl; break;
+    case ERR_READONLY: cout << "READONLY" << endl; break;
 
     case 20: cout << "System is ready" << endl; break;
 
