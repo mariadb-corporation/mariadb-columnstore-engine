@@ -109,7 +109,8 @@ class ArithmeticOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override;
 
   using Operator::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                             ParseTree* rop) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull, lop, rop);
@@ -141,7 +142,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDoubleVal();
   }
   using Operator::getLongDoubleVal;
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                       ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getLongDoubleVal();
@@ -178,7 +180,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDatetimeIntVal();
   }
   using Operator::getTimestampIntVal;
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                     ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getTimestampIntVal();
@@ -222,11 +225,13 @@ class ArithmeticOperator : public Operator
   bool fDecimalOverflowCheck;
 
  public:
+  using Operator::compile;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                              CalpontSystemCatalog::ColDataType dataType) override;
+                              rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop,
+                              ParseTree* rop) override;
   inline llvm::Value* compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline llvm::Value* compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  using Operator::isCompilable;
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
 
@@ -450,8 +455,7 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 }
 
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                                                CalpontSystemCatalog::ColDataType dataType)
+                                                rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
 {
   switch (fOperationType.colDataType)
   {

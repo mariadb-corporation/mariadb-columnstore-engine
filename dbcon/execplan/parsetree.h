@@ -367,7 +367,7 @@ class ParseTree
     if (fLeft && fRight)
     {
       return (reinterpret_cast<Operator*>(fData))
-          ->compile(b, data, isNull, row, fLeft, fRight, dataType);
+          ->compile(b, data, isNull, row, dataType, fLeft, fRight);
     }
     else
     {

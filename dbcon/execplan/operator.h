@@ -246,8 +246,7 @@ class Operator : public TreeNode
  public:
   using TreeNode::compile;
   virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                               CalpontSystemCatalog::ColDataType dataType)
+                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
   {
     return fResult.compiledBlock;
   }
