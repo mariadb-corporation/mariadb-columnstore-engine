@@ -227,11 +227,13 @@ class ArithmeticOperator : public Operator
   bool fDecimalOverflowCheck;
 
  public:
+  using Operator::compile;
   inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                              rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                              CalpontSystemCatalog::ColDataType dataType) override;
+                              rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop,
+                              ParseTree* rop) override;
   inline llvm::Value* compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   inline llvm::Value* compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  using Operator::isCompilable;
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
 
@@ -500,8 +502,7 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
 }
 
 inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                                rowgroup::Row& row, ParseTree* lop, ParseTree* rop,
-                                                CalpontSystemCatalog::ColDataType dataType)
+                                                rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
 {
   switch (fOperationType.colDataType)
   {

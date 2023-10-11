@@ -93,7 +93,6 @@ class SimpleColumn_INT : public SimpleColumn
   {
     auto offset = row.getOffset(fInputIndex);
     CalpontSystemCatalog::ColDataType colType = row.getColType(fInputIndex);
-    llvm::Value* result;
     msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
     return msc_jit::CompileHelper::compileIntField<len>(b, data, offset);
   }

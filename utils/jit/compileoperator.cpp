@@ -93,6 +93,7 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
     case CalpontSystemCatalog::UFLOAT:
       result_compiled_function.compiled_function_float = reinterpret_cast<JITCompiledOperator<float>>(
           compiled_module.function_name_to_symbol[expression->alias()]);
+      break;
     default: throw logic_error("compileOperator: unsupported type");
   }
 

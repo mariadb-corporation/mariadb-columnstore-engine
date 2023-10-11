@@ -115,6 +115,7 @@ class CompileHelper
                                                 b.getInt64(joblist::DOUBLENULL)),
                                  isNullVal),
                       isNull);
+        break;
       case CalpontSystemCatalog::UDOUBLE:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<8>(b, dataValue, offset, false),
                                                 b.getInt64(joblist::DOUBLENULL)),
