@@ -957,7 +957,7 @@ int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOff
  * Description:
  * Used by bulk import to insert batch of parquet strings into this store file.
  * Function assumes that the file is already positioned to the current block.
- * 
+ *
  * PARAMETERS:
  *    input
  *       columnData - arrow array containing input strings
@@ -966,7 +966,7 @@ int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOff
  *       col - column of strings to be parsed from "buf"
  *    output
  *       tokenBuf   - tokens assigned to inserted strings
- * 
+ *
  * RETURN:
  *    success     - successfully write the header to block
  *    failure     - it did not write the header to block
@@ -1005,7 +1005,7 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
   // check if this column data imported is NULL array or not
   if (columnData->type_id() == arrow::Type::type::NA)
     isNonNullArray = false;
-  
+
   //...Loop through all the rows for the specified column
   while (startPos < totalRow)
   {
@@ -1017,20 +1017,17 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
     if (isNonNullArray)
     {
       const uint8_t* data;
-      
-      // if (binaryArray != nullptr)
-      // {
-      //   data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
-      // }
-      // else
-      // {
-      //   data = fixedSizeBinaryArray->GetValue(startPos + startRowIdx);
-      //   std::shared_ptr<arrow::DataType> tType = fixedSizeBinaryArray->type();
-      //   curSig.size = tType->byte_width();
-      // }
 
-      // comment this line and uncomment the above will reproduce the error
-      data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+      if (binaryArray != nullptr)
+      {
+        data = binaryArray->GetValue(startPos + startRowIdx, &curSig.size);
+      }
+      else
+      {
+        data = fixedSizeBinaryArray->GetValue(startPos + startRowIdx);
+        std::shared_ptr<arrow::DataType> tType = fixedSizeBinaryArray->type();
+        curSig.size = tType->byte_width();
+      }
 
       const char* dataPtr = reinterpret_cast<const char*>(data);
 
@@ -1105,7 +1102,7 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
   // Done
   // If any data leftover and not written by subsequent call to
   // insertDctnry(), then it will be written by closeDctnry().
-  
+
   return NO_ERROR;
 }
 
