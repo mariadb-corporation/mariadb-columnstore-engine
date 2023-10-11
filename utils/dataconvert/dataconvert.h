@@ -1315,6 +1315,7 @@ class DataConvert
   EXPORT static int64_t datetimeToInt(const std::string& datetime);
   EXPORT static int64_t datetimeToInt(const utils::NullString& datetime);
   EXPORT static int64_t timestampToInt(const std::string& timestamp, long timeZone);
+  EXPORT static int64_t timestampValueToInt(long long timestampvalue, long timeZone);
   EXPORT static int64_t timeToInt(const std::string& time);
   EXPORT static int64_t stringToTime(const std::string& data);
   EXPORT static int64_t stringToTime(const utils::NullString& data);
