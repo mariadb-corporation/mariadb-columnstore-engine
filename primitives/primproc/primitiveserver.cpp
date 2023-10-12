@@ -1524,11 +1524,15 @@ struct BPPHandler
 
     if (!bppv)
     {
-      // cout << "got a lastJoiner msg for an unknown obj " << uniqueID << endl;
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "kill LJ_UNK " << uniqueID << endl;
         return 0;
+      }
       else
+      {
         return -1;
+      }
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
@@ -1540,7 +1544,10 @@ struct BPPHandler
       if (err == -1)
       {
         if (posix_time::second_clock::universal_time() > dieTime)
+        {
+          cout << "kill LJ " << uniqueID << endl;
           return 0;
+        }
         else
           return -1;
       }
@@ -1970,6 +1977,7 @@ struct ReadThread
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
+          std::cout << "E_J " << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
