@@ -843,7 +843,6 @@ int BatchPrimitiveProcessor::endOfJoiner()
   /* Wait for all joiner elements to be added */
   uint32_t i;
   size_t currentSize;
-  pthread_mutex_lock(&objLock);
 
   if (endOfJoinerRan)
     return 0;
