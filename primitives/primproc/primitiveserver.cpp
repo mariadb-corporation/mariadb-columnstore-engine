@@ -1233,6 +1233,9 @@ struct BPPHandler
   {
     LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
+      // There are issues with
+      // This is to let this last joiner message to stay longer in the threadpool.
+      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
@@ -1270,6 +1273,8 @@ struct BPPHandler
   {
     AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
+      // This is to let this joiner message to stay longer in the threadpool.
+      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
@@ -1327,7 +1332,10 @@ struct BPPHandler
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        std::cout << "doAbort: job for key " << key << " has been killed." << std::endl;
         return 0;
+      }
       else
         return -1;
     }
@@ -1435,24 +1443,6 @@ struct BPPHandler
       return it->second;
     else
       return SBPPV();
-
-    /*
-                    do
-                    {
-                            if (++failCount == maxFailCount) {
-                                    //cout << "grabBPPs couldn't find the BPPs for " << uniqueID << endl;
-                                    return ret;
-                                    //throw logic_error("grabBPPs couldn't find the unique ID");
-                            }
-                            scoped.unlock();
-                            usleep(5000);
-                            scoped.lock();
-                            it = bppMap.find(uniqueID);
-                    } while (it == bppMap.end());
-
-                    ret = it->second;
-                    return ret;
-    */
   }
 
   inline shared_mutex& getDJLock(uint32_t uniqueID)
@@ -1501,7 +1491,10 @@ struct BPPHandler
     else
     {
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "addJoinerToBPP: job for id " << uniqueID << " has been killed." << endl;
         return 0;
+      }
       else
         return -1;
     }
@@ -1526,7 +1519,7 @@ struct BPPHandler
     {
       if (posix_time::second_clock::universal_time() > dieTime)
       {
-        cout << "kill LJ_UNK " << uniqueID << endl;
+        cout << "LastJoiner: job for unknown id " << uniqueID << " has been killed." << endl;
         return 0;
       }
       else
@@ -1545,14 +1538,14 @@ struct BPPHandler
       {
         if (posix_time::second_clock::universal_time() > dieTime)
         {
-          cout << "kill LJ " << uniqueID << endl;
+          cout << "LastJoiner: job for id " << uniqueID
+               << " has been killed waiting for joiner messages for too long." << endl;
           return 0;
         }
         else
           return -1;
       }
     }
-    bppv->get()[0]->doneSendingJoinerData();
 
     /* Note: some of the duplicate/run/join sync was moved to the BPPV class to do
     more intelligent scheduling.  Once the join data is received, BPPV will
@@ -1570,6 +1563,7 @@ struct BPPHandler
     // The if block below works around the issue.
     if (posix_time::second_clock::universal_time() > dieTime)
     {
+      cout << "destroyBPP: job for unknown id has been killed." << endl;
       return 0;
     }
 
@@ -1615,38 +1609,26 @@ struct BPPHandler
       {
         // MCOL-5. On ubuntu, a crash was happening. Checking
         // joinDataReceived here fixes it.
-        // We're not ready for a destroy. Reschedule.
+        // We're not ready for a destroy. Reschedule to wait
+        // for all joiners to arrive.
         return -1;
       }
     }
     else
     {
-      // cout << "got a destroy for an unknown obj " << uniqueID << endl;
       bs.rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
       {
-        // XXXPAT: going to let this fall through and delete jobs for
-        // uniqueID if there are any.  Not clear what the downside is.
-        /*
-lk.unlock();
-deleteDJLock(uniqueID);
-return 0;
-        */
+        cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
+             << endl;
+        // If for some reason there are jobs for this uniqueID that arrived later
+        // they won't leave PP thread pool staying there forever.
       }
       else
         return -1;
     }
 
-    // 			cout << "  destroy: new size is " << bppMap.size() << endl;
-    /*
-                    if (sessionID & 0x80000000)
-                            cerr << "destroyed BPP instances for sessionID " << (int)
-                            (sessionID ^ 0x80000000) << " stepID "<< stepID << " (syscat)\n";
-                    else
-                            cerr << "destroyed BPP instances for sessionID " << sessionID <<
-                            " stepID "<< stepID << endl;
-    */
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
@@ -1716,7 +1698,10 @@ class DictionaryOp : public FairThreadPool::Functor
       bs->rewind();
 
       if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "DictionaryOp::operator(): job has been killed." << endl;
         return 0;
+      }
     }
 
     return ret;
@@ -1977,7 +1962,6 @@ struct ReadThread
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
         {
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
-          std::cout << "E_J " << id << std::endl;
           functor.reset(new BPPHandler::LastJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_DESTROY)
@@ -2418,27 +2402,6 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 {
   uint32_t size = v.size();
   uint32_t i = 0;
-
-#if 0
-
-    // This block of code scans for the first available BPP instance,
-    // makes BPPSeeder reschedule it if none are available. Relies on BPP instance
-    // being preallocated.
-    for (i = 0; i < size; i++)
-    {
-        uint32_t index = (i + pos) % size;
-
-        if (!(v[index]->busy()))
-        {
-            pos = (index + 1) % size;
-            v[index]->busy(true);
-            return v[index];
-        }
-    }
-
-    // They're all busy, make threadpool reschedule the job
-    return boost::shared_ptr<BatchPrimitiveProcessor>();
-#endif
 
   // This block of code creates BPP instances if/when they are needed
 
