@@ -3656,6 +3656,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
         if (rc)
           lhs = new ParseTree(rc);
       }
+
       rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
 
       if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
