@@ -110,7 +110,8 @@ class ArithmeticOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override;
 
   using Operator::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                             ParseTree* rop) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull, lop, rop);
@@ -142,7 +143,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDoubleVal();
   }
   using Operator::getLongDoubleVal;
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                       ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getLongDoubleVal();
@@ -179,7 +181,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDatetimeIntVal();
   }
   using Operator::getTimestampIntVal;
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                     ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getTimestampIntVal();
@@ -239,51 +242,51 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
+    {
+      // XXX: this is bandaid solution for specific customer case (MCOL-5568).
+      // Despite that I tried to implement a proper solution: to have operations
+      // performed using int128_t amd then check the result.
+      int128_t x, y;
+      bool signedLeft = lop->data()->resultType().isSignedInteger();
+      bool signedRight = rop->data()->resultType().isSignedInteger();
+      if (signedLeft)
       {
-        // XXX: this is bandaid solution for specific customer case (MCOL-5568).
-        // Despite that I tried to implement a proper solution: to have operations
-        // performed using int128_t amd then check the result.
-        int128_t x, y;
-        bool signedLeft = lop->data()->resultType().isSignedInteger();
-        bool signedRight = rop->data()->resultType().isSignedInteger();
-        if (signedLeft)
-        {
-          x = static_cast<int128_t>(lop->getIntVal(row, isNull));
-        }
-        else
-        {
-          x = static_cast<int128_t>(lop->getUintVal(row, isNull));
-        }
-        if (signedRight)
-        {
-          y = static_cast<int128_t>(rop->getIntVal(row, isNull));
-        }
-        else
-        {
-          y = static_cast<int128_t>(rop->getUintVal(row, isNull));
-        }
-        int128_t result = execute(x, y, isNull);
-        if (!isNull && (result > MAX_UBIGINT || result < 0))
-        {
-          logging::Message::Args args;
-          std::string func = "<unknown>";
-          switch (fOp)
-          {
-            case OP_ADD: func = "\"+\""; break;
-            case OP_SUB: func = "\"-\""; break;
-            case OP_MUL: func = "\"*\""; break;
-            case OP_DIV: func = "\"/\""; break;
-            default: break;
-          }
-          args.add(func);
-          args.add(static_cast<double>(x));
-          args.add(static_cast<double>(y));
-          unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-        }
-        fResult.uintVal = static_cast<uint64_t<(result);
+        x = static_cast<int128_t>(lop->getIntVal(row, isNull));
       }
-      break;
+      else
+      {
+        x = static_cast<int128_t>(lop->getUintVal(row, isNull));
+      }
+      if (signedRight)
+      {
+        y = static_cast<int128_t>(rop->getIntVal(row, isNull));
+      }
+      else
+      {
+        y = static_cast<int128_t>(rop->getUintVal(row, isNull));
+      }
+      int128_t result = execute(x, y, isNull);
+      if (!isNull && (result > MAX_UBIGINT || result < 0))
+      {
+        logging::Message::Args args;
+        std::string func = "<unknown>";
+        switch (fOp)
+        {
+          case OP_ADD: func = "\"+\""; break;
+          case OP_SUB: func = "\"-\""; break;
+          case OP_MUL: func = "\"*\""; break;
+          case OP_DIV: func = "\"/\""; break;
+          default: break;
+        }
+        args.add(func);
+        args.add(static_cast<double>(x));
+        args.add(static_cast<double>(y));
+        unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+      }
+      fResult.uintVal = static_cast<uint64_t>(result);
+    }
+    break;
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
