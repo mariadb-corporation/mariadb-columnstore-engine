@@ -24,10 +24,9 @@
 #include "string_prefixes.h"
 
 // XXX: string (or, actually, a BLOB) with all NUL chars will be encoded into zero. Which corresponds to
-//      encoding of empty string, or NULL.
-int64_t encodeStringPrefix(const uint8_t* str, size_t len, int charsetNumber)
+//      encoding of empty string.
+int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& cset)
 {
-  datatypes::Charset cset(charsetNumber);
   uint8_t fixedLenPrefix[8];
   memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
   cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
@@ -41,11 +40,11 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, int charsetNumber)
   return acc;
 }
 
-int64_t encodeStringPrefix_check_null(const uint8_t* str, size_t len, int charsetNumber)
+int64_t encodeStringPrefix_check_null(const uint8_t* str, size_t len, datatypes::Charset& cset)
 {
-  if (len < 1)
+  if (len < 1) // XXX: should we also check for str being NULL???
   {
     return joblist::UBIGINTNULL;
   }
-  return encodeStringPrefix(str, len, charsetNumber);
+  return encodeStringPrefix(str, len, cset);
 }
