@@ -1,30 +1,31 @@
 #!/bin/bash
 ########################################################################
-# Documentation: bash columnstore_backup.sh help
+# Documentation:  bash mcs_backup_manager.sh help
 #
 # Backup Example
-#   LocalStorage: sudo ./columnstore_backup.sh 
-#   S3: sudo ./columnstore_backup.sh -bb s3://my-cs-backups
+#   LocalStorage: sudo ./mcs_backup_manager.sh backup
+#   S3:           sudo ./mcs_backup_manager.sh backup -bb s3://my-cs-backups
 #
 ########################################################################
 #
 # Restore Example
-#   LocalStorage: sudo ./columnstore_backup.sh restore -l <date>
-#   S3: sudo ./columnstore_backup.sh restore -bb s3://my-cs-backups -l <date> 
+#   LocalStorage: sudo ./mcs_backup_manager.sh restore -l <date>
+#   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
 
 start=`date +%s`
 action=$1
+
 print_action_help_text() {
     echo "
-    Columnstore Backup
+    MariaDB Columnstore Backup Manager
     
     Actions:
 
         backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
         restore                 Restore a backup taken with this script
-        dbrm_backup             Quick hot backup of internal columnstore metadata
+        dbrm_backup             Quick hot backup of internal columnstore metadata only - only use under support recommendation
 
     Documentation:
         bash $0 <action> help
@@ -223,7 +224,7 @@ parse_backup_variables()
                 shift # past value
                 ;;
             -c    | --compress)
-                mode="$2"
+                compress_format="$2"
                 shift # past argument
                 shift # past value
                 ;;
@@ -263,6 +264,7 @@ print_backup_help_text()
         -scp                             scp connection to remote server if -bd 'Remote'
         -bb   | --backup_bucket          bucket name for where to save S3 backups
         -url  | --endpoint-url           onprem url to s3 storage api example: http://127.0.0.1:8000
+        --no-verify-ssl                  skips verifying ssl certs, useful for onpremise s3 storage
         -s    | --storage                the storage used by columnstore data 'LocalStorage' or 'S3'
         -i    | --incremental            adds columnstore deltas to an existing full backup
         -P    | --parallel               number of parallel rsync threads to run
@@ -278,18 +280,18 @@ print_backup_help_text()
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
 
         Local Storage Examples:
-            ./columnstore_backup.sh -bl /tmp/backups/ -bd Local -s LocalStorage
-            ./columnstore_backup.sh -bl /tmp/backups/ -bd Local -s LocalStorage -P 8
-            ./columnstore_backup.sh -bl /tmp/backups/ -bd Local -s LocalStorage --incremental 02-18-2022
-            ./columnstore_backup.sh -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
+            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage
+            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage -P 8
+            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage --incremental 02-18-2022
+            ./$0 backup -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
 
         S3 Examples:  
-            ./columnstore_backup.sh -bb s3://my-cs-backups -s S3
-            ./columnstore_backup.sh -bb gs://my-cs-backups -s S3 --incremental 02-18-2022
-            ./columnstore_backup.sh -bb s3://my-premise-bucket -s S3 -url http://127.0.0.1:8000
+            ./$0 backup -bb s3://my-cs-backups -s S3
+            ./$0 backup -bb gs://my-cs-backups -s S3 --incremental 02-18-2022
+            ./$0 backup -bb s3://my-onpremise-bucket -s S3 -url http://127.0.0.1:8000
             
         Cron Example:
-        */60 */24 * * *  root  bash /root/columnstore_backup.sh -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
+        */60 */24 * * *  root  bash /root/$0 -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
     ";
 }
 
@@ -333,21 +335,21 @@ check_for_dependancies()
 {
     # Check pidof works
     if [ $mode != "indirect" ] &&  ! command -v pidof > /dev/null; then
-        handle_failed_dependencies "\n\n Please make sure pidof is installed and executable\n\n"
+        handle_failed_dependencies "\n\n[!] Please make sure pidof is installed and executable\n\n"
     fi
     
     # used for save_brm and defining columnstore_user
     if ! command -v stat > /dev/null; then
-        handle_failed_dependencies "\n\n Please make sure stat is installed and executable\n\n"
+        handle_failed_dependencies "\n\n[!] Please make sure stat is installed and executable\n\n"
     fi
 
     # Check MariaDB-backup installed
     if ! $skip_mdb && ! command -v mariadb-backup  > /dev/null; then
-        handle_failed_dependencies "\n\n Please make sure mariadb-backup is installed and executable\n\nyum install MariaDB-backup\nPlease rerun backup\n"
+        handle_failed_dependencies "\n\n[!] Please make sure mariadb-backup is installed and executable\n\nyum install MariaDB-backup\nPlease rerun backup\n\n"
     fi
 
     if [ $1 == "backup" ] && [ $mode != "indirect" ] && ! command -v dbrmctl  > /dev/null; then 
-        handle_failed_dependencies "\n\n dbrmctl unreachable to issue lock \n\n"
+        handle_failed_dependencies "\n\n[!] dbrmctl unreachable to issue lock \n\n"
     fi
 
     if [ $storage == "S3" ]; then
@@ -928,7 +930,7 @@ run_backup()
                 final_message="Incremental Backup Complete"
             else 
                 # Create restore job file
-                echo "./columnstore_backup.sh restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT" > $backup_location$today/restore.job
+                echo "./mcs_backup_manager.sh restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT" > $backup_location$today/restore.job
             fi
 
             final_message+=" @ $backup_location$today"
@@ -998,7 +1000,7 @@ run_backup()
                 final_message="Incremental Backup Complete"
             else
                 # Create restore job file
-                ssh $scp "echo './columnstore_backup.sh -l $today -bl $backup_location -bd $backup_destination -s $storage -scp $scp --dbroots $DBROOT_COUNT' > $backup_location$today/restore.job"
+                ssh $scp "echo './mcs_backup_manager.sh -l $today -bl $backup_location -bd $backup_destination -s $storage -scp $scp --dbroots $DBROOT_COUNT' > $backup_location$today/restore.job"
             fi
             final_message+=" @ $scp:$backup_location$today"
         fi
@@ -1086,7 +1088,7 @@ run_backup()
             if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
             if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
             if [ ! -z "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
-            echo "./columnstore_backup.sh restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
+            echo "./mcs_backup_manager.sh restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
         fi
@@ -1316,6 +1318,7 @@ print_restore_help_text()
         -scp                            scp connection to remote server if -bd 'Remote'
         -bb  | --backup_bucket          bucket name for where to find the S3 backups
         -url | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
+        --no-verify-ssl                 skips verifying ssl certs, useful for onpremise s3 storage
         -s   | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -pm  | --nodeid                 Forces the handling of the restore as this node as opposed to whats detected on disk
         -nb  | --new_bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
@@ -1330,13 +1333,13 @@ print_restore_help_text()
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
 
         Local Storage Examples:
-            ./columnstore_backup.sh restore -s LocalStorage -bl /tmp/backups/ -bd Local -l 12-29-2021
-            ./columnstore_backup.sh restore -s LocalStorage -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -l 12-29-2021
+            ./mcs_backup_manager.sh restore -s LocalStorage -bl /tmp/backups/ -bd Local -l 12-29-2021
+            ./mcs_backup_manager.sh restore -s LocalStorage -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -l 12-29-2021
         
         S3 Storage Examples:
-            ./columnstore_backup.sh restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
-            ./columnstore_backup.sh restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
-            ./columnstore_backup.sh restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
+            ./mcs_backup_manager.sh restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
+            ./mcs_backup_manager.sh restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
+            ./mcs_backup_manager.sh restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
     ";
 }
 
@@ -1651,13 +1654,13 @@ print_dbrm_backup_help_text() {
         -r   | --retention_days    Number of days of dbrm backups to retain - script will delete based on last update file time
         -p   | --path              path of where to save the dbrm backups on disk
 
-        Default: ./columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups
+        Default: ./$0 dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups
 
         Examples:
-            ./columnstore_backup.sh dbrm_backup --mode loop --interval 90 --retention_days 7 --path /mnt/dbrm_backups
+            ./$0 dbrm_backup --mode loop --interval 90 --retention_days 7 --path /mnt/dbrm_backups
             
         Cron Example:
-        */60 */3 * * * root  bash /root/columnstore_backup.sh dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+        */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention_days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
     ";
 }
 
@@ -1815,7 +1818,6 @@ process_dbrm_backup() {
     printf "[+] Complete\n\n"
 }
 
-
 process_backup()
 {
     load_default_backup_variables;
@@ -1826,7 +1828,6 @@ process_backup()
     issue_write_locks;
     run_save_brm;
     run_backup;
-
 }
 
 process_restore()
