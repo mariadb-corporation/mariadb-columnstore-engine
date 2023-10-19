@@ -35,7 +35,6 @@ print_action_help_text() {
     "
 }
 
-
 load_default_backup_variables()
 {
 
@@ -930,7 +929,7 @@ run_backup()
                 final_message="Incremental Backup Complete"
             else 
                 # Create restore job file
-                echo "./mcs_backup_manager.sh restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT" > $backup_location$today/restore.job
+                echo "./$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT" > $backup_location$today/restore.job
             fi
 
             final_message+=" @ $backup_location$today"
@@ -1000,7 +999,7 @@ run_backup()
                 final_message="Incremental Backup Complete"
             else
                 # Create restore job file
-                ssh $scp "echo './mcs_backup_manager.sh -l $today -bl $backup_location -bd $backup_destination -s $storage -scp $scp --dbroots $DBROOT_COUNT' > $backup_location$today/restore.job"
+                ssh $scp "echo './$0 -l $today -bl $backup_location -bd $backup_destination -s $storage -scp $scp --dbroots $DBROOT_COUNT' > $backup_location$today/restore.job"
             fi
             final_message+=" @ $scp:$backup_location$today"
         fi
@@ -1088,7 +1087,7 @@ run_backup()
             if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
             if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
             if [ ! -z "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
-            echo "./mcs_backup_manager.sh restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
+            echo "./$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
         fi
@@ -1333,13 +1332,13 @@ print_restore_help_text()
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
 
         Local Storage Examples:
-            ./mcs_backup_manager.sh restore -s LocalStorage -bl /tmp/backups/ -bd Local -l 12-29-2021
-            ./mcs_backup_manager.sh restore -s LocalStorage -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -l 12-29-2021
+            ./$0 restore -s LocalStorage -bl /tmp/backups/ -bd Local -l 12-29-2021
+            ./$0 restore -s LocalStorage -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -l 12-29-2021
         
         S3 Storage Examples:
-            ./mcs_backup_manager.sh restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
-            ./mcs_backup_manager.sh restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
-            ./mcs_backup_manager.sh restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
+            ./$0 restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
+            ./$0 restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
+            ./$0 restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
     ";
 }
 
