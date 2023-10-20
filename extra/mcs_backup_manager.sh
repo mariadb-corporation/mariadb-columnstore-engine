@@ -498,6 +498,27 @@ validation_prechecks_for_backup()
 
 }
 
+cs_read_only_wait_loop() {
+    retry_limit=1800
+    retry_counter=0
+    read_only_mode_message="DBRM is currently Read Only!"
+    current_status=$(dbrmctl status);
+    printf " - Confirming CS Readonly... "
+    while [ "$current_status" != "$read_only_mode_message" ]; do
+        sleep 1
+        printf "."
+        current_status=$(dbrmctl status);
+        if [ $? -ne 0 ]; then
+            handle_early_exit_on_backup "\n[!] Failed to get dbrmctl status\n\n" 
+        fi
+        if [ $retry_counter -ge $retry_limit ]; then
+            handle_early_exit_on_backup "\n[!] Set columnstore readonly wait retry limit exceeded: $retry_counter \n\n"
+        fi
+       
+        ((retry_counter++))
+    done
+    printf " Done. \n"
+}
 
 # Having the database offline is best for non-volatile backups
 # If online - issue a flush tables with read lock and set DBRM to readonly
@@ -522,20 +543,29 @@ issue_write_locks()
 
         # Set Columnstore ReadOnly Mode
         printf "[+] Issuing read-only lock to Columnstore Engine ... "; 
+        success_lock_message="[+] Locks Successful"
         if ! $columnstore_online; then 
             printf " skip since offline\n";
         elif [ $DBROOT_COUNT == "1" ]; then 
-            if dbrmctl readonly ; then
-                printf "[+] Locks Successful \n";
+            
+             # Try startreadonly for safer CS lock
+            if dbrmctl startreadonly 2>/dev/null; then
+                cs_read_only_wait_loop
+                printf "$success_lock_message\n";
             else 
-                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl\n" true;
+                # Try readonly for backward compatibility 
+                if dbrmctl readonly 2>/dev/null; then
+                    printf "$success_lock_message\n";
+                else 
+                    handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl\n" true;
+                fi
             fi
         else 
             cmapiResponse=$(curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header "x-api-key:$cmapi_key" --data '{"timeout":20, "mode": "readonly"}' -k);
             if [[ $cmapiResponse == '{"error":'* ]] ; then 
                 handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock\n" true;
             else
-                printf " Done - BRM Lock Success via cmapi \n";
+                printf "$success_lock_message (via cmapi) \n";
             fi
         fi
         
