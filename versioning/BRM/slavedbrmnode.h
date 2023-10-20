@@ -248,7 +248,7 @@ class SlaveDBRMNode
    * @return 0 on success, -1 on error
    */
   int deleteOID(OID_t oid, const bool vbbmIsLocked = false, const bool vssIsLocked = false,
-                const bool cleanUpEM = true) throw();
+                const bool cleanUpEM = true, const bool failOnNoLBID = true) throw();
 
   /** @brief Delete the extents of OIDs and invalidate VSS references to them
    *

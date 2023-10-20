@@ -34,7 +34,7 @@ namespace dbbc
 {
 FileBuffer::FileBuffer(const FileBuffer& rhs)
 {
-  if (this == NULL || this == &rhs)
+  if (this == nullptr || this == &rhs)
     return;
 
   fLbid = rhs.fLbid;

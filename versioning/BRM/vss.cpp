@@ -679,15 +679,13 @@ void VSS::insert_(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loadi
 // metadata is modified by the caller
 void VSS::_insert(VSSEntry& e, VSSShmsegHeader* dest, int* destHash, VSSEntry* destStorage, bool loading)
 {
-  int hashIndex, insertIndex;
-
-  hashIndex = hasher((char*)&e.lbid, sizeof(e.lbid)) % dest->numHashBuckets;
-
-  insertIndex = dest->LWM;
+  const int hashIndex = hasher((char*)&e.lbid, sizeof(e.lbid)) % dest->numHashBuckets;
+  int insertIndex = dest->LWM;
+  // std::cout << "_insert " << vssShmType_ << " insertIndex init " << insertIndex << endl;
 
   while (destStorage[insertIndex].lbid != -1)
   {
-    insertIndex++;
+    ++insertIndex;
 #ifdef BRM_DEBUG
 
     if (insertIndex == dest->capacity)
@@ -699,10 +697,14 @@ void VSS::_insert(VSSEntry& e, VSSShmsegHeader* dest, int* destHash, VSSEntry* d
 #endif
   }
 
+  // std::cout << "_insert " << vssShmType_ << " insertIndex  final" << insertIndex << endl;
+
   if (!loading)
     makeUndoRecord(dest, sizeof(VSSShmsegHeader));
 
+  // std::cout << "_insert b " << vssShmType_ << " dest->LWM " << dest->LWM << endl;
   dest->LWM = insertIndex + 1;
+  // std::cout << "_insert a " << vssShmType_ << " dest->LWM " << dest->LWM << endl;
 
   if (!loading)
   {
@@ -713,6 +715,11 @@ void VSS::_insert(VSSEntry& e, VSSShmsegHeader* dest, int* destHash, VSSEntry* d
   e.next = destHash[hashIndex];
   destStorage[insertIndex] = e;
   destHash[hashIndex] = insertIndex;
+
+  // std::cout << "_insert " << vssShmType_ << " lbid:ver " << e.lbid << ":" << e.verID << " e.next " <<
+  // e.next
+  //           << " at index " << insertIndex << " hashIndex " << hashIndex << " dest->LWM " << dest->LWM
+  //           << endl;
 }
 
 // assumes read lock is held
@@ -914,6 +921,8 @@ bool VSS::isLocked(const LBID_t lbid, VER_t transID) const
 // requires write lock
 void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
 {
+  // std::cout << "removeEntry " << vssShmType_ << " lbid " << lbid << endl;
+
   int index, prev, bucket;
 
 #ifdef BRM_DEBUG
@@ -933,6 +942,7 @@ void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
 #endif
 
   index = getIndex(lbid, verID, prev, bucket);
+  // std::cout << "removeEntry " << vssShmType_ << " lbid " << lbid << " index " << index << endl;
 
   if (index == -1)
   {
@@ -1123,7 +1133,7 @@ void VSS::setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag)
 void VSS::commit(VER_t txnID)
 {
   int i;
-
+  // std::cout << "commit " << vssShmType_ << " txnID " << txnID << endl;
 #ifdef BRM_DEBUG
 
   if (txnID < 1)
@@ -1162,7 +1172,8 @@ void VSS::getUncommittedLBIDs(VER_t txnID, vector<LBID_t>& lbids)
 {
   int i;
 
-  lbids.clear();
+  // can't clear it
+  // lbids.clear();
 
 #ifdef BRM_DEBUG
 
@@ -1177,7 +1188,7 @@ void VSS::getUncommittedLBIDs(VER_t txnID, vector<LBID_t>& lbids)
   for (i = 0; i < vss->capacity; i++)
     if (storage[i].lbid != -1 && storage[i].verID == txnID)
     {
-#ifdef BRM_DEBUG
+      // #ifdef BRM_DEBUG
 
       if (storage[i].locked == false)
       {
@@ -1191,35 +1202,38 @@ void VSS::getUncommittedLBIDs(VER_t txnID, vector<LBID_t>& lbids)
         throw logic_error("VSS::getUncommittedLBIDs(): found a block with that TxnID in the VB");
       }
 
-#endif
+      // #endif
       lbids.push_back(storage[i].lbid);
     }
 }
 
 void VSS::getUnlockedLBIDs(BlockList_t& lbids)
 {
-  lbids.clear();
+  // can't clear it b/c it collects a list for all VSS instances.
+  // lbids.clear();
 
   for (int i = 0; i < vss->capacity; i++)
     if (storage[i].lbid != -1 && !storage[i].locked)
       lbids.push_back(LVP_t(storage[i].lbid, storage[i].verID));
 }
 
-void VSS::getLockedLBIDs(BlockList_t& lbids)
-{
-  lbids.clear();
+// void VSS::getLockedLBIDs(BlockList_t& lbids)
+// {
+//   lbids.clear();
 
-  for (int i = 0; i < vss->capacity; i++)
-    if (storage[i].lbid != -1 && storage[i].locked)
-      lbids.push_back(LVP_t(storage[i].lbid, storage[i].verID));
-}
+//   for (int i = 0; i < vss->capacity; i++)
+//     if (storage[i].lbid != -1 && storage[i].locked)
+//       lbids.push_back(LVP_t(storage[i].lbid, storage[i].verID));
+// }
 // write lock
 /* Rewritten on 6/2/10 to be O(n) with the size of range rather than
  * O(nlogn) with VSS capacity. */
 void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
 {
-  int bucket, index, prev;
-  LBID_t lastLBID, lbid;
+  // int bucket, index, prev;
+  // LBID_t lastLBID, lbid;
+  // std::cout << "removeEntriesFromDB " << vssShmType_ << " range start " << range.start << " range last "
+  //           << range.start + range.size << endl;
 
 #ifdef BRM_DEBUG
 
@@ -1239,13 +1253,15 @@ void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
 
   makeUndoRecord(vss, sizeof(VSSShmsegHeader));
 
-  lastLBID = range.start + range.size - 1;
+  LBID_t lastLBID = range.start + range.size - 1;
 
-  for (lbid = range.start; lbid <= lastLBID; lbid++)
+  for (LBID_t lbid = range.start; lbid <= lastLBID; lbid++)
   {
-    bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+    int bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+    int index = hashBuckets[bucket];
+    int prev = -1;
 
-    for (prev = -1, index = hashBuckets[bucket]; index != -1; index = storage[index].next)
+    for (; index != -1; index = storage[index].next)
     {
       if (storage[index].lbid == lbid)
       {
@@ -1345,51 +1361,93 @@ void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
 // }
 
 // This traverses the vss hash map searching for the first lbid match.
-optLbidVersion VSS::removeEntryFromDB(const LBID_t& lbid)
+VecLbidVersion VSS::removeEntryFromDB(const LBID_t& lbid)
 {
+  if (vssShmType_ == 12)
+  {
+    // std::cout << "removeEntryFromDB " << vssShmType_ << " lbid " << lbid << endl;
+  }
   makeUndoRecord(vss, sizeof(VSSShmsegHeader));
   auto bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  VecLbidVersion lbidsVersions;
+
   int prev = -1;
   auto index = hashBuckets[bucket];
   for (; index != -1; index = storage[index].next, prev = index)
   {
     if (storage[index].lbid == lbid)
     {
-      break;
+      if (storage[index].vbFlag)
+      {
+        lbidsVersions.emplace_back(storage[index].lbid, storage[index].verID);
+      }
+
+      makeUndoRecord(&storage[index], sizeof(VSSEntry));
+      storage[index].lbid = -1;
+
+      if (prev == -1)
+      {
+        makeUndoRecord(&hashBuckets[bucket], sizeof(int));
+        hashBuckets[bucket] = storage[index].next;
+      }
+      else
+      {
+        makeUndoRecord(&storage[prev], sizeof(VSSEntry));
+        storage[prev].next = storage[index].next;
+        // If the index to has next == -1, than set hash[bucket] to -1 as well.
+        // hash[bucket] == -1 has the last entry in the blocks chain.
+        if (storage[index].next == -1)
+        {
+          hashBuckets[bucket] = storage[index].next;
+        }
+      }
+
+      --vss->currentSize;
+
+      if (storage[index].locked && (vss->lockedEntryCount > 0))
+        --vss->lockedEntryCount;
+
+      if (index < vss->LWM)
+        vss->LWM = index;
+    }
+    else
+    {
+      prev = index;
     }
   }
-  if (index == -1)  // not found
-  {
-    return std::nullopt;
-  }
+  // if (index == -1)  // not found
+  // {
+  //   return std::nullopt;
+  // }
 
-  makeUndoRecord(&storage[index], sizeof(VSSEntry));
-  storage[index].lbid = -1;
+  // makeUndoRecord(&storage[index], sizeof(VSSEntry));
+  // storage[index].lbid = -1;
 
-  if (prev == -1)
-  {
-    makeUndoRecord(&hashBuckets[bucket], sizeof(int));
-    hashBuckets[bucket] = storage[index].next;
-  }
-  else
-  {
-    makeUndoRecord(&storage[prev], sizeof(VSSEntry));
-    storage[prev].next = storage[index].next;
-  }
+  // if (prev == -1)
+  // {
+  //   makeUndoRecord(&hashBuckets[bucket], sizeof(int));
+  //   hashBuckets[bucket] = storage[index].next;
+  // }
+  // else
+  // {
+  //   makeUndoRecord(&storage[prev], sizeof(VSSEntry));
+  //   storage[prev].next = storage[index].next;
+  // }
 
-  --vss->currentSize;
+  // --vss->currentSize;
 
-  if (storage[index].locked && (vss->lockedEntryCount > 0))
-    --vss->lockedEntryCount;
+  // if (storage[index].locked && (vss->lockedEntryCount > 0))
+  //   --vss->lockedEntryCount;
 
-  if (index < vss->LWM)
-    vss->LWM = index;
+  // if (index < vss->LWM)
+  //   vss->LWM = index;
 
-  if (storage[index].vbFlag)
-  {
-    return {{storage[index].lbid, storage[index].verID}};
-  }
-  return std::nullopt;
+  // if (storage[index].vbFlag)
+  // {
+  //   return {{storage[index].lbid, storage[index].verID}};
+  // }
+  // return std::nullopt;
+  return lbidsVersions;
 }
 
 int VSS::size() const

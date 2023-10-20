@@ -85,6 +85,11 @@ if (WITH_UNITTESTS)
     target_link_libraries(vss_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET vss_tests TEST_PREFIX columnstore:)
 
+    add_executable(filebuffermgr_test filebuffermgr.cpp)
+    add_dependencies(filebuffermgr_test googletest)
+    target_link_libraries(filebuffermgr_test ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} dbbc processor ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET filebuffermgr_test TEST_PREFIX columnstore:)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)

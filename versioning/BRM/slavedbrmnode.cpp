@@ -251,8 +251,8 @@ int SlaveDBRMNode::deleteEmptyDictStoreExtents(const ExtentsInfoMap_t& extentsIn
   return 0;
 }
 
-int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssIsLocked,
-                             const bool cleanUpEM) throw()
+int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssIsLocked, const bool cleanUpEM,
+                             const bool failOnNoLBID) throw()
 {
   try
   {
@@ -274,9 +274,10 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
     LBIDRange_v lbids;
     auto err = lookup(oid, lbids);
 
-    if (err == -1 || lbids.empty())
+    if (err == -1 || (failOnNoLBID && lbids.empty()))
       return -1;
-
+    // TODO lbid ranges are painful to process. I suggest a bitmap for a range to filter out
+    // lbids that are not in vss bucket.
     for (auto lbidRange : lbids)
     {
       for (auto lbid = lbidRange.start; lbid < lbidRange.start + lbidRange.size; ++lbid)
@@ -286,10 +287,10 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
         // Mb I don't need this state
         // vss_[bucket]->lock_(VSS::WRITE);
         // vssIsLocked_[bucket] = true;
-        auto lbidVersion = vss_[bucket]->removeEntryFromDB(lbid);
-        if (lbidVersion)
+        // removeEntryFromDB returns a vector of lbid/version pairs to be removed from vbbm.
+        for (auto [lbid, version] : vss_[bucket]->removeEntryFromDB(lbid))
         {
-          vbbm.removeEntry(lbidVersion.value().first, lbidVersion.value().second);
+          vbbm.removeEntry(lbid, version);
         }
       }
     }
@@ -348,7 +349,6 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
 
 int SlaveDBRMNode::deleteOIDs(const OidsMap_t& oids) throw()
 {
-  int err;
   try
   {
     vbbm.lock(VBBM::WRITE);
@@ -363,9 +363,11 @@ int SlaveDBRMNode::deleteOIDs(const OidsMap_t& oids) throw()
 
     const bool vssIsLocked = true;
     const bool cleanUpEM = false;
+    const bool failOnNoLBID = false;
+    int err;
     for (auto [u, oid] : oids)
     {
-      if ((err = deleteOID(oid, vbbmIsLocked, vssIsLocked, cleanUpEM)) != 0)
+      if ((err = deleteOID(oid, vbbmIsLocked, vssIsLocked, cleanUpEM, failOnNoLBID)) != 0)
       {
         return err;
       }
@@ -620,9 +622,13 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_
     vbbm.insert(lbid, oldVerID, vbOID, vbFBO);
 
     if (oldVerID > 0)
+    {
       vss_[bucket]->setVBFlag(lbid, oldVerID, true);
+    }
     else
+    {
       vss_[bucket]->insert_(lbid, oldVerID, true, false);
+    }
 
     vss_[bucket]->insert_(lbid, transID, false, true);
   }
@@ -1164,6 +1170,8 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const LBIDRange_v& lbidList, bool f
       {
         auto bucket = VSS::getBucket(lbid);
         oldVerID = vss_[bucket]->getHighestVerInVB(lbid, transID);  /// !!!
+        // std::cout << "vbRollback oldVerID: " << oldVerID << " transID " << transID << " lbid " << lbid
+        //           << std::endl;
 
         if (oldVerID != -1)
         {

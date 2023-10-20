@@ -364,24 +364,24 @@ uint32_t loadBlocks(LBID_t* lbids, QueryContext qc, VER_t txn, int compType, uin
 
   for (i = 0; i < blockCount; i++)
   {
-    // if (vssCache)
-    // {
-    //   it = vssCache->find(lbids[i]);
+    if (vssCache)
+    {
+      it = vssCache->find(lbids[i]);
 
-    //   if (it != vssCache->end())
-    //   {
-    //     VSSData& vd = it->second;
-    //     vers[i] = vd.verID;
-    //     vbFlags[i] = vd.vbFlag;
-    //     vssRCs[i] = vd.returnCode;
+      if (it != vssCache->end())
+      {
+        VSSData& vd = it->second;
+        vers[i] = vd.verID;
+        vbFlags[i] = vd.vbFlag;
+        vssRCs[i] = vd.returnCode;
 
-    //     if (vssRCs[i] == ERR_SNAPSHOT_TOO_OLD)
-    //       throw runtime_error("Snapshot too old");
-    //   }
-    // }
+        if (vssRCs[i] == ERR_SNAPSHOT_TOO_OLD)
+          throw runtime_error("Snapshot too old");
+      }
+    }
 
-    // if (!vssCache || it == vssCache->end())
-    vssRCs[i] = brm->vssLookup(lbids[i], qc, txn, &vers[i], &vbFlags[i]);
+    if (!vssCache || it == vssCache->end())
+      vssRCs[i] = brm->vssLookup(lbids[i], qc, txn, &vers[i], &vbFlags[i]);
 
     *blocksWereVersioned |= vbFlags[i];
 
@@ -932,10 +932,10 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
 
     if (it != vssCache->end())
     {
-      // cout << "async: vss cache hit on " << lbid << endl;
       VSSData& vd = it->second;
       ver = vd.verID;
       vbFlag = vd.vbFlag;
+      cout << "async: vss cache hit on " << lbid << " vbflag " << vbFlag << endl;
     }
   }
 

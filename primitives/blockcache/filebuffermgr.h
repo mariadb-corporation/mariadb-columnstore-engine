@@ -31,6 +31,7 @@
 #include <deque>
 #include <mutex>
 
+#include "hasher.h"
 #include "primitivemsg.h"
 #include "blocksize.h"
 #include "filebuffer.h"
@@ -49,6 +50,8 @@
 namespace dbbc
 {
 
+class FileBufferMgrTest;
+class FileBufferMgrTest_bulkInsert_Test;
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
@@ -65,13 +68,25 @@ struct FileBufferIndex
 
 struct CacheInsert_t
 {
-  CacheInsert_t(const BRM::LBID_t& l, const BRM::VER_t& v, const uint8_t* d) : lbid(l), ver(v), data(d)
+  CacheInsert_t(const BRM::LBID_t& l, const BRM::VER_t v, const uint8_t* d) : lbid(l), ver(v), data(d)
   {
   }
   BRM::LBID_t lbid;
   BRM::VER_t ver;
   const uint8_t* data;
+
+  BRM::LBID_t Lbid() const
+  {
+    return lbid;
+  }
+
+  BRM::VER_t Verid() const
+  {
+    return ver;
+  }
 };
+
+using CacheInsertVec = std::vector<CacheInsert_t>;
 
 typedef FileBufferIndex HashObject_t;
 
@@ -122,7 +137,7 @@ class FileBufferMgr
    * @brief return TRUE if the Disk block lbid@ver is loaded into the Disk Block Buffer cache otherwise return
    *FALSE.
    **/
-  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver);
+  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t ver);
 
   /**
    * @brief return TRUE if the Disk block referenced by fb is loaded into the Disk Block Buffer cache
@@ -135,7 +150,7 @@ class FileBufferMgr
    **/
   // int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
-  int bulkInsert(const std::vector<CacheInsert_t>&);
+  int bulkInsert(const CacheInsertVec&);
 
   /**
    * @brief returns the total number of Disk Blocks in the Cache
@@ -245,6 +260,15 @@ class FileBufferMgr
   void updateLRU(const FBData_t& f, const size_t bucket);
   uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data,
                        const size_t bucket);
+
+  size_t partition(const BRM::LBID_t lbid) const
+  {
+    utils::Hasher64_r hasher;
+    return hasher(&lbid, sizeof(BRM::LBID_t)) % MagicNumber;
+  }
+
+  friend FileBufferMgrTest;
+  friend FileBufferMgrTest_bulkInsert_Test;
 };
 
 }  // namespace dbbc

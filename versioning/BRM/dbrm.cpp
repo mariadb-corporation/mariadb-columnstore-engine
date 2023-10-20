@@ -2368,6 +2368,8 @@ int DBRM::getUncommittedLBIDs(VER_t transID, vector<LBID_t>& lbidList) throw()
 
 #endif
   std::vector<bool> vssIsLocked(VssFactor, false);
+  // clear the list here, so that we don't have to clear it in getUncommittedLBIDs.
+  lbidList.clear();
 
   try
   {
