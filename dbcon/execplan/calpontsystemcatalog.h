@@ -134,13 +134,12 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     DictOID() : dictOID(0), listOID(0), treeOID(0), compressionType(0)
     {
     }
-    DictOID(OID dictOID_, OID listOID_, OID treeOID_, int compressionType_) :
-      dictOID(dictOID_), listOID(listOID_), treeOID(treeOID_),
-      compressionType(compressionType_)
+    DictOID(OID dictOID_, OID listOID_, OID treeOID_, int compressionType_)
+     : dictOID(dictOID_), listOID(listOID_), treeOID(treeOID_), compressionType(compressionType_)
     {
     }
     DictOID(const DictOID& rhs)
-    : dictOID(rhs.dictOID), listOID(rhs.listOID), treeOID(rhs.treeOID), compressionType(rhs.compressionType)
+     : dictOID(rhs.dictOID), listOID(rhs.listOID), treeOID(rhs.treeOID), compressionType(rhs.compressionType)
     {
     }
     OID dictOID;
@@ -213,7 +212,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    *
    * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
    */
-  struct ColType : public datatypes::SystemCatalog::TypeHolderStd
+  struct ColType : public datatypes::TypeHolderStd
   {
     ConstraintType constraintType = NO_CONSTRAINT;
     DictOID ddn;
@@ -232,9 +231,9 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    public:
     ColType() = default;
     ColType(const ColType& rhs);
-    ColType(int32_t colWidth_, int32_t scale_, int32_t precision_,
-            const ConstraintType& constraintType_, const DictOID& ddn_, int32_t colPosition_,
-            int32_t compressionType_, OID columnOID_, const ColDataType& colDataType_);
+    ColType(int32_t colWidth_, int32_t scale_, int32_t precision_, const ConstraintType& constraintType_,
+            const DictOID& ddn_, int32_t colPosition_, int32_t compressionType_, OID columnOID_,
+            const ColDataType& colDataType_);
     ColType& operator=(const ColType& rhs);
 
     CHARSET_INFO* getCharset();
@@ -1270,8 +1269,8 @@ const int OID_SYSCOLUMN_MINVALUE = SYSCOLUMN_BASE + 19;        /** @brief min va
 const int OID_SYSCOLUMN_MAXVALUE = SYSCOLUMN_BASE + 20;        /** @brief max value col */
 const int OID_SYSCOLUMN_COMPRESSIONTYPE = SYSCOLUMN_BASE + 21; /** @brief compression type */
 const int OID_SYSCOLUMN_NEXTVALUE = SYSCOLUMN_BASE + 22;       /** @brief next value */
-const int OID_SYSCOLUMN_CHARSETNUM = SYSCOLUMN_BASE + 23;      /** @brief character set number for the column */
-const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 24;                 // be sure this is one more than the highest #
+const int OID_SYSCOLUMN_CHARSETNUM = SYSCOLUMN_BASE + 23; /** @brief character set number for the column */
+const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 24;            // be sure this is one more than the highest #
 
 /*****************************************************
  * SYSTABLE columns dictionary OID definition

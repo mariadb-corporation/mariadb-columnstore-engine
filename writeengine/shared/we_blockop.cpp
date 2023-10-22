@@ -86,7 +86,7 @@ bool BlockOp::calculateRowId(RID rowId, const int epb, const int width, int& fbo
 const uint8_t* BlockOp::getEmptyRowValue(const CalpontSystemCatalog::ColDataType colDataType,
                                          const int width) const
 {
-  auto attrs = datatypes::SystemCatalog::TypeAttributesStd(width, 0, -1);
+  auto attrs = datatypes::TypeAttributesStd(width, 0, -1);
   // Bulk operation runtime should have m_typeHandler nullptr calling this
   // Non-bulk operations runtime branch
   if (m_typeHandler)
@@ -224,7 +224,7 @@ void BlockOp::findTypeHandler(const int colWidth,
                               const execplan::CalpontSystemCatalog::ColDataType colDataType)
 
 {
-  auto attrs = datatypes::SystemCatalog::TypeAttributesStd(colWidth, 0, -1);
+  auto attrs = datatypes::TypeAttributesStd(colWidth, 0, -1);
   m_typeHandler = datatypes::TypeHandler::find(colDataType, attrs);
 }
 

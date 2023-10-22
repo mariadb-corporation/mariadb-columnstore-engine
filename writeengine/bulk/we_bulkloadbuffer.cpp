@@ -47,7 +47,6 @@ using namespace std;
 using namespace boost;
 using namespace execplan;
 
-
 namespace
 {
 const std::string INPUT_ERROR_WRONG_NO_COLUMNS = "Data contains wrong number of columns";
@@ -79,13 +78,13 @@ inline void resizeRowDataArray(char** pRowData, unsigned int dataLength, unsigne
 {
   char* tmpRaw = new char[newArrayCapacity];
   memcpy(tmpRaw, *pRowData, dataLength);
-  delete[] * pRowData;
+  delete[] *pRowData;
   *pRowData = tmpRaw;
 }
 
 }  // namespace
 
-//#define DEBUG_TOKEN_PARSING 1
+// #define DEBUG_TOKEN_PARSING 1
 
 namespace WriteEngine
 {
@@ -516,7 +515,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
         if (column.cs->mbmaxlen > 1)
         {
           const CHARSET_INFO* cs = column.cs;
-          const char* start = (const char*) field;
+          const char* start = (const char*)field;
           const char* end = (const char*)(field + fieldLength);
           size_t numChars = cs->numchars(start, end);
           size_t maxCharLength = column.definedWidth / cs->mbmaxlen;
@@ -529,7 +528,7 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
             bufStats.satCount++;
           }
         }
-        else // cs->mbmaxlen == 1
+        else  // cs->mbmaxlen == 1
         {
           if (fieldLength > column.definedWidth)
           {
@@ -1193,8 +1192,8 @@ void BulkLoadBuffer::convert(char* field, int fieldLength, bool nullFlag, unsign
           // number_int_value(), and the bSatVal flag is set to true
           dataconvert::number_int_value(
               string(field), column.dataType,
-              datatypes::SystemCatalog::TypeAttributesStd(column.width, column.scale, column.precision),
-              dummy, false, bigllVal, &bSatVal);
+              datatypes::TypeAttributesStd(column.width, column.scale, column.precision), dummy, false,
+              bigllVal, &bSatVal);
         }
       }
 

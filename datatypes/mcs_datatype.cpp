@@ -47,8 +47,7 @@ using namespace dataconvert;
 
 namespace datatypes
 {
-int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const std::string& value,
-                                                                bool* saturate) const
+int128_t TypeAttributesStd::decimal128FromString(const std::string& value, bool* saturate) const
 {
   int128_t result = 0;
   bool pushWarning = false;
@@ -58,8 +57,7 @@ int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const std::strin
   return result;
 }
 
-int128_t SystemCatalog::TypeAttributesStd::decimal128FromString(const utils::NullString& value,
-                                                                bool* saturate) const
+int128_t TypeAttributesStd::decimal128FromString(const utils::NullString& value, bool* saturate) const
 {
   if (value.isNull())
   {
@@ -287,8 +285,7 @@ TypeHandlerClob mcs_type_handler_clob;
 TypeHandlerVarbinary mcs_type_handler_varbinary;
 TypeHandlerBlob mcs_type_handler_blob;
 
-const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode,
-                                     const SystemCatalog::TypeAttributesStd& ct)
+const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode, const TypeAttributesStd& ct)
 {
   switch (typeCode)
   {
@@ -339,12 +336,12 @@ const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode,
   return NULL;
 }
 
-const TypeHandler* SystemCatalog::TypeHolderStd::typeHandler() const
+const TypeHandler* TypeHolderStd::typeHandler() const
 {
   return TypeHandler::find(colDataType, *this);
 }
 
-boost::any SystemCatalog::TypeHolderStd::getNullValueForType() const
+boost::any TypeHolderStd::getNullValueForType() const
 {
   const TypeHandler* h = typeHandler();
   if (!h)
@@ -581,27 +578,27 @@ int TypeHandlerBinary::storeValueToField(rowgroup::Row &row, int pos,
 
 /****************************************************************************/
 
-string TypeHandlerDate::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerDate::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   return DataConvert::dateToString(v.toSInt64());
 }
 
-string TypeHandlerDatetime::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerDatetime::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   return DataConvert::datetimeToString(v.toSInt64());
 }
 
-string TypeHandlerTimestamp::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerTimestamp::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   return DataConvert::timestampToString(v.toSInt64(), v.timeZone());
 }
 
-string TypeHandlerTime::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerTime::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   return DataConvert::timeToString(v.toSInt64());
 }
 
-string TypeHandlerChar::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerChar::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   // swap again to retain the string byte order
   ostringstream oss;
@@ -610,7 +607,7 @@ string TypeHandlerChar::format(const SimpleValue& v, const SystemCatalog::TypeAt
   return oss.str();
 }
 
-string TypeHandlerVarchar::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerVarchar::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   // swap again to retain the string byte order
   ostringstream oss;
@@ -619,26 +616,26 @@ string TypeHandlerVarchar::format(const SimpleValue& v, const SystemCatalog::Typ
   return oss.str();
 }
 
-string TypeHandlerInt::formatSInt64(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerInt::formatSInt64(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   ostringstream oss;
   oss << v.toSInt64();
   return oss.str();
 }
 
-string TypeHandlerInt::formatUInt64(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerInt::formatUInt64(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   ostringstream oss;
   oss << static_cast<uint64_t>(v.toSInt64());
   return oss.str();
 }
 
-string TypeHandlerVarbinary::format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerVarbinary::format(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   return "N/A";
 }
 
-string TypeHandlerXDecimal::format64(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerXDecimal::format64(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   idbassert(isValidXDecimal64(attr));
   if (attr.scale > 0)
@@ -651,8 +648,7 @@ string TypeHandlerXDecimal::format64(const SimpleValue& v, const SystemCatalog::
   return oss.str();
 }
 
-string TypeHandlerXDecimal::format128(const SimpleValue& v,
-                                      const SystemCatalog::TypeAttributesStd& attr) const
+string TypeHandlerXDecimal::format128(const SimpleValue& v, const TypeAttributesStd& attr) const
 {
   idbassert(isValidXDecimal128(attr));
   datatypes::Decimal dec(0, attr.scale, attr.precision, v.toSInt128());
@@ -670,8 +666,7 @@ class ostringstreamL : public ostringstream
   }
 };
 
-string TypeHandler::formatPartitionInfoSInt64(const SystemCatalog::TypeAttributesStd& attr,
-                                              const MinMaxInfo& pi) const
+string TypeHandler::formatPartitionInfoSInt64(const TypeAttributesStd& attr, const MinMaxInfo& pi) const
 {
   ostringstreamL output;
   if (pi.isEmptyOrNullSInt64())
@@ -682,8 +677,7 @@ string TypeHandler::formatPartitionInfoSInt64(const SystemCatalog::TypeAttribute
   return output.str();
 }
 
-string TypeHandler::formatPartitionInfoUInt64(const SystemCatalog::TypeAttributesStd& attr,
-                                              const MinMaxInfo& pi) const
+string TypeHandler::formatPartitionInfoUInt64(const TypeAttributesStd& attr, const MinMaxInfo& pi) const
 {
   ostringstreamL output;
   if (pi.isEmptyOrNullUInt64())
@@ -694,8 +688,7 @@ string TypeHandler::formatPartitionInfoUInt64(const SystemCatalog::TypeAttribute
   return output.str();
 }
 
-string TypeHandlerXDecimal::formatPartitionInfo128(const SystemCatalog::TypeAttributesStd& attr,
-                                                   const MinMaxInfo& pi) const
+string TypeHandlerXDecimal::formatPartitionInfo128(const TypeAttributesStd& attr, const MinMaxInfo& pi) const
 {
   ostringstreamL output;
   if (pi.isEmptyOrNullSInt128())
@@ -707,7 +700,7 @@ string TypeHandlerXDecimal::formatPartitionInfo128(const SystemCatalog::TypeAttr
   return output.str();
 }
 
-string TypeHandlerStr::formatPartitionInfoSmallCharVarchar(const SystemCatalog::TypeAttributesStd& attr,
+string TypeHandlerStr::formatPartitionInfoSmallCharVarchar(const TypeAttributesStd& attr,
                                                            const MinMaxInfo& pi) const
 {
   ostringstreamL output;
@@ -723,8 +716,7 @@ string TypeHandlerStr::formatPartitionInfoSmallCharVarchar(const SystemCatalog::
   return output.str();
 }
 
-string TypeHandlerChar::formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                            const MinMaxInfo& pi) const
+string TypeHandlerChar::formatPartitionInfo(const TypeAttributesStd& attr, const MinMaxInfo& pi) const
 {
   // char column order swap for compare in subsequent loop
   if (attr.colWidth <= 8)
@@ -732,8 +724,7 @@ string TypeHandlerChar::formatPartitionInfo(const SystemCatalog::TypeAttributesS
   return formatPartitionInfoSInt64(attr, pi);
 }
 
-string TypeHandlerVarchar::formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                               const MinMaxInfo& pi) const
+string TypeHandlerVarchar::formatPartitionInfo(const TypeAttributesStd& attr, const MinMaxInfo& pi) const
 {
   // varchar column order swap for compare in subsequent loop
   if (attr.colWidth <= 7)
@@ -744,7 +735,7 @@ string TypeHandlerVarchar::formatPartitionInfo(const SystemCatalog::TypeAttribut
 /****************************************************************************/
 
 execplan::SimpleColumn* TypeHandlerSInt8::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                          SystemCatalog::TypeHolderStd& ct,
+                                                          TypeHolderStd& ct,
                                                           const SimpleColumnParam& prm) const
 {
   if (ct.scale == 0)
@@ -756,7 +747,7 @@ execplan::SimpleColumn* TypeHandlerSInt8::newSimpleColumn(const DatabaseQualifie
 }
 
 execplan::SimpleColumn* TypeHandlerSInt16::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   if (ct.scale == 0)
@@ -768,7 +759,7 @@ execplan::SimpleColumn* TypeHandlerSInt16::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerSInt24::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   if (ct.scale == 0)
@@ -780,7 +771,7 @@ execplan::SimpleColumn* TypeHandlerSInt24::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerSInt32::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   if (ct.scale == 0)
@@ -792,7 +783,7 @@ execplan::SimpleColumn* TypeHandlerSInt32::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerSInt64::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   if (ct.scale == 0)
@@ -804,7 +795,7 @@ execplan::SimpleColumn* TypeHandlerSInt64::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerUInt8::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                          SystemCatalog::TypeHolderStd& ct,
+                                                          TypeHolderStd& ct,
                                                           const SimpleColumnParam& prm) const
 {
   // QQ: why scale is not checked (unlike SInt1)?
@@ -813,7 +804,7 @@ execplan::SimpleColumn* TypeHandlerUInt8::newSimpleColumn(const DatabaseQualifie
 }
 
 execplan::SimpleColumn* TypeHandlerUInt16::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   return new execplan::SimpleColumn_UINT<2>(name.db(), name.table(), name.column(), prm.columnStore(),
@@ -821,7 +812,7 @@ execplan::SimpleColumn* TypeHandlerUInt16::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerUInt24::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   return new execplan::SimpleColumn_UINT<4>(name.db(), name.table(), name.column(), prm.columnStore(),
@@ -829,7 +820,7 @@ execplan::SimpleColumn* TypeHandlerUInt24::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerUInt32::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   return new execplan::SimpleColumn_UINT<4>(name.db(), name.table(), name.column(), prm.columnStore(),
@@ -837,7 +828,7 @@ execplan::SimpleColumn* TypeHandlerUInt32::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerUInt64::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                           SystemCatalog::TypeHolderStd& ct,
+                                                           TypeHolderStd& ct,
                                                            const SimpleColumnParam& prm) const
 {
   return new execplan::SimpleColumn_UINT<8>(name.db(), name.table(), name.column(), prm.columnStore(),
@@ -845,7 +836,7 @@ execplan::SimpleColumn* TypeHandlerUInt64::newSimpleColumn(const DatabaseQualifi
 }
 
 execplan::SimpleColumn* TypeHandlerReal::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                         SystemCatalog::TypeHolderStd& ct,
+                                                         TypeHolderStd& ct,
                                                          const SimpleColumnParam& prm) const
 {
   // QQ
@@ -854,7 +845,7 @@ execplan::SimpleColumn* TypeHandlerReal::newSimpleColumn(const DatabaseQualified
 }
 
 execplan::SimpleColumn* TypeHandlerXDecimal::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                             SystemCatalog::TypeHolderStd& ct,
+                                                             TypeHolderStd& ct,
                                                              const SimpleColumnParam& prm) const
 {
   // QQ
@@ -863,8 +854,7 @@ execplan::SimpleColumn* TypeHandlerXDecimal::newSimpleColumn(const DatabaseQuali
 }
 
 execplan::SimpleColumn* TypeHandlerStr::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                        SystemCatalog::TypeHolderStd& ct,
-                                                        const SimpleColumnParam& prm) const
+                                                        TypeHolderStd& ct, const SimpleColumnParam& prm) const
 {
   // QQ
   return new execplan::SimpleColumn(name.db(), name.table(), name.column(), prm.columnStore(),
@@ -872,7 +862,7 @@ execplan::SimpleColumn* TypeHandlerStr::newSimpleColumn(const DatabaseQualifiedC
 }
 
 execplan::SimpleColumn* TypeHandlerTemporal::newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                                             SystemCatalog::TypeHolderStd& ct,
+                                                             TypeHolderStd& ct,
                                                              const SimpleColumnParam& prm) const
 {
   // QQ
@@ -892,7 +882,7 @@ class SimpleConverter : public boost::any
   bool m_pushWarning;
 
  public:
-  SimpleConverter(const SessionParam& sp, const TypeHandler* h, const SystemCatalog::TypeAttributesStd& attr,
+  SimpleConverter(const SessionParam& sp, const TypeHandler* h, const TypeAttributesStd& attr,
                   const char* str)
    : boost::any(h->convertFromString(attr, ConvertFromStringParam(sp.timeZone(), true, false), str,
                                      initPushWarning()))
@@ -939,8 +929,8 @@ class SimpleConverter : public boost::any
 class SimpleConverterSNumeric : public SimpleConverter
 {
  public:
-  SimpleConverterSNumeric(const SessionParam& sp, const TypeHandler* h,
-                          const SystemCatalog::TypeAttributesStd& attr, const char* str, round_style_t& rf)
+  SimpleConverterSNumeric(const SessionParam& sp, const TypeHandler* h, const TypeAttributesStd& attr,
+                          const char* str, round_style_t& rf)
    : SimpleConverter(sp, h, attr, str)
   {
     rf = roundStyle(str);
@@ -948,133 +938,117 @@ class SimpleConverterSNumeric : public SimpleConverter
 };
 
 template <typename T>
-SimpleValue toSimpleValueSInt(const SessionParam& sp, const TypeHandler* h,
-                              const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                              round_style_t& rf)
+SimpleValue toSimpleValueSInt(const SessionParam& sp, const TypeHandler* h, const TypeAttributesStd& attr,
+                              const char* str, round_style_t& rf)
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverterSNumeric anyVal(sp, h, attr, str, rf);
   return SimpleValueSInt64(static_cast<int64_t>(boost::any_cast<T>(anyVal)));
 }
 
-SimpleValue TypeHandlerSInt8::toSimpleValue(const SessionParam& sp,
-                                            const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                            round_style_t& rf) const
+SimpleValue TypeHandlerSInt8::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                            const char* str, round_style_t& rf) const
 {
   return toSimpleValueSInt<char>(sp, this, attr, str, rf);
 }
 
-SimpleValue TypeHandlerSInt16::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerSInt16::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueSInt<int16_t>(sp, this, attr, str, rf);
 }
 
-SimpleValue TypeHandlerSInt24::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerSInt24::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueSInt<mcs_sint32_t>(sp, this, attr, str, rf);
 }
 
-SimpleValue TypeHandlerSInt32::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerSInt32::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueSInt<mcs_sint32_t>(sp, this, attr, str, rf);
 }
 
-SimpleValue TypeHandlerSInt64::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerSInt64::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueSInt<long long>(sp, this, attr, str, rf);
 }
 
 template <typename T>
-SimpleValue toSimpleValueUInt(const SessionParam& sp, const TypeHandler* h,
-                              const SystemCatalog::TypeAttributesStd& attr, const char* str)
+SimpleValue toSimpleValueUInt(const SessionParam& sp, const TypeHandler* h, const TypeAttributesStd& attr,
+                              const char* str)
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, h, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(boost::any_cast<T>(anyVal)));
 }
 
-SimpleValue TypeHandlerUInt8::toSimpleValue(const SessionParam& sp,
-                                            const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                            round_style_t& rf) const
+SimpleValue TypeHandlerUInt8::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                            const char* str, round_style_t& rf) const
 {
   return toSimpleValueUInt<uint8_t>(sp, this, attr, str);
 }
 
-SimpleValue TypeHandlerUInt16::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerUInt16::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueUInt<uint16_t>(sp, this, attr, str);
 }
 
-SimpleValue TypeHandlerUInt24::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerUInt24::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueUInt<uint32_t>(sp, this, attr, str);
 }
 
-SimpleValue TypeHandlerUInt32::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerUInt32::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueUInt<uint32_t>(sp, this, attr, str);
 }
 
-SimpleValue TypeHandlerUInt64::toSimpleValue(const SessionParam& sp,
-                                             const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                             round_style_t& rf) const
+SimpleValue TypeHandlerUInt64::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                             const char* str, round_style_t& rf) const
 {
   return toSimpleValueUInt<uint64_t>(sp, this, attr, str);
 }
 
-SimpleValue TypeHandlerDate::toSimpleValue(const SessionParam& sp,
-                                           const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                           round_style_t& rf) const
+SimpleValue TypeHandlerDate::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                           const char* str, round_style_t& rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(anyVal.to_uint32()));
 }
 
-SimpleValue TypeHandlerDatetime::toSimpleValue(const SessionParam& sp,
-                                               const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                               round_style_t& rf) const
+SimpleValue TypeHandlerDatetime::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                               const char* str, round_style_t& rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(static_cast<int64_t>(anyVal.to_uint64()));
 }
 
-SimpleValue TypeHandlerTimestamp::toSimpleValue(const SessionParam& sp,
-                                                const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                                round_style_t& rf) const
+SimpleValue TypeHandlerTimestamp::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                                const char* str, round_style_t& rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueTimestamp(anyVal.to_uint64(), sp.timeZone());
 }
 
-SimpleValue TypeHandlerTime::toSimpleValue(const SessionParam& sp,
-                                           const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                           round_style_t& rf) const
+SimpleValue TypeHandlerTime::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                           const char* str, round_style_t& rf) const
 {
   idbassert(attr.colWidth <= SystemCatalog::EIGHT_BYTE);
   SimpleConverter anyVal(sp, this, attr, str);
   return SimpleValueSInt64(anyVal.to_sint64());
 }
 
-SimpleValue TypeHandlerXDecimal::toSimpleValue(const SessionParam& sp,
-                                               const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                               round_style_t& rf) const
+SimpleValue TypeHandlerXDecimal::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                               const char* str, round_style_t& rf) const
 {
   if (attr.colWidth <= SystemCatalog::EIGHT_BYTE)
   {
@@ -1103,9 +1077,8 @@ SimpleValue TypeHandlerXDecimal::toSimpleValue(const SessionParam& sp,
   }
 }
 
-SimpleValue TypeHandlerStr::toSimpleValue(const SessionParam& sp,
-                                          const SystemCatalog::TypeAttributesStd& attr, const char* str,
-                                          round_style_t& rf) const
+SimpleValue TypeHandlerStr::toSimpleValue(const SessionParam& sp, const TypeAttributesStd& attr,
+                                          const char* str, round_style_t& rf) const
 {
   SimpleConverter anyVal(sp, this, attr, str);
   rf = anyVal.roundStyle();
@@ -1122,9 +1095,8 @@ MinMaxPartitionInfo::MinMaxPartitionInfo(const BRM::EMEntry& entry)
 {
 }
 
-MinMaxPartitionInfo TypeHandler::getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                                        BRM::DBRM& em, const BRM::EMEntry& entry,
-                                                        int* state) const
+MinMaxPartitionInfo TypeHandler::getExtentPartitionInfo(const TypeAttributesStd& attr, BRM::DBRM& em,
+                                                        const BRM::EMEntry& entry, int* state) const
 {
   int32_t seqNum;
   MinMaxPartitionInfo partInfo(entry);
@@ -1132,8 +1104,9 @@ MinMaxPartitionInfo TypeHandler::getExtentPartitionInfo(const SystemCatalog::Typ
   return partInfo;
 }
 
-MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo64(
-    const SystemCatalog::TypeAttributesStd& attr, BRM::DBRM& em, const BRM::EMEntry& entry, int* state) const
+MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo64(const TypeAttributesStd& attr,
+                                                                  BRM::DBRM& em, const BRM::EMEntry& entry,
+                                                                  int* state) const
 {
   int32_t seqNum;
   MinMaxPartitionInfo partInfo(entry);
@@ -1141,8 +1114,9 @@ MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo64(
   return partInfo;
 }
 
-MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo128(
-    const SystemCatalog::TypeAttributesStd& attr, BRM::DBRM& em, const BRM::EMEntry& entry, int* state) const
+MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo128(const TypeAttributesStd& attr,
+                                                                   BRM::DBRM& em, const BRM::EMEntry& entry,
+                                                                   int* state) const
 {
   int32_t seqNum;
   MinMaxPartitionInfo partInfo(entry);
@@ -1150,9 +1124,8 @@ MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo128(
   return partInfo;
 }
 
-MinMaxPartitionInfo TypeHandlerChar::getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                                            BRM::DBRM& em, const BRM::EMEntry& entry,
-                                                            int* state) const
+MinMaxPartitionInfo TypeHandlerChar::getExtentPartitionInfo(const TypeAttributesStd& attr, BRM::DBRM& em,
+                                                            const BRM::EMEntry& entry, int* state) const
 {
   int32_t seqNum;
   MinMaxPartitionInfo partInfo(entry);
@@ -1166,9 +1139,8 @@ MinMaxPartitionInfo TypeHandlerChar::getExtentPartitionInfo(const SystemCatalog:
   return partInfo;
 }
 
-MinMaxPartitionInfo TypeHandlerVarchar::getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                                               BRM::DBRM& em, const BRM::EMEntry& entry,
-                                                               int* state) const
+MinMaxPartitionInfo TypeHandlerVarchar::getExtentPartitionInfo(const TypeAttributesStd& attr, BRM::DBRM& em,
+                                                               const BRM::EMEntry& entry, int* state) const
 {
   int32_t seqNum;
   MinMaxPartitionInfo partInfo(entry);
@@ -1184,7 +1156,7 @@ MinMaxPartitionInfo TypeHandlerVarchar::getExtentPartitionInfo(const SystemCatal
 
 /****************************************************************************/
 
-string TypeHandler::PrintPartitionValueSInt64(const SystemCatalog::TypeAttributesStd& attr,
+string TypeHandler::PrintPartitionValueSInt64(const TypeAttributesStd& attr,
                                               const MinMaxPartitionInfo& partInfo,
                                               const SimpleValue& startVal, round_style_t rfMin,
                                               const SimpleValue& endVal, round_style_t rfMax) const
@@ -1201,7 +1173,7 @@ string TypeHandler::PrintPartitionValueSInt64(const SystemCatalog::TypeAttribute
   return oss.str();
 }
 
-string TypeHandler::PrintPartitionValueUInt64(const SystemCatalog::TypeAttributesStd& attr,
+string TypeHandler::PrintPartitionValueUInt64(const TypeAttributesStd& attr,
                                               const MinMaxPartitionInfo& partInfo,
                                               const SimpleValue& startVal, round_style_t rfMin,
                                               const SimpleValue& endVal, round_style_t rfMax) const
@@ -1218,7 +1190,7 @@ string TypeHandler::PrintPartitionValueUInt64(const SystemCatalog::TypeAttribute
   return oss.str();
 }
 
-string TypeHandlerXDecimal::PrintPartitionValue128(const SystemCatalog::TypeAttributesStd& attr,
+string TypeHandlerXDecimal::PrintPartitionValue128(const TypeAttributesStd& attr,
                                                    const MinMaxPartitionInfo& partInfo,
                                                    const SimpleValue& startVal, round_style_t rfMin,
                                                    const SimpleValue& endVal, round_style_t rfMax) const
@@ -1238,77 +1210,77 @@ string TypeHandlerXDecimal::PrintPartitionValue128(const SystemCatalog::TypeAttr
 
 /****************************************************************************/
 
-boost::any TypeHandlerSInt8::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSInt8::getNullValueForType(const TypeAttributesStd& attr) const
 {
   char tinyintvalue = joblist::TINYINTNULL;
   boost::any value = tinyintvalue;
   return value;
 }
 
-boost::any TypeHandlerUInt8::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUInt8::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint8_t utinyintvalue = joblist::UTINYINTNULL;
   boost::any value = utinyintvalue;
   return value;
 }
 
-boost::any TypeHandlerSInt16::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSInt16::getNullValueForType(const TypeAttributesStd& attr) const
 {
   short smallintvalue = joblist::SMALLINTNULL;
   boost::any value = smallintvalue;
   return value;
 }
 
-boost::any TypeHandlerUInt16::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUInt16::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint16_t usmallintvalue = joblist::USMALLINTNULL;
   boost::any value = usmallintvalue;
   return value;
 }
 
-boost::any TypeHandlerSInt24::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSInt24::getNullValueForType(const TypeAttributesStd& attr) const
 {
   int intvalue = joblist::INTNULL;
   boost::any value = intvalue;
   return value;
 }
 
-boost::any TypeHandlerSInt32::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSInt32::getNullValueForType(const TypeAttributesStd& attr) const
 {
   int intvalue = joblist::INTNULL;
   boost::any value = intvalue;
   return value;
 }
 
-boost::any TypeHandlerUInt24::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUInt24::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint32_t uintvalue = joblist::UINTNULL;
   boost::any value = uintvalue;
   return value;
 }
 
-boost::any TypeHandlerUInt32::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUInt32::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint32_t uintvalue = joblist::UINTNULL;
   boost::any value = uintvalue;
   return value;
 }
 
-boost::any TypeHandlerSInt64::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSInt64::getNullValueForType(const TypeAttributesStd& attr) const
 {
   long long bigint = joblist::BIGINTNULL;
   boost::any value = bigint;
   return value;
 }
 
-boost::any TypeHandlerUInt64::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUInt64::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint64_t ubigint = joblist::UBIGINTNULL;
   boost::any value = ubigint;
   return value;
 }
 
-boost::any TypeHandlerXDecimal::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerXDecimal::getNullValueForType(const TypeAttributesStd& attr) const
 {
   if (LIKELY(attr.colWidth == 16))
   {
@@ -1346,7 +1318,7 @@ boost::any TypeHandlerXDecimal::getNullValueForType(const SystemCatalog::TypeAtt
   return value;
 }
 
-boost::any TypeHandlerSFloat::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSFloat::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint32_t jlfloatnull = joblist::FLOATNULL;
   float* fp = reinterpret_cast<float*>(&jlfloatnull);
@@ -1354,7 +1326,7 @@ boost::any TypeHandlerSFloat::getNullValueForType(const SystemCatalog::TypeAttri
   return value;
 }
 
-boost::any TypeHandlerUFloat::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUFloat::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint32_t jlfloatnull = joblist::FLOATNULL;
   float* fp = reinterpret_cast<float*>(&jlfloatnull);
@@ -1362,7 +1334,7 @@ boost::any TypeHandlerUFloat::getNullValueForType(const SystemCatalog::TypeAttri
   return value;
 }
 
-boost::any TypeHandlerSDouble::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerSDouble::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint64_t jldoublenull = joblist::DOUBLENULL;
   double* dp = reinterpret_cast<double*>(&jldoublenull);
@@ -1370,7 +1342,7 @@ boost::any TypeHandlerSDouble::getNullValueForType(const SystemCatalog::TypeAttr
   return value;
 }
 
-boost::any TypeHandlerUDouble::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerUDouble::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint64_t jldoublenull = joblist::DOUBLENULL;
   double* dp = reinterpret_cast<double*>(&jldoublenull);
@@ -1378,35 +1350,35 @@ boost::any TypeHandlerUDouble::getNullValueForType(const SystemCatalog::TypeAttr
   return value;
 }
 
-boost::any TypeHandlerDate::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerDate::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint32_t d = joblist::DATENULL;
   boost::any value = d;
   return value;
 }
 
-boost::any TypeHandlerDatetime::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerDatetime::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint64_t d = joblist::DATETIMENULL;
   boost::any value = d;
   return value;
 }
 
-boost::any TypeHandlerTime::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerTime::getNullValueForType(const TypeAttributesStd& attr) const
 {
   int64_t d = joblist::TIMENULL;
   boost::any value = d;
   return value;
 }
 
-boost::any TypeHandlerTimestamp::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerTimestamp::getNullValueForType(const TypeAttributesStd& attr) const
 {
   uint64_t d = joblist::TIMESTAMPNULL;
   boost::any value = d;
   return value;
 }
 
-boost::any TypeHandlerChar::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerChar::getNullValueForType(const TypeAttributesStd& attr) const
 {
   switch (attr.colWidth)
   {
@@ -1448,7 +1420,7 @@ boost::any TypeHandlerChar::getNullValueForType(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerStr::getNullValueForTypeVarcharText(const TypeAttributesStd& attr) const
 {
   switch (attr.colWidth)
   {
@@ -1483,14 +1455,14 @@ boost::any TypeHandlerStr::getNullValueForTypeVarcharText(const SystemCatalog::T
   return value;
 }
 
-boost::any TypeHandlerBlob::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerBlob::getNullValueForType(const TypeAttributesStd& attr) const
 {
   WriteEngine::Token nullToken;
   boost::any value = nullToken;
   return value;
 }
 
-boost::any TypeHandlerVarbinary::getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+boost::any TypeHandlerVarbinary::getNullValueForType(const TypeAttributesStd& attr) const
 {
   WriteEngine::Token nullToken;
   boost::any value = nullToken;
@@ -1499,14 +1471,14 @@ boost::any TypeHandlerVarbinary::getNullValueForType(const SystemCatalog::TypeAt
 
 /****************************************************************************/
 
-boost::any TypeHandlerBit::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerBit::convertFromString(const TypeAttributesStd& colType,
                                              const ConvertFromStringParam& prm, const std::string& data,
                                              bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToBit(colType, prm, data, pushWarning);
 }
 
-boost::any TypeHandlerSInt8::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSInt8::convertFromString(const TypeAttributesStd& colType,
                                                const ConvertFromStringParam& prm, const std::string& data,
                                                bool& pushWarning) const
 {
@@ -1516,7 +1488,7 @@ boost::any TypeHandlerSInt8::convertFromString(const SystemCatalog::TypeAttribut
   return value;
 }
 
-boost::any TypeHandlerSInt16::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSInt16::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1526,7 +1498,7 @@ boost::any TypeHandlerSInt16::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerSInt24::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSInt24::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1536,7 +1508,7 @@ boost::any TypeHandlerSInt24::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerSInt32::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSInt32::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1546,7 +1518,7 @@ boost::any TypeHandlerSInt32::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerSInt64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSInt64::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1556,7 +1528,7 @@ boost::any TypeHandlerSInt64::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerUInt8::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUInt8::convertFromString(const TypeAttributesStd& colType,
                                                const ConvertFromStringParam& prm, const std::string& data,
                                                bool& pushWarning) const
 
@@ -1566,7 +1538,7 @@ boost::any TypeHandlerUInt8::convertFromString(const SystemCatalog::TypeAttribut
   return value;
 }
 
-boost::any TypeHandlerUInt16::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUInt16::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1575,7 +1547,7 @@ boost::any TypeHandlerUInt16::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerUInt24::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUInt24::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1584,7 +1556,7 @@ boost::any TypeHandlerUInt24::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerUInt32::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUInt32::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1593,7 +1565,7 @@ boost::any TypeHandlerUInt32::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerUInt64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUInt64::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
@@ -1602,84 +1574,84 @@ boost::any TypeHandlerUInt64::convertFromString(const SystemCatalog::TypeAttribu
   return value;
 }
 
-boost::any TypeHandlerSFloat::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSFloat::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToFloat(SystemCatalog::FLOAT, data, pushWarning);
 }
 
-boost::any TypeHandlerUFloat::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUFloat::convertFromString(const TypeAttributesStd& colType,
                                                 const ConvertFromStringParam& prm, const std::string& data,
                                                 bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToFloat(SystemCatalog::UFLOAT, data, pushWarning);
 }
 
-boost::any TypeHandlerSDouble::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSDouble::convertFromString(const TypeAttributesStd& colType,
                                                  const ConvertFromStringParam& prm, const std::string& data,
                                                  bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToDouble(SystemCatalog::DOUBLE, data, pushWarning);
 }
 
-boost::any TypeHandlerUDouble::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUDouble::convertFromString(const TypeAttributesStd& colType,
                                                  const ConvertFromStringParam& prm, const std::string& data,
                                                  bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToDouble(SystemCatalog::UDOUBLE, data, pushWarning);
 }
 
-boost::any TypeHandlerDate::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerDate::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToDate(data, pushWarning);
 }
 
-boost::any TypeHandlerDatetime::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerDatetime::convertFromString(const TypeAttributesStd& colType,
                                                   const ConvertFromStringParam& prm, const std::string& data,
                                                   bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToDatetime(data, pushWarning);
 }
 
-boost::any TypeHandlerTime::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerTime::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToTime(colType, data, pushWarning);
 }
 
-boost::any TypeHandlerTimestamp::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerTimestamp::convertFromString(const TypeAttributesStd& colType,
                                                    const ConvertFromStringParam& prm, const std::string& data,
                                                    bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToTimestamp(prm, data, pushWarning);
 }
 
-boost::any TypeHandlerChar::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerChar::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
 }
 
-boost::any TypeHandlerVarchar::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerVarchar::convertFromString(const TypeAttributesStd& colType,
                                                  const ConvertFromStringParam& prm, const std::string& data,
                                                  bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
 }
 
-boost::any TypeHandlerText::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerText::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToString(colType, data, pushWarning);
 }
 
-boost::any TypeHandlerClob::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerClob::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
@@ -1687,7 +1659,7 @@ boost::any TypeHandlerClob::convertFromString(const SystemCatalog::TypeAttribute
   return value;
 }
 
-boost::any TypeHandlerBlob::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerBlob::convertFromString(const TypeAttributesStd& colType,
                                               const ConvertFromStringParam& prm, const std::string& data,
                                               bool& pushWarning) const
 {
@@ -1695,7 +1667,7 @@ boost::any TypeHandlerBlob::convertFromString(const SystemCatalog::TypeAttribute
   return value;
 }
 
-boost::any TypeHandlerVarbinary::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerVarbinary::convertFromString(const TypeAttributesStd& colType,
                                                    const ConvertFromStringParam& prm, const std::string& data,
                                                    bool& pushWarning) const
 {
@@ -1703,28 +1675,28 @@ boost::any TypeHandlerVarbinary::convertFromString(const SystemCatalog::TypeAttr
   return value;
 }
 
-boost::any TypeHandlerSDecimal64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSDecimal64::convertFromString(const TypeAttributesStd& colType,
                                                     const ConvertFromStringParam& prm,
                                                     const std::string& data, bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToSDecimal(colType, prm, data, pushWarning);
 }
 
-boost::any TypeHandlerUDecimal64::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUDecimal64::convertFromString(const TypeAttributesStd& colType,
                                                     const ConvertFromStringParam& prm,
                                                     const std::string& data, bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToUDecimal(colType, prm, data, pushWarning);
 }
 
-boost::any TypeHandlerSDecimal128::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerSDecimal128::convertFromString(const TypeAttributesStd& colType,
                                                      const ConvertFromStringParam& prm,
                                                      const std::string& data, bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToSDecimal(colType, prm, data, pushWarning);
 }
 
-boost::any TypeHandlerUDecimal128::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+boost::any TypeHandlerUDecimal128::convertFromString(const TypeAttributesStd& colType,
                                                      const ConvertFromStringParam& prm,
                                                      const std::string& data, bool& pushWarning) const
 {
@@ -1738,7 +1710,7 @@ const uint8_t* getEmptyTypeHandlerSInt8()
   return &TINYINTEMPTYROW;
 }
 
-const uint8_t* TypeHandlerSInt8::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSInt8::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerSInt8();
 }
@@ -1749,7 +1721,7 @@ const uint8_t* getEmptyTypeHandlerSInt16()
   return reinterpret_cast<const uint8_t*>(&SMALLINTEMPTYROW);
 }
 
-const uint8_t* TypeHandlerSInt16::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSInt16::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerSInt16();
 }
@@ -1760,12 +1732,12 @@ const uint8_t* getEmptyTypeHandlerSInt32()
   return reinterpret_cast<const uint8_t*>(&INTEMPTYROW);
 }
 
-const uint8_t* TypeHandlerSInt24::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSInt24::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerSInt32();
 }
 
-const uint8_t* TypeHandlerSInt32::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSInt32::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerSInt32();
 }
@@ -1776,18 +1748,18 @@ const uint8_t* getEmptyTypeHandlerSInt64()
   return reinterpret_cast<const uint8_t*>(&BIGINTEMPTYROW);
 }
 
-const uint8_t* TypeHandlerSInt64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSInt64::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerSInt64();
 }
 
-const uint8_t* TypeHandlerUInt8::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUInt8::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   const static uint8_t UTINYINTEMPTYROW = joblist::UTINYINTEMPTYROW;
   return reinterpret_cast<const uint8_t*>(&UTINYINTEMPTYROW);
 }
 
-const uint8_t* TypeHandlerUInt16::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUInt16::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   const static uint16_t USMALLINTEMPTYROW = joblist::USMALLINTEMPTYROW;
   return reinterpret_cast<const uint8_t*>(&USMALLINTEMPTYROW);
@@ -1799,50 +1771,50 @@ const uint8_t* getEmptyTypeHandlerUInt32()
   return reinterpret_cast<const uint8_t*>(&UINTEMPTYROW);
 }
 
-const uint8_t* TypeHandlerUInt24::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUInt24::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerUInt32();
 }
 
-const uint8_t* TypeHandlerUInt32::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUInt32::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerUInt32();
 }
 
-const uint8_t* TypeHandlerUInt64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUInt64::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   const static uint64_t UBIGINTEMPTYROW = joblist::UBIGINTEMPTYROW;
   return reinterpret_cast<const uint8_t*>(&UBIGINTEMPTYROW);
 }
 
-const uint8_t* getEmptyTypeHandlerFloat(const SystemCatalog::TypeAttributesStd& attr)
+const uint8_t* getEmptyTypeHandlerFloat(const TypeAttributesStd& attr)
 {
   const static uint32_t FLOATEMPTYROW = joblist::FLOATEMPTYROW;
   return reinterpret_cast<const uint8_t*>(&FLOATEMPTYROW);
 }
 
-const uint8_t* TypeHandlerUFloat::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUFloat::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerFloat(attr);
 }
 
-const uint8_t* TypeHandlerSFloat::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSFloat::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerFloat(attr);
 }
 
-const uint8_t* getEmptyTypeHandlerDouble(const SystemCatalog::TypeAttributesStd& attr)
+const uint8_t* getEmptyTypeHandlerDouble(const TypeAttributesStd& attr)
 {
   const static uint64_t DOUBLEEMPTYROW = joblist::DOUBLEEMPTYROW;
   return reinterpret_cast<const uint8_t*>(&DOUBLEEMPTYROW);
 }
 
-const uint8_t* TypeHandlerUDouble::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUDouble::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerDouble(attr);
 }
 
-const uint8_t* TypeHandlerSDouble::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSDouble::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerDouble(attr);
 }
@@ -1851,7 +1823,7 @@ const uint8_t* TypeHandlerSDouble::getEmptyValueForType(const SystemCatalog::Typ
 // args
 //  attr - width, precision and scale
 //  offset - offset value to reduce width for VARCHAR by 1
-const uint8_t* getEmptyTypeHandlerStr(const SystemCatalog::TypeAttributesStd& attr, int8_t offset)
+const uint8_t* getEmptyTypeHandlerStr(const TypeAttributesStd& attr, int8_t offset)
 {
   const static uint8_t CHAR1EMPTYROW = joblist::CHAR1EMPTYROW;
   const static uint16_t CHAR2EMPTYROW = joblist::CHAR2EMPTYROW;
@@ -1868,17 +1840,17 @@ const uint8_t* getEmptyTypeHandlerStr(const SystemCatalog::TypeAttributesStd& at
   return reinterpret_cast<const uint8_t*>(&CHAR1EMPTYROW);
 }
 
-const uint8_t* TypeHandlerStr::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerStr::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerStr(attr, 0);
 }
 
-const uint8_t* TypeHandlerVarchar::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerVarchar::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyTypeHandlerStr(attr, -1);
 }
 
-inline const uint8_t* getEmptyValueForDecimal64(const SystemCatalog::TypeAttributesStd& attr)
+inline const uint8_t* getEmptyValueForDecimal64(const TypeAttributesStd& attr)
 {
   if (attr.colWidth <= 1)
     return getEmptyTypeHandlerSInt8();
@@ -1890,24 +1862,22 @@ inline const uint8_t* getEmptyValueForDecimal64(const SystemCatalog::TypeAttribu
     return getEmptyTypeHandlerSInt64();
 }
 
-const uint8_t* TypeHandlerSDecimal64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSDecimal64::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyValueForDecimal64(attr);
 }
 
-const uint8_t* TypeHandlerUDecimal64::getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUDecimal64::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return getEmptyValueForDecimal64(attr);
 }
 
-const uint8_t* TypeHandlerSDecimal128::getEmptyValueForType(
-    const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerSDecimal128::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return reinterpret_cast<const uint8_t*>(&datatypes::Decimal128Empty);
 }
 
-const uint8_t* TypeHandlerUDecimal128::getEmptyValueForType(
-    const SystemCatalog::TypeAttributesStd& attr) const
+const uint8_t* TypeHandlerUDecimal128::getEmptyValueForType(const TypeAttributesStd& attr) const
 {
   return reinterpret_cast<const uint8_t*>(&datatypes::Decimal128Empty);
 }
@@ -1915,4 +1885,3 @@ const uint8_t* TypeHandlerUDecimal128::getEmptyValueForType(
 /****************************************************************************/
 
 }  // end of namespace datatypes
-
