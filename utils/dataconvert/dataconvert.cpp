@@ -98,9 +98,8 @@ int64_t getSInt64LE(const char* ptr)
 }
 
 template <typename T>
-void number_int_value(const string& data, cscDataType typeCode,
-                      const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
-                      bool noRoundup, T& intVal, bool* saturate)
+void number_int_value(const string& data, cscDataType typeCode, const datatypes::TypeAttributesStd& ct,
+                      bool& pushwarning, bool noRoundup, T& intVal, bool* saturate)
 {
   // copy of the original input
   string valStr(data);
@@ -487,16 +486,15 @@ void number_int_value(const string& data, cscDataType typeCode,
 
 // Explicit template instantiation
 template void number_int_value<int64_t>(const std::string& data, cscDataType typeCode,
-                                        const datatypes::SystemCatalog::TypeAttributesStd& ct,
-                                        bool& pushwarning, bool noRoundup, int64_t& intVal, bool* saturate);
+                                        const datatypes::TypeAttributesStd& ct, bool& pushwarning,
+                                        bool noRoundup, int64_t& intVal, bool* saturate);
 
 template void number_int_value<int128_t>(const std::string& data, cscDataType typeCode,
-                                         const datatypes::SystemCatalog::TypeAttributesStd& ct,
-                                         bool& pushwarning, bool noRoundup, int128_t& intVal, bool* saturate);
+                                         const datatypes::TypeAttributesStd& ct, bool& pushwarning,
+                                         bool noRoundup, int128_t& intVal, bool* saturate);
 
-uint64_t number_uint_value(const string& data, cscDataType typeCode,
-                           const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
-                           bool noRoundup)
+uint64_t number_uint_value(const string& data, cscDataType typeCode, const datatypes::TypeAttributesStd& ct,
+                           bool& pushwarning, bool noRoundup)
 {
   // copy of the original input
   string valStr(data);
@@ -1214,7 +1212,7 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, long time
   return true;
 }
 
-boost::any DataConvert::StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+boost::any DataConvert::StringToBit(const datatypes::TypeAttributesStd& colType,
                                     const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
                                     bool& pushWarning)
 {
@@ -1254,7 +1252,7 @@ boost::any DataConvert::StringToBit(const datatypes::SystemCatalog::TypeAttribut
   return boost::any();
 }
 
-boost::any DataConvert::StringToSDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+boost::any DataConvert::StringToSDecimal(const datatypes::TypeAttributesStd& colType,
                                          const datatypes::ConvertFromStringParam& prm,
                                          const std::string& data, bool& pushWarning)
 {
@@ -1299,7 +1297,7 @@ boost::any DataConvert::StringToSDecimal(const datatypes::SystemCatalog::TypeAtt
   return boost::any();
 }
 
-boost::any DataConvert::StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+boost::any DataConvert::StringToUDecimal(const datatypes::TypeAttributesStd& colType,
                                          const datatypes::ConvertFromStringParam& prm,
                                          const std::string& data, bool& pushWarning)
 {
@@ -1490,7 +1488,7 @@ boost::any DataConvert::StringToDouble(cscDataType typeCode, const std::string& 
   return value;
 }
 
-boost::any DataConvert::StringToString(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+boost::any DataConvert::StringToString(const datatypes::TypeAttributesStd& colType,
                                        const std::string& dataOrig, bool& pushWarning)
 
 {
@@ -1546,8 +1544,8 @@ boost::any DataConvert::StringToDatetime(const std::string& data, bool& pushWarn
   return value;
 }
 
-boost::any DataConvert::StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& colType,
-                                     const std::string& data, bool& pushWarning)
+boost::any DataConvert::StringToTime(const datatypes::TypeAttributesStd& colType, const std::string& data,
+                                     bool& pushWarning)
 {
   Time aTime;
 
@@ -2907,8 +2905,8 @@ int64_t DataConvert::stringToTime(const string& data)
   return getSInt64LE((const char*)&atime);
 }
 
-void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                      const datatypes::SystemCatalog::TypeHolderStd& type, unsigned int& rc)
+void DataConvert::joinColTypeForUnion(datatypes::TypeHolderStd& unionedType,
+                                      const datatypes::TypeHolderStd& type, unsigned int& rc)
 {
   // limited support for VARBINARY, no implicit conversion.
   if (type.colDataType == datatypes::SystemCatalog::VARBINARY ||
