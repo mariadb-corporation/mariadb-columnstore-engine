@@ -277,6 +277,17 @@ class ArithmeticColumn : public ReturnedColumn
   void evaluate(rowgroup::Row& row)
   {
   }
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType dataType) override
+  {
+    return fExpression->compile(b, data, isNull, row, dataType);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return fExpression->isCompilable(row);
+  }
 };
 
 /**

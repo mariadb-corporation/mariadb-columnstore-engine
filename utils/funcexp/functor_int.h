@@ -178,6 +178,11 @@ class Func_day : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_minute class
@@ -197,6 +202,11 @@ class Func_minute : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_month class
@@ -216,6 +226,11 @@ class Func_month : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_week class
@@ -235,6 +250,7 @@ class Func_week : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
 };
 
 /** @brief Func_year class
@@ -254,6 +270,11 @@ class Func_year : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_to_days class
@@ -434,6 +455,11 @@ class Func_hour : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_second class
@@ -453,6 +479,11 @@ class Func_second : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct);
+
+  bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType);
+
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_dayofweek class
