@@ -30,6 +30,7 @@
 #include <boost/thread.hpp>
 #include <deque>
 #include <mutex>
+#include <vector>
 
 #include "hasher.h"
 #include "primitivemsg.h"
@@ -50,8 +51,9 @@
 namespace dbbc
 {
 
-class FileBufferMgrTest;
+class FileBufferMgrTest;  // WIP remove
 class FileBufferMgrTest_bulkInsert_Test;
+class FileBufferMgrTest_flushOIDs_Test;
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
@@ -116,6 +118,8 @@ inline bool operator<(const HashObject_t& f1, const HashObject_t& f2)
 class FileBufferMgr
 {
  public:
+  static constexpr const size_t PartitionsNumber = 8;
+
   typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
   typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
   typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t;  // return type for insert
@@ -181,6 +185,7 @@ class FileBufferMgr
 
   void flushOIDs(const uint32_t* oids, uint32_t count);
   void flushPartition(const std::vector<BRM::OID_t>& oids, const std::set<BRM::LogicalPartition>& partitions);
+  void flushExtents(const vector<BRM::EMEntry>& extents);
 
   /**
    * @brief return the disk Block referenced by fb
@@ -222,26 +227,26 @@ class FileBufferMgr
   std::ostream& formatLRUList(std::ostream& os) const;
 
  private:
-  static constexpr const size_t MagicNumber = 8;
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
   std::mutex fBufferWLock;
-  std::array<std::mutex, MagicNumber> fWLocks;
+  std::array<std::mutex, PartitionsNumber> fWLocks;
 
   // mutable filebuffer_uset_t fbSet;
-  std::array<filebuffer_uset_t, MagicNumber> fbSets;
+  std::array<filebuffer_uset_t, PartitionsNumber> fbSets;
 
   // mutable filebuffer_list_t fbList;        // rename this
-  std::array<filebuffer_list_t, MagicNumber> fbLists;  // rename this
+  std::array<filebuffer_list_t, PartitionsNumber> fbLists;  // rename this
 
   uint32_t fCacheSize;
-  std::vector<size_t> fCacheSizes;
+  std::vector<size_t> fCacheSizes = std::vector<size_t>(PartitionsNumber, 0);
 
   FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
   // emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
-  std::array<emptylist_t, MagicNumber> fEmptyPoolsSlots;  // keep track of FBPool slots that can be reused
+  std::array<emptylist_t, PartitionsNumber>
+      fEmptyPoolsSlots;  // keep track of FBPool slots that can be reused
 
   // void depleteCache();
   void depleteCache(const size_t bucket);
@@ -264,11 +269,12 @@ class FileBufferMgr
   size_t partition(const BRM::LBID_t lbid) const
   {
     utils::Hasher64_r hasher;
-    return hasher(&lbid, sizeof(BRM::LBID_t)) % MagicNumber;
+    return hasher(&lbid, sizeof(BRM::LBID_t)) % PartitionsNumber;
   }
 
   friend FileBufferMgrTest;
-  friend FileBufferMgrTest_bulkInsert_Test;
+  // friend FileBufferMgrTest_bulkInsert_Test;
+  // friend FileBufferMgrTest_flushOIDs_Test;
 };
 
 }  // namespace dbbc

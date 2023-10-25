@@ -17,110 +17,16 @@
 
 #include <gtest/gtest.h>
 #include <memory>
-#include "brmtypes.h"
-// #include <iostream>
-// #include <mutex>
-// #include <vector>
 
 using namespace std;
 
+#include "brmtypes.h"
+#include "extentmap.h"
 #include "filebuffermgr.h"
 
 using namespace dbbc;
 namespace dbbc
 {
-
-class FileBufferMgrTest : public testing::Test
-{
- public:
-  static constexpr int64_t OpsNumber = 5;
-  void SetUp() override
-  {
-    bufferMgr_ = unique_ptr<FileBufferMgr>(new FileBufferMgr(100));
-    buff_ = make_unique<uint8_t[]>(BLOCK_SIZE * OpsNumber);
-  }
-
-  bool insertCorrectlyUpdatesSets(const CacheInsert_t& op)
-  {
-    size_t partition = bufferMgr_->partition(op.lbid);
-    auto setsIt = bufferMgr_->fbSets[partition].find(HashObject_t{op.lbid, op.ver, 0});
-    if (setsIt == bufferMgr_->fbSets[partition].end())
-      return false;
-
-    auto [lbid, ver, poolIdx] = *setsIt;
-    if (lbid != op.lbid || ver != op.ver)
-      return false;
-
-    return true;
-  }
-
-  // bool insertCorrectlyUpdatesLists(const CacheInsert_t& op, const size_t num)
-  // {
-  //     const size_t partition = bufferMgr_->partition(op.lbid);
-  //     if (bufferMgr_->fbLists[partition].size() < num + 1)
-  //     {
-  //     return false;
-  //     }
-
-  //     auto listIt = bufferMgr_->fbLists[partition].begin();
-  //     advance(listIt, num);
-  //     auto [lbid, ver, poolIdx] = *listIt;
-  //     if (lbid != op.lbid || ver != op.ver)
-  //     {
-  //     return false;
-  //     }
-
-  //     return true;
-  // }
-
-  // TBD
-  bool insertCorrectlyCopiesBlock(const CacheInsert_t& op)
-  {
-    return false;
-  }
-
-  bool insertCorrectlyUpdatesPool(const CacheInsert_t& op)
-  {
-    return false;
-  }
-
-  bool insertUpdatesCacheSizes(const CacheInsert_t& op)
-  {
-    return false;
-  }
-
-  unique_ptr<FileBufferMgr> bufferMgr_;
-  unique_ptr<uint8_t[]> buff_;
-};
-
-// TEST_F(FairThreadPoolTesta, FairThreadPoolAdd)
-// {
-//   SP_UM_IOSOCK sock(new messageqcpp::IOSocket);
-//   auto functor1 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(1, 150000));
-//   FairThreadPool::Job job1(1, 1, 1, functor1, sock, 1);
-//   auto functor2 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(2, 150000));
-//   FairThreadPool::Job job2(2, 1, 1, functor2, sock, 2);
-//   auto functor3 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(3, 5000));
-//   FairThreadPool::Job job3(3, 1, 1, functor3, sock, 1);
-//   auto functor4 = boost::shared_ptr<FairThreadPool::Functor>(new TestFunctor(4, 5000));
-//   FairThreadPool::Job job4(4, 1, 2, functor4, sock, 1);
-
-//   threadPool->addJob(job1);
-//   threadPool->addJob(job2);
-//   threadPool->addJob(job3);
-//   threadPool->addJob(job4);
-
-//   while (threadPool->queueSize())
-//   {
-//     usleep(350000);
-//   }
-
-//   EXPECT_EQ(threadPool->queueSize(), 0ULL);
-//   EXPECT_EQ(results.size(), 4ULL);
-//   EXPECT_EQ(results[0], 1);
-//   EXPECT_EQ(results[1], 4);
-//   EXPECT_TRUE(isThisOrThat(results, 2, 2, 3, 3));
-// }
 
 template <typename L, typename R>
 bool CompareLbidAndVer(const L& x, const R& y)
@@ -142,9 +48,105 @@ template <typename L, typename R>
                                        << " vs {lbid=" << y.Lbid() << ",ver=" << y.Verid() << "})";
 }
 
+template <typename L, typename R>
+::testing::AssertionResult AreFieldsDiff(const char* a_expr, const char* b_expr, const L& x, const R& y)
+{
+  if (!CompareLbidAndVer(x, y))
+  {
+    return ::testing::AssertionSuccess();
+  }
+  return ::testing::AssertionFailure() << a_expr << " and " << b_expr
+                                       << " have same values ("
+                                          "{lbid="
+                                       << x.Lbid() << ",ver=" << x.Verid() << "}"
+                                       << " vs {lbid=" << y.Lbid() << ",ver=" << y.Verid() << "})";
+}
+
+class FileBufferMgrTest : public testing::Test
+{
+ public:
+  using ListOffsets = vector<size_t>;
+  static constexpr int64_t OpsNumber = 7;
+  void SetUp() override
+  {
+    bufferMgr_ = unique_ptr<FileBufferMgr>(new FileBufferMgr(100));
+    buff_ = make_unique<uint8_t[]>(BLOCK_SIZE * OpsNumber);
+  }
+
+  bool operationCorrectlyUpdatesSets(const CacheInsert_t& op, const bool setMustHaveOp)
+  {
+    size_t partition = bufferMgr_->partition(op.lbid);
+    auto setsIt = bufferMgr_->fbSets[partition].find(HashObject_t{op.lbid, op.ver, 0});
+    if (setsIt == bufferMgr_->fbSets[partition].end())
+      return !setMustHaveOp;
+
+    auto [lbid, ver, poolIdx] = *setsIt;
+    if (lbid != op.lbid || ver != op.ver)
+      return false;
+
+    return setMustHaveOp;
+  }
+
+  // TBD
+  void insertCorrectlyUpdatesList(const CacheInsert_t& op, ListOffsets& offsets)
+  {
+    const size_t partition = bufferMgr_->partition(op.lbid);
+    EXPECT_TRUE(bufferMgr_->fbLists[partition].size() > offsets[partition]);
+    auto listIt = bufferMgr_->fbLists[partition].rbegin();
+    advance(listIt, offsets[partition]);
+    ++offsets[partition];
+    EXPECT_PRED_FORMAT2(AreFieldsEqual, *listIt, op);
+  }
+
+  // TBD
+  bool insertCorrectlyCopiesBlock(const CacheInsert_t& op)
+  {
+    return false;
+  }
+
+  void insertCorrectlyUpdatesPool()
+  {
+    for (auto& buffer : bufferMgr_->fFBPool)
+    {
+      auto& listLoc = *buffer.listLoc();
+      EXPECT_PRED_FORMAT2(AreFieldsEqual, buffer, listLoc);
+    }
+  }
+
+  bool insertUpdatesCacheSizes(const CacheInsert_t& op)
+  {
+    return false;
+  }
+
+  void flushOIDsCorrectlyUpdatesStructs(CacheInsertVec& opsToFlush)
+  {
+    const bool setMustHaveOp = false;
+
+    for (auto op : opsToFlush)
+    {
+      EXPECT_TRUE(operationCorrectlyUpdatesSets(op, setMustHaveOp));
+
+      const size_t partition = bufferMgr_->partition(op.lbid);
+      auto listIt = bufferMgr_->fbLists[partition].begin();
+      for (; listIt != bufferMgr_->fbLists[partition].begin(); ++listIt)
+      {
+        EXPECT_PRED_FORMAT2(AreFieldsDiff, *listIt, op);
+      }
+    }
+  }
+
+  void runBulkInsertTest()
+  {
+  }
+
+  unique_ptr<FileBufferMgr> bufferMgr_;
+  unique_ptr<uint8_t[]> buff_;
+};
+
 TEST_F(FileBufferMgrTest, bulkInsert)
 {
-  using ListOffsets = vector<size_t>;
+  runBulkInsertTest();
+
   const uint8_t* data = buff_.get();
   CacheInsertVec ops = {
       CacheInsert_t{250144LL, 10, data},
@@ -155,39 +157,42 @@ TEST_F(FileBufferMgrTest, bulkInsert)
   };
   bufferMgr_->bulkInsert(ops);
 
-  ListOffsets offsets(bufferMgr_->MagicNumber, 0);
+  ListOffsets offsets(bufferMgr_->PartitionsNumber, 0);
   for (auto& op : ops)
   {
-    const size_t partition = bufferMgr_->partition(op.lbid);
-    // TBD This doesn't check the buffer contents yet.
-    // check set
-    EXPECT_TRUE(insertCorrectlyUpdatesSets(op));
-
-    // check list
-    EXPECT_TRUE(bufferMgr_->fbLists[partition].size() > offsets[partition]);
-    auto listIt = bufferMgr_->fbLists[partition].rbegin();
-    advance(listIt, offsets[partition]);
-    ++offsets[partition];
-
-    EXPECT_PRED_FORMAT2(AreFieldsEqual, *listIt, op);
-
-    // check pool
-    for (auto& buffer : bufferMgr_->fFBPool)
-    {
-      auto& listLoc = *buffer.listLoc();
-      EXPECT_PRED_FORMAT2(AreFieldsEqual, buffer, listLoc);
-    }
+    const bool setMustHaveOp = true;
+    EXPECT_TRUE(operationCorrectlyUpdatesSets(op, setMustHaveOp));
+    insertCorrectlyUpdatesList(op, offsets);
+    insertCorrectlyUpdatesPool();
   }
 }
 
 TEST_F(FileBufferMgrTest, flushOIDs)
 {
-  EXPECT_EQ(true, true);
-}
+  const uint8_t* data = buff_.get();
+  CacheInsertVec opsToFlush = {
+      CacheInsert_t{201728LL, 5, data + 3 * BLOCK_SIZE},
+      CacheInsert_t{201729LL, 5, data + 4 * BLOCK_SIZE},
+      CacheInsert_t{201730LL, 5, data + 5 * BLOCK_SIZE},
+  };
+  CacheInsertVec ops = {
+      CacheInsert_t{250144LL, 10, data},
+      CacheInsert_t{0LL, 0, data + BLOCK_SIZE},
+      CacheInsert_t{9223372036854775807LL, 42, data + 2 * BLOCK_SIZE},
+      CacheInsert_t{25LL, 5, data + 6 * BLOCK_SIZE},
+  };
+  ops.insert(ops.end(), opsToFlush.begin(), opsToFlush.end());
 
-TEST_F(FileBufferMgrTest, insertAndFlush)
-{
-  EXPECT_EQ(true, true);
+  bufferMgr_->bulkInsert(ops);
+
+  std::vector<BRM::EMEntry> extents{
+      BRM::EMEntry(),
+  };
+  extents[0].range.start = 201728LL;
+  extents[0].range.size = 8;
+
+  bufferMgr_->flushExtents(extents);
+  flushOIDsCorrectlyUpdatesStructs(opsToFlush);
 }
 
 }  // namespace dbbc
