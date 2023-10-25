@@ -191,7 +191,8 @@ TEST_F(FileBufferMgrTest, flushOIDs)
   extents[0].range.start = 201728LL;
   extents[0].range.size = 8;
 
-  bufferMgr_->flushExtents(extents);
+  auto notInPartitions = [](const BRM::EMEntry& range) { return false; };
+  bufferMgr_->flushExtents(extents, notInPartitions);
   flushOIDsCorrectlyUpdatesStructs(opsToFlush);
 }
 

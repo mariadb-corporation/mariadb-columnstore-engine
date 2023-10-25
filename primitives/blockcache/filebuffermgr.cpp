@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporation
+   Copyright (C) 2016-2023 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -25,9 +25,11 @@
  ***************************************************************************/
 
 // #define NDEBUG
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <cassert>
 #include <limits>
 #include <mutex>
+#include <optional>
 
 #include <pthread.h>
 
@@ -140,24 +142,24 @@ void FileBufferMgr::flushOne(const BRM::LBID_t lbid, const BRM::VER_t ver)
 {
   // std::cout << "flushOne" << std::endl;
 
-  utils::Hasher64_r hasher;
+  auto part = partition(lbid);
+
   HashObject_t fbIndex(lbid, ver, 0);
-  size_t bucket = hasher(&lbid, sizeof(lbid)) % PartitionsNumber;
-  std::scoped_lock lk(fWLocks[bucket]);
+  std::scoped_lock lk(fWLocks[part]);
 
-  filebuffer_uset_iter_t iter = fbSets[bucket].find(fbIndex);
+  auto iter = fbSets[part].find(fbIndex);
 
-  if (iter != fbSets[bucket].end())
+  if (iter != fbSets[part].end())
   {
     // remove it from fbList
     uint32_t idx = iter->poolIdx;
-    fbLists[bucket].erase(fFBPool[idx].listLoc());
+    fbLists[part].erase(fFBPool[idx].listLoc());
     // add to fEmptyPoolSlots
-    fEmptyPoolsSlots[bucket].push_back(idx);
+    fEmptyPoolsSlots[part].push_back(idx);
     // remove it from fbSet
-    fbSets[bucket].erase(iter);
+    fbSets[part].erase(iter);
     // adjust fCacheSize
-    --fCacheSizes[bucket];
+    --fCacheSizes[part];
   }
 }
 
@@ -165,8 +167,6 @@ void FileBufferMgr::flushOne(const BRM::LBID_t lbid, const BRM::VER_t ver)
 void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
 {
   // std::cout << "flushMany" << std::endl;
-
-  utils::Hasher64_r hasher;
 
   if (fReportFrequency)
   {
@@ -182,26 +182,23 @@ void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
   {
     auto [lbid, ver] = *laVptr;
     HashObject_t fbIndex(lbid, ver, 0);
-    size_t bucket = hasher(&lbid, sizeof(lbid)) % PartitionsNumber;
-    std::scoped_lock lk(fWLocks[bucket]);
+    auto part = partition(lbid);
 
-    auto iter = fbSets[bucket].find(fbIndex);
+    std::scoped_lock lk(fWLocks[part]);
 
-    if (iter != fbSets[bucket].end())
+    auto iter = fbSets[part].find(fbIndex);
+
+    if (iter != fbSets[part].end())
     {
-      if (fReportFrequency)
-      {
-        fLog << "flushMany hit, lbid: " << lbid << " index: " << iter->poolIdx << endl;
-      }
       // remove it from fbList
       uint32_t idx = iter->poolIdx;
-      fbLists[bucket].erase(fFBPool[idx].listLoc());
+      fbLists[part].erase(fFBPool[idx].listLoc());
       // add to fEmptyPoolSlots
-      fEmptyPoolsSlots[bucket].push_back(idx);
+      fEmptyPoolsSlots[part].push_back(idx);
       // remove it from fbSet
-      fbSets[bucket].erase(iter);
+      fbSets[part].erase(iter);
       // adjust fCacheSize
-      --fCacheSizes[bucket];
+      --fCacheSizes[part];
     }
 
     ++laVptr;
@@ -213,8 +210,6 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
 {
   // std::cout << " flushManyAllversion" << std::endl;
 
-  utils::Hasher64_r hasher;
-  tr1::unordered_set<LBID_t> uniquer;
   // put lbids into separate buckets and loop over the buckets separately
 
   if (fReportFrequency)
@@ -229,32 +224,28 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
   if (cnt == 0)
     return;
 
+  boost::unordered_flat_set<LBID_t> uniquer;
   for (uint32_t i = 0; i < cnt; i++)
     uniquer.insert(laVptr[i]);
 
   for (uint32_t i = 0; i < cnt; i++)
   {
     auto lbid = *laVptr;
-    // HashObject_t fbIndex(lbid, ver, 0);
-    size_t bucket = hasher(&lbid, sizeof(lbid)) % PartitionsNumber;
-    std::scoped_lock lk(fWLocks[bucket]);
-    if (fCacheSizes[bucket] == 0)
+    auto part = partition(lbid);
+    std::scoped_lock lk(fWLocks[part]);
+    if (fCacheSizes[part] == 0)
       return;
-    for (auto it = fbSets[bucket].begin(); it != fbSets[bucket].end();)
+    for (auto it = fbSets[part].begin(); it != fbSets[part].end();)
     {
       if (uniquer.find(it->lbid) != uniquer.end())
       {
-        if (fReportFrequency)
-        {
-          fLog << "flushManyAllversion hit: " << it->lbid << " index: " << it->poolIdx << endl;
-        }
         const uint32_t idx = it->poolIdx;
-        fbLists[bucket].erase(fFBPool[idx].listLoc());
-        fEmptyPoolsSlots[bucket].push_back(idx);
+        fbLists[part].erase(fFBPool[idx].listLoc());
+        fEmptyPoolsSlots[part].push_back(idx);
         auto tmpIt = it;
         ++it;
-        fbSets[bucket].erase(tmpIt);
-        --fCacheSizes[bucket];
+        fbSets[part].erase(tmpIt);
+        --fCacheSizes[part];
       }
       else
         ++it;
@@ -262,124 +253,34 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
   }
 }
 
-// void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
-// {
-//   DBRM dbrm;
-//   uint32_t i;
-//   vector<EMEntry> extents;
-//   int err;
-//   uint32_t currentExtent;
-//   LBID_t currentLBID;
-//   typedef tr1::unordered_multimap<LBID_t, filebuffer_uset_t::iterator> byLBID_t;
-//   byLBID_t byLBID;
-//   pair<byLBID_t::iterator, byLBID_t::iterator> itList;
-//   filebuffer_uset_t::iterator it;
-
-//   if (fReportFrequency)
-//   {
-//     fLog << "flushOIDs " << count << " items: ";
-//     for (uint32_t i = 0; i < count; i++)
-//     {
-//       fLog << oids[i] << ", ";
-//     }
-//     fLog << endl;
-//   }
-
-//   // If there are more than this # of extents to drop, the whole cache will be cleared
-//   const uint32_t clearThreshold = 50000;
-
-//   boost::mutex::scoped_lock lk(fWLock);
-
-//   if (fCacheSize == 0 || count == 0)
-//     return;
-
-//   /* Index the cache by LBID */
-//   for (it = fbSet.begin(); it != fbSet.end(); it++)
-//     byLBID.insert(pair<LBID_t, filebuffer_uset_t::iterator>(it->lbid, it));
-
-//   for (i = 0; i < count; i++)
-//   {
-//     extents.clear();
-//     err = dbrm.getExtents(oids[i], extents, true, true, true);  // @Bug 3838 Include outofservice
-//     extents
-
-//     if (err < 0 || (i == 0 && (extents.size() * count) > clearThreshold))
-//     {
-//       // (The i == 0 should ensure it's not a dictionary column)
-//       lk.unlock();
-//       flushCache();
-//       return;
-//     }
-
-//     for (currentExtent = 0; currentExtent < extents.size(); currentExtent++)
-//     {
-//       EMEntry& range = extents[currentExtent];
-//       LBID_t lastLBID = range.range.start + (range.range.size * 1024);
-
-//       for (currentLBID = range.range.start; currentLBID < lastLBID; currentLBID++)
-//       {
-//         itList = byLBID.equal_range(currentLBID);
-
-//         for (byLBID_t::iterator tmpIt = itList.first; tmpIt != itList.second; tmpIt++)
-//         {
-//           fbList.erase(fFBPool[tmpIt->second->poolIdx].listLoc());
-//           fEmptyPoolSlots.push_back(tmpIt->second->poolIdx);
-//           fbSet.erase(tmpIt->second);
-//           fCacheSize--;
-//         }
-//       }
-//     }
-//   }
-// }
-
-void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents)
+template <typename OIDsContainer>
+EMEntriesVec FileBufferMgr::getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const
 {
-  using byLBID_t = tr1::unordered_multimap<LBID_t, filebuffer_uset_t::iterator>;
-  byLBID_t byLBID;
-  // WIP This expression should be refactored if possible.
-  // Take multiple mutexes in a safe way w/o a loop.
-  std::scoped_lock overalLock(fWLocks[0], fWLocks[1], fWLocks[2], fWLocks[3], fWLocks[4], fWLocks[5],
-                              fWLocks[6], fWLocks[7]);
-
-  /* Index the cache by LBID */
-  // multiple threads can sync here so here should be a random start
-  // TODO take only those sets that are affected by this flush.
-  for (auto& fbSet : fbSets)
+  vector<EMEntry> extents;
   {
-    // for (filebuffer_uset_t::iterator it = fbSet.begin(); it != fbSet.end(); ++it)
-    for (auto it = fbSet.begin(); it != fbSet.end(); ++it)
-    {
-      byLBID.insert({it->lbid, it});
-    }
-  }
+    const uint32_t clearThreshold = 50000;
+    DBRM dbrm;
+    // This is moved outside the loop to allocate space only once.
+    vector<EMEntry> extentsLocal;
 
-  for (auto& extent : extents)
-  {
-    const LBID_t lastLBID = extent.range.start + (extent.range.size * 1024);
-    for (auto currentLBID = extent.range.start; currentLBID < lastLBID; ++currentLBID)
+    for (size_t i = 0; i < count; i++)
     {
-      auto fbSetRange4LBID = byLBID.equal_range(currentLBID);
+      extentsLocal.clear();
 
-      for (auto lbidAndfbSetPair = fbSetRange4LBID.first; lbidAndfbSetPair != fbSetRange4LBID.second;
-           ++lbidAndfbSetPair)
+      // change sorted to false b/c there is no need to sort the extents.
+      auto err = dbrm.getExtents(oids[i], extentsLocal, false, true,
+                                 true);  // @Bug 3838 Include outofservice extents
+      // std::cout << "flushOIDs id " << oids[i] << " " << extents.size() << std::endl;
+
+      // WIP make clearThreshold dynamic and based on the cache size.
+      if (err < 0 || (i == 0 && (extents.size() * count) > clearThreshold))
       {
-        const auto lbid = lbidAndfbSetPair->first;
-        auto fbSetItToErase = lbidAndfbSetPair->second;
-        const auto poolIdx = fbSetItToErase->poolIdx;
-
-        // WIP make a simplier hashe>>r to avoid needless complex math every loop iter.
-        // don't need to calculate bucket but get it from byLBID
-        const size_t part = partition(lbid);
-        if (!fCacheSizes[part])
-          return;
-
-        fbLists[part].erase(fFBPool[poolIdx].listLoc());
-        fEmptyPoolsSlots[part].push_back(poolIdx);
-        fbSets[part].erase(fbSetItToErase);
-        --fCacheSizes[part];
+        return std::nullopt;
       }
+      extents.insert(std::begin(extents), std::begin(extentsLocal), std::end(extentsLocal));
     }
   }
+  return extents;
 }
 
 void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
@@ -387,8 +288,6 @@ void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
   // std::cout << " flushOIDs" << std::endl;
   if (count == 0)
     return;
-
-  uint32_t i;
 
   if (fReportFrequency)
   {
@@ -401,138 +300,19 @@ void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
   }
 
   // If there are more than this # of extents to drop, the whole cache will be cleared
-  const uint32_t clearThreshold = 50000;
 
-  vector<EMEntry> extents;
-  {
-    DBRM dbrm;
-    vector<EMEntry> extentsLocal;
+  auto extents = getExtentsByOIDs(oids, count);
+  if (!extents)
+    return takeLocksAndflushCache();
 
-    for (i = 0; i < count; i++)
-    {
-      extentsLocal.clear();
-      // WIP need to check if I can move these BRM traversal oustside crit section.
-      // extents.clear();
-
-      // change sorted to false b/c there is no need to sort the extents.
-      auto err = dbrm.getExtents(oids[i], extentsLocal, false, true,
-                                 true);  // @Bug 3838 Include outofservice extents
-      // std::cout << "flushOIDs id " << oids[i] << " " << extents.size() << std::endl;
-
-      // WIP make clearThreshold dynamic and based on the cache size.
-      if (err < 0 || (i == 0 && (extents.size() * count) > clearThreshold))
-      {
-        // TODO add a printout here.
-        return takeLocksAndflushCache();
-      }
-      extents.insert(std::begin(extents), std::begin(extentsLocal), std::end(extentsLocal));
-    }
-  }
-  return flushExtents(extents);
+  auto notInPartitions = [](const EMEntry& range) { return false; };
+  return flushExtents(extents.value(), notInPartitions);
 }
-
-// void FileBufferMgr::flushPartition(const vector<OID_t>& oids, const set<BRM::LogicalPartition>&
-// partitions)
-// {
-//   // //std::cout << " flushPartition" << std::endl;
-
-//   DBRM dbrm;
-//   uint32_t i;
-//   vector<EMEntry> extents;
-//   int err;
-//   uint32_t currentExtent;
-//   LBID_t currentLBID;
-//   typedef tr1::unordered_multimap<LBID_t, filebuffer_uset_t::iterator> byLBID_t;
-//   byLBID_t byLBID;
-//   pair<byLBID_t::iterator, byLBID_t::iterator> itList;
-//   filebuffer_uset_t::iterator it;
-//   uint32_t count = oids.size();
-
-//   boost::mutex::scoped_lock lk(fWLock);
-
-//   if (fReportFrequency)
-//   {
-//     std::set<BRM::LogicalPartition>::iterator sit;
-//     fLog << "flushPartition oids: ";
-//     for (uint32_t i = 0; i < count; i++)
-//     {
-//       fLog << oids[i] << ", ";
-//     }
-//     fLog << "flushPartition partitions: ";
-//     for (sit = partitions.begin(); sit != partitions.end(); ++sit)
-//     {
-//       fLog << (*sit).toString() << ", ";
-//     }
-//     fLog << endl;
-//   }
-
-//   if (fCacheSize == 0 || oids.size() == 0 || partitions.size() == 0)
-//     return;
-
-//   /* Index the cache by LBID */
-//   for (it = fbSet.begin(); it != fbSet.end(); it++)
-//     byLBID.insert(pair<LBID_t, filebuffer_uset_t::iterator>(it->lbid, it));
-
-//   for (i = 0; i < count; i++)
-//   {
-//     extents.clear();
-//     err = dbrm.getExtents(oids[i], extents, true, true, true);  // @Bug 3838 Include outofservice
-//     extents
-
-//     if (err < 0)
-//     {
-//       lk.unlock();
-//       flushCache();  // better than returning an error code to the user
-//       return;
-//     }
-
-//     for (currentExtent = 0; currentExtent < extents.size(); currentExtent++)
-//     {
-//       EMEntry& range = extents[currentExtent];
-
-//       LogicalPartition logicalPartNum(range.dbRoot, range.partitionNum, range.segmentNum);
-
-//       if (partitions.find(logicalPartNum) == partitions.end())
-//         continue;
-
-//       LBID_t lastLBID = range.range.start + (range.range.size * 1024);
-
-//       for (currentLBID = range.range.start; currentLBID < lastLBID; currentLBID++)
-//       {
-//         itList = byLBID.equal_range(currentLBID);
-
-//         for (byLBID_t::iterator tmpIt = itList.first; tmpIt != itList.second; tmpIt++)
-//         {
-//           fbList.erase(fFBPool[tmpIt->second->poolIdx].listLoc());
-//           fEmptyPoolSlots.push_back(tmpIt->second->poolIdx);
-//           fbSet.erase(tmpIt->second);
-//           fCacheSize--;
-//         }
-//       }
-//     }
-//   }
-// }
 
 void FileBufferMgr::flushPartition(const vector<OID_t>& oids, const set<BRM::LogicalPartition>& partitions)
 {
   // //std::cout << " flushPartition" << std::endl;
-
-  DBRM dbrm;
-  uint32_t i;
-  vector<EMEntry> extents;
-  int err;
-  uint32_t currentExtent;
-  LBID_t currentLBID;
-  typedef tr1::unordered_multimap<LBID_t, filebuffer_uset_t::iterator> byLBID_t;
-  byLBID_t byLBID;
-  pair<byLBID_t::iterator, byLBID_t::iterator> itList;
-  filebuffer_uset_t::iterator it;
-  uint32_t count = oids.size();
-
-  // WIP This expression should be refactored if possible.
-  std::scoped_lock overalLock(fWLocks[0], fWLocks[1], fWLocks[2], fWLocks[3], fWLocks[4], fWLocks[5],
-                              fWLocks[6], fWLocks[7]);
-
+  const uint32_t count = oids.size();
   if (fReportFrequency)
   {
     std::set<BRM::LogicalPartition>::iterator sit;
@@ -549,59 +329,20 @@ void FileBufferMgr::flushPartition(const vector<OID_t>& oids, const set<BRM::Log
     fLog << endl;
   }
 
-  if (oids.size() == 0 || partitions.size() == 0)
+  if (count == 0 || partitions.size() == 0)
     return;
 
-  /* Index the cache by LBID */
-  for (auto fbSet : fbSets)
+  auto extents = getExtentsByOIDs(oids, count);
+  if (!extents)
+    return takeLocksAndflushCache();
+
+  auto notInPartitions = [&partitions](const EMEntry& range)
   {
-    for (auto it = fbSet.begin(); it != fbSet.end(); it++)
-      byLBID.insert({it->lbid, it});
-  }
+    LogicalPartition logicalPartNum(range.dbRoot, range.partitionNum, range.segmentNum);
+    return partitions.find(logicalPartNum) == partitions.end();
+  };
 
-  for (i = 0; i < count; i++)
-  {
-    extents.clear();
-    err = dbrm.getExtents(oids[i], extents, true, true, true);  // @Bug 3838 Include outofservice extents
-
-    if (err < 0)
-    {
-      return flushCache();
-    }
-
-    utils::Hasher64_r hasher;
-
-    for (currentExtent = 0; currentExtent < extents.size(); currentExtent++)
-    {
-      EMEntry& range = extents[currentExtent];
-
-      LogicalPartition logicalPartNum(range.dbRoot, range.partitionNum, range.segmentNum);
-
-      if (partitions.find(logicalPartNum) == partitions.end())
-        continue;
-
-      LBID_t lastLBID = range.range.start + (range.range.size * 1024);
-
-      for (currentLBID = range.range.start; currentLBID < lastLBID; currentLBID++)
-      {
-        auto fbSetRange4LBID = byLBID.equal_range(currentLBID);
-
-        for (auto lbidAndfbSetPair = fbSetRange4LBID.first; lbidAndfbSetPair != fbSetRange4LBID.second;
-             ++lbidAndfbSetPair)
-        {
-          auto [lbid, fbSetIter] = lbidAndfbSetPair;
-          // WIP make a simplier hasher to avoid needless complex math every loop iter.
-          size_t bucket = hasher(&lbid, sizeof(lbid)) % PartitionsNumber;
-          if (!fCacheSizes[bucket])
-            return;
-          fbLists[bucket].erase(fFBPool[lbidAndfbSetPair->second->poolIdx].listLoc());
-          fEmptyPoolsSlots[bucket].push_back(lbidAndfbSetPair->second->poolIdx);
-          fbSets[bucket].erase(lbidAndfbSetPair->second);
-          --fCacheSizes[bucket];
-        }
-      }
-    }
-  }
+  return flushExtents(extents.value(), notInPartitions);
 }
 
 bool FileBufferMgr::exists(const BRM::LBID_t& lbid, const BRM::VER_t ver)
@@ -616,17 +357,16 @@ bool FileBufferMgr::exists(const BRM::LBID_t& lbid, const BRM::VER_t ver)
 
 FileBuffer* FileBufferMgr::findPtr(const HashObject_t& keyFb)
 {
-  utils::Hasher64_r hasher;
-  size_t bucket = hasher(&keyFb.lbid, sizeof(keyFb.lbid)) % PartitionsNumber;
-  std::scoped_lock lk(fWLocks[bucket]);
+  auto part = partition(keyFb.lbid);
+  std::scoped_lock lk(fWLocks[part]);
 
-  auto it = fbSets[bucket].find(keyFb);
+  auto it = fbSets[part].find(keyFb);
 
-  if (fbSets[bucket].end() != it)
+  if (fbSets[part].end() != it)
   {
     FileBuffer* fb = &(fFBPool[it->poolIdx]);
     fFBPool[it->poolIdx].listLoc()->hits++;
-    fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], (fFBPool[it->poolIdx]).listLoc());
+    fbLists[part].splice(fbLists[part].begin(), fbLists[part], (fFBPool[it->poolIdx]).listLoc());
     return fb;
   }
 
@@ -637,16 +377,16 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, FileBuffer& fb)
 {
   std::cout << " find1 " << keyFb.lbid << std::endl;
 
-  utils::Hasher64_r hasher;
-  size_t bucket = hasher(&keyFb.lbid, sizeof(keyFb.lbid)) % PartitionsNumber;
-  std::scoped_lock lk(fWLocks[bucket]);
+  auto part = partition(keyFb.lbid);
 
-  auto it = fbSets[bucket].find(keyFb);
+  std::scoped_lock lk(fWLocks[part]);
 
-  if (fbSets[bucket].end() != it)
+  auto it = fbSets[part].find(keyFb);
+
+  if (fbSets[part].end() != it)
   {
     fFBPool[it->poolIdx].listLoc()->hits++;
-    fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], (fFBPool[it->poolIdx]).listLoc());
+    fbLists[part].splice(fbLists[part].begin(), fbLists[part], (fFBPool[it->poolIdx]).listLoc());
     fb = fFBPool[it->poolIdx];
     return true;
   }
@@ -658,17 +398,16 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
 {
   std::cout << " find2 " << keyFb.lbid << std::endl;
 
-  utils::Hasher64_r hasher;
-  size_t bucket = hasher(&keyFb.lbid, sizeof(keyFb.lbid)) % PartitionsNumber;
+  auto part = partition(keyFb.lbid);
 
   bool found = false;
   uint32_t idx = 0;
   {
-    std::scoped_lock lk(fWLocks[bucket]);
+    std::scoped_lock lk(fWLocks[part]);
 
-    auto it = fbSets[bucket].find(keyFb);
+    auto it = fbSets[part].find(keyFb);
 
-    if (fbSets[bucket].end() != it)
+    if (fbSets[part].end() != it)
     {
       found = true;
       idx = it->poolIdx;
@@ -676,12 +415,10 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
 
       //@bug 669 LRU cache, move block to front of list as last recently used.
       fFBPool[idx].listLoc()->hits++;
-      fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], (fFBPool[idx]).listLoc());
-      // lk.unlock();
-      // memcpy(bufferPtr, (fFBPool[idx]).getData(), 8192);
-      // return true;
+      fbLists[part].splice(fbLists[part].begin(), fbLists[part], (fFBPool[idx]).listLoc());
     }
   }
+  // There is a potential race b/w the moment the block is found and the copy below.
   if (found)
   {
     memcpy(bufferPtr, (fFBPool[idx]).getData(), 8192);
@@ -697,52 +434,48 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
   std::cout << " bulkFind " << std::endl;
 
   uint32_t ret = 0;
-  filebuffer_uset_iter_t* it = (filebuffer_uset_iter_t*)alloca(count * sizeof(filebuffer_uset_iter_t));
-  uint32_t* indexes = (uint32_t*)alloca(count * 4);
-  utils::Hasher64_r hasher;
+  // filebuffer_uset_iter_t* it = (filebuffer_uset_iter_t*)alloca(count * sizeof(filebuffer_uset_iter_t));
+  std::vector<uint32_t> indexes(count, 0);
+  // utils::Hasher64_r hasher;
 
   // It is worth to distribute lbids into buckets before going over them
   for (uint32_t i = 0; i < count; i++)
   {
     // std::cout << " bulkFind l " << std::dec << lbids[i] << std::endl;
-    new ((void*)&it[i]) filebuffer_uset_iter_t();
-    size_t bucket = hasher(lbids + i, sizeof(lbids[0])) % PartitionsNumber;
-    std::scoped_lock lk(fWLocks[bucket]);
+    // new ((void*)&it[i]) filebuffer_uset_iter_t();
+    auto part = partition(lbids[i]);  // hasher(lbids + i, sizeof(lbids[0])) % PartitionsNumber;
+    std::scoped_lock lk(fWLocks[part]);
 
-    it[i] = fbSets[bucket].find(HashObject_t(lbids[i], vers[i], 0));
+    auto it = fbSets[part].find(HashObject_t(lbids[i], vers[i], 0));
+    wasCached[i] = it != fbSets[part].end();
 
-    if (it[i] != fbSets[bucket].end())
+    if (wasCached[i])
     {
-      const auto poolIdx = it[i]->poolIdx;
+      const auto poolIdx = it->poolIdx;
       indexes[i] = poolIdx;
       // std::cout << " bulkFind l " << lbids[i] << " i " << indexes[i] << std::endl;
 
-      wasCached[i] = true;
-      fFBPool[poolIdx].listLoc()->hits++;
+      ++fFBPool[poolIdx].listLoc()->hits;
       // There is a potential race b/w the next line and memcpy below.
       // Less realistic to happen b/c this algo puts the used list entries at the front of the list.
       // WIP can be future improved the memcpy block in this loop but outside the crit section.
-      fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], (fFBPool[poolIdx]).listLoc());
-    }
-    else
-    {
-      wasCached[i] = false;
-      indexes[i] = 0;
+      fbLists[part].splice(fbLists[part].begin(), fbLists[part], (fFBPool[poolIdx]).listLoc());
     }
   }
 
   // lk.unlock();
   for (uint32_t i = 0; i < count; i++)
   {
-    if (wasCached[i])
+    const uint32_t idx = indexes[i];
+    if (idx)
     {
-      memcpy(buffers[i], fFBPool[indexes[i]].getData(), 8192);
+      memcpy(buffers[i], fFBPool[idx].getData(), 8192);
       // int64_t* v = (int64_t*)(buffers[i]);
       // std::cout << " bulkFind l " << lbids[i] << " v " << std::hex << *v << std::dec << std::endl;
 
-      ret++;
+      ++ret;
     }
-    it[i].filebuffer_uset_iter_t::~filebuffer_uset_iter_t();
+    // it[i].filebuffer_uset_iter_t::~filebuffer_uset_iter_t();
   }
 
   return ret;
@@ -752,165 +485,45 @@ bool FileBufferMgr::exists(const HashObject_t& fb)
 {
   std::cout << " exists2 " << fb.lbid << std::endl;
 
-  utils::Hasher64_r hasher;
-  size_t bucket = hasher(&fb.lbid, sizeof(fb.lbid)) % PartitionsNumber;
-  std::scoped_lock lk(fWLocks[bucket]);
+  auto part = partition(fb.lbid);
+  std::scoped_lock lk(fWLocks[part]);
 
-  filebuffer_uset_iter_t it = fbSets[bucket].find(fb);
+  auto it = fbSets[part].find(fb);
 
-  if (it != fbSets[bucket].end())
+  if (it != fbSets[part].end())
   {
     // std::cout << " exists2 true " << fb.lbid << std::endl;
     fFBPool[it->poolIdx].listLoc()->hits++;
-    fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], (fFBPool[it->poolIdx]).listLoc());
+    fbLists[part].splice(fbLists[part].begin(), fbLists[part], (fFBPool[it->poolIdx]).listLoc());
     return true;
   }
 
   return false;
 }
 
-// default insert operation.
-// add a new fb into fbMgr and to fbList
-// add to the front and age out from the back
-// so add new fbs to the front of the list
-//@bug 665: keep filebuffer in a vector. HashObject keeps the index of the filebuffer
-
-// int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data)
-// {
-//   int ret = 0;
-//   //std::cout << " insert lbid " << lbid << " ver " << ver << std::endl;
-
-//   if (gPMProfOn && gPMStatsPtr)
-//     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
-//   utils::Hasher64_r hasher;
-//   size_t bucket = hasher(&lbid, sizeof(lbid)) % PartitionsNumber;
-//   HashObject_t fbIndex(lbid, ver, 0);
-//   std::scoped_lock<std::mutex> lk(fWLocks[bucket]);
-
-//   filebuffer_pair_t pr = fbSets[bucket].insert(fbIndex);
-
-//   if (pr.second)
-//   {
-//     // It was inserted (it wasn't there before)
-//     // Right now we have an invalid cache: we have inserted an entry with a -1 index.
-//     // We need to fix this quickly...
-//     fCacheSizes[bucket]++;
-//     FBData_t fbdata = {lbid, ver, 0};
-//     fbLists[bucket].push_front(fbdata);
-//     fBlksLoaded++;
-
-//     if (fReportFrequency && (fBlksLoaded % fReportFrequency) == 0)
-//     {
-//       struct timespec tm;
-//       clock_gettime(CLOCK_MONOTONIC, &tm);
-//       fLog << "insert: " << left << fixed << ((double)(tm.tv_sec + (1.e-9 * tm.tv_nsec))) << " " <<
-//       right
-//            << setw(12) << fBlksLoaded << " " << right << setw(12) << fBlksNotUsed << endl;
-//     }
-//   }
-//   else
-//   {
-//     // if it's a duplicate there's nothing to do
-//     if (gPMProfOn && gPMStatsPtr)
-//       gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'D');
-//     return ret;
-//   }
-
-//   uint32_t pi = numeric_limits<int>::max();
-
-//   if (fCacheSizes[bucket] > maxCacheSize())
-//   {
-//     // If the insert above caused the cache to exceed its max size, find the lru block in
-//     // the cache and use its pool index to store the block data.
-//     FBData_t& fbdata = fbLists[bucket].back();  // the lru block
-//     HashObject_t lastFB(fbdata.lbid, fbdata.ver, 0);
-//     filebuffer_uset_iter_t iter = fbSets[bucket].find(lastFB);  // should be there
-
-//     idbassert(iter != fbSets[bucket].end());
-//     pi = iter->poolIdx;
-//     idbassert(pi < maxCacheSize());
-//     idbassert(pi < fFBPool.size());
-
-//     // set iters are always const. We are not changing the hash here, and this gets us
-//     // the pointer we need cheaply...
-//     HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
-//     ref.poolIdx = pi;
-
-//     // replace the lru block with this block
-//     FileBuffer fb(lbid, ver, NULL, 0);
-//     fFBPool[pi] = fb;
-//     fFBPool[pi].setData(data, 8192);
-//     fbSets[bucket].erase(iter);
-
-//     if (fbLists[bucket].back().hits == 0)
-//       fBlksNotUsed++;
-
-//     fbLists[bucket].pop_back();
-//     --fCacheSizes[bucket];
-//     depleteCache(bucket);
-//     ret = 1;
-//   }
-//   else
-//   {
-//     if (!fEmptyPoolsSlots[bucket].empty())
-//     {
-//       pi = fEmptyPoolsSlots[bucket].front();
-//       //std::cout << " insert lbid " << lbid << " ver " << ver << " pi " << pi << std::endl;
-
-//       fEmptyPoolsSlots[bucket].pop_front();
-//       FileBuffer fb(lbid, ver, NULL, 0);
-//       fFBPool[pi] = fb;
-//       fFBPool[pi].setData(data, 8192);
-//     }
-//     else
-//     {
-//       pi = fFBPool.size();
-//       //std::cout << " insert lbid " << lbid << " ver " << ver << " pi " << pi << std::endl;
-
-//       FileBuffer fb(lbid, ver, NULL, 0);
-//       fFBPool.push_back(fb);
-//       fFBPool[pi].setData(data, 8192);
-//     }
-
-//     // See comment above
-//     HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
-//     ref.poolIdx = pi;
-//     ret = 1;
-//   }
-
-//   idbassert(pi < fFBPool.size());
-//   fFBPool[pi].listLoc(fbLists[bucket].begin());
-
-//   if (gPMProfOn && gPMStatsPtr)
-//     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'J');
-
-//   idbassert(fCacheSizes[bucket] <= maxCacheSize());
-//   return ret;
-// }
-
 // The bucket lock must be taken calling this method
-void FileBufferMgr::depleteCache(const size_t bucket)
+void FileBufferMgr::depleteCache(const size_t part)
 {
   // std::cout << " depleteCache" << std::endl;
 
-  for (uint32_t i = 0; i < fDeleteBlocks && !fbLists[bucket].empty(); ++i)
+  for (uint32_t i = 0; i < fDeleteBlocks && !fbLists[part].empty(); ++i)
   {
-    FBData_t fbdata(fbLists[bucket].back());  // the lru block
+    FBData_t fbdata(fbLists[part].back());  // the lru block
     HashObject_t lastFB(fbdata.lbid, fbdata.ver, 0);
-    auto iter = fbSets[bucket].find(lastFB);
+    auto iter = fbSets[part].find(lastFB);
 
-    idbassert(iter != fbSets[bucket].end());
+    idbassert(iter != fbSets[part].end());
     uint32_t idx = iter->poolIdx;
     idbassert(idx < fFBPool.size());
     // Save position in FileBuffer pool for reuse.
-    fEmptyPoolsSlots[bucket].push_back(idx);
-    fbSets[bucket].erase(iter);
+    fEmptyPoolsSlots[part].push_back(idx);
+    fbSets[part].erase(iter);
 
-    if (fbLists[bucket].back().hits == 0)
+    if (fbLists[part].back().hits == 0)
       fBlksNotUsed++;
 
-    fbLists[bucket].pop_back();
-    fCacheSizes[bucket]--;
+    fbLists[part].pop_back();
+    --fCacheSizes[part];
   }
 }
 
@@ -938,30 +551,30 @@ ostream& FileBufferMgr::formatLRUList(ostream& os) const
 
 // WIP this will break the LRU list.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // puts the new entry at the front of the list
-void FileBufferMgr::updateLRU(const FBData_t& f, const size_t bucket)
+void FileBufferMgr::updateLRU(const FBData_t& f, const size_t part)
 {
   // std::cout << " updateLRU" << std::endl;
 
-  if (fCacheSizes[bucket] > maxCacheSize())
+  if (fCacheSizes[part] > maxCacheSize())
   {
-    auto last = fbLists[bucket].end();
+    auto last = fbLists[part].end();
     --last;
     FBData_t& fbdata = *last;
     HashObject_t lastFB(fbdata.lbid, fbdata.ver, 0);
-    auto iter = fbSets[bucket].find(lastFB);
-    fEmptyPoolsSlots[bucket].push_back(iter->poolIdx);
+    auto iter = fbSets[part].find(lastFB);
+    fEmptyPoolsSlots[part].push_back(iter->poolIdx);
 
     if (!fbdata.hits)
       fBlksNotUsed++;
 
-    fbSets[bucket].erase(iter);
-    fbLists[bucket].splice(fbLists[bucket].begin(), fbLists[bucket], last);
+    fbSets[part].erase(iter);
+    fbLists[part].splice(fbLists[part].begin(), fbLists[part], last);
     fbdata = f;
-    --fCacheSizes[bucket];
+    --fCacheSizes[part];
   }
   else
   {
-    fbLists[bucket].push_front(f);
+    fbLists[part].push_front(f);
   }
 }
 
@@ -1005,9 +618,9 @@ int FileBufferMgr::bulkInsert(const CacheInsertVec& ops)
 
     {
       HashObject_t fbIndex(op.lbid, op.ver, 0);
-      size_t bucket = partition(op.Lbid());
-      std::scoped_lock lk(fWLocks[bucket]);
-      filebuffer_pair_t pr = fbSets[bucket].insert(fbIndex);
+      size_t part = partition(op.Lbid());
+      std::scoped_lock lk(fWLocks[part]);
+      auto pr = fbSets[part].insert(fbIndex);
 
       if (!pr.second)
       {
@@ -1019,27 +632,27 @@ int FileBufferMgr::bulkInsert(const CacheInsertVec& ops)
         fLog << op.lbid << " " << op.ver << ", ";
       }
 
-      ++fCacheSizes[bucket];
+      ++fCacheSizes[part];
       ++fBlksLoaded;
       FBData_t fbdata = {op.lbid, op.ver, 0};
-      updateLRU(fbdata, bucket);
+      updateLRU(fbdata, part);
       HashObject_t& ref = const_cast<HashObject_t&>(*pr.first);
 
       // crit section to put the block into the buffer pool
       // WIP what if shared blocks are better
       {
         std::scoped_lock lk(fBufferWLock);
-        int32_t pi = doBlockCopy(op.lbid, op.ver, op.data, bucket);
+        int32_t pi = doBlockCopy(op.lbid, op.ver, op.data, part);
         // int64_t* v = (int64_t*)(op.data);
         // std::cout << "bulkInsert lbid " << op.lbid << " ver " << op.ver << " pi " << pi << " v " <<
         // std::hex
         //           << *v << std::dec << std::endl;
         ref.poolIdx = pi;
-        fFBPool[pi].listLoc(fbLists[bucket].begin());  // updateLRU sets the front of the list
+        fFBPool[pi].listLoc(fbLists[part].begin());  // updateLRU sets the front of the list
       }
 
       ++ret;
-      idbassert(fCacheSizes[bucket] <= maxCacheSize());  // WIP!!!!!
+      idbassert(fCacheSizes[part] <= maxCacheSize());  // WIP!!!!!
     }
   }
   if (fReportFrequency)

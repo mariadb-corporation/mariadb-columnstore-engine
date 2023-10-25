@@ -23,15 +23,18 @@
  ***************************************************************************/
 
 #pragma once
-#include <iostream>
+
+#include <boost/unordered/unordered_flat_set.hpp>
+#include <concepts>
+#include <deque>
 #include <fstream>
 #include <iomanip>
-#include <tr1/unordered_set>
-#include <boost/thread.hpp>
-#include <deque>
+#include <iostream>
 #include <mutex>
 #include <vector>
 
+#include "brmtypes.h"
+#include "extentmap.h"
 #include "hasher.h"
 #include "primitivemsg.h"
 #include "blocksize.h"
@@ -89,6 +92,7 @@ struct CacheInsert_t
 };
 
 using CacheInsertVec = std::vector<CacheInsert_t>;
+using EMEntriesVec = std::optional<vector<BRM::EMEntry>>;
 
 typedef FileBufferIndex HashObject_t;
 
@@ -120,10 +124,7 @@ class FileBufferMgr
  public:
   static constexpr const size_t PartitionsNumber = 8;
 
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
-  typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t;  // return type for insert
-
+  using filebuffer_uset_t = boost::unordered_flat_set<HashObject_t, bcHasher, bcEqual>;
   typedef std::deque<uint32_t> emptylist_t;
 
   /**
@@ -185,7 +186,12 @@ class FileBufferMgr
 
   void flushOIDs(const uint32_t* oids, uint32_t count);
   void flushPartition(const std::vector<BRM::OID_t>& oids, const std::set<BRM::LogicalPartition>& partitions);
-  void flushExtents(const vector<BRM::EMEntry>& extents);
+  template <typename OIDsContainer>
+  EMEntriesVec getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const;
+  template <typename Invokable>
+    requires std::invocable<Invokable, BRM::EMEntry&>
+  void flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions);
+  // void flushExtents(const vector<BRM::EMEntry>& extents);
 
   /**
    * @brief return the disk Block referenced by fb
@@ -207,16 +213,6 @@ class FileBufferMgr
   {
     return fMaxNumBlocks;
   }
-
-  // uint32_t listSize() const
-  // {
-  //   return fbList.size();
-  // }
-
-  // const filebuffer_uset_iter_t end() const
-  // {
-  //   return fbSet.end();
-  // }
 
   void setReportingFrequency(const uint32_t d);
   uint32_t ReportingFrequency() const
@@ -276,5 +272,57 @@ class FileBufferMgr
   // friend FileBufferMgrTest_bulkInsert_Test;
   // friend FileBufferMgrTest_flushOIDs_Test;
 };
+
+template <typename Invokable>
+  requires std::invocable<Invokable, BRM::EMEntry&>
+void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
+{
+  using byLBID_t = std::unordered_multimap<BRM::LBID_t, filebuffer_uset_t::iterator>;
+  // Take multiple mutexes in a safe way w/o a loop.
+  std::scoped_lock overalLock(fWLocks[0], fWLocks[1], fWLocks[2], fWLocks[3], fWLocks[4], fWLocks[5],
+                              fWLocks[6], fWLocks[7]);
+
+  /* Index the cache by LBID */
+  // TODO take only those sets that are affected by this flush.
+  byLBID_t byLBID;
+  for (auto& fbSet : fbSets)
+  {
+    for (auto it = fbSet.begin(); it != fbSet.end(); ++it)
+    {
+      byLBID.insert({it->lbid, it});
+    }
+  }
+
+  for (auto& extent : extents)
+  {
+    if (notInPartitions(extent))
+      continue;
+
+    const BRM::LBID_t lastLBID = extent.range.start + (extent.range.size * 1024);
+    for (auto currentLBID = extent.range.start; currentLBID < lastLBID; ++currentLBID)
+    {
+      auto fbSetRange4LBID = byLBID.equal_range(currentLBID);
+
+      for (auto lbidAndfbSetPair = fbSetRange4LBID.first; lbidAndfbSetPair != fbSetRange4LBID.second;
+           ++lbidAndfbSetPair)
+      {
+        const auto lbid = lbidAndfbSetPair->first;
+        auto fbSetItToErase = lbidAndfbSetPair->second;
+        const auto poolIdx = fbSetItToErase->poolIdx;
+
+        // WIP make a simplier hashe>>r to avoid needless complex math every loop iter.
+        // don't need to calculate bucket but get it from byLBID
+        const size_t part = partition(lbid);
+        if (!fCacheSizes[part])
+          return;
+
+        fbLists[part].erase(fFBPool[poolIdx].listLoc());
+        fEmptyPoolsSlots[part].push_back(poolIdx);
+        fbSets[part].erase(fbSetItToErase);
+        --fCacheSizes[part];
+      }
+    }
+  }
+}
 
 }  // namespace dbbc
