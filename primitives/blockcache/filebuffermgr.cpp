@@ -280,7 +280,7 @@ EMEntriesVec FileBufferMgr::getExtentsByOIDs(OIDsContainer oids, const uint32_t 
       extents.insert(std::begin(extents), std::begin(extentsLocal), std::end(extentsLocal));
     }
   }
-  return extents;
+  return std::move(extents);
 }
 
 void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
@@ -641,6 +641,7 @@ int FileBufferMgr::bulkInsert(const CacheInsertVec& ops)
       // crit section to put the block into the buffer pool
       // WIP what if shared blocks are better
       {
+        // TODO This might worth to reduce the scope moving fBufferWLock lock into else in the doBlockCopy
         std::scoped_lock lk(fBufferWLock);
         int32_t pi = doBlockCopy(op.lbid, op.ver, op.data, part);
         // int64_t* v = (int64_t*)(op.data);
