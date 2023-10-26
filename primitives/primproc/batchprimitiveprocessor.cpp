@@ -2835,11 +2835,6 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
       // cout << "buildVSSCache lbid " << lbidList[i] << " txn" << vssData[i].verID << endl;
       vssCache.insert(make_pair(lbidList[i], vssData[i]));
     }
-<<<<<<< HEAD
-=======
-
-  // cout << "buildVSSCache inserted " << vssCache.size() << " elements" << endl;
->>>>>>> 4abb107d6 (WIP looking for a mixed blocks issue solution)
 }
 
 }  // namespace primitiveprocessor

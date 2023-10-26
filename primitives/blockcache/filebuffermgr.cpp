@@ -253,6 +253,7 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
   }
 }
 
+// WIP check if copy ellision works here
 template <typename OIDsContainer>
 EMEntriesVec FileBufferMgr::getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const
 {
@@ -280,7 +281,7 @@ EMEntriesVec FileBufferMgr::getExtentsByOIDs(OIDsContainer oids, const uint32_t 
       extents.insert(std::begin(extents), std::begin(extentsLocal), std::end(extentsLocal));
     }
   }
-  return std::move(extents);
+  return extents;
 }
 
 void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
