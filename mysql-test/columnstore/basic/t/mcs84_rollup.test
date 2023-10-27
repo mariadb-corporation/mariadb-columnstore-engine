@@ -86,7 +86,7 @@ SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, g
 SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, genre WITH ROLLUP UNION all SELECT country3, year3, genre3, SUM(sales3) FROM booksales3 GROUP BY country3,year3,genre3 WITH ROLLUP;
 
 --sorted_result
-select * from (SELECT country, year, genre, sales FROM booksales UNION all SELECT country2, year2, genre2, sales2 FROM booksales2) t1 GROUP BY country,year,genre WITH ROLLUP;
+select country,year,genre,sum(sales),avg(sales) from (SELECT country, year, genre, sales FROM booksales UNION all SELECT country2, year2, genre2, sales2 FROM booksales2) t1 GROUP BY country,year,genre WITH ROLLUP;
 
 --sorted_result
 select country,year,genre,sum(sales) from (SELECT country, year, genre, sales FROM booksales UNION all SELECT country3, year3, genre3, sales3 FROM booksales3) t1 GROUP BY country,year,genre WITH ROLLUP;
