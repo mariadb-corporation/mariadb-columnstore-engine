@@ -60,8 +60,8 @@ FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, cons
   // fCacheSizes = std::vector<size_t>(PartitionsNumber, 0);
 
   fFBPool.reserve(numBlcks);
-  fConfig = Config::makeConfig();
-  setReportingFrequency(1);
+  // fConfig = Config::makeConfig();
+  // setReportingFrequency(1);
   fLog.open(string(MCSLOGDIR) + "/trace/bc", ios_base::app | ios_base::ate);
 }
 
@@ -80,24 +80,25 @@ void FileBufferMgr::setReportingFrequency(const uint32_t d)
   }
 
   // ////std::cout << "setReportingFrequency" << std::endl;
-  const string val = fConfig->getConfig("DBBC", "ReportFrequency");
-  uint32_t temp = 0;
+  // const string val = fConfig->getConfig("DBBC", "ReportFrequency");
+  // WIP there should be runtime control for such logging.
+  // uint32_t temp = 0;
 
-  if (val.length() > 0)
-    temp = static_cast<int>(Config::fromText(val));
+  // if (val.length() > 0)
+  //   temp = static_cast<int>(Config::fromText(val));
 
-  if (!temp)
-  {
-    fReportFrequency = 0;
-  }
-  else if (temp > 0 && temp <= gReportingFrequencyMin)
-  {
-    fReportFrequency = gReportingFrequencyMin;
-  }
-  else
-  {
-    fReportFrequency = temp;
-  }
+  // if (!temp)
+  // {
+  //   fReportFrequency = 0;
+  // }
+  // else if (temp > 0 && temp <= gReportingFrequencyMin)
+  // {
+  //   fReportFrequency = gReportingFrequencyMin;
+  // }
+  // else
+  // {
+  //   fReportFrequency = temp;
+  // }
 }
 
 void FileBufferMgr::takeLocksAndflushCache()

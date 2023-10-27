@@ -251,7 +251,8 @@ class FileBufferMgr
   uint64_t fBlksNotUsed;      // number of blocks inserted and not used
   uint64_t fReportFrequency;  // how many blocks are read between reports
   std::ofstream fLog;
-  config::Config* fConfig;
+  // To enable unit tests
+  // config::Config* fConfig;
 
   // do not implement
   FileBufferMgr(const FileBufferMgr& fbm);
