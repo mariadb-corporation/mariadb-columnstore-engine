@@ -23,6 +23,22 @@ INSERT INTO booksales VALUES
   ('Paraguay','fiction',2014,87970), ('Paraguay','fiction',2015,76940),
   ('Paraguay','non-fiction',2014,8760), ('Paraguay','non-fiction',2015,9030);
 
+CREATE TABLE booksales2 (country2 CHAR(35), genre2 CHAR(15), year2 INT, sales2 INT) ENGINE=Columnstore;
+
+INSERT INTO booksales2 VALUES
+  ('Senegal','fiction',2014,12234), ('Senegal','fiction',2015,15647),
+  ('Senegal','non-fiction',2014,64980), ('Senegal','non-fiction',2015,78901),
+  ('Paraguay','fiction',2014,87970), ('Paraguay','fiction',2015,76940),
+  ('Paraguay','non-fiction',2014,8760), ('Paraguay','non-fiction',2015,9030);
+
+CREATE TABLE booksales3 (country3 CHAR(35), genre3 CHAR(15), year3 INT, sales3 INT);
+
+INSERT INTO booksales3 VALUES
+  ('Senegal','fiction',2014,12234), ('Senegal','fiction',2015,15647),
+  ('Senegal','non-fiction',2014,64980), ('Senegal','non-fiction',2015,78901),
+  ('Paraguay','fiction',2014,87970), ('Paraguay','fiction',2015,76940),
+  ('Paraguay','non-fiction',2014,8760), ('Paraguay','non-fiction',2015,9030);
+
 SELECT year, SUM(sales) FROM booksales GROUP BY year ORDER BY year;
 
 # Negative. WITH ROLLUP cannot be used with ORDER BY. 
@@ -41,6 +57,39 @@ SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
 
 --sorted_result
 SELECT country, genre, SUM(sales) FROM booksales GROUP BY country, genre WITH ROLLUP;
+
+--sorted_result
+SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, genre WITH ROLLUP;
+
+--sorted_result
+SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, genre WITH ROLLUP limit 4;
+
+--sorted_result
+SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year DESC, genre WITH ROLLUP;
+
+--sorted_result
+select country, year2, sum(sales2) from booksales b1 join booksales2 b2 on b1.sales=b2.sales2 group by country,year2 WITH ROLLUP;
+
+--sorted_result
+select country, year3, sum(sales3) from booksales b1 join booksales3 b3 on b1.sales=b3.sales3 group by country,year3 WITH ROLLUP;
+
+--sorted_result
+select country, year, sum(sales) from booksales where country in (select max(country) from booksales) group by country,year WITH ROLLUP;
+
+--sorted_result
+select country, year, sum(sales) from booksales where country in (select max(country2) from booksales2) group by country,year WITH ROLLUP;
+
+--sorted_result
+SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, genre WITH ROLLUP UNION SELECT country2, year2, genre2, SUM(sales2) FROM booksales2 GROUP BY country2,year2,genre2 WITH ROLLUP;
+
+--sorted_result
+SELECT country, year, genre, SUM(sales) FROM booksales GROUP BY country, year, genre WITH ROLLUP UNION all SELECT country3, year3, genre3, SUM(sales3) FROM booksales3 GROUP BY country3,year3,genre3 WITH ROLLUP;
+
+--sorted_result
+select * from (SELECT country, year, genre, sales FROM booksales UNION all SELECT country2, year2, genre2, sales2 FROM booksales2) t1 GROUP BY country,year,genre WITH ROLLUP;
+
+--sorted_result
+select country,year,genre,sum(sales) from (SELECT country, year, genre, sales FROM booksales UNION all SELECT country3, year3, genre3, sales3 FROM booksales3) t1 GROUP BY country,year,genre WITH ROLLUP;
 
 CREATE TABLE three_cols ( key1 INTEGER, key2 INTEGER, value DECIMAL(38)) ENGINE=COLUMNSTORE;
 
