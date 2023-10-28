@@ -188,14 +188,12 @@ void DictStep::copyResultToTmpSpace(OrderedToken* ot)
       pos += 1;
       len = *((uint16_t*)pos);
       pos += 2;
-      if (!isnull) {
+      if (!isnull)
+      {
         ns.assign(pos, len);
       }
       pos += len;
       ot[rid16].str = ns;
-
-      //if (rid64 & 0x8000000000000000LL)
-      //  ot[rid16].str = joblist::CPNULLSTRMARK;
     }
   }
 }
@@ -485,6 +483,7 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
   int64_t l_lbid = 0;
   int64_t o_lbid = 0;
   OldGetSigParams* pt;
+  // TODO consider smart pointer using actual number of records.
   StringPtr* tmpStrings =
       new StringPtr[LOGICAL_BLOCK_RIDS];  // WIP might be too much given that we know a number of rids
 

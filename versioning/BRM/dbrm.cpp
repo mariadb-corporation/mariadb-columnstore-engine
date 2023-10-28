@@ -163,14 +163,11 @@ int DBRM::saveState(string filename) throw()
   {
     vbbm->lock(VBBM::READ);
     locked[0] = true;
-    // vss->lock(VSS::READ);
-    // locked[1] = true;
     copylocks->lock(CopyLocks::READ);
     locked[2] = true;
 
     saveExtentMap(emFilename);
     vbbm->save(vbbmFilename);
-    // vss->save(vssFilename);
 
     for (size_t i = 0; auto& v : vss_)
     {
@@ -185,8 +182,6 @@ int DBRM::saveState(string filename) throw()
 
     copylocks->release(CopyLocks::READ);
     locked[2] = false;
-    // vss->release(VSS::READ);
-    // locked[1] = false;
     vbbm->release(VBBM::READ);
     locked[0] = false;
   }
@@ -195,8 +190,6 @@ int DBRM::saveState(string filename) throw()
     if (locked[2])
       copylocks->release(CopyLocks::READ);
 
-    // if (locked[1])
-    //   vss->release(VSS::READ);
     assert(vssIsLocked.size() == vss_.size());
     for (size_t i = 0; auto& v : vss_)
     {
@@ -264,7 +257,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   bool locked[2] = {false, false};
   int ret;
   bool tooOld = false;
-  size_t bucket = VSS::getBucket(lbid);
+  size_t bucket = VSS::partition(lbid);
 
   try
   {
@@ -691,8 +684,8 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   }
 
 #endif
-  auto bucket = VSS::getBucket(lbid);
-  if (!vbOnly && vss_[bucket]->isEmpty())
+  auto partition = VSS::partition(lbid);
+  if (!vbOnly && vss_[partition]->isEmpty())
   {
     *outVer = 0;
     *vbFlag = false;
@@ -703,72 +696,21 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
 
   try
   {
-    vss_[bucket]->lock_(VSS::READ);
+    vss_[partition]->lock_(VSS::READ);
     locked = true;
-    int rc = vss_[bucket]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
-    vss_[bucket]->release(VSS::READ);
+    int rc = vss_[partition]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+    vss_[partition]->release(VSS::READ);
     return rc;
   }
   catch (exception& e)
   {
     if (locked)
-      vss_[bucket]->release(VSS::READ);
+      vss_[partition]->release(VSS::READ);
 
     cerr << e.what() << endl;
     return -1;
   }
 }
-
-// int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss& verInfo, VER_t txnID,
-//                         std::vector<VSSData>* out)
-// {
-//   uint32_t i;
-//   bool locked = false;
-
-//   try
-//   {
-//     out->resize(lbids.size());
-//     vss->lock(VSS::READ);
-//     locked = true;
-
-//     if (vss->isEmpty(false))
-//     {
-//       for (i = 0; i < lbids.size(); i++)
-//       {
-//         VSSData& vd = (*out)[i];
-//         vd.verID = 0;
-//         vd.vbFlag = false;
-//         vd.returnCode = -1;
-//       }
-//     }
-//     else
-//     {
-//       for (i = 0; i < lbids.size(); i++)
-//       {
-//         VSSData& vd = (*out)[i];
-//         vd.returnCode = vss->lookup(lbids[i], verInfo, txnID, &vd.verID, &vd.vbFlag, false);
-//       }
-//     }
-
-//     vss->release(VSS::READ);
-//     return 0;
-//   }
-//   catch (exception& e)
-//   {
-//     cerr << e.what() << endl;
-//   }
-//   catch (...)
-//   {
-//     cerr << "bulkVSSLookup: caught an exception" << endl;
-//   }
-
-//   if (locked)
-//     vss->release(VSS::READ);
-
-//   out->clear();
-//   return -1;
-// }
-
 int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss& verInfo, VER_t txnID,
                         std::vector<VSSData>* out)
 {
@@ -786,15 +728,15 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
     for (size_t i = 0; i < lbids.size(); ++i)
     {
       auto lbid = lbids[i];
-      auto bucket = VSS::getBucket(lbid);
+      auto partition = VSS::partition(lbid);
       VSSData& vd = (*out)[i];
-      if (vss_[bucket]->isEmpty(false))
+      if (vss_[partition]->isEmpty(false))
       {
         vd = {0, false, -1};
       }
       else
       {
-        vd.returnCode = vss_[bucket]->lookup(lbid, verInfo, txnID, &vd.verID, &vd.vbFlag, false);
+        vd.returnCode = vss_[partition]->lookup(lbid, verInfo, txnID, &vd.verID, &vd.vbFlag, false);
       }
     }
     for (size_t i = 0; auto& v : vss_)
@@ -830,13 +772,13 @@ VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 {
   bool locked = false;
   VER_t ret = 0;
-  auto bucket = VSS::getBucket(lbid);
+  auto partition = VSS::partition(lbid);
   try
   {
-    vss_[bucket]->lock_(VSS::READ);
+    vss_[partition]->lock_(VSS::READ);
     locked = true;
-    ret = vss_[bucket]->getCurrentVersion(lbid, isLocked);
-    vss_[bucket]->release(VSS::READ);
+    ret = vss_[partition]->getCurrentVersion(lbid, isLocked);
+    vss_[partition]->release(VSS::READ);
     locked = false;
   }
   catch (exception& e)
@@ -844,7 +786,7 @@ VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
     cerr << e.what() << endl;
 
     if (locked)
-      vss_[bucket]->release(VSS::READ);
+      vss_[partition]->release(VSS::READ);
 
     throw;
   }
@@ -910,7 +852,7 @@ VER_t DBRM::getHighestVerInVB(LBID_t lbid, VER_t max) const
 {
   bool locked = false;
   VER_t ret = -1;
-  size_t bucket = VSS::getBucket(lbid);
+  size_t bucket = VSS::partition(lbid);
 
   try
   {
@@ -937,7 +879,7 @@ bool DBRM::isVersioned(LBID_t lbid, VER_t ver) const
 {
   bool ret = false;
   bool locked = false;
-  size_t bucket = VSS::getBucket(lbid);
+  size_t bucket = VSS::partition(lbid);
 
   try
   {

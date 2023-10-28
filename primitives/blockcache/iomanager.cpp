@@ -651,7 +651,6 @@ void* thr_popper(ioManager* arg)
       }    // if (oid > 3000)
 
       int opts = primitiveprocessor::directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
-      // int opts = 0;
 
       fp = NULL;
       uint32_t openRetries = 0;
@@ -1012,13 +1011,6 @@ void* thr_popper(ioManager* arg)
           int dcrc = decompressor->uncompressBlock(
               &alignedbuff[0], fdit->second->ptrList[cmpOffFact.quot].second, uCmpBuf, blen);
 
-          auto* cm = &uCmpBuf[cmpOffFact.rem];
-          for (size_t q = 0; q < blocksThisRead; ++q)
-          {
-            int64_t* v = (int64_t*)(&cm[q * BLOCK_SIZE]);
-            std::cout << "thr_popper 0 lbid " << lbids[q] << " v " << std::hex << *v << std::dec << std::endl;
-          }
-
           if (dcrc != 0)
           {
 #ifdef IDB_COMP_POC_DEBUG
@@ -1087,10 +1079,6 @@ void* thr_popper(ioManager* arg)
         {
           if (!isLocked[i])
           {
-            // int64_t* v = (int64_t*)(&alignedbuff[i * BLOCK_SIZE]);
-            // std::cout << "thr_popper 2 lbid " << lbids[i] << " v " << std::hex << *v << std::dec <<
-            // std::endl;
-
             cacheInsertOps.push_back(
                 CacheInsert_t(lbids[i], versions[i], (uint8_t*)&alignedbuff[i * BLOCK_SIZE]));
           }

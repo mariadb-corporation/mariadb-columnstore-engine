@@ -653,8 +653,8 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VssPtrVe
           storage[i].vbFBO <= lastFBO)
       {
         {
-          auto bucket = VSS::getBucket(storage[i].lbid);
-          if (vss[bucket]->isEntryLocked(storage[i].lbid, storage[i].verID))
+          auto partition = VSS::partition(storage[i].lbid);
+          if (vss[partition]->isEntryLocked(storage[i].lbid, storage[i].verID))
           {
             ostringstream msg;
             msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
@@ -666,7 +666,7 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VssPtrVe
             throw logging::VBBMBufferOverFlowExcept(msg.str());
           }
 
-          vss[bucket]->removeEntry(storage[i].lbid, storage[i].verID, &flushList);
+          vss[partition]->removeEntry(storage[i].lbid, storage[i].verID, &flushList);
         }
         removeEntry(storage[i].lbid, storage[i].verID);
       }

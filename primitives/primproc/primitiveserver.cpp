@@ -851,6 +851,7 @@ struct AsynchLoader
     utils::setThreadName("PPAsyncLoader");
     bool cached = false;
     uint32_t rCount = 0;
+    // TODO consider smart pointer here.
     char buf[BLOCK_SIZE];
 
     try
@@ -935,7 +936,6 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
       VSSData& vd = it->second;
       ver = vd.verID;
       vbFlag = vd.vbFlag;
-      cout << "async: vss cache hit on " << lbid << " vbflag " << vbFlag << endl;
     }
   }
 

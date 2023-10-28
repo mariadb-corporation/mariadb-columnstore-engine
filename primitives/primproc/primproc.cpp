@@ -220,8 +220,7 @@ class QszMonThd
 };
 #endif
 
-// #define DUMP_CACHE_CONTENTS
-// #ifdef DUMP_CACHE_CONTENTS
+// Outputs cache contents into stdout on SIGUSR1
 void* waitForSIGUSR1(void* p)
 {
   utils::setThreadName("waitForSIGUSR1");
@@ -272,7 +271,6 @@ void* waitForSIGUSR1(void* p)
 
   return 0;
 }
-// #endif
 
 }  // namespace
 
@@ -658,6 +656,7 @@ int ServicePrimProc::Child()
                          rotatingDestination, BRPBlocks, BRPThreads, cacheCount, maxBlocksPerRead,
                          blocksReadAhead, deleteBlocks, PTTrace, prefetchThreshold, PMSmallSide);
 
+// TODO re-consider pre macro
 #ifdef QSIZE_DEBUG
   thread* qszMonThd;
 
@@ -677,7 +676,6 @@ int ServicePrimProc::Child()
 
 #endif
 
-  // #ifdef DUMP_CACHE_CONTENTS
   {
     // Need to use pthreads API here...
     pthread_t thd1;
@@ -686,7 +684,6 @@ int ServicePrimProc::Child()
     pthread_attr_setdetachstate(&attr1, PTHREAD_CREATE_DETACHED);
     pthread_create(&thd1, &attr1, waitForSIGUSR1, reinterpret_cast<void*>(cacheCount));
   }
-  // #endif
 
   primServerThreadPool = server.getProcessorThreadPool();
 

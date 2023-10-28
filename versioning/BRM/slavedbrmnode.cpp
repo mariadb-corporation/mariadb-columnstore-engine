@@ -64,11 +64,6 @@ SlaveDBRMNode::SlaveDBRMNode()
   }
 }
 
-// SlaveDBRMNode::SlaveDBRMNode(const SlaveDBRMNode& brm)
-// {
-//   throw logic_error("WorkerDBRMNode: Don't use the copy constructor.");
-// }
-
 SlaveDBRMNode::~SlaveDBRMNode() throw()
 {
 }
@@ -282,13 +277,10 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
     {
       for (auto lbid = lbidRange.start; lbid < lbidRange.start + lbidRange.size; ++lbid)
       {
-        auto bucket = VSS::getBucket(lbid);
-        assert(bucket < vss_.size() && bucket < vssIsLocked_.size() && vss_[bucket]);
-        // Mb I don't need this state
-        // vss_[bucket]->lock_(VSS::WRITE);
-        // vssIsLocked_[bucket] = true;
+        auto partition = VSS::partition(lbid);
+        assert(partition < vss_.size() && partition < vssIsLocked_.size() && vss_[partition]);
         // removeEntryFromDB returns a vector of lbid/version pairs to be removed from vbbm.
-        for (auto [lbid, version] : vss_[bucket]->removeEntryFromDB(lbid))
+        for (auto [lbid, version] : vss_[partition]->removeEntryFromDB(lbid))
         {
           vbbm.removeEntry(lbid, version);
         }
@@ -308,44 +300,6 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
 
   return 0;
 }
-
-// WIP
-// int SlaveDBRMNode::deleteOIDs(const OidsMap_t& oids) throw()
-// {
-//   LBIDRange_v::iterator it;
-//   int err;
-
-//   try
-//   {
-//     vbbm.lock(VBBM::WRITE);
-//     locked[0] = true;
-//     vss.lock(VSS::WRITE);
-//     locked[1] = true;
-
-//     OidsMap_t::const_iterator mapit;
-
-//     for (mapit = oids.begin(); mapit != oids.end(); ++mapit)
-//     {
-//       LBIDRange_v lbids;
-//       err = lookup(mapit->second, lbids);
-
-//       if (err == -1)
-//         return -1;
-
-//       for (it = lbids.begin(); it != lbids.end(); it++)
-//         vss.removeEntriesFromDB(*it, vbbm);
-//     }
-
-//     em.deleteOIDs(oids);
-//   }
-//   catch (exception& e)
-//   {
-//     cerr << e.what() << endl;
-//     return -1;
-//   }
-
-//   return 0;
-// }
 
 int SlaveDBRMNode::deleteOIDs(const OidsMap_t& oids) throw()
 {
@@ -516,67 +470,6 @@ int SlaveDBRMNode::bulkUpdateDBRoot(const vector<BulkUpdateDBRootArg>& args) thr
   return 0;
 }
 
-// int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_t vbFBO) throw()
-// {
-//   VER_t oldVerID;
-
-//   /*
-//       LBIDRange r;
-//       r.start = lbid;
-//       r.size = 1;
-//       if (!copylocks.isLocked(r))
-//               cout << "Copylock error: lbid " << lbid << " isn't locked\n";
-//   */
-
-//   try
-//   {
-//     vbbm.lock(VBBM::WRITE);
-//     locked[0] = true;
-//     vss.lock(VSS::WRITE);
-//     locked[1] = true;
-
-//     // figure out the current version of the block
-//     // NOTE!  This will currently error out to preserve the assumption that
-//     // larger version numbers imply more recent changes.  If we ever change that
-//     // assumption, we'll need to revise the vbRollback() fcns as well.
-//     oldVerID = vss.getCurrentVersion(lbid, NULL);
-
-//     if (oldVerID == transID)
-//       return 0;
-//     else if (oldVerID > transID)
-//     {
-//       ostringstream str;
-
-//       str << "WorkerDBRMNode::writeVBEntry(): Overlapping transactions detected.  "
-//              "Transaction "
-//           << transID
-//           << " cannot overwrite blocks written by "
-//              "transaction "
-//           << oldVerID;
-//       log(str.str());
-//       return ERR_OLDTXN_OVERWRITING_NEWTXN;
-//     }
-
-//     vbbm.insert(lbid, oldVerID, vbOID, vbFBO);
-
-//     if (oldVerID > 0)
-//       vss.setVBFlag(lbid, oldVerID, true);
-//     else
-//       vss.insert(lbid, oldVerID, true, false);
-
-//     // XXXPAT:  There's a problem if we use transID as the new version here.
-//     // Need to use at least oldVerID + 1.  OldverID can be > TransID
-//     vss.insert(lbid, transID, false, true);
-//   }
-//   catch (exception& e)
-//   {
-//     cerr << e.what() << endl;
-//     return -1;
-//   }
-
-//   return 0;
-// }
-
 int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_t vbFBO,
                                 const bool vbbmIsLocked, const bool vssIsLocked) throw()
 {
@@ -592,16 +485,16 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_
     // NOTE!  This will currently error out to preserve the assumption that
     // larger version numbers imply more recent changes.  If we ever change that
     // assumption, we'll need to revise the vbRollback() fcns as well.
-    auto bucket = VSS::getBucket(lbid);
-    assert(bucket < vss_.size() && bucket < vssIsLocked_.size() && vss_[bucket]);
+    auto partition = VSS::partition(lbid);
+    assert(partition < vss_.size() && partition < vssIsLocked_.size() && vss_[partition]);
     if (!vssIsLocked)
     {
-      vss_[bucket]->lock_(VSS::WRITE);
-      vssIsLocked_[bucket] = true;
+      vss_[partition]->lock_(VSS::WRITE);
+      vssIsLocked_[partition] = true;
     }
 
     bool* isLocked = nullptr;
-    VER_t oldVerID = vss_[bucket]->getCurrentVersion(lbid, isLocked);
+    VER_t oldVerID = vss_[partition]->getCurrentVersion(lbid, isLocked);
 
     if (oldVerID == transID)
       return 0;
@@ -623,14 +516,14 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_
 
     if (oldVerID > 0)
     {
-      vss_[bucket]->setVBFlag(lbid, oldVerID, true);
+      vss_[partition]->setVBFlag(lbid, oldVerID, true);
     }
     else
     {
-      vss_[bucket]->insert_(lbid, oldVerID, true, false);
+      vss_[partition]->insert_(lbid, oldVerID, true, false);
     }
 
-    vss_[bucket]->insert_(lbid, transID, false, true);
+    vss_[partition]->insert_(lbid, transID, false, true);
   }
   catch (exception& e)
   {
@@ -641,63 +534,6 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_
   return 0;
 }
 
-// int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID, const std::vector<BRM::LBID_t>& lbids, OID_t vbOID,
-//                                     const std::vector<uint32_t>& vbFBOs) throw()
-// {
-//   VER_t oldVerID;
-
-//   try
-//   {
-//     vbbm.lock(VBBM::WRITE);
-//     locked[0] = true;
-//     vss.lock(VSS::WRITE);
-//     locked[1] = true;
-
-//     for (size_t i = 0; i < lbids.size(); i++)
-//     {
-//       // figure out the current version of the block
-//       // NOTE!  This will currently error out to preserve the assumption that
-//       // larger version numbers imply more recent changes.  If we ever change that
-//       // assumption, we'll need to revise the vbRollback() fcns as well.
-//       oldVerID = vss.getCurrentVersion(lbids[i], NULL);
-
-//       if (oldVerID == transID)
-//         continue;  // !!!!!!
-//       else if (oldVerID > transID)
-//       {
-//         ostringstream str;
-
-//         str << "WorkerDBRMNode::bulkWriteVBEntry(): Overlapping transactions detected.  "
-//                "Transaction "
-//             << transID
-//             << " cannot overwrite blocks written by "
-//                "transaction "
-//             << oldVerID;
-//         log(str.str());
-//         return ERR_OLDTXN_OVERWRITING_NEWTXN;
-//       }
-
-//       vbbm.insert(lbids[i], oldVerID, vbOID, vbFBOs[i]);
-
-//       if (oldVerID > 0)
-//         vss.setVBFlag(lbids[i], oldVerID, true);
-//       else
-//         vss.insert(lbids[i], oldVerID, true, false);
-
-//       // XXXPAT:  There's a problem if we use transID as the new version here.
-//       // Need to use at least oldVerID + 1.  OldverID can be > TransID
-//       vss.insert(lbids[i], transID, false, true);
-//     }
-//   }
-//   catch (exception& e)
-//   {
-//     cerr << e.what() << endl;
-//     return -1;
-//   }
-
-//   return 0;
-// }
-
 int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID, const std::vector<BRM::LBID_t>& lbids, OID_t vbOID,
                                     const std::vector<uint32_t>& vbFBOs) throw()
 {
@@ -705,6 +541,7 @@ int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID, const std::vector<BRM::LBID_t
   {
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
+    // TODO take only specific locks preprocessing lbids first.
     for (size_t i = 0; auto& v : vss_)
     {
       v->lock_(VSS::WRITE);
@@ -729,148 +566,6 @@ int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID, const std::vector<BRM::LBID_t
 
   return 0;
 }
-
-// int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v& ranges, VBRange_v&
-// freeList,
-//                                bool flushPMCache) throw()
-// {
-//   int64_t sum = 0;
-//   uint64_t maxRetries;
-//   uint64_t waitInterval = 50000;  // usecs to sleep between retries
-//   uint64_t retries;
-//   bool* lockedRanges = (bool*)alloca(ranges.size() * sizeof(bool));
-//   bool allLocked;
-//   uint32_t i;
-
-// #ifdef BRM_DEBUG
-
-//   if (transID < 1)
-//   {
-//     cerr << "WorkerDBRMNode::beginVBCopy(): transID must be > 0" << endl;
-//     return -1;
-//   }
-
-// #endif
-
-//   /* XXXPAT: The controller node will wait up to 5 mins for the response.
-//    * For now, this alg will try for 1 min to grab all of the locks.
-//    * After that, it will release them all then grab them.  Releasing
-//    * them by force opens the slight possibility of a bad result, but more
-//    * likely something crashed, and there has to be some kind of recovery.  The worst
-//    * case is better than stalling the system or causing the BRM to go read-only.
-//    * It should be extremely rare that it has to be done.
-//    */
-//   maxRetries = (60 * 1000000) / waitInterval;
-
-//   for (i = 0; i < ranges.size(); i++)
-//   {
-//     sum += ranges[i].size;
-//     lockedRanges[i] = false;
-//   }
-
-//   try
-//   {
-//     vbbm.lock(VBBM::WRITE);
-//     locked[0] = true;
-//     vss.lock(VSS::WRITE);
-//     locked[1] = true;
-
-//     /* This check doesn't need to be repeated after the retry loop below.
-//      * For now, there is no other transaction that could lock these
-//      * ranges.  When we support multiple transactions at once, the resource
-//      * graph in the controller node should make this redundant anyway.
-//      */
-//     for (i = 0; i < ranges.size(); i++)
-//       if (vss.isLocked(ranges[i], transID))
-//         return -1;
-
-//     copylocks.lock(CopyLocks::WRITE);
-//     locked[2] = true;
-//     allLocked = false;
-//     /* This version grabs all unlocked ranges in each pass.
-//      * If there are locked ranges it waits and tries again.
-//      */
-//     retries = 0;
-
-//     while (!allLocked && retries < maxRetries)
-//     {
-//       allLocked = true;
-
-//       for (i = 0; i < ranges.size(); i++)
-//       {
-//         if (!lockedRanges[i])
-//         {
-//           if (copylocks.isLocked(ranges[i]))
-//             allLocked = false;
-//           else
-//           {
-//             copylocks.lockRange(ranges[i], transID);
-//             lockedRanges[i] = true;
-//           }
-//         }
-//       }
-
-//       /* PrimProc is reading at least 1 range and it could need the locks.
-//        */
-//       if (!allLocked)
-//       {
-//         copylocks.release(CopyLocks::WRITE);
-//         locked[2] = false;
-//         vss.release(VSS::WRITE);
-//         locked[1] = false;
-//         vbbm.release(VBBM::WRITE);
-//         locked[0] = false;
-//         usleep(waitInterval);
-//         retries++;
-//         vbbm.lock(VBBM::WRITE);
-//         locked[0] = true;
-//         vss.lock(VSS::WRITE);
-//         locked[1] = true;
-//         copylocks.lock(CopyLocks::WRITE);
-//         locked[2] = true;
-//       }
-//     }
-
-//     if (retries >= maxRetries)
-//     {
-//       for (i = 0; i < ranges.size(); i++)
-//       {
-//         if (!lockedRanges[i])
-//         {
-//           copylocks.forceRelease(ranges[i]);
-//           copylocks.lockRange(ranges[i], transID);
-//           lockedRanges[i] = true;
-//         }
-//       }
-//     }
-
-//     vbbm.getBlocks(sum, vbOID, freeList, vss, flushPMCache);
-//     /*
-//                     for (i = 0; i < ranges.size(); i++)
-//                             assert(copylocks.isLocked(ranges[i]));
-//     */
-//     return 0;
-//   }
-//   catch (const logging::VBBMBufferOverFlowExcept& e)
-//   {
-//     cerr << e.what() << endl;
-
-//     for (i = 0; i < ranges.size(); i++)
-//       if (lockedRanges[i])
-//         copylocks.releaseRange(ranges[i]);
-
-//     return e.errorCode();
-//   }
-//   catch (exception& e)
-//   {
-//     for (i = 0; i < ranges.size(); i++)
-//       if (lockedRanges[i])
-//         copylocks.releaseRange(ranges[i]);
-
-//     cerr << e.what() << endl;
-//     return -1;
-//   }
-// }
 
 int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v& ranges, VBRange_v& freeList,
                                bool flushPMCache) throw()
@@ -901,10 +596,10 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
   // {
   //   LBID_t rangeEnd = range.start + range.size;
   //   assert(range.size);
-  //   for (LBID_t lbid = range.start; lbid < rangeEnd; ++lbid)
+  //   for (LBID_t lbid = range.stasrt; lbid < rangeEnd; ++lbid)
   //   {
-  //     auto bucket = VSS::getBucket(lbid);
-  //     vss_[bucket]->isLocked(lbid, transID);
+  //     auto partition = VSS::partition(lbid);
+  //     vss_[partition]->isLocked(lbid, transID);
   //   }
   // }
 
@@ -929,8 +624,8 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
       assert(range.size);
       for (LBID_t lbid = range.start; lbid < rangeEnd; ++lbid)
       {
-        auto bucket = VSS::getBucket(lbid);
-        if (vss_[bucket]->isLocked(lbid, transID))
+        auto partition = VSS::partition(lbid);
+        if (vss_[partition]->isLocked(lbid, transID))
         {
           return -1;
         }
@@ -1168,18 +863,18 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const LBIDRange_v& lbidList, bool f
     {
       for (lbid = (*it).start; lbid < (*it).start + (*it).size; lbid++)
       {
-        auto bucket = VSS::getBucket(lbid);
-        oldVerID = vss_[bucket]->getHighestVerInVB(lbid, transID);  /// !!!
+        auto partition = VSS::partition(lbid);
+        oldVerID = vss_[partition]->getHighestVerInVB(lbid, transID);  /// !!!
         // std::cout << "vbRollback oldVerID: " << oldVerID << " transID " << transID << " lbid " << lbid
         //           << std::endl;
 
         if (oldVerID != -1)
         {
           vbbm.removeEntry(lbid, oldVerID);
-          vss_[bucket]->setVBFlag(lbid, oldVerID, false);  // !!!
+          vss_[partition]->setVBFlag(lbid, oldVerID, false);  // !!!
         }
 
-        vss_[bucket]->removeEntry(lbid, transID, &flushList);  // !!!
+        vss_[partition]->removeEntry(lbid, transID, &flushList);  // !!!
       }
     }
 
@@ -1229,16 +924,16 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const vector<LBID_t>& lbidList, boo
 
     for (auto lbid : lbidList)
     {
-      auto bucket = VSS::getBucket(lbid);
-      oldVerID = vss_[bucket]->getHighestVerInVB(lbid, transID);
+      auto partition = VSS::partition(lbid);
+      oldVerID = vss_[partition]->getHighestVerInVB(lbid, transID);
 
       if (oldVerID != -1)
       {
         vbbm.removeEntry(lbid, oldVerID);
-        vss_[bucket]->setVBFlag(lbid, oldVerID, false);
+        vss_[partition]->setVBFlag(lbid, oldVerID, false);
       }
 
-      vss_[bucket]->removeEntry(lbid, transID, &flushList);
+      vss_[partition]->removeEntry(lbid, transID, &flushList);
     }
 
     if (flushPMCache && !flushList.empty())
@@ -1945,7 +1640,7 @@ const std::atomic<bool>* SlaveDBRMNode::getEMLockStatus()
   return em.getEMLockStatus();
 }
 
-const std::atomic<bool> *SlaveDBRMNode::getEMIndexLockStatus()
+const std::atomic<bool>* SlaveDBRMNode::getEMIndexLockStatus()
 {
   return em.getEMIndexLockStatus();
 }

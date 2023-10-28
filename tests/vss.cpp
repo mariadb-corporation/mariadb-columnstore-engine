@@ -1,4 +1,4 @@
-/* Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2023 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -130,7 +130,7 @@ TEST_F(VSSTest, lock)
 
 //   for (size_t lbid = 0; lbid < iterations; lbid++)
 //   {
-//     auto bucket = VSS::getBucket(lbid);
+//     auto bucket = VSS::partitionlbid);
 //     VER_t ver = lbid + 1;
 //     // it is int so watch out for wraparound writing tests
 //     auto prevSize = vss[bucket]->getCurrentSize();

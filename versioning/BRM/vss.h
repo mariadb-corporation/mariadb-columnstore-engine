@@ -302,11 +302,10 @@ class VSS : public Undoable
   void load(std::string filename);
   void save(std::string filename);
 
-  template <typename T>
-  static size_t getBucket(const T v)
+  static size_t partition(const LBID_t v)
   {
     utils::Hasher_r h;
-    return h(&v, sizeof(T)) % VssFactor;
+    return h(&v, sizeof(LBID_t)) % VssFactor;
   }
 
 #ifdef BRM_DEBUG

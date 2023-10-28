@@ -372,7 +372,6 @@ void ColumnCommandJL::reloadExtents()
 {
   int err;
   BRM::DBRM dbrm;
-  std::cout << "reloadExtents OID " << OID << std::endl;
 
   err = dbrm.getExtents(OID, extents);
 
