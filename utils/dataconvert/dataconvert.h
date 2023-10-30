@@ -1176,7 +1176,7 @@ class DataConvert
    * @param dayVal the input data representing days
    * @param status 0 - success, -1 - fail
    */
-  EXPORT static int32_t ConvertArrowColumnDate(int32_t dayVal, int& status);
+  EXPORT static int32_t convertArrowColumnDate(int32_t dayVal, int& status);
 
   /**
    * @brief convert a date column data, represnted as a string, to it's native
