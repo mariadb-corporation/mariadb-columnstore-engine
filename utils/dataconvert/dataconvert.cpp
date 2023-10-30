@@ -1576,7 +1576,7 @@ boost::any DataConvert::StringToTimestamp(const datatypes::ConvertFromStringPara
 //------------------------------------------------------------------------------
 // Convert date32 parquet data to binary date.  Used by BulkLoad.
 //------------------------------------------------------------------------------
-int32_t DataConvert::ConvertArrowColumnDate(int32_t dayVal, int& status)
+int32_t DataConvert::convertArrowColumnDate(int32_t dayVal, int& status)
 {
   int inYear;
   int inMonth;
