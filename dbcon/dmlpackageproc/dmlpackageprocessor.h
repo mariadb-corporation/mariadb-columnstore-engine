@@ -175,7 +175,7 @@ class DMLPackageProcessor
   /** @brief ctor
    */
   DMLPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid)
-   : fEC(0), DMLLoggingId(21), fRollbackPending(false), fDebugLevel(VERBOSE)
+   : fEC(0), DMLLoggingId(21), fRollbackPending(false), fDebugLevel(NONE)
   {
     try
     {
@@ -534,16 +534,6 @@ class DMLPackageProcessor
 
   DebugLevel fDebugLevel;  // internal use debug level
 };
-
-/** @brief helper template function to do safe from string to type conversions
- *
- */
-// template <class T>
-// bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
-// {
-//   std::istringstream iss(s);
-//   return !(iss >> f >> t).fail();
-// }
 
 }  // namespace dmlpackageprocessor
 
