@@ -42,6 +42,7 @@ using namespace execplan;
 
 #include "ha_subquery.h"
 #include "ha_view.h"
+#include "ha_mcs_common.h"
 
 namespace cal_impl_if
 {
@@ -131,7 +132,7 @@ void View::transform()
       else
       {
         // check foreign engine tables
-        bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+        bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 
         // trigger system catalog cache
         if (columnStore)
