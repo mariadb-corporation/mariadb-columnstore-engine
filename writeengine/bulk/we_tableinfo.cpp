@@ -107,7 +107,6 @@ void TableInfo::sleepMS(long ms)
     abs_ts.tv_sec = rm_ts.tv_sec;
     abs_ts.tv_nsec = rm_ts.tv_nsec;
   } while (nanosleep(&abs_ts, &rm_ts) < 0);
-
 }
 
 //------------------------------------------------------------------------------
@@ -156,7 +155,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fRejectErrCnt(0)
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
- , fParquetReader(NULL)
+ , fParquetReader(nullptr)
  , fReader(nullptr)
 {
   fBuffers.clear();
@@ -271,8 +270,8 @@ int TableInfo::readTableData()
 {
   RID validTotalRows = 0;
   RID totalRowsPerInputFile = 0;
-  int64_t totalRowsParquet = 0;   // totalRowsParquet to be used in later function
-                                  // needs int64_t type
+  int64_t totalRowsParquet = 0;  // totalRowsParquet to be used in later function
+                                 // needs int64_t type
   int filesTBProcessed = fLoadFileList.size();
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
@@ -308,7 +307,6 @@ int TableInfo::readTableData()
       }
       fileCounter++;
     }
-
   }
 
   timeval readStart;
@@ -562,7 +560,8 @@ int TableInfo::readTableData()
       fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
       // bufferCount++;
-      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) || (totalRowsPerInputFile == (RID)totalRowsParquet))
+      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) ||
+          (totalRowsPerInputFile == (RID)totalRowsParquet))
       {
         timeval readFinished;
         gettimeofday(&readFinished, NULL);
@@ -1147,8 +1146,7 @@ int TableInfo::getColumnForParse(const int& id, const int& bufferId, bool report
 
     if (report)
     {
-      oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId <<
-          "]: (colLocker,status,lasttime)- ";
+      oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId << "]: (colLocker,status,lasttime)- ";
     }
 
     // @bug2099-
@@ -1232,8 +1230,8 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
     ostringstream oss;
     string bufStatusStr;
     ColumnInfo::convertStatusToString(stat, bufStatusStr);
-    oss << " --- " << pthread_self() <<
-        ":fBuffers[" << bufferId << "]=" << bufStatusStr << " (" << stat << ")" << std::endl;
+    oss << " --- " << pthread_self() << ":fBuffers[" << bufferId << "]=" << bufStatusStr << " (" << stat
+        << ")" << std::endl;
     cout << oss.str();
   }
 
@@ -1249,7 +1247,6 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
 int TableInfo::initializeBuffers(int noOfBuffers, const JobFieldRefList& jobFieldRefList,
                                  unsigned int fixedBinaryRecLen)
 {
-
   fReadBufCount = noOfBuffers;
 
   // initialize and populate the buffer vector.
@@ -1292,8 +1289,7 @@ void TableInfo::addColumn(ColumnInfo* info)
   fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width, info->column.dataType);
 }
 
- 
-int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
+int TableInfo::openTableFileParquet(int64_t& totalRowsParquet)
 {
   if (fParquetReader != NULL)
     return NO_ERROR;
@@ -1323,14 +1319,13 @@ int TableInfo::openTableFileParquet(int64_t &totalRowsParquet)
     return ERR_FILE_OPEN;
   }
   // initialize fBuffers batch source
-  for (int i = 0; i < fReadBufCount; ++i)
+  for (auto& buffer : fBuffers)
   {
-    fBuffers[i].setParquetReader(fParquetReader);
+    buffer.setParquetReader(fParquetReader);
   }
   return NO_ERROR;
- 
 }
- 
+
 //------------------------------------------------------------------------------
 // Open the file corresponding to fFileName so that we can import it's contents.
 // A buffer is also allocated and passed to setvbuf().
@@ -1424,7 +1419,7 @@ void TableInfo::closeTableFile()
         fclose(fHandle);
         delete[] fFileBuffer;
       }
-  
+
       fHandle = 0;
     }
     else if (ms3)

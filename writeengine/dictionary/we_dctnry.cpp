@@ -35,8 +35,6 @@
 #include <iostream>
 using namespace std;
 
-
-
 #include "bytestream.h"
 #include "brmtypes.h"
 #include "extentmap.h"  // for DICT_COL_WIDTH
@@ -54,10 +52,13 @@ using namespace BRM;
 
 using namespace idbdatafile;
 #include "checks.h"
-#include "utils_utf8.h" // for utf8_truncate_point()
+#include "utils_utf8.h"  // for utf8_truncate_point()
 
 namespace
 {
+using BinaryArraySharedPtr = std::shared_ptr<arrow::BinaryArray>;
+using FixedSizeBinaryArraySharedPtr = std::shared_ptr<arrow::FixedSizeBinaryArray>;
+
 // These used to be member variables, hence the "m_" prefix.  But they are
 // all constants, so I removed them as member variables.  May change the
 // variable name later (to remove the m_ prefix) as time allows.
@@ -770,7 +771,7 @@ int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOff
     }
     else
     {
-      const char* start = (const char*) curSig.signature;
+      const char* start = (const char*)curSig.signature;
       const char* end = (const char*)(curSig.signature + curSig.size);
       size_t numChars = cs->numchars(start, end);
       size_t maxCharLength = m_colWidth / cs->mbmaxlen;
@@ -784,7 +785,7 @@ int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOff
       }
     }
   }
-  else // cs->mbmaxlen == 1
+  else  // cs->mbmaxlen == 1
   {
     if (curSig.size > m_colWidth)
     {
@@ -971,9 +972,8 @@ int Dctnry::insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOff
  *    success     - successfully write the header to block
  *    failure     - it did not write the header to block
  ******************************************************************************/
-int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx,
-                                const int totalRow, const int col, char* tokenBuf,
-                                long long& truncCount, const CHARSET_INFO* cs,
+int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx, const int totalRow,
+                                const int col, char* tokenBuf, long long& truncCount, const CHARSET_INFO* cs,
                                 const WriteEngine::ColType& weType)
 {
 #ifdef PROFILE
@@ -993,9 +993,8 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
   cb.file.pFile = m_dFile;
   WriteEngine::Token nullToken;
 
-  bool isNonNullArray = true;
-  std::shared_ptr<arrow::BinaryArray> binaryArray;
-  std::shared_ptr<arrow::FixedSizeBinaryArray> fixedSizeBinaryArray;
+  BinaryArraySharedPtr binaryArray;
+  FixedSizeBinaryArraySharedPtr fixedSizeBinaryArray;
 
   if (columnData->type_id() != arrow::Type::type::FIXED_SIZE_BINARY)
     binaryArray = std::static_pointer_cast<arrow::BinaryArray>(columnData);
@@ -1003,8 +1002,7 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
     fixedSizeBinaryArray = std::static_pointer_cast<arrow::FixedSizeBinaryArray>(columnData);
 
   // check if this column data imported is NULL array or not
-  if (columnData->type_id() == arrow::Type::type::NA)
-    isNonNullArray = false;
+  bool isNonNullArray = columnData->type_id() == arrow::Type::type::NA ? false : true;
 
   //...Loop through all the rows for the specified column
   while (startPos < totalRow)
@@ -1092,8 +1090,8 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
       }
     }
 
-    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next, truncCount,
-                                  cs, weType));
+    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next,
+                                  truncCount, cs, weType));
   }
 
 #ifdef PROFILE
@@ -1125,8 +1123,7 @@ int Dctnry::insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int st
  *    failure    - it did not  write the header to block
  ******************************************************************************/
 int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col, char* tokenBuf,
-                         long long& truncCount, const CHARSET_INFO* cs,
-                         const WriteEngine::ColType& weType)
+                         long long& truncCount, const CHARSET_INFO* cs, const WriteEngine::ColType& weType)
 {
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_PARSE_DCT);
@@ -1199,9 +1196,9 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       curSig.signature = (unsigned char*)pIn;
     }
 
-    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next, truncCount,
-                                  cs, weType));
-  }    // end while
+    RETURN_ON_ERROR(insertDctnry1(curSig, found, pOut, outOffset, startPos, totalUseSize, cb, next,
+                                  truncCount, cs, weType));
+  }  // end while
 
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_PARSE_DCT);

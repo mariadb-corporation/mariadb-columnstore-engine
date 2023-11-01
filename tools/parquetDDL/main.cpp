@@ -8,18 +8,21 @@
 #include <fstream>
 #include <unistd.h>
 
+using ReadableFileSharedPtr = std::shared_ptr<arrow::io::ReadableFile>;
+
 enum STATUS_CODE
 {
   NO_ERROR,
   EMPTY_FIELD,
   UNSUPPORTED_DATA_TYPE,
   UNSUPPORTED_FILE_TYPE,
-  FILE_NUM_ERROR
+  FILE_NUM_ERROR,
+  IO_ERROR
 };
 
 /**
  * print the usage information
-*/
+ */
 static void usage()
 {
   std::cout << "usage: " << std::endl;
@@ -29,20 +32,29 @@ static void usage()
 
 /**
  * get the schema of the parquet file
-*/
-void getSchema(std::string filePath, std::shared_ptr<arrow::Schema>* parquetSchema)
+ */
+int getSchema(std::string filePath, std::shared_ptr<arrow::Schema>* parquetSchema)
 {
-  std::shared_ptr<arrow::io::ReadableFile> infile;
-  PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filePath, arrow::default_memory_pool()));
-  std::unique_ptr<parquet::arrow::FileReader> reader;
-  PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
-  PARQUET_THROW_NOT_OK(reader->GetSchema(parquetSchema));
-  PARQUET_THROW_NOT_OK(infile->Close());
+  try
+  {
+    ReadableFileSharedPtr infile;
+    PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filePath, arrow::default_memory_pool()));
+    std::unique_ptr<parquet::arrow::FileReader> reader;
+    PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
+    PARQUET_THROW_NOT_OK(reader->GetSchema(parquetSchema));
+    PARQUET_THROW_NOT_OK(infile->Close());
+  }
+  catch (...)
+  {
+    std::cerr << "Error while calling `getSchema` for the filepath " << filePath << std::endl;
+    return IO_ERROR;
+  }
+  return NO_ERROR;
 }
 
 /**
  * convert arrow data type id to corresponding columnstore type string
-*/
+ */
 int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typeId, std::string& colType)
 {
   switch (typeId)
@@ -116,7 +128,8 @@ int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typ
     }
     case arrow::Type::type::FIXED_SIZE_BINARY:
     {
-      std::shared_ptr<arrow::FixedSizeBinaryType> fType = std::static_pointer_cast<arrow::FixedSizeBinaryType>(dataType);
+      std::shared_ptr<arrow::FixedSizeBinaryType> fType =
+          std::static_pointer_cast<arrow::FixedSizeBinaryType>(dataType);
       int byteWidth = fType->byte_width();
       colType = "CHAR(" + std::to_string(byteWidth) + ")";
       break;
@@ -157,7 +170,7 @@ int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typ
         colType = "TIME(6)";
       else
         return UNSUPPORTED_DATA_TYPE;
-        
+
       break;
     }
     case arrow::Type::type::DECIMAL128:
@@ -179,14 +192,16 @@ int convert2mcs(std::shared_ptr<arrow::DataType> dataType, arrow::Type::type typ
 
 /**
  * main function to generate DDL file
-*/
+ */
 int generateDDL(std::string filePath, std::string targetPath, std::string tableName)
 {
   std::shared_ptr<arrow::Schema> parquetSchema;
-  getSchema(filePath, &parquetSchema);
+  int rc = getSchema(filePath, &parquetSchema);
+  if (rc != NO_ERROR)
+    return rc;
+
   std::vector<std::string> parquetCols;
   std::vector<std::string> parquetTypes;
-  int rc = NO_ERROR;
   int fieldsNum = parquetSchema->num_fields();
 
   if (fieldsNum == 0)
@@ -217,7 +232,7 @@ int generateDDL(std::string filePath, std::string targetPath, std::string tableN
 
   for (int i = 0; i < fieldsNum; i++)
   {
-    str1 += parquetCols[i] + " " + parquetTypes[i] + (i == fieldsNum-1 ? "\n" : ",\n");
+    str1 += parquetCols[i] + " " + parquetTypes[i] + (i == fieldsNum - 1 ? "\n" : ",\n");
   }
 
   str1 += str2;
@@ -259,9 +274,8 @@ int main(int argc, char** argv)
   // check file extension
   std::string::size_type endBase = ddlFile.rfind('.');
   std::string::size_type endBase1 = parquetFile.rfind('.');
-  if (endBase == std::string::npos || endBase1 == std::string::npos || 
-      parquetFile.substr(endBase1 + 1) != "parquet" ||
-      ddlFile.substr(endBase + 1) != "ddl")
+  if (endBase == std::string::npos || endBase1 == std::string::npos ||
+      parquetFile.substr(endBase1 + 1) != "parquet" || ddlFile.substr(endBase + 1) != "ddl")
   {
     std::cout << "File type not supported" << std::endl;
     usage();
