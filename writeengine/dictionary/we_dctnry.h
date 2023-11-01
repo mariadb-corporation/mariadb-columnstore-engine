@@ -37,10 +37,7 @@
 #include "bytestream.h"
 #include "nullstring.h"
 
-
-
 #define EXPORT
-
 
 namespace arrow
 {
