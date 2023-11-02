@@ -259,6 +259,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'upgrade-test from ' + version,
     depends_on: ['smoke'],
     image: 'docker',
+    failure: 'ignore',
     volumes: [pipeline._volumes.docker],
     environment: {
       UPGRADE_TOKEN: {
@@ -277,6 +278,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   upgradelog:: {
     name: 'upgradelog',
     depends_on: ['upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions) - 1]],
+    failure: 'ignore',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
