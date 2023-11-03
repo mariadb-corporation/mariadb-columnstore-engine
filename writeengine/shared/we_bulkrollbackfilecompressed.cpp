@@ -927,7 +927,7 @@ size_t BulkRollbackFileCompressed::readFillBuffer(IDBDataFile* pFile, char* buff
   size_t bytesToRead = bytesReq;
   size_t totalBytesRead = 0;
 
-  while (1)
+  while (true)
   {
     nBytes = pFile->read(pBuf, bytesToRead);
 

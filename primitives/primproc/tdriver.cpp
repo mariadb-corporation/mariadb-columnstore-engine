@@ -926,7 +926,7 @@ int main(int argc, char* argv[])
   }
   else if (vm.count("loop"))
   {
-    while (1)
+    while (true)
     {
       testColByScan();
       testColByRid();

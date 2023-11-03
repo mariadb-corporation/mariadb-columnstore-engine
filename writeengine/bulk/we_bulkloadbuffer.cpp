@@ -3296,10 +3296,7 @@ bool BulkLoadBuffer::setColumnStatus(const int& columnId, const Status& status)
   if (status == WriteEngine::PARSE_COMPLETE)
     fParseComplete++;
 
-  if (fParseComplete == fNumberOfColumns)
-    return true;
-
-  return false;
+  return (fParseComplete == fNumberOfColumns);
 }
 
 //------------------------------------------------------------------------------

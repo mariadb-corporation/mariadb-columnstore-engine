@@ -255,7 +255,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #endif
 
     uint32_t numColumnOids = numColumns + numDictCols;
-    numColumnOids += 1; // MCOL-5021
+    numColumnOids += 1;  // MCOL-5021
 
     if (fStartingColOID < 0)
     {
@@ -316,7 +316,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #endif
       fWEClient->write(bytestream, (unsigned)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -437,7 +437,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #endif
       fWEClient->write(bytestream, (uint32_t)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -644,7 +644,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #endif
       fWEClient->write(bytestream, pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -687,7 +687,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 
         fWEClient->write(bytestream, pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);

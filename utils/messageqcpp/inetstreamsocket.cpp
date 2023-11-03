@@ -73,8 +73,6 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
-
-
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"
 #undef INETSTREAMSOCKET_DLLEXPORT
@@ -96,7 +94,6 @@ namespace
 // sometimes seeing "unknown error 512" error msgs in response to calls to
 // read(), so adding logic to retry after ERESTARTSYS the way we do for EINTR.
 // const int KERR_ERESTARTSYS = 512;
-
 
 int in_cksum(unsigned short* buf, int sz)
 {
@@ -171,7 +168,6 @@ void InetStreamSocket::open()
 #endif
     throw runtime_error(msg);
   }
-
 
   /*  XXXPAT:  If we have latency problems again, try these...
       bufferSizeSize = 4;
@@ -380,8 +376,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
 
       ostringstream oss;
       oss << "InetStreamSocket::readToMagic(): I/O error2.1: "
-          << "err = " << err << " e = " << e <<
-          ": " << strerror(e);
+          << "err = " << err << " e = " << e << ": " << strerror(e);
       throw runtime_error(oss.str());
     }
 
@@ -880,9 +875,9 @@ const string InetStreamSocket::toString() const
   ostringstream oss;
   char buf[INET_ADDRSTRLEN];
   const SocketParms& sp = fSocketParms;
-  oss << "InetStreamSocket: sd: " << sp.sd() <<
-      " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
-      " port: " << ntohs(fSa.sin_port);
+  oss << "InetStreamSocket: sd: " << sp.sd()
+      << " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN)
+      << " port: " << ntohs(fSa.sin_port);
   return oss.str();
 }
 
@@ -1047,7 +1042,6 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
 
   ::close(pingsock);
 
-
   return 0;
 }
 
@@ -1088,10 +1082,7 @@ bool InetStreamSocket::hasData() const
   // EAGAIN | EWOULDBLOCK means the socket is clear. Anything else is data or error
   retval = recv(fSocketParms.sd(), buf, 1, MSG_DONTWAIT);
 
-  if (retval & (EAGAIN | EWOULDBLOCK))
-    return false;
-
-  return true;
+  return !(retval & (EAGAIN | EWOULDBLOCK));
 }
 
 }  // namespace messageqcpp

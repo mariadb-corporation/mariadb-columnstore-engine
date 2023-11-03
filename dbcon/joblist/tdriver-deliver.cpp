@@ -396,7 +396,7 @@ void runStep(DeliveryStep& dstep, const string& message)
 //...Perform table band projection and serialization in succession
 #if 0
 
-    while (1)
+    while (true)
     {
         // timer.start(nextBandMsg);
         tb = dstep.nextBand();
@@ -435,7 +435,7 @@ void runStep(DeliveryStep& dstep, const string& message)
   pthread_create(&projectionThread, 0, projectThreadWrapper, &tableBandMgr);
   // timer.stop (thrCreateMsg);
 
-  while (1)
+  while (true)
   {
     //...The amount of time we spend waiting will help tell us how
     //...much extra time is being spent constructing the table bands

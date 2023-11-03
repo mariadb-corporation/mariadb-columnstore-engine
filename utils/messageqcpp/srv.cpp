@@ -19,7 +19,7 @@ int main(int argc, char** argv)
   ByteStream obs;
   uint32_t qb = 0;
 
-  while (1)
+  while (true)
   {
     ios = mqs.accept();
     ibs = ios.read();

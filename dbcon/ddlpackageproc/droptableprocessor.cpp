@@ -228,7 +228,6 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
@@ -336,7 +335,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
       // cout << "deleting systable entries with txnid " << txnID.id << endl;
       fWEClient->write(bytestream, (uint32_t)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -429,7 +428,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
 #endif
       fWEClient->write(bytestream, (unsigned)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -645,7 +644,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     bsIn.reset(new ByteStream());
     ByteStream::byte tmp8;
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -886,7 +885,6 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
@@ -1072,7 +1070,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
       bsIn.reset(new ByteStream());
 
-      while (1)
+      while (true)
       {
         if (msgRecived == fWEClient->getPmCount())
           break;
@@ -1212,7 +1210,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 #endif
       fWEClient->write(bytestream, pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -1252,7 +1250,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
         fWEClient->write(bytestream, pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -1380,4 +1378,3 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 }
 
 }  // namespace ddlpackageprocessor
-

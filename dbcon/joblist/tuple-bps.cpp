@@ -19,7 +19,7 @@
 //  $Id: tuple-bps.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -77,7 +77,7 @@ using namespace querytele;
 
 #include "columnwidth.h"
 #include "pseudocolumn.h"
-//#define DEBUG 1
+// #define DEBUG 1
 
 extern boost::mutex fileLock_g;
 
@@ -556,14 +556,14 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       throw runtime_error(oss.str());
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       oss << " due to:  " << ex.what();
       throw runtime_error(oss.str());
     }
-    catch(...)
+    catch (...)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
@@ -2412,7 +2412,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
   {
     tplLock.lock();
 
-    while (1)
+    while (true)
     {
       // sync with the send side
       while (!finishedSending && msgsSent == msgsRecvd)

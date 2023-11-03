@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <sstream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -589,9 +589,8 @@ inline bool matchingColValue(
     {
       auto filterValue = filterValues[0];
       // This can be future optimized checking if a filterValue is NULL or not
-      bool cmp =
-          colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0], filterRFs[0], typeHolder,
-                                               NULL_VALUE);
+      bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0], filterRFs[0],
+                                                      typeHolder, NULL_VALUE);
       return cmp;
     }
 
@@ -603,13 +602,11 @@ inline bool matchingColValue(
         auto filterValue = filterValues[argIndex];
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
-        bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+        if (colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
+                                                 filterRFs[argIndex], typeHolder, NULL_VALUE))
+          return true;
 
         // Short-circuit the filter evaluation - true || ... == true
-        if (cmp == true)
-          return true;
       }
 
       // We can get here only if all filters returned false
@@ -625,8 +622,7 @@ inline bool matchingColValue(
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+                                                        filterRFs[argIndex], typeHolder, NULL_VALUE);
 
         // Short-circuit the filter evaluation - false && ... = false
         if (cmp == false)
@@ -648,8 +644,7 @@ inline bool matchingColValue(
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+                                                        filterRFs[argIndex], typeHolder, NULL_VALUE);
         result ^= cmp;
       }
 
@@ -694,7 +689,8 @@ template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND == KIND_TEXT,
 inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* in)
 {
   constexpr int COL_WIDTH = sizeof(T);
-  const T DUMMY_NULL_VALUE = ~curValue; // it SHALL NOT be equal to curValue, other constraints do not matter.
+  const T DUMMY_NULL_VALUE =
+      ~curValue;  // it SHALL NOT be equal to curValue, other constraints do not matter.
   if (colCompare<KIND_TEXT, COL_WIDTH>(Min, curValue, COMPARE_GT, false, in->colType, DUMMY_NULL_VALUE))
     Min = curValue;
 

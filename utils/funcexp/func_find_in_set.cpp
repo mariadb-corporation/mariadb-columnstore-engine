@@ -77,7 +77,7 @@ int64_t Func_find_in_set::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   size_t find_str_len = searchStr.length();
   int position = 0;
   static const char separator = ',';
-  while (1)
+  while (true)
   {
     int symbol_len;
     if ((symbol_len = cs->mb_wc(&wc, (uchar*)str_end, (uchar*)real_end)) > 0)

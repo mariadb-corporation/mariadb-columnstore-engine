@@ -362,13 +362,7 @@ inline int32_t leapsThruEndOf(int32_t year)
 
 inline bool isLeapYear(int year)
 {
-  if (year % 400 == 0)
-    return true;
-
-  if ((year % 4 == 0) && (year % 100 != 0))
-    return true;
-
-  return false;
+  return ((year % 400 == 0) || ((year % 4 == 0) && (year % 100 != 0)));
 }
 
 static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};

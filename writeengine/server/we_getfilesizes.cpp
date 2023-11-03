@@ -74,7 +74,7 @@ size_t readFillBuffer(idbdatafile::IDBDataFile* pFile, char* buffer, size_t byte
   size_t bytesToRead = bytesReq;
   size_t totalBytesRead = 0;
 
-  while (1)
+  while (true)
   {
     nBytes = pFile->read(pBuf, bytesToRead);
 

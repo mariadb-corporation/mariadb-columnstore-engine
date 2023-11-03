@@ -61,7 +61,7 @@ int main()
   int nTest = 0;
   std::cout << std::endl;
 
-  while (1)
+  while (true)
   {
     std::cout << "test" << nTest << "..." << std::endl;
     test();

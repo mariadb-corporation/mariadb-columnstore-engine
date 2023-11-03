@@ -1615,7 +1615,7 @@ THREAD_RETURN returnChannelMain(void* args)
 {
   struct returnChannel* returnChannel = (struct returnChannel*)args;
 
-  while (1)
+  while (true)
   {
     struct sockaddr_in from;
     int clNo;
@@ -1726,7 +1726,7 @@ int freeSlice(sender_state_t sendst, struct slice* slice)
   i = slice - sendst->slices;
   slice->state = slice::SLICE_PRE_FREE;
 
-  while (1)
+  while (true)
   {
     int pos = pc_getProducerPosition(sendst->free_slices_pc);
 
@@ -2533,7 +2533,7 @@ void localReader(struct fifo* fifo, const uint8_t* buf, uint32_t len)
   // cerr << "starting to send " << len << " bytes" << endl;
   uint32_t offset = 0;
 
-  while (1)
+  while (true)
   {
     int pos = pc_getConsumerPosition(fifo->freeMemQueue);
     int bytes = pc_consumeContiguousMinAmount(fifo->freeMemQueue, BLOCKSIZE);
@@ -2841,7 +2841,7 @@ void advanceReceivedPointer(struct clientState* clst)
 {
   int pos = clst->receivedPtr;
 
-  while (1)
+  while (true)
   {
     slice_t slice = &clst->slices[pos];
 
@@ -2870,7 +2870,7 @@ void receiverStatsAddBytes(receiver_stats_t rs, long bytes)
 
 void cleanupSlices(struct clientState* clst, unsigned int doneState)
 {
-  while (1)
+  while (true)
   {
     int pos = pc_getProducerPosition(clst->free_slices_pc);
     int bytes;
@@ -3372,7 +3372,7 @@ int writer(struct fifo* fifo, SBS outbs)
   outbs->restart();
   int fifoSize = pc_getSize(fifo->data);
 
-  while (1)
+  while (true)
   {
     int pos = pc_getConsumerPosition(fifo->data);
     int bytes = pc_consumeContiguousMinAmount(fifo->data, BLOCKSIZE);
@@ -3680,7 +3680,7 @@ void MulticastImpl::startReceiver()
 
   fClient_config.clientNumber = 0; /*default number for asynchronous transfer*/
 
-  while (1)
+  while (true)
   {
     // int len;
     int msglen;

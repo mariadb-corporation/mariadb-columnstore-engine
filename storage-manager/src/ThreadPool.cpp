@@ -83,7 +83,7 @@ void ThreadPool::prune()
   set<ID_Thread>::iterator it;
   boost::unique_lock<boost::mutex> s(mutex);
 
-  while (1)
+  while (true)
   {
     while (pruneable.empty() && !die)
       somethingToPrune.wait(s);

@@ -220,10 +220,7 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
   int res = regexec(&re, expr.c_str(), 0, NULL, 0);
   regfree(&re);
 
-  if (res == 0)
-    return true;
-  else
-    return false;
+  return res == 0;
 
 #else
   std::regex pat(pattern.c_str());

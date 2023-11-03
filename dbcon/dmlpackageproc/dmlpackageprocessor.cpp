@@ -323,7 +323,7 @@ int DMLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
     bsIn.reset(new ByteStream());
     ByteStream::byte tmp8;
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -444,7 +444,7 @@ int DMLPackageProcessor::commitBatchAutoOnTransaction(uint64_t uniqueId, BRM::Tx
   typedef std::vector<BRM::BulkSetHWMArg> BulkSetHWMArgs;
   std::vector<BulkSetHWMArgs> hwmArgsAllPms;
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -540,7 +540,7 @@ int DMLPackageProcessor::commitBatchAutoOnTransaction(uint64_t uniqueId, BRM::Tx
   msgRecived = 0;
   fWEClient->write_to_all(bytestream);
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -609,7 +609,7 @@ int DMLPackageProcessor::rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::
   ByteStream::byte tmp8;
 
   // cout << "waiting for reply from WES" << endl;
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -671,7 +671,7 @@ int DMLPackageProcessor::rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::
   msgRecived = 0;
   fWEClient->write_to_all(bytestream);
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -755,7 +755,7 @@ int DMLPackageProcessor::commitBatchAutoOffTransaction(uint64_t uniqueId, BRM::T
   uint32_t msgRecived = 0;
   fWEClient->write_to_all(bytestream);
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -796,7 +796,7 @@ int DMLPackageProcessor::rollBackBatchAutoOffTransaction(uint64_t uniqueId, BRM:
   int rc = 0;
   ByteStream::byte tmp8;
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -848,7 +848,7 @@ int DMLPackageProcessor::flushDataFiles(int rcIn, std::map<FID, FID>& columnOids
 
   try
   {
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -900,7 +900,7 @@ int DMLPackageProcessor::endTransaction(uint64_t uniqueId, BRM::TxnID txnID, boo
 
   try
   {
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;

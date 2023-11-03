@@ -21,7 +21,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -508,7 +508,7 @@ void DDLPackageProcessor::removeFiles(const uint64_t uniqueId,
 
     bsIn.reset(new ByteStream());
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -562,10 +562,9 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
 {
   SUMMARY_INFO("DDLPackageProcessor::createFiles");
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-    CalpontSystemCatalog::makeCalpontSystemCatalog(1);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(1);
   CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(aTableName);
-  CalpontSystemCatalog::OID tableAUXColOid =
-    systemCatalogPtr->tableAUXColumnOID(aTableName);
+  CalpontSystemCatalog::OID tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(aTableName);
 
   if (tableAUXColOid > 3000)
   {
@@ -618,7 +617,7 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
     fWEClient->write(bytestream, (uint32_t)pmNum);
     bsIn.reset(new ByteStream());
 
-    while (1)
+    while (true)
     {
       fWEClient->read(uniqueId, bsIn);
 
@@ -784,7 +783,7 @@ void DDLPackageProcessor::createWriteDropLogFile(execplan::CalpontSystemCatalog:
   {
     fWEClient->write(bytestream, (uint32_t)parentId);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -845,7 +844,7 @@ void DDLPackageProcessor::deleteLogFile(LogFileType fileType, execplan::CalpontS
   {
     fWEClient->write(bytestream, (uint32_t)parentId);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -913,7 +912,7 @@ void DDLPackageProcessor::fetchLogFile(TableLogInfo& tableLogInfos, uint64_t uni
   {
     fWEClient->write(bytestream, (uint32_t)parentId);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1019,7 +1018,7 @@ void DDLPackageProcessor::createWritePartitionLogFile(
   {
     fWEClient->write(bytestream, (uint32_t)parentId);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1088,7 +1087,7 @@ void DDLPackageProcessor::createWriteTruncateTableLogFile(
   {
     fWEClient->write(bytestream, (uint32_t)parentId);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1423,7 +1422,7 @@ int DDLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
   ByteStream::byte tmp8;
   std::string errorMsg;
 
-  while (1)
+  while (true)
   {
     if (msgRecived == fWEClient->getPmCount())
       break;
@@ -1463,7 +1462,7 @@ int DDLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
     bsIn.reset(new ByteStream());
     msgRecived = 0;
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;

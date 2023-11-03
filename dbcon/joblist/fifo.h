@@ -318,10 +318,7 @@ inline void FIFO<element_t>::waitTillReadyForInserts()
 template <typename element_t>
 inline bool FIFO<element_t>::isOutputBlocked() const
 {
-  if (ppos == fMaxElements)
-    return true;
-  else
-    return false;
+  return (ppos == fMaxElements);
 }
 
 template <typename element_t>
@@ -528,4 +525,3 @@ void FIFO<element_t>::totalFileCounts(uint64_t& numFiles, uint64_t& numBytes) co
 }
 
 }  // namespace joblist
-

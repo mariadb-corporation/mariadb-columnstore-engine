@@ -157,7 +157,8 @@ string AggregateColumn::toCppCode(IncludeSet& includes) const
   stringstream ss;
   auto fContent = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
 
-  ss << "AggregateColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fContent) << ", " << sessionID() << ")";
+  ss << "AggregateColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fContent) << ", "
+     << sessionID() << ")";
 
   return ss.str();
 }
@@ -278,9 +279,7 @@ bool AggregateColumn::operator==(const AggregateColumn& t) const
     return false;
 
   if (aggParms().size() != t.aggParms().size())
-  {
     return false;
-  }
 
   for (it = fAggParms.begin(), it2 = t.fAggParms.begin(); it != fAggParms.end(); ++it, ++it2)
   {

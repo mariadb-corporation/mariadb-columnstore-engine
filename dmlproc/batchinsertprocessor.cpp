@@ -293,7 +293,7 @@ void BatchInsertProc::sendNextBatch()
   else
   {
     // cout << "current pm state for pm is false for pm " << fCurrentPMid<< endl;
-    while (1)
+    while (true)
     {
       // cout << "Read from WES for pm id " << (uint32_t) tmp32 << endl;
       bsIn.reset(new ByteStream());
@@ -377,7 +377,7 @@ void BatchInsertProc::receiveOutstandingMsg()
     string errorMsg;
     uint32_t msgReceived = 0;
 
-    while (1)
+    while (true)
     {
       if (msgReceived == messagesNotReceived)
         break;
@@ -430,7 +430,7 @@ void BatchInsertProc::receiveAllMsg()
 
   try
   {
-    while (1)
+    while (true)
     {
       if (msgRevd == fWEClient->getPmCount())
         break;

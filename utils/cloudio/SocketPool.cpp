@@ -143,7 +143,7 @@ retry:
   uint i;
   storagemanager::sm_msg_header* resp = NULL;
 
-  while (1)
+  while (true)
   {
     // cout << "SP receiving msg on sock " << sock << endl;
     // here remainingBytes means the # of bytes from the previous message

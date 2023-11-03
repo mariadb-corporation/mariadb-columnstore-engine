@@ -91,190 +91,103 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 {
   switch (colType.colDataType)
   {
-    case (CalpontSystemCatalog::BIT):
-      if (newType.fType == DDL_BIT)
-        return true;
-
-      break;
+    case (CalpontSystemCatalog::BIT): return (newType.fType == DDL_BIT);
 
     case (CalpontSystemCatalog::TINYINT):
-      if (newType.fType == DDL_TINYINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
+      return (newType.fType == DDL_TINYINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
       //@Bug 5443 Not allow user change data type.
       // Not sure this is possible...
       // if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
       //	colType.scale == newType.fScale) return true;
-      break;
 
     case (CalpontSystemCatalog::UTINYINT):
-      if (newType.fType == DDL_UNSIGNED_TINYINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
-      break;
+      return (newType.fType == DDL_UNSIGNED_TINYINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
 
     case (CalpontSystemCatalog::CHAR):
-      if (newType.fType == DDL_CHAR && colType.colWidth == newType.fLength)
-        return true;
-
-      break;
+      return (newType.fType == DDL_CHAR && colType.colWidth == newType.fLength);
 
     case (CalpontSystemCatalog::SMALLINT):
-      if (newType.fType == DDL_SMALLINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
+      return (newType.fType == DDL_SMALLINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
       // if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
       //	colType.scale == newType.fScale) return true;
-      break;
 
     case (CalpontSystemCatalog::USMALLINT):
-      if (newType.fType == DDL_UNSIGNED_SMALLINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
-      break;
+      return (newType.fType == DDL_UNSIGNED_SMALLINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
 
     case (CalpontSystemCatalog::DECIMAL):
-      if ((newType.fType == DDL_DECIMAL || newType.fType == DDL_NUMERIC) &&
-          colType.precision == newType.fPrecision && colType.scale == newType.fScale)
-        return true;
-
-      break;
+      return ((newType.fType == DDL_DECIMAL || newType.fType == DDL_NUMERIC) &&
+              colType.precision == newType.fPrecision && colType.scale == newType.fScale);
 
     case (CalpontSystemCatalog::UDECIMAL):
-      if ((newType.fType == DDL_UNSIGNED_DECIMAL || newType.fType == DDL_UNSIGNED_NUMERIC) &&
-          colType.precision == newType.fPrecision && colType.scale == newType.fScale)
-        return true;
-
-      break;
+      return ((newType.fType == DDL_UNSIGNED_DECIMAL || newType.fType == DDL_UNSIGNED_NUMERIC) &&
+              colType.precision == newType.fPrecision && colType.scale == newType.fScale);
 
     case (CalpontSystemCatalog::MEDINT):
-      if (newType.fType == DDL_MEDINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
+      return (newType.fType == DDL_MEDINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
       //@Bug 5443 Not allow user change data type.
       // if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
       //	colType.scale == newType.fScale) return true;
-      break;
 
     case (CalpontSystemCatalog::UMEDINT):
-      if (newType.fType == DDL_UNSIGNED_MEDINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
-      break;
+      return (newType.fType == DDL_UNSIGNED_MEDINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
 
     case (CalpontSystemCatalog::INT):
-      if (newType.fType == DDL_INT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
+      return (newType.fType == DDL_INT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
       // if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
       //	colType.scale == newType.fScale) return true;
-      break;
 
     case (CalpontSystemCatalog::UINT):
-      if (newType.fType == DDL_UNSIGNED_INT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
+      return (newType.fType == DDL_UNSIGNED_INT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
 
-      break;
+    case (CalpontSystemCatalog::FLOAT): return (newType.fType == DDL_FLOAT);
 
-    case (CalpontSystemCatalog::FLOAT):
-      if (newType.fType == DDL_FLOAT)
-        return true;
+    case (CalpontSystemCatalog::UFLOAT): return (newType.fType == DDL_UNSIGNED_FLOAT);
 
-      break;
-
-    case (CalpontSystemCatalog::UFLOAT):
-      if (newType.fType == DDL_UNSIGNED_FLOAT)
-        return true;
-
-      break;
-
-    case (CalpontSystemCatalog::DATE):
-      if (newType.fType == DDL_DATE)
-        return true;
-
-      break;
+    case (CalpontSystemCatalog::DATE): return (newType.fType == DDL_DATE);
 
     case (CalpontSystemCatalog::BIGINT):
-      if (newType.fType == DDL_BIGINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
-
+      return (newType.fType == DDL_BIGINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
       //@Bug 5443 Not allow user change data type.
       // decimal is mapped to bigint in syscat
       // if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
       //	colType.scale == newType.fScale) return true;
-      break;
 
     case (CalpontSystemCatalog::UBIGINT):
-      if (newType.fType == DDL_UNSIGNED_BIGINT && colType.precision == newType.fPrecision &&
-          colType.scale == newType.fScale)
-        return true;
+      return (newType.fType == DDL_UNSIGNED_BIGINT && colType.precision == newType.fPrecision &&
+              colType.scale == newType.fScale);
 
-      break;
+    case (CalpontSystemCatalog::DOUBLE): return (newType.fType == DDL_DOUBLE);
 
-    case (CalpontSystemCatalog::DOUBLE):
-      if (newType.fType == DDL_DOUBLE)
-        return true;
+    case (CalpontSystemCatalog::UDOUBLE): return (newType.fType == DDL_UNSIGNED_DOUBLE);
 
-      break;
+    case (CalpontSystemCatalog::DATETIME): return (newType.fType == DDL_DATETIME);
 
-    case (CalpontSystemCatalog::UDOUBLE):
-      if (newType.fType == DDL_UNSIGNED_DOUBLE)
-        return true;
+    case (CalpontSystemCatalog::TIMESTAMP): return (newType.fType == DDL_TIMESTAMP);
 
-      break;
-
-    case (CalpontSystemCatalog::DATETIME):
-      if (newType.fType == DDL_DATETIME)
-        return true;
-
-      break;
-
-    case (CalpontSystemCatalog::TIMESTAMP):
-      if (newType.fType == DDL_TIMESTAMP)
-        return true;
-
-      break;
-
-    case (CalpontSystemCatalog::TIME):
-      if (newType.fType == DDL_TIME)
-        return true;
-
-      break;
+    case (CalpontSystemCatalog::TIME): return (newType.fType == DDL_TIME);
 
     case (CalpontSystemCatalog::VARCHAR):
-      if (newType.fType == DDL_VARCHAR && colType.colWidth == newType.fLength)
-        return true;
-
-      break;
+      return (newType.fType == DDL_VARCHAR && colType.colWidth == newType.fLength);
 
     case (CalpontSystemCatalog::VARBINARY):
-      if (newType.fType == DDL_VARBINARY && colType.colWidth == newType.fLength)
-        return true;
-
-      break;
+      return (newType.fType == DDL_VARBINARY && colType.colWidth == newType.fLength);
 
     case (CalpontSystemCatalog::CLOB): break;
 
     case (CalpontSystemCatalog::BLOB):
-      if (newType.fType == DDL_BLOB && colType.colWidth == newType.fLength)
-        return true;
-
-      break;
+      return (newType.fType == DDL_BLOB && colType.colWidth == newType.fLength);
 
     case (CalpontSystemCatalog::TEXT):
-      if (newType.fType == DDL_TEXT && colType.colWidth == newType.fLength)
-        return true;
-
-      break;
+      return (newType.fType == DDL_TEXT && colType.colWidth == newType.fLength);
 
     default: break;
   }
@@ -815,7 +728,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -880,7 +793,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -1025,7 +938,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
         fWEClient->write_to_all(bs);
         bsIn.reset(new ByteStream());
 
-        while (1)
+        while (true)
         {
           if (msgRecived == fPMCount)
             break;
@@ -1071,7 +984,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
             bsIn.reset(new ByteStream());
             ByteStream::byte tmp8;
 
-            while (1)
+            while (true)
             {
               if (msgRecived == fWEClient->getPmCount())
                 break;
@@ -1270,7 +1183,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     cout << "Alter table drop column sending WE_SVR_DELETE_SYSCOLUMN_ROW to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1336,7 +1249,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
       cout << "Alter table drop column sending WE_SVR_UPDATE_SYSTABLE_AUTO to pm " << pmNum << endl;
 #endif
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);
@@ -1401,7 +1314,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     cout << "Alter table drop column sending WE_SVR_UPDATE_SYSTABLE_AUTO to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1488,7 +1401,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     bsIn.reset(new ByteStream());
     ByteStream::byte tmp8;
 
-    while (1)
+    while (true)
     {
       if (msgRecived == fWEClient->getPmCount())
         break;
@@ -1673,7 +1586,7 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1758,7 +1671,7 @@ void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::Calpon
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -1949,7 +1862,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
     cout << "Rename table sending WE_SVR_UPDATE_SYSTABLE_TABLENAME to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -2013,7 +1926,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
     cout << "Rename table sending WE_SVR_UPDATE_SYSCOLUMN_TABLENAME to pm " << pmNum << endl;
 #endif
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -2232,7 +2145,7 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   {
     fWEClient->write(bs, (uint32_t)pmNum);
 
-    while (1)
+    while (true)
     {
       bsIn.reset(new ByteStream());
       fWEClient->read(uniqueId, bsIn);
@@ -2371,7 +2284,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
       {
         fWEClient->write(bs, (uint32_t)pmNum);
 
-        while (1)
+        while (true)
         {
           bsIn.reset(new ByteStream());
           fWEClient->read(uniqueId, bsIn);
@@ -2483,7 +2396,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
     {
       fWEClient->write(bs, (uint32_t)pmNum);
 
-      while (1)
+      while (true)
       {
         bsIn.reset(new ByteStream());
         fWEClient->read(uniqueId, bsIn);

@@ -130,7 +130,7 @@ int ColumnBufferManager::reserveSection(RID startRowId, uint32_t nRowsIn, uint32
   //..Ensure that ColumnBufferSection allocations are made in input row order
   bool bWaitedForInSequence = false;
 
-  while (1)
+  while (true)
   {
     RID startRowTest = (std::numeric_limits<WriteEngine::RID>::max() == fMaxRowId) ? 0 : fMaxRowId + 1;
 

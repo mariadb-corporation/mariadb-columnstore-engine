@@ -107,23 +107,7 @@ inline typename std::iterator_traits<octet_iterator>::difference_type sequence_l
 template <typename octet_difference_type>
 inline bool is_overlong_sequence(uint32_t cp, octet_difference_type length)
 {
-  if (cp < 0x80)
-  {
-    if (length != 1)
-      return true;
-  }
-  else if (cp < 0x800)
-  {
-    if (length != 2)
-      return true;
-  }
-  else if (cp < 0x10000)
-  {
-    if (length != 3)
-      return true;
-  }
-
-  return false;
+  return (cp < 0x80 && length != 1) || (cp < 0x800 && length != 2) || (cp < 0x10000 && length != 3);
 }
 
 enum utf_error
