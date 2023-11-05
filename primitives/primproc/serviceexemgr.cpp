@@ -434,14 +434,16 @@ int ServiceExeMgr::Child()
   }
 
   // Load statistics.
-  try
-  {
-    statistics::StatisticsManager::instance()->loadFromFile();
-  }
-  catch (...)
-  {
-    std::cerr << "Cannot load statistics from file " << std::endl;
-  }
+
+  // Disable loading statistics from file until fixed MCOL-5544
+  // try
+  //  {
+  //  statistics::StatisticsManager::instance()->loadFromFile();
+  // }
+  // catch (...)
+  // {
+  //  std::cerr << "Cannot load statistics from file " << std::endl;
+  // }
 
   for (;;)
   {

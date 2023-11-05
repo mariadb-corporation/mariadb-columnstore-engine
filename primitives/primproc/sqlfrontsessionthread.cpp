@@ -309,7 +309,8 @@ void SQLFrontSessionThread::analyzeTableHandleStats(messageqcpp::ByteStream& bs)
   std::cout << "Read statistics on ExeMgr(Client) from ExeMgr(Server) " << std::endl;
 #endif
   statistics::StatisticsManager::instance()->unserialize(bs);
-  statistics::StatisticsManager::instance()->saveToFile();
+  // Disable until fixed MCOL-5544
+  // statistics::StatisticsManager::instance()->saveToFile();
 
 #ifdef DEBUG_STATISTICS
   std::cout << "Write flag on ExeMgr(Client) to ExeMgr(Server)" << std::endl;
