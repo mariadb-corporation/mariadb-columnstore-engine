@@ -482,7 +482,7 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
 
   // MCOL-1482 Disable derived_handler if the multi-table update
   // statement contains a non-columnstore table.
-  if (cal_impl_if::isUpdateHasForeignTable(thd))
+  if (ha_mcs_common::isUpdateHasForeignTable(thd))
   {
     return handler;
   }
@@ -715,18 +715,18 @@ int ha_mcs_group_by_handler::end_scan()
 
 /*@brief  create_columnstore_select_handler_- Creates handler
 ************************************************************
- * DESCRIPTION:
- * Creates a select handler if there is no non-equi JOIN, e.g
- * t1.c1 > t2.c2 and logical OR in the filter predicates.
- * More details in server/sql/select_handler.h
- * PARAMETERS:
- *    thd - THD pointer.
- *    sel_lex - SELECT_LEX* that describes the query.
- *    sel_unit - SELECT_LEX_UNIT* that describes the query.
- * RETURN:
- *    select_handler if possible
- *    NULL in other case
- ***********************************************************/
+* DESCRIPTION:
+* Creates a select handler if there is no non-equi JOIN, e.g
+* t1.c1 > t2.c2 and logical OR in the filter predicates.
+* More details in server/sql/select_handler.h
+* PARAMETERS:
+*    thd - THD pointer.
+*    sel_lex - SELECT_LEX* that describes the query.
+*    sel_unit - SELECT_LEX_UNIT* that describes the query.
+* RETURN:
+*    select_handler if possible
+*    NULL in other case
+***********************************************************/
 select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit)
 {
   mcs_select_handler_mode_t select_handler_mode = get_select_handler_mode(thd);
@@ -742,7 +742,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // MCOL-1482 Disable select_handler for a multi-table update
   // with a non-columnstore table as the target table of the update
   // operation.
-  if (cal_impl_if::isForeignTableUpdate(thd))
+  if (ha_mcs_common::isForeignTableUpdate(thd))
   {
     return nullptr;
   }
@@ -810,15 +810,15 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // or unsupported feature.
   ha_columnstore_select_handler* handler;
 
-  if (sel_unit && sel_lex) // partial pushdown of the SELECT_LEX_UNIT
+  if (sel_unit && sel_lex)  // partial pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex, sel_unit);
   }
-  else if (sel_unit) // complete pushdown of the SELECT_LEX_UNIT
+  else if (sel_unit)  // complete pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_unit);
   }
-  else // Query only has a SELECT_LEX, no SELECT_LEX_UNIT
+  else  // Query only has a SELECT_LEX, no SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex);
   }
@@ -908,8 +908,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
           select_lex != select_lex->master_unit()->fake_select_lex)  // (2)
         thd->lex->set_limit_rows_examined();
 
-      if ((!sel_unit || sel_lex) && !join->tables_list &&
-          (join->table_count || !select_lex->with_sum_func) &&
+      if ((!sel_unit || sel_lex) && !join->tables_list && (join->table_count || !select_lex->with_sum_func) &&
           !select_lex->have_window_funcs())
       {
         if (!thd->is_error())

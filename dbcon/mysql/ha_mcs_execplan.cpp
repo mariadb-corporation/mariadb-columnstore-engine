@@ -4693,10 +4693,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   {
     // check foreign engine
     if (ifp->cached_table && ifp->cached_table->table)
-      prm.columnStore(isMCSTable(ifp->cached_table->table));
+      prm.columnStore(ha_mcs_common::isMCSTable(ifp->cached_table->table));
     // @bug4509. ifp->cached_table could be null for myisam sometimes
     else if (ifp->field && ifp->field->table)
-      prm.columnStore(isMCSTable(ifp->field->table));
+      prm.columnStore(ha_mcs_common::isMCSTable(ifp->field->table));
 
     if (prm.columnStore())
     {
@@ -6529,104 +6529,6 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
   }
 }
 
-bool isMCSTable(TABLE* table_ptr)
-{
-#if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-
-  if (!(table_ptr->s && (*table_ptr->s->db_plugin)->name.str))
-#else
-  if (!(table_ptr->s && (table_ptr->s->db_plugin)->name.str))
-#endif
-    return true;
-
-#if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-  string engineName = (*table_ptr->s->db_plugin)->name.str;
-#else
-  string engineName = table_ptr->s->db_plugin->name.str;
-#endif
-
-  if (engineName == "Columnstore" || engineName == "Columnstore_cache")
-    return true;
-  else
-    return false;
-}
-
-bool isForeignTableUpdate(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  Item_field* item;
-  List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
-
-  while ((item = (Item_field*)field_it++))
-  {
-    if (item->field && item->field->table && !isMCSTable(item->field->table))
-      return true;
-  }
-
-  return false;
-}
-
-bool isMCSTableUpdate(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  Item_field* item;
-  List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
-
-  while ((item = (Item_field*)field_it++))
-  {
-    if (item->field && item->field->table && isMCSTable(item->field->table))
-      return true;
-  }
-
-  return false;
-}
-
-bool isMCSTableDelete(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isDeleteStatement(lex->sql_command))
-    return false;
-
-  TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
-
-  if (table_ptr && table_ptr->table && isMCSTable(table_ptr->table))
-    return true;
-
-  return false;
-}
-
-// This function is different from isForeignTableUpdate()
-// above as it only checks if any of the tables involved
-// in the multi-table update statement is a foreign table,
-// irrespective of whether the update is performed on the
-// foreign table or not, as in isForeignTableUpdate().
-bool isUpdateHasForeignTable(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
-
-  for (; table_ptr; table_ptr = table_ptr->next_local)
-  {
-    if (table_ptr->table && !isMCSTable(table_ptr->table))
-      return true;
-  }
-
-  return false;
-}
-
 /*@brief  set some runtime params to run the query         */
 /***********************************************************
  * DESCRIPTION:
@@ -6750,7 +6652,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       else
       {
         // check foreign engine tables
-        bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+        bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 
         // trigger system catalog cache
         if (columnStore)
@@ -6881,7 +6783,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     else if (select_lex.where)
       icp = select_lex.where;
   }
-  else if (!join && isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+  else if (!join && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
   {
     isUpdateDelete = true;
   }
@@ -7657,7 +7559,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           }
 
           //@Bug 3030 Add error check for dml statement
-          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+          if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
           {
             if (after_size - before_size != 0)
             {
@@ -7691,7 +7593,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           case REAL_RESULT:
           case TIME_RESULT:
           {
-            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+            if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
             {
             }
             else
@@ -7724,7 +7626,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
       case Item::NULL_ITEM:
       {
-        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+        if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
         {
         }
         else
@@ -9052,7 +8954,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
       else
       {
         // check foreign engine tables
-        bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+        bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 
         // trigger system catalog cache
         if (columnStore)
@@ -9519,7 +9421,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           }
 
           //@Bug 3030 Add error check for dml statement
-          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+          if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
           {
             if (after_size - before_size != 0)
             {
@@ -9550,7 +9452,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           case REAL_RESULT:
           case TIME_RESULT:
           {
-            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+            if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
             {
             }
             else
@@ -9583,7 +9485,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
       case Item::NULL_ITEM:
       {
-        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+        if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
         {
         }
         else
