@@ -42,7 +42,7 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& c
 
 int64_t encodeStringPrefix_check_null(const uint8_t* str, size_t len, datatypes::Charset& cset)
 {
-  if (len < 1 && str == nullptr)
+  if (len < 1)
   {
     return joblist::UBIGINTNULL;
   }
