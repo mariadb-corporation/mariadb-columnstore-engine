@@ -42,19 +42,6 @@ year	sales	MAX(country)
 2015	9030	Paraguay
 2015	NULL	Senegal
 NULL	NULL	Senegal
-SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
-year	sales	MAX(country)
-2014	12234	Senegal
-2014	64980	Senegal
-2014	8760	Paraguay
-2014	87970	Paraguay
-2014	NULL	Senegal
-2015	15647	Senegal
-2015	76940	Paraguay
-2015	78901	Senegal
-2015	9030	Paraguay
-2015	NULL	Senegal
-NULL	NULL	Senegal
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
 year	SUM(sales)
 2014	173944
@@ -62,6 +49,14 @@ year	SUM(sales)
 NULL	354462
 SELECT country, genre, SUM(sales) FROM booksales GROUP BY country, genre WITH ROLLUP;
 country	genre	SUM(sales)
+NULL	NULL	354462
+Paraguay	NULL	182700
+Paraguay	fiction	164910
+Paraguay	non-fiction	17790
+Senegal	NULL	171762
+Senegal	fiction	27881
+Senegal	non-fiction	143881
+SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
 NULL	NULL	354462
 Paraguay	NULL	182700
 Paraguay	fiction	164910
