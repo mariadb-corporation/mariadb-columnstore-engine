@@ -106,8 +106,8 @@ void FileBufferMgr::flushOne(const BRM::LBID_t lbid, const BRM::VER_t ver)
     // remove it from fbSet
     fbSets[part].erase(iter);
     // adjust fCacheSize
+    fCacheSize.fetch_sub(1, std::memory_order_release);
     // --fCacheSizes[part];
-    --fCacheSizes[part];
   }
 }
 
@@ -134,7 +134,8 @@ void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
       // remove it from fbSet
       fbSets[part].erase(iter);
       // adjust fCacheSize
-      --fCacheSizes[part];
+      fCacheSize.fetch_sub(1, std::memory_order_release);
+      // --fCacheSizes[part];
     }
 
     ++laVptr;
@@ -157,8 +158,8 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
     auto lbid = *laVptr;
     auto part = partition(lbid);
     std::scoped_lock lk(fWLocks[part]);
-    // if (!fCacheSize.load(std::memory_order_acquire))
-    if (!fCacheSizes[part])
+    if (!fCacheSize.load(std::memory_order_acquire))
+      // if (!fCacheSizes[part])
       return;
     for (auto it = fbSets[part].begin(); it != fbSets[part].end();)
     {
@@ -170,7 +171,8 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
         auto tmpIt = it;
         ++it;
         fbSets[part].erase(tmpIt);
-        --fCacheSizes[part];
+        fCacheSize.fetch_sub(1, std::memory_order_release);
+        // --fCacheSizes[part];
       }
       else
         ++it;
@@ -393,7 +395,8 @@ void FileBufferMgr::depleteCache(const size_t part)
     fbSets[part].erase(iter);
 
     fbLists[part].pop_back();
-    --fCacheSizes[part];
+    fCacheSize.fetch_sub(1, std::memory_order_release);
+    // --fCacheSizes[part];
   }
 }
 
@@ -423,8 +426,8 @@ ostream& FileBufferMgr::formatLRUList(ostream& os) const
 void FileBufferMgr::updateLRU(const FBData_t& f, const size_t part)
 {
   // Pick the least used from LRU
-  // if (fCacheSize.load(std::memory_order_acquire) > fMaxNumBlocks)
-  if (fCacheSizes[part] > fMaxNumBlocks)
+  if (fCacheSize.load(std::memory_order_acquire) > fMaxNumBlocks)
+  // if (fCacheSizes[part] > fMaxNumBlocks)
   {
     auto last = fbLists[part].end();
     --last;
@@ -436,8 +439,8 @@ void FileBufferMgr::updateLRU(const FBData_t& f, const size_t part)
     fbSets[part].erase(iter);
     fbLists[part].splice(fbLists[part].begin(), fbLists[part], last);
     fbdata = f;
+    fCacheSize.fetch_sub(1, std::memory_order_release);
     // --fCacheSizes[part];
-    --fCacheSizes[part];
   }
   else  // buffer has some capacity left
   {
@@ -486,8 +489,8 @@ int FileBufferMgr::bulkInsert(const CacheInsertVec& ops)
         continue;
       }
 
-      ++fCacheSizes[part];
-      // fCacheSize.fetch_add(1, std::memory_order_release);
+      // ++fCacheSizes[part];
+      fCacheSize.fetch_add(1, std::memory_order_release);
 
       FBData_t fbdata = {op.lbid, op.ver, 0};
       updateLRU(fbdata, part);

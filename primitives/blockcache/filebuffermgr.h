@@ -285,13 +285,14 @@ void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable 
         const auto poolIdx = fbSetItToErase->poolIdx;
 
         const size_t part = partition(lbid);
-        if (!fCacheSizes[part])
-          return;
+        // if (!fCacheSizes[part]) // WIP
+        //   return;
 
         fbLists[part].erase(fFBPool[poolIdx].listLoc());
         fEmptyPoolsSlots[part].push_back(poolIdx);
         fbSets[part].erase(fbSetItToErase);
-        --fCacheSizes[part];
+        fCacheSize.fetch_sub(1, std::memory_order_release);
+        // --fCacheSizes[part];
       }
     }
   }
