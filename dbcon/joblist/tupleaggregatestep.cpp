@@ -1503,7 +1503,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, false));
+  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, jobInfo.hasRollup));
   rowAgg->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRG);
   aggregators.push_back(rowAgg);
@@ -5443,7 +5443,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
           for (uint32_t i = 0; i < fNumOfBuckets; i++)
           {
             fAggregators[i].reset(fAggregator->clone());
-            fAggregators[i]->clearRollup();
             fAggregators[i]->setInputOutput(fRowGroupIn, &fRowGroupOuts[i]);
           }
         }
