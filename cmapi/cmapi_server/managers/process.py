@@ -263,6 +263,41 @@ class MCSProcessManager:
         cls.process_dispatcher.noop()
 
     @classmethod
+    def gracefully_stop_dmlproc(cls) -> None:
+        """Gracefully stop DMLProc using DBRM commands."""
+        logging.info(
+            'Trying to gracefully stop DMLProc using DBRM commands.'
+        )
+        try:
+            with DBRM() as dbrm:
+                dbrm.set_system_state(
+                    ['SS_ROLLBACK', 'SS_SHUTDOWN_PENDING']
+                )
+        except (ConnectionRefusedError, RuntimeError):
+            logging.error(
+                'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING '
+                'using DBRM while trying to gracefully auto stop DMLProc.'
+                'Continue with a regular stop method.'
+            )
+            raise
+
+    @classmethod
+    def is_service_running(cls, name: str, use_sudo: bool = True) -> bool:
+        """Check if MCS process is running.
+
+        :param name: mcs process name
+        :type name: str
+        :param use_sudo: use sudo or not, defaults to True
+        :type use_sudo: bool, optional
+        :return: True if mcs process is running, otherwise False
+        :rtype: bool
+        """
+        return cls.process_dispatcher.is_service_running(
+            cls._get_prog_name(name), use_sudo
+        )
+
+
+    @classmethod
     def start(cls, name: str, is_primary: bool, use_sudo: bool) -> bool:
         """Start mcs process.
 
@@ -299,20 +334,9 @@ class MCSProcessManager:
         # TODO: do we need here force stop DMLProc as a method argument?
 
         if is_primary and name == 'DMLProc':
-            logging.info(
-                'Trying to gracefully stop DMLProc using DBRM commands.'
-            )
             try:
-                with DBRM() as dbrm:
-                    dbrm.set_system_state(
-                        ['SS_ROLLBACK', 'SS_SHUTDOWN_PENDING']
-                    )
+                cls.gracefully_stop_dmlproc()
             except (ConnectionRefusedError, RuntimeError):
-                logging.error(
-                    'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING '
-                    'using DBRM while trying to gracefully auto stop DMLProc.'
-                    'Continue with a regular stop method.'
-                )
                 # stop DMLProc using regular signals or systemd
                 return cls.process_dispatcher.stop(
                     cls._get_prog_name(name), is_primary, use_sudo

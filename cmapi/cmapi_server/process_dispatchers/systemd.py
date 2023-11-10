@@ -55,7 +55,7 @@ class SystemdDispatcher(BaseDispatcher):
         """Check if systemd service is running.
 
         :param service: service name
-        :type service: str, optional
+        :type service: str
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
         :return: True if service is running, otherwise False

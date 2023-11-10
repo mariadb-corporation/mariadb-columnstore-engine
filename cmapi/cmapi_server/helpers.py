@@ -11,10 +11,12 @@ import logging
 import os
 import socket
 import time
+from collections import namedtuple
 from functools import partial
 from random import random
 from shutil import copyfile
 from typing import Tuple, Optional
+from urllib.parse import urlencode, urlunparse
 
 import lxml.objectify
 import requests
@@ -273,6 +275,7 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
+    timeout: int = 10
 ) -> bool:
     """Send new config to nodes. Now in async way.
 
@@ -289,8 +292,11 @@ def broadcast_new_config(
     :type test_mode: bool, optional
     :param nodes: nodes list for config put, defaults to None
     :type nodes: Optional[list], optional
+    :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
+                    releases. Could affect all logic of broadcacting new config
+    :type timeout: int
     :return: success state
-    :rtype: _type_
+    :rtype: bool
     """
 
     cfg_parser = get_config_parser(cmapi_config_filename)
@@ -326,6 +332,11 @@ def broadcast_new_config(
 
     async def update_config(node, success_nodes, failed_nodes, headers, body):
         url = f'https://{node}:8640/cmapi/{version}/node/config'
+        # TODO: investigate about hardcoded 120 seconds timeout
+        #       Check e1242eed47b61276ebc86136f124f6d974655515 in cmapi old
+        #       repo to get more info. Patric made it because:
+        #       "Made the timeout for a CS process restart 120s, since
+        #        the container dispatcher waits up to 60s for SM to stop"
         request_put = partial(
             requests.put, url, verify=False, headers=headers, json=body,
             timeout=120
@@ -845,3 +856,44 @@ def get_dispatcher_name_and_path(
         config_parser.get('Dispatcher', 'path', fallback='')
     )
     return dispatcher_name, dispatcher_path
+
+
+def build_url(
+        base_url: str, query_params: dict, scheme: str = 'https',
+        path: str = '', params: str = '', fragment: str = '',
+        port: Optional[int] = None
+) -> str:
+    """Build url with query params.
+
+    :param base_url: base url address
+    :type base_url: str
+    :param query_params: query params
+    :type query_params: dict
+    :param scheme: url scheme, defaults to 'https'
+    :type scheme: str, optional
+    :param path: url path, defaults to ''
+    :type path: str, optional
+    :param params: params, defaults to ''
+    :type params: str, optional
+    :param fragment: fragment, defaults to ''
+    :type fragment: str, optional
+    :param port: port for base url, defaults to None
+    :type port: Optional[int], optional
+    :return: url with query params
+    :rtype: str
+    """
+    # namedtuple to match the internal signature of urlunparse
+    Components = namedtuple(
+        typename='Components',
+        field_names=['scheme', 'netloc', 'path', 'params', 'query', 'fragment']
+    )
+    return urlunparse(
+        Components(
+            scheme=scheme,
+            netloc=f'{base_url}:{port}' if port else base_url,
+            path=path,
+            params=params,
+            query=urlencode(query_params),
+            fragment=fragment
+        )
+    )

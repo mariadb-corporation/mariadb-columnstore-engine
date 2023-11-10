@@ -1,6 +1,7 @@
 """Module contains Cluster business logic functions."""
 import logging
 from datetime import datetime
+from typing import Optional
 
 import requests
 
@@ -141,7 +142,9 @@ class ClusterHandler():
     @staticmethod
     def shutdown(
         config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
+        logger: logging.Logger = logging.getLogger('cmapi_server'),
+        transaction_id: Optional[int] = None,
+        timeout: int = 15
     ) -> dict:
         """Method to stop the MCS Cluster.
 
@@ -150,6 +153,9 @@ class ClusterHandler():
         :type config: str, optional
         :param logger: logger, defaults to logging.getLogger('cmapi_server')
         :type logger: logging.Logger, optional
+        :param timeout: timeout in seconds for gracefully stop DMLProc
+                        TODO: for next releases
+        :type timeout: int
         :raises CMAPIBasicError: if no nodes in the cluster
         :return: start timestamp
         :rtype: dict
@@ -159,24 +165,30 @@ class ClusterHandler():
         )
 
         start_time = str(datetime.now())
-        transaction_id = get_id()
+        if not transaction_id:
+            transaction_id = get_id()
+            try:
+                suceeded, transaction_id, successes = start_transaction(
+                    cs_config_filename=config, id=transaction_id
+                )
+            except Exception as err:
+                rollback_transaction(
+                    transaction_id, cs_config_filename=config
+                )
+                raise CMAPIBasicError(
+                    'Error while starting the transaction.'
+                ) from err
+            if not suceeded:
+                rollback_transaction(transaction_id, cs_config_filename=config)
+                raise CMAPIBasicError(
+                    'Starting transaction isn\'t successful.'
+                )
 
-        try:
-            suceeded, transaction_id, successes = start_transaction(
-                cs_config_filename=config, id=transaction_id
-            )
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while starting the transaction.'
-            ) from err
-        if not suceeded:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Starting transaction isn\'t successful.')
-
-        if suceeded and len(successes) == 0:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('There are no nodes in the cluster.')
+            if suceeded and len(successes) == 0:
+                rollback_transaction(transaction_id, cs_config_filename=config)
+                raise CMAPIBasicError(
+                    'There are no nodes in the cluster.'
+                )
 
         switch_node_maintenance(True)
         update_revision_and_manager()
