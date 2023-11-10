@@ -26,7 +26,6 @@
 #pragma once
 
 #include <boost/unordered/unordered_flat_set.hpp>
-#include <concepts>
 #include <cstdint>
 #include <deque>
 #include <fstream>
@@ -192,7 +191,6 @@ class FileBufferMgr
   template <typename OIDsContainer>
   EMEntriesVec getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const;
   template <typename Invokable>
-    requires std::invocable<Invokable, BRM::EMEntry&>
   void flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions);
 
   /**
@@ -214,7 +212,13 @@ class FileBufferMgr
   std::ostream& formatLRUList(std::ostream& os) const;
 
  private:
-  std::atomic<uint32_t> fCacheSize = 0;
+  // There are two state elements to store sizes of the cache:
+  // fCacheSizes to bypass some loops in case of an empty partition.
+  // fCacheSizes partitions access is synced with fWLocks
+  // fCacheSize to trigger cache eviction.
+  std::atomic<uint32_t> fCacheSize{0};
+  std::vector<size_t> fCacheSizes = std::vector<size_t>(PartitionsNumber, 0);
+
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
@@ -224,8 +228,6 @@ class FileBufferMgr
   std::array<filebuffer_uset_t, PartitionsNumber> fbSets;
 
   std::array<filebuffer_list_t, PartitionsNumber> fbLists;  // rename this
-
-  std::vector<size_t> fCacheSizes = std::vector<size_t>(PartitionsNumber, 0);
 
   FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
@@ -248,7 +250,6 @@ class FileBufferMgr
 };
 
 template <typename Invokable>
-  requires std::invocable<Invokable, BRM::EMEntry&>
 void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
 {
   using byLBID_t = std::unordered_multimap<BRM::LBID_t, filebuffer_uset_t::iterator>;
@@ -285,14 +286,14 @@ void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable 
         const auto poolIdx = fbSetItToErase->poolIdx;
 
         const size_t part = partition(lbid);
-        // if (!fCacheSizes[part]) // WIP
-        //   return;
+        if (!fCacheSizes[part])
+          return;
 
         fbLists[part].erase(fFBPool[poolIdx].listLoc());
         fEmptyPoolsSlots[part].push_back(poolIdx);
         fbSets[part].erase(fbSetItToErase);
+        --fCacheSizes[part];
         fCacheSize.fetch_sub(1, std::memory_order_release);
-        // --fCacheSizes[part];
       }
     }
   }
