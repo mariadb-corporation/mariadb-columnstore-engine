@@ -1551,7 +1551,6 @@ struct BPPHandler
     more intelligent scheduling.  Once the join data is received, BPPV will
     start letting jobs run and create more BPP instances on demand. */
 
-    atomicops::atomicMb();  // make sure the joinDataReceived assignment doesn't migrate upward...
     bppv->joinDataReceived = true;
     return 0;
   }
@@ -1611,6 +1610,8 @@ struct BPPHandler
         // joinDataReceived here fixes it.
         // We're not ready for a destroy. Reschedule to wait
         // for all joiners to arrive.
+        // TODO there might be no joiners if the query is canceled.
+        // The memory will leak.
         return -1;
       }
     }
@@ -2363,7 +2364,6 @@ BPPV::BPPV(PrimitiveServer* ps)
   sendThread->setProcessorPool(ps->getProcessorThreadPool());
   v.reserve(BPPCount);
   pos = 0;
-  joinDataReceived = false;
 }
 
 BPPV::~BPPV()

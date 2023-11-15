@@ -66,7 +66,7 @@ class BPPV
   }
   void abort();
   bool aborted();
-  volatile bool joinDataReceived;
+  std::atomic<bool> joinDataReceived{false};
 
  private:
   std::vector<boost::shared_ptr<BatchPrimitiveProcessor> > v;

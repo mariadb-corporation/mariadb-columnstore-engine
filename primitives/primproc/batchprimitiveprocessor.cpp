@@ -349,8 +349,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
         uint32_t tmp32;
         bs >> tmp32;
         tJoinerSizes[i] = tmp32;
-        // bs >> tJoinerSizes[i];
-        // cout << "joiner size = " << tJoinerSizes[i] << endl;
         bs >> joinTypes[i];
         bs >> tmp8;
         typelessJoin[i] = (bool)tmp8;
