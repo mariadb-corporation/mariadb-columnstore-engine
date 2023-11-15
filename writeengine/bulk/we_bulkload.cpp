@@ -355,7 +355,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -364,7 +364,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(...)
+    catch (...)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -378,10 +378,10 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     // tableAUXColOid = 0
     if (tableAUXColOid > 3000)
     {
-      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING,
-        execplan::AUX_COL_WIDTH, execplan::AUX_COL_WIDTH,
-        execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_COMPRESSION_TYPE,
-        execplan::AUX_COL_MINVALUE, execplan::AUX_COL_MAXVALUE, true, 1);
+      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING, execplan::AUX_COL_WIDTH,
+                          execplan::AUX_COL_WIDTH, execplan::AUX_COL_COMPRESSION_TYPE,
+                          execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_MINVALUE,
+                          execplan::AUX_COL_MAXVALUE, true, 1);
       curColumn.fFldColRelation = BULK_FLDCOL_COLUMN_DEFAULT;
       curJob.jobTableList[i].colList.push_back(curColumn);
       JobFieldRef fieldRef(BULK_FLDCOL_COLUMN_DEFAULT, curJob.jobTableList[i].colList.size() - 1);
@@ -1210,26 +1210,21 @@ int BulkLoad::manageImportDataFileList(Job& job, int tableNo, TableInfo* tableIn
   std::vector<std::string> loadFilesList;
   bool bUseStdin = false;
 
-  // Check if all the import files are parquet file
-  bool isParquet = false;
-  for (unsigned int i = 0; i < fCmdLineImportFiles.size(); i++)
+  // Check if all the import files are the same type.
+  const auto& fileNameA = (fCmdLineImportFiles.empty()) ? "" : fCmdLineImportFiles.front();
+  bool allFilesHaveSameType =
+      !fCmdLineImportFiles.empty() &&
+      std::all_of(std::next(fCmdLineImportFiles.begin()), fCmdLineImportFiles.end(),
+                  [&fileNameA](auto& fileName) { return fileName.rfind(fileNameA) != std::string::npos; });
+
+  if (!fCmdLineImportFiles.empty() && !allFilesHaveSameType)
   {
-    if (fCmdLineImportFiles[i].rfind(".parquet") != std::string::npos)
-    {
-      if (!isParquet)
-        isParquet = true;
-    }
-    else
-    {
-      if (isParquet)
-      {
-        ostringstream oss;
-        oss << "Import files exist parquet file while not all of them are parquet files.";
-        fLog.logMsg(oss.str(), ERR_FILE_TYPE_DIFF, MSGLVL_ERROR);
-        return ERR_FILE_TYPE_DIFF;
-      }
-    }
+    ostringstream oss;
+    oss << "Input files have different types.";
+    fLog.logMsg(oss.str(), ERR_FILE_TYPE_DIFF, MSGLVL_ERROR);
+    return ERR_FILE_TYPE_DIFF;
   }
+  const bool isParquet = allFilesHaveSameType && fileNameA.rfind(".parquet") != std::string::npos;
 
   if (isParquet)
   {
@@ -1410,7 +1405,6 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
       fullPath = location;
       fullPath += token;
     }
-
 
     // If running mode2, then support a filename with wildcards
     if (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC)
