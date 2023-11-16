@@ -58,6 +58,11 @@ typedef std::vector<execplan::SPTP> FunctionParm;
 constexpr const int32_t MAX_MICROSECOND_PRECISION = 6;
 
 /** @brief Func class
+ *
+ * @desc IMPOTRANT: functions are pure transformers, they should
+ * not have state shared between invocations. This is so because
+ * functions' objects are, essentially, singletons and the same
+ * objects will be used in diffeent threads.
  */
 class Func
 {
