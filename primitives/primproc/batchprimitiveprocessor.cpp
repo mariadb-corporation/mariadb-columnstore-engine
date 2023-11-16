@@ -349,6 +349,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
         uint32_t tmp32;
         bs >> tmp32;
         tJoinerSizes[i] = tmp32;
+        std::cout << "IBPP tJs " << i << " " << tJoinerSizes[i] << std::endl;
         bs >> joinTypes[i];
         bs >> tmp8;
         typelessJoin[i] = (bool)tmp8;
@@ -861,22 +862,36 @@ int BatchPrimitiveProcessor::endOfJoiner()
       currentSize = 0;
       for (uint j = 0; j < processorThreads; ++j)
         if (!tJoiners[i] || !tJoiners[i][j])
+        {
+          std::cout << "EOF1 " << i << " " << j << std::endl;
           return -1;
+        }
         else
           currentSize += tJoiners[i][j]->size();
       if (currentSize != tJoinerSizes[i])
+      {
+        std::cout << "EOF2 " << i << std::endl;
         return -1;
+      }
     }
     else
     {
       currentSize = 0;
       for (uint j = 0; j < processorThreads; ++j)
+      {
         if (!tlJoiners[i] || !tlJoiners[i][j])
+        {
+          std::cout << "EOFTL1 " << i << " " << j << std::endl;
           return -1;
+        }
         else
           currentSize += tlJoiners[i][j]->size();
+      }
       if (currentSize != tJoinerSizes[i])
+      {
+        std::cout << "EOFTL2 " << i << std::endl;
         return -1;
+      }
     }
   }
 
