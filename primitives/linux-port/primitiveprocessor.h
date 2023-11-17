@@ -49,7 +49,7 @@
 class PrimTest;
 
 // XXX: turn off dictionary range setting during scan.
-//#define XXX_PRIMITIVES_TOKEN_RANGES_XXX
+#define XXX_PRIMITIVES_TOKEN_RANGES_XXX
 
 namespace primitives
 {

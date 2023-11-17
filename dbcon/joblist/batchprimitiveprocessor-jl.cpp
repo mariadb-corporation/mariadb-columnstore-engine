@@ -50,7 +50,7 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
-//#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
+#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
 
 namespace joblist
 {
