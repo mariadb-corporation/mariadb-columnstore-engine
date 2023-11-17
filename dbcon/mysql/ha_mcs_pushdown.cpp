@@ -17,7 +17,39 @@
 #include <typeinfo>
 #include <string>
 
+// This makes specific MDB classes' attributes public to implement
+// MCOL-4740 temporary solution. Search for MCOL-4740
+// to get the actual place where it is used.
+#define updated_leaves \
+  updated_leaves;      \
+                       \
+ public:
+
 #include "ha_mcs_pushdown.h"
+
+void update_counters_on_multi_update()
+{
+  if (ha_mcs_common::isMultiUpdateStatement(current_thd->lex->sql_command) &&
+      !ha_mcs_common::isForeignTableUpdate(current_thd))
+  {
+    SELECT_LEX_UNIT* unit = &current_thd->lex->unit;
+    SELECT_LEX* select_lex = unit->first_select();
+    auto* multi = (select_lex->join) ? reinterpret_cast<multi_update*>(select_lex->join->result) : nullptr;
+
+    if (multi)
+    {
+      multi->table_to_update = multi->update_tables ? multi->update_tables->table : 0;
+
+      cal_impl_if::cal_connection_info* ci =
+          reinterpret_cast<cal_impl_if::cal_connection_info*>(get_fe_conn_info_ptr());
+
+      if (ci)
+      {
+        multi->updated = multi->found = ci->affectedRows;
+      }
+    }
+  }
+}
 
 void check_walk(const Item* item, void* arg);
 
@@ -1167,6 +1199,11 @@ int ha_columnstore_select_handler::end_scan()
   DBUG_ENTER("ha_columnstore_select_handler::end_scan");
 
   scan_ended = true;
+
+  // MCOL-4740 multi_update::send_eof(), which outputs the affected
+  // number of rows to the client, is called after handler::rnd_end().
+  // So we set multi_update::updated and multi_update::found here.
+  update_counters_on_multi_update();
 
   int rc = ha_mcs_impl_rnd_end(table, true);
 
