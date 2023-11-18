@@ -342,14 +342,16 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       hasJoinFEFilters = false;
       hasSmallOuterJoin = false;
       bool smallSideRGRecvd = false;
-
+      std::cout << "IBPP tJs " << uniqueID;
+      cout.flush();
       for (i = 0; i < joinerCount; i++)
       {
         doMatchNulls[i] = false;
         uint32_t tmp32;
         bs >> tmp32;
         tJoinerSizes[i] = tmp32;
-        std::cout << "IBPP tJs " << i << " " << tJoinerSizes[i] << std::endl;
+        std::cout << " " << i << " " << tJoinerSizes[i] << " ";
+        cout.flush();
         bs >> joinTypes[i];
         bs >> tmp8;
         typelessJoin[i] = (bool)tmp8;
@@ -399,6 +401,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
           }
         }
       }
+      std::cout << std::endl;
 
       if (hasJoinFEFilters)
       {
@@ -863,14 +866,16 @@ int BatchPrimitiveProcessor::endOfJoiner()
       for (uint j = 0; j < processorThreads; ++j)
         if (!tJoiners[i] || !tJoiners[i][j])
         {
-          std::cout << "EOF1 " << i << " " << j << std::endl;
+          std::cout << "EOF1 " << i << " " << j << " ";
+          cout.flush();
           return -1;
         }
         else
           currentSize += tJoiners[i][j]->size();
       if (currentSize != tJoinerSizes[i])
       {
-        std::cout << "EOF2 " << i << std::endl;
+        std::cout << "EOF2 " << i << " " << currentSize << " " << tJoinerSizes[i] << " ";
+        cout.flush();
         return -1;
       }
     }

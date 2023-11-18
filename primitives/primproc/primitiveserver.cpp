@@ -1529,13 +1529,15 @@ struct BPPHandler
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-
+    std::cout << "EOJ " << uniqueID;
+    cout.flush();
     for (i = 0; i < bppv->get().size(); i++)
     {
       err = bppv->get()[i]->endOfJoiner();
 
       if (err == -1)
       {
+        std::cout << std::endl;
         if (posix_time::second_clock::universal_time() > dieTime)
         {
           cout << "LastJoiner: job for id " << uniqueID
@@ -1546,6 +1548,7 @@ struct BPPHandler
           return -1;
       }
     }
+    std::cout << " finished" << std::endl;
 
     /* Note: some of the duplicate/run/join sync was moved to the BPPV class to do
     more intelligent scheduling.  Once the join data is received, BPPV will
