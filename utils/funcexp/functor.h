@@ -54,6 +54,11 @@ namespace funcexp
 typedef std::vector<execplan::SPTP> FunctionParm;
 
 /** @brief Func class
+ *
+ * @desc IMPORTANT: functions are pure transformers, they should
+ * not have state shared between invocations. This is so because
+ * functions' objects are, essentially, singletons and the same
+ * objects will be used in diffeent threads.
  */
 class Func
 {
