@@ -8173,23 +8173,31 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
         SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
-        for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-        {
-          if (sc)
+	if (sc)
+	{
+	  bool found = false;
+          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (sc->sameColumn(gwi.returnedCols[j].get()))
             {
               sc->orderPos(j);
+	      found = true;
               break;
             }
-            else if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
+	  }
+          for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
+          {
+            if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
             {
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
             }
           }
-          else
+	}
+	else
+	{
+          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
             {
@@ -8198,7 +8206,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-        }
+	}
 
         if (!rc)
         {
@@ -9920,7 +9928,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             }
           }
 
-          srcp->orderPos(groupcol->counter - 1);
+	  srcp->orderPos(groupcol->counter - 1);
           gwi.groupByCols.push_back(srcp);
           continue;
         }
