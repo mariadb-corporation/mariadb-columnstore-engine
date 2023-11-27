@@ -804,9 +804,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   trigger: {
     event: [event],
     branch: [branch],
-  } + (if event == 'cron' then {
-         cron: ['nightly-' + std.strReplace(branch, '.', '-')],
-       } else {}),
+  },
+  //  + (if event == 'cron' then {
+  //        cron: ['nightly-' + std.strReplace(branch, '.', '-')],
+  //      } else {}),
 };
 
 local FinalPipeline(branch, event) = {
