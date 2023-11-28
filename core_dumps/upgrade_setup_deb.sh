@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../build/utils.sh
+source ./utils.sh
 
 set -xeuo pipefail
 
@@ -47,7 +47,8 @@ bash -c "./setup-repo.sh"
 #       Z     : start a shell to examine the situation
 #  The default action is to keep your current version.
 
-# rm to escape halt on interactive question
+# the -o options are used to make choise of keep your currently-installed version without interactive prompt
+
 apt-get --yes --with-new-pkgs -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
 
 UPGRADED_VERSION=$(mariadb -e "select @@version;")
