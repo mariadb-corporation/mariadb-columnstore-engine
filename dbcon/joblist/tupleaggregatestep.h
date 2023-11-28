@@ -32,6 +32,64 @@ namespace joblist
 // forward reference
 struct JobInfo;
 
+struct cmpTuple
+{
+  bool operator()(boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> a,
+                  boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> b) const
+  {
+    uint32_t keya = boost::get<0>(a);
+    uint32_t keyb = boost::get<0>(b);
+    int opa;
+    int opb;
+    mcsv1sdk::mcsv1_UDAF* pUDAFa;
+    mcsv1sdk::mcsv1_UDAF* pUDAFb;
+
+    // If key is less than
+    if (keya < keyb)
+      return true;
+    if (keya == keyb)
+    {
+      // test Op
+      opa = boost::get<1>(a);
+      opb = boost::get<1>(b);
+      if (opa < opb)
+        return true;
+      if (opa == opb)
+      {
+        // look at the UDAF object
+        pUDAFa = boost::get<2>(a);
+        pUDAFb = boost::get<2>(b);
+        if (pUDAFa < pUDAFb)
+          return true;
+        if (pUDAFa == pUDAFb)
+        {
+          std::vector<uint32_t>* paramKeysa = boost::get<3>(a);
+          std::vector<uint32_t>* paramKeysb = boost::get<3>(b);
+          if (paramKeysa == NULL || paramKeysb == NULL)
+            return false;
+          if (paramKeysa->size() < paramKeysb->size())
+            return true;
+          if (paramKeysa->size() == paramKeysb->size())
+          {
+            for (uint64_t i = 0; i < paramKeysa->size(); ++i)
+            {
+              if ((*paramKeysa)[i] < (*paramKeysb)[i])
+                return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+};
+
+// The AGG_MAP type is used to maintain a list of aggregate functions in order to
+// detect duplicates. Since all UDAF have the same op type (ROWAGG_UDAF), we add in
+// the function pointer in order to ensure uniqueness.
+using AGG_MAP =
+    map<boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*>, uint64_t, cmpTuple>;
+
 /** @brief class TupleAggregateStep
  *
  */
@@ -105,6 +163,13 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   void pruneAuxColumns();
   void formatMiniStats();
   void printCalTrace();
+  template <class GroupByMap>
+  static bool tryToFindEqualFunctionColumnByTupleKey(JobInfo& jobInfo, GroupByMap& groupByMap,
+                                                     const uint32_t tupleKey, uint32_t& foundTypleKey);
+  // This functions are workaround for the function above. For some reason different parts of the code with same
+  // semantics use different containers.
+  static uint32_t getTupleKeyFromTuple(const boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*>& tuple);
+  static uint32_t getTupleKeyFromTuple(uint32_t key);
 
   boost::shared_ptr<execplan::CalpontSystemCatalog> fCatalog;
   uint64_t fRowsReturned;
@@ -226,4 +291,3 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-
