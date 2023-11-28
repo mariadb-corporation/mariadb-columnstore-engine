@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../build/utils.sh
+source ./utils.sh
 
 set -xeuo pipefail
 
@@ -11,13 +11,12 @@ LINK="$4"
 UPGRADE_TOKEN="$5"
 
 yum clean all
-#rm -rf /var/cache/dnf/*
 yum install -y wget which procps-ng diffutils rsyslog
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup
 chmod +x mariadb_es_repo_setup
 bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools --skip-check-installed"
-dnf repo-pkgs mariadb-es-main list
-dnf -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
+yum repo-pkgs mariadb-es-main list
+yum -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
 
 systemctl start mariadb
 systemctl start mariadb-columnstore
@@ -29,8 +28,8 @@ bash -c "./upgrade_verify.sh"
 
 bash -c "./setup-repo.sh"
 
-dnf repo-pkgs repo list
-dnf -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
+yum repo-pkgs repo list
+yum -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
 
 UPGRADED_VERSION=$(mariadb -e "select @@version;")
 

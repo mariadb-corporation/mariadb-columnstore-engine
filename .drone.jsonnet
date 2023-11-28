@@ -68,31 +68,31 @@ local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,
 
 local upgrade_test_lists = {
   "centos7":  {
-                "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
               },
   "rockylinux8":  {
                     "arm64": ["10.6.4-1", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-                    "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                    "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                   },
   "rockylinux9":  {
-                    "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-                    "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                    "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+                    "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                   },
   "debian11": {
-                "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-                "amd64": ["10.6.5-2", "10.6.7-3", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+                "amd64": ["10.6.5-2", "10.6.7-3", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
               },
   "debian12": {
-    "arm64": ["10.6.15-10"],
-    "amd64": ["10.6.15-10"]
+    "arm64": [],
+    "amd64": []
   },
   "ubuntu20.04": {
-                   "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-                   "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                   "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+                   "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                  },
   "ubuntu22.04": {
-                   "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-                   "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"]
+                   "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+                   "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                  },
 };
 
@@ -250,6 +250,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     execInnerDocker('mkdir core', dockerImage),
     execInnerDocker('chmod 777 core', dockerImage),
     'docker cp core_dumps/. ' + dockerImage  +  ':/',
+    'docker cp build/utils.sh ' + dockerImage  +  ':/',
     'docker cp setup-repo.sh ' + dockerImage  +  ':/',
     if (do_setup) then execInnerDocker('/setup-repo.sh', dockerImage),
     execInnerDocker(installRpmDeb(pkg_format,
@@ -345,7 +346,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
        then execInnerDocker('bash -c "./upgrade_setup_rpm.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
                              dockerImage('upgrade') + version),
       if (std.split(platform, ':')[0] == 'centos')
-       then execInnerDocker('bash -c "./upgrade_setup_cent.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
+       then execInnerDocker('bash -c "./upgrade_setup_rpm.sh '+ version + ' ' + result + ' ' + arch + ' ' + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
                              dockerImage('upgrade') + version),
     ],
   },
@@ -732,8 +733,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'git config cmake.update-submodules no',
                'rm -rf storage/columnstore/columnstore',
                'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
-               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-10.1-kvm-rpm-centos74-amd64.rpm',
-               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3-amd64.rpm',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-10.1.kvm-rpm-centos74-amd64.rpm',
+               if (std.split(platform, ':')[0] == 'centos') then 'wget -P /mdb/ https://cspkg.s3.amazonaws.com/MariaDB-Compat/MariaDB-shared-5.3.amd64.rpm',
              ],
            },
            {
@@ -846,8 +847,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
          [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         [pipeline.upgradelog] +
-         [pipeline.publish('upgradelog')] +
+         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
