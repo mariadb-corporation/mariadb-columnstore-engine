@@ -425,6 +425,8 @@ class RowAggregation : public messageqcpp::Serializeable
 
   void clearRollup() { fRollupFlag = false; }
 
+  bool hasRollup() const { return fRollupFlag; }
+
   /** @brief Define content of data to be joined
    *
    *    This method must be call after setInputOutput() for PM hashjoin case.
