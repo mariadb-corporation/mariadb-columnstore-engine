@@ -1495,7 +1495,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, false));
+  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, jobInfo.hasRollup));
   rowAgg->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRG);
   aggregators.push_back(rowAgg);
@@ -5502,7 +5502,6 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
           for (uint32_t i = 0; i < fNumOfBuckets; i++)
           {
             fAggregators[i].reset(fAggregator->clone());
-            fAggregators[i]->clearRollup();
             fAggregators[i]->setInputOutput(fRowGroupIn, &fRowGroupOuts[i]);
           }
         }
@@ -5556,7 +5555,19 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
               // The key is the groupby columns, which are the leading columns.
               // TBD This approach could potential
               // put all values in on bucket.
-              uint64_t hash = rowgroup::hashRow(rowIn, hashLens[0] - 1);
+	      // The fAggregator->hasRollup() is true when we perform one-phase
+	      // aggregation and also are doing subtotals' computations.
+	      // Subtotals produce new keys whose hash values may not be in
+	      // the processing bucket. Consider case for key tuples (1,2) and (1,3).
+	      // Their subtotals's keys will be (1, NULL) and (1, NULL)
+	      // but they will be left in their processing buckets and never
+	      // gets aggregated properly.
+	      // Due to this, we put all rows into the same bucket 0 when perfoming
+	      // single-phase aggregation with subtotals.
+	      // For all other cases (single-phase without subtotals and two-phase
+	      // aggregation with and without subtotals) fAggregator->hasRollup() is false.
+	      // In these cases we have full parallel processing as expected.
+              uint64_t hash = fAggregator->hasRollup() ? 0 : rowgroup::hashRow(rowIn, hashLens[0] - 1);
               int bucketID = hash % fNumOfBuckets;
               rowBucketVecs[bucketID][0].emplace_back(rowIn.getPointer(), hash);
               rowIn.nextRow();

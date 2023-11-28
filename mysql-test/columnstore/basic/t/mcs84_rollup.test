@@ -42,6 +42,9 @@ SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
 --sorted_result
 SELECT country, genre, SUM(sales) FROM booksales GROUP BY country, genre WITH ROLLUP;
 
+--sorted_result
+SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
+
 CREATE TABLE three_cols ( key1 INTEGER, key2 INTEGER, value DECIMAL(38)) ENGINE=COLUMNSTORE;
 
 INSERT INTO three_cols(key1, key2, value) VALUES
