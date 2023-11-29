@@ -33,7 +33,7 @@ optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore 
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
-optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
@@ -45,6 +45,8 @@ optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SK
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
 optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false
+optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 
 source $( optparse.build )
 
@@ -141,6 +143,7 @@ stop_service()
     message "Stopping MariaDB services"
     systemctl stop mariadb
     systemctl stop mariadb-columnstore
+    systemctl stop mcs-storagemanager
 }
 
 check_service()
@@ -170,6 +173,17 @@ start_service()
     check_service mcs-writeengineserver
 }
 
+start_storage_manager_if_needed()
+{
+  if [[ $CLOUD_STORAGE_ENABLED = true ]]; then
+    export MCS_USE_S3_STORAGE=1;
+    message_split
+    message "Starting Storage Manager service"
+    systemctl start mcs-storagemanager
+    check_service mcs-storagemanager
+  fi
+}
+
 clean_old_installation()
 {
     message_split
@@ -177,8 +191,7 @@ clean_old_installation()
     rm -rf /var/lib/columnstore/data1/*
     rm -rf /var/lib/columnstore/data/
     rm -rf /var/lib/columnstore/local/
-    rm -f /var/lib/columnstore/storagemanager/storagemanager-lock
-    rm -f /var/lib/columnstore/storagemanager/cs-initialized
+    rm -rf /var/lib/columnstore/storagemanager/*
     rm -rf /var/log/mariadb/columnstore/*
     rm -rf /tmp/*
     rm -rf $REPORT_PATH
@@ -493,6 +506,8 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     ldconfig
 
+    start_storage_manager_if_needed
+
     message "Running columnstore-post-install"
     mkdir -p /var/lib/columnstore/local
     columnstore-post-install --rpmmode=install
@@ -533,7 +548,9 @@ generate_svgs()
     fi
 }
 
-disable_git_restore_frozen_revision
+if [[ $DO_NOT_FREEZE_REVISION = false ]] ; then
+    disable_git_restore_frozen_revision
+fi
 
 select_branch
 
