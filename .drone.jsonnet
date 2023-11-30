@@ -219,6 +219,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   ] else [
     'test000.sh',
     'test001.sh',
+    'test500.sh',
   ],
 
   local mdb_server_versions = upgrade_test_lists[result][arch],
