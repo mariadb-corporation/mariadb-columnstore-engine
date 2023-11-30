@@ -201,8 +201,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   ] else [
     "basic",
     "bugfixes"
-  ]
-
+  ],
 
   local regression_tests = if (event == 'cron') then [
     'test000.sh',
