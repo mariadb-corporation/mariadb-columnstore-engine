@@ -189,6 +189,21 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
   },
 
+  local mtr_tests = if (event == 'cron') then [
+    "basic",
+    "bugfixes",
+    "devregression",
+    "autopilot",
+    "extended",
+    "multinode",
+    "oracle",
+    "1pmonly"
+  ] else [
+    "basic",
+    "bugfixes"
+  ]
+
+
   local regression_tests = if (event == 'cron') then [
     'test000.sh',
     'test001.sh',
@@ -375,43 +390,43 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
     },
     commands: [
-      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
-      + prepareTestStage('mtr$${DRONE_BUILD_NUMBER}', pkg_format, result, true) + [
-      installEngine(dockerImage("mtr"), pkg_format),
-      'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
-      execInnerDocker('chown -R mysql:mysql ' + mtr_path, dockerImage("mtr")),
-      // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
-      execInnerDocker("bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'", dockerImage('mtr')),
-      execInnerDocker('systemctl daemon-reload', dockerImage("mtr")),
-      execInnerDocker('systemctl start mariadb', dockerImage("mtr")),
-      execInnerDocker('mariadb -e "create database if not exists test;"', dockerImage("mtr")),
-      execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("mtr")),
+      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target'
+      ] + prepareTestStage('mtr$${DRONE_BUILD_NUMBER}', pkg_format, result, true) + [
+        installEngine(dockerImage("mtr"), pkg_format),
+        'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
+        execInnerDocker('chown -R mysql:mysql ' + mtr_path, dockerImage("mtr")),
+        // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
+        execInnerDocker("bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'", dockerImage('mtr')),
+        execInnerDocker('systemctl daemon-reload', dockerImage("mtr")),
+        execInnerDocker('systemctl start mariadb', dockerImage("mtr")),
+        execInnerDocker('mariadb -e "create database if not exists test;"', dockerImage("mtr")),
+        execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("mtr")),
 
-      // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
+        // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
+        //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
+        //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
+        //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
+        // aaaa
+        // delay mtr for manual debugging on live instance
+        'sleep $${MTR_DELAY_SECONDS:-1s}',
+        'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
+        if (event == 'custom' || event == 'cron') then
+          execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
+                          dockerImage('mtr')),
+        if (event == 'custom' || event == 'cron') then
+          execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
+                          dockerImage('mtr')),
 
-      // delay mtr for manual debugging on live instance
-      'sleep $${MTR_DELAY_SECONDS:-1s}',
-      'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
-      if (event == 'custom' || event == 'cron') then
-        execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
-                        dockerImage('mtr')),
-      if (event == 'custom' || event == 'cron') then
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
-                        dockerImage('mtr')),
-
-      if (event == 'cron') then
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
-                         + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
-                         dockerImage('mtr')) + '"'
-                         else
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
-                        dockerImage('mtr')),
-    ],
+        if (event == 'cron') then
+          execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
+                          ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
+                          + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
+                          dockerImage('mtr')) + '"'
+                          else
+          execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
+                          ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
+                          dockerImage('mtr')),
+      ],
   },
   mtrlog:: {
     name: 'mtrlog',
@@ -435,7 +450,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   prepare_regression:: {
     name: 'prepare regression',
-    depends_on: [ 'publish pkg', 'publish cmapi build'],
+    depends_on: [ 'smoke','publish pkg', 'publish cmapi build'],
     when: {
       status: ['success', 'failure'],
     },
@@ -853,7 +868,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
-         [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+         //[pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+         [pipeline.regression(regression_tests[i],'prepare regression') for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
