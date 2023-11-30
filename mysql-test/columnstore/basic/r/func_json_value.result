@@ -48,4 +48,34 @@ json_text	$.key3	json_value	json_query
 {"key1":123, "key2":"[1]"}	$.key3	NULL	NULL
 DROP TABLE t2;
 DROP TABLE t1;
+CREATE TABLE zu (hu TEXT) ENGINE = COLUMNSTORE;
+INSERT INTO zu(hu) VALUES ('{}'), (NULL), ('{ "": "huh", "10001" : "10001", "10002" : "10001", "10003" : "10001", "10004" : "10001", "10005" : "10001", "10006" : "10001", "10007" : "10001", "10008" : "10001", "10009" : "10001", "10010" : "10001", "10011" : "10001", "10012" : "10001", "10013" : "10001", "10014" : "10001", "10015" : "10001", "10016" : "10001", "10017" : "10001", "10018" : "10001", "10019" : "10001", "10020" : "10001", "buga" : ""}');
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+INSERT INTO zu(hu) SELECT hu FROM zu;
+SELECT COUNT(*) FROM zu;
+COUNT(*)
+3145728
+SELECT COUNT(*) FROM zu wHERE
+JSON_QUERY(hu, '$.buga') IS NOT NULL
+AND     JSON_QUERY(hu, '$.zhuga') IS NULL;
+COUNT(*)
+0
 DROP DATABASE json_value_db;
