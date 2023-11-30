@@ -549,7 +549,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   regressionlog:: {
     name: 'regressionlog',
-    depends_on: [regression_tests[std.length(regression_tests) - 1]],
+    //depends_on: [regression_tests[std.length(regression_tests) - 1]],
+    depends_on: regression_tests,
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
