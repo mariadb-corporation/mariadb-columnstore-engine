@@ -34,6 +34,8 @@ usr/bin/mariadb-columnstore-start.sh
 usr/bin/mariadb-columnstore-stop.sh
 usr/bin/mcs-savebrm.py
 usr/bin/mcs-loadbrm.py
+usr/bin/mcs_parquet_ddl
+usr/bin/mcs_parquet_gen
 usr/bin/mcs-stop-controllernode.sh
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig

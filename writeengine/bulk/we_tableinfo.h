@@ -30,6 +30,9 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/uuid/uuid.hpp>
 
+#include <arrow/api.h>
+#include <parquet/arrow/reader.h>
+
 #include <libmarias3/marias3.h>
 
 #include "we_type.h"
@@ -170,22 +173,25 @@ class TableInfo : public WeUIDGID
   oam::OamCache* fOamCachePtr;              // OamCache: ptr is copyable
   boost::uuids::uuid fJobUUID;              // Job UUID
   std::vector<BRM::LBID_t> fDictFlushBlks;  // dict blks to be flushed from cache
-
+  
+  std::shared_ptr<arrow::RecordBatchReader> fParquetReader;   // Batch reader to read batches of data
+  std::unique_ptr<parquet::arrow::FileReader> fReader;        // Reader to read parquet file
   //--------------------------------------------------------------------------
   // Private Functions
   //--------------------------------------------------------------------------
 
-  int changeTableLockState();            // Change state of table lock to cleanup
-  void closeTableFile();                 // Close current tbl file; free buffer
-  void closeOpenDbFiles();               // Close DB files left open at job's end
-  int confirmDBFileChanges();            // Confirm DB file changes (on HDFS)
-  void deleteTempDBFileChanges();        // Delete DB temp swap files (on HDFS)
-  int finishBRM();                       // Finish reporting updates for BRM
-  void freeProcessingBuffers();          // Free up Processing Buffers
-  bool isBufferAvailable(bool report);   // Is tbl buffer available for reading
-  int openTableFile();                   // Open data file and set the buffer
-  void reportTotals(double elapsedSec);  // Report summary totals
-  void sleepMS(long int ms);             // Sleep method
+  int changeTableLockState();                       // Change state of table lock to cleanup
+  void closeTableFile();                            // Close current tbl file; free buffer
+  void closeOpenDbFiles();                          // Close DB files left open at job's end
+  int confirmDBFileChanges();                       // Confirm DB file changes (on HDFS)
+  void deleteTempDBFileChanges();                   // Delete DB temp swap files (on HDFS)
+  int finishBRM();                                  // Finish reporting updates for BRM
+  void freeProcessingBuffers();                     // Free up Processing Buffers
+  bool isBufferAvailable(bool report);              // Is tbl buffer available for reading
+  int openTableFileParquet(int64_t &totalRowsParquet);  // Open parquet data file and set batch reader for each buffer
+  int openTableFile();                              // Open data file and set the buffer
+  void reportTotals(double elapsedSec);             // Report summary totals
+  void sleepMS(long int ms);                        // Sleep method
   // Compare column HWM with the examplar HWM.
   int compareHWMs(const int smallestColumnId, const int widerColumnId, const uint32_t smallerColumnWidth,
                   const uint32_t widerColumnWidth, const std::vector<DBRootExtentInfo>& segFileInfo,
