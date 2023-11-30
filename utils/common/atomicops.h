@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sched.h>
+#include <atomic>
 
 /*
 This is an attempt to wrap the differneces between Windows and Linux around atomic ops.
@@ -90,6 +91,17 @@ inline void atomicZero(volatile T* mem)
 inline void atomicYield()
 {
   sched_yield();
+}
+
+// This f assumes decrement is smaller than minuend.
+template <typename T>
+inline void atomicSubstitute(typename std::atomic<T>& minuend, T decrement)
+{
+  T expected = minuend.load();
+  do
+  {
+    expected = minuend.load();
+  } while (!minuend.compare_exchange_weak(expected, expected - decrement));
 }
 
 }  // namespace atomicops
