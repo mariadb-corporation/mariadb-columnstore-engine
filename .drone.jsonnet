@@ -868,7 +868,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
          //[pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
-         [pipeline.regression(regression_tests[i],'prepare regression') for i in indexes(regression_tests)] +
+         [pipeline.regression(regression_tests[i] for i in indexes(regression_tests), 'prepare regression' ) ] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
