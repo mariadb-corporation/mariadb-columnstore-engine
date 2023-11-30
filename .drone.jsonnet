@@ -435,7 +435,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   prepare_regression:: {
     name: 'prepare regression',
-    depends_on: ['mtr', 'publish pkg', 'publish cmapi build'],
+    depends_on: [ 'publish pkg', 'publish cmapi build'],
     when: {
       status: ['success', 'failure'],
     },
