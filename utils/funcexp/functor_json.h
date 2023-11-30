@@ -405,7 +405,7 @@ class Func_json_value : public Func_Str, public JSONPathWrapper
 
 /** @brief Func_json_query class
  */
-class Func_json_query : public Func_Str, public JSONPathWrapper
+class Func_json_query : public Func_Str
 {
  public:
   Func_json_query() : Func_Str("json_query")
@@ -413,11 +413,6 @@ class Func_json_query : public Func_Str, public JSONPathWrapper
   }
   virtual ~Func_json_query()
   {
-  }
-
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
-  {
-    return je->checkAndGetComplexVal(res, error);
   }
 
   execplan::CalpontSystemCatalog::ColType operationType(
