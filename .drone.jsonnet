@@ -202,7 +202,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     "basic",
     "bugfixes"
   ],
-
+  // cccc
   local regression_tests = if (event == 'cron') then [
     'test000.sh',
     'test001.sh',
@@ -379,8 +379,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       status: ['success', 'failure'],
     },
   },
-  mtr:: {
-    name: 'mtr',
+  mtr(name, test_suite) {
+    name: name,
     depends_on: ['smoke'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
@@ -405,7 +405,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
         //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
         //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
         //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
-        // aaaa
+   
         // delay mtr for manual debugging on live instance
         'sleep $${MTR_DELAY_SECONDS:-1s}',
         'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
@@ -416,15 +416,17 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
           execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
                           dockerImage('mtr')),
 
-        if (event == 'cron') then
-          execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                          ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
-                          + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
-                          dockerImage('mtr')) + '"'
-                          else
-          execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                          ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
-                          dockerImage('mtr')),
+        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/' + test_suite , dockerImage('mtr')),
+        //if (event == 'cron') then
+        //  execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
+        //                  ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
+        //                  + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
+        //                  dockerImage('mtr')) + '"'
+        //else
+        //  execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
+        //                  ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=
+        //                  columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
+        //                  dockerImage('mtr')),
       ],
   },
   mtrlog:: {
@@ -865,11 +867,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.publish('cmapilog')] +
          [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
-         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
+         // (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
+         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr(mtr_tests[i], ['smoke'] ) for i in indexes(mtr_tests) ] +
+         // bbbb     
+
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
          //[pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
-         [pipeline.regression(regression_tests[i], ['prepare regression'] ) for i in indexes(regression_tests) ] +
+         [pipeline.regression(regression_tests[i], [ if (i == 1) then 'test000.sh' else 'prepare regression'] ) for i in indexes(regression_tests) ] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
