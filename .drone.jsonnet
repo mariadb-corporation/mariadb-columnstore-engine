@@ -380,7 +380,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
   },
   mtr(name, test_suite):: {
-    name: name,
+    name: 'mtr.' + name,
     depends_on: ['smoke'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
@@ -865,6 +865,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
+         // TODO: create new images that run the tests, as oppose to all tests on 1 image
          [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          // (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
