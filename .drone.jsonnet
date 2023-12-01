@@ -379,7 +379,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       status: ['success', 'failure'],
     },
   },
-  mtr(name, test_suite) {
+  mtr(name, test_suite):: {
     name: name,
     depends_on: ['smoke'],
     image: 'docker:git',
