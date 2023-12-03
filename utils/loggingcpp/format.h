@@ -40,16 +40,27 @@ void formatOne(std::string& errMsg, Iter iter, uint32_t position)
     if (index == std::string::npos)
       break;
 
+    size_t advance_length;
+ 
+    // below we can replace token with longer or shorter string.
+    // we should compute exact replacement length to prevent
+    // 1) recognizing token inside a replacement
+    // 2) not skipping token recognition if replacement is shorter.i
+    // regarding 1: the string is "%1%" and replacement is "aaaaa %1%".
+    // regarding 2: the string is "%1% %1%" and replacement is empty string.
+ 
     if constexpr (std::is_same_v<T, std::string>)
     {
+      advance_length = arg.length();
       errMsg.replace(index, token.length(), arg);
     }
     else
     {
+      advance_length = std::to_string(arg).length();
       errMsg.replace(index, token.length(), std::to_string(arg));
     }
 
-    index += token.length();
+    index += advance_length;
   }
 }
 
