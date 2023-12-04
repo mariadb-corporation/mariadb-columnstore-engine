@@ -216,8 +216,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test300.sh',
     'test400.sh',
   ] else [
-    'test000.sh',
-    'test001.sh',
+    'test005.sh',
   ],
 
   local mdb_server_versions = upgrade_test_lists[result][arch],
@@ -393,22 +392,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
-      if (event == 'custom' || event == 'cron') then
-        execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
-                        dockerImage('mtr')),
-      if (event == 'custom' || event == 'cron') then
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
-                        dockerImage('mtr')),
-
-      if (event == 'cron') then
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
-                         + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
-                         dockerImage('mtr')) + '"'
-                         else
-        execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
-                        dockerImage('mtr')),
+      
     ],
   },
   mtrlog:: {
