@@ -311,6 +311,21 @@ class RowAggStorage
   static constexpr uint8_t INIT_INFO_HASH_SHIFT{0};
   static constexpr uint16_t MAX_INMEMORY_GENS{4};
 
+  // This is SplitMix64 implementation borrowed from here
+  // https://thompsonsed.co.uk/random-number-generators-for-c-performance-tested
+  inline uint64_t nextRandom()
+  {
+    uint64_t z = (fRandom += UINT64_C(0x9E3779B97F4A7C15));
+    z = (z ^ (z >> 30)) * UINT64_C(0xBF58476D1CE4E5B9);
+    z = (z ^ (z >> 27)) * UINT64_C(0x94D049BB133111EB);
+    return z ^ (z >> 31);
+  }
+
+  inline uint64_t nextRandDistib()
+  {
+    return nextRandom() % 100;
+  }
+
   struct Data
   {
     RowPosHashStoragePtr fHashes;
@@ -349,9 +364,7 @@ class RowAggStorage
   bool fInitialized{false};
   rowgroup::RowGroup* fRowGroupOut;
   rowgroup::RowGroup* fKeysRowGroup;
-  std::random_device fRD;
-  std::mt19937 fRandGen;
-  std::uniform_int_distribution<uint8_t> fRandDistr;
+  uint64_t fRandom = 0xc4ceb9fe1a85ec53ULL;  // initial integer to set PRNG up
 };
 
 }  // namespace rowgroup
