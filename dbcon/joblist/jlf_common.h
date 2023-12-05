@@ -93,6 +93,20 @@ struct TupleInfo
   uint32_t csNum;  // For collations
 };
 
+// This struct holds information about `FunctionColumn`.
+struct FunctionColumnInfo
+{
+  // Function argument.
+  uint64_t associatedColumnOid;
+  // Function name.
+  std::string functionName;
+
+  FunctionColumnInfo(uint64_t colOid, std::string funcName)
+   : associatedColumnOid(colOid), functionName(funcName)
+  {
+  }
+};
+
 // for compound join
 struct JoinData
 {
@@ -383,6 +397,8 @@ struct JobInfo
   std::map<std::pair<uint32_t, uint32_t>, int64_t> joinEdgesToRestore;
   // Represents a pair of `table` to be on a large side and weight associated with that table.
   std::unordered_map<uint32_t, int64_t> tablesForLargeSide;
+  // Represents a pair of `tupleId` and `FunctionColumnInfo`.
+  std::unordered_map<uint32_t, FunctionColumnInfo> functionColumnMap;
 
  private:
   // defaults okay
