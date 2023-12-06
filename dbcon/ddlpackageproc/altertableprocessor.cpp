@@ -1899,7 +1899,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
       CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   execplan::CalpontSystemCatalog::TableName tableName;
-  tableName.schema = fTableName.fSchema;
+  tableName.schema = ataRenameTable.fQualifiedName->fSchema;
   tableName.table = ataRenameTable.fQualifiedName->fName;
   execplan::CalpontSystemCatalog::ROPair roPair;
   roPair.objnum = 0;
@@ -1924,6 +1924,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   bytestream << fTableName.fSchema;
   bytestream << fTableName.fName;
   bytestream << ataRenameTable.fQualifiedName->fName;
+  bytestream << ataRenameTable.fQualifiedName->fSchema;
 
   std::string errorMsg;
   uint16_t dbRoot;
@@ -1997,6 +1998,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   bytestream << fTableName.fSchema;
   bytestream << fTableName.fName;
   bytestream << ataRenameTable.fQualifiedName->fName;
+  bytestream << ataRenameTable.fQualifiedName->fSchema;
   sysOid = 1021;
   // Find out where syscolumn is
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);

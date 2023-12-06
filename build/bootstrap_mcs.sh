@@ -4,6 +4,7 @@
 # - the server's source code is two directories above the MCS engine source.
 # - the script is to be run under root.
 
+set -o pipefail
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
 
@@ -44,7 +45,7 @@ optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=D
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false
+optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 
@@ -68,6 +69,8 @@ CONFIG_DIR="/etc/my.cnf.d"
 if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
     CONFIG_DIR="/etc/mysql/mariadb.conf.d"
 fi
+
+export CLICOLOR_FORCE=1
 
 
 disable_git_restore_frozen_revision()
@@ -323,7 +326,8 @@ build()
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
     message_split
-    ${CMAKE_BIN_NAME} --build . -j $CPUS && \
+
+    ${CMAKE_BIN_NAME} --build . -j $CPUS | onelinearizator && \
     message "Installing silently" &&
     ${CMAKE_BIN_NAME} --install . | spinner 30
 
