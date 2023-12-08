@@ -250,7 +250,8 @@ check_package_managers() {
 check_operating_system() {
 
     distro_info=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
-    version_id=$(grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}' |  awk -F. '{print $1}')
+    version_id_exact=$( grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
+    version_id=$( echo "$version_id_exact" | awk -F. '{print $1}')
 
     echo "Distro: $distro_info"
     echo "Version: $version_id"
@@ -261,13 +262,13 @@ check_operating_system() {
             distro="${distro_info}${version_id}"
             ;;
         debian )
-            distro="${distro_info}${version_id}"
+            distro="${distro_info}${version_id_exact}"
             ;;
         rocky )
             distro="rockylinux${version_id}"
             ;;
         ubuntu )
-            distro="${distro_info}${version_id}"
+            distro="${distro_info}${version_id_exact}"
             ;;
         *)  # unknown option
             printf "\ncheck_operating_system: unknown os & version: $distro_info\n"
@@ -471,6 +472,7 @@ enterprise_install() {
     esac
 }
 
+# aaaa
 community_install() {
     
     version=$3 
@@ -710,6 +712,7 @@ add_primary_node_cmapi() {
     fi
 }
 
+# bbb
 dev_install() {
     
     if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
@@ -721,22 +724,42 @@ dev_install() {
     branch="$3"
     build="$4"
     product="10.6-enterprise"
+    if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
+    if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
 
     # Construct URLs
     s3_path="$dronePath/$branch/$build/$product/$arch/$distro"
     replace="https://$dev_drone_key.s3.amazonaws.com/"
     # Use sed to replace the s3 path to create https path
-    yum_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|$replace|")
+    drone_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|$replace|")
     echo "Locations:"
-    echo "RPM: $s3_path"
-    echo "Yum: $yum_http"
+    echo "Bucket: $s3_path"
+    echo "Drone: $drone_http"
     echo "###################################"
     
     check_dev_build_exists
+
+    case $distro_info in
+        centos | rocky )
+            do_dev_yum_install "$@" 
+            ;;
+        ubuntu | debian )
+            do_dev_apt_install "$@" 
+            ;;
+        *)  # unknown option
+            printf "\nos & version not implemented: $distro_info\n"
+            exit 2;
+    esac
     
+
+    add_primary_node_cmapi
+}
+
+do_dev_yum_install() {
+
     echo "[drone]
 name=Drone Repository
-baseurl="$yum_http"
+baseurl="$drone_http"
 gpgcheck=0
 enabled=1
     " > /etc/yum.repos.d/drone.repo
@@ -753,13 +776,75 @@ enabled=1
         exit 1
     fi
 
-    yum install MariaDB-server-*.rpm -y
-    yum install MariaDB-columnstore-engine MariaDB-columnstore-cmapi jq -y
-    systemctl start mariadb
-    systemctl start mariadb-columnstore-cmapi
-    mariadb -e "show status like '%Columnstore%';"
+    # Install MariaDB Server
+    if ! yum install MariaDB-server-*.rpm -y; then
+        printf "\n[!] Failed to install MariaDB-server \n\n"
+        exit 1;
+    fi
 
-    add_primary_node_cmapi
+    # Install Columnstore
+    if ! yum install MariaDB-columnstore-engine -y; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi
+
+     # Install Cmapi
+    if ! yum install MariaDB-columnstore-cmapi jq -y; then
+        printf "\n[!] Failed to install cmapi\n\n"
+        exit 1;
+    else
+        systemctl start mariadb
+        systemctl enable mariadb-columnstore-cmapi
+        systemctl start mariadb-columnstore-cmapi
+        mariadb -e "show status like '%Columnstore%';"
+        sleep 2
+
+        add_primary_node_cmapi
+    fi
+}
+
+do_dev_apt_install() {
+
+    local_deb="/tmp/mdb-packages"
+
+    if [ -d "$local_deb" ]; then rm -rf $local_deb; fi;
+    mkdir -p "$local_deb/$distro"
+    aws s3 cp "${s3_path}" "$local_deb/$distro" --recursive --exclude "mtr-logs/*"  --exclude "unit_logs/*"  --exclude "testErrorLogs*" --exclude "regressionQueries.tgz"
+    cd "$local_deb/$distro"
+    gunzip Packages.gz
+    sudo cp Packages $local_deb
+    echo "deb [trusted=yes] file://$local_deb /" > /etc/apt/sources.list.d/drone.list
+
+    # Install MariaDB
+    apt-get clean
+    apt-get update
+    if ! apt install mariadb-server -y --quiet; then
+        printf "\n[!] Failed to install mariadb-server \n\n"
+        exit 1;
+    fi
+    sleep 2
+    systemctl daemon-reload
+    systemctl enable mariadb
+    systemctl start mariadb
+
+    # Install Columnstore
+    if ! apt install mariadb-plugin-columnstore -y --quiet; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi;
+
+    if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
+        printf "\n[!] Failed to install cmapi \n\n"
+        mariadb -e "show status like '%Columnstore%';"
+    else 
+        systemctl daemon-reload
+        systemctl enable mariadb-columnstore-cmapi
+        systemctl start mariadb-columnstore-cmapi
+        mariadb -e "show status like '%Columnstore%';"
+        sleep 2
+
+        add_primary_node_cmapi
+    fi
 }
 
 do_install() {
