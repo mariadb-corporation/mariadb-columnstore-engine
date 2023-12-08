@@ -472,7 +472,6 @@ enterprise_install() {
     esac
 }
 
-# aaaa
 community_install() {
     
     version=$3 
@@ -712,7 +711,6 @@ add_primary_node_cmapi() {
     fi
 }
 
-# bbb
 dev_install() {
     
     if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
