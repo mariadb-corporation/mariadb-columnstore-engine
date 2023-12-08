@@ -1,4 +1,17 @@
 #!/bin/bash
+/*
+ * Copyright (c) 2020 MariaDB Corporation Ab
+ *
+ * Use of this software is governed by the Business Source License included
+ * in the LICENSE.TXT file and at www.mariadb.com/bsl11.
+ *
+ * Change Date: 2024-07-10
+ *
+ * On the date above, in accordance with the Business Source License, use
+ * of this software will be governed by version 2 or later of the General
+ * Public License.
+ */
+ 
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
 # Version: 3.3
@@ -759,7 +772,7 @@ poll_check_no_active_sql_writes() {
     done
 
     if ! $no_writes; then
-        handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive write operations detected: $active_writes \n"
+        handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive write operations detected: $active_writes \n" true
     fi;
 }
 
@@ -783,7 +796,7 @@ poll_check_no_active_cpimports() {
     done
 
     if ! $no_cpimports; then
-        handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive cpimports\n$active_cpimports \n"
+        handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive cpimports\n$active_cpimports \n" true
     fi;
 }
 
