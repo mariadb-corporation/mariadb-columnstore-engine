@@ -351,7 +351,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   upgradelog:: {
     name: 'upgradelog',
-    depends_on: ['upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions) - 1]],
+    depends_on: std.map(function(p) 'upgrade-test from ' + p, mdb_server_versions),
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
