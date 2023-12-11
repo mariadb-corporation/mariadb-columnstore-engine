@@ -27,7 +27,6 @@
 # 
 ########################################################################
 
-
 start=`date +%s`
 action=$1
 
@@ -49,9 +48,36 @@ print_action_help_text() {
     "
 }
 
+check_operating_system() {
+
+    OPERATING_SYSTEM=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
+    VERSION_EXACT=$(grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
+    VERSION_MAJOR=$(grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}' |  awk -F. '{print $1}')
+
+    # Supported OS
+    case $OPERATING_SYSTEM in
+        centos )
+            return 1;
+            ;;
+        debian )
+            return 1;
+            ;;
+        rocky )
+            return 1;
+            ;;
+        ubuntu )
+            return 1;
+            ;;
+        *)  # unknown option
+            printf "\ncheck_operating_system: unknown os & version: $OPERATING_SYSTEM\n"
+            exit 2;
+    esac   
+}
+
 load_default_backup_variables()
 {
-
+    check_operating_system
+    
     # What directory to store the backups on this machine or the target machine.
     # Consider write permissions of the scp user and the user running this script.
     # Mariadb-backup will use this location as a tmp dir for S3 and remote backups temporarily
@@ -71,6 +97,18 @@ load_default_backup_variables()
     # Name of the bucket to store the columnstore backups
     # Example: "s3://my-cs-backups"
     backup_bucket=""
+
+    # OS specific Defaults
+    case $OPERATING_SYSTEM in
+        centos | rocky )
+            MARIADB_SERVER_CONFIGS_PATH="/etc/my.cnf.d"
+            ;;
+        ubuntu | debian )
+            MARIADB_SERVER_CONFIGS_PATH="/etc/mysql/mariadb.conf.d/"
+            ;;
+        *)  # unknown option
+            handle_failed_dependencies "\nload_default_backup_variables: unknown os & version: $OPERATING_SYSTEM\n";
+    esac  
 
     # Fixed Paths
     CS_CONFIGS_PATH="/etc/columnstore"
@@ -121,7 +159,7 @@ load_default_backup_variables()
     if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
     PM_NUMBER=$(echo "$pm" | tr -dc '0-9')
     if [[ -z $PM_NUMBER ]]; then PM_NUMBER=1; fi;
-    ASSIGNED_DBROOT=$(xmllint --xpath "string(//ModuleDBRootID$PM_NUMBER-1-3)" $CS_CONFIGS_PATH/Columnstore.xml)
+    
     #source_ips=$(grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/columnstore/Columnstore.xml)
     #source_host_names=$(grep "<Node>" /etc/columnstore/Columnstore.xml)
     cmapi_key="$(grep "x-api-key" $CS_CONFIGS_PATH/cmapi_server.conf | awk  '{print $3}' | tr -d "'" )";
@@ -165,6 +203,7 @@ load_default_backup_variables()
         confirm_xmllint_installed
     fi;
     DBROOT_COUNT=$(xmllint --xpath "string(//DBRootCount)" $CS_CONFIGS_PATH/Columnstore.xml)
+    ASSIGNED_DBROOT=$(xmllint --xpath "string(//ModuleDBRootID$PM_NUMBER-1-3)" $CS_CONFIGS_PATH/Columnstore.xml)
 }
 
 parse_backup_variables()
@@ -403,7 +442,7 @@ check_package_managers() {
     fi    
 
     if [ $package_manager == '' ]; then 
-        log_debug_message "[!!] No package manager found: yum or apt must be installed"
+        handle_failed_dependencies "[!!] No package manager found: yum or apt must be installed"
         exit 1;
     fi;
 }
@@ -421,7 +460,7 @@ confirm_xmllint_installed() {
                 install_command="apt install libxml2-utils -y --quiet";
                 ;;
             *)  # unknown option
-                log_debug_message "[!!] package manager not implemented: $package_manager\n"
+                handle_failed_dependencies "[!!] package manager not implemented: $package_manager\n"
                 exit 2;
         esac
 
@@ -477,6 +516,30 @@ confirm_mariadb_backup_installed() {
 
         if ! eval $install_command; then
             handle_failed_dependencies "[!] Failed to install MariaDB-backup\nThis is required."
+            exit 1;
+        fi
+    fi
+}
+
+confirm_pigz_installed() {
+
+    if ! command -v pigz  > /dev/null; then
+        printf "[!] pigz not installed ... attempting auto install\n\n"
+        check_package_managers
+        case $package_manager in
+            yum ) 
+                install_command="yum install pigz -y";
+                ;;
+            apt )
+                install_command="apt install pigz -y --quiet";
+                ;;
+            *)  # unknown option
+                log_debug_message "[!!] package manager not implemented: $package_manager\n"
+                exit 2;
+        esac
+
+        if ! eval $install_command; then
+            handle_failed_dependencies "[!] Failed to install pigz\nThis is required for '-c pigz'"
             exit 1;
         fi
     fi
@@ -593,7 +656,13 @@ validation_prechecks_for_backup()
 
     # Validate compression option
     if [[ -n "$compress_format" ]]; then
-        if [ "$compress_format" != "pigz" ]; then handle_early_exit_on_backup "\n[!!!] Invalid field --compress: $compress_format\n\n" true; fi;
+        case $compress_format in
+            pigz) 
+                confirm_pigz_installed
+                ;;
+            *)  # unknown option
+                handle_early_exit_on_backup "\n[!!!] Invalid field --compress: $compress_format\n\n" true
+        esac
     fi;
 
     # If Remote save - Check ssh works to remote
@@ -1216,10 +1285,10 @@ run_backup()
                 if [[ ! -n "$compress_format" ]]; then
                     printf " - Copying MariaDB Configs...        "
                     mkdir -p $backup_location$today/configs/mysql/$pm/
-                    eval "rsync $additional_rysnc_flags /etc/my.cnf.d/* $backup_location$today/configs/mysql/$pm/ $xtra_cmd_args"
+                    eval "rsync $additional_rysnc_flags $MARIADB_SERVER_CONFIGS_PATH/* $backup_location$today/configs/mysql/$pm/ $xtra_cmd_args"
                     printf " Done\n\n"
                 else
-                    compress_paths+=" /etc/my.cnf.d/*"
+                    compress_paths+=" $MARIADB_SERVER_CONFIGS_PATH/*"
                 fi
             fi
             
@@ -1286,7 +1355,7 @@ run_backup()
             # Backup MariaDB configurations
             if ! $skip_mdb; then
                 printf "[~] Backing up MariaDB configurations... \n"
-                rsync $additional_rysnc_flags /etc/my.cnf.d/* $scp:$backup_location$today/configs/mysql/$pm/
+                rsync $additional_rysnc_flags $MARIADB_SERVER_CONFIGS_PATH/* $scp:$backup_location$today/configs/mysql/$pm/
                 printf "[+] Done - configurations\n"
             fi
 
@@ -1429,9 +1498,9 @@ run_backup()
         if ! $skip_mdb; then
             if [[ ! -n "$compress_format" ]]; then
                 printf " - Syncing MariaDB configurations \n"
-                s3sync /etc/my.cnf.d/ $backup_bucket/$today/configs/mysql/$pm/ "   + /etc/my.cnf.d/\n" "\n\n[!!!] sync failed - try alone and debug\n\n"
+                s3sync $MARIADB_SERVER_CONFIGS_PATH/ $backup_bucket/$today/configs/mysql/$pm/ "   + $MARIADB_SERVER_CONFIGS_PATH/\n" "\n\n[!!!] sync failed - try alone and debug\n\n"
             else
-                compress_paths+="/etc/my.cnf.d"
+                compress_paths+="$MARIADB_SERVER_CONFIGS_PATH"
             fi
         fi
 
@@ -2184,7 +2253,7 @@ run_restore()
                 printf " - Columnstore Configs ...             "
                 rsync $rsync_flags $backup_location$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF
                 rsync $rsync_flags $backup_location$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup
-                rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ /etc/my.cnf.d/
+                rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/
                 if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ; fi;
                 printf " Done\n" 
             fi
@@ -2209,7 +2278,7 @@ run_restore()
             printf " - Columnstore Configs ...             "
             rsync $rsync_flags $backup_location$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF
             rsync $rsync_flags $backup_location$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup  
-            rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ /etc/my.cnf.d/ 
+            rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/ 
             if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ; fi;
             printf " Done\n"
             load_date=$tmp
@@ -2295,7 +2364,7 @@ run_restore()
             s3cp $backup_bucket/$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF 
             s3sync $backup_bucket/$load_date/storagemanager/cache/data$pm_number $cs_cache/data$pm_number/ " - Done cache/data$pm_number/\n"
             s3sync $backup_bucket/$load_date/storagemanager/metadata/data$pm_number $cs_metadata/data$pm_number/ " - Done metadata/data$pm_number/\n"
-            if ! $skip_mdb; then s3sync $backup_bucket/$load_date/configs/mysql/$pm/ /etc/my.cnf.d/ " - Done /etc/my.cnf.d/\n"; fi
+            if ! $skip_mdb; then s3sync $backup_bucket/$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/ " - Done $MARIADB_SERVER_CONFIGS_PATH/\n"; fi
 
             if s3ls "$backup_bucket/$today/storagemanager/journal/data$ASSIGNED_DBROOT" > /dev/null 2>&1; then
                 s3sync $backup_bucket/$load_date/storagemanager/journal/data$pm_number $cs_journal/data$pm_number/ " - Done journal/data$pm_number/\n"
@@ -2323,7 +2392,7 @@ run_restore()
         prefix=$( grep -m 1 "^prefix =" $STORAGEMANGER_CNF | sed "s/\//\\\\\//g");
         if [ ! -z "$prefix" ]; then sed -i "s/$prefix/$target_prefix/g" $STORAGEMANGER_CNF; echo " - Adjusted prefix"; fi;
         chown -R $columnstore_user:$columnstore_user /var/lib/columnstore/
-        chown -R root:root /etc/my.cnf.d/
+        chown -R root:root $MARIADB_SERVER_CONFIGS_PATH/
     
         # Confirm S3 connection works
         if [ $mode == "direct" ]; then echo "[+] Checking S3 Connection ..."; if testS3Connection $xtra_cmd_args; then echo " - S3 Connection passes" ; else handle_early_exit_on_restore "\n[X] S3 Connection issues - retest/configure\n"; fi; fi;
@@ -2592,7 +2661,7 @@ process_dbrm_backup() {
 }
 
 process_backup()
-{
+{   
     load_default_backup_variables;
     parse_backup_variables "$@";
     print_backup_variables;
