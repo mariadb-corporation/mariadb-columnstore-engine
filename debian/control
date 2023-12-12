@@ -8,6 +8,7 @@ Depends: binutils,
          libmariadb3 (= ${server:Version}),
          net-tools,
          python3,
+         procps,
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-columnstore-libs,
