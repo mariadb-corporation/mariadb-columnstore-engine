@@ -837,8 +837,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
                "echo 'for installation run:'",
-               "export OS="+result,
-               "export PACKAGES_URL="+packages_url,
+               "echo 'export OS="+result+"'",
+               "echo 'export PACKAGES_URL="+packages_url+"'",
              ],
            },
          ] +
