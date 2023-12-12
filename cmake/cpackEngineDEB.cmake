@@ -55,13 +55,8 @@ if (EXISTS "/etc/debian_version")
     string(REGEX MATCH "([0-9]+).[0-9]+" DEBIAN "${DEBIAN_VERSION}")
     set(DEBIAN_VERSION_NUMBER "${CMAKE_MATCH_1}")
 endif ()
-if ("${DEBIAN_VERSION_NUMBER}" EQUAL "8")
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "openssl, file, libdbi-perl, rsync, net-tools, libboost-all-dev, libsnappy1, MariaDB-server, python3")
-elseif ("${DEBIAN_VERSION_NUMBER}" EQUAL "9")
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "openssl, file, libdbi-perl, rsync, net-tools, libboost-all-dev, libsnappy1v5, MariaDB-server, python3")
-else()
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "openssl, file, libdbi-perl, libboost-all-dev, rsync, libsnappy1v5, net-tools, MariaDB-server, python3")
-endif ()
+
+SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "openssl, file, libdbi-perl, rsync, libsnappy1v5, net-tools, MariaDB-server, python3, procps")
 
 set(CPACK_DEBIAN_COLUMNSTORE-ENGINE_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/postinst;${CMAKE_CURRENT_SOURCE_DIR}/build/debian/storageEngine/prerm;")
 

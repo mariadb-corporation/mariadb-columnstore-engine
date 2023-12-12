@@ -46,7 +46,7 @@ It is GPL v2 licensed, which means you can use the it free of charge under the
 conditions of the GNU General Public License Version 2 (http://www.gnu.org/licenses/).
 
 MariaDB documentation can be found at https://mariadb.com/kb
-MariaDB bug reports should be submitted through https://jira.mariadb.org 
+MariaDB bug reports should be submitted through https://jira.mariadb.org
 
 ")
 
@@ -71,20 +71,14 @@ IF (EXISTS "/etc/redhat-release")
     string(REGEX MATCH "release ([0-9]+)" CENTOS "${REDHAT_VERSION}")
     set(REDHAT_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
+
 IF (EXISTS "/etc/SuSE-release")
     file (READ "/etc/SuSE-release" SUSE_VERSION)
     string(REGEX MATCH "VERSION = ([0-9]+)" SUSE "${SUSE_VERSION}")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
-if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "MariaDB-columnstore-shared" "snappy" "net-tools" "MariaDB-server" "python3")
-    # Disable auto require as this will also try to pull Boost via RPM
-    SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
-elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
-    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost-devel >= 1.54.0" "libsnappy1" "net-tools" "MariaDB-server" "python3" "jemalloc")
-else ()
-    SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "boost >= 1.53.0" "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc")
-endif()
+
+SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng")
 
 SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storage_engine.sh)
 SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
