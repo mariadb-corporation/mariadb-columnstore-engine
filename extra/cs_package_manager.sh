@@ -192,7 +192,13 @@ do_apt_remove() {
             DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-*
             print_and_delete "/var/lib/mysql/*"
         else
-            apt remove mariadb-* -y
+            if ! apt remove mariadb-columnstore-cmapi -y; then
+                printf "[!!] Failed to remove columnstore \n"
+            fi
+
+            if ! apt remove mariadb-* -y; then
+                printf "[!!] Failed to remove the rest of mariadb \n\n"
+            fi
         fi
     fi
 
@@ -439,7 +445,8 @@ enterprise_install() {
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
-    wget $url ;chmod +x mariadb_es_repo_setup;  
+    curl -LO "$url" -o mariadb_es_repo_setup;
+    chmod +x mariadb_es_repo_setup;  
     if ! bash mariadb_es_repo_setup --token="$enterprise_token" --apply --mariadb-server-version="$version"; then
         printf "\n[!] Failed to apply mariadb_es_repo_setup...\n\n"
         exit 2;
@@ -447,6 +454,8 @@ enterprise_install() {
 
     case $distro_info in
         centos | rocky )
+
+            if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; fi;
 
             if $enterprise_staging; then 
                 sed -i 's/mariadb-es-main/mariadb-es-staging/g' /etc/yum.repos.d/mariadb.repo
@@ -457,6 +466,8 @@ enterprise_install() {
             do_enterprise_yum_install "$@" 
             ;;
         ubuntu | debian )
+        
+            if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; fi;
 
             if $enterprise_staging; then 
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/apt/sources.list.d/mariadb.list
@@ -726,10 +737,8 @@ dev_install() {
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
 
     # Construct URLs
-    s3_path="$dronePath/$branch/$build/$product/$arch/$distro"
-    replace="https://$dev_drone_key.s3.amazonaws.com/"
-    # Use sed to replace the s3 path to create https path
-    drone_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|$replace|")
+    s3_path="$dronePath/$branch/$build/$product/$arch"
+    drone_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|https://${dev_drone_key}.s3.amazonaws.com/|")
     echo "Locations:"
     echo "Bucket: $s3_path"
     echo "Drone: $drone_http"
@@ -739,6 +748,8 @@ dev_install() {
 
     case $distro_info in
         centos | rocky )
+            s3_path="${s3_path}/$distro"
+            drone_http="${drone_http}/$distro"
             do_dev_yum_install "$@" 
             ;;
         ubuntu | debian )
@@ -803,19 +814,16 @@ enabled=1
 
 do_dev_apt_install() {
 
-    local_deb="/tmp/mdb-packages"
-
-    if [ -d "$local_deb" ]; then rm -rf $local_deb; fi;
-    mkdir -p "$local_deb/$distro"
-    aws s3 cp "${s3_path}" "$local_deb/$distro" --recursive --exclude "mtr-logs/*"  --exclude "unit_logs/*"  --exclude "testErrorLogs*" --exclude "regressionQueries.tgz"
-    cd "$local_deb/$distro"
-    gunzip Packages.gz
-    sudo cp Packages $local_deb
-    echo "deb [trusted=yes] file://$local_deb /" > /etc/apt/sources.list.d/drone.list
+    echo "deb [trusted=yes] ${drone_http} ${distro}/" >  /etc/apt/sources.list.d/repo.list
+    cat << EOF > /etc/apt/preferences
+Package: *
+Pin: origin cspkg.s3.amazonaws.com
+Pin-Priority: 1700
+EOF
 
     # Install MariaDB
     apt-get clean
-    apt-get update
+    apt-get update 
     if ! apt install mariadb-server -y --quiet; then
         printf "\n[!] Failed to install mariadb-server \n\n"
         exit 1;
@@ -843,7 +851,60 @@ do_dev_apt_install() {
 
         add_primary_node_cmapi
     fi
+
 }
+
+# For later if we ever add install via RPMs for offline installs
+# do_dev_apt_install_via_rpms() {
+
+#         echo "[drone]
+# name=Drone Repository
+# baseurl="$drone_http"
+# gpgcheck=0
+# enabled=1
+#     " > /etc/yum.repos.d/drone.repo
+
+#     local_deb="/tmp/mdb-packages"
+
+#     if [ -d "$local_deb" ]; then rm -rf $local_deb; fi;
+#     mkdir -p "$local_deb/$distro"
+#     aws s3 cp "${s3_path}" "$local_deb/$distro" --recursive --exclude "mtr-logs/*"  --exclude "unit_logs/*"  --exclude "testErrorLogs*" --exclude "regressionQueries.tgz"
+#     cd "$local_deb/$distro"
+#     gunzip Packages.gz
+#     sudo cp Packages $local_deb
+#     echo "deb [trusted=yes] file://$local_deb /" > /etc/apt/sources.list.d/drone.list
+
+#     # Install MariaDB
+#     apt-get clean
+#     apt-get update 
+#     if ! apt install mariadb-server -y --quiet; then
+#         printf "\n[!] Failed to install mariadb-server \n\n"
+#         exit 1;
+#     fi
+#     sleep 2
+#     systemctl daemon-reload
+#     systemctl enable mariadb
+#     systemctl start mariadb
+
+#     # Install Columnstore
+#     if ! apt install mariadb-plugin-columnstore -y --quiet; then
+#         printf "\n[!] Failed to install columnstore \n\n"
+#         exit 1;
+#     fi;
+
+#     if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
+#         printf "\n[!] Failed to install cmapi \n\n"
+#         mariadb -e "show status like '%Columnstore%';"
+#     else 
+#         systemctl daemon-reload
+#         systemctl enable mariadb-columnstore-cmapi
+#         systemctl start mariadb-columnstore-cmapi
+#         mariadb -e "show status like '%Columnstore%';"
+#         sleep 2
+
+#         add_primary_node_cmapi
+#     fi
+# }
 
 do_install() {
 
@@ -1063,12 +1124,7 @@ global_dependencies() {
     if ! command -v curl &> /dev/null; then
         printf "\n[!] curl not found. Please install curl\n\n"
         exit 1; 
-    fi  
-
-    if ! command -v wget &> /dev/null; then
-        printf "\n[!] wget not found. Please install wget\n\n"
-        exit 1; 
-    fi  
+    fi   
 }
 
 check_set_es_token() {
