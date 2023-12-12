@@ -455,7 +455,7 @@ enterprise_install() {
     case $distro_info in
         centos | rocky )
 
-            if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; fi;
+            if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
             if $enterprise_staging; then 
                 sed -i 's/mariadb-es-main/mariadb-es-staging/g' /etc/yum.repos.d/mariadb.repo
@@ -466,8 +466,8 @@ enterprise_install() {
             do_enterprise_yum_install "$@" 
             ;;
         ubuntu | debian )
-        
-            if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; fi;
+
+            if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; exit 1; fi;
 
             if $enterprise_staging; then 
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/apt/sources.list.d/mariadb.list
