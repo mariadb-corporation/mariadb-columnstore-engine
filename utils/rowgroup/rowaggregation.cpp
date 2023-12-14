@@ -501,7 +501,8 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 // Row Aggregation default constructor
 //------------------------------------------------------------------------------
 RowAggregation::RowAggregation()
- : fRowGroupOut(nullptr)
+ : fKeysInGbCols(0)
+ , fRowGroupOut(nullptr)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
@@ -510,10 +511,11 @@ RowAggregation::RowAggregation()
 {
 }
 
-RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols, uint32_t keysInGbCols,
                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl, bool withRollup)
- : fRowGroupOut(nullptr)
+ : fKeysInGbCols(keysInGbCols)
+ , fRowGroupOut(nullptr)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
@@ -527,7 +529,8 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
 }
 
 RowAggregation::RowAggregation(const RowAggregation& rhs)
- : fRowGroupOut(nullptr)
+ : fKeysInGbCols(rhs.fKeysInGbCols)
+ , fRowGroupOut(nullptr)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
@@ -662,7 +665,7 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 void RowAggregation::initialize(bool hasGroupConcat)
 {
   // Calculate the length of the hashmap key.
-  fAggMapKeyCount = fGroupByCols.size();
+  fAggMapKeyCount = fKeysInGbCols; //fGroupByCols.size();
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
@@ -1611,6 +1614,7 @@ void RowAggregation::serialize(messageqcpp::ByteStream& bs) const
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
   bs << timeZone;
   bs << (int8_t)fRollupFlag;
+  bs << fKeysInGbCols;
 }
 
 //------------------------------------------------------------------------------
@@ -1661,6 +1665,7 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   uint8_t tmp8;
   bs >> tmp8;
   fRollupFlag = tmp8;
+  bs >> fKeysInGbCols;
 }
 
 //------------------------------------------------------------------------------
@@ -2385,11 +2390,11 @@ void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)
 // Row Aggregation constructor used on UM
 // For one-phase case, from projected RG to final aggregated RG
 //------------------------------------------------------------------------------
-RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols, uint32_t keysInGbCols,
                                    const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                    joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit,
                                    bool withRollup)
- : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
+ : RowAggregation(rowAggGroupByCols, keysInGbCols, rowAggFunctionCols, r, sessionLimit, withRollup)
  , fHasAvg(false)
  , fHasStatsFunc(false)
  , fHasUDAF(false)
@@ -4104,10 +4109,11 @@ bool RowAggregationUM::nextRowGroup()
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
 //------------------------------------------------------------------------------
 RowAggregationUMP2::RowAggregationUMP2(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                                       uint32_t keysInGbCols,
                                        const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                        joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit,
                                        bool withRollup)
- : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
+ : RowAggregationUM(rowAggGroupByCols, keysInGbCols, rowAggFunctionCols, r, sessionLimit, withRollup)
 {
 }
 
@@ -4496,10 +4502,11 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 RowAggregationDistinct::RowAggregationDistinct(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                                               uint32_t keysInGbCols,
                                                const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                joblist::ResourceManager* r,
                                                boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUMP2(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, false)
+ : RowAggregationUMP2(rowAggGroupByCols, keysInGbCols, rowAggFunctionCols, r, sessionLimit, false)
 {
 }
 
@@ -4695,10 +4702,11 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn, std::vector<mcsv1sdk:
 // Constructor / destructor
 //------------------------------------------------------------------------------
 RowAggregationSubDistinct::RowAggregationSubDistinct(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                                                     uint32_t keysInGbCols,
                                                      const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                      joblist::ResourceManager* r,
                                                      boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, false)
+ : RowAggregationUM(rowAggGroupByCols, keysInGbCols, rowAggFunctionCols, r, sessionLimit, false)
 {
   fKeyOnHeap = false;
 }
@@ -4803,10 +4811,11 @@ void RowAggregationSubDistinct::doJsonAgg(const Row& rowIn, int64_t i, int64_t o
 // Constructor / destructor
 //------------------------------------------------------------------------------
 RowAggregationMultiDistinct::RowAggregationMultiDistinct(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                                                         uint32_t keysInGbCols,
                                                          const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                                                          joblist::ResourceManager* r,
                                                          boost::shared_ptr<int64_t> sessionLimit)
- : RowAggregationDistinct(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit)
+ : RowAggregationDistinct(rowAggGroupByCols, keysInGbCols, rowAggFunctionCols, r, sessionLimit)
 {
 }
 

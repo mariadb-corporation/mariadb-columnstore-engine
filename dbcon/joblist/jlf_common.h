@@ -212,6 +212,7 @@ struct JobInfo
    , hasDistinct(false)
    , hasAggregation(false)
    , hasRollup(false)
+   , keysInGbCols(0)
    , limitStart(0)
    , limitCount(-1)
    , joinNum(0)
@@ -256,6 +257,7 @@ struct JobInfo
   bool hasAggregation;
   bool hasRollup;
   std::vector<uint32_t> groupByColVec;
+  uint32_t keysInGbCols;
   std::vector<uint32_t> distinctColVec;
   std::vector<uint32_t> expressionVec;
   std::vector<std::pair<uint32_t, int> > returnedColVec;

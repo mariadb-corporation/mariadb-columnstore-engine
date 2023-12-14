@@ -1,0 +1,27 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL4234;
+--enable_warnings
+CREATE DATABASE MCOL4234;
+USE MCOL4234;
+
+CREATE TABLE t1 (
+spID int(10) unsigned,
+userID int(10) unsigned,
+score smallint(5) unsigned,
+date date
+) ENGINE=Columnstore;
+
+INSERT INTO t1 VALUES (1,1,1,'0000-00-00');
+
+CREATE TABLE t2 (
+userID int(10) unsigned NOT NULL,
+niName char(15)
+) ENGINE=Columnstore;
+
+INSERT INTO t2 VALUES (1,'name');
+
+SELECT t1.spID, t2.userid, MIN(t1.score)
+FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
+
+DROP DATABASE MCOL4234;
+

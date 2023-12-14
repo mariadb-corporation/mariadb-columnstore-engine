@@ -2455,7 +2455,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
   if (fAggregator.get() != NULL)
   {
     bpp->fAggregateRG = fAggregateRG;
-    bpp->fAggregator.reset(new RowAggregation(fAggregator->getGroupByCols(), fAggregator->getAggFunctions()));
+    bpp->fAggregator.reset(new RowAggregation(fAggregator->getGroupByCols(), fAggregator->getKeysInGbCols(), fAggregator->getAggFunctions()));
     bpp->fAggregator->timeZone(fAggregator->timeZone());
   }
 
