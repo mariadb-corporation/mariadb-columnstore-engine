@@ -8301,6 +8301,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   }
 
   // ORDER BY processing
+  // Remember the length of original key.
+  uint32_t originalGroupBySize = gwi.groupByCols.size();
+  // here we check for ORDER BY columns to be present in GROUP BY.
+  // we mark their positions if they are absent and will push
+  // into GROUP BY columns list later.
+  std::vector<bool> orderbyOutOfGroupBy;
   {
     SQL_I_List<ORDER> order_list = select_lex.order_list;
     ORDER* ordercol = static_cast<ORDER*>(order_list.first);
@@ -8309,6 +8315,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     // window functions are involved, either in order by or projection.
     for (; ordercol; ordercol = ordercol->next)
     {
+      bool outOfGB = false;
       if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
         gwi.hasWindowFunc = true;
       // MCOL-2166 Looking for this sorting item in GROUP_BY items list.
@@ -8317,23 +8324,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       if (select_lex.agg_func_used() && select_lex.group_list.first &&
           !sortItemIsInGrouping(*ordercol->item, select_lex.group_list.first))
       {
-        std::ostringstream ostream;
-        std::ostringstream& osr = ostream;
-        getColNameFromItem(osr, *ordercol->item);
-        Message::Args args;
-        args.add(ostream.str());
-        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
-        gwi.parseErrorText = emsg;
-        setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-        return ERR_NOT_GROUPBY_EXPRESSION;
+        // instead of reporting an error, mark column as not in GROUP BY.
+        outOfGB = true;
       }
+      orderbyOutOfGroupBy.push_back(outOfGB);
     }
 
     // re-visit the first of ordercol list
     ordercol = static_cast<ORDER*>(order_list.first);
 
     {
-      for (; ordercol; ordercol = ordercol->next)
+      int indexOC;
+      for (indexOC = 0; ordercol; ordercol = ordercol->next, indexOC ++)
       {
         ReturnedColumn* rc = NULL;
 
@@ -8353,6 +8355,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
               ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
           {
+            // This is the case of server's optimization of EXISTS(SELECT ...).
+            // look at sql_base.cc.
+            continue;
+          }
+          else if (ord_item->type() == Item::NULL_ITEM)
+          {
+            // Do not add NULL contant as a order key.
+            // NULL as order key is an optimization hint for Mysql, but
+            // we test against it.
             continue;
           }
           else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
@@ -8403,7 +8414,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         else
           rc->asc(false);
 
-        gwi.orderByCols.push_back(SRCP(rc));
+        SRCP srcprc(rc);
+        gwi.orderByCols.push_back(srcprc);
+        if (orderbyOutOfGroupBy[indexOC])
+        {
+          gwi.groupByCols.push_back(srcprc);
+        }
       }
     }
     // make sure columnmap, returnedcols and count(*) arg_list are not empty
@@ -8620,6 +8636,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                           gwi.additionalRetCols.end());
 
   csep->groupByCols(gwi.groupByCols);
+  csep->groupByKeysCount(originalGroupBySize);
   csep->withRollup(withRollup);
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);

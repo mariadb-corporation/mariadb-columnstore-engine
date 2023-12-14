@@ -387,7 +387,7 @@ class RowAggregation : public messageqcpp::Serializeable
    *    mapping from input to output.
    */
   RowAggregation();
-  RowAggregation(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+  RowAggregation(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols, uint32_t keysInGbCols,
                  const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                  joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {}, bool withRollup = false);
   RowAggregation(const RowAggregation& rhs);
@@ -445,6 +445,14 @@ class RowAggregation : public messageqcpp::Serializeable
   std::vector<SP_ROWAGG_GRPBY_t>& getGroupByCols()
   {
     return fGroupByCols;
+  }
+
+  /**
+   * MCOL-4234: get actual number of columns in key
+   */
+  uint32_t getKeysInGbCols() const
+  {
+    return fKeysInGbCols;
   }
 
   /** @brief Returns aggregate function vector
@@ -572,6 +580,7 @@ class RowAggregation : public messageqcpp::Serializeable
   inline void updateFloatMinMax(float val1, float val2, int64_t col, int func);
   inline void updateStringMinMax(utils::NullString val1, utils::NullString val2, int64_t col, int func);
   std::vector<SP_ROWAGG_GRPBY_t> fGroupByCols;
+  uint32_t fKeysInGbCols;
   std::vector<SP_ROWAGG_FUNC_t> fFunctionCols;
   uint32_t fAggMapKeyCount;  // the number of columns that make up the key
   RowGroup fRowGroupIn;
@@ -654,7 +663,7 @@ class RowAggregationUM : public RowAggregation
   RowAggregationUM()
   {
   }
-  RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+  RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols, uint32_t keysInGbCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                    boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUM(const RowAggregationUM& rhs);
@@ -831,6 +840,7 @@ class RowAggregationUMP2 : public RowAggregationUM
   {
   }
   RowAggregationUMP2(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                     uint32_t keysInGbCols,
                      const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                      boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUMP2(const RowAggregationUMP2& rhs);
@@ -873,6 +883,7 @@ class RowAggregationDistinct : public RowAggregationUMP2
   {
   }
   RowAggregationDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                         uint32_t keysInGbCols,
                          const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                          boost::shared_ptr<int64_t> sessionMemLimit);
 
@@ -940,6 +951,7 @@ class RowAggregationSubDistinct : public RowAggregationUM
   {
   }
   RowAggregationSubDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                            uint32_t keysInGbCols,
                             const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                             joblist::ResourceManager*, boost::shared_ptr<int64_t> sessionMemLimit);
   RowAggregationSubDistinct(const RowAggregationSubDistinct& rhs);
@@ -981,6 +993,7 @@ class RowAggregationMultiDistinct : public RowAggregationDistinct
   {
   }
   RowAggregationMultiDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
+                              uint32_t keysInGbCols,
                               const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                               joblist::ResourceManager*, boost::shared_ptr<int64_t> sessionMemLimit);
   RowAggregationMultiDistinct(const RowAggregationMultiDistinct& rhs);

@@ -61,7 +61,6 @@ SELECT t1.spID, t2.userid, MIN(t1.score)
 
 # columns in ORDER BY clause not included in the GROUP BY clause.
 #Suspected bug. Innodb succeeds.
---error 1815
 SELECT t1.spID, t2.userid, MIN(t1.score) 
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
 
@@ -77,7 +76,6 @@ SELECT t2.userid, MIN(t1.score)
 
 # order by null
 #Suspected bug. Innodb succeeds.
---error 1815
 SELECT t2.userid, MIN(t1.score)
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY NULL;
 
