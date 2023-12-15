@@ -30,7 +30,7 @@
 //
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
@@ -50,7 +50,7 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
-//#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
+// #define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
 
 namespace joblist
 {
@@ -90,10 +90,8 @@ BatchPrimitiveProcessorJL::~BatchPrimitiveProcessorJL()
 {
 }
 
-void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan,
-                                              vector<BRM::LBID_t> lastScannedLBID,
-                                              bool hasAuxCol,
-                                              const std::vector<BRM::EMEntry>& extentsAux,
+void BatchPrimitiveProcessorJL::addFilterStep(const pColScanStep& scan, vector<BRM::LBID_t> lastScannedLBID,
+                                              bool hasAuxCol, const std::vector<BRM::EMEntry>& extentsAux,
                                               execplan::CalpontSystemCatalog::OID oidAux)
 {
   SCommand cc;
@@ -1446,6 +1444,9 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     bs << (messageqcpp::ByteStream::quadbyte)sessionID;
     bs << (messageqcpp::ByteStream::quadbyte)stepID;
     bs << uniqueID;
+    std::cout << "NTJM_LJjl " << sessionID << " " << stepID << " " << uniqueID << " " << joinerNum
+              << std::endl;
+
     return false;
   }
 
@@ -1480,6 +1481,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
   bs << (messageqcpp::ByteStream::quadbyte)sessionID;
   bs << (messageqcpp::ByteStream::quadbyte)stepID;
   bs << uniqueID;
+
+  std::cout << "NTJMjl " << sessionID << " " << stepID << " " << uniqueID << " " << joinerNum << std::endl;
 
   smallSideRGs[joinerNum].initRow(&r);
 
@@ -1555,7 +1558,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     {
       int64_t key;
       uint32_t value;
-    } * arr;
+    }* arr;
 #pragma pack(pop)
     bs.needAtLeast(toSend * sizeof(JoinerElements));
     arr = (JoinerElements*)bs.getInputPtr();

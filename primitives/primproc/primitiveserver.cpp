@@ -1480,16 +1480,22 @@ struct BPPHandler
     buf = bs.buf();
     /* the uniqueID is after the ISMPacketHeader, sessionID, and stepID */
     uniqueID = *((const uint32_t*)&buf[sizeof(ISMPacketHeader) + 2 * sizeof(uint32_t)]);
+    std::cout << "AJ1 " << uniqueID;
+
     bppv = grabBPPs(uniqueID);
 
     if (bppv)
     {
+      std::cout << "AJ2 " << uniqueID;
+
       shared_lock<shared_mutex> lk(getDJLock(uniqueID));
       bppv->get()[0]->addToJoiner(bs);
       return 0;
     }
     else
     {
+      std::cout << "AJ3 " << uniqueID;
+
       if (posix_time::second_clock::universal_time() > dieTime)
       {
         cout << "addJoinerToBPP: job for id " << uniqueID << " has been killed." << endl;
@@ -1512,7 +1518,7 @@ struct BPPHandler
     buf = bs.buf();
     /* the uniqueID is after the ISMPacketHeader, sessionID, and stepID */
     uniqueID = *((const uint32_t*)&buf[sizeof(ISMPacketHeader) + 2 * sizeof(uint32_t)]);
-
+    std::cout << "EOJ1 " << uniqueID;
     bppv = grabBPPs(uniqueID);
 
     if (!bppv)
@@ -1529,7 +1535,7 @@ struct BPPHandler
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-    std::cout << "EOJ " << uniqueID;
+    std::cout << "EOJ2 " << uniqueID;
     cout.flush();
     for (i = 0; i < bppv->get().size(); i++)
     {
