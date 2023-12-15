@@ -1235,7 +1235,7 @@ struct BPPHandler
     {
       // There are issues with
       // This is to let this last joiner message to stay longer in the threadpool.
-      dieTime += posix_time::seconds(300);
+      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
