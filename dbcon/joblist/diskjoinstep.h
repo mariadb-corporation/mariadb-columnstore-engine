@@ -53,6 +53,7 @@ class DiskJoinStep : public JobStep
   void prepareJobs(const std::vector<joiner::JoinPartition*>& joinPartitions,
                    JoinPartitionJobs& joinPartitionsJobs);
   void outputResult(const std::vector<rowgroup::RGData>& result);
+  void outputResult(const rowgroup::RGData& result);
   void spawnJobs(const std::vector<std::vector<joiner::JoinPartition*>>& joinPartitionsJobs,
                  const uint32_t smallSideSizeLimitPerThread);
   boost::shared_ptr<joiner::JoinPartition> jp;
