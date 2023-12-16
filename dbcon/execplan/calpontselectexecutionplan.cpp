@@ -39,6 +39,7 @@ using namespace messageqcpp;
 #include "querytele.h"
 using namespace querytele;
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace
 {
 template <class T>

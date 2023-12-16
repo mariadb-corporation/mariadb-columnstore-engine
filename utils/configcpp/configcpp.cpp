@@ -401,7 +401,7 @@ void Config::writeConfig(const string& configFile) const
       {
       }
 
-      fs::copy_file(dcf, scft, fs::copy_option::overwrite_if_exists);
+      fs::copy_file(dcf, scft, fs::copy_options::overwrite_existing);
 
       try
       {

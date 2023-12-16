@@ -1320,6 +1320,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   return doProject(pcv, jobInfo);
 }
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 template <typename T>
 class Uniqer : public unary_function<typename T::value_type, void>
 {

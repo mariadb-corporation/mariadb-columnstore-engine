@@ -125,6 +125,7 @@ class ColExtInfEntry
  *  the last input Row number in the extent, as the key.
  */
 //------------------------------------------------------------------------------
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct uint64Hasher : public std::unary_function<RID, std::size_t>
 {
   std::size_t operator()(RID val) const

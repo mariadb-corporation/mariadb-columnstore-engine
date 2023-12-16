@@ -32,6 +32,7 @@
 #include "exceptclasses.h"
 #include "columnstoreversion.h"
 #include "vlarray.h"
+#include <array>
 
 using std::string;
 

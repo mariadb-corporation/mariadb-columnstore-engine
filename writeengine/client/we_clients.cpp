@@ -148,6 +148,7 @@ struct WEClientRunner
   }
 };
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 template <typename T>
 struct QueueShutdown : public unary_function<T&, void>
 {

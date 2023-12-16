@@ -37,6 +37,8 @@ using namespace std;
 #include "aggregatecolumn.h"
 #include "windowfunctioncolumn.h"
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 namespace
 {
 template <class T>

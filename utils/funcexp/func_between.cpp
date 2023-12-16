@@ -243,19 +243,19 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     case execplan::CalpontSystemCatalog::TEXT:
     {
       const string& val = pm[0]->data()->getStrVal(row, isNull);
-      CHARSET_INFO& cs = datatypes::Charset(ct.charsetNumber).getCharset();
+      CHARSET_INFO *cs = &datatypes::Charset(ct.charsetNumber).getCharset();
 
       if (notBetween)
       {
-        if (!strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
+        if (!strGE(*cs, val, pm[1]->data()->getStrVal(row, isNull)) && !isNull)
           return true;
 
         isNull = false;
-        return (!strLE(cs, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
+        return (!strLE(*cs, val, pm[2]->data()->getStrVal(row, isNull)) && !isNull);
       }
 
-      return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
-             strLE(cs, val, pm[2]->data()->getStrVal(row, isNull));
+      return !isNull && strGE(*cs, val, pm[1]->data()->getStrVal(row, isNull)) &&
+             strLE(*cs, val, pm[2]->data()->getStrVal(row, isNull));
     }
 
     default:
