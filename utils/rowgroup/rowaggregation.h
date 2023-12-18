@@ -633,6 +633,10 @@ class RowAggregation : public messageqcpp::Serializeable
   boost::shared_ptr<int64_t> fSessionMemLimit;
   std::unique_ptr<RGData> fCurRGData;
   bool fRollupFlag = false;
+
+  std::string fTmpDir = config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+  std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
+
 };
 
 //------------------------------------------------------------------------------
