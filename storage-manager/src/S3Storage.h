@@ -24,6 +24,7 @@
 #include "libmarias3/marias3.h"
 #include "Config.h"
 #include <curl/curl.h>
+#include <deque>
 
 namespace storagemanager
 {

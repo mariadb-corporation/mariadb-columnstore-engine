@@ -28,6 +28,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <unistd.h>
+#include <set>
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
