@@ -675,19 +675,16 @@ void RowAggregation::initialize(bool hasGroupConcat)
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
 
@@ -768,19 +765,16 @@ void RowAggregation::aggReset()
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
   fRowGroupOut->getRow(0, &fRow);
