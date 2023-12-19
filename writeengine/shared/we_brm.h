@@ -380,8 +380,6 @@ class BRMWrapper : public WEObj
    * @brief Commit the transaction
    */
   EXPORT int commit(const BRM::VER_t transID);
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
-  EXPORT void finishCpimportJob(uint32_t jobId);
 
   /**
    * @brief Copy blocks between write engine and version buffer
@@ -468,7 +466,7 @@ class BRMWrapper : public WEObj
   static boost::thread_specific_ptr<int> m_ThreadDataPtr;
   static boost::mutex m_instanceCreateMutex;
 
-  EXPORT static bool m_useVb;
+      EXPORT static bool m_useVb;
 
   static OID m_curVBOid;
   static IDBDataFile* m_curVBFile;
