@@ -18,6 +18,7 @@
 #ifndef S3STORAGE_H_
 #define S3STORAGE_H_
 
+#include <deque>
 #include <string>
 #include <map>
 #include "CloudStorage.h"
