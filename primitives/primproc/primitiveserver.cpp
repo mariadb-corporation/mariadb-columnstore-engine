@@ -1412,7 +1412,7 @@ struct BPPHandler
     bppKeys.push_back(key);
     bool newInsert;
     newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
-    // cout << "creating BPP # " << key << endl;
+    cout << "CB " << key << endl;
     scoped.unlock();
 
     if (!newInsert)
