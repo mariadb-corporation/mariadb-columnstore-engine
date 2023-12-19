@@ -30,6 +30,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stack>
 #include <vector>
+#include <bitset>
 
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
