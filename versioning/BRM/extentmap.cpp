@@ -1871,16 +1871,35 @@ void ExtentMap::save(const string& filename)
     throw;
   }
 
-  for (auto& lbidEMEntryPair : *fExtentMapRBTree)
+  // MCOL-5623 Prepare `ExtentMap` buffer before write.
+  const size_t emNumOfElements = fExtentMapRBTree->size();
+  auto emIterator = fExtentMapRBTree->begin();
+  size_t emIndex = 0;
+  while (emIndex < emNumOfElements)
   {
-    EMEntry& emEntry = lbidEMEntryPair.second;
-    const uint32_t writeSize = sizeof(EMEntry);
-    char* writePos = reinterpret_cast<char*>(&emEntry);
-    uint32_t progress = 0;
+    const size_t emNumOfElementsInBatch = std::min(EM_SAVE_NUM_PER_BATCH, emNumOfElements - emIndex);
+    const size_t emSizeInBatch = emNumOfElementsInBatch * sizeof(EMEntry);
+    std::unique_ptr<char[]> extentMapBuffer(new char[emSizeInBatch]);
 
-    while (progress < writeSize)
+    size_t endOfBatch = std::min(emIndex + EM_SAVE_NUM_PER_BATCH, emNumOfElements);
+    size_t offset = 0;
+    while (emIndex < endOfBatch)
     {
-      auto err = out->write(writePos + progress, writeSize - progress);
+      EMEntry& emEntry = emIterator->second;
+      const size_t writeSize = sizeof(EMEntry);
+      char* source = reinterpret_cast<char*>(&emEntry);
+      std::memcpy(&extentMapBuffer[offset], source, writeSize);
+      offset += writeSize;
+      std::advance(emIterator, 1);
+      ++emIndex;
+    }
+    // Double check.
+    idbassert(offset == emSizeInBatch);
+
+    offset = 0;
+    while (offset < emSizeInBatch)
+    {
+      auto err = out->write(&extentMapBuffer[offset], emSizeInBatch - offset);
       if (err < 0)
       {
         releaseFreeList(READ);
@@ -1888,7 +1907,7 @@ void ExtentMap::save(const string& filename)
         releaseEMEntryTable(READ);
         throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
       }
-      progress += err;
+      offset += err;
     }
   }
 
