@@ -1966,7 +1966,7 @@ struct ReadThread
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_ADD_JOINER)
         {
-          weight += 10000;
+          // weight += 10000;
           functor.reset(new BPPHandler::AddJoiner(fBPPHandler, sbs));
         }
         else if (ismHdr->Command == BATCH_PRIMITIVE_END_JOINER)
