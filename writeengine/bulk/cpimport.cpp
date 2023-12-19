@@ -59,7 +59,6 @@ namespace
 char* pgmName = 0;
 const std::string IMPORT_PATH_CWD(".");
 bool bDebug = false;
-uint32_t cpimportJobId = 0;
 
 //@bug 4643: cpimport job ended during setup w/o any err msg.
 //           Added a try/catch with logging to main() in case
@@ -193,7 +192,6 @@ void printUsage()
 //------------------------------------------------------------------------------
 void handleSigTerm(int i)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGTERM to terminate the process..." << std::endl;
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
@@ -203,32 +201,12 @@ void handleSigTerm(int i)
 //------------------------------------------------------------------------------
 void handleControlC(int i)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   if (!BulkLoad::disableConsoleOutput())
     std::cout << "Received Control-C to terminate the process..." << std::endl;
 
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
 
-//------------------------------------------------------------------------------
-// Signal handler to catch SIGTERM signal to terminate the process
-//------------------------------------------------------------------------------
-void handleSigSegv(int i)
-{
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
-  std::cout << "Received SIGSEGV to terminate the process..." << std::endl;
-  BulkStatus::setJobStatus(EXIT_FAILURE);
-}
-
-//------------------------------------------------------------------------------
-// Signal handler to catch SIGTERM signal to terminate the process
-//------------------------------------------------------------------------------
-void handleSigAbrt(int i)
-{
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
-  std::cout << "Received SIGABRT to terminate the process..." << std::endl;
-  BulkStatus::setJobStatus(EXIT_FAILURE);
-}
 
 //------------------------------------------------------------------------------
 // If error occurs during startup, this function is called to log the specified
@@ -236,7 +214,6 @@ void handleSigAbrt(int i)
 //------------------------------------------------------------------------------
 void startupError(const std::string& errMsg, bool showHint)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   // Log to console
   if (!BulkLoad::disableConsoleOutput())
     cerr << errMsg << endl;
@@ -298,17 +275,6 @@ void setupSignalHandlers()
   memset(&act, 0, sizeof(act));
   act.sa_handler = handleSigTerm;
   sigaction(SIGTERM, &act, 0);
-
-  // catch SIGSEGV signal to terminate the program
-  memset(&act, 0, sizeof(act));
-  act.sa_handler = handleSigSegv;
-  sigaction(SIGSEGV, &act, 0);
-
-  // catch SIGABRT signal to terminate the program
-  memset(&act, 0, sizeof(act));
-  act.sa_handler = handleSigAbrt;
-  sigaction(SIGABRT, &act, 0);
-
 }
 
 //------------------------------------------------------------------------------
@@ -1304,16 +1270,6 @@ int main(int argc, char** argv)
       new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK));
     }
 
-    rc = BRMWrapper::getInstance()->newCpimportJob(cpimportJobId);
-    if (rc != NO_ERROR)
-    {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << "Error in creating new cpimport job on Controller node; " << ec.errorString(rc)
-          << "; cpimport is terminating.";
-      startupError(oss.str(), false);
-    }
-
     //--------------------------------------------------------------------------
     // This is the real business
     //--------------------------------------------------------------------------
@@ -1364,7 +1320,6 @@ int main(int argc, char** argv)
     rc = ERR_UNKNOWN;
   }
 
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   // Free up resources allocated by MY_INIT() above.
   my_end(0);
 
