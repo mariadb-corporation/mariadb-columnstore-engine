@@ -124,7 +124,7 @@ class PrimitiveServer
 
   /** @brief get a pointer the shared processor thread pool
    */
-  inline boost::shared_ptr<threadpool::FairThreadPool> getProcessorThreadPool() const
+  inline boost::shared_ptr<threadpool::PriorityThreadPool> getProcessorThreadPool() const
   {
     return fProcessorPool;
   }
@@ -160,7 +160,7 @@ class PrimitiveServer
   /** @brief the thread pool used to process
    * primitive commands
    */
-  boost::shared_ptr<threadpool::FairThreadPool> fProcessorPool;
+  boost::shared_ptr<threadpool::PriorityThreadPool> fProcessorPool;
 
   int fServerThreads;
   int fServerQueueSize;
