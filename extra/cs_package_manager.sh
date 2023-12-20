@@ -335,13 +335,48 @@ check_aws_cli_installed() {
     if ! command -v aws &> /dev/null ; then
         echo "[!] aws cli - binary could not be found"
         echo "[+] Installing aws cli ..."
-        rm -rf aws awscliv2.zip
-        yum install unzip -y;
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip";
-        unzip awscliv2.zip;
-        sudo ./aws/install;
-        mv /usr/local/bin/aws /usr/bin/aws;
-        aws configure set default.s3.max_concurrent_requests 700       
+
+        cli_url="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+        case $architecture in
+            x86_64 )
+                cli_url="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+                ;;
+            aarch64 )
+                cli_url="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+                ;;
+            *)  # unknown option
+                echo "Error: Unsupported architecture ($architecture)"
+        esac    
+
+        case $distro_info in
+            centos | rocky )
+                rm -rf aws awscliv2.zip
+                yum install unzip -y;
+                curl "$cli_url" -o "awscliv2.zip";
+                unzip -q awscliv2.zip;
+                sudo ./aws/install;
+                mv /usr/local/bin/aws /usr/bin/aws;
+                aws configure set default.s3.max_concurrent_requests 70       
+                ;;
+            ubuntu | debian )
+                rm -rf aws awscliv2.zip
+                if ! sudo apt install unzip -y; then
+                    echo "[!!] Installing Unzip Failed: Trying update"
+                    sudo apt update -y;
+                    sudo apt install unzip -y;
+                fi
+                curl "$cli_url" -o "awscliv2.zip";
+                unzip -q awscliv2.zip;
+                sudo ./aws/install;
+                mv /usr/local/bin/aws /usr/bin/aws;
+                aws configure set default.s3.max_concurrent_requests 70      
+                ;;
+            *)  # unknown option
+                printf "\nos & version not implemented: $distro_info\n"
+                exit 2;
+        esac
+        
+       
     fi
 }
 
