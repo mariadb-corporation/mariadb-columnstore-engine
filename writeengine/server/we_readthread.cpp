@@ -325,12 +325,6 @@ void DmlReadThread::operator()()
           break;
         }
 
-        case WE_SVR_UPDATE_SYSTABLES_TABLENAME:
-        {
-          rc = fWeDDLprocessor->updateSystablesTablename(ibs, errMsg);
-          break;
-        }
-
         case WE_SVR_FILL_COLUMN:
         {
           rc = fWeDDLprocessor->fillNewColumn(ibs, errMsg);
