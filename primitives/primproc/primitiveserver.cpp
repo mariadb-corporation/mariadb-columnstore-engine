@@ -1329,15 +1329,16 @@ struct BPPHandler
     }
     else
     {
-      bs.rewind();
-
       if (posix_time::second_clock::universal_time() > dieTime)
       {
         std::cout << "doAbort: job for key " << key << " has been killed." << std::endl;
         return 0;
       }
       else
+      {
+        bs.rewind();
         return -1;
+      }
     }
 
     scoped.unlock();
@@ -1364,7 +1365,10 @@ struct BPPHandler
       return 0;
     }
     else
+    {
+      bs.rewind();
       return -1;
+    }
   }
 
   void createBPP(ByteStream& bs)
@@ -1569,11 +1573,11 @@ struct BPPHandler
     // This is a corner case that damages bs so its length becomes less than a header length.
     // The damaged bs doesn't pass the if that checks bs at least has header + 3x int32_t.
     // The if block below works around the issue.
-    if (posix_time::second_clock::universal_time() > dieTime)
-    {
-      cout << "destroyBPP: job for unknown id has been killed." << endl;
-      return 0;
-    }
+    // if (posix_time::second_clock::universal_time() > dieTime)
+    // {
+    //   cout << "destroyBPP: job for unknown id has been killed." << endl;
+    //   return 0;
+    // }
 
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
@@ -1621,13 +1625,13 @@ struct BPPHandler
         // for all joiners to arrive.
         // TODO there might be no joiners if the query is canceled.
         // The memory will leak.
+        // Rewind to the beginning of ByteStream buf b/c of the advance above.
+        bs.rewind();
         return -1;
       }
     }
     else
     {
-      bs.rewind();
-
       if (posix_time::second_clock::universal_time() > dieTime)
       {
         cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
@@ -1636,7 +1640,10 @@ struct BPPHandler
         // they won't leave PP thread pool staying there forever.
       }
       else
+      {
+        bs.rewind();
         return -1;
+      }
     }
 
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
@@ -1789,7 +1796,10 @@ class DestroyEqualityFilter : public DictionaryOp
       return 0;
     }
     else
+    {
+      // WIP
       return -1;
+    }
   }
 };
 
