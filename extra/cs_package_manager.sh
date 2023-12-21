@@ -889,58 +889,6 @@ EOF
 
 }
 
-# For later if we ever add install via RPMs for offline installs
-# do_dev_apt_install_via_rpms() {
-
-#         echo "[drone]
-# name=Drone Repository
-# baseurl="$drone_http"
-# gpgcheck=0
-# enabled=1
-#     " > /etc/yum.repos.d/drone.repo
-
-#     local_deb="/tmp/mdb-packages"
-
-#     if [ -d "$local_deb" ]; then rm -rf $local_deb; fi;
-#     mkdir -p "$local_deb/$distro"
-#     aws s3 cp "${s3_path}" "$local_deb/$distro" --recursive --exclude "mtr-logs/*"  --exclude "unit_logs/*"  --exclude "testErrorLogs*" --exclude "regressionQueries.tgz"
-#     cd "$local_deb/$distro"
-#     gunzip Packages.gz
-#     sudo cp Packages $local_deb
-#     echo "deb [trusted=yes] file://$local_deb /" > /etc/apt/sources.list.d/drone.list
-
-#     # Install MariaDB
-#     apt-get clean
-#     apt-get update 
-#     if ! apt install mariadb-server -y --quiet; then
-#         printf "\n[!] Failed to install mariadb-server \n\n"
-#         exit 1;
-#     fi
-#     sleep 2
-#     systemctl daemon-reload
-#     systemctl enable mariadb
-#     systemctl start mariadb
-
-#     # Install Columnstore
-#     if ! apt install mariadb-plugin-columnstore -y --quiet; then
-#         printf "\n[!] Failed to install columnstore \n\n"
-#         exit 1;
-#     fi;
-
-#     if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
-#         printf "\n[!] Failed to install cmapi \n\n"
-#         mariadb -e "show status like '%Columnstore%';"
-#     else 
-#         systemctl daemon-reload
-#         systemctl enable mariadb-columnstore-cmapi
-#         systemctl start mariadb-columnstore-cmapi
-#         mariadb -e "show status like '%Columnstore%';"
-#         sleep 2
-
-#         add_primary_node_cmapi
-#     fi
-# }
-
 do_install() {
 
     check_operating_system
