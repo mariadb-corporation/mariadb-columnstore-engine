@@ -1012,10 +1012,48 @@ namespace
 {
 using namespace primitiveprocessor;
 
+class TimeoutWatcher
+{
+ public:
+  TimeoutWatcher() = delete;
+  TimeoutWatcher(size_t timeout = 100)
+   : dieTime(posix_time::second_clock::universal_time() + posix_time::seconds(timeout))
+  {
+  }
+  ~TimeoutWatcher() = default;
+  void delayTimeout(size_t timeout)
+  {
+    dieTime += posix_time::seconds(timeout);
+  }
+
+  int checkTimeoutAndRewindBS(ByteStream& bs, const string& msg, std::optional<uint32_t> uniqueID)
+  {
+    if (posix_time::second_clock::universal_time() > dieTime)
+    {
+      // it's been too long, give up
+      std::cout << msg;
+      if (uniqueID.has_value())
+      {
+        std::cout << to_string(uniqueID.value());
+      }
+      std::cout << std::endl;
+      return 0;  // was probably aborted, go away...
+    }
+    else
+    {
+      bs.rewind();
+      // it's still being built, wait for it
+      return -1;
+    }
+  }
+
+  posix_time::ptime dieTime;
+};
+
 /** @brief The job type to process a dictionary scan (pDictionaryScan class on the UM)
  * TODO: Move this & the impl into different files
  */
-class DictScanJob : public threadpool::PriorityThreadPool::Functor
+class DictScanJob : public threadpool::FairThreadPool::Functor, public TimeoutWatcher
 {
  public:
   DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock);
@@ -1030,13 +1068,11 @@ class DictScanJob : public threadpool::PriorityThreadPool::Functor
   SP_UM_IOSOCK fIos;
   SBS fByteStream;
   SP_UM_MUTEX fWriteLock;
-  posix_time::ptime dieTime;
 };
 
 DictScanJob::DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock)
- : fIos(ios), fByteStream(bs), fWriteLock(writeLock)
+ : TimeoutWatcher(100), fIos(ios), fByteStream(bs), fWriteLock(writeLock)
 {
-  dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
 }
 
 DictScanJob::~DictScanJob()
@@ -1107,13 +1143,25 @@ int DictScanJob::operator()()
 
       if (!eqFilter)
       {
-        if (posix_time::second_clock::universal_time() < dieTime)
+        // WIP return checkTimeout only
+        int ret =
+            checkTimeoutAndRewindBS(*fByteStream, "DictScanJob: operator() killed job with id ", uniqueId);
+        if (!ret)
         {
-          fByteStream->rewind();
-          return -1;  // it's still being built, wait for it
+          dieTime += posix_time::seconds(100);
         }
-        else
-          return 0;  // was probably aborted, go away...
+        return -1;
+        // if (posix_time::second_clock::universal_time() > dieTime)
+        // {
+        //   // it's been too long, give up
+        //   std::cout << "DictScanJob: operator() has been killed uniqueId " << uniqueId << std::endl;
+        //   return 0;  // was probably aborted, go away...
+        // }
+        // else
+        // {
+        //   fByteStream->rewind();
+        //   return -1;  // it's still being built, wait for it
+        // }
       }
     }
 
@@ -1216,31 +1264,26 @@ struct BPPHandler
     scoped.unlock();
   }
 
-  struct BPPHandlerFunctor : public PriorityThreadPool::Functor
+  struct BPPHandlerFunctor : public FairThreadPool::Functor, public TimeoutWatcher
   {
-    BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
+    BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : TimeoutWatcher(100), bs(b)
     {
       rt = r;
-      dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
     }
 
     boost::shared_ptr<BPPHandler> rt;
     SBS bs;
-    posix_time::ptime dieTime;
   };
 
   struct LastJoiner : public BPPHandlerFunctor
   {
     LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
-      // There are issues with
-      // This is to let this last joiner message to stay longer in the threadpool.
-      dieTime += posix_time::seconds(100);
     }
     int operator()()
     {
       utils::setThreadName("PPHandLastJoiner");
-      return rt->lastJoinerMsg(*bs, dieTime);
+      return rt->lastJoinerMsg(*bs, *this);
     }
   };
 
@@ -1265,7 +1308,7 @@ struct BPPHandler
     int operator()()
     {
       utils::setThreadName("PPHandDestroy");
-      return rt->destroyBPP(*bs, dieTime);
+      return rt->destroyBPP(*bs, *this);
     }
   };
 
@@ -1279,7 +1322,7 @@ struct BPPHandler
     int operator()()
     {
       utils::setThreadName("PPHandAddJoiner");
-      return rt->addJoinerToBPP(*bs, dieTime);
+      return rt->addJoinerToBPP(*bs, *this);
     }
   };
 
@@ -1291,11 +1334,11 @@ struct BPPHandler
     int operator()()
     {
       utils::setThreadName("PPHandAbort");
-      return rt->doAbort(*bs, dieTime);
+      return rt->doAbort(*bs, *this);
     }
   };
 
-  int doAbort(ByteStream& bs, const posix_time::ptime& dieTime)
+  int doAbort(ByteStream& bs, TimeoutWatcher& tw)
   {
     uint32_t key;
     BPPMap::iterator it;
@@ -1329,16 +1372,25 @@ struct BPPHandler
     }
     else
     {
-      if (posix_time::second_clock::universal_time() > dieTime)
+      static const string msg("doAbort: killed job with key ");
+      // WIP return checkTimeout only
+      auto ret = tw.checkTimeoutAndRewindBS(bs, msg, key);
+      if (!ret)
       {
-        std::cout << "doAbort: job for key " << key << " has been killed." << std::endl;
-        return 0;
+        tw.delayTimeout(100);
       }
-      else
-      {
-        bs.rewind();
-        return -1;
-      }
+      return -1;
+
+      // if (posix_time::second_clock::universal_time() > dieTime)
+      // {
+      //   std::cout << "doAbort: job for key " << key << " has been killed." << std::endl;
+      //   return 0;
+      // }
+      // else
+      // {
+      //   bs.rewind();
+      //   return -1;
+      // }
     }
 
     scoped.unlock();
@@ -1473,7 +1525,7 @@ struct BPPHandler
     }
   }
 
-  int addJoinerToBPP(ByteStream& bs, const posix_time::ptime& dieTime)
+  int addJoinerToBPP(ByteStream& bs, TimeoutWatcher& tw)
   {
     SBPPV bppv;
     uint32_t uniqueID;
@@ -1500,17 +1552,26 @@ struct BPPHandler
     {
       std::cout << "AJ3 " << uniqueID;
 
-      if (posix_time::second_clock::universal_time() > dieTime)
+      static const string msg("addJoinerToBPP: killed job for id ");
+      // WIP return checkTimeout only
+      auto ret = tw.checkTimeoutAndRewindBS(bs, msg, uniqueID);
+      if (!ret)
       {
-        cout << "addJoinerToBPP: job for id " << uniqueID << " has been killed." << endl;
-        return 0;
+        tw.delayTimeout(100);
       }
-      else
-        return -1;
+      return -1;
+
+      // if (posix_time::second_clock::universal_time() > dieTime)
+      // {
+      //   cout << "addJoinerToBPP: job for id " << uniqueID << " has been killed." << endl;
+      //   return 0;
+      // }
+      // else
+      //   return -1;
     }
   }
 
-  int lastJoinerMsg(ByteStream& bs, const posix_time::ptime& dieTime)
+  int lastJoinerMsg(ByteStream& bs, TimeoutWatcher& tw)
   {
     SBPPV bppv;
     uint32_t uniqueID, i;
@@ -1527,15 +1588,24 @@ struct BPPHandler
 
     if (!bppv)
     {
-      if (posix_time::second_clock::universal_time() > dieTime)
+      static const string msg("LastJoiner: by timeout killed job for id ");
+      // WIP return checkTimeout only
+      auto ret = tw.checkTimeoutAndRewindBS(bs, msg, uniqueID);
+      if (!ret)
       {
-        cout << "LastJoiner: job for unknown id " << uniqueID << " has been killed." << endl;
-        return 0;
+        tw.delayTimeout(100);
       }
-      else
-      {
-        return -1;
-      }
+      return -1;
+
+      // if (posix_time::second_clock::universal_time() > dieTime)
+      // {
+      //   cout << "LastJoiner: job for unknown id " << uniqueID << " has been killed." << endl;
+      //   return 0;
+      // }
+      // else
+      // {
+      //   return -1;
+      // }
     }
 
     boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
@@ -1547,15 +1617,26 @@ struct BPPHandler
 
       if (err == -1)
       {
+        // WIP clean this up
         std::cout << std::endl;
-        if (posix_time::second_clock::universal_time() > dieTime)
+
+        static const string msg("LastJoiner: not enough joiner messages for too long so killed job for id ");
+        // WIP return checkTimeout only
+        auto ret = tw.checkTimeoutAndRewindBS(bs, msg, uniqueID);
+        if (!ret)
         {
-          cout << "LastJoiner: job for id " << uniqueID
-               << " has been killed waiting for joiner messages for too long." << endl;
-          return 0;
+          tw.delayTimeout(100);
         }
-        else
-          return -1;
+        return -1;
+
+        // if (posix_time::second_clock::universal_time() > dieTime)
+        // {
+        //   cout << "LastJoiner: job for id " << uniqueID
+        //        << " has been killed waiting for joiner messages for too long." << endl;
+        //   return 0;
+        // }
+        // else
+        //   return -1;
       }
     }
     std::cout << " finished" << std::endl;
@@ -1568,17 +1649,8 @@ struct BPPHandler
     return 0;
   }
 
-  int destroyBPP(ByteStream& bs, const posix_time::ptime& dieTime)
+  int destroyBPP(ByteStream& bs, TimeoutWatcher& tw)
   {
-    // This is a corner case that damages bs so its length becomes less than a header length.
-    // The damaged bs doesn't pass the if that checks bs at least has header + 3x int32_t.
-    // The if block below works around the issue.
-    // if (posix_time::second_clock::universal_time() > dieTime)
-    // {
-    //   cout << "destroyBPP: job for unknown id has been killed." << endl;
-    //   return 0;
-    // }
-
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
 
@@ -1632,18 +1704,29 @@ struct BPPHandler
     }
     else
     {
-      if (posix_time::second_clock::universal_time() > dieTime)
+      static const string msg("destroyBPP: killed job for id ");
+      // WIP return checkTimeout only
+      auto ret = tw.checkTimeoutAndRewindBS(bs, msg, uniqueID);
+      if (!ret)
       {
-        cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
-             << endl;
-        // If for some reason there are jobs for this uniqueID that arrived later
-        // they won't leave PP thread pool staying there forever.
+        tw.delayTimeout(100);
       }
-      else
-      {
-        bs.rewind();
-        return -1;
-      }
+      // WIP watch out for logic mistakes here
+      return -1;
+
+      // if (posix_time::second_clock::universal_time() > dieTime)
+      // {
+      //   cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been
+      //   killed."
+      //        << endl;
+      //   // If for some reason there are jobs for this uniqueID that arrived later
+      //   // they won't leave PP thread pool staying there forever.
+      // }
+      // else
+      // {
+      //   bs.rewind();
+      //   return -1;
+      // }
     }
 
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
@@ -1696,12 +1779,11 @@ struct BPPHandler
   PrimitiveServer* fPrimitiveServerPtr;
 };
 
-class DictionaryOp : public PriorityThreadPool::Functor
+class DictionaryOp : public FairThreadPool::Functor, public TimeoutWatcher
 {
  public:
-  DictionaryOp(SBS cmd) : bs(cmd)
+  DictionaryOp(SBS cmd) : TimeoutWatcher(100), bs(cmd)
   {
-    dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
   }
   virtual int execute() = 0;
   int operator()()
@@ -1716,8 +1798,12 @@ class DictionaryOp : public PriorityThreadPool::Functor
 
       if (posix_time::second_clock::universal_time() > dieTime)
       {
-        cout << "DictionaryOp::operator(): job has been killed." << endl;
-        return 0;
+        // WIP
+        delayTimeout(100);
+        std::cout << "DictionaryOp::operator(): job has been killed." << std::endl;
+        return -1;
+        // std::cout << "DictionaryOp::operator(): job has been killed." << std::endl;
+        // return 0;
       }
     }
 
@@ -1726,9 +1812,6 @@ class DictionaryOp : public PriorityThreadPool::Functor
 
  protected:
   SBS bs;
-
- private:
-  posix_time::ptime dieTime;
 };
 
 class CreateEqualityFilter : public DictionaryOp
@@ -1937,7 +2020,7 @@ struct ReadThread
   }
 
   static void dispatchPrimitive(SBS sbs, boost::shared_ptr<BPPHandler>& fBPPHandler,
-                                boost::shared_ptr<threadpool::PriorityThreadPool>& procPoolPtr,
+                                boost::shared_ptr<threadpool::FairThreadPool>& procPoolPtr,
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
                                 const bool ptTrace)
   {
@@ -1961,7 +2044,7 @@ struct ReadThread
         uint32_t weight = threadpool::MetaJobsInitialWeight;
 
         uint32_t id = 0;
-        boost::shared_ptr<PriorityThreadPool::Functor> functor;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
         {
           functor.reset(new CreateEqualityFilter(sbs));
@@ -1994,7 +2077,7 @@ struct ReadThread
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
-        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
+        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
         procPoolPtr->addJob(job);
         break;
       }
@@ -2003,7 +2086,7 @@ struct ReadThread
       case BATCH_PRIMITIVE_RUN:
       {
         TokenByScanRequestHeader* hdr = nullptr;
-        boost::shared_ptr<PriorityThreadPool::Functor> functor;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
         uint32_t id = 0;
         uint32_t weight = 0;
         uint32_t priority = 0;
@@ -2038,7 +2121,7 @@ struct ReadThread
           uniqueID = *((uint32_t*)&buf[pos + 10]);
           weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
         }
-        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         procPoolPtr->addJob(job);
 
         break;
@@ -2063,8 +2146,7 @@ struct ReadThread
   void operator()()
   {
     utils::setThreadName("PPReadThread");
-    boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
-        fPrimitiveServerPtr->getProcessorThreadPool();
+    boost::shared_ptr<threadpool::FairThreadPool> procPoolPtr = fPrimitiveServerPtr->getProcessorThreadPool();
     SBS bs;
     UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2295,8 +2377,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   fServerpool.setQueueSize(fServerQueueSize);
   fServerpool.setName("PrimitiveServer");
 
-  fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
-                                                          medPriorityThreads, lowPriorityThreads, 0));
+  fProcessorPool.reset(new threadpool::FairThreadPool(fProcessorWeight, highPriorityThreads,
+                                                      medPriorityThreads, lowPriorityThreads, 0));
 
   asyncCounter = 0;
 

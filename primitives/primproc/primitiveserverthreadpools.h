@@ -24,16 +24,16 @@ class PrimitiveServerThreadPools
 {
  public:
   PrimitiveServerThreadPools() = default;
-  PrimitiveServerThreadPools(boost::shared_ptr<threadpool::PriorityThreadPool> primServerThreadPool)
+  PrimitiveServerThreadPools(boost::shared_ptr<threadpool::FairThreadPool> primServerThreadPool)
    : fPrimServerThreadPool(primServerThreadPool)
   {
   }
 
-  boost::shared_ptr<threadpool::PriorityThreadPool> getPrimitiveServerThreadPool()
+  boost::shared_ptr<threadpool::FairThreadPool> getPrimitiveServerThreadPool()
   {
     return fPrimServerThreadPool;
   }
 
  private:
-  boost::shared_ptr<threadpool::PriorityThreadPool> fPrimServerThreadPool;
+  boost::shared_ptr<threadpool::FairThreadPool> fPrimServerThreadPool;
 };
