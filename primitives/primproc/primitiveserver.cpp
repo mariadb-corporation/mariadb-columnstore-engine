@@ -1015,7 +1015,7 @@ using namespace primitiveprocessor;
 /** @brief The job type to process a dictionary scan (pDictionaryScan class on the UM)
  * TODO: Move this & the impl into different files
  */
-class DictScanJob : public threadpool::PriorityThreadPool::Functor
+class DictScanJob : public threadpool::FairThreadPool::Functor
 {
  public:
   DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock);
@@ -1211,12 +1211,13 @@ struct BPPHandler
       }
 
       fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+      fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(key);
     }
 
     scoped.unlock();
   }
 
-  struct BPPHandlerFunctor : public PriorityThreadPool::Functor
+  struct BPPHandlerFunctor : public FairThreadPool::Functor
   {
     BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
     {
@@ -1343,6 +1344,7 @@ struct BPPHandler
 
     scoped.unlock();
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+    fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(key);
     return 0;
   }
 
@@ -1570,15 +1572,6 @@ struct BPPHandler
 
   int destroyBPP(ByteStream& bs, const posix_time::ptime& dieTime)
   {
-    // This is a corner case that damages bs so its length becomes less than a header length.
-    // The damaged bs doesn't pass the if that checks bs at least has header + 3x int32_t.
-    // The if block below works around the issue.
-    // if (posix_time::second_clock::universal_time() > dieTime)
-    // {
-    //   cout << "destroyBPP: job for unknown id has been killed." << endl;
-    //   return 0;
-    // }
-
     uint32_t uniqueID, sessionID, stepID;
     BPPMap::iterator it;
 
@@ -1647,6 +1640,7 @@ struct BPPHandler
     }
 
     fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
+    fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(uniqueID);
     lk.unlock();
     deleteDJLock(uniqueID);
     return 0;
@@ -1696,7 +1690,7 @@ struct BPPHandler
   PrimitiveServer* fPrimitiveServerPtr;
 };
 
-class DictionaryOp : public PriorityThreadPool::Functor
+class DictionaryOp : public FairThreadPool::Functor
 {
  public:
   DictionaryOp(SBS cmd) : bs(cmd)
@@ -1937,7 +1931,8 @@ struct ReadThread
   }
 
   static void dispatchPrimitive(SBS sbs, boost::shared_ptr<BPPHandler>& fBPPHandler,
-                                boost::shared_ptr<threadpool::PriorityThreadPool>& procPoolPtr,
+                                boost::shared_ptr<threadpool::FairThreadPool> procPool,
+                                std::shared_ptr<threadpool::PriorityThreadPool> OOBProcPool,
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
                                 const bool ptTrace)
   {
@@ -1961,7 +1956,7 @@ struct ReadThread
         uint32_t weight = threadpool::MetaJobsInitialWeight;
 
         uint32_t id = 0;
-        boost::shared_ptr<PriorityThreadPool::Functor> functor;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
         if (ismHdr->Command == DICT_CREATE_EQUALITY_FILTER)
         {
           functor.reset(new CreateEqualityFilter(sbs));
@@ -1995,7 +1990,7 @@ struct ReadThread
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
         PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
-        procPoolPtr->addJob(job);
+        OOBProcPool->addJob(job);
         break;
       }
 
@@ -2003,7 +1998,7 @@ struct ReadThread
       case BATCH_PRIMITIVE_RUN:
       {
         TokenByScanRequestHeader* hdr = nullptr;
-        boost::shared_ptr<PriorityThreadPool::Functor> functor;
+        boost::shared_ptr<FairThreadPool::Functor> functor;
         uint32_t id = 0;
         uint32_t weight = 0;
         uint32_t priority = 0;
@@ -2038,8 +2033,16 @@ struct ReadThread
           uniqueID = *((uint32_t*)&buf[pos + 10]);
           weight = ismHdr->Size + *((uint32_t*)&buf[pos + 18]) + 100000;
         }
-        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-        procPoolPtr->addJob(job);
+        if (hdr && hdr->flags & IS_SYSCAT)
+        {
+          PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          OOBProcPool->addJob(job);
+        }
+        else
+        {
+          FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+          procPool->addJob(job);
+        }
 
         break;
       }
@@ -2063,8 +2066,8 @@ struct ReadThread
   void operator()()
   {
     utils::setThreadName("PPReadThread");
-    boost::shared_ptr<threadpool::PriorityThreadPool> procPoolPtr =
-        fPrimitiveServerPtr->getProcessorThreadPool();
+    auto procPool = fPrimitiveServerPtr->getProcessorThreadPool();
+    auto OOBProcPool = fPrimitiveServerPtr->getOOBProcessorThreadPool();
     SBS bs;
     UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
 
@@ -2155,7 +2158,7 @@ struct ReadThread
 
             default: break;
           }
-          dispatchPrimitive(bs, fBPPHandler, procPoolPtr, outIos, writeLock,
+          dispatchPrimitive(bs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
                             fPrimitiveServerPtr->ProcessorThreads(), fPrimitiveServerPtr->PTTrace());
         }
         else  // bs.length() == 0
@@ -2295,8 +2298,11 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   fServerpool.setQueueSize(fServerQueueSize);
   fServerpool.setName("PrimitiveServer");
 
-  fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
-                                                          medPriorityThreads, lowPriorityThreads, 0));
+  fProcessorPool.reset(new threadpool::FairThreadPool(fProcessorWeight, highPriorityThreads,
+                                                      medPriorityThreads, lowPriorityThreads, 0));
+  // We're not using either the priority or the job-clustering features, just need a threadpool
+  // that can reschedule jobs, and an unlimited non-blocking queue
+  fOOBPool.reset(new threadpool::PriorityThreadPool(1, 5, 0, 0, 1));
 
   asyncCounter = 0;
 
@@ -2353,7 +2359,8 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
         // These empty SPs have "same-host" messaging semantics.
         SP_UM_IOSOCK outIos(nullptr);
         SP_UM_MUTEX writeLock(nullptr);
-        auto procPoolPtr = this->getProcessorThreadPool();
+        auto procPool = this->getProcessorThreadPool();
+        auto OOBProcPool = this->getOOBProcessorThreadPool();
         boost::shared_ptr<BPPHandler> fBPPHandler(new BPPHandler(this));
         for (;;)
         {
@@ -2367,7 +2374,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
             }
             idbassert(sbs->length() >= sizeof(ISMPacketHeader));
 
-            ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPoolPtr, outIos, writeLock,
+            ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
                                           this->ProcessorThreads(), this->PTTrace());
           }
         }
