@@ -1869,7 +1869,7 @@ void ExtentMap::save(const string& filename)
     const size_t emSizeInBatch = emNumOfElementsInBatch * sizeof(EMEntry);
     std::unique_ptr<char[]> extentMapBuffer(new char[emSizeInBatch]);
 
-    size_t endOfBatch = std::min(emIndex + EM_SAVE_NUM_PER_BATCH, emNumOfElements);
+    const size_t endOfBatch = std::min(emIndex + EM_SAVE_NUM_PER_BATCH, emNumOfElements);
     size_t offset = 0;
     while (emIndex < endOfBatch)
     {
