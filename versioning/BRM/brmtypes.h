@@ -527,6 +527,11 @@ const uint8_t BULK_UPDATE_DBROOT = 100;
 const uint8_t GET_SYSTEM_CATALOG = 101;
 const uint8_t BULK_WRITE_VB_ENTRY = 102;
 
+const uint8_t NEW_CPIMPORT_JOB = 103;
+const uint8_t FINISH_CPIMPORT_JOB = 104;
+const uint8_t START_READONLY = 105;
+const uint8_t FORCE_CLEAR_CPIMPORT_JOBS = 106;
+
 /* Error codes returned by the DBRM functions. */
 /// The operation was successful
 const int8_t ERR_OK = 0;

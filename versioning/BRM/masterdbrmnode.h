@@ -186,6 +186,7 @@ class MasterDBRMNode
   void doReload(messageqcpp::IOSocket* sock);
   void doSetReadOnly(messageqcpp::IOSocket* sock, bool b);
   void doGetReadOnly(messageqcpp::IOSocket* sock);
+  void doStartReadOnly(messageqcpp::IOSocket* sock);
 
   /* SessionManager interface */
   SessionManagerServer sm;
@@ -193,6 +194,9 @@ class MasterDBRMNode
   void doGetSystemCatalog(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doSysCatVerID(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doNewTxnID(messageqcpp::ByteStream& msg, ThreadParams* p);
+  void doNewCpimportJob(ThreadParams* p);
+  void doFinishCpimportJob(messageqcpp::ByteStream& msg, ThreadParams* p);
+  void doForceClearAllCpimportJobs(messageqcpp::IOSocket* sock);
   void doCommitted(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doRolledBack(messageqcpp::ByteStream& msg, ThreadParams* p);
   void doGetTxnID(messageqcpp::ByteStream& msg, ThreadParams* p);
@@ -247,11 +251,14 @@ class MasterDBRMNode
   boost::mutex mutex2;      // protects params and the hand-off  TODO: simplify
   boost::mutex slaveLock;   // syncs communication with the slaves
   boost::mutex serverLock;  // kludge to synchronize reloading
+  std::mutex cpimportMutex;
+  std::condition_variable cpimportJobsCond;
   int runners, NumWorkers;
   ThreadParams* params;
   volatile bool die, halting;
   bool reloadCmd;
   mutable bool readOnly;
+  mutable bool waitToFinishJobs{false};
   struct timespec MSG_TIMEOUT;
 };
 

@@ -2733,6 +2733,25 @@ int DBRM::setReadOnly(bool b) DBRM_THROW
   return err;
 }
 
+int DBRM::startReadOnly() DBRM_THROW
+{
+  ByteStream command, response;
+  uint8_t err;
+
+  command << START_READONLY;
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+    return err;
+
+  if (response.length() != 1)
+    return ERR_NETWORK;
+
+  response >> err;
+  CHECK_EMPTY(response);
+  return err;
+}
+
 int DBRM::isReadWrite() throw()
 {
 #ifdef BRM_INFO
@@ -3004,6 +3023,73 @@ const QueryContext DBRM::sysCatVerID()
   }
 
   return ret;
+}
+
+uint8_t DBRM::newCpimportJob(uint32_t& jobId)
+{
+  ByteStream command, response;
+  uint8_t err;
+  command << NEW_CPIMPORT_JOB;
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+  {
+    log("DBRM: SessionManager::newCpimportJob(): network error");
+    return err;
+  }
+
+  if (response.length() != 5)
+  {
+    log("DBRM: SessionManager::newCpimportJob(): bad response");
+    return ERR_READONLY;
+  }
+
+  response >> err;
+  response >> jobId;
+  return ERR_OK;
+}
+
+void DBRM::finishCpimportJob(uint32_t jobId)
+{
+  ByteStream command, response;
+  uint8_t err;
+
+  command << FINISH_CPIMPORT_JOB << (uint32_t)jobId;
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+    log("DBRM: error: SessionManager::finishCpimportJob() failed");
+  else if (response.length() != 1)
+    log("DBRM: error: SessionManager::finishCpimportJob() failed (bad response)", logging::LOG_TYPE_ERROR);
+
+  response >> err;
+
+  if (err != ERR_OK)
+    log("DBRM: error: SessionManager::finishCpimportJob() failed (valid error code)",
+        logging::LOG_TYPE_ERROR);
+}
+
+int DBRM::forceClearCpimportJobs() DBRM_THROW
+{
+  ByteStream command, response;
+  uint8_t err;
+
+  command << FORCE_CLEAR_CPIMPORT_JOBS;
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+    log("DBRM: error: SessionManager::forceClearAllCpimportJobs()) failed");
+  else if (response.length() != 1)
+    log("DBRM: error: SessionManager::forceClearAllCpimportJobs() failed (bad response)",
+        logging::LOG_TYPE_ERROR);
+
+  response >> err;
+
+  if (err != ERR_OK)
+    log("DBRM: error: SessionManager::forceClearAllCpimportJobs() failed (valid error code)",
+        logging::LOG_TYPE_ERROR);
+
+  return err;
 }
 
 const TxnID DBRM::newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL)
@@ -4462,11 +4548,12 @@ void DBRM::deleteAISequence(uint32_t OID)
 void DBRM::addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList)
 {
   boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
-    execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+      execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
-  std::unordered_map<execplan::CalpontSystemCatalog::OID,
-    std::unordered_map<execplan::CalpontSystemCatalog::OID,
-      std::vector<struct BRM::EMEntry>>> extentMap;
+  std::unordered_map<
+      execplan::CalpontSystemCatalog::OID,
+      std::unordered_map<execplan::CalpontSystemCatalog::OID, std::vector<struct BRM::EMEntry>>>
+      extentMap;
 
   int err = 0;
 
@@ -4491,18 +4578,15 @@ void DBRM::addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList)
       throw runtime_error(os.str());
     }
 
-    execplan::CalpontSystemCatalog::OID tableOid =
-      systemCatalogPtr->isAUXColumnOID(oid);
+    execplan::CalpontSystemCatalog::OID tableOid = systemCatalogPtr->isAUXColumnOID(oid);
 
     if (tableOid >= 3000)
     {
       if (tableOidSet.find(tableOid) == tableOidSet.end())
       {
         tableOidSet.insert(tableOid);
-        execplan::CalpontSystemCatalog::TableName tableName =
-          systemCatalogPtr->tableName(tableOid);
-        execplan::CalpontSystemCatalog::RIDList tableColRidList =
-          systemCatalogPtr->columnRIDs(tableName);
+        execplan::CalpontSystemCatalog::TableName tableName = systemCatalogPtr->tableName(tableOid);
+        execplan::CalpontSystemCatalog::RIDList tableColRidList = systemCatalogPtr->columnRIDs(tableName);
 
         for (unsigned j = 0; j < tableColRidList.size(); j++)
         {
