@@ -60,8 +60,7 @@ BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
 boost::mutex BRMWrapper::m_instanceCreateMutex;
 
-
-    bool BRMWrapper::m_useVb = true;
+bool BRMWrapper::m_useVb = true;
 OID BRMWrapper::m_curVBOid = INVALID_NUM;
 IDBDataFile* BRMWrapper::m_curVBFile = NULL;
 boost::mutex vbFileLock;
@@ -742,6 +741,16 @@ int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, IDBDataFile* pTargetFile, 
     return ERR_BRM_VB_COPY_WRITE;
   else
     return NO_ERROR;
+}
+
+uint8_t BRMWrapper::newCpimportJob(uint32_t &jobId)
+{
+  return blockRsltnMgrPtr->newCpimportJob(jobId);
+}
+
+void BRMWrapper::finishCpimportJob(uint32_t jobId)
+{
+  blockRsltnMgrPtr->finishCpimportJob(jobId);
 }
 
 int BRMWrapper::commit(const VER_t transID)

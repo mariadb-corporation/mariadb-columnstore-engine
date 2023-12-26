@@ -39,7 +39,10 @@ bool vflg;
 
 void usage(char* c)
 {
-  cerr << "Usage: " << c << " [-vh] status | halt | resume | readonly | readwrite | reload" << endl;
+  cerr << "Usage: " << c
+       << " [-vh] status | halt | resume | readonly | readwrite | reload | startreadonly | "
+          "forceclearcpimportjobs"
+       << endl;
   exit(1);
 }
 
@@ -115,6 +118,20 @@ void do_status()
   errMsg(err);
 }
 
+void start_readonly()
+{
+  int err;
+  err = dbrm.startReadOnly();
+  errMsg(err);
+}
+
+void force_clear_cpimport_jobs()
+{
+  int err;
+  err = dbrm.forceClearCpimportJobs();
+  errMsg(err);
+}
+
 void do_sysstatus()
 {
   int err;
@@ -172,6 +189,10 @@ int main(int argc, char** argv)
     set_readonly(false);
   else if (cmd == "reload")
     do_reload();
+  else if (cmd == "startreadonly")
+    start_readonly();
+  else if (cmd == "forceclearcpimportjobs")
+    force_clear_cpimport_jobs();
   else if (cmd == "sysstatus")
     do_sysstatus();
   else
