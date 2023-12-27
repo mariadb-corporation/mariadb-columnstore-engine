@@ -1061,6 +1061,7 @@ class ExtentMap : public Undoable
   static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
   static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
   static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
+  static const constexpr size_t EM_SAVE_NUM_PER_BATCH = 1000000;
   // RBTree constants.
   static const size_t EM_RB_TREE_NODE_SIZE = sizeof(EMEntry) + 8 * sizeof(uint64_t);
   static const size_t EM_RB_TREE_EMPTY_SIZE = 1024;
