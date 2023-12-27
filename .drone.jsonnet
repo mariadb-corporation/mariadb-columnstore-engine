@@ -177,9 +177,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-MENT-1667') =
     'test210.sh',
     'test211.sh',
     'test212.sh',
+    'test222.sh',
     'test297.sh',
     'test299.sh',
     'test300.sh',
+    'test400.sh',
   ] else [
     'test000.sh',
     'test001.sh',
