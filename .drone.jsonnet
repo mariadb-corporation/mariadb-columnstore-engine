@@ -67,7 +67,7 @@ local core_dump_format = 'https://raw.githubusercontent.com/mariadb-corporation/
 local core_dump_check = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_check.sh';
 local core_dump_drop = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/core_dump_drop.sh';
 local ansi2html = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/ansi2html.sh';
-local logs = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/with_service_logs/core_dumps/logs.sh';
+local logs = 'https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/core_dumps/logs.sh';
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
 
