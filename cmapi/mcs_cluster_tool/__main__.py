@@ -4,7 +4,7 @@ import sys
 import typer
 
 from cmapi_server.logging_management import dict_config, add_logging_level
-from mcs_cluster_tool import cluster_app
+from mcs_cluster_tool import cluster_app, cmapi_app
 from mcs_cluster_tool.constants import MCS_CLI_LOG_CONF_PATH
 
 
@@ -17,6 +17,7 @@ app = typer.Typer(
     ),
 )
 app.add_typer(cluster_app.app, name="cluster")
+app.add_typer(cmapi_app.app, name="cmapi")
 
 
 if __name__ == "__main__":
