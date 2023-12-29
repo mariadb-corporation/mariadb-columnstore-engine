@@ -389,7 +389,7 @@ void TupleAggregateStep::initializeMultiThread()
     boost::mutex* lock = new boost::mutex();
     fAgg_mutex.push_back(lock);
     fRowGroupOuts[i] = fRowGroupOut;
-    rgData.reinit(fRowGroupOut);
+    rgData.reinit(fRowGroupOut, 1);
     fRowGroupDatas[i] = rgData;
     fRowGroupOuts[i].setData(&fRowGroupDatas[i]);
     fRowGroupOuts[i].resetRowGroup(0);
