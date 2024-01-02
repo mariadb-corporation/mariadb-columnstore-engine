@@ -603,7 +603,12 @@ class RowGroupStorage
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
-    fMM->acquire(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    if (!fMM->acquire(fRowGroupOut->getSizeWithStrings(fMaxRows)))
+    {
+      // WIP set a unique error
+      throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_TOO_BIG),
+                               logging::ERR_DISKAGG_TOO_BIG);
+    }
   }
 
   ~RowGroupStorage() = default;
