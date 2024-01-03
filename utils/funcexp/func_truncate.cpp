@@ -19,7 +19,6 @@
 //  $Id: func_truncate.cpp 3921 2013-06-19 18:59:56Z bwilkinson $
 
 #include <cstdlib>
-#include <iomanip>
 #include <string>
 using namespace std;
 
@@ -560,7 +559,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
         else
         {
           if (-s >= (int32_t)value.size())
-            value = "0";
+            value = std::string("0");
           else
           {
             value = value.substr(0, value.size() + s);
@@ -661,7 +660,7 @@ int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
@@ -677,7 +676,7 @@ int64_t Func_truncate::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isN
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
@@ -693,7 +692,7 @@ int64_t Func_truncate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
