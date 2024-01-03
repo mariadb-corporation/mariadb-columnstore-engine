@@ -2365,7 +2365,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
         for (;;)
         {
           joblist::DistributedEngineComm::SBSVector primitiveMsgs;
-          for (auto& sbs : exeMgrDecPtr->readLocalQueueMessagesOrWait(primitiveMsgs))
+          for (auto sbs : exeMgrDecPtr->readLocalQueueMessagesOrWait(primitiveMsgs))
           {
             if (sbs->length() == 0)
             {
@@ -2384,7 +2384,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
       []()
       {
         utils::setThreadName("PPRamMonitorThr");
-        vector<int64_t> values(12, 0);
+        vector<int64_t> values(12, std::numeric_limits<int64_t>::max());
         auto& rm = exemgr::globServiceExeMgr->getRm();
         while (true)
         {
@@ -2394,8 +2394,8 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
             sleep(5);
             values[i] = rm.availableMemory();
           }
-          auto maxRAMUsed = *std::max_element(values.begin(), values.end());
-          std::cout << "RAM peak consumption for the prev 60 sec: " << maxRAMUsed << std::endl;
+          auto minRAMFree = *std::min_element(values.begin(), values.end());
+          std::cout << "RAM peak consumption for the prev 60 sec: " << minRAMFree << std::endl;
         }
       });
   fServerpool.wait();
