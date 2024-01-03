@@ -1015,7 +1015,8 @@ DistributedEngineComm::SBSVector& DistributedEngineComm::readLocalQueueMessagesO
     // Batch processing to reduce the crit section
     while (!inMemoryEM2PPExchQueue_.empty())
     {
-      receivedMessages.push_back(inMemoryEM2PPExchQueue_.front());
+      SBS bs = inMemoryEM2PPExchQueue_.front();
+      receivedMessages.push_back(bs);
       inMemoryEM2PPExchQueue_.pop();
     }
     exchangeLock.unlock();
