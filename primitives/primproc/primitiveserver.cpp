@@ -2380,24 +2380,6 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
         }
       });
 
-  std::thread ramConsumptionMonitor(
-      []()
-      {
-        utils::setThreadName("PPRamMonitorThr");
-        vector<int64_t> values(12, std::numeric_limits<int64_t>::max());
-        auto& rm = exemgr::globServiceExeMgr->getRm();
-        while (true)
-        {
-          size_t i = 0;
-          while (i++ < 12)
-          {
-            sleep(5);
-            values[i] = rm.availableMemory();
-          }
-          auto minRAMFree = *std::min_element(values.begin(), values.end());
-          std::cout << "RAM peak consumption for the prev 60 sec: " << minRAMFree << std::endl;
-        }
-      });
   fServerpool.wait();
 
   cerr << "PrimitiveServer::start() exiting!" << endl;
