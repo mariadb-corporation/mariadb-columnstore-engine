@@ -351,6 +351,7 @@ class ByteStream : public Serializeable
    */
   EXPORT void needAtLeast(size_t amount);
   inline uint8_t* getInputPtr();
+  inline void setInputPtr(uint8_t *ptr);
   inline void advanceInputPtr(size_t amount);
 
   /**
@@ -409,6 +410,7 @@ class ByteStream : public Serializeable
    * can be read again.
    */
   inline void rewind();
+  inline void onStart();
 
   /**
    * Get the allocated size of the buffer.
@@ -468,8 +470,8 @@ class ByteStream : public Serializeable
   uint8_t* fCurInPtr;   // the point in fBuf where data is inserted next
   uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
   uint32_t fMaxLen;     // how big fBuf is currently
-  // Stores `long strings`.
-    std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+                        // Stores `long strings`.
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
 };
 
 template <int W, typename T = void>
@@ -561,6 +563,10 @@ inline void ByteStream::rewind()
 {
   fCurOutPtr = fBuf + ISSOverhead;
 }
+inline void ByteStream::onStart()
+{
+  fCurOutPtr = fBuf;
+}
 inline void ByteStream::advance(uint32_t adv)
 {
   // fCurOutPtr is always >= fBuf, so fCurOutPtr - fBuf is >= 0, and this difference is always <= 32 bits
@@ -575,6 +581,12 @@ inline uint8_t* ByteStream::getInputPtr()
 {
   return fCurInPtr;
 }
+
+inline void ByteStream::setInputPtr(uint8_t *ptr)
+{
+  fCurInPtr = ptr;
+}
+
 inline void ByteStream::advanceInputPtr(size_t amount)
 {
   fCurInPtr += amount;
@@ -660,7 +672,6 @@ void deserializeVector(ByteStream& bs, std::vector<T>& v)
   }
 }
 
-
 template <typename T>
 void serializeInlineVector(ByteStream& bs, const std::vector<T>& v)
 {
@@ -693,7 +704,6 @@ void deserializeInlineVector(ByteStream& bs, std::vector<T>& v)
     bs.advance(sizeof(T) * size);
   }
 }
-
 
 inline void deserializeVector(ByteStream& bs, std::vector<int64_t>& v)
 {

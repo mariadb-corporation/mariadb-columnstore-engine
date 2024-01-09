@@ -55,6 +55,7 @@ void ByteStream::doCopy(const ByteStream& rhs)
     fMaxLen = rlen;
   }
 
+ // memcpy(fBuf, rhs.fBuf, ISSOverhead);
   memcpy(fBuf + ISSOverhead, rhs.fCurOutPtr, rlen);
   fCurInPtr = fBuf + ISSOverhead + rlen;
   fCurOutPtr = fBuf + ISSOverhead;
@@ -624,7 +625,6 @@ void ByteStream::needAtLeast(size_t amount)
   if (currentSpace < amount)
     growBuf(fMaxLen + amount);
 }
-
 
 ByteStream& ByteStream::operator<<(const ByteStream& bs)
 {

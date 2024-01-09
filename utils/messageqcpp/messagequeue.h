@@ -205,7 +205,8 @@ class MessageQueueClient
    * write a message to otherEnd. If the socket is not open, the timeout parm (in ms) will be used
    *  to establish a sync connection w/ the server
    */
-  EXPORT void write(const ByteStream& msg, const struct timespec* timeout = 0, Stats* stats = NULL) const;
+  EXPORT void write(const ByteStream& msg, const struct timespec* timeout = 0, Stats* stats = NULL,
+                    int senderType = 1) const;
 
   /**
    * @brief shutdown the connection to the server

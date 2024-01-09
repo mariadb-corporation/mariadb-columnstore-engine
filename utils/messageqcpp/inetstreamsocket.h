@@ -96,7 +96,7 @@ class InetStreamSocket : public Socket
   virtual void close();
 
   /** test if this socket is open
-   *
+   4*
    */
   inline virtual bool isOpen() const;
 
@@ -121,12 +121,12 @@ class InetStreamSocket : public Socket
    *
    * write a message to the socket
    */
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
+  virtual void write(const ByteStream& msg, Stats* stats = NULL, int senderType = 1);
   virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
 
   /** this version of write takes ownership of the bytestream
    */
-  virtual void write(SBS msg, Stats* stats = NULL);
+  virtual void write(SBS msg, Stats* stats = NULL, int senderType = 1);
 
   /** bind to a port
    *
@@ -231,7 +231,7 @@ class InetStreamSocket : public Socket
    */
   virtual bool readToMagic(long msecs, bool* isTimeOut, Stats* stats) const;
 
-  void do_write(const ByteStream& msg, uint32_t magic, Stats* stats = NULL) const;
+  void do_write(const ByteStream& msg, uint32_t magic, Stats* stats = NULL, int senderType = 1) const;
   ssize_t written(int fd, const uint8_t* ptr, size_t nbytes) const;
   bool readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, const size_t numberOfBytes,
                          const struct ::timespec* timeout, bool* isTimeOut, Stats* stats, int64_t msec) const;

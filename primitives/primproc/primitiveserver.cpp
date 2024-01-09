@@ -1913,8 +1913,17 @@ struct ReadThread
                                 boost::shared_ptr<threadpool::FairThreadPool> procPool,
                                 std::shared_ptr<threadpool::PriorityThreadPool> OOBProcPool,
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
-                                const bool ptTrace)
+                                const bool ptTrace, bool isLocal)
   {
+    /*
+    uint8_t *originalInputPtr = sbs->getInputPtr();
+    sbs->rewind();
+    uint32_t *buf = (uint32_t *)sbs->buf();
+    buf = buf - 1;
+    std::cout << "PP SENDER ID: " << (uint32_t)buf[0] << endl;
+    sbs->setInputPtr(originalInputPtr);
+    */
+
     const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
     switch (ismHdr->Command)
     {
@@ -2032,6 +2041,31 @@ struct ReadThread
       }
       default:
       {
+        std::cout << "IS LOCAL SBS " << isLocal << std::endl;
+        std::cout << "PRIMITIVE SERVER SBS BUFFER FROM BEGINNING IN BYTES: " << std::endl;
+        sbs->onStart();
+        uint8_t* buffer = sbs->buf();
+        std::cout << std::hex;
+        for (uint32_t i = 0; i < sbs->length(); ++i)
+        {
+          std::cout << (uint32_t)buffer[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "SBS LENGTH: " << std::dec << sbs->length() << std::endl;
+
+        sbs->rewind();
+        uint32_t* buff = (uint32_t*)sbs->buf();
+        buff = buff - 1;
+        std::cout << std::dec << "SENDER ID: " << (uint32_t)buff[0] << endl;
+        buffer = sbs->buf();
+        std::cout << "PRIMITIVE SERVER REWIND SBS BUFFER IN BYTES: " << std::endl;
+        std::cout << std::hex;
+        for (uint32_t i = 0; i < sbs->length(); ++i)
+        {
+          std::cout << (uint32_t)buffer[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "SBS LENGTH: " << std::dec << sbs->length() << std::endl;
         std::ostringstream os;
         Logger log;
         os << "unknown primitive cmd: " << ismHdr->Command;
@@ -2137,7 +2171,7 @@ struct ReadThread
             default: break;
           }
           dispatchPrimitive(bs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
-                            fPrimitiveServerPtr->ProcessorThreads(), fPrimitiveServerPtr->PTTrace());
+                            fPrimitiveServerPtr->ProcessorThreads(), fPrimitiveServerPtr->PTTrace(), false);
         }
         else  // bs.length() == 0
         {
@@ -2355,7 +2389,7 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
             idbassert(sbs->length() >= sizeof(ISMPacketHeader));
 
             ReadThread::dispatchPrimitive(sbs, fBPPHandler, procPool, OOBProcPool, outIos, writeLock,
-                                          this->ProcessorThreads(), this->PTTrace());
+                                          this->ProcessorThreads(), this->PTTrace(), true);
           }
         }
       });

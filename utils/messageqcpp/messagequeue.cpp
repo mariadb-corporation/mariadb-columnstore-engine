@@ -292,7 +292,7 @@ const SBS MessageQueueClient::read(const struct timespec* timeout, bool* isTimeO
   return res;
 }
 
-void MessageQueueClient::write(const ByteStream& msg, const struct timespec* timeout, Stats* stats) const
+void MessageQueueClient::write(const ByteStream& msg, const struct timespec* timeout, Stats* stats, int senderType) const
 {
   if (!fClientSock.isOpen())
   {
@@ -312,7 +312,7 @@ void MessageQueueClient::write(const ByteStream& msg, const struct timespec* tim
 
   try
   {
-    fClientSock.write(msg, stats);
+    fClientSock.write(msg, stats, senderType);
   }
   catch (runtime_error& e)
   {

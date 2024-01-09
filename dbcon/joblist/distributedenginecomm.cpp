@@ -719,12 +719,12 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
         continue;
       }
       pmAcked[sockIndex] = true;
-      writeToClient(sockIndex, msg);
+      writeToClient(sockIndex, msg, std::numeric_limits<uint32_t>::max(), false, 31);
     }
     if (sendToLocal)
     {
       pmAcked[localConnectionId_] = true;
-      writeToClient(localConnectionId_, msg);
+      writeToClient(localConnectionId_, msg, std::numeric_limits<uint32_t>::max(), false, 32);
     }
 
     // @bug4436, when no more unacked work, send an ack to all PMs that haven't been acked.
@@ -749,12 +749,12 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
             {
               continue;
             }
-            writeToClient(i, msg);
+            writeToClient(i, msg, std::numeric_limits<uint32_t>::max(), false, 33);
           }
         }
         if (!pmAcked[localConnectionId_] && fIsExeMgr)
         {
-          writeToClient(localConnectionId_, msg);
+          writeToClient(localConnectionId_, msg, std::numeric_limits<uint32_t>::max(), false, 34);
         }
       }
     }
@@ -841,13 +841,13 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
     {
       continue;
     }
-    writeToClient(i, msg);
+    writeToClient(i, msg, std::numeric_limits<uint32_t>::max(), false, 35);
   }
   if (fIsExeMgr)
-    writeToClient(localConnectionId_, msg);
+    writeToClient(localConnectionId_, msg, std::numeric_limits<uint32_t>::max(), false, 36);
 }
 
-int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
+int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg, int senderType)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg->buf();
   uint32_t dest;
@@ -879,14 +879,14 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
               continue;
             }
 
-            if ((rc = writeToClient(i, msg, senderID)))
+            if ((rc = writeToClient(i, msg, std::numeric_limits<uint32_t>::max(), false, 37)))
             {
               return rc;
             }
           }
           if (fIsExeMgr)
           {
-            return writeToClient(localConnectionId_, msg);
+            return writeToClient(localConnectionId_, msg, std::numeric_limits<uint32_t>::max(), false, 38);
           }
           return rc;
         }
@@ -898,7 +898,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
         // and decides the final connection index because it already grabs the
         // caller's queue information
         dest = ism->Interleave;
-        return writeToClient(dest, msg, senderID, true);
+        return writeToClient(dest, msg, std::numeric_limits<uint32_t>::max(), true, 39);
       }
 
       default: idbassert_s(0, "Unknown message type");
@@ -912,7 +912,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
   return 0;
 }
 
-void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
+void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection, int senderId)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg.buf();
   PrimitiveHeader* pm = (PrimitiveHeader*)(ism + 1);
@@ -934,7 +934,7 @@ void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connect
 
   lk.unlock();
 
-  newClients[connection]->write(msg, NULL, senderStats);
+  newClients[connection]->write(msg, NULL, senderStats, senderId);
 }
 
 void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueClient> cl, uint32_t connIndex)
@@ -1037,7 +1037,7 @@ void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::
 // SBS is cleared when it is sent to PP at the same host. This fact forces any
 // code uses ::writeToClient to send to a local node in the last turn.
 int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
-                                         bool doInterleaving)
+                                         bool doInterleaving, int senderType)
 {
   MessageQueueMap::iterator it;
   // Keep mqe's stats from being freed early
@@ -1077,7 +1077,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       return 0;
 
     std::lock_guard lk(*(fWlock[connectionId]));
-    client->write(bs, NULL, senderStats);
+    client->write(bs, NULL, senderStats, senderType);
   }
   catch (...)
   {

@@ -34,7 +34,7 @@ class SameNodePseudoSocket : public Socket
  public:
   explicit SameNodePseudoSocket(joblist::DistributedEngineComm* exeMgrDecPtr);
   virtual ~SameNodePseudoSocket();
-  virtual void write(SBS msg, Stats* stats = NULL);
+  virtual void write(SBS msg, Stats* stats = NULL, int senderType = 1);
 
  private:
   virtual void bind(const sockaddr* serv_addr);
@@ -70,7 +70,7 @@ class SameNodePseudoSocket : public Socket
   inline virtual bool isOpen() const;
   virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
                          Stats* stats = NULL) const;
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
+  virtual void write(const ByteStream& msg, Stats* stats = NULL, int senderType = 1);
   virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
   virtual void listen(int backlog = 5);
   virtual const IOSocket accept(const struct timespec* timeout = 0);

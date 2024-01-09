@@ -59,12 +59,12 @@ const SBS SameNodePseudoSocket::read(const struct ::timespec* timeout, bool* isT
 }
 
 // This is the only working method of this class. It puts SBS directly into DEC queue.
-void SameNodePseudoSocket::write(SBS msg, Stats* stats)
+void SameNodePseudoSocket::write(SBS msg, Stats* stats, int senderId)
 {
   dec_->addDataToOutput(msg);
 }
 
-void SameNodePseudoSocket::write(const ByteStream& msg, Stats* stats)
+void SameNodePseudoSocket::write(const ByteStream& msg, Stats* stats, int senderId)
 {
 }
 
