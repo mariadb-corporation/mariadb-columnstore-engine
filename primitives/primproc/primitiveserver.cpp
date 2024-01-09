@@ -2034,6 +2034,16 @@ struct ReadThread
       }
       default:
       {
+        sbs->rewind();
+        uint8_t* buffer = sbs->buf();
+        std::cout << "PRIMITIVE SERVER SBS BUFFER IN BYTES: " << std::endl;
+        std::cout << std::hex;
+        for (uint32_t i = 0; i < sbs->length(); ++i)
+        {
+          std::cout << (uint32_t)buffer[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "SBS LENGTH: " << std::dec << sbs->length() << std::endl;
         std::ostringstream os;
         Logger log;
         os << "unknown primitive cmd: " << ismHdr->Command;
