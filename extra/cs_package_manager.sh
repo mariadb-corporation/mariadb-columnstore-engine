@@ -217,7 +217,7 @@ do_remove() {
     check_package_managers
  
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
             do_yum_remove "$@"
             ;;
 
@@ -225,7 +225,7 @@ do_remove() {
             do_apt_remove "$@"
             ;;
         *)  # unknown option
-            echo "\nos & version not implemented: $distro_info\n"
+            echo "\ndo_remove: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 
@@ -264,7 +264,7 @@ check_operating_system() {
 
     # distros=(centos7 debian11 debian12 rockylinux8 rockylinux9 ubuntu20.04 ubuntu22.04)
     case $distro_info in
-        centos )
+        centos | rhel )
             distro="${distro_info}${version_id}"
             ;;
         debian )
@@ -305,13 +305,7 @@ check_no_mdb_installed() {
 
     packages=""
     case $distro_info in
-        centos )
-            packages=$(yum list installed | grep -i mariadb)
-            ;;
-        # debian )
-            
-        #     ;;
-        rocky )
+        centos | rhel | rocky )
             packages=$(yum list installed | grep -i mariadb)
             ;;
         ubuntu | debian )
@@ -349,7 +343,7 @@ check_aws_cli_installed() {
         esac    
 
         case $distro_info in
-            centos | rocky )
+            centos | rhel | rocky )
                 rm -rf aws awscliv2.zip
                 yum install unzip -y;
                 curl "$cli_url" -o "awscliv2.zip";
@@ -488,7 +482,7 @@ enterprise_install() {
     fi;
 
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
 
             if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
@@ -513,7 +507,7 @@ enterprise_install() {
             do_enterprise_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\nos & version not implemented: $distro_info\n"
+            printf "\nenterprise_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 }
@@ -538,14 +532,14 @@ community_install() {
     fi;
 
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
             do_community_yum_install "$@" 
             ;;
         ubuntu | debian )
             do_community_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\nos & version not implemented: $distro_info\n"
+            printf "\ncommunity_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 
@@ -782,7 +776,7 @@ dev_install() {
     check_dev_build_exists
 
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
             s3_path="${s3_path}/$distro"
             drone_http="${drone_http}/$distro"
             do_dev_yum_install "$@" 
@@ -791,7 +785,7 @@ dev_install() {
             do_dev_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\nos & version not implemented: $distro_info\n"
+            printf "\ndev_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
     
@@ -970,7 +964,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rocky )
+                        centos | rhel | rocky )
                             path="rpm/rhel/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
@@ -1016,7 +1010,7 @@ do_check() {
                      
                             ;;
                         *)  # unknown option
-                            printf "\nNot implemented for: $distro_info\n\n"
+                            printf "\ndo_check: Not implemented for: $distro_info\n\n"
                             exit 2;
                         esac
                     fi;
@@ -1047,7 +1041,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rocky )
+                        centos | rhel | rocky )
                             path="yum/centos/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
