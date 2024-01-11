@@ -1921,64 +1921,6 @@ void BatchPrimitiveProcessor::execute()
   }
   catch (NeedToRestartJob& n)
   {
-#if 0
-
-        /* This block of code will flush the problematic OIDs from the
-         * cache.  It seems to have no effect on the problem, so it's commented
-         * for now.
-         *
-         * This is currently thrown only on syscat queries.  If we find the problem
-         * in user tables also, we should avoid dropping entire OIDs if possible.
-         *
-         * In local testing there was no need for flushing, because DDL flushes
-         * the syscat constantly.  However, it can take a long time (>10 s) before
-         * that happens.  Doing it locally should make it much more likely only
-         * one restart is necessary.
-         */
-
-        try
-        {
-            vector<uint32_t> oids;
-            uint32_t oid;
-
-            for (uint32_t i = 0; i < filterCount; i++)
-            {
-                oid = filterSteps[i]->getOID();
-
-                if (oid > 0)
-                    oids.push_back(oid);
-            }
-
-            for (uint32_t i = 0; i < projectCount; i++)
-            {
-                oid = projectSteps[i]->getOID();
-
-                if (oid > 0)
-                    oids.push_back(oid);
-            }
-
-#if 0
-            Logger logger;
-            ostringstream os;
-            os << "dropping OIDs: ";
-
-            for (int i = 0; i < oids.size(); i++)
-                os << oids[i] << " ";
-
-            logger.logMessage(os.str());
-#endif
-
-            for (int i = 0; i < fCacheCount; i++)
-            {
-                dbbc::blockCacheClient bc(*BRPp[i]);
-//				bc.flushCache();
-                bc.flushOIDs(&oids[0], oids.size());
-            }
-        }
-        catch (...) { }     // doesn't matter if this fails, just avoid crashing
-
-#endif
-
 #ifndef __FreeBSD__
     pthread_mutex_unlock(&objLock);
 #endif
@@ -2109,21 +2051,20 @@ void BatchPrimitiveProcessor::serializeStrings()
 
 void BatchPrimitiveProcessor::sendResponse()
 {
-  auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
   // Here is the fast path for local EM to PM interaction. PM puts into the
   // input EM DEC queue directly.
-  // !sock has a 'same host connection' semantics here.
-  if (initiatedByEM_ && (!sock || exeMgrDecPtr->clientAtTheSameHost(sock)))
+  // !writelock has a 'same host connection' semantics here.
+  if (initiatedByEM_ && !writelock)
   {
     // Flow Control now handles same node connections so the recieving DEC queue
     // is limited.
     if (sendThread->flowControlEnabled())
     {
-      sendThread->sendResult({serialized, nullptr, nullptr, 0}, false);
+      sendThread->sendResult({serialized, sock, writelock, 0}, false);
     }
     else
     {
-      exeMgrDecPtr->addDataToOutput(serialized);
+      sock->write(serialized);
       serialized.reset();
     }
 

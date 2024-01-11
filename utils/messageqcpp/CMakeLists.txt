@@ -9,6 +9,7 @@ set(messageqcpp_LIB_SRCS
     bytestream.cpp
     socketparms.cpp
     inetstreamsocket.cpp
+    samenodepseudosocket.cpp
     iosocket.cpp
     compressed_iss.cpp
     bytestreampool.cpp

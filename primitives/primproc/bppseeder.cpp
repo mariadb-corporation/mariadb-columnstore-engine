@@ -153,7 +153,7 @@ int BPPSeeder::operator()()
 
       if (0 < status)
       {
-        sendErrorMsg(uniqueID, status, stepID);
+        error_handling::sendErrorMsg(status, uniqueID, stepID, sock);
         return ret;
       }
 
@@ -335,23 +335,8 @@ void BPPSeeder::catchHandler(const string& ex, uint32_t id, uint32_t step)
 {
   Logger log;
   log.logMessage(ex);
-  sendErrorMsg(id, logging::bppSeederErr, step);
-}
 
-void BPPSeeder::sendErrorMsg(uint32_t id, uint16_t status, uint32_t step)
-{
-  ISMPacketHeader ism;
-  PrimitiveHeader ph = {0, 0, 0, 0, 0, 0};
-
-  ism.Status = status;
-  ph.UniqueID = id;
-  ph.StepID = step;
-  ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-  msg.append((uint8_t*)&ism, sizeof(ism));
-  msg.append((uint8_t*)&ph, sizeof(ph));
-
-  boost::mutex::scoped_lock lk(*writelock);
-  sock->write(msg);
+  error_handling::sendErrorMsg(logging::bppSeederErr, id, step, sock);
 }
 
 bool BPPSeeder::isSysCat()
