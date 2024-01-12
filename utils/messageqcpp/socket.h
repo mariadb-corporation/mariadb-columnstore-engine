@@ -99,9 +99,9 @@ class Socket
    *
    * write a message to the socket
    */
-  virtual void write(const ByteStream& msg, Stats* stats = NULL) = 0;
+  virtual void write(const ByteStream& msg, Stats* stats = NULL, int senderType = 1) = 0;
   virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const = 0;
-  virtual void write(SBS msg, Stats* stats = NULL) = 0;
+  virtual void write(SBS msg, Stats* stats = NULL, int senderType = 1) = 0;
 
   /** close the socket
    *

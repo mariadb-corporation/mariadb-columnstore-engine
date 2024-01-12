@@ -847,7 +847,7 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
     writeToClient(localConnectionId_, msg);
 }
 
-int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
+int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg, int senderType)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg->buf();
   uint32_t dest;
@@ -879,7 +879,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
               continue;
             }
 
-            if ((rc = writeToClient(i, msg, senderID)))
+            if ((rc = writeToClient(i, msg, senderID, false, senderType)))
             {
               return rc;
             }
@@ -898,7 +898,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
         // and decides the final connection index because it already grabs the
         // caller's queue information
         dest = ism->Interleave;
-        return writeToClient(dest, msg, senderID, true);
+        return writeToClient(dest, msg, senderID, true, senderType);
       }
 
       default: idbassert_s(0, "Unknown message type");
@@ -1037,7 +1037,7 @@ void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::
 // SBS is cleared when it is sent to PP at the same host. This fact forces any
 // code uses ::writeToClient to send to a local node in the last turn.
 int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
-                                         bool doInterleaving)
+                                         bool doInterleaving, int senderType)
 {
   MessageQueueMap::iterator it;
   // Keep mqe's stats from being freed early
@@ -1077,7 +1077,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       return 0;
 
     std::lock_guard lk(*(fWlock[connectionId]));
-    client->write(bs, NULL, senderStats);
+    client->write(bs, NULL, senderStats, senderType);
   }
   catch (...)
   {

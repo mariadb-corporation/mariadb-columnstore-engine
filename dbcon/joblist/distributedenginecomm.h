@@ -142,7 +142,7 @@ class DistributedEngineComm
    * Writes a primitive message to a primitive server. Msg needs to conatin an ISMPacketHeader. The
    * LBID is extracted from the ISMPacketHeader and used to determine the actual P/M to send to.
    */
-  EXPORT int32_t write(uint32_t key, const messageqcpp::SBS& msg);
+  EXPORT int32_t write(uint32_t key, const messageqcpp::SBS& msg, int senderType = 1);
 
   // EXPORT void throttledWrite(const messageqcpp::ByteStream& msg);
 
@@ -270,7 +270,7 @@ class DistributedEngineComm
    * Continues trying to write data to the client at the next index until all clients have been tried.
    */
   int writeToClient(size_t index, const messageqcpp::SBS& bs,
-                    uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false);
+                    uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving = false, int senderType = 1);
 
   void pushToTheLocalQueueAndNotifyRecv(const messageqcpp::SBS& bs);
   static DistributedEngineComm* fInstance;

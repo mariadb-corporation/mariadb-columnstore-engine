@@ -84,9 +84,9 @@ class IOSocket
    * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
    * call close() method if exception is thrown.
    */
-  EXPORT virtual void write(const ByteStream& msg, Stats* stats = NULL) const;
+  EXPORT virtual void write(const ByteStream& msg, Stats* stats = NULL, int senderType = 1) const;
   EXPORT virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
-  EXPORT virtual void write(SBS msg, Stats* stats = NULL) const;
+  EXPORT virtual void write(SBS msg, Stats* stats = NULL, int senderType = 1) const;
 
   /** access the sockaddr member
    */
@@ -245,20 +245,20 @@ inline const SBS IOSocket::read(const struct timespec* timeout, bool* isTimeOut,
   idbassert(fSocket);
   return fSocket->read(timeout, isTimeOut, stats);
 }
-inline void IOSocket::write(const ByteStream& msg, Stats* stats) const
+inline void IOSocket::write(const ByteStream& msg, Stats* stats, int senderType) const
 {
   idbassert(fSocket);
-  fSocket->write(msg, stats);
+  fSocket->write(msg, stats, senderType);
 }
 inline void IOSocket::write_raw(const ByteStream& msg, Stats* stats) const
 {
   idbassert(fSocket);
   fSocket->write_raw(msg, stats);
 }
-inline void IOSocket::write(SBS msg, Stats* stats) const
+inline void IOSocket::write(SBS msg, Stats* stats, int senderType) const
 {
   idbassert(fSocket);
-  fSocket->write(msg, stats);
+  fSocket->write(msg, stats, senderType);
 }
 inline const SocketParms IOSocket::socketParms() const
 {

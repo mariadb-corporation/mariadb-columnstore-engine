@@ -73,8 +73,6 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
-
-
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"
 #undef INETSTREAMSOCKET_DLLEXPORT
@@ -96,7 +94,6 @@ namespace
 // sometimes seeing "unknown error 512" error msgs in response to calls to
 // read(), so adding logic to retry after ERESTARTSYS the way we do for EINTR.
 // const int KERR_ERESTARTSYS = 512;
-
 
 int in_cksum(unsigned short* buf, int sz)
 {
@@ -171,7 +168,6 @@ void InetStreamSocket::open()
 #endif
     throw runtime_error(msg);
   }
-
 
   /*  XXXPAT:  If we have latency problems again, try these...
       bufferSizeSize = 4;
@@ -380,8 +376,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
 
       ostringstream oss;
       oss << "InetStreamSocket::readToMagic(): I/O error2.1: "
-          << "err = " << err << " e = " << e <<
-          ": " << strerror(e);
+          << "err = " << err << " e = " << e << ": " << strerror(e);
       throw runtime_error(oss.str());
     }
 
@@ -504,10 +499,14 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     return SBS(new ByteStream(0));
 
   // Read the number of the `long strings`.
-  uint32_t longStringSize;
-  if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&longStringSize), sizeof(longStringSize), timeout,
-                         isTimeOut, stats, msecs))
+  uint32_t temp;
+  if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&temp), sizeof(temp), timeout, isTimeOut, stats,
+                         msecs))
     return SBS(new ByteStream(0));
+
+  uint32_t longStringSize = temp & 0x00FFFFFF;
+  uint32_t senderType = temp >> 24;
+//  cout << "SENDRER TYPE" << senderType << endl;
 
   // Read the actual data of the `ByteStream`.
   SBS res(new ByteStream(msglen));
@@ -565,12 +564,13 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
  * read side, we reverse it.
  */
 
-void InetStreamSocket::write(SBS msg, Stats* stats)
+void InetStreamSocket::write(SBS msg, Stats* stats, int senderType)
 {
-  write(*msg, stats);
+  write(*msg, stats, senderType);
 }
 
-void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stats* stats) const
+void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stats* stats,
+                                int senderType) const
 {
   uint32_t msglen = msg.length();
   uint32_t magic = whichMagic;
@@ -586,7 +586,9 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   realBuf -= 3;
   realBuf[0] = magic;
   realBuf[1] = msglen;
-  realBuf[2] = longStrings.size();
+  uint32_t temp = longStrings.size();
+  temp |= senderType << 24;
+  realBuf[2] = temp;
 
   try
   {
@@ -614,7 +616,7 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   }
 }
 
-void InetStreamSocket::write(const ByteStream& msg, Stats* stats)
+void InetStreamSocket::write(const ByteStream& msg, Stats* stats, int senderType)
 {
   do_write(msg, BYTESTREAM_MAGIC, stats);
 }
@@ -880,9 +882,9 @@ const string InetStreamSocket::toString() const
   ostringstream oss;
   char buf[INET_ADDRSTRLEN];
   const SocketParms& sp = fSocketParms;
-  oss << "InetStreamSocket: sd: " << sp.sd() <<
-      " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
-      " port: " << ntohs(fSa.sin_port);
+  oss << "InetStreamSocket: sd: " << sp.sd()
+      << " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN)
+      << " port: " << ntohs(fSa.sin_port);
   return oss.str();
 }
 
@@ -1046,7 +1048,6 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
   }
 
   ::close(pingsock);
-
 
   return 0;
 }

@@ -45,8 +45,8 @@ class CompressedInetStreamSocket : public InetStreamSocket
   virtual Socket* clone() const;
   virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
                          Stats* stats = NULL) const;
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
-  virtual void write(SBS msg, Stats* stats = NULL);
+  virtual void write(const ByteStream& msg, Stats* stats = NULL, int senderType = 1);
+  virtual void write(SBS msg, Stats* stats = NULL, int senderType = 1);
   virtual const IOSocket accept(const struct timespec* timeout);
   virtual void connect(const sockaddr* addr);
 

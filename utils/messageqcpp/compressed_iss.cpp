@@ -115,7 +115,7 @@ const SBS CompressedInetStreamSocket::read(const struct timespec* timeout, bool*
   return ret;
 }
 
-void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats)
+void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats, int senderType)
 {
   size_t len = msg.length();
 
@@ -132,15 +132,15 @@ void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats)
     if (outLen < len)
       do_write(smsg, COMPRESSED_BYTESTREAM_MAGIC, stats);
     else
-      InetStreamSocket::write(msg, stats);
+      InetStreamSocket::write(msg, stats, senderType);
   }
   else
-    InetStreamSocket::write(msg, stats);
+    InetStreamSocket::write(msg, stats, senderType);
 }
 
-void CompressedInetStreamSocket::write(SBS msg, Stats* stats)
+void CompressedInetStreamSocket::write(SBS msg, Stats* stats, int senderType)
 {
-  write(*msg, stats);
+  write(*msg, stats, senderType);
 }
 
 /* this was cut & pasted from InetStreamSocket;
