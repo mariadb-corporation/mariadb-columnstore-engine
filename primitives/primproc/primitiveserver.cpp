@@ -2035,7 +2035,8 @@ struct ReadThread
       default:
       {
         std::cout << "IS LOCAL SBS " << isLocal << std::endl;
-        std::cout << "PRIMITIVE SERVER DEFAULT SBS BUFFER IN BYTES: " << std::endl;
+        std::cout << "PRIMITIVE SERVER SBS BUFFER FROM BEGINNING IN BYTES: " << std::endl;
+        sbs->onStart();
         uint8_t* buffer = sbs->buf();
         std::cout << std::hex;
         for (uint32_t i = 0; i < sbs->length(); ++i)
