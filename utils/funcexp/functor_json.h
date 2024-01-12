@@ -56,6 +56,7 @@ class JSONPathWrapper : public JSONPath
   {
   }
   virtual bool checkAndGetValue(JSONEgWrapper* je, std::string& ret, int* error) = 0;
+ public:
   bool extract(std::string& ret, rowgroup::Row& row, execplan::SPTP& funcParmJS,
                execplan::SPTP& funcParmPath);
 };
@@ -381,7 +382,7 @@ class Func_json_merge_patch : public Func_Str
 
 /** @brief Func_json_value class
  */
-class Func_json_value : public Func_Str, public JSONPathWrapper
+class Func_json_value : public Func_Str
 {
  public:
   Func_json_value() : Func_Str("json_value")
@@ -389,11 +390,6 @@ class Func_json_value : public Func_Str, public JSONPathWrapper
   }
   virtual ~Func_json_value()
   {
-  }
-
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
-  {
-    return je->checkAndGetScalar(res, error);
   }
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -405,7 +401,7 @@ class Func_json_value : public Func_Str, public JSONPathWrapper
 
 /** @brief Func_json_query class
  */
-class Func_json_query : public Func_Str, public JSONPathWrapper
+class Func_json_query : public Func_Str
 {
  public:
   Func_json_query() : Func_Str("json_query")
@@ -413,11 +409,6 @@ class Func_json_query : public Func_Str, public JSONPathWrapper
   }
   virtual ~Func_json_query()
   {
-  }
-
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
-  {
-    return je->checkAndGetComplexVal(res, error);
   }
 
   execplan::CalpontSystemCatalog::ColType operationType(

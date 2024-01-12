@@ -108,6 +108,9 @@ void set_diskjoin_largesidelimit(THD* thd, ulong value);
 ulong get_diskjoin_bucketsize(THD* thd);
 void set_diskjoin_bucketsize(THD* thd, ulong value);
 
+ulong get_max_pm_join_result_count(THD* thd);
+void set_max_pm_join_result_count(THD* thd, ulong value);
+
 ulong get_um_mem_limit(THD* thd);
 void set_um_mem_limit(THD* thd, ulong value);
 

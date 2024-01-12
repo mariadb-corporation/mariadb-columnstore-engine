@@ -1203,6 +1203,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     return bRunFEonPM;
   }
 
+  void setMaxPmJoinResultCount(uint32_t count)
+  {
+    maxPmJoinResultCount = count;
+  }
+
  protected:
   void sendError(uint16_t status);
 
@@ -1343,6 +1348,8 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
 
   boost::shared_ptr<RowGroupDL> deliveryDL;
   uint32_t deliveryIt;
+
+  uint32_t maxPmJoinResultCount;
 
   class JoinLocalData
   {

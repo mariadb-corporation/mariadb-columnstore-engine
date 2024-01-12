@@ -1105,6 +1105,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
   /* if HAS_JOINER, send the init params */
   if (flags & HAS_JOINER)
   {
+    bs << (uint32_t)maxPmJoinResultCount;
     if (ot == ROW_GROUP)
     {
       idbassert(tJoiners.size() > 0);

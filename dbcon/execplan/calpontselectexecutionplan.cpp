@@ -85,6 +85,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location)
  , fDJSSmallSideLimit(0)
  , fDJSLargeSideLimit(0)
  , fDJSPartitionSize(100 * 1024 * 1024)
+ , fMaxPmJoinResultCount(1048576)
  ,  // 100MB mem usage for disk based join,
  fUMMemLimit(numeric_limits<int64_t>::max())
  , fIsDML(false)
@@ -498,6 +499,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
   b << fDJSSmallSideLimit;
   b << fDJSLargeSideLimit;
   b << fDJSPartitionSize;
+  b << (uint32_t)fMaxPmJoinResultCount;
   b << fUMMemLimit;
   b << (uint8_t)fIsDML;
   messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
@@ -693,6 +695,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   b >> fDJSSmallSideLimit;
   b >> fDJSLargeSideLimit;
   b >> fDJSPartitionSize;
+  b >> (uint32_t&)fMaxPmJoinResultCount;
   b >> fUMMemLimit;
   b >> tmp8;
   fIsDML = tmp8;

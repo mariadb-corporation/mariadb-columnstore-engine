@@ -39,8 +39,8 @@ static MYSQL_THDVAR_ENUM(compression_type, PLUGIN_VAR_RQCMDARG,
                          "SNAPPY segment files are Snappy compressed (default);"
 #ifdef HAVE_LZ4
                          "LZ4 segment files are LZ4 compressed;",
-# else
-			 ,
+#else
+                         ,
 #endif
                          NULL,                              // check
                          NULL,                              // update
@@ -135,6 +135,10 @@ static MYSQL_THDVAR_ULONG(diskjoin_bucketsize, PLUGIN_VAR_RQCMDARG,
                           "The maximum size in MB of each 'small side' table in memory.", NULL, NULL, 100, 1,
                           ~0U, 1);
 
+static MYSQL_THDVAR_ULONG(max_pm_join_result_count, PLUGIN_VAR_RQCMDARG,
+                          "The maximum size of the join result for the single block on BPP.", NULL, NULL,
+                          1048576, 1, ~0U, 1);
+
 static MYSQL_THDVAR_ULONG(um_mem_limit, PLUGIN_VAR_RQCMDARG,
                           "Per user Memory limit(MB). Switch to disk-based JOIN when limit is reached", NULL,
                           NULL, 0, 0, ~0U, 1);
@@ -191,21 +195,21 @@ static MYSQL_THDVAR_ULONGLONG(cache_flush_threshold, PLUGIN_VAR_RQCMDARG,
                               "Threshold on the number of rows in the cache to trigger a flush", NULL, NULL,
                               500000, 1, 1000000000, 1);
 
-static MYSQL_THDVAR_STR(cmapi_host, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI host", NULL, NULL,
+static MYSQL_THDVAR_STR(cmapi_host, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI host", NULL, NULL,
                         "https://localhost");
 
-static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI version", NULL, NULL,
+static MYSQL_THDVAR_STR(cmapi_version, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI version", NULL, NULL,
                         "0.4.0");
 
-static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL,
-                        "");
+static MYSQL_THDVAR_STR(cmapi_key, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "CMAPI key", NULL, NULL, "");
 
-static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL,
-                              NULL, 8640, 100, 65356, 1);
+static MYSQL_THDVAR_ULONGLONG(cmapi_port, PLUGIN_VAR_NOCMDOPT, "CMAPI port", NULL, NULL, 8640, 100, 65356, 1);
 
-static MYSQL_THDVAR_STR(s3_key, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Key ", NULL, NULL, "");
-static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 Authentication Secret", NULL, NULL, "");
-static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT|PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_key, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 Authentication Key ", NULL,
+                        NULL, "");
+static MYSQL_THDVAR_STR(s3_secret, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 Authentication Secret",
+                        NULL, NULL, "");
+static MYSQL_THDVAR_STR(s3_region, PLUGIN_VAR_NOCMDOPT | PLUGIN_VAR_MEMALLOC, "S3 region", NULL, NULL, "");
 
 st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(fe_conn_info_ptr),
@@ -224,6 +228,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(diskjoin_smallsidelimit),
                                             MYSQL_SYSVAR(diskjoin_largesidelimit),
                                             MYSQL_SYSVAR(diskjoin_bucketsize),
+                                            MYSQL_SYSVAR(max_pm_join_result_count),
                                             MYSQL_SYSVAR(um_mem_limit),
                                             MYSQL_SYSVAR(double_for_decimal_math),
                                             MYSQL_SYSVAR(decimal_overflow_check),
@@ -256,8 +261,10 @@ void* get_fe_conn_info_ptr(THD* thd)
 
 void set_fe_conn_info_ptr(void* ptr, THD* thd)
 {
-  if (thd == NULL) thd = current_thd;
-  if (thd == NULL) return;
+  if (thd == NULL)
+    thd = current_thd;
+  if (thd == NULL)
+    return;
 
   THDVAR(thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
@@ -418,6 +425,15 @@ ulong get_diskjoin_bucketsize(THD* thd)
 void set_diskjoin_bucketsize(THD* thd, ulong value)
 {
   THDVAR(thd, diskjoin_bucketsize) = value;
+}
+
+ulong get_max_pm_join_result_count(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, max_pm_join_result_count);
+}
+void set_max_pm_join_result_count(THD* thd, ulong value)
+{
+  THDVAR(thd, max_pm_join_result_count) = value;
 }
 
 ulong get_um_mem_limit(THD* thd)

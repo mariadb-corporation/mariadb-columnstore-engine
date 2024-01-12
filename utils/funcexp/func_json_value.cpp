@@ -65,27 +65,17 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 
   const string& js = funcParamJS->data()->getStrVal(row, isNullJS);
   const string_view jsp = funcParamPath->data()->getStrVal(row, isNullPath);
+  
   if (isNullJS || isNullPath)
     return true;
 
   int error = 0;
 
-  if (!parsed)
-  {
-    if (!constant)
-    {
-      ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(funcParamPath->data());
-      constant = (constCol != nullptr);
-    }
+  if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)jsp.data(),
+                                                     (const uchar*)jsp.data() + jsp.size()))
+    return true;
 
-    if (isNullPath || json_path_setup(&p, getCharset(funcParamPath), (const uchar*)jsp.data(),
-                                      (const uchar*)jsp.data() + jsp.size()))
-      return true;
-
-    parsed = constant;
-  }
-
-  JSONEgWrapper je(js, getCharset(funcParamJS));
+  JSONEgWrapper je(getCharset(funcParamJS), (const uchar*)js.data(), (const uchar*)js.data() + js.size());
 
   currStep = p.steps;
 
@@ -112,11 +102,29 @@ CalpontSystemCatalog::ColType Func_json_value::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
+class JSONPathWrapperValue : public JSONPathWrapper
+{
+ public:
+  JSONPathWrapperValue()
+  {
+  }
+  virtual ~JSONPathWrapperValue()
+  {
+  }
+
+  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
+  {
+    return je->checkAndGetScalar(res, error);
+  }
+
+};
+
 string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                   execplan::CalpontSystemCatalog::ColType& type)
 {
   string ret;
-  isNull = JSONPathWrapper::extract(ret, row, fp[0], fp[1]);
+  JSONPathWrapperValue pw;
+  isNull = pw.extract(ret, row, fp[0], fp[1]);
   return isNull ? "" : ret;
 }
 }  // namespace funcexp
