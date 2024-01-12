@@ -2047,6 +2047,9 @@ struct ReadThread
         std::cout << "SBS LENGTH: " << std::dec << sbs->length() << std::endl;
 
         sbs->rewind();
+        uint32_t* buff = (uint32_t*)sbs->buf();
+        buff = buff - 1;
+        std::cout << "SENDER ID: " << (uint32_t)buff[0] << endl;
         buffer = sbs->buf();
         std::cout << "PRIMITIVE SERVER REWIND SBS BUFFER IN BYTES: " << std::endl;
         std::cout << std::hex;

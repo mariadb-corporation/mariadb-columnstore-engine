@@ -516,7 +516,7 @@ void pDictionaryScan::sendAPrimitiveMessage(BRM::LBID_t msgLbidStart, uint32_t m
 
   try
   {
-    fDec->write(uniqueID, primMsg);
+    fDec->write(uniqueID, primMsg, 12);
   }
   catch (...)
   {
@@ -867,7 +867,7 @@ void pDictionaryScan::serializeEqualityFilter()
 
   try
   {
-    fDec->write(uniqueID, msg);
+    fDec->write(uniqueID, msg, 13);
   }
   catch (...)
   {
@@ -892,7 +892,7 @@ void pDictionaryScan::destroyEqualityFilter()
 
   try
   {
-    fDec->write(uniqueID, msg);
+    fDec->write(uniqueID, msg, 14);
   }
   catch (...)
   {

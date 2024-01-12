@@ -148,7 +148,7 @@ class DistributedEngineComm
 
   /** @brief Special write function for use only by newPMOnline event handlers
    */
-  EXPORT void write(messageqcpp::ByteStream& msg, uint32_t connection);
+  EXPORT void write(messageqcpp::ByteStream& msg, uint32_t connection, int senderType = 1);
 
   /** @brief Shutdown this object
    *

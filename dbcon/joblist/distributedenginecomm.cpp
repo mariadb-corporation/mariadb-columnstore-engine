@@ -912,7 +912,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg, int send
   return 0;
 }
 
-void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
+void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection, int senderId)
 {
   ISMPacketHeader* ism = (ISMPacketHeader*)msg.buf();
   PrimitiveHeader* pm = (PrimitiveHeader*)(ism + 1);
@@ -934,7 +934,7 @@ void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connect
 
   lk.unlock();
 
-  newClients[connection]->write(msg, NULL, senderStats);
+  newClients[connection]->write(msg, NULL, senderStats, senderId);
 }
 
 void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueClient> cl, uint32_t connIndex)

@@ -800,7 +800,7 @@ TupleBPS::~TupleBPS()
 
       try
       {
-        fDec->write(uniqueID, sbs);
+        fDec->write(uniqueID, sbs, 2);
       }
       catch (const std::exception& e)
       {
@@ -1166,7 +1166,7 @@ void TupleBPS::serializeJoiner()
 #ifdef JLF_DEBUG
     cout << "serializing joiner into " << bs.length() << " bytes" << endl;
 #endif
-    fDec->write(uniqueID, sbs);
+    fDec->write(uniqueID, sbs, 3);
     sbs.reset(new ByteStream());
   }
 }
@@ -1185,7 +1185,7 @@ void TupleBPS::serializeJoiner(uint32_t conn)
   while (more)
   {
     more = fBPP->nextTupleJoinerMsg(bs);
-    fDec->write(bs, conn);
+    fDec->write(bs, conn, 4);
     bs.restart();
   }
 }
@@ -1478,7 +1478,7 @@ void TupleBPS::run()
     fDec->addDECEventListener(this);
     fBPP->priority(priority());
     fBPP->createBPP(*sbs);
-    fDec->write(uniqueID, sbs);
+    fDec->write(uniqueID, sbs, 5);
     BPPIsAllocated = true;
 
     if (doJoin && tjoiners[0]->inPM())
@@ -1530,7 +1530,7 @@ void TupleBPS::join()
 
       try
       {
-        fDec->write(uniqueID, sbs);
+        fDec->write(uniqueID, sbs, 6);
       }
       catch (...)
       {
@@ -1554,7 +1554,7 @@ void TupleBPS::sendError(uint16_t status)
 
   try
   {
-    fDec->write(uniqueID, msgBpp);
+    fDec->write(uniqueID, msgBpp, 7);
   }
   catch (...)
   {
@@ -1673,7 +1673,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
-    fDec->write(uniqueID, jobs[i].msg);
+    fDec->write(uniqueID, jobs[i].msg, 8);
     tplLock.lock();
     msgsSent += jobs[i].expectedResponses;
 
@@ -2688,7 +2688,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
       {
         fDec->removeDECEventListener(this);
         fBPP->destroyBPP(*sbs);
-        fDec->write(uniqueID, sbs);
+        fDec->write(uniqueID, sbs, 9);
         BPPIsAllocated = false;
       }
     }
@@ -2955,7 +2955,7 @@ void TupleBPS::newPMOnline(uint32_t connectionNumber)
 
   try
   {
-    fDec->write(bs, connectionNumber);
+    fDec->write(bs, connectionNumber, 10);
 
     if (hasPMJoin)
       serializeJoiner(connectionNumber);
@@ -3374,7 +3374,7 @@ void TupleBPS::abort_nolock()
 
     try
     {
-      fDec->write(uniqueID, sbs);
+      fDec->write(uniqueID, sbs, 11);
     }
     catch (...)
     {
