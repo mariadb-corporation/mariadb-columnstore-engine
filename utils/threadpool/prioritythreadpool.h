@@ -40,6 +40,9 @@
 
 namespace threadpool
 {
+
+using TransactionIdxT = uint32_t;
+
 class PriorityThreadPool
 {
  public:
@@ -57,12 +60,38 @@ class PriorityThreadPool
     Job() : weight(1), priority(0), id(0)
     {
     }
+    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
+        const boost::shared_ptr<Functor>& functor, const primitiveprocessor::SP_UM_IOSOCK& sock,
+        const uint32_t weight = 1, const uint32_t priority = 0, const uint32_t id = 0)
+     : functor(functor)
+     , weight(weight)
+     , priority(priority)
+     , id(id)
+     , stepID(stepID)
+     , uniqueID(uniqueID)
+     , sock(sock)
+    {
+    }
+    // sock_ is nullptr here. This is kinda dangerous.
+    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
+        const boost::shared_ptr<Functor>& functor, const uint32_t weight = 1, const uint32_t priority = 0,
+        const uint32_t id = 0)
+     : functor(functor)
+     , weight(weight)
+     , priority(priority)
+     , id(id)
+     , stepID(stepID)
+     , uniqueID(uniqueID)
+     , sock(nullptr)
+    {
+    }
+
     boost::shared_ptr<Functor> functor;
     uint32_t weight;
     uint32_t priority;
     uint32_t id;
-    uint32_t uniqueID;
     uint32_t stepID;
+    uint32_t uniqueID;
     primitiveprocessor::SP_UM_IOSOCK sock;
   };
 
@@ -113,7 +142,7 @@ class PriorityThreadPool
   {
     return blockedThreads;
   }
-  
+
  protected:
  private:
   struct ThreadHelper

@@ -157,8 +157,6 @@ int BPPSeeder::operator()()
         return ret;
       }
 
-      // if (!(sessionID & 0x80000000))
-      // cout << "got request for <" << sessionID <<", " << stepID << ">\n";
       scoped.lock();
 
       if (!bppv)
@@ -172,26 +170,12 @@ int BPPSeeder::operator()()
 
           if (boost::posix_time::second_clock::universal_time() > dieTime)
           {
-#if 0  // for debugging
-                        boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
-
-                        if (sessionID & 0x80000000)
-                            cout << "BPPSeeder couldn't find the sessionID/stepID pair.  sessionID="
-                                 << (int) (sessionID ^ 0x80000000) << " stepID=" << stepID << " (syscat)" << pt << endl;
-                        else
-                            cout << "BPPSeeder couldn't find the sessionID/stepID pair.  sessionID="
-                                 << sessionID << " stepID=" << stepID << pt << endl;
-
-                        throw logic_error("BPPSeeder couldn't find the sessionID/stepID pair");
-#endif
+            cout << "BPPSeeder::operator(): job for id " << uniqueID << "and session " << sessionID
+                 << " has been killed." << endl;
             return 0;
           }
 
-          //				if (!isSysCat())
           return -1;
-          //				else {   // syscat queries aren't run by a threadpool, can't reschedule those
-          //jobs 					usleep(1000); 					goto retry;
-          //				}
         }
 
         bppv = it->second;
@@ -205,10 +189,6 @@ int BPPSeeder::operator()()
 
       if (!bpp)
       {
-        //			if (isSysCat()) {
-        //				usleep(1000);
-        //				goto retry;
-        //			}
         return -1;  // all BPP instances are busy, make threadpool reschedule
       }
 
