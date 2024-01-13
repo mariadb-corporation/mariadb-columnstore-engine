@@ -39,7 +39,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -124,7 +124,6 @@ void setupSignalHandlers()
   sigaddset(&sigset, SIGUSR1);
   sigaddset(&sigset, SIGUSR2);
   sigprocmask(SIG_BLOCK, &sigset, 0);
-
 }
 
 int8_t setupCwd(Config* cf)
@@ -234,7 +233,6 @@ void* waitForSIGUSR1(void* p)
 #endif
   sigset_t oset;
   int rec_sig;
-  int32_t rpt_state = 0;
   sigfillset(&oset);
   sigdelset(&oset, SIGUSR1);
   sigdelset(&oset, SIGUSR2);
@@ -257,21 +255,6 @@ void* waitForSIGUSR1(void* p)
         BRPp[i]->formatLRUList(out);
         cout << out.str() << "###" << endl;
       }
-    }
-    else if (rec_sig == SIGUSR2)
-    {
-      // is reporting currently on?
-      rpt_state = BRPp[0]->ReportingFrequency();
-
-      if (rpt_state > 0)
-        rpt_state = 0;  // turn reporting off
-      else
-        rpt_state = 1;  // fbm will set to the value from config file
-
-      for (int i = 0; i < cacheCount; i++)
-        BRPp[i]->setReportingFrequency(rpt_state);
-
-      cout << "@@@" << endl;
     }
   }
 
@@ -646,7 +629,6 @@ int ServicePrimProc::Child()
 
   if ((strVal == "n") || (strVal == "N"))
     directIOFlag = 0;
-
 
   IDBPolicy::configIDBPolicy();
 

@@ -148,16 +148,6 @@ class BlockRequestProcessor
     fbMgr.flushPartition(oids, partitions);
   }
 
-  void setReportingFrequency(const uint32_t d)
-  {
-    fbMgr.setReportingFrequency(d);
-  }
-
-  uint32_t ReportingFrequency() const
-  {
-    return fbMgr.ReportingFrequency();
-  }
-
   std::ostream& formatLRUList(std::ostream& os) const
   {
     return fbMgr.formatLRUList(os);

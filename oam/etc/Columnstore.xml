@@ -159,7 +159,6 @@
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
 		<IOMTracing>0</IOMTracing>
 		<BRPTracing>0</BRPTracing>
-		<ReportFrequency>65536</ReportFrequency>
 		<MaxOpenFiles>2K</MaxOpenFiles>
 		<DecreaseOpenFilesCount>200</DecreaseOpenFilesCount>
 		<FDCacheTrace>0</FDCacheTrace>

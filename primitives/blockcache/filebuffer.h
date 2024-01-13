@@ -50,6 +50,16 @@ typedef struct FBData
   BRM::LBID_t lbid;
   BRM::VER_t ver;
   uint8_t hits;
+
+  BRM::LBID_t Lbid() const
+  {
+    return lbid;
+  }
+
+  BRM::VER_t Verid() const
+  {
+    return ver;
+  }
 } FBData_t;
 
 //@bug 669 Change to list for least recently used cache
