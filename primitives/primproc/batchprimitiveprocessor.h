@@ -96,7 +96,6 @@ class BatchPrimitiveProcessor
   void resetBPP(messageqcpp::ByteStream&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& outputSock);
   void addToJoiner(messageqcpp::ByteStream&);
   int endOfJoiner();
-  void doneSendingJoinerData();
   int operator()();
   void setLBIDForScan(uint64_t rid);
 

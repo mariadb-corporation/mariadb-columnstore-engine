@@ -441,9 +441,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       }
     }
 
-#ifdef __FreeBSD__
     pthread_mutex_unlock(&objLock);
-#endif
   }
 
   bs >> filterCount;
@@ -593,9 +591,7 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w, con
   memset(asyncLoaded.get(), 0, sizeof(bool) * (projectCount + 2));
 
   buildVSSCache(count);
-#ifdef __FreeBSD__
   pthread_mutex_unlock(&objLock);
-#endif
 }
 
 // This version of addToJoiner() is multithreaded.  Values are first
@@ -834,28 +830,11 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
   idbassert(bs.length() == 0);
 }
 
-void BatchPrimitiveProcessor::doneSendingJoinerData()
-{
-  /*  to get wall-time of hash table construction
-if (!firstCallTime.is_not_a_date_time() && !(sessionID & 0x80000000))
-{
-  boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
-  Logger logger;
-  ostringstream os;
-  os << "id " << uniqueID << ": joiner construction time = " << now-firstCallTime;
-  logger.logMessage(os.str());
-  cout << os.str() << endl;
-}
-  */
-}
-
 int BatchPrimitiveProcessor::endOfJoiner()
 {
   /* Wait for all joiner elements to be added */
   uint32_t i;
   size_t currentSize;
-  // it should be safe to run this without grabbing this lock
-  // boost::mutex::scoped_lock scoped(addToJoinerLock);
 
   if (endOfJoinerRan)
     return 0;
@@ -876,34 +855,38 @@ int BatchPrimitiveProcessor::endOfJoiner()
       currentSize = 0;
       for (uint j = 0; j < processorThreads; ++j)
         if (!tJoiners[i] || !tJoiners[i][j])
+        {
           return -1;
+        }
         else
           currentSize += tJoiners[i][j]->size();
       if (currentSize != tJoinerSizes[i])
+      {
         return -1;
-      // if ((!tJoiners[i] || tJoiners[i]->size() != tJoinerSizes[i]))
-      //    return -1;
+      }
     }
     else
     {
       currentSize = 0;
       for (uint j = 0; j < processorThreads; ++j)
+      {
         if (!tlJoiners[i] || !tlJoiners[i][j])
+        {
           return -1;
+        }
         else
           currentSize += tlJoiners[i][j]->size();
+      }
       if (currentSize != tJoinerSizes[i])
+      {
         return -1;
-      // if ((!tJoiners[i] || tlJoiners[i]->size() != tJoinerSizes[i]))
-      //    return -1;
+      }
     }
   }
 
   endOfJoinerRan = true;
 
-#ifndef __FreeBSD__
   pthread_mutex_unlock(&objLock);
-#endif
   return 0;
 }
 
@@ -1076,7 +1059,6 @@ void BatchPrimitiveProcessor::initProcessor()
   {
     for (i = 0; i < (uint32_t)filterCount - 1; ++i)
     {
-      // 			cout << "prepping filter " << i << endl;
       filterSteps[i]->setBatchPrimitiveProcessor(this);
 
       if (filterSteps[i + 1]->getCommandType() == Command::DICT_STEP)
@@ -1087,14 +1069,12 @@ void BatchPrimitiveProcessor::initProcessor()
         filterSteps[i]->prep(OT_RID, false);
     }
 
-    // 		cout << "prepping filter " << i << endl;
     filterSteps[i]->setBatchPrimitiveProcessor(this);
     filterSteps[i]->prep(OT_BOTH, false);
   }
 
   for (i = 0; i < projectCount; ++i)
   {
-    // 		cout << "prepping projection " << i << endl;
     projectSteps[i]->setBatchPrimitiveProcessor(this);
 
     if (noVB)
@@ -1120,7 +1100,6 @@ void BatchPrimitiveProcessor::initProcessor()
 
   if (fAggregator.get() != NULL)
   {
-    // fAggRowGroupData.reset(new uint8_t[fAggregateRG.getMaxDataSize()]);
     fAggRowGroupData.reinit(fAggregateRG);
     fAggregateRG.setData(&fAggRowGroupData);
 
