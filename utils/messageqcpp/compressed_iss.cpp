@@ -109,6 +109,7 @@ const SBS CompressedInetStreamSocket::read(const struct timespec* timeout, bool*
 
   alg->uncompress((char*)readBS->buf() + HEADER_SIZE, readBS->length() - HEADER_SIZE,
                   (char*)ret->getInputPtr(), &uncompressedSize);
+  cout << "uncompress " << endl;
 
   ret->advanceInputPtr(uncompressedSize);
 
@@ -119,7 +120,7 @@ void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats, int 
 {
   size_t len = msg.length();
 
-  if (useCompression && (len > 512))
+  if (false && useCompression && (len > 512))
   {
     size_t outLen = alg->maxCompressedSize(len) + HEADER_SIZE;
     ByteStream smsg(outLen);

@@ -312,7 +312,7 @@ void MessageQueueClient::write(const ByteStream& msg, const struct timespec* tim
 
   try
   {
-    fClientSock.write(msg, stats);
+    fClientSock.write(msg, stats, senderType);
   }
   catch (runtime_error& e)
   {

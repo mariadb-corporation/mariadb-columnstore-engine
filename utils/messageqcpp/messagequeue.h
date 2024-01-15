@@ -280,7 +280,7 @@ class MessageQueueClient
   // This client's flag is set running DEC::Setup() call
   bool atTheSameHost() const
   {
-    return atTheSameHost_;
+    return false; //atTheSameHost_;
   }
 
   void atTheSameHost(const bool atTheSameHost)

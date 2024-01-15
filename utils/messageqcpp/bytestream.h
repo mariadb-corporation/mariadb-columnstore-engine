@@ -351,6 +351,7 @@ class ByteStream : public Serializeable
    */
   EXPORT void needAtLeast(size_t amount);
   inline uint8_t* getInputPtr();
+  inline void setInputPtr(uint8_t *ptr);
   inline void advanceInputPtr(size_t amount);
 
   /**
@@ -580,6 +581,12 @@ inline uint8_t* ByteStream::getInputPtr()
 {
   return fCurInPtr;
 }
+
+inline void ByteStream::setInputPtr(uint8_t *ptr)
+{
+  fCurInPtr = ptr;
+}
+
 inline void ByteStream::advanceInputPtr(size_t amount)
 {
   fCurInPtr += amount;

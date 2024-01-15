@@ -886,7 +886,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg, int send
           }
           if (fIsExeMgr)
           {
-            return writeToClient(localConnectionId_, msg);
+            return writeToClient(localConnectionId_, msg, senderType);
           }
           return rc;
         }

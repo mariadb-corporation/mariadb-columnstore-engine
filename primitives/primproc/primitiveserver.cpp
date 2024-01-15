@@ -1917,6 +1917,15 @@ struct ReadThread
                                 SP_UM_IOSOCK& outIos, SP_UM_MUTEX& writeLock, const uint32_t processorThreads,
                                 const bool ptTrace, bool isLocal)
   {
+    /*
+    uint8_t *originalInputPtr = sbs->getInputPtr();
+    sbs->rewind();
+    uint32_t *buf = (uint32_t *)sbs->buf();
+    buf = buf - 1;
+    std::cout << "PP SENDER ID: " << (uint32_t)buf[0] << endl;
+    sbs->setInputPtr(originalInputPtr);
+    */
+
     const ISMPacketHeader* ismHdr = reinterpret_cast<const ISMPacketHeader*>(sbs->buf());
     switch (ismHdr->Command)
     {
@@ -2049,7 +2058,7 @@ struct ReadThread
         sbs->rewind();
         uint32_t* buff = (uint32_t*)sbs->buf();
         buff = buff - 1;
-        std::cout << "SENDER ID: " << (uint32_t)buff[0] << endl;
+        std::cout << std::dec << "SENDER ID: " << (uint32_t)buff[0] << endl;
         buffer = sbs->buf();
         std::cout << "PRIMITIVE SERVER REWIND SBS BUFFER IN BYTES: " << std::endl;
         std::cout << std::hex;

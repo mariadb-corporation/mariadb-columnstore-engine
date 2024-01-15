@@ -505,17 +505,22 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     return SBS(new ByteStream(0));
 
   uint32_t longStringSize = temp & 0x00FFFFFF;
+  // uint32_t temp1 = temp & 0x00FFFFFF;
+  // cout << "default value: " << temp << endl;
+  // cout << "long string size: " << temp1 << endl;
   uint32_t senderType = temp >> 24;
-  //  cout << "SENDRER TYPE" << senderType << endl;
+  // cout << "sender type: " << senderType << endl;
 
   // Read the actual data of the `ByteStream`.
   SBS res(new ByteStream(msglen));
+  if (!readFixedSizeData(pfd, res->getInputPtr(), msglen, timeout, isTimeOut, stats, msecs))
+  {
+    return SBS(new ByteStream(0));
+  }
+
   uint32_t* buf = (uint32_t*)res->buf();
   buf -= 1;
   buf[0] = senderType;
-
-  if (!readFixedSizeData(pfd, res->getInputPtr(), msglen, timeout, isTimeOut, stats, msecs))
-    return SBS(new ByteStream(0));
   res->advanceInputPtr(msglen);
 
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
@@ -560,6 +565,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
   }
 
   res->setLongStrings(longStrings);
+
   return res;
 }
 
@@ -622,7 +628,7 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
 
 void InetStreamSocket::write(const ByteStream& msg, Stats* stats, int senderType)
 {
-  do_write(msg, BYTESTREAM_MAGIC, stats);
+  do_write(msg, BYTESTREAM_MAGIC, stats, senderType);
 }
 
 void InetStreamSocket::write_raw(const ByteStream& msg, Stats* stats) const
