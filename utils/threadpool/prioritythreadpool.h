@@ -24,11 +24,6 @@
 
 #pragma once
 
-#include <string>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-#include <stdexcept>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -36,7 +31,14 @@
 #include <boost/function.hpp>
 #include <atomic>
 #include "primitives/primproc/umsocketselector.h"
-#include "atomicops.h"
+
+namespace error_handling
+{
+
+messageqcpp::SBS makePrimitiveErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step);
+void sendErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step,
+                  primitiveprocessor::SP_UM_IOSOCK sock);
+}  // namespace error_handling
 
 namespace threadpool
 {
@@ -164,7 +166,6 @@ class PriorityThreadPool
 
   Priority pickAQueue(Priority preference);
   void threadFcn(const Priority preferredQueue) throw();
-  void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
   std::list<Job> jobQueues[3];  // higher indexes = higher priority
   uint32_t threadCounts[3];
