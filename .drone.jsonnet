@@ -308,13 +308,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
-      'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage("smoke"), pkg_format, result, true) + [
       installEngine(dockerImage("smoke"), pkg_format),
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       execInnerDocker('systemctl start mariadb', dockerImage("smoke")),
-      execInnerDocker('systemctl start mariadb-columnstore', dockerImage("smoke")),
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("smoke") + " --quiet --no-trunc)", dockerImage("smoke")),
+      execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("smoke")),
       execInnerDocker('mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
                       dockerImage("smoke")),
 
@@ -371,7 +372,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
     },
     commands: [
-      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --memory 8g --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage('mtr$${DRONE_BUILD_NUMBER}', pkg_format, result, true) + [
       installEngine(dockerImage("mtr"), pkg_format),
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
@@ -380,13 +381,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker("bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'", dockerImage('mtr')),
       execInnerDocker('systemctl daemon-reload', dockerImage("mtr")),
       execInnerDocker('systemctl start mariadb', dockerImage("mtr")),
+      // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("mtr") + " --quiet --no-trunc)", dockerImage("mtr")),
       execInnerDocker('mariadb -e "create database if not exists test;"', dockerImage("mtr")),
       execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("mtr")),
-
-      // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 4G"',
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 1G"',
-      //'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=mtr$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
 
       // delay mtr for manual debugging on live instance
       'sleep $${MTR_DELAY_SECONDS:-1s}',
@@ -458,7 +456,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --memory 8g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage('regression'), pkg_format, result, true) + [
 
       if (platform == 'centos:7') then
@@ -478,11 +476,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + 'server.cnf', dockerImage('regression')),
       // set default client character set to utf-8
       execInnerDocker('sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + 'client.cnf',dockerImage('regression')),
+
       // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig HashJoin TotalUmMemory 5G"',
-      //'docker exec -t regressin$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig DBBC NumBlocksPct 2G"',
-      //'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=regression$${DRONE_BUILD_NUMBER} --quiet --no-trunc)"',
-      // start mariadb and mariadb-columnstore services
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("regression") + " --quiet --no-trunc)", dockerImage("regression")),
+
       execInnerDocker('systemctl start mariadb',dockerImage('regression')),
       execInnerDocker('systemctl restart mariadb-columnstore',dockerImage('regression')),
       // delay regression for manual debugging on live instance
