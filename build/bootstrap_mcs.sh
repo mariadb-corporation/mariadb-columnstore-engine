@@ -48,6 +48,7 @@ optparse.define short=j long=parallel desc="Number of paralles for build" variab
 optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
 
 source $( optparse.build )
 
@@ -101,7 +102,7 @@ select_branch()
     fi
 
     cd - > /dev/null
-    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
+    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_cyan branch"
 }
 
 install_deps()
@@ -210,8 +211,11 @@ clean_old_installation()
 
 build()
 {
+    MARIA_BUILD_PATH=$(realpath $MARIA_BUILD_PATH)
     message_split
-    message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
+    message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_cyan mode"
+    message "Compiled artifacts will be written to $color_yellow$MARIA_BUILD_PATH$color_cyan"
+    mkdir -p $MARIA_BUILD_PATH
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
                      -DPLUGIN_COLUMNSTORE=YES
@@ -328,12 +332,12 @@ build()
     fi
 
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS -S$MDB_SOURCE_PATH -B$MARIA_BUILD_PATH | spinner
     message_split
 
-    ${CMAKE_BIN_NAME} --build . -j $CPUS | onelinearizator && \
+    ${CMAKE_BIN_NAME} --build $MARIA_BUILD_PATH -j $CPUS | onelinearizator && \
     message "Installing silently" &&
-    ${CMAKE_BIN_NAME} --install . | spinner 30
+    ${CMAKE_BIN_NAME} --install $MARIA_BUILD_PATH | spinner 30
 
     if [ $? -ne 0 ]; then
         message_split
