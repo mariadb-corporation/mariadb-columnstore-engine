@@ -259,7 +259,8 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 
       if (running)
       {
-        sendErrorMsg(runList[0].uniqueID_, runList[0].stepID_, runList[0].sock_);
+        error_handling::sendErrorMsg(logging::primitiveServerErr, runList[0].uniqueID_, runList[0].stepID_,
+                                     runList[0].sock_);
       }
     }
     catch (...)
@@ -291,7 +292,8 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
 #endif
 
       if (running)
-        sendErrorMsg(runList[0].uniqueID_, runList[0].stepID_, runList[0].sock_);
+        error_handling::sendErrorMsg(logging::primitiveServerErr, runList[0].uniqueID_, runList[0].stepID_,
+                                     runList[0].sock_);
     }
     catch (...)
     {
@@ -299,21 +301,6 @@ void FairThreadPool::threadFcn(const PriorityThreadPool::Priority preferredQueue
                 << std::endl;
     }
   }
-}
-
-void FairThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock)
-{
-  ISMPacketHeader ism;
-  PrimitiveHeader ph = {0, 0, 0, 0, 0, 0};
-
-  ism.Status = logging::primitiveServerErr;
-  ph.UniqueID = id;
-  ph.StepID = step;
-  messageqcpp::ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-  msg.append((uint8_t*)&ism, sizeof(ism));
-  msg.append((uint8_t*)&ph, sizeof(ph));
-
-  sock->write(msg);
 }
 
 void FairThreadPool::stop()
