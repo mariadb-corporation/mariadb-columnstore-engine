@@ -199,6 +199,7 @@ clean_old_installation()
     rm -rf /var/lib/columnstore/local/
     rm -rf /var/lib/columnstore/storagemanager/*
     rm -rf /var/log/mariadb/columnstore/*
+    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf /etc/my.cnf.d/columnstore.cnf
     rm -rf /tmp/*
     rm -rf $REPORT_PATH
     rm -rf /var/lib/mysql
