@@ -39,8 +39,6 @@
 
 class MessageQTestSuite;
 
-#define EXPORT
-
 namespace messageqcpp
 {
 class ServerSocket;
@@ -54,22 +52,22 @@ class IOSocket
   /** ctor
    *
    */
-  EXPORT explicit IOSocket(Socket* socket = 0);
+  explicit IOSocket(Socket* socket = 0);
 
   /** copy ctor
    *
    */
-  EXPORT IOSocket(const IOSocket& rhs);
+  IOSocket(const IOSocket& rhs);
 
   /** assign op
    *
    */
-  EXPORT IOSocket& operator=(const IOSocket& rhs);
+  IOSocket& operator=(const IOSocket& rhs);
 
   /** dtor
    *
    */
-  EXPORT virtual ~IOSocket();
+  virtual ~IOSocket();
 
   /** read a ByteStream from this socket
    *
@@ -84,9 +82,9 @@ class IOSocket
    * This socket needs to be connected first. Will throw runtime_error on I/O error. Caller should
    * call close() method if exception is thrown.
    */
-  EXPORT virtual void write(const ByteStream& msg, Stats* stats = NULL) const;
-  EXPORT virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
-  EXPORT virtual void write(SBS msg, Stats* stats = NULL) const;
+  virtual void write(const ByteStream& msg, Stats* stats = NULL) const;
+  virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
+  virtual void write(SBS msg, Stats* stats = NULL) const;
 
   /** access the sockaddr member
    */
@@ -125,29 +123,29 @@ class IOSocket
    *
    * Install a socket implementation that meets the Socket interface
    */
-  EXPORT virtual void setSocketImpl(Socket* socket);
+  virtual void setSocketImpl(Socket* socket);
 
   /** get a string rep of the IOSocket
    *
    */
-  EXPORT virtual const std::string toString() const;
+  virtual const std::string toString() const;
 
   /** syncProto() forwarder for inherited classes
    *
    */
-  EXPORT virtual void syncProto(bool use)
+  virtual void syncProto(bool use)
   {
     fSocket->syncProto(use);
   }
 
-  EXPORT virtual int getConnectionNum() const;
+  virtual int getConnectionNum() const;
 
   // Debug
-  EXPORT void setSockID(uint32_t id)
+  void setSockID(uint32_t id)
   {
     sockID = id;
   }
-  EXPORT uint32_t getSockID()
+  uint32_t getSockID()
   {
     return sockID;
   }
@@ -173,7 +171,6 @@ class IOSocket
   {
     return fSocket->isSameAddr(ipv4Addr);
   }
-
 
   /** connect() forwarder for inherited classes
    *
@@ -298,5 +295,3 @@ inline std::ostream& operator<<(std::ostream& os, const IOSocket& rhs)
 }
 
 }  // namespace messageqcpp
-
-#undef EXPORT
