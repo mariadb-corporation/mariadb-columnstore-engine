@@ -261,7 +261,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     execInnerDocker('ls -al /sys/fs/cgroup/cgroup.controllers || true', dockerImage),
     execInnerDocker('ls -al /sys/fs/cgroup/ || true', dockerImage),
     execInnerDocker('ls -al /sys/fs/cgroup/memory || true', dockerImage),
-    execInnerDocker("docker ps --filter=name=" + dockerImage, dockerImage),
+
 
     execInnerDocker('mkdir core', dockerImage),
     execInnerDocker('chmod 777 core', dockerImage),
@@ -330,7 +330,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       execInnerDocker('systemctl start mariadb', dockerImage("smoke")),
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("smoke") + " --quiet --no-trunc)", dockerImage("smoke")),
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", dockerImage("smoke")),
       execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("smoke")),
       execInnerDocker('mariadb -e "create database if not exists test; create table test.t1 (a int) engine=Columnstore; insert into test.t1 values (1); select * from test.t1"',
                       dockerImage("smoke")),
@@ -354,6 +354,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
     commands: [
+      // why do we mount cgroups here, but miss it on other steps?
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --env UCF_FORCE_CONFNEW=1 --name upgrade$${DRONE_BUILD_NUMBER}' + version + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage('upgrade') + version, pkg_format, result, false) + [
       if (pkg_format == 'deb')
@@ -400,7 +401,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('systemctl daemon-reload', dockerImage("mtr")),
       execInnerDocker('systemctl start mariadb', dockerImage("mtr")),
       // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("mtr") + " --quiet --no-trunc)", dockerImage("mtr")),
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", dockerImage("mtr")),
       execInnerDocker('mariadb -e "create database if not exists test;"', dockerImage("mtr")),
       execInnerDocker('systemctl restart mariadb-columnstore', dockerImage("mtr")),
 
@@ -496,7 +497,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + 'client.cnf',dockerImage('regression')),
 
       // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup $(docker ps --filter=name=" + dockerImage("regression") + " --quiet --no-trunc)", dockerImage("regression")),
+      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", dockerImage("regression")),
 
       execInnerDocker('systemctl start mariadb',dockerImage('regression')),
       execInnerDocker('systemctl restart mariadb-columnstore',dockerImage('regression')),
