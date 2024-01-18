@@ -247,6 +247,18 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     if (pkg_format == 'deb')
       then execInnerDocker('sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d', dockerImage),
 
+    'echo "Docker CGroups opts here"',
+    'ls -al /sys/fs/cgroup/cgroup.controllers',
+    'ls -al /sys/fs/cgroup/',
+    'ls -al /sys/fs/cgroup/memory',
+    "docker ps --filter=name=" + dockerImage,
+
+    execInnerDocker('echo "Inner Docker CGroups opts here"', dockerImage),
+    execInnerDocker('ls -al /sys/fs/cgroup/cgroup.controllers', dockerImage),
+    execInnerDocker('ls -al /sys/fs/cgroup/', dockerImage),
+    execInnerDocker('ls -al /sys/fs/cgroup/memory', dockerImage),
+    execInnerDocker("docker ps --filter=name=" + dockerImage, dockerImage),
+
     execInnerDocker('mkdir core', dockerImage),
     execInnerDocker('chmod 777 core', dockerImage),
     'docker cp core_dumps/. ' + dockerImage  +  ':/',
