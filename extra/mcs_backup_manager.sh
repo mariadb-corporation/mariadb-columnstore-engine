@@ -2572,6 +2572,7 @@ load_default_dbrm_variables() {
     fi
 }
 
+# for next release
 load_default_dbrm_restore_variables() {
     backup_location=/tmp/dbrm_backups
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
@@ -2605,7 +2606,7 @@ print_dbrm_backup_help_text() {
     ";
 }
 
-
+# for next release
 print_dbrm_restore_help_text() {
     echo "
     Columnstore DBRM Restore
@@ -2670,6 +2671,7 @@ parse_dbrms_variables() {
     done
 }
 
+# for next release
 parse_dbrm_restore_variables() {
 
     # Dynamic Arguments
@@ -2753,6 +2755,7 @@ validation_prechecks_for_dbrm_backup() {
     fi;
 }
 
+# for next release
 validation_prechecks_for_dbrm_restore() {
     # Confirm storage not empty
     if [ -z "$storage" ]; then printf "[!] Empty storage: \ncheck: grep -m 1 \"^service = \" \$STORAGEMANGER_CNF | awk '{print \$3}' \n\n"; fi;
@@ -2833,6 +2836,7 @@ process_dbrm_backup() {
     if ! $quiet; then printf "[+] Complete\n\n"; fi;
 }
 
+# for next release
 process_dbrm_restore() {
     
     load_default_dbrm_restore_variables
@@ -2894,9 +2898,9 @@ process_dbrm_restore() {
     else
         process_localstorage_dbrm_restore
     fi;
-
-
 }
+
+# for next release
 process_s3_dbrm_restore() {
     
     # shuffle DBRMs - detect newest date _em from the set, if smaller than the current one throw a warning
@@ -2911,6 +2915,7 @@ process_s3_dbrm_restore() {
     return 1;
 }
 
+# for next release
 process_localstorage_dbrm_restore() {
 
     # shuffle DBRMs - detect newest date _em from the set, if smaller than the current one throw a warning
@@ -3025,6 +3030,7 @@ case "$action" in
         process_dbrm_backup "$@";
         ;;
     'dbrm_restore') 	
+        # for next release
         process_dbrm_restore "$@";
         ;;
     'restore') 	
