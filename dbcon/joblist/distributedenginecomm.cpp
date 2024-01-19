@@ -749,6 +749,17 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
             {
               continue;
             }
+            uint8_t* originalInputPtr = msg->getInputPtr();
+            msg->rewind();
+            uint8_t* buf = (uint8_t*)msg->buf();
+            std::cout << "DEC message on ack: ";
+            std::cout << std::hex;
+            for (uint32_t i = 0; i < msg->length(); ++i)
+            {
+              std::cout << (uint32_t)buf[i] << " ";
+            }
+            msg->setInputPtr(originalInputPtr);
+
             writeToClient(i, msg, std::numeric_limits<uint32_t>::max(), false, 33);
           }
         }
