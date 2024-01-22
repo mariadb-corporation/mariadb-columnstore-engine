@@ -152,7 +152,14 @@ void BPPSendThread::sendMore(int num)
     msgsLeft = 0;
   }
   else
+  {
+    if (num == 666)
+    {
+      cout << "SEND MORE REACHED" << endl;
+      num = 1;
+    }
     (void)atomicops::atomicAdd(&msgsLeft, num);
+  }
 
   sl.unlock();
   if (waiting)

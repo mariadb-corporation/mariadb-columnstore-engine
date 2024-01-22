@@ -760,7 +760,18 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
             }
             msg->setInputPtr(originalInputPtr);
 
-            writeToClient(i, msg, std::numeric_limits<uint32_t>::max(), false, 33);
+            SBS s(new ByteStream(sizeof(ISMPacketHeader)));
+            auto* ism = (ISMPacketHeader*)s->getInputPtr();
+            // The only var checked by ReadThread is the Command var.  The others
+            // are wasted space.  We hijack the Size, & Flags fields for the
+            // params to the ACK msg.
+
+            ism->Interleave = uniqueID;
+            ism->Command = BATCH_PRIMITIVE_ACK;
+            ism->Size = 666;
+            s->advanceInputPtr(sizeof(ISMPacketHeader));
+
+            writeToClient(i, s, std::numeric_limits<uint32_t>::max(), false, 33);
           }
         }
         if (!pmAcked[localConnectionId_] && fIsExeMgr)
