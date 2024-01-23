@@ -566,6 +566,18 @@ const ByteStream DistributedEngineComm::read(uint32_t key)
   return *sbs;
 }
 
+SBS DistributedEngineComm::createBatchPrimitiveCommand(ISMPACKETCOMMAND command, uint32_t uniqueID,
+                                                       uint16_t size)
+{
+  SBS bpCommand(new ByteStream(sizeof(ISMPacketHeader)));
+  auto* ism = (ISMPacketHeader*)bpCommand->getInputPtr();
+  ism->Interleave = uniqueID;
+  ism->Command = command;
+  ism->Size = size;
+  bpCommand->advanceInputPtr(sizeof(ISMPacketHeader));
+  return bpCommand;
+}
+
 void DistributedEngineComm::read_all(uint32_t key, vector<SBS>& v)
 {
   boost::shared_ptr<MQE> mqe;
@@ -754,7 +766,9 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
             {
               continue;
             }
-            writeToClient(i, msg);
+            // MCOL-5637 Initialize a new bytestream before send a `ACK` command to Primitive Server.
+            SBS ackCommand = createBatchPrimitiveCommand(BATCH_PRIMITIVE_ACK, uniqueID, 1);
+            writeToClient(i, ackCommand);
           }
         }
         if (!pmAcked[localConnectionId_] && fIsExeMgr)
