@@ -226,6 +226,10 @@ class DistributedEngineComm
   // A queue of ByteStreams coming in from PrimProc heading for a JobStep
   typedef ThreadSafeQueue<messageqcpp::SBS> StepMsgQueue;
 
+  // Creates a ByteStream as a command for Primitive Server and initializes it with a given `command`,
+  // `uniqueID` and `size`.
+  messageqcpp::SBS createBatchPrimitiveCommand(ISMPACKETCOMMAND command, uint32_t uniqueID, uint16_t size);
+
   /* To keep some state associated with the connection.  These aren't copyable. */
   struct MQE : public boost::noncopyable
   {
