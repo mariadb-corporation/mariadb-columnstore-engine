@@ -43,18 +43,18 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
                        'expect createrepo ';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y pcre2-devel jemalloc-devel jemalloc devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
-                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
+                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel jemalloc-devel jemalloc ' +
                                '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
 
 
 local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled crb ' +
-                               '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
+                               '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++ jemalloc-devel jemalloc ';
 
 local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
 local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
@@ -75,6 +75,10 @@ local upgrade_test_lists = {
                     "amd64": ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                   },
   "rockylinux9":  {
+                    "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+                    "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
+                  },
+  "amazonlinux":  {
                     "arm64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
                     "amd64": ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"]
                   },
@@ -130,7 +134,7 @@ local testPreparation(platform) =
     'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'amazonlinuxs': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
+    'amazonlinux': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
     'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
