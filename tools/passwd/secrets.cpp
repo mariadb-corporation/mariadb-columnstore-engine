@@ -13,6 +13,7 @@
 #include "secrets.h"
 
 #include <cctype>
+#include <array>
 #include <fstream>
 #include <pwd.h>
 #include <sys/stat.h>
