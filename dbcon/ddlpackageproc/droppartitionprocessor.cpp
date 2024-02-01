@@ -37,20 +37,14 @@ using namespace oam;
 
 namespace ddlpackageprocessor
 {
-DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
-    ddlpackage::DropPartitionStatement& dropPartitionStmt)
+DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal(
+    ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("DropPartitionProcessor::processPackage");
 
   DDLResult result;
   result.result = NO_ERROR;
   std::string err;
-  VERBOSE_INFO(dropPartitionStmt);
-
-  // Commit current transaction.
-  // all DDL statements cause an implicit commit
-  VERBOSE_INFO("Getting current txnID");
-
   int rc = 0;
   rc = fDbrm->isReadWrite();
   BRM::TxnID txnID;
@@ -69,6 +63,23 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
     return result;
   }
 
+  auto* dropPartitionStmt = dynamic_cast<ddlpackage::DropPartitionStatement*>(sqlStmt);
+  if (!dropPartitionStmt)
+  {
+    logging::Message::Args args;
+    logging::Message message(9);
+    args.add("DropPartitionStatement wrong cast");
+    message.format(args);
+    result.result = ALTER_ERROR;
+    result.message = message;
+    return result;
+  }
+
+  VERBOSE_INFO(dropPartitionStmt);
+  // Commit current transaction.
+  // all DDL statements cause an implicit commit
+  VERBOSE_INFO("Getting current txnID");
+
   std::vector<CalpontSystemCatalog::OID> oidList;
   CalpontSystemCatalog::OID tableAuxColOid;
   CalpontSystemCatalog::RIDList tableColRidList;
@@ -76,7 +87,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
   execplan::CalpontSystemCatalog::ROPair roPair;
   uint32_t processID = 0;
   uint64_t uniqueID = 0;
-  uint32_t sessionID = dropPartitionStmt.fSessionID;
+  uint32_t sessionID = dropPartitionStmt->fSessionID;
   std::string processName("DDLProc");
   uint64_t uniqueId = 0;
 
@@ -108,19 +119,19 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
     return result;
   }
 
-  string stmt = dropPartitionStmt.fSql + "|" + dropPartitionStmt.fTableName->fSchema + "|";
+  string stmt = dropPartitionStmt->fSql + "|" + dropPartitionStmt->fTableName->fSchema + "|";
   SQLLogger logger(stmt, fDDLLoggingId, sessionID, txnID.id);
 
   try
   {
     // check table lock
     boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-        CalpontSystemCatalog::makeCalpontSystemCatalog(dropPartitionStmt.fSessionID);
+        CalpontSystemCatalog::makeCalpontSystemCatalog(dropPartitionStmt->fSessionID);
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-    systemCatalogPtr->sessionID(dropPartitionStmt.fSessionID);
+    systemCatalogPtr->sessionID(dropPartitionStmt->fSessionID);
     CalpontSystemCatalog::TableName tableName;
-    tableName.schema = dropPartitionStmt.fTableName->fSchema;
-    tableName.table = dropPartitionStmt.fTableName->fName;
+    tableName.schema = dropPartitionStmt->fTableName->fSchema;
+    tableName.table = dropPartitionStmt->fTableName->fName;
     roPair = systemCatalogPtr->tableRID(tableName);
 
     //@Bug 3054 check for system catalog
@@ -177,7 +188,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
         // reset
-        sessionID = dropPartitionStmt.fSessionID;
+        sessionID = dropPartitionStmt->fSessionID;
         txnID.id = fTxnid.id;
         txnID.valid = fTxnid.valid;
         processID = ::getpid();
@@ -224,8 +235,8 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
     // 7. Remove the extents from extentmap for the partition
 
     CalpontSystemCatalog::TableName userTableName;
-    userTableName.schema = dropPartitionStmt.fTableName->fSchema;
-    userTableName.table = dropPartitionStmt.fTableName->fName;
+    userTableName.schema = dropPartitionStmt->fTableName->fSchema;
+    userTableName.table = dropPartitionStmt->fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
     tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
@@ -252,7 +263,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
 
     // Mark the partition disabled from extent map
     string emsg;
-    rc = fDbrm->markPartitionForDeletion(oidList, dropPartitionStmt.fPartitions, emsg);
+    rc = fDbrm->markPartitionForDeletion(oidList, dropPartitionStmt->fPartitions, emsg);
 
     if (rc != 0 && rc != BRM::ERR_PARTITION_DISABLED && rc != BRM::ERR_INVALID_OP_LAST_PARTITION &&
         rc != BRM::ERR_NOT_EXIST_PARTITION)
@@ -277,7 +288,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
 
     set<BRM::LogicalPartition>::iterator it;
 
-    for (it = dropPartitionStmt.fPartitions.begin(); it != dropPartitionStmt.fPartitions.end(); ++it)
+    for (it = dropPartitionStmt->fPartitions.begin(); it != dropPartitionStmt->fPartitions.end(); ++it)
     {
       if (outOfServicePartitions.find(*it) != outOfServicePartitions.end())
         markedPartitions.insert(*it);
@@ -293,7 +304,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
 
     // Remove the partition from extent map
     emsg.clear();
-    rc = fDbrm->deletePartition(oidList, dropPartitionStmt.fPartitions, emsg);
+    rc = fDbrm->deletePartition(oidList, dropPartitionStmt->fPartitions, emsg);
 
     if (rc != 0)
       throw std::runtime_error(emsg);
@@ -359,7 +370,8 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackage(
   }
 
   // Log the DDL statement
-  logging::logDDL(dropPartitionStmt.fSessionID, txnID.id, dropPartitionStmt.fSql, dropPartitionStmt.fOwner);
+  logging::logDDL(dropPartitionStmt->fSessionID, txnID.id, dropPartitionStmt->fSql,
+                  dropPartitionStmt->fOwner);
 
   // Remove the log file
   // release the transaction
