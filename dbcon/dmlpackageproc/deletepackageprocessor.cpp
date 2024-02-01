@@ -57,7 +57,8 @@ using namespace messageqcpp;
 using namespace oam;
 namespace dmlpackageprocessor
 {
-DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
+DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackageInternal(
+    dmlpackage::CalpontDMLPackage& cpackage)
 {
   SUMMARY_INFO("DeletePackageProcessor::processPackage");
 
@@ -174,7 +175,6 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
             try
             {
               processID = ::getpid();
@@ -264,15 +264,22 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
   }
   catch (exception& ex)
   {
-    cerr << "DeletePackageProcessor::processPackage: " << ex.what() << endl;
-
-    //@Bug 4994 Cancelled job is not error
-    if (result.result == 0)
+    if (checkPPLostConnection(ex))
     {
-      result.result = DELETE_ERROR;
+      result.result = PP_LOST_CONNECTION;
     }
+    else
+    {
+      cerr << "DeletePackageProcessor::processPackage: " << ex.what() << endl;
 
-    result.message = Message(ex.what());
+      //@Bug 4994 Cancelled job is not error
+      if (result.result == 0)
+      {
+        result.result = DELETE_ERROR;
+      }
+
+      result.message = Message(ex.what());
+    }
   }
   catch (...)
   {

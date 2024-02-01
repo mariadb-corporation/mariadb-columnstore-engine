@@ -39,14 +39,14 @@ class RestorePartitionProcessor : public DDLPackageProcessor
   RestorePartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
+
+ protected:
+ private:
   /** @brief process a drop table statement
    *
    *  @param dropTableStmt the drop table statement
    */
-  EXPORT DDLResult processPackage(ddlpackage::RestorePartitionStatement& RestorePartitionStmt);
-
- protected:
- private:
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* RestorePartitionStmt);
 };
 }  // namespace ddlpackageprocessor
 

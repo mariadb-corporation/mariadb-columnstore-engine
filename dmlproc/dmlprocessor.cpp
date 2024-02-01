@@ -577,7 +577,18 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = insertPkg.get_Table()->get_SchemaName();
             tableName.table = insertPkg.get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair;
+            try
+            {
+              roPair = fcsc->tableRID(tableName);
+            }
+            catch (...)
+            {
+              if (setupDec())
+                throw;
+              roPair = fcsc->tableRID(tableName);
+            }
+
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this, &insertPkg);  // Blocks if another DML thread is using this fTableOid
@@ -976,7 +987,17 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = updatePkg->get_Table()->get_SchemaName();
             tableName.table = updatePkg->get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair;
+            try
+            {
+              roPair = fcsc->tableRID(tableName);
+            }
+            catch (...)
+            {
+              if (setupDec())
+                throw;
+              roPair = fcsc->tableRID(tableName);
+            }
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this,
@@ -1036,7 +1057,17 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = deletePkg->get_Table()->get_SchemaName();
             tableName.table = deletePkg->get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair;
+            try
+            {
+              roPair = fcsc->tableRID(tableName);
+            }
+            catch (...)
+            {
+              if (setupDec())
+                throw;
+              roPair = fcsc->tableRID(tableName);
+            }
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this,

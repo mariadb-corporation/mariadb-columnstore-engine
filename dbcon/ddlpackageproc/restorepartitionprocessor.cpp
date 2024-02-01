@@ -34,14 +34,27 @@ using namespace WriteEngine;
 
 namespace ddlpackageprocessor
 {
-RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
-    ddlpackage::RestorePartitionStatement& restorePartitionStmt)
+RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackageInternal(
+    ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("RestorePartitionProcessor::processPackage");
 
   DDLResult result;
   result.result = NO_ERROR;
   std::string err;
+
+  auto* restorePartitionStmt = dynamic_cast<ddlpackage::RestorePartitionStatement*>(sqlStmt);
+  if (!restorePartitionStmt)
+  {
+    logging::Message::Args args;
+    logging::Message message(9);
+    args.add("RestorePartitionStatement wrong cast");
+    message.format(args);
+    result.result = DROP_ERROR;
+    result.message = message;
+    return result;
+  }
+
   VERBOSE_INFO(restorePartitionStmt);
 
   BRM::TxnID txnID;
@@ -69,24 +82,24 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
   CalpontSystemCatalog::DictOIDList dictOIDList;
   std::string processName("DDLProc");
 
-  string stmt = restorePartitionStmt.fSql + "|" + restorePartitionStmt.fTableName->fSchema + "|";
-  SQLLogger logger(stmt, fDDLLoggingId, restorePartitionStmt.fSessionID, txnID.id);
+  string stmt = restorePartitionStmt->fSql + "|" + restorePartitionStmt->fTableName->fSchema + "|";
+  SQLLogger logger(stmt, fDDLLoggingId, restorePartitionStmt->fSessionID, txnID.id);
 
   uint32_t processID = 0;
   uint64_t uniqueID = 0;
-  uint32_t sessionID = restorePartitionStmt.fSessionID;
+  uint32_t sessionID = restorePartitionStmt->fSessionID;
   execplan::CalpontSystemCatalog::ROPair roPair;
 
   try
   {
     // check table lock
     boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-        CalpontSystemCatalog::makeCalpontSystemCatalog(restorePartitionStmt.fSessionID);
+        CalpontSystemCatalog::makeCalpontSystemCatalog(restorePartitionStmt->fSessionID);
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-    systemCatalogPtr->sessionID(restorePartitionStmt.fSessionID);
+    systemCatalogPtr->sessionID(restorePartitionStmt->fSessionID);
     CalpontSystemCatalog::TableName tableName;
-    tableName.schema = restorePartitionStmt.fTableName->fSchema;
-    tableName.table = restorePartitionStmt.fTableName->fName;
+    tableName.schema = restorePartitionStmt->fTableName->fSchema;
+    tableName.table = restorePartitionStmt->fTableName->fName;
     roPair = systemCatalogPtr->tableRID(tableName);
 
     //@Bug 3054 check for system catalog
@@ -142,7 +155,7 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
         // reset
-        sessionID = restorePartitionStmt.fSessionID;
+        sessionID = restorePartitionStmt->fSessionID;
         txnID.id = fTxnid.id;
         txnID.valid = fTxnid.valid;
         processID = ::getpid();
@@ -188,8 +201,8 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
     // 6. Remove the column and dictionary  files for the partition
 
     CalpontSystemCatalog::TableName userTableName;
-    userTableName.schema = restorePartitionStmt.fTableName->fSchema;
-    userTableName.table = restorePartitionStmt.fTableName->fName;
+    userTableName.schema = restorePartitionStmt->fTableName->fSchema;
+    userTableName.table = restorePartitionStmt->fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
     tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
@@ -216,7 +229,7 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
 
     // Remove the partition from extent map
     string emsg;
-    rc = fDbrm->restorePartition(oidList, restorePartitionStmt.fPartitions, emsg);
+    rc = fDbrm->restorePartition(oidList, restorePartitionStmt->fPartitions, emsg);
 
     if (rc != 0)
     {
@@ -281,8 +294,8 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackage(
   }
 
   // Log the DDL statement
-  logging::logDDL(restorePartitionStmt.fSessionID, txnID.id, restorePartitionStmt.fSql,
-                  restorePartitionStmt.fOwner);
+  logging::logDDL(restorePartitionStmt->fSessionID, txnID.id, restorePartitionStmt->fSql,
+                  restorePartitionStmt->fOwner);
 
   try
   {
