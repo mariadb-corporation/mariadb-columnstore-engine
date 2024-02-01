@@ -34,16 +34,28 @@ using namespace oam;
 
 namespace ddlpackageprocessor
 {
-MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
-    ddlpackage::MarkPartitionStatement& markPartitionStmt)
+MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackageInternal(
+    ddlpackage::SqlStatement* sqlStmt)
 {
-  SUMMARY_INFO("RestorePartitionProcessor::processPackage");
+  SUMMARY_INFO("MarkPartitionProcessor::processPackage");
 
   DDLResult result;
   result.result = NO_ERROR;
   std::string err;
-  VERBOSE_INFO(markPartitionStmt);
 
+  auto* markPartitionStmt = dynamic_cast<ddlpackage::MarkPartitionStatement*>(sqlStmt);
+  if (!markPartitionStmt)
+  {
+    logging::Message::Args args;
+    logging::Message message(9);
+    args.add("MarkPartitionStatement wrong cast");
+    message.format(args);
+    result.result = DROP_ERROR;
+    result.message = message;
+    return result;
+  }
+
+  VERBOSE_INFO(markPartitionStmt);
   BRM::TxnID txnID;
   txnID.id = fTxnid.id;
   txnID.valid = fTxnid.valid;
@@ -69,30 +81,30 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
   CalpontSystemCatalog::DictOIDList dictOIDList;
   std::string processName("DDLProc");
 
-  string stmt = markPartitionStmt.fSql + "|" + markPartitionStmt.fTableName->fSchema + "|";
-  SQLLogger logger(stmt, fDDLLoggingId, markPartitionStmt.fSessionID, txnID.id);
+  string stmt = markPartitionStmt->fSql + "|" + markPartitionStmt->fTableName->fSchema + "|";
+  SQLLogger logger(stmt, fDDLLoggingId, markPartitionStmt->fSessionID, txnID.id);
 
   uint32_t processID = 0;
   uint64_t uniqueID = 0;
-  uint32_t sessionID = markPartitionStmt.fSessionID;
+  uint32_t sessionID = markPartitionStmt->fSessionID;
   execplan::CalpontSystemCatalog::ROPair roPair;
 
   try
   {
     // check table lock
     boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-        CalpontSystemCatalog::makeCalpontSystemCatalog(markPartitionStmt.fSessionID);
+        CalpontSystemCatalog::makeCalpontSystemCatalog(markPartitionStmt->fSessionID);
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-    systemCatalogPtr->sessionID(markPartitionStmt.fSessionID);
+    systemCatalogPtr->sessionID(markPartitionStmt->fSessionID);
     CalpontSystemCatalog::TableName tableName;
-    tableName.schema = markPartitionStmt.fTableName->fSchema;
-    tableName.table = markPartitionStmt.fTableName->fName;
+    tableName.schema = markPartitionStmt->fTableName->fSchema;
+    tableName.table = markPartitionStmt->fTableName->fName;
     roPair = systemCatalogPtr->tableRID(tableName);
 
     //@Bug 3054 check for system catalog
     if (roPair.objnum < 3000)
     {
-      throw std::runtime_error("Drop partition cannot be operated on Calpont system catalog.");
+      throw std::runtime_error("Mark partition cannot be operated on Calpont system catalog.");
     }
 
     int i = 0;
@@ -142,7 +154,7 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
         // reset
-        sessionID = markPartitionStmt.fSessionID;
+        sessionID = markPartitionStmt->fSessionID;
         txnID.id = fTxnid.id;
         txnID.valid = fTxnid.valid;
         processID = ::getpid();
@@ -186,8 +198,8 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
     // 6. Remove the column and dictionary  files for the partition
 
     CalpontSystemCatalog::TableName userTableName;
-    userTableName.schema = markPartitionStmt.fTableName->fSchema;
-    userTableName.table = markPartitionStmt.fTableName->fName;
+    userTableName.schema = markPartitionStmt->fTableName->fSchema;
+    userTableName.table = markPartitionStmt->fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
     tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
@@ -214,7 +226,7 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
 
     // Remove the partition from extent map
     string emsg;
-    rc = fDbrm->markPartitionForDeletion(oidList, markPartitionStmt.fPartitions, emsg);
+    rc = fDbrm->markPartitionForDeletion(oidList, markPartitionStmt->fPartitions, emsg);
 
     if (rc != 0)
     {
@@ -281,7 +293,7 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackage(
   }
 
   // Log the DDL statement
-  logging::logDDL(markPartitionStmt.fSessionID, 0, markPartitionStmt.fSql, markPartitionStmt.fOwner);
+  logging::logDDL(markPartitionStmt->fSessionID, 0, markPartitionStmt->fSql, markPartitionStmt->fOwner);
 
   try
   {

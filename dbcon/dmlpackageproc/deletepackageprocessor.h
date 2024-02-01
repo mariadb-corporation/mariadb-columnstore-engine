@@ -45,14 +45,11 @@ class DeletePackageProcessor : public DMLPackageProcessor
   DeletePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
   {
   }
-  /** @brief process a DeleteDMLPackage
-   *
-   * @param cpackage the delete dml package to process
-   */
-  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
  protected:
  private:
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) override;
+
   /** @brief delete a row
    *
    * @param txnID the transaction id

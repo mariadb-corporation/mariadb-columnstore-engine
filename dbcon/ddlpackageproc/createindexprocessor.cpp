@@ -37,8 +37,8 @@ using namespace logging;
 using namespace BRM;
 namespace ddlpackageprocessor
 {
-CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
-    ddlpackage::CreateIndexStatement& createIndexStmt)
+CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackageInternal(
+    ddlpackage::SqlStatement* sqlStmt)
 {
   /*
     get OIDs for the list & tree files
@@ -53,6 +53,19 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
   DDLResult result;
   result.result = NO_ERROR;
 
+  auto* createIndexStmt = dynamic_cast<CreateIndexStatement*>(sqlStmt);
+  if (!createIndexStmt)
+  {
+    logging::Message::Args args;
+    logging::Message message(9);
+    args.add("CreateIndexStatement wrong cast ");
+    message.format(args);
+
+    result.result = CREATE_ERROR;
+    result.message = message;
+    return result;
+  }
+
   DETAIL_INFO(createIndexStmt);
 
   BRM::TxnID txnID;
@@ -62,11 +75,11 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
   This is based on the assumption that Front end is already error out if the user trys to
   create index on non-existing table. */
   CalpontSystemCatalog::TableName tableName;
-  tableName.schema = (createIndexStmt.fTableName)->fSchema;
-  tableName.table = (createIndexStmt.fTableName)->fName;
+  tableName.schema = (createIndexStmt->fTableName)->fSchema;
+  tableName.table = (createIndexStmt->fTableName)->fName;
   CalpontSystemCatalog::ROPair roPair;
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(createIndexStmt.fSessionID);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(createIndexStmt->fSessionID);
 
   try
   {
@@ -75,7 +88,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
   catch (exception& ex)
   {
     // store primary key name in fPKName
-    fPKName = createIndexStmt.fIndexName->fName;
+    fPKName = createIndexStmt->fIndexName->fName;
     return result;
   }
   catch (...)
@@ -88,10 +101,10 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
     return result;
   }
 
-  fPKName = createIndexStmt.fIndexName->fName;
+  fPKName = createIndexStmt->fIndexName->fName;
   int err = 0;
 
-  SQLLogger logger(createIndexStmt.fSql, fDDLLoggingId, createIndexStmt.fSessionID, txnID.id);
+  SQLLogger logger(createIndexStmt->fSql, fDDLLoggingId, createIndexStmt->fSessionID, txnID.id);
 
   VERBOSE_INFO("Allocating object IDs for columns");
 
@@ -102,31 +115,31 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
   VERBOSE_INFO("Starting a new transaction");
 
   ddlpackage::DDL_CONSTRAINTS type =
-      createIndexStmt.fUnique ? ddlpackage::DDL_UNIQUE : ddlpackage::DDL_INVALID_CONSTRAINT;
+      createIndexStmt->fUnique ? ddlpackage::DDL_UNIQUE : ddlpackage::DDL_INVALID_CONSTRAINT;
 
   VERBOSE_INFO("Writing meta data to SYSINDEX");
   bool multicol = false;
 
-  if (createIndexStmt.fColumnNames.size() > 1)
+  if (createIndexStmt->fColumnNames.size() > 1)
   {
     multicol = true;
   }
 
   // validate index columns
   CalpontSystemCatalog::TableColName tableColName;
-  tableColName.schema = (createIndexStmt.fTableName)->fSchema;
-  tableColName.table = (createIndexStmt.fTableName)->fName;
+  tableColName.schema = (createIndexStmt->fTableName)->fSchema;
+  tableColName.table = (createIndexStmt->fTableName)->fName;
   CalpontSystemCatalog::OID oid;
   CalpontSystemCatalog::ColType colType;
   ColumnNameList::const_iterator colIter;
   int totalWidth = 0;
-  DDLIndexPopulator pop(&fWriteEngine, &fSessionManager, createIndexStmt.fSessionID, txnID.id, result,
-                        fIdxOID, createIndexStmt.fColumnNames, *createIndexStmt.fTableName, type,
+  DDLIndexPopulator pop(&fWriteEngine, &fSessionManager, createIndexStmt->fSessionID, txnID.id, result,
+                        fIdxOID, createIndexStmt->fColumnNames, *(createIndexStmt->fTableName), type,
                         getDebugLevel());
 
   if (multicol)
   {
-    for (colIter = createIndexStmt.fColumnNames.begin(); colIter != createIndexStmt.fColumnNames.end();
+    for (colIter = createIndexStmt->fColumnNames.begin(); colIter != createIndexStmt->fColumnNames.end();
          colIter++)
     {
       tableColName.column = *colIter;
@@ -167,7 +180,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
     // writeSysIndexColMetaData(createIndexStmt.fSessionID, txnID.id, result,*createIndexStmt.fTableName,
     // createIndexStmt.fColumnNames, createIndexStmt.fIndexName->fName );
 
-    if (createIndexStmt.fUnique)
+    if (createIndexStmt->fUnique)
     {
       VERBOSE_INFO("Writing column constraint meta data to SYSCONSTRAINT");
       WriteEngine::ColStruct colStruct;
@@ -189,7 +202,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
       // get the columns for the SYSCONSTRAINT table
       ColumnList sysConsColumns;
       ColumnList::const_iterator sysCons_iterator;
-      getColumnsForTable(createIndexStmt.fSessionID, sysConsTableName.schema, sysConsTableName.table,
+      getColumnsForTable(createIndexStmt->fSessionID, sysConsTableName.schema, sysConsTableName.table,
                          sysConsColumns);
       sysCons_iterator = sysConsColumns.begin();
       std::string idxData;
@@ -201,17 +214,17 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
 
         if (CONSTRAINTNAME_COL == column.tableColName.column)
         {
-          idxData = createIndexStmt.fIndexName->fName;
+          idxData = createIndexStmt->fIndexName->fName;
           colTuple.data = idxData;
         }
         else if (SCHEMA_COL == column.tableColName.column)
         {
-          idxData = (createIndexStmt.fTableName)->fSchema;
+          idxData = (createIndexStmt->fTableName)->fSchema;
           colTuple.data = idxData;
         }
         else if (TABLENAME_COL == column.tableColName.column)
         {
-          idxData = (createIndexStmt.fTableName)->fName;
+          idxData = (createIndexStmt->fTableName)->fName;
           colTuple.data = idxData;
         }
         else if (CONSTRAINTTYPE_COL == column.tableColName.column)
@@ -233,7 +246,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
         }
         else if (INDEXNAME_COL == column.tableColName.column)
         {
-          idxData = createIndexStmt.fIndexName->fName;
+          idxData = createIndexStmt->fIndexName->fName;
           colTuple.data = idxData;
         }
         else
@@ -271,7 +284,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
         if (error != WriteEngine::NO_ERROR)
         {
           return rollBackCreateIndex(errorString("WE: Error inserting Column Record: ", error), txnID,
-                                     createIndexStmt.fSessionID);
+                                     createIndexStmt->fSessionID);
           //         		logging::Message::Args args;
           //         		logging::Message message(9);
           //         		args.add("Error updating: ");
@@ -305,7 +318,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
       // get the columns for the SYSCONSTRAINTCOL table
       ColumnList sysConsColColumns;
       ColumnList::const_iterator sysConsCol_iterator;
-      getColumnsForTable(createIndexStmt.fSessionID, sysConsColTableName.schema, sysConsColTableName.table,
+      getColumnsForTable(createIndexStmt->fSessionID, sysConsColTableName.schema, sysConsColTableName.table,
                          sysConsColColumns);
       // write sysconstraintcol
       sysConsCol_iterator = sysConsColColumns.begin();
@@ -319,22 +332,22 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
 
         if (SCHEMA_COL == column.tableColName.column)
         {
-          colData = (createIndexStmt.fTableName)->fSchema;
+          colData = (createIndexStmt->fTableName)->fSchema;
           colTupleCol.data = colData;
         }
         else if (TABLENAME_COL == column.tableColName.column)
         {
-          colData = (createIndexStmt.fTableName)->fName;
+          colData = (createIndexStmt->fTableName)->fName;
           colTupleCol.data = colData;
         }
         else if (COLNAME_COL == column.tableColName.column)
         {
-          colData = createIndexStmt.fColumnNames[0];
+          colData = createIndexStmt->fColumnNames[0];
           colTupleCol.data = colData;
         }
         else if (CONSTRAINTNAME_COL == column.tableColName.column)
         {
-          colData = createIndexStmt.fIndexName->fName;
+          colData = createIndexStmt->fIndexName->fName;
           colTupleCol.data = colData;
         }
         else
@@ -372,7 +385,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
         if (error != WriteEngine::NO_ERROR)
         {
           return rollBackCreateIndex(errorString("WE: Error inserting Column Record: ", error), txnID,
-                                     createIndexStmt.fSessionID);
+                                     createIndexStmt->fSessionID);
 
           /*       				logging::Message::Args args;
                                       logging::Message message(9);
@@ -398,7 +411,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
     if (err)
     {
       return rollBackCreateIndex(errorString("Write engine failed to create the new index. ", err), txnID,
-                                 createIndexStmt.fSessionID);
+                                 createIndexStmt->fSessionID);
     }
 
     // new if BULK_LOAD close
@@ -407,11 +420,11 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
     if (err)
     {
       return rollBackCreateIndex(errorString("Failed to populate index with current data. ", err), txnID,
-                                 createIndexStmt.fSessionID);
+                                 createIndexStmt->fSessionID);
     }
 
     // Log the DDL statement.
-    logging::logDDL(createIndexStmt.fSessionID, txnID.id, createIndexStmt.fSql, createIndexStmt.fOwner);
+    logging::logDDL(createIndexStmt->fSessionID, txnID.id, createIndexStmt->fSql, createIndexStmt->fOwner);
 
     DETAIL_INFO("Commiting transaction");
     err = fWriteEngine.commit(txnID.id);
@@ -419,7 +432,7 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
     if (err)
     {
       return rollBackCreateIndex(errorString("Failed to commit the create index transaction. ", err), txnID,
-                                 createIndexStmt.fSessionID);
+                                 createIndexStmt->fSessionID);
     }
 
     fSessionManager.committed(txnID);
@@ -428,12 +441,12 @@ CreateIndexProcessor::DDLResult CreateIndexProcessor::processPackage(
 
   catch (exception& ex)
   {
-    result = rollBackCreateIndex(ex.what(), txnID, createIndexStmt.fSessionID);
+    result = rollBackCreateIndex(ex.what(), txnID, createIndexStmt->fSessionID);
   }
   catch (...)
   {
     string msg("CreateIndexProcessor::processPackage: caught unknown exception!");
-    result = rollBackCreateIndex(msg, txnID, createIndexStmt.fSessionID);
+    result = rollBackCreateIndex(msg, txnID, createIndexStmt->fSessionID);
   }
 
   return result;
