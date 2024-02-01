@@ -287,6 +287,31 @@ int32_t DMLPackageProcessor::tryToRollBackTransaction(uint64_t uniqueId, BRM::Tx
   return weRc;
 }
 
+DMLPackageProcessor::DMLResult DMLPackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
+{
+  auto result = processPackageInternal(cpackage);
+  uint32_t tries = 0;
+  // Try to setup connection and process package one more time.
+  while ((result.result == PP_LOST_CONNECTION) && (tries < 5))
+  {
+    std::cerr << "DMLPackageProcessor: NETWORK ERROR; attempt # " << tries << std::endl;
+    joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+    joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+    if (fEc->Setup())
+      return result;
+
+    result = processPackageInternal(cpackage);
+    ++tries;
+  }
+  return result;
+}
+
+bool DMLPackageProcessor::checkPPLostConnection(std::exception& ex)
+{
+  std::string error = ex.what();
+  return error.find(PPLostConnectionErrorCode) != std::string::npos;
+}
+
 int DMLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID,
                                              std::string& errorMsg)
 {
