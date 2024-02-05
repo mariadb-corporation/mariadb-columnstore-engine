@@ -71,9 +71,7 @@ def cmapi_available(host=LOCALHOST):
     :return: is CMAPI running or not
     :rtype: bool
     """
-    logging.debug(
-        'Detecting CMAPI is up and running on {}.'.format(host)
-    )
+    logging.debug('Detecting CMAPI is up and running on {}.'.format(host))
     url = 'https://{}:{}/notfound'.format(host, API_PORT)
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
@@ -113,7 +111,7 @@ def get_ip_address_by_nic(ifname):
                 struct.pack('256s', bytes(ifname[:15], 'utf-8'))
             )[20:24]
         )
-    except Exception as exc:
+    except Exception:
         logging.debug(
             'Exception while getting IP address of an "{}" interface'.format(
                 ifname
@@ -172,13 +170,14 @@ def is_node_primary(conf_root):
             success = True
         except HTTPError as exc:
             logging.warning(
-                'Something goes wrong while requesting primary status through api. Got response code "{}" with reason "{}".'.format(
-                    exc.code, exc.reason
-                )
+                'Something goes wrong while requesting primary status '
+                'through api. '
+                f'Got response code "{exc.code}" with reason "{exc.reason}".'
             )
         except URLError:
             logging.warning(
-                'CMAPI became unavailable while trying to request primary status.'
+                'CMAPI became unavailable while trying '
+                'to request primary status.'
             )
         except Exception:
             logging.error(
@@ -235,7 +234,8 @@ def get_meta(conf_root, meta_type):
         raise
     except URLError:
         logging.warning(
-            'CMAPI on primary became unavailable while trying to request {} from it.'.format(meta_type)
+            'CMAPI on primary became unavailable while trying '
+            'to request {} from it.'.format(meta_type)
         )
         raise
     except Exception:
@@ -314,7 +314,8 @@ if __name__ == '__main__':
                 subprocess.check_call(CMD, shell=True)
             except subprocess.CalledProcessError as exc:
                 logging.error(
-                    'Failed to start storagemanager. {} exits with {}.'.format(CMD, exc.returncode)
+                    'Failed to start storagemanager. '
+                    f'Command "{cmd}" exits with {exc.returncode}.'
                 )
                 sys.exit(1)
             time.sleep(1)   # allow SM time to init
@@ -396,7 +397,8 @@ if __name__ == '__main__':
                             )
             except Exception as exc:
                 logging.error(
-                    'Failed to detect primary or load BRM data from the primary node.',
+                    'Failed to detect primary or load BRM data from'
+                    'the primary node.',
                     exc_info=True
                 )
                 sys.exit(1)
@@ -443,7 +445,8 @@ if __name__ == '__main__':
     else:
         if s3_enabled:
             logging.info(
-                'brm_saves_currenty returned empty string from read_from_sm_with_retry'
+                'brm_saves_currenty returned empty string from '
+                'read_from_sm_with_retry'
             )
         else:
             logging.info(
