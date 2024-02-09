@@ -602,7 +602,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: img,
     volumes: [pipeline._volumes.mdb],
     environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v3-unknown-linux-gnu-pgo+lto-full.tar.zst',
+      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst',
       PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
     },
     commands: [
