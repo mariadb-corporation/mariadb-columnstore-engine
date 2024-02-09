@@ -191,6 +191,23 @@ class StoreFieldMariaDB : public StoreField
   int store_decimal128(const datatypes::Decimal& dec) override
   {
     std::string decAsAStr = dec.toString(true);
+    Field_new_decimal* NDField = dynamic_cast<Field_new_decimal*>(m_field);
+    // look at decimal.h in MDB's include dir. it uses int32 to hold values that
+    // consist of 9 digits (000000000..999999999). All numbers with precision 9
+    // or less will use one int32 element in the decimal_t's buf.
+    // It appears that we need to correct precision for numbers that
+    // are represented with 9 digits or less and we do not need to correct
+    // for precisions that are wider. Most probably it is due to some corner
+    // case in server's code.
+    if (NDField && NDField->precision < 10 && NDField->precision < dec.precision)
+    {
+       NDField->precision = dec.precision;
+    }
+    uint32_t reqLength = dec.precision + 2;
+    if (m_field->field_length < reqLength)
+    {
+      m_field->field_length = reqLength;
+    }
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
