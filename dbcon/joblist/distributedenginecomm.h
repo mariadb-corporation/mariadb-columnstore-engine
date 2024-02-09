@@ -227,6 +227,10 @@ class DistributedEngineComm
   typedef ThreadSafeQueue<messageqcpp::SBS> StepMsgQueue;
   using AtomicSizeVec = std::vector<std::atomic<size_t>>;
 
+  // Creates a ByteStream as a command for Primitive Server and initializes it with a given `command`,
+  // `uniqueID` and `size`.
+  messageqcpp::SBS createBatchPrimitiveCommand(ISMPACKETCOMMAND command, uint32_t uniqueID, uint16_t size);
+
   /* To keep some state associated with the connection.  These aren't copyable. */
   struct MQE : public boost::noncopyable
   {
