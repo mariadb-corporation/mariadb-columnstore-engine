@@ -1967,7 +1967,7 @@ struct ReadThread
           id = fBPPHandler->getUniqueID(sbs, ismHdr->Command);
           functor.reset(new BPPHandler::Abort(fBPPHandler, sbs));
         }
-        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, weight, priority, id);
+        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
         OOBProcPool->addJob(job);
         break;
       }
