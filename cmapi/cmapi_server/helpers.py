@@ -34,17 +34,25 @@ from cmapi_server.managers.process import MCSProcessManager
 from mcs_node_control.models.node_config import NodeConfig
 
 
-def get_id():
+def get_id() -> int:
+    """Generate pseudo random id for transaction.
+
+    :return: id for internal transaction
+    :rtype: int
+
+    ..TODO: need to change transaction id format and generation method?
+    """
     return int(random() * 1000000)
 
 
 def start_transaction(
-    config_filename=CMAPI_CONF_PATH,
-    cs_config_filename=DEFAULT_MCS_CONF_PATH,
-    extra_nodes=None,
-    remove_nodes=None,
-    optional_nodes=None,
-    id=get_id()
+    config_filename: str = CMAPI_CONF_PATH,
+    cs_config_filename: str = DEFAULT_MCS_CONF_PATH,
+    extra_nodes: Optional[list] = None,
+    remove_nodes: Optional[list] = None,
+    optional_nodes: Optional[list] = None,
+    txn_id: Optional[int] = None,
+    timeout: float = 300.0
 ):
     """Start internal CMAPI transaction.
 
@@ -55,19 +63,26 @@ def start_transaction(
 
     :param config_filename: cmapi config filepath,
                             defaults to CMAPI_CONF_PATH
-    :type config_filename: str
+    :type config_filename: str, optional
     :param cs_config_filename: columnstore xml config filepath,
                                defaults to DEFAULT_MCS_CONF_PATH
     :type cs_config_filename: str, optional
     :param extra_nodes: extra nodes, defaults to None
-    :type extra_nodes: list, optional
+    :type extra_nodes: Optional[list], optional
     :param remove_nodes: remove nodes, defaults to None
-    :type remove_nodes: list, optional
+    :type remove_nodes: Optional[list], optional
     :param optional_nodes: optional nodes, defaults to None
-    :type optional_nodes: list, optional
-    :return: (success, txnid, nodes)
-    :rtype: tuple
+    :type optional_nodes: Optional[list], optional
+    :param txn_id: id for transaction to start, defaults to None
+    :type txn_id: Optional[int], optional
+    :param timeout: time in seconds for cmapi transaction lock before it ends
+                    automatically, defaults to 300
+    :type timeout: float, optional
+    :return: (success, txn_id, nodes)
+    :rtype: tuple[bool, int, list[str]]
     """
+    if txn_id is None:
+        txn_id = get_id()
     # TODO: Somehow change that logic for eg using several input types
     #       (str\list\set) and detect which one we got.
     extra_nodes = extra_nodes or []
@@ -80,8 +95,8 @@ def start_transaction(
     version = get_version()
 
     headers = {'x-api-key': api_key}
-    body = {'id' : id}
-    final_time = datetime.datetime.now() + datetime.timedelta(seconds=300)
+    body = {'id' : txn_id}
+    final_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
 
     success = False
     while datetime.datetime.now() < final_time and not success:
@@ -182,7 +197,7 @@ def start_transaction(
                 time.sleep(1)
 
             if not node_success and node not in optional_nodes:
-                rollback_txn_attempt(api_key, version, id, successes)
+                rollback_txn_attempt(api_key, version, txn_id, successes)
                 # wait up to 5 secs and try the whole thing again
                 time.sleep(random() * 5)
                 break
@@ -194,7 +209,7 @@ def start_transaction(
         # are up (> 50%).
         success = (len(successes) == len(real_active_nodes))
 
-    return (success, id, successes)
+    return (success, txn_id, successes)
 
 def rollback_txn_attempt(key, version, txnid, nodes):
     headers = {'x-api-key': key}
