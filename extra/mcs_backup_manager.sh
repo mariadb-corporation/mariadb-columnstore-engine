@@ -213,22 +213,22 @@ parse_backup_variables()
             backup)
                 shift # past argument
                 ;;
-            -bl|--backuplocation)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -bd|--backupdestination)
+            -bd|--backup-destination)
                 backup_destination="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -scp)
+            -scp|--secure-copy-protocol)
                 scp="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -bb|--backupbucket)
+            -bb|--backup-bucket)
                 backup_bucket="$2"
                 shift # past argument
                 shift # past value
@@ -303,7 +303,7 @@ parse_backup_variables()
                 quiet=true
                 shift # past argument
                 ;;
-            --no-verify-ssl)
+            -vs-ssl| --no-verify-ssl)
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
@@ -340,27 +340,27 @@ print_backup_help_text()
     echo "
     Columnstore Backup
 
-        -bl   | --backup_location        directory where the backup will be saved
-        -bd   | --backup_destination     if the directory is 'Local' or 'Remote' to this script
-        -scp                             scp connection to remote server if -bd 'Remote'
-        -bb   | --backup_bucket          bucket name for where to save S3 backups
-        -url  | --endpoint-url           onprem url to s3 storage api example: http://127.0.0.1:8000
-        --no-verify-ssl                  skips verifying ssl certs, useful for onpremise s3 storage
-        -s    | --storage                the storage used by columnstore data 'LocalStorage' or 'S3'
-        -i    | --incremental            adds columnstore deltas to an existing full backup
-        -P    | --parallel               number of parallel rsync/compression threads to run
-        -f    | --config-file            path to backup configuration file to load variables from
-        -sbrm | --skip-save-brm          skip saving brm prior to running a backup - ideal for dirty backups
-        -slock| --skip-locks             skip issuing write locks - ideal for dirty backups
-        -spoll| --skip-polls             skip sql checks confirming no write/cpimports running
-        -smdb | --skip-mariadb-backup    skip running a mariadb-backup for innodb data - ideal for incremental dirty backups
-        -sb   | --skip-bucket-data       skip taking a copy of the columnstore data in the bucket
-        -pi   | --poll-interval          number of seconds between poll checks for active writes & cpimports
-        -pmw  | --poll-max-wait          max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt
-        -q    | --quiet                  silence verbose copy command outputs
-        -c    | --compress               compress backup in X format - Options: [ pigz ]
-        -nb   | --name-backup            define the name of the backup - default: date +%m-%d-%Y
-        -ha   | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
+        -bl    | --backup-location        Directory where the backup will be saved
+        -bd    | --backup-destination     If the directory is 'Local' or 'Remote' to this script
+        -scp   | --secure-copy-protocol   scp connection to remote server if -bd 'Remote'
+        -bb    | --backup-bucket          Bucket name for where to save S3 backups
+        -url   | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
+        -vs-ssl| --no-verify-ssl          Skips verifying ssl certs, useful for onpremise s3 storage
+        -s     | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
+        -i     | --incremental            Adds columnstore deltas to an existing full backup
+        -P     | --parallel               Number of parallel rsync/compression threads to run
+        -f     | --config-file            Path to backup configuration file to load variables from
+        -sbrm  | --skip-save-brm          Skip saving brm prior to running a backup - ideal for dirty backups
+        -slock | --skip-locks             Skip issuing write locks - ideal for dirty backups
+        -spoll | --skip-polls             Skip sql checks confirming no write/cpimports running
+        -smdb  | --skip-mariadb-backup    Skip running a mariadb-backup for innodb data - ideal for incremental dirty backups
+        -sb    | --skip-bucket-data       Skip taking a copy of the columnstore data in the bucket
+        -pi    | --poll-interval          Number of seconds between poll checks for active writes & cpimports
+        -pmw   | --poll-max-wait          Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt
+        -q     | --quiet                  Silence verbose copy command outputs
+        -c     | --compress               Compress backup in X format - Options: [ pigz ]
+        -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
+        -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
 
@@ -379,6 +379,11 @@ print_backup_help_text()
         Cron Example:
         */60 */24 * * *  root  bash /root/$0 -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
     ";
+
+    # Hidden flags
+    # -m | --mode           Options ['direct','indirect'] - direct backups run on the columnstore nodes themselves. indirect run on another machine that has read-only mounts associated with columnstore/mariadb
+    # -f| --config-file     Path of the Configuration file to load variables from 
+
 }
 
 print_backup_variables()
@@ -1709,22 +1714,22 @@ parse_restore_variables()
                 shift # past argument
                 shift # past value
                 ;;
-            -bl|--backup_location)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -bd|--backup_destination)
+            -bd|--backup-destination)
                 backup_destination="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -scp)
+            -scp|--secure-copy-protocol)
                 scp="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -bb|--backup_bucket)
+            -bb|--backup-bucket)
                 backup_bucket="$2"
                 shift # past argument
                 shift # past value
@@ -1750,22 +1755,22 @@ parse_restore_variables()
                 shift # past argument
                 shift # past value
                 ;;
-            -nb | --new_bucket)
+            -nb | --new-bucket)
                 new_bucket="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -nr | --new_region)
+            -nr | --new-region)
                 new_region="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -nk | --new_key)
+            -nk | --new-key)
                 new_key="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -ns | --new_secret)
+            -ns | --new-secret)
                 new_secret="$2"
                 shift # past argument
                 shift # past value
@@ -1779,7 +1784,7 @@ parse_restore_variables()
                 HA=true
                 shift # past argument
                 ;;
-            --continue)
+            -cont| --continue)
                 continue=true
                 shift # past argument
                 ;;
@@ -1830,31 +1835,31 @@ parse_restore_variables()
 }
 
 print_restore_help_text()
-{
+{   
     echo "
     Columnstore Restore
 
         -l   | --load                   What backup to load
-        -bl  | --backup_location        Directory where the backup was saved
-        -bd  | --backup_destination     If the directory is 'Local' or 'Remote' to this script
+        -bl  | --backup-location        Directory where the backup was saved
+        -bd  | --backup-destination     If the directory is 'Local' or 'Remote' to this script
         -dbs | --dbroots                Number of database roots in the backup
-        -scp                            scp connection to remote server if -bd 'Remote'
-        -bb  | --backup_bucket          bucket name for where to find the S3 backups
+        -scp | --secure-copy-protocol   scp connection to remote server if -bd 'Remote'
+        -bb  | --backup_bucket          Bucket name for where to find the S3 backups
         -url | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
-        --no-verify-ssl                 skips verifying ssl certs, useful for onpremise s3 storage
+        -vs-ssl| --no-verify-ssl)       Skips verifying ssl certs, useful for onpremise s3 storage
         -s   | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -pm  | --nodeid                 Forces the handling of the restore as this node as opposed to whats detected on disk
-        -nb  | --new_bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
+        -nb  | --new-bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
                                         Use -nb if the new restored cluster should use a different bucket than the backup bucket itself
-        -nr  | --new_region             Defines the region of the new bucket to copy the s3 data to from the backup bucket   
-        -nk  | --new_key                Defines the aws key to connect to the new_bucket  
-        -ns  | --new_secret             Defines the aws secret of the aws key to connect to the new_bucket  
-        -f   | --config-file            path to backup configuration file to load variables from
-        --continue                      this acknowledges data in your --new_bucket is ok to delete when restoring S3
-        -smdb| --skip-mariadb-backup    skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore
-        -sb  | --skip-bucket-data       skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
-        -q   | --quiet                  silence verbose copy command outputs
-        -c   | --compress               hint that the backup is compressed in X format - Options: [ pigz ]
+        -nr  | --new-region             Defines the region of the new bucket to copy the s3 data to from the backup bucket   
+        -nk  | --new-key                Defines the aws key to connect to the new_bucket  
+        -ns  | --new-secret             Defines the aws secret of the aws key to connect to the new_bucket  
+        -f   | --config-file            Path to backup configuration file to load variables from
+        -cont| --continue               This acknowledges data in your --new_bucket is ok to delete when restoring S3
+        -smdb| --skip-mariadb-backup    Skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore
+        -sb  | --skip-bucket-data       Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
+        -q   | --quiet                  Silence verbose copy command outputs
+        -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
