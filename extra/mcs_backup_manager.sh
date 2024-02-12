@@ -303,7 +303,7 @@ parse_backup_variables()
                 quiet=true
                 shift # past argument
                 ;;
-            -vs-ssl| --no-verify-ssl)
+            -nv-ssl| --no-verify-ssl)
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
@@ -345,7 +345,7 @@ print_backup_help_text()
         -scp   | --secure-copy-protocol   scp connection to remote server if -bd 'Remote'
         -bb    | --backup-bucket          Bucket name for where to save S3 backups
         -url   | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
-        -vs-ssl| --no-verify-ssl          Skips verifying ssl certs, useful for onpremise s3 storage
+        -nv-ssl| --no-verify-ssl          Skips verifying ssl certs, useful for onpremise s3 storage
         -s     | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -i     | --incremental            Adds columnstore deltas to an existing full backup
         -P     | --parallel               Number of parallel rsync/compression threads to run
@@ -382,7 +382,6 @@ print_backup_help_text()
 
     # Hidden flags
     # -m | --mode           Options ['direct','indirect'] - direct backups run on the columnstore nodes themselves. indirect run on another machine that has read-only mounts associated with columnstore/mariadb
-    # -f| --config-file     Path of the Configuration file to load variables from 
 
 }
 
@@ -1815,7 +1814,7 @@ parse_restore_variables()
                 quiet=true
                 shift # past argument
                 ;;
-            --no-verify-ssl)
+            -nv-ssl| --no-verify-ssl)
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
@@ -1846,7 +1845,7 @@ print_restore_help_text()
         -scp | --secure-copy-protocol   scp connection to remote server if -bd 'Remote'
         -bb  | --backup_bucket          Bucket name for where to find the S3 backups
         -url | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
-        -vs-ssl| --no-verify-ssl)       Skips verifying ssl certs, useful for onpremise s3 storage
+        -nv-ssl| --no-verify-ssl)       Skips verifying ssl certs, useful for onpremise s3 storage
         -s   | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -pm  | --nodeid                 Forces the handling of the restore as this node as opposed to whats detected on disk
         -nb  | --new-bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
@@ -1873,6 +1872,10 @@ print_restore_help_text()
             ./$0 restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
             ./$0 restore -s S3 -bb s3://my-cs-backups  -l 08-16-2022 -nb s3://new-data-bucket -nr us-east-1 -nk AKIAxxxxxxx3FHCADF -ns GGGuxxxxxxxxxxnqa72csk5 -ha
     ";
+
+    # Hidden flags
+    # -m | --mode           Options ['direct','indirect'] - direct backups run on the columnstore nodes themselves. indirect run on another machine that has read-only mounts associated with columnstore/mariadb
+
 }
 
 print_restore_variables()
