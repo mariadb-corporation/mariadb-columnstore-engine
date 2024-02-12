@@ -74,19 +74,6 @@ class PriorityThreadPool
      , sock(sock)
     {
     }
-    // sock_ is nullptr here. This is kinda dangerous.
-    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
-        const boost::shared_ptr<Functor>& functor, const uint32_t weight = 1, const uint32_t priority = 0,
-        const uint32_t id = 0)
-     : functor(functor)
-     , weight(weight)
-     , priority(priority)
-     , id(id)
-     , stepID(stepID)
-     , uniqueID(uniqueID)
-     , sock(nullptr)
-    {
-    }
 
     boost::shared_ptr<Functor> functor;
     uint32_t weight;
