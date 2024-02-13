@@ -153,12 +153,10 @@ int BPPSeeder::operator()()
 
       if (0 < status)
       {
-        sendErrorMsg(uniqueID, status, stepID);
+        error_handling::sendErrorMsg(status, uniqueID, stepID, sock);
         return ret;
       }
 
-      // if (!(sessionID & 0x80000000))
-      // cout << "got request for <" << sessionID <<", " << stepID << ">\n";
       scoped.lock();
 
       if (!bppv)
@@ -172,26 +170,12 @@ int BPPSeeder::operator()()
 
           if (boost::posix_time::second_clock::universal_time() > dieTime)
           {
-#if 0  // for debugging
-                        boost::posix_time::ptime pt = boost::posix_time::microsec_clock::local_time();
-
-                        if (sessionID & 0x80000000)
-                            cout << "BPPSeeder couldn't find the sessionID/stepID pair.  sessionID="
-                                 << (int) (sessionID ^ 0x80000000) << " stepID=" << stepID << " (syscat)" << pt << endl;
-                        else
-                            cout << "BPPSeeder couldn't find the sessionID/stepID pair.  sessionID="
-                                 << sessionID << " stepID=" << stepID << pt << endl;
-
-                        throw logic_error("BPPSeeder couldn't find the sessionID/stepID pair");
-#endif
+            cout << "BPPSeeder::operator(): job for id " << uniqueID << "and session " << sessionID
+                 << " has been killed." << endl;
             return 0;
           }
 
-          //				if (!isSysCat())
           return -1;
-          //				else {   // syscat queries aren't run by a threadpool, can't reschedule those
-          //jobs 					usleep(1000); 					goto retry;
-          //				}
         }
 
         bppv = it->second;
@@ -205,10 +189,6 @@ int BPPSeeder::operator()()
 
       if (!bpp)
       {
-        //			if (isSysCat()) {
-        //				usleep(1000);
-        //				goto retry;
-        //			}
         return -1;  // all BPP instances are busy, make threadpool reschedule
       }
 
@@ -355,23 +335,8 @@ void BPPSeeder::catchHandler(const string& ex, uint32_t id, uint32_t step)
 {
   Logger log;
   log.logMessage(ex);
-  sendErrorMsg(id, logging::bppSeederErr, step);
-}
 
-void BPPSeeder::sendErrorMsg(uint32_t id, uint16_t status, uint32_t step)
-{
-  ISMPacketHeader ism;
-  PrimitiveHeader ph = {0, 0, 0, 0, 0, 0};
-
-  ism.Status = status;
-  ph.UniqueID = id;
-  ph.StepID = step;
-  ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-  msg.append((uint8_t*)&ism, sizeof(ism));
-  msg.append((uint8_t*)&ph, sizeof(ph));
-
-  boost::mutex::scoped_lock lk(*writelock);
-  sock->write(msg);
+  error_handling::sendErrorMsg(logging::bppSeederErr, id, step, sock);
 }
 
 bool BPPSeeder::isSysCat()
