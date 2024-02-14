@@ -8,10 +8,17 @@ USE MCOL5241;
 
 CREATE TABLE t1 (id INT, avgseek DATETIME) ENGINE = columnstore;
 
-INSERT INTO t1 (id, avgseek) VALUES (1,'2023-06-12 14:47:37');
-INSERT INTO t1 (id, avgseek) VALUES (1,NULL);
+INSERT INTO t1 (id, avgseek) VALUES (1, '2023-06-12 14:47:37');
+INSERT INTO t1 (id, avgseek) VALUES (1, NULL);
 
 SELECT AVG(YEAR(avgseek)) FROM t1;
+
+CREATE TABLE t2 (id INT, x TINYINT) ENGINE = columnstore;
+
+INSERT INTO t2 (id, x) VALUES (1, 1);
+INSERT INTO t2 (id, x) VALUES (1, 2);
+
+SELECT AVG(x) FROM t2;
 
 DROP DATABASE MCOL5241;
 
