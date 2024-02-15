@@ -188,7 +188,7 @@ class StoreFieldMariaDB : public StoreField
     if (NDField)
     {
 	    idblog("dec 64, p " << dec.precision << ", s " << dec.scale
-	    	<< ", field p " << NDField->precision << ", s " << NDField->scale);
+	    	<< ", field p " << NDField->precision);
     }
     else
     {
