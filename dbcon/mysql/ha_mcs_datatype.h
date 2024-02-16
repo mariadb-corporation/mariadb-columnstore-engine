@@ -220,10 +220,12 @@ class StoreFieldMariaDB : public StoreField
     // are represented with 9 digits or less and we do not need to correct
     // for precisions that are wider. Most probably it is due to some corner
     // case in server's code.
+#if 0
     if (NDField && NDField->precision < 10 && NDField->precision < dec.precision)
     {
        NDField->precision = dec.precision;
     }
+#endif
 #if 0
     uint32_t reqLength = dec.precision + 2;
     if (m_field->field_length < reqLength)
