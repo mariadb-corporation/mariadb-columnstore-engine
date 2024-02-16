@@ -184,17 +184,17 @@ class StoreFieldMariaDB : public StoreField
 
   int store_decimal64(const datatypes::Decimal& dec) override
   {
+    std::string decAsAStr = dec.toString();
     Field_new_decimal* NDField = dynamic_cast<Field_new_decimal*>(m_field);
     if (NDField)
     {
 	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale)
-	    	<< ", field p " << NDField->precision);
+	    	<< ", field p " << NDField->precision << " str " << decAsAStr);
     }
     else
     {
-	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale));
+	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale) << " str " << decAsAStr);
     }
-    std::string decAsAStr = dec.toString();
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
@@ -204,12 +204,12 @@ class StoreFieldMariaDB : public StoreField
     Field_new_decimal* NDField = dynamic_cast<Field_new_decimal*>(m_field);
     if (NDField)
     {
-	    idblog("dec 64, p " << dec.precision << ", s " << dec.scale
-	    	<< ", field p " << NDField->precision);
+	    idblog("dec 128, p " << int(dec.precision) << ", s " << int(dec.scale)
+	    	<< ", field p " << NDField->precision << " str " << decAsAStr);
     }
     else
     {
-	    idblog("dec 64, p " << dec.precision << ", s " << dec.scale);
+	    idblog("dec 128, p " << int(dec.precision) << ", s " << int(dec.scale) << " str " << decAsAStr);
     }
     // look at decimal.h in MDB's include dir. it uses int32 to hold values that
     // consist of 9 digits (000000000..999999999). All numbers with precision 9
