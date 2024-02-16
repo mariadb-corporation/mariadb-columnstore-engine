@@ -189,7 +189,8 @@ class StoreFieldMariaDB : public StoreField
     if (NDField)
     {
 	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale)
-	    	<< ", field p " << NDField->precision << " str " << decAsAStr);
+	    	<< ", field p " << NDField->precision << ", field csn " << int(m_field->charset->number)
+		<< " str " << decAsAStr);
     }
     else
     {
@@ -223,11 +224,13 @@ class StoreFieldMariaDB : public StoreField
     {
        NDField->precision = dec.precision;
     }
+#if 0
     uint32_t reqLength = dec.precision + 2;
     if (m_field->field_length < reqLength)
     {
       m_field->field_length = reqLength;
     }
+#endif
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
