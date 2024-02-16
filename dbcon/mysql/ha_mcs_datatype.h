@@ -189,7 +189,7 @@ class StoreFieldMariaDB : public StoreField
     if (NDField)
     {
 	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale)
-	    	<< ", field p " << NDField->precision << ", field csn " << int(m_field->charset->number)
+	    	<< ", field p " << NDField->precision << ", field csn " << int(m_field->charset()->number)
 		<< " str " << decAsAStr);
     }
     else
