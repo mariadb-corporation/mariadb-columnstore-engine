@@ -53,8 +53,10 @@ def stop(
         typer.Option(
             '--interactive/--no-interactive', '-i/-no-i',
             help=(
-                'Use this option on a highly loaded cluster. '
-                'It prevents data loss.'
+                'Use this option on active cluster as interactive stop '
+                'waits for current writes to complete in DMLProc before '
+                'shutting down. Ensuring consistency, preventing data loss '
+                'of active writes.'
             ),
         )
     ] = False,
@@ -63,9 +65,9 @@ def stop(
         typer.Option(
             '-t', '--timeout',
             help=(
-                'Time in seconds to wait DMLproc gracefully stops. '
-                'Use this with caution: on a working cluster '
-                'low values could cause data loss. '
+                'Time in seconds to wait for DMLproc to gracefully stop.'
+                'Warning: Low wait timeout values could result in data loss '
+                'if the cluster is very active.'
                 'In interactive mode means delay time between promts.'
             )
         )
@@ -75,8 +77,8 @@ def stop(
         typer.Option(
             '--force/--no-force', '-f/-no-f',
             help=(
-                'Force stopping a cluster.'
-                'WARNING: It could cause data corruption or/and data loss.'
+                'Force stops Columnstore.'
+                'Warning: This could cause data corruption and/or data loss.'
             ),
             #TODO: hide from help till not investigated in decreased timeout
             #      affect
@@ -142,9 +144,9 @@ def stop(
                 break
             else:
                 force = typer.confirm(
-                    'DMLProc still working. '
-                    'Do you want to force stop? WARNING: It could cause data '
-                    'loss and broken cluster.',
+                    'DMLProc is still running. '
+                    'Do you want to force stop? '
+                    'WARNING: Could cause data loss and/or broken cluster.',
                     prompt_suffix=' '
                 )
                 if force:

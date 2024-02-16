@@ -116,7 +116,7 @@ class TransactionManager(ContextDecorator):
             self._handle_exception(exc=exc)
         if not suceeded:
             self._handle_exception(
-                exc=CMAPIBasicError('Starting transaction isn\'t succesfull.')
+                exc=CMAPIBasicError('Starting transaction isn\'t succesful.')
             )
         if suceeded and len(successes) == 0:
             self._handle_exception(

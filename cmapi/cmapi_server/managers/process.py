@@ -275,9 +275,9 @@ class MCSProcessManager:
                 )
         except (ConnectionRefusedError, RuntimeError):
             logging.error(
-                'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING '
-                'using DBRM while trying to gracefully auto stop DMLProc.'
-                'Continue with a regular stop method.'
+                'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING via DBRM, '
+                'graceful auto stop of DMLProc failed. '
+                'Try a regular stop method.'
             )
             raise
 

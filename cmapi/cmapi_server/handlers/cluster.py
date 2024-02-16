@@ -156,7 +156,7 @@ class ClusterHandler():
         :type logger: logging.Logger, optional
         :param in_transaction: is function called in existing transaction or no
         :type in_transaction: bool
-        :param timeout: timeout in seconds for gracefully stop DMLProc
+        :param timeout: timeout in seconds to gracefully stop DMLProc
                         TODO: for next releases
         :type timeout: int
         :raises CMAPIBasicError: if no nodes in the cluster
