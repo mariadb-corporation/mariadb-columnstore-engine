@@ -196,42 +196,6 @@ class DDLPackageProcessor
       int spare  : 6;
           Date( )   { year = 0; month = 0; day = 0; spare = 0;}
       }; */
-  /** @brief a structure to hold a datetime
-   */
-  struct dateTime
-  {
-    unsigned msecond : 20;
-    unsigned second : 6;
-    unsigned minute : 6;
-    unsigned hour : 6;
-    unsigned day : 6;
-    unsigned month : 4;
-    unsigned year : 16;
-    // NULL column value = 0xFFFFFFFFFFFFFFFE
-    EXPORT dateTime()
-    {
-      year = 0xFFFF;
-      month = 0xF;
-      day = 0x3F;
-      hour = 0x3F;
-      minute = 0x3F;
-      second = 0x3F;
-      msecond = 0xFFFFE;
-    }
-  };
-  /*
-      struct dateTime
-      {
-      int year    : 16;
-      int month   : 4;
-      int day     : 6;
-      int hour    : 6;
-      int minute  : 6;
-      int second  : 6;
-      int msecond : 20;
-          dateTime( )   { year = 0; month = 0; day = 0; hour = 0; minute = 0; second = 0; msecond = 0; }
-      }
-      ; */
   /** @brief a vector of dictionary object ids
    */
   typedef std::vector<DictOID> DictionaryOIDList;
