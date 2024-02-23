@@ -115,7 +115,6 @@ class NodeConfig:
         maintenance = etree.SubElement(root, 'Maintenance')
         maintenance.text = str(False).lower()
 
-
     def upgrade_config(self, tree=None, root=None, upgrade=True):
         """
         Add the parts that might be missing after an upgrade from an earlier
@@ -290,7 +289,6 @@ class NodeConfig:
                 return pm_num
         raise Exception("Did not find my IP addresses or names in the SystemModuleConfig section")
 
-
     def rollback_config(self, config_filename: str = DEFAULT_MCS_CONF_PATH):
         """Rollback the configuration.
 
@@ -306,7 +304,6 @@ class NodeConfig:
         config_file_copy = Path(backup_path)
         if config_file_copy.exists():
             replace(backup_path, config_file)   # atomic replacement
-
 
     def get_current_config(self, config_filename: str = DEFAULT_MCS_CONF_PATH):
         """Retrievs current configuration.
@@ -325,7 +322,6 @@ class NodeConfig:
             tree.getroot(), pretty_print=True, encoding='unicode'
         )
 
-
     def get_current_sm_config(
         self, config_filename: str = DEFAULT_SM_CONF_PATH
     ) -> str:
@@ -342,7 +338,6 @@ class NodeConfig:
         except FileNotFoundError:
             module_logger.error(f"{func_name} SM config {config_filename} not found.")
             return ''
-
 
     def s3_enabled(self, config_filename: str = DEFAULT_SM_CONF_PATH) -> bool:
         """Checks if SM is enabled
