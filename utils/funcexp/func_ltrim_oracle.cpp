@@ -21,6 +21,7 @@
  *
  ****************************************************************************/
 
+#include <boost/stacktrace.hpp>
 #include <string>
 using namespace std;
 
@@ -46,6 +47,7 @@ CalpontSystemCatalog::ColType Func_ltrim_oracle::operationType(FunctionParm& fp,
 std::string Func_ltrim_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                          execplan::CalpontSystemCatalog::ColType& type)
 {
+	idblog("Func_ltrim_oracle::getStrVal stack: " << boost::stacktrace::stacktrace());
   CHARSET_INFO* cs = type.getCharset();
   // The original string
   const auto& src = fp[0]->data()->getStrVal(row, isNull);
