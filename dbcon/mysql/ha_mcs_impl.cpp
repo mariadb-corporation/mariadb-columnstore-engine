@@ -396,6 +396,13 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
       }
 
       // precision == -16 is borrowed as skip null check indicator for bit ops.
+      idblog("row.isNullValue(s) " << int(row.isNullValue(s)) << ", colType.precision " << int(colType.precision));
+      if (colType.colDataType == CalpontSystemCatalog::CHAR ||
+            colType.colDataType == CalpontSystemCatalog::VARCHAR ||
+            colType.colDataType == CalpontSystemCatalog::VARBINARY)
+      {
+        idblog("is char");
+      }
       if (row.isNullValue(s) && colType.precision != -16)
       {
         // @2835. Handle empty string and null confusion. store empty string for string column
