@@ -4395,7 +4395,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" || funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
