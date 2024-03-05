@@ -25,12 +25,7 @@
 #include <string>
 using namespace std;
 
-#ifdef __linux__
-#include <regex.h>
-#else
-#include <regex>
-using namespace boost;
-#endif
+#include "utils/pcre2/jpcre2.hpp"
 
 #include "functor_bool.h"
 #include "functioncolumn.h"
@@ -50,7 +45,7 @@ namespace
 inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
                     CalpontSystemCatalog::ColType& ct, long timeZone)
 {
-  string expr;
+  string expr   ;
   string pattern;
 
   switch (pm[0]->data()->resultType().colDataType)
@@ -212,25 +207,9 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     }
   }
 
-#ifdef __linux__
-  regex_t re;
-
-  regcomp(&re, pattern.c_str(), REG_EXTENDED | REG_NOSUB);
-
-  int res = regexec(&re, expr.c_str(), 0, NULL, 0);
-  regfree(&re);
-
-  if (res == 0)
-    return true;
-  else
-    return false;
-
-#else
-  std::regex pat(pattern.c_str());
-  return std::regex_search(expr.c_str(), pat);
-#endif
+  jpcre2::select<char>::Regex re(pattern);
+  return re.match(expr);
 }
-
 }  // namespace
 
 namespace funcexp

@@ -67,7 +67,7 @@ extern boost::condition_variable cond;
 
 namespace
 {
-const std::string myname = "DMLProc";
+[[maybe_unused]] const std::string myname = "DMLProc";
 }
 
 namespace dmlprocessor
