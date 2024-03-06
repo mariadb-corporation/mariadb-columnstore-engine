@@ -28,6 +28,7 @@ using namespace std;
 #include "utils/pcre2/jpcre2.hpp"
 
 #include "functor_bool.h"
+#include "functor_str.h"
 #include "functioncolumn.h"
 #include "predicateoperator.h"
 #include "constantcolumn.h"
@@ -42,10 +43,17 @@ using namespace logging;
 
 namespace
 {
-inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
-                    CalpontSystemCatalog::ColType& ct, long timeZone)
+
+struct RegExpParams
 {
-  string expr   ;
+  std::string expression;
+  std::string pattern;
+};
+
+inline RegExpParams getEpressionAndPattern(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
+                                           CalpontSystemCatalog::ColType& ct, long timeZone)
+{
+  string expr;
   string pattern;
 
   switch (pm[0]->data()->resultType().colDataType)
@@ -207,23 +215,126 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
     }
   }
 
-  jpcre2::select<char>::Regex re(pattern);
-  return re.match(expr);
+  return RegExpParams{expr, pattern};
 }
 }  // namespace
 
 namespace funcexp
 {
+CalpontSystemCatalog::ColType Func_regexp_replace::operationType(FunctionParm& fp,
+                                                                 CalpontSystemCatalog::ColType& resultType)
+{
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
+}
+
+CalpontSystemCatalog::ColType Func_regexp_substr::operationType(FunctionParm& fp,
+                                                                CalpontSystemCatalog::ColType& resultType)
+{
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
+}
+
+CalpontSystemCatalog::ColType Func_regexp_instr::operationType(FunctionParm& fp,
+                                                               CalpontSystemCatalog::ColType& resultType)
+{
+  // operation type is not used by this functor
+  return fp[0]->data()->resultType();
+}
+
 CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
+using jp = jpcre2::select<char>;
+
+/*
+  returns the string subject with all occurrences of the regular expression pattern replaced by
+  the string replace. If no occurrences are found, then subject is returned as is.
+  https://mariadb.com/kb/en/regexp_replace/
+*/
+std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                           execplan::CalpontSystemCatalog::ColType& ct)
+
+{
+  if (isNull)
+    return std::string{};
+
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+  const auto& replace_with = fp[2]->data()->getStrVal(row, isNull);
+
+  if (replace_with.isNull())
+    return std::string{};
+
+  jp::Regex re(param.pattern);
+  return re.replace(param.expression, replace_with.unsafeStringRef(), "g");
+}
+
+/*
+  Returns the part of the string subject that matches the regular expression pattern, or an empty string if
+  pattern was not found. https://mariadb.com/kb/en/regexp_substr/
+*/
+std::string Func_regexp_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& ct)
+
+{
+  if (isNull)
+    return std::string{};
+
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
+  jp::Regex re(param.pattern);
+  jp::RegexMatch rm(&re);
+  jp::VecNum vec_num;
+
+  size_t count = rm.setSubject(param.expression).setNumberedSubstringVector(&vec_num).match();
+
+  if (count == 0)
+    return std::string{};
+
+  return vec_num[0][0];
+}
+
+/*
+  Returns the position of the first occurrence of the regular expression pattern in the string subject, or 0
+  if pattern was not found. https://mariadb.com/kb/en/regexp_instr/
+*/
+std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                         execplan::CalpontSystemCatalog::ColType& ct)
+
+{
+  if (isNull)
+    return std::string{};
+
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
+  jp::Regex re(param.pattern);
+  jp::RegexMatch rm(&re);
+  jpcre2::VecOff vec_soff;
+
+  size_t count = rm.setSubject(param.expression).setMatchStartOffsetVector(&vec_soff).match();
+
+  if (count == 0)
+    return "0";
+
+  return std::to_string(vec_soff[0] + 1);
+}
+
+/*
+  https://mariadb.com/kb/en/regexp/
+*/
+bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
-  return getBool(row, pm, isNull, ct, ct.getTimeZone()) && !isNull;
+  if (isNull)
+    return false;
+
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
+  jp::Regex re(param.pattern);
+  return re.match(param.expression);
 }
 
 }  // namespace funcexp
