@@ -266,7 +266,7 @@ std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   const auto& replace_with = fp[2]->data()->getStrVal(row, isNull);
 
   if (replace_with.isNull())
-    return std::string{};
+    return param.expression;
 
   jp::Regex re(param.pattern);
   return re.replace(param.expression, replace_with.unsafeStringRef(), "g");
