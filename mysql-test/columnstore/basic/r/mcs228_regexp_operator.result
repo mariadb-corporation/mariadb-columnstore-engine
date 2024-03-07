@@ -412,6 +412,11 @@ t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'o?o', 'KittyCat')
 ooooo	KittyCatKittyCatKittyCat
 ppppp	ppppp
 qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'q', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'q', 'KittyCat')
+ooooo	ooooo
+ppppp	ppppp
+qqqqq	KittyCatKittyCatKittyCatKittyCatKittyCat
 SELECT t1_DATE, t1_DATE REGEXP '(1997)+' FROM t1 ORDER BY 1;
 t1_DATE	t1_DATE REGEXP '(1997)+'
 1997-12-12	1

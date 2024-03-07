@@ -259,10 +259,11 @@ std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp,
                                            execplan::CalpontSystemCatalog::ColType& ct)
 
 {
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
   if (isNull)
     return std::string{};
 
-  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
   const auto& replace_with = fp[2]->data()->getStrVal(row, isNull);
 
   if (replace_with.isNull())
@@ -280,10 +281,10 @@ std::string Func_regexp_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, 
                                           execplan::CalpontSystemCatalog::ColType& ct)
 
 {
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
   if (isNull)
     return std::string{};
-
-  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
 
   jp::Regex re(param.pattern);
   jp::RegexMatch rm(&re);
@@ -305,10 +306,10 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
                                          execplan::CalpontSystemCatalog::ColType& ct)
 
 {
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
   if (isNull)
     return std::string{};
-
-  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
 
   jp::Regex re(param.pattern);
   jp::RegexMatch rm(&re);
@@ -328,10 +329,10 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                              CalpontSystemCatalog::ColType& ct)
 {
+  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
+
   if (isNull)
     return false;
-
-  RegExpParams param = getEpressionAndPattern(row, fp, isNull, ct, ct.getTimeZone());
 
   jp::Regex re(param.pattern);
   return re.match(param.expression);
