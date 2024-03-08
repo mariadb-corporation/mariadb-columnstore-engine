@@ -250,6 +250,37 @@ CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
 
 using jp = jpcre2::select<char>;
 
+struct PCREOptions
+{
+  jpcre2::Uint flags = 0;
+  CHARSET_INFO* library_charset = &my_charset_utf8mb3_general_ci;
+  bool conversion_is_needed = false;
+};
+
+inline bool areSameCharsets(CHARSET_INFO* cs1, CHARSET_INFO* cs2)
+{
+  return (cs1->cs_name.str == cs2->cs_name.str);
+}
+
+PCREOptions pcreOptions(execplan::CalpontSystemCatalog::ColType& ct)
+{
+  CHARSET_INFO* cs = ct.getCharset();
+  PCREOptions options;
+
+  // TODO use system variable instead if hardcode default_regex_flags_pcre(_current_thd());
+
+  jpcre2::Uint defaultFlags =
+      PCRE2_DOTALL | PCRE2_DUPNAMES | PCRE2_EXTENDED | PCRE2_EXTENDED_MORE | PCRE2_MULTILINE | PCRE2_UNGREEDY;
+
+  options.flags = (cs != &my_charset_bin ? (PCRE2_UTF | PCRE2_UCP) : 0) |
+                  ((cs->state & (MY_CS_BINSORT | MY_CS_CSSORT)) ? 0 : PCRE2_CASELESS) | defaultFlags;
+
+  // Convert text data to utf-8.
+  options.library_charset = cs == &my_charset_bin ? &my_charset_bin : &my_charset_utf8mb3_general_ci;
+  options.conversion_is_needed = (cs != &my_charset_bin) && !areSameCharsets(cs, options.library_charset);
+  return options;
+}
+
 /*
   returns the string subject with all occurrences of the regular expression pattern replaced by
   the string replace. If no occurrences are found, then subject is returned as is.
@@ -269,7 +300,9 @@ std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   if (replace_with.isNull())
     return param.expression;
 
-  jp::Regex re(param.pattern);
+  const PCREOptions& options = pcreOptions(ct);
+  jp::Regex re(param.pattern, options.flags);
+
   return re.replace(param.expression, replace_with.unsafeStringRef(), "g");
 }
 
@@ -286,7 +319,8 @@ std::string Func_regexp_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, 
   if (isNull)
     return std::string{};
 
-  jp::Regex re(param.pattern);
+  const PCREOptions& options = pcreOptions(ct);
+  jp::Regex re(param.pattern, options.flags);
   jp::RegexMatch rm(&re);
   jp::VecNum vec_num;
 
@@ -311,7 +345,8 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   if (isNull)
     return std::string{};
 
-  jp::Regex re(param.pattern);
+  const PCREOptions& options = pcreOptions(ct);
+  jp::Regex re(param.pattern, options.flags);
   jp::RegexMatch rm(&re);
   jpcre2::VecOff vec_soff;
 
@@ -320,7 +355,10 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   if (count == 0)
     return "0";
 
-  return std::to_string(vec_soff[0] + 1);
+  size_t offset = vec_soff[0];
+  size_t charNumber = ct.getCharset()->numchars(param.expression.c_str(), param.expression.c_str() + offset);
+
+  return std::to_string(charNumber + 1);
 }
 
 /*
@@ -334,7 +372,8 @@ bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
   if (isNull)
     return false;
 
-  jp::Regex re(param.pattern);
+  const PCREOptions& options = pcreOptions(ct);
+  jp::Regex re(param.pattern, options.flags);
   return re.match(param.expression);
 }
 
