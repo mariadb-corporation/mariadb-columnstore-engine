@@ -253,8 +253,9 @@ using jp = jpcre2::select<char>;
 struct PCREOptions
 {
   jpcre2::Uint flags = 0;
-  CHARSET_INFO* library_charset = &my_charset_utf8mb3_general_ci;
-  bool conversion_is_needed = false;
+  CHARSET_INFO* dataCharset = &my_charset_utf8mb3_general_ci;
+  CHARSET_INFO* libraryCharset = &my_charset_utf8mb3_general_ci;
+  bool conversionIsNeeded = false;
 };
 
 inline bool areSameCharsets(CHARSET_INFO* cs1, CHARSET_INFO* cs2)
@@ -268,17 +269,39 @@ PCREOptions pcreOptions(execplan::CalpontSystemCatalog::ColType& ct)
   PCREOptions options;
 
   // TODO use system variable instead if hardcode default_regex_flags_pcre(_current_thd());
+  // PCRE2_DOTALL | PCRE2_DUPNAMES | PCRE2_EXTENDED | PCRE2_EXTENDED_MORE | PCRE2_MULTILINE | PCRE2_UNGREEDY;
 
-  jpcre2::Uint defaultFlags =
-      PCRE2_DOTALL | PCRE2_DUPNAMES | PCRE2_EXTENDED | PCRE2_EXTENDED_MORE | PCRE2_MULTILINE | PCRE2_UNGREEDY;
+  jpcre2::Uint defaultFlags = 0;
 
   options.flags = (cs != &my_charset_bin ? (PCRE2_UTF | PCRE2_UCP) : 0) |
                   ((cs->state & (MY_CS_BINSORT | MY_CS_CSSORT)) ? 0 : PCRE2_CASELESS) | defaultFlags;
 
   // Convert text data to utf-8.
-  options.library_charset = cs == &my_charset_bin ? &my_charset_bin : &my_charset_utf8mb3_general_ci;
-  options.conversion_is_needed = (cs != &my_charset_bin) && !areSameCharsets(cs, options.library_charset);
+  options.dataCharset = cs;
+  options.libraryCharset = cs == &my_charset_bin ? &my_charset_bin : &my_charset_utf8mb3_general_ci;
+  options.conversionIsNeeded = (cs != &my_charset_bin) && !areSameCharsets(cs, options.libraryCharset);
+
   return options;
+}
+
+std::string csConvert(const std::string& from, CHARSET_INFO* to_cs, CHARSET_INFO* from_cs)
+{
+  std::string result;
+  uint dummy_errors;
+  result.resize(from.size() * to_cs->mbmaxlen);
+  size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), to_cs, from.c_str(),
+                                    from.size(), from_cs, &dummy_errors);
+  result.resize(resultingSize);
+  return result;
+}
+
+void regexpParamCSfix(const PCREOptions options, RegExpParams& param)
+{
+  if (!options.conversionIsNeeded)
+    return;
+
+  param.expression = csConvert(param.expression, options.libraryCharset, options.dataCharset);
+  param.pattern = csConvert(param.pattern, options.libraryCharset, options.dataCharset);
 }
 
 /*
@@ -295,15 +318,24 @@ std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   if (isNull)
     return std::string{};
 
-  const auto& replace_with = fp[2]->data()->getStrVal(row, isNull);
+  const auto& replaceWith = fp[2]->data()->getStrVal(row, isNull);
 
-  if (replace_with.isNull())
+  if (replaceWith.isNull())
     return param.expression;
 
   const PCREOptions& options = pcreOptions(ct);
+
+  auto replaceWithStr = replaceWith.unsafeStringRef();
+  if (options.conversionIsNeeded)
+  {
+    replaceWithStr = csConvert(replaceWithStr, options.libraryCharset, options.dataCharset);
+  }
+
+  regexpParamCSfix(options, param);
+
   jp::Regex re(param.pattern, options.flags);
 
-  return re.replace(param.expression, replace_with.unsafeStringRef(), "g");
+  return re.replace(param.expression, replaceWithStr, "g");
 }
 
 /*
@@ -320,6 +352,8 @@ std::string Func_regexp_substr::getStrVal(rowgroup::Row& row, FunctionParm& fp, 
     return std::string{};
 
   const PCREOptions& options = pcreOptions(ct);
+  regexpParamCSfix(options, param);
+
   jp::Regex re(param.pattern, options.flags);
   jp::RegexMatch rm(&re);
   jp::VecNum vec_num;
@@ -346,6 +380,8 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     return std::string{};
 
   const PCREOptions& options = pcreOptions(ct);
+  regexpParamCSfix(options, param);
+
   jp::Regex re(param.pattern, options.flags);
   jp::RegexMatch rm(&re);
   jpcre2::VecOff vec_soff;
@@ -356,7 +392,8 @@ std::string Func_regexp_instr::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     return "0";
 
   size_t offset = vec_soff[0];
-  size_t charNumber = ct.getCharset()->numchars(param.expression.c_str(), param.expression.c_str() + offset);
+  size_t charNumber =
+      options.libraryCharset->numchars(param.expression.c_str(), param.expression.c_str() + offset);
 
   return std::to_string(charNumber + 1);
 }
@@ -373,6 +410,8 @@ bool Func_regexp::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
     return false;
 
   const PCREOptions& options = pcreOptions(ct);
+  regexpParamCSfix(options, param);
+
   jp::Regex re(param.pattern, options.flags);
   return re.match(param.expression);
 }
