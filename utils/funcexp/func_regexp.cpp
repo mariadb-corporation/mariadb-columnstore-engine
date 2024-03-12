@@ -323,16 +323,16 @@ std::string Func_regexp_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp,
     return param.expression;
 
   PCREOptions options(ct);
+  param.CharsetFix(options);
+  jp::Regex re(param.pattern, options.flags);
 
-  auto replaceWithStr = replaceWith.unsafeStringRef();
+  const auto& replaceWithStr = replaceWith.unsafeStringRef();
   if (options.conversionIsNeeded)
   {
-    replaceWithStr = csConvert(replaceWithStr, options.libraryCharset, options.dataCharset);
+    const auto& convertedReplaceToken = csConvert(replaceWithStr, options.libraryCharset, options.dataCharset);
+    return re.replace(param.expression, convertedReplaceToken, "g");
   }
 
-  param.CharsetFix(options);
-
-  jp::Regex re(param.pattern, options.flags);
 
   return re.replace(param.expression, replaceWithStr, "g");
 }
