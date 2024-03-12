@@ -60,9 +60,10 @@ using jp = jpcre2::select<char>;
 struct PCREOptions
 {
   PCREOptions(execplan::CalpontSystemCatalog::ColType& ct);
-  jpcre2::Uint flags = 0;
+
   CHARSET_INFO* dataCharset = &my_charset_utf8mb3_general_ci;
   CHARSET_INFO* libraryCharset = &my_charset_utf8mb3_general_ci;
+  jpcre2::Uint flags = 0;
   bool conversionIsNeeded = false;
 };
 
