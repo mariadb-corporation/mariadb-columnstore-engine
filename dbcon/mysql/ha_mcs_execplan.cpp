@@ -3883,6 +3883,17 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
+  const Schema* funcSchema = ifp->schema();
+  if (funcSchema)
+  {
+    idbassert(funcSchema->name().str);
+    string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
+    if (funcSchemaName == "oracle_schema")
+    {
+      // XXX: this is a shortcut.
+      funcName = funcName + "_oracle";
+    }
+  }
   FuncExp* funcExp = FuncExp::instance();
   Func* functor;
   FunctionColumn* fc = NULL;
