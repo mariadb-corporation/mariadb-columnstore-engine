@@ -152,32 +152,31 @@ SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat') FROM t1 ORDER BY 1;
 
 SET character_set_connection = 'utf8';
 
-
 CREATE TABLE t2 (hello text) engine columnstore;
 INSERT INTO t2 values('こんにちは');
 INSERT INTO t2 values('привет');
 INSERT INTO t2 values('Γεια');
 INSERT INTO t2 values('სალამი');
 
-SELECT hello, hello regexp 'ん.ち' from t2;
-SELECT hello, hello regexp 'и.е' from t2;
-SELECT hello, hello regexp 'ε.α' from t2;
-SELECT hello, hello regexp 'ა.ა' from t2;
+SELECT hello, hello regexp 'ん.ち' FROM t2;
+SELECT hello, hello regexp 'и.е' FROM t2;
+SELECT hello, hello regexp 'ε.α' FROM t2;
+SELECT hello, hello regexp 'ა.ა' FROM t2;
 
-SELECT hello, regexp_substr(hello, 'ん.ち') from t2;
-SELECT hello, regexp_substr(hello, 'и.е') from t2;
-SELECT hello, regexp_substr(hello, 'ε.α') from t2;
-SELECT hello, regexp_substr(hello, 'ა.ა') from t2;
+SELECT hello, regexp_substr(hello, 'ん.ち') FROM t2;
+SELECT hello, regexp_substr(hello, 'и.е') FROM t2;
+SELECT hello, regexp_substr(hello, 'ε.α') FROM t2;
+SELECT hello, regexp_substr(hello, 'ა.ა') FROM t2;
 
-SELECT hello, regexp_instr(hello, 'ん.ち') from t2;
-SELECT hello, regexp_instr(hello, 'и.е') from t2;
-SELECT hello, regexp_instr(hello, 'ε.α') from t2;
-SELECT hello, regexp_instr(hello, 'ა.ა') from t2;
+SELECT hello, regexp_instr(hello, 'ん.ち') FROM t2;
+SELECT hello, regexp_instr(hello, 'и.е') FROM t2;
+SELECT hello, regexp_instr(hello, 'ε.α') FROM t2;
+SELECT hello, regexp_instr(hello, 'ა.ა') FROM t2;
 
-SELECT hello, regexp_replace(hello, 'ん.ち', 'Достоевский') from t2;
-SELECT hello, regexp_replace(hello, 'и.е', 'Достоевский') from t2;
-SELECT hello, regexp_replace(hello, 'ε.α', 'Достоевский') from t2;
-SELECT hello, regexp_replace(hello, 'ა.ა', 'Достоевский') from t2;
+SELECT hello, regexp_replace(hello, 'ん.ち', 'Достоевский') FROM t2;
+SELECT hello, regexp_replace(hello, 'и.е', 'Достоевский') FROM t2;
+SELECT hello, regexp_replace(hello, 'ε.α', 'Достоевский') FROM t2;
+SELECT hello, regexp_replace(hello, 'ა.ა', 'Достоевский') FROM t2;
 
 # Clean UP
 DROP DATABASE mcs228_db;
