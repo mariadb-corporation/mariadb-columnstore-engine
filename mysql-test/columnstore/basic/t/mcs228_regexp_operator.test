@@ -151,8 +151,9 @@ SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '(59)+', 'KittyCat') FROM t1 ORDER BY 1;
 SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat') FROM t1 ORDER BY 1;
 
 SET character_set_connection = 'utf8';
+SET NAMES utf8mb3;
 
-CREATE TABLE t2 (hello text) engine columnstore;
+CREATE TABLE t2 (hello text) DEFAULT CHARSET=utf8 engine columnstore;
 INSERT INTO t2 values('こんにちは');
 INSERT INTO t2 values('привет');
 INSERT INTO t2 values('Γεια');
@@ -177,6 +178,15 @@ SELECT hello, regexp_replace(hello, 'ん.ち', 'Достоевский') FROM t2
 SELECT hello, regexp_replace(hello, 'и.е', 'Достоевский') FROM t2;
 SELECT hello, regexp_replace(hello, 'ε.α', 'Достоевский') FROM t2;
 SELECT hello, regexp_replace(hello, 'ა.ა', 'Достоевский') FROM t2;
+
+SHOW VARIABLES LIKE 'character_set%';
+CREATE TABLE tw(hello text) DEFAULT CHARSET=cp1251 ENGINE COLUMNSTORE;
+INSERT INTO tw values(convert('привет' USING cp1251));
+SELECT hello, regexp_instr(hello, convert('и.е' USING cp1251)) FROM tw;
+SELECT hello, convert(regexp_substr(hello, convert('и.е' USING cp1251)) using utf8) FROM tw;
+SELECT hello, convert(regexp_replace(hello, convert('и.е' USING cp1251), convert('Достоевкий' USING cp1251))  using utf8) FROM tw;
+
+SELECT hello, hello regexp convert('и.е' USING cp1251) FROM tw;
 
 # Clean UP
 DROP DATABASE mcs228_db;
