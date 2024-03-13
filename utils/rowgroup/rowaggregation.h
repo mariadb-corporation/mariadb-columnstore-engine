@@ -458,6 +458,8 @@ class RowAggregation : public messageqcpp::Serializeable
    * @parm pRowGroupIn(in) RowGroup to be added to aggregation.
    */
   virtual void addRowGroup(const RowGroup* pRowGroupIn);
+  virtual void addRowGroup1(const RowGroup* pRowGroupIn);
+
   virtual void addRowGroup(const RowGroup* pRowGroupIn,
                            std::vector<std::pair<Row::Pointer, uint64_t>>& inRows);
 
@@ -497,6 +499,8 @@ class RowAggregation : public messageqcpp::Serializeable
 
   virtual void aggregateRow(Row& row, const uint64_t* hash = nullptr,
                             std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
+  virtual void aggregateRow1(Row& row, size_t& counter, const uint64_t* hash = nullptr,
+                             std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
   inline uint32_t aggMapKeyLength() const
   {
     return fAggMapKeyCount;
@@ -531,6 +535,9 @@ class RowAggregation : public messageqcpp::Serializeable
   virtual void attachGroupConcatAg();
 
   virtual void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
+  virtual void updateEntry1(const Row& row, size_t& counter,
+                            std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
+
   void mergeEntries(const Row& row);
   virtual void doMinMax(const Row&, int64_t, int64_t, int);
   virtual void doSum(const Row&, int64_t, int64_t, int);

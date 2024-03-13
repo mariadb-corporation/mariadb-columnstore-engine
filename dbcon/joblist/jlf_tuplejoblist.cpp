@@ -25,8 +25,8 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -196,11 +196,18 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
 {
   // -- the selected columns
   vector<uint32_t>& pjCol = tableInfoMap[tid].fProjectCols;
+  // std::cout << "addColumnsToRG bef proj" << std::endl;
+  // std::copy(pjCol.begin(), pjCol.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+  // std::cout << std::endl;
 
   for (unsigned i = 0; i < pjCol.size(); i++)
   {
     addColumnToRG(pjCol[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
   }
+
+  // std::cout << "addColumnsToRG after proj" << std::endl;
+  // std::copy(keys.begin(), keys.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+  // std::cout << std::endl;
 
   // -- any columns will be used in cross-table exps
   vector<uint32_t>& exp2 = tableInfoMap[tid].fColsInExp2;
@@ -225,6 +232,10 @@ inline void addColumnsToRG(uint32_t tid, vector<uint32_t>& pos, vector<uint32_t>
   {
     addColumnInExpToRG(expo[i], pos, oids, keys, scale, precision, types, csNums, jobInfo);
   }
+  // std::cout << "addColumnsToRG before quit" << std::endl;
+
+  // std::copy(keys.begin(), keys.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
+  // std::cout << std::endl;
 }
 
 void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool root, set<uint32_t>& tableSet,
@@ -255,6 +266,9 @@ void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool r
   for (set<uint32_t>::iterator i = tableSet.begin(); i != tableSet.end(); i++)
     addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csNums, tableInfoMap, jobInfo);
 
+  // uint32_t cid = 7;
+  // addColumnToRG(cid, pos, oids, keys, scale, precision, types, csNums, jobInfo);
+
   RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
   rg = tmpRg;
 }
@@ -274,9 +288,11 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
 
   for (set<uint32_t>::iterator i = tableSet.begin(); i != tableSet.end(); i++)
   {
+    // std::cout << " tableSet: " << *i << std::endl;
     // columns in select or expression
     addColumnsToRG(*i, pos, oids, keys, scale, precision, types, csNums, tableInfoMap, jobInfo);
 
+    // std::copy(keys.begin(), keys.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
     // keys to be joined if not already in the rowgroup
     vector<uint32_t>& adjList = tableInfoMap[*i].fAdjacentList;
 
@@ -296,6 +312,7 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
     }
   }
 
+  // std::copy(keys.begin(), keys.end(), std::ostream_iterator<uint32_t>(std::cout, " "));
   RowGroup tmpRg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
   rg = tmpRg;
 }
@@ -433,7 +450,10 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     if (thjs && thjs->hasFcnExpGroup2())
       thjs->setFE23Output(rg1);
     else
+    {
       tjs->setOutputRowGroup(rg1);
+      // tjs->setOutputRowGroup(*rg0);
+    }
   }
 
   if (jobInfo.trace)
@@ -705,7 +725,8 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
     {
       //			if (jobInfo.trace && bps->tableOid() >= 3000)
       //				cout << "1 setting project BPP for " << tbps->toString() << " with "
-      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString() << endl;
+      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
+      //<< endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -1876,7 +1897,6 @@ void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(con
       if ((tableKey1 == joinEdge.first && tableKey2 == joinEdge.second) ||
           (tableKey1 == joinEdge.second && tableKey2 == joinEdge.first))
       {
-
         if (jobInfo.trace)
           std::cout << "Erase matched join step with keys: " << tableKey1 << " <-> " << tableKey2
                     << std::endl;
@@ -2130,9 +2150,8 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
-            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b) {
-              return a.second < b.second;
-            });
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
+            { return a.second < b.second; });
 
   // For each weighted adjacent node.
   for (const auto& adjNodeWeighted : adjacentListWeighted)

@@ -98,6 +98,49 @@ uint nextPowOf2(uint x)
   return x;
 }
 
+std::shared_ptr<int[]> makeMapping1(const RowGroup& r1, const RowGroup& r2)
+{
+  std::shared_ptr<int[]> ret(new int[r1.getColumnCount()]);
+  // bool reserved[r2.getColumnCount()];
+  std::vector<bool> reserved(r2.getColumnCount(), false);
+  uint32_t i, j;
+
+  ostringstream ss;
+  ss << "r1 key ";
+  for (auto el : r1.getKeys())
+  {
+    ss << el << " ";
+  }
+  std::cout << ss.str() << std::endl;
+
+  ostringstream ss1;
+  ss1 << "r2 key ";
+  for (auto el : r2.getKeys())
+  {
+    ss1 << el << " ";
+  }
+  ss1 << std::endl;
+
+  std::cout << ss.str() << std::endl;
+  std::cout << ss1.str() << std::endl;
+
+  for (i = 0; i < r1.getColumnCount(); i++)
+  {
+    for (j = 0; j < r2.getColumnCount(); j++)
+      if ((r1.getKeys()[i] == r2.getKeys()[j]) && !reserved[j])
+      {
+        ret[i] = j;
+        reserved[j] = true;
+        break;
+      }
+
+    if (j == r2.getColumnCount())
+      ret[i] = -1;
+  }
+
+  return ret;
+}
+
 BatchPrimitiveProcessor::BatchPrimitiveProcessor()
  : ot(BPS_ELEMENT_TYPE)
  , txnID(0)
@@ -907,10 +950,7 @@ void BatchPrimitiveProcessor::initProcessor()
   {
     // calculate the projection -> outputRG mapping
     projectionMap.reset(new int[projectCount]);
-    bool* reserved = (bool*)alloca(outputRG.getColumnCount() * sizeof(bool));
-
-    for (i = 0; i < outputRG.getColumnCount(); i++)
-      reserved[i] = false;
+    std::vector<bool> reserved(outputRG.getColumnCount(), false);
 
     for (i = 0; i < projectCount; i++)
     {
@@ -1016,6 +1056,8 @@ void BatchPrimitiveProcessor::initProcessor()
       fe2Output.initRow(&fe2Out);
     }
 
+    // This scope prepares a context for a pushdown optimization
+    // that combines SEMI | ANTI join with subsequent aggregate function.
     if (getTupleJoinRowGroupData)
     {
       gjrgPlaceHolders.reset(new uint32_t[joinerCount]);
@@ -1034,7 +1076,13 @@ void BatchPrimitiveProcessor::initProcessor()
       for (i = 0; i < joinerCount; i++)
         gjrgMappings[i] = makeMapping(smallSideRGs[i], joinedRG);
 
-      gjrgMappings[joinerCount] = makeMapping(outputRG, joinedRG);
+      gjrgMappings[joinerCount] = makeMapping1(outputRG, outputRG);
+
+      // std::cout << outputRG.toString() << std::endl;
+      // for (size_t ba = 0; ba < outputRG.6(); ++ba)
+      // {
+      //   std::cout << " init " << gjrgMappings[0][ba] << " " << std::endl;
+      // }
     }
   }
 
@@ -2564,6 +2612,7 @@ void BatchPrimitiveProcessor::asyncLoadProjectColumns()
   }
 }
 
+// Depth here corresponds with the joiner number.
 bool BatchPrimitiveProcessor::generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth)
 {
   Row& smallRow = smallRows[depth];
@@ -2582,19 +2631,15 @@ bool BatchPrimitiveProcessor::generateJoinedRowGroup(rowgroup::Row& baseRow, con
       baseRow.setRid(largeRow.getRelRid());
     }
 
-    // cout << "rowNum = " << gjrgRowNumber << " at depth " << depth << " size is " << size << endl;
     for (uint32_t& i = gjrgPlaceHolders[depth]; i < size && !gjrgFull; i++)
     {
       if (results[i] != (uint32_t)-1)
       {
         smallSideRGs[depth].getRow(results[i], &smallRow);
-        // rowOffset = ((uint64_t) results[i]) * smallRowSize;
-        // smallRow.setData(&rowDataAtThisLvl.rowData[rowOffset] + emptySize);
       }
       else
         smallRow.setPointer(smallNullPointers[depth]);
 
-      // cout << "small row: " << smallRow.toString() << endl;
       applyMapping(gjrgMappings[depth], smallRow, &baseRow);
 
       if (!lowestLvl)
@@ -2602,8 +2647,6 @@ bool BatchPrimitiveProcessor::generateJoinedRowGroup(rowgroup::Row& baseRow, con
       else
       {
         copyRow(baseRow, &joinedRow);
-        // memcpy(joinedRow.getData(), baseRow.getData(), joinedRow.getSize());
-        // cerr << "joined row " << joinedRG.getRowCount() << ": " << joinedRow.toString() << endl;
         joinedRow.nextRow();
         joinedRG.incRowCount();
 
@@ -2750,7 +2793,6 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
   if (rc == 0)
     for (i = 0; i < vssData.size(); i++)
       vssCache.insert(make_pair(lbidList[i], vssData[i]));
-
 }
 
 }  // namespace primitiveprocessor

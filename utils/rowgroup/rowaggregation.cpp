@@ -25,6 +25,7 @@
  */
 
 #include <unistd.h>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <limits>
@@ -57,7 +58,7 @@
 #include "rowstorage.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
-//#define NDEBUG
+// #define NDEBUG
 #include "mcs_decimal.h"
 
 using namespace std;
@@ -558,6 +559,7 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
     // special, but very common case -- count(*) without groupby columns
     if (fFunctionCols.size() == 1 && fFunctionCols[0]->fAggFunction == ROWAGG_COUNT_ASTERISK)
     {
+      // std::cout << "spec " << std::endl;
       if (countSpecial(pRows))
         return;
     }
@@ -568,12 +570,62 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
   Row rowIn;
   pRows->initRow(&rowIn);
   pRows->getRow(0, &rowIn);
+  // if (pRows->getRowCount() != 1)
+  //   std::cout << "adRG " << pRows->getRowCount() << std::endl;
 
   for (uint64_t i = 0; i < pRows->getRowCount(); ++i)
   {
     aggregateRow(rowIn);
     rowIn.nextRow();
   }
+
+  // Row r1;
+  // fRowGroupOut->initRow(&r1);
+  // fRowGroupOut->getRow(0, &r1);
+  // std::cout << "adRG c " << c << " " << r1.toString() << std::endl;
+  // std::cout << "adRG " << c << std::endl;
+
+  fRowAggStorage->dump();
+}
+
+void RowAggregation::addRowGroup1(const RowGroup* pRows)
+{
+  // no group by == no map, everything done in fRow
+  if (fGroupByCols.empty())
+  {
+    fRowGroupOut->setRowCount(1);
+
+    // special, but very common case -- count(*) without groupby columns
+    if (fFunctionCols.size() == 1 && fFunctionCols[0]->fAggFunction == ROWAGG_COUNT_ASTERISK)
+    {
+      // std::cout << "spec " << std::endl;
+      if (countSpecial(pRows))
+        return;
+    }
+  }
+
+  fRowGroupOut->setDBRoot(pRows->getDBRoot());
+
+  Row rowIn;
+  pRows->initRow(&rowIn);
+  pRows->getRow(0, &rowIn);
+  // if (pRows->getRowCount() != 1)
+  //   std::cout << "adRG " << pRows->getRowCount() << std::endl;
+
+  size_t c = 0;
+
+  for (uint64_t i = 0; i < pRows->getRowCount(); ++i)
+  {
+    aggregateRow1(rowIn, c);
+    rowIn.nextRow();
+  }
+
+  Row r1;
+  fRowGroupOut->initRow(&r1);
+  fRowGroupOut->getRow(0, &r1);
+  std::cout << "adRG c " << c << " " << r1.toString() << std::endl;
+  // std::cout << "adRG " << c << std::endl;
+
   fRowAggStorage->dump();
 }
 
@@ -848,6 +900,56 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
   }
 
   updateEntry(row, rgContextColl);
+}
+
+void RowAggregation::aggregateRow1(Row& row, size_t& counter, const uint64_t* hash,
+                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
+{
+  // groupby column list is not empty, find the entry.
+  if (!fGroupByCols.empty())
+  {
+    bool is_new_row;
+    if (hash != nullptr)
+      is_new_row = fRowAggStorage->getTargetRow(row, *hash, fRow);
+    else
+      is_new_row = fRowAggStorage->getTargetRow(row, fRow);
+
+    is_new_row = fRowAggStorage->getTargetRow(row, fRow);
+
+    if (is_new_row)
+    {
+      initMapData(row);
+      attachGroupConcatAg();
+
+      // If there's UDAF involved, reset the user data.
+      if (fOrigFunctionCols)
+      {
+        // This is a multi-distinct query and fFunctionCols may not
+        // contain all the UDAF we need to reset
+        for (uint64_t i = 0; i < fOrigFunctionCols->size(); i++)
+        {
+          if ((*fOrigFunctionCols)[i]->fAggFunction == ROWAGG_UDAF)
+          {
+            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>((*fOrigFunctionCols)[i].get());
+            resetUDAF(rowUDAFColumnPtr, i);
+          }
+        }
+      }
+      else
+      {
+        for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+        {
+          if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+          {
+            auto rowUDAFColumnPtr = dynamic_cast<RowUDAFFunctionCol*>(fFunctionCols[i].get());
+            resetUDAF(rowUDAFColumnPtr, i);
+          }
+        }
+      }
+    }
+  }
+
+  updateEntry1(row, counter, nullptr);
 }
 
 //------------------------------------------------------------------------------
@@ -1147,8 +1249,8 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
     {
       if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
       {
-        updateIntMinMax(rowIn.getTSInt128Field(colIn).getValue(), fRow.getTSInt128Field(colOut).getValue(), colOut,
-                        funcType);
+        updateIntMinMax(rowIn.getTSInt128Field(colIn).getValue(), fRow.getTSInt128Field(colOut).getValue(),
+                        colOut, funcType);
       }
       else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
       {
@@ -1635,6 +1737,88 @@ void RowAggregation::deserialize(messageqcpp::ByteStream& bs)
   fTimeZone = timeZone;
 }
 
+void RowAggregation::updateEntry1(const Row& rowIn, size_t& counter,
+                                  std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
+{
+  for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+  {
+    int64_t colIn = fFunctionCols[i]->fInputColumnIndex;
+    int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
+
+    switch (fFunctionCols[i]->fAggFunction)
+    {
+      case ROWAGG_COUNT_COL_NAME:
+      {
+        ++counter;
+        auto val = fRow.getUintField<8>(colOut);
+
+        // std::cout << "ROWAGG_COUNT_COL_NAME" << std::endl;
+        auto isNulla = isNull(&fRowGroupIn, rowIn, colIn);
+        // if NOT null, let execution fall through.
+        if (isNulla)
+        {
+          [[maybe_unused]] auto isNullb = isNull(&fRowGroupIn, rowIn, colIn);
+          std::cout << "isNull c " << colIn << std::endl;
+          break;
+        }
+        if (counter != val + 1)
+        {
+          std::cout << "counter: " << counter << " val: " << val << std::endl;
+        }
+      }
+        /* fall through */
+
+      case ROWAGG_COUNT_ASTERISK: fRow.setUintField<8>(fRow.getUintField<8>(colOut) + 1, colOut); break;
+
+      case ROWAGG_MIN:
+      case ROWAGG_MAX: doMinMax(rowIn, colIn, colOut, fFunctionCols[i]->fAggFunction); break;
+
+      case ROWAGG_SUM: doSum(rowIn, colIn, colOut, fFunctionCols[i]->fAggFunction); break;
+
+      case ROWAGG_AVG:
+        // count(column) for average is inserted after the sum,
+        // colOut+1 is the position of the aux count column.
+        doAvg(rowIn, colIn, colOut, colOut + 1);
+        break;
+
+      case ROWAGG_STATS: doStatistics(rowIn, colIn, colOut, colOut + 1); break;
+
+      case ROWAGG_BIT_AND:
+      case ROWAGG_BIT_OR:
+      case ROWAGG_BIT_XOR:
+      {
+        doBitOp(rowIn, colIn, colOut, fFunctionCols[i]->fAggFunction);
+        break;
+      }
+
+      case ROWAGG_COUNT_NO_OP:
+      case ROWAGG_DUP_FUNCT:
+      case ROWAGG_DUP_AVG:
+      case ROWAGG_DUP_STATS:
+      case ROWAGG_DUP_UDAF:
+      case ROWAGG_CONSTANT:
+      case ROWAGG_JSON_ARRAY:
+      case ROWAGG_GROUP_CONCAT: break;
+
+      case ROWAGG_UDAF:
+      {
+        doUDAF(rowIn, colIn, colOut, colOut + 1, i, rgContextColl);
+        break;
+      }
+
+      default:
+      {
+        std::ostringstream errmsg;
+        errmsg << "RowAggregation: function (id = " << (uint64_t)fFunctionCols[i]->fAggFunction
+               << ") is not supported.";
+        cerr << errmsg.str() << endl;
+        throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
+        break;
+      }
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 // Update the aggregation totals in the internal hashmap for the specified row.
 // NULL values are recognized and ignored for all agg functions except for
@@ -1652,11 +1836,22 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
     switch (fFunctionCols[i]->fAggFunction)
     {
       case ROWAGG_COUNT_COL_NAME:
+      {
+        // std::cout << "ROWAGG_COUNT_COL_NAME" << std::endl;
 
         // if NOT null, let execution fall through.
         if (isNull(&fRowGroupIn, rowIn, colIn) == true)
+        {
+          // std::cout << "isNull" << std::endl;
           break;
-        /* fall through */
+        }
+        auto a = fRow.getUintField<8>(colOut);
+        a++;
+        fRow.setUintField<8>(a, colOut);
+        // fRow.setUintField<8>(fRow.getUintField<8>(colOut) + 1, colOut);
+        break;
+      }
+        // /* fall through */
 
       case ROWAGG_COUNT_ASTERISK: fRow.setUintField<8>(fRow.getUintField<8>(colOut) + 1, colOut); break;
 
@@ -1981,9 +2176,8 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
   long double mean = fRow.getLongDoubleField(colAux);
   long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
   volatile long double delta = valIn - mean;
-  mean += delta/count;
+  mean += delta / count;
   scaledMomentum2 += delta * (valIn - mean);
-
 
   fRow.setDoubleField(count, colOut);
   fRow.setLongDoubleField(mean, colAux);
@@ -2329,12 +2523,19 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
 //------------------------------------------------------------------------------
 void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
 {
+  // Row r1, r2;
+  // fRowGroupOut->initRow(&r1);
+
   uint32_t sz = 0;
   messageqcpp::ByteStream rgdbs;
   while (auto rgd = fRowAggStorage->getNextRGData())
   {
     ++sz;
     fRowGroupOut->setData(rgd.get());
+
+    // fRowGroupOut->getRow(0, &r1);
+    // std::cout << "lR " << r1.toString() << std::endl;
+
     fRowGroupOut->serializeRGData(rgdbs);
   }
 
@@ -4291,7 +4492,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
   {
     if (LIKELY(cnt > 0))
     {
-      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
+      ;
       int128_t sum = valOut + wideValue;
       fRow.setInt128Field(sum, colOut);
       fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
@@ -4350,7 +4552,8 @@ void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t c
   {
     volatile long double delta = mean - blockMean;
     nextMean = (mean * count + blockMean * blockCount) / nextCount;
-    nextScaledMomentum2 = scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
+    nextScaledMomentum2 =
+        scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
   }
   fRow.setDoubleField(nextCount, colOut);
   fRow.setLongDoubleField(nextMean, colAux);

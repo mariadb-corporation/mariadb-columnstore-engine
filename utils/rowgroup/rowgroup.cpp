@@ -31,7 +31,6 @@
 #include <iterator>
 using namespace std;
 
-
 #include <numeric>
 
 #include "bytestream.h"
@@ -48,8 +47,6 @@ using namespace execplan;
 namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
-
-
 
 StringStore::~StringStore()
 {
@@ -302,7 +299,6 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
   // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
@@ -312,7 +308,6 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
 
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
@@ -1340,13 +1335,8 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
 std::shared_ptr<int[]> makeMapping(const RowGroup& r1, const RowGroup& r2)
 {
   std::shared_ptr<int[]> ret(new int[r1.getColumnCount()]);
-  // bool reserved[r2.getColumnCount()];
-  bool* reserved = (bool*)alloca(r2.getColumnCount() * sizeof(bool));
+  std::vector<bool> reserved(r2.getColumnCount(), false);
   uint32_t i, j;
-
-  for (i = 0; i < r2.getColumnCount(); i++)
-    reserved[i] = false;
-
   for (i = 0; i < r1.getColumnCount(); i++)
   {
     for (j = 0; j < r2.getColumnCount(); j++)
