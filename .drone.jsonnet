@@ -125,13 +125,13 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
   };
   platform_map[platform];
 
