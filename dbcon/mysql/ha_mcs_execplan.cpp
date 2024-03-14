@@ -3892,15 +3892,23 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
-  const Schema* funcSchema = ifp->schema();
-  if (funcSchema)
+  if ( nullptr != dynamic_cast<Item_func_concat_operator_oracle*>(ifp))
   {
-    idbassert(funcSchema->name().str);
-    string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
-    if (funcSchemaName == "oracle_schema")
+    // the condition above is the only way to recognize this particular case.
+    funcName = "concat_operator_oracle";
+  }
+  else
+  {
+    const Schema* funcSchema = ifp->schema();
+    if (funcSchema)
     {
-      // XXX: this is a shortcut.
-      funcName = funcName + "_oracle";
+      idbassert(funcSchema->name().str);
+      string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
+      if (funcSchemaName == "oracle_schema")
+      {
+        // XXX: this is a shortcut.
+        funcName = funcName + "_oracle";
+      }
     }
   }
   FuncExp* funcExp = FuncExp::instance();
