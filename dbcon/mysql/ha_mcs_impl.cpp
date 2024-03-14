@@ -401,6 +401,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
         // @2835. Handle empty string and null confusion. store empty string for string column
         if (colType.colDataType == CalpontSystemCatalog::CHAR ||
             colType.colDataType == CalpontSystemCatalog::VARCHAR ||
+            colType.colDataType == CalpontSystemCatalog::TEXT ||
             colType.colDataType == CalpontSystemCatalog::VARBINARY)
         {
           (*f)->reset();
