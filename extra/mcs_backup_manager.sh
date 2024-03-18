@@ -14,7 +14,7 @@
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
 # Version: 3.5
-# 
+#
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
 #   S3:           sudo ./mcs_backup_manager.sh backup -bb s3://my-cs-backups
@@ -23,8 +23,8 @@
 #
 # Restore Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh restore -l <date>
-#   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
-# 
+#   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date>
+#
 ########################################################################
 
 start=$(date +%s)
@@ -33,7 +33,7 @@ action=$1
 print_action_help_text() {
     echo "
     MariaDB Columnstore Backup Manager
-    
+
     Actions:
 
         backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
@@ -73,13 +73,13 @@ check_operating_system() {
         *)  # unknown option
             printf "\ncheck_operating_system: unknown os & version: $OPERATING_SYSTEM\n"
             exit 2;
-    esac   
+    esac
 }
 
 load_default_backup_variables()
 {
     check_operating_system
-    
+
     # What directory to store the backups on this machine or the target machine.
     # Consider write permissions of the scp user and the user running this script.
     # Mariadb-backup will use this location as a tmp dir for S3 and remote backups temporarily
@@ -110,7 +110,7 @@ load_default_backup_variables()
             ;;
         *)  # unknown option
             handle_failed_dependencies "\nload_default_backup_variables: unknown os & version: $OPERATING_SYSTEM\n";
-    esac  
+    esac
 
     # Fixed Paths
     CS_CONFIGS_PATH="/etc/columnstore"
@@ -124,7 +124,7 @@ load_default_backup_variables()
     cs_cache=$(grep -A25 "\[Cache\]" $STORAGEMANGER_CNF | grep ^path | cut -d "=" -f 2 | tr -d " ")
 
     # What storage topogoly is being used by Columnstore - found in /etc/columnstore/storagemanager.cnf
-    # Options: "LocalStorage" or "S3" 
+    # Options: "LocalStorage" or "S3"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
 
     # Name of the existing bucket used in the cluster - found in /etc/columnstore/storagemanager.cnf
@@ -134,7 +134,7 @@ load_default_backup_variables()
     # modes ['direct','indirect'] - direct backups run on the columnstore nodes themselves. indirect run on another machine that has read-only mounts associated with columnstore/mariadb
     mode="direct"
 
-    # Name of the Configuration file to load variables from 
+    # Name of the Configuration file to load variables from
     config_file=".cs-backup-config"
 
     # Track your write speed with "dstat --top-cpu --top-io"
@@ -161,7 +161,7 @@ load_default_backup_variables()
     if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
     PM_NUMBER=$(echo "$pm" | tr -dc '0-9')
     if [[ -z $PM_NUMBER ]]; then PM_NUMBER=1; fi;
-    
+
     #source_ips=$(grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/columnstore/Columnstore.xml)
     #source_host_names=$(grep "<Node>" /etc/columnstore/Columnstore.xml)
     cmapi_key="$(grep "x-api-key" $CS_CONFIGS_PATH/cmapi_server.conf | awk  '{print $3}' | tr -d "'" )";
@@ -198,7 +198,7 @@ load_default_backup_variables()
     columnstore_online=false
 
     confirm_xmllint_installed
-   
+
     # Number of DBroots
     # Integer usually 1 or 3
     DBROOT_COUNT=$(xmllint --xpath "string(//DBRootCount)" $CS_CONFIGS_PATH/Columnstore.xml)
@@ -206,7 +206,7 @@ load_default_backup_variables()
 }
 
 parse_backup_variables()
-{   
+{
     # Dynamic Arguments
     while [[ $# -gt 0 ]]; do
         key="$1"
@@ -305,7 +305,7 @@ parse_backup_variables()
                 shift # past argument
                 ;;
             -nv-ssl| --no-verify-ssl)
-                no_verify_ssl=true 
+                no_verify_ssl=true
                 shift # past argument
                 ;;
             -pi| --poll-interval)
@@ -363,7 +363,7 @@ print_backup_help_text()
         -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
         -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
-                                            HA S3           ( /var/lib/columnstore/storagemanager/ ) 
+                                            HA S3           ( /var/lib/columnstore/storagemanager/ )
 
         Local Storage Examples:
             ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage
@@ -371,12 +371,12 @@ print_backup_help_text()
             ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage --incremental 02-18-2022
             ./$0 backup -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
 
-        S3 Examples:  
+        S3 Examples:
             ./$0 backup -bb s3://my-cs-backups -s S3
             ./$0 backup -bb s3://my-cs-backups -c pigz --quiet -sb
             ./$0 backup -bb gs://my-cs-backups -s S3 --incremental 02-18-2022
             ./$0 backup -bb s3://my-onpremise-bucket -s S3 -url http://127.0.0.1:8000
-            
+
         Cron Example:
         */60 */24 * * *  root  bash /root/$0 -bb s3://my-cs-backups -s S3  >> /root/csBackup.log  2>&1
     ";
@@ -411,18 +411,18 @@ print_backup_variables()
         printf "%-${s1}s  %-${s2}s\n" "Compression:" "true";
         printf "%-${s1}s  %-${s2}s\n" "Compression Format:" "$compress_format";
         printf "%-${s1}s  %-${s2}s\n" "Compression Threads:" "$PARALLEL_THREADS";
-    else 
+    else
         printf "%-${s1}s  %-${s2}s\n" "Parallel Enabled:" "$parrallel_rsync";
         if $parrallel_rsync ; then printf "%-${s1}s  %-${s2}s\n" "Parallel Threads:" "$PARALLEL_THREADS";   fi;
     fi
 
     if [ $storage == "LocalStorage" ]; then
         printf "%-${s1}s  %-${s2}s\n" "Backup Destination:" "$backup_destination";
-        if [ $backup_destination == "Remote" ]; then   printf "%-${s1}s  %-${s2}s\n" "scp:" "$scp";  fi; 
+        if [ $backup_destination == "Remote" ]; then   printf "%-${s1}s  %-${s2}s\n" "scp:" "$scp";  fi;
         printf "%-${s1}s  %-${s2}s\n" "Backup Location:" "$backup_location";
     fi
 
-    if [ $storage == "S3" ]; then 
+    if [ $storage == "S3" ]; then
         printf "%-${s1}s  %-${s2}s\n" "Active Bucket:" "$bucket";
         printf "%-${s1}s  %-${s2}s\n" "Backup Bucket:" "$backup_bucket";
     fi
@@ -430,7 +430,7 @@ print_backup_variables()
 }
 
 check_package_managers() {
-    
+
     package_manager='';
     if command -v apt &> /dev/null ; then
         if ! command -v dpkg-query &> /dev/null ; then
@@ -442,21 +442,21 @@ check_package_managers() {
 
     if command -v yum &> /dev/null ; then
         package_manager="yum";
-    fi    
+    fi
 
-    if [ $package_manager == '' ]; then 
+    if [ $package_manager == '' ]; then
         handle_failed_dependencies "[!!] No package manager found: yum or apt must be installed"
         exit 1;
     fi;
 }
 
 confirm_xmllint_installed() {
-    
+
     if ! command -v xmllint > /dev/null; then
         printf "[!] xmllint not installed ... attempting auto install\n\n"
         check_package_managers
         case $package_manager in
-            yum ) 
+            yum )
                 install_command="yum install libxml2 -y";
                 ;;
             apt )
@@ -480,7 +480,7 @@ confirm_rsync_installed() {
         printf "[!] rsync not installed ... attempting auto install\n\n"
         check_package_managers
         case $package_manager in
-            yum ) 
+            yum )
                 install_command="yum install rsync -y";
                 ;;
             apt )
@@ -506,7 +506,7 @@ confirm_mariadb_backup_installed() {
         printf "[!]  mariadb-backup not installed ... attempting auto install\n\n"
         check_package_managers
         case $package_manager in
-            yum ) 
+            yum )
                 install_command="yum install MariaDB-backup -y";
                 ;;
             apt )
@@ -530,7 +530,7 @@ confirm_pigz_installed() {
         printf "[!] pigz not installed ... attempting auto install\n\n"
         check_package_managers
         case $package_manager in
-            yum ) 
+            yum )
                 install_command="yum install pigz -y";
                 ;;
             apt )
@@ -548,13 +548,13 @@ confirm_pigz_installed() {
     fi
 }
 
-check_for_dependancies() 
+check_for_dependancies()
 {
     # Check pidof works
     if [ $mode != "indirect" ] &&  ! command -v pidof > /dev/null; then
         handle_failed_dependencies "\n\n[!] Please make sure pidof is installed and executable\n\n"
     fi
-    
+
     # used for save_brm and defining columnstore_user
     if ! command -v stat > /dev/null; then
         handle_failed_dependencies "\n\n[!] Please make sure stat is installed and executable\n\n"
@@ -563,22 +563,22 @@ check_for_dependancies()
     confirm_rsync_installed
     confirm_mariadb_backup_installed
 
-    if [ $1 == "backup" ] && [ $mode != "indirect" ] && ! command -v dbrmctl  > /dev/null; then 
+    if [ $1 == "backup" ] && [ $mode != "indirect" ] && ! command -v dbrmctl  > /dev/null; then
         handle_failed_dependencies "\n\n[!] dbrmctl unreachable to issue lock \n\n"
     fi
 
     if [ $storage == "S3" ]; then
-        
+
         # Default cloud
         cloud="aws"
-        
+
         # Critical argument for S3 - determine which cloud
         if [ -z "$backup_bucket" ]; then handle_failed_dependencies "\n undefined --backup_bucket: $backup_bucket \nfor examples see: ./$0 backup --help\n"; fi
         if [[ $backup_bucket == gs://* ]]; then
             cloud="gcp"; protocol="gs";
         elif [[ $backup_bucket == s3://* ]]; then
             cloud="aws"; protocol="s3";
-        else 
+        else
             handle_failed_dependencies "\n Invalid --backup_bucket - doesnt lead with gs:// or s3:// - $backup_bucket\n";
         fi
 
@@ -590,7 +590,7 @@ check_for_dependancies()
                 gsutil=$(which mcs_gsutil 2>/dev/null)
             elif ! command -v gsutil > /dev/null; then
                 which gsutil
-                echo "Hints:  
+                echo "Hints:
                 curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-443.0.0-linux-x86_64.tar.gz
                 tar -xvf google-cloud-cli-443.0.0-linux-x86_64.tar.gz
                 ./google-cloud-sdk/install.sh -q
@@ -602,13 +602,13 @@ check_for_dependancies()
                 "
 
                 handle_failed_dependencies "\n\nPlease make sure gsutil cli is installed configured and executable\n"
-            else 
+            else
                 gsutil=$(which gsutil 2>/dev/null)
             fi
-           
+
             # gsutil sytax for silent
             if $quiet; then xtra_s3_args+="-q"; fi
-        else 
+        else
 
             # on prem S3 will use aws cli
             # If AWS - Check aws-cli installed
@@ -618,7 +618,7 @@ check_for_dependancies()
                 awscli=$(which mcs_aws 2>/dev/null)
             elif ! command -v aws > /dev/null; then
                 which aws
-                echo "Hints:  
+                echo "Hints:
                 curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"
                 unzip awscliv2.zip
                 sudo ./aws/install
@@ -628,14 +628,14 @@ check_for_dependancies()
             else
                 awscli=$(which aws 2>/dev/null)
             fi
-            
+
             # aws sytax for silent
             if $quiet; then xtra_s3_args+="--quiet"; fi
         fi;
     fi
 }
 
-validation_prechecks_for_backup() 
+validation_prechecks_for_backup()
 {
     echo "Prechecks"
 
@@ -654,19 +654,19 @@ validation_prechecks_for_backup()
 
     # Detect if columnstore online
     if [ $mode == "direct" ]; then
-        if [ -z $(pidof PrimProc) ] || [ -z $(pidof WriteEngineServer) ]; then 
-            printf " - Columnstore is OFFLINE \n"; 
-            export columnstore_online=false; 
-        else 
-            printf " - Columnstore is ONLINE - safer if offline \n"; 
-            export columnstore_online=true; 
+        if [ -z $(pidof PrimProc) ] || [ -z $(pidof WriteEngineServer) ]; then
+            printf " - Columnstore is OFFLINE \n";
+            export columnstore_online=false;
+        else
+            printf " - Columnstore is ONLINE - safer if offline \n";
+            export columnstore_online=true;
         fi
     fi;
 
     # Validate compression option
     if [[ -n "$compress_format" ]]; then
         case $compress_format in
-            pigz) 
+            pigz)
                 confirm_pigz_installed
                 ;;
             *)  # unknown option
@@ -684,51 +684,51 @@ validation_prechecks_for_backup()
     fi
 
     # Storage Based Checks
-    if [ $storage == "LocalStorage" ]; then 
+    if [ $storage == "LocalStorage" ]; then
 
         # Incremental Job checks
         if  $incremental; then
             # Cant continue if this folder (which represents a full backup) doesnt exists
-            if [ $backup_destination == "Local" ]; then 
-                if [ -d $backup_location$today ]; then 
-                    printf "[+] Full backup directory exists\n"; 
-                else  
-                    handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist \n\n" true; 
+            if [ $backup_destination == "Local" ]; then
+                if [ -d $backup_location$today ]; then
+                    printf "[+] Full backup directory exists\n";
+                else
+                    handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist \n\n" true;
                 fi;
             elif [ $backup_destination == "Remote" ]; then
-                if [[ $(ssh $scp test -d $backup_location$today && echo exists) ]]; then  
-                    printf "[+] Full backup directory exists\n"; 
-                else 
-                    handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist on remote $scp \n\n" true;  
+                if [[ $(ssh $scp test -d $backup_location$today && echo exists) ]]; then
+                    printf "[+] Full backup directory exists\n";
+                else
+                    handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist on remote $scp \n\n" true;
                 fi
             fi
         fi
     elif [ $storage == "S3" ]; then
-        
+
         # Adjust s3api flags for onpremise/custom endpoints
         add_s3_api_flags=""
         if [ -n "$s3_url" ];  then add_s3_api_flags+=" --endpoint-url $s3_url"; fi;
         if $no_verify_ssl; then add_s3_api_flags+=" --no-verify-ssl"; fi;
-        
+
         # Validate addtional relevant arguments for S3
         if [ -z "$backup_bucket" ]; then echo "Invalid --backup_bucket: $backup_bucket - is empty"; exit 1; fi
 
         # Check cli access to bucket
         if [ $cloud == "gcp" ]; then
-        
+
             if $gsutil ls $backup_bucket > /dev/null ; then
                 printf " - Success listing backup bucket\n"
-            else 
+            else
                 printf "\n[X] Failed to list bucket contents... \nCheck $gsutil credentials: $gsutil config -a"
                 handle_early_exit_on_backup "\n$gsutil ls $backup_bucket \n\n" true
             fi
 
-        else 
+        else
 
             # Check aws cli access to bucket
             if $( $awscli $add_s3_api_flags s3 ls $backup_bucket > /dev/null ) ; then
                 printf " - Success listing backup bucket\n"
-            else 
+            else
                 printf "\n[X] Failed to list bucket contents... \nCheck aws cli credentials: aws configure"
                 handle_early_exit_on_backup "\naws $add_s3_api_flags s3 ls $backup_bucket \n" true
             fi
@@ -738,20 +738,20 @@ validation_prechecks_for_backup()
         if $incremental; then
             # Cant continue if this folder (which represents a full backup) doesnt exists
             if [ $cloud == "gcp" ]; then
-                if [[ $( $gsutil ls $backup_bucket/$today | head ) ]]; then  
-                    printf "[+] Full backup directory exists\n"; 
-                else 
-                    handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in GCS \nCheck - $gsutil ls $backup_bucket/$today | head \n\n" true;   
-                fi  
+                if [[ $( $gsutil ls $backup_bucket/$today | head ) ]]; then
+                    printf "[+] Full backup directory exists\n";
+                else
+                    handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in GCS \nCheck - $gsutil ls $backup_bucket/$today | head \n\n" true;
+                fi
             else
-                if [[ $( $awscli $add_s3_api_flags s3 ls $backup_bucket/$today | head ) ]]; then  
-                    printf "[+] Full backup directory exists\n"; 
-                else 
-                    handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in S3 \nCheck - aws $add_s3_api_flags s3 ls $backup_bucket/$today | head \n\n" true; 
-                fi  
+                if [[ $( $awscli $add_s3_api_flags s3 ls $backup_bucket/$today | head ) ]]; then
+                    printf "[+] Full backup directory exists\n";
+                else
+                    handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in S3 \nCheck - aws $add_s3_api_flags s3 ls $backup_bucket/$today | head \n\n" true;
+                fi
             fi;
         fi
-    else 
+    else
         handle_early_exit_on_backup "Invalid Variable storage: $storage" true
     fi
 }
@@ -767,7 +767,7 @@ cs_read_only_wait_loop() {
         printf "."
         current_status=$(dbrmctl status);
         if [ $? -ne 0 ]; then
-            handle_early_exit_on_backup "\n[!] Failed to get dbrmctl status\n\n" 
+            handle_early_exit_on_backup "\n[!] Failed to get dbrmctl status\n\n"
         fi
         if [ $retry_counter -ge $retry_limit ]; then
             handle_early_exit_on_backup "\n[!] Set columnstore readonly wait retry limit exceeded: $retry_counter \n\n"
@@ -778,18 +778,18 @@ cs_read_only_wait_loop() {
     printf "Done\n"
 }
 
-# Having columnstore offline is best for non-volatile backups  
+# Having columnstore offline is best for non-volatile backups
 # If online - issue a flush tables with read lock and set DBRM to readonly
-issue_write_locks() 
+issue_write_locks()
 {
     if [ $mode == "indirect" ] || $skip_locks; then printf "\n"; return; fi;
-    if ! $skip_mdb && ! pidof mariadbd > /dev/null; then 
-        handle_early_exit_on_backup "\n[X] MariaDB is offline ... Needs to be online to issue read only lock and to run mariadb-backup \n\n" true; 
+    if ! $skip_mdb && ! pidof mariadbd > /dev/null; then
+        handle_early_exit_on_backup "\n[X] MariaDB is offline ... Needs to be online to issue read only lock and to run mariadb-backup \n\n" true;
     fi;
 
-    printf "\nLocks \n"; 
+    printf "\nLocks \n";
     # Pre 23.10.2 CS startreadonly doesnt exist - so poll cpimports added to protect them
-    if ! $skip_polls; then 
+    if ! $skip_polls; then
         poll_check_no_active_sql_writes
         poll_check_no_active_cpimports
     fi;
@@ -801,43 +801,43 @@ issue_write_locks()
         if mariadb -e "FLUSH TABLES WITH READ LOCK;"; then
             mariadb -e "set global read_only=ON;"
             read_lock=true
-            printf " Done\n"; 
-        else    
-            handle_early_exit_on_backup "\n[X] Failed issuing read-only lock\n\n" 
-        fi 
+            printf " Done\n";
+        else
+            handle_early_exit_on_backup "\n[X] Failed issuing read-only lock\n\n"
+        fi
     fi
-    
-    if [ $pm == "pm1" ]; then 
-        
+
+    if [ $pm == "pm1" ]; then
+
         # Set Columnstore ReadOnly Mode
         startreadonly_exists=$(dbrmctl -h 2>&1 | grep "startreadonly")
         printf " - Issuing read-only lock to Columnstore Engine ...   ";
-        if ! $columnstore_online; then 
+        if ! $columnstore_online; then
             printf "Skip since offline\n\n";
         elif [ $DBROOT_COUNT == "1" ] && [[ -n "$startreadonly_exists" ]]; then
             if dbrmctl startreadonly ; then
                 cs_read_only_wait_loop
                 printf " \n";
             else
-                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl startreadonly\n" 
+                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl startreadonly\n"
             fi;
 
-        elif [ $DBROOT_COUNT == "1" ]; then 
+        elif [ $DBROOT_COUNT == "1" ]; then
             if dbrmctl readonly ; then
                 printf " \n";
-            else 
-                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl readonly \n" 
+            else
+                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl readonly \n"
             fi
-        else 
+        else
             if command -v mcs &> /dev/null && command -v jq &> /dev/null ; then
                 if ! mcs cluster set mode --mode readonly  | jq -r tostring ; then
-                    handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n" 
+                    handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n"
                 fi
             else
                 # Older CS versions dont have mcs cli
                 cmapiResponse=$(curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header "x-api-key:$cmapi_key" --data '{"timeout":20, "mode": "readonly"}' -k);
-                if [[ $cmapiResponse == '{"error":'* ]] ; then 
-                    handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n" 
+                if [[ $cmapiResponse == '{"error":'* ]] ; then
+                    handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n"
                 else
                     printf "$cmapiResponse \n";
                 fi
@@ -887,7 +887,7 @@ poll_check_no_active_cpimports() {
             printf "Done\n"
             no_cpimports=true
             break
-        else 
+        else
             printf "."
             if ! $quiet; then printf "\n$active_cpimports"; fi;
             sleep "$poll_interval"
@@ -900,7 +900,7 @@ poll_check_no_active_cpimports() {
     fi;
 }
 
-run_save_brm() 
+run_save_brm()
 {
 
     if $skip_save_brm || [ $pm != "pm1" ] || ! $columnstore_online || [ $mode == "indirect" ]; then return; fi;
@@ -910,9 +910,9 @@ run_save_brm()
     if [ ! -d "$tmpDir" ]; then mkdir -p $tmpDir; fi;
 
     # Copy extent map locally just in case save_brm fails
-    if [ $storage == "LocalStorage" ]; then 
+    if [ $storage == "LocalStorage" ]; then
         cp -R $DBRM_PATH/* $tmpDir
-    elif [ $storage == "S3" ]; then 
+    elif [ $storage == "S3" ]; then
         cp -R $STORAGEMANAGER_PATH/* $tmpDir
 
         # Base Set
@@ -926,7 +926,7 @@ run_save_brm()
         eval "smcat /data1/systemFiles/dbrm/BRM_savesA_em > $tmpDir/BRM_savesA_em $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vbbm > $tmpDir/BRM_savesA_vbbm $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vss > $tmpDir/BRM_savesA_vss $xtra_cmd_args"
-        
+
         # B Set
         eval "smcat /data1/systemFiles/dbrm/BRM_savesB_em > $tmpDir/BRM_savesB_em $xtra_cmd_args"
         eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vbbm > $tmpDir/BRM_savesB_vbbm $xtra_cmd_args"
@@ -935,18 +935,18 @@ run_save_brm()
 
     printf " - Saving BRMs... \n"
     brmOwner=$(stat -c "%U" $DBRM_PATH/)
-    if sudo -u $brmOwner /usr/bin/save_brm ; then 
+    if sudo -u $brmOwner /usr/bin/save_brm ; then
         rm -rf $tmpDir
-    else  
-        printf "\n Failed: save_brm error - see /var/log/messages - backup @ $tmpDir \n\n"; 
-        handle_early_exit_on_backup 
+    else
+        printf "\n Failed: save_brm error - see /var/log/messages - backup @ $tmpDir \n\n";
+        handle_early_exit_on_backup
     fi
-    
+
 }
 
 # Example: s3sync <from> <to> <success_message> <failed_message>
 # Example: s3sync s3://$bucket $backup_bucket/$today/columnstoreData "Done - Columnstore data sync complete"
-s3sync() 
+s3sync()
 {
 
     local from=$1
@@ -955,13 +955,13 @@ s3sync()
     local failed_message=$4
     local retries=${5:-0}
     local cmd=""
-    
+
     if [ $cloud == "gcp" ]; then
         cmd="$gsutil $xtra_s3_args -m rsync -r -d $from $to"
 
         # gsutil throws WARNINGS if not directed to /dev/null
         if $quiet; then cmd+="  2>/dev/null"; fi
-    else 
+    else
         # Default AWS
         cmd="$awscli $xtra_s3_args $add_s3_api_flags s3 sync $from $to"
     fi
@@ -969,7 +969,7 @@ s3sync()
     if eval $cmd; then
         if [ -n "$success_message" ]; then printf "$success_message"; fi;
     else
-        if [ $retries -lt $RETRY_LIMIT ]; then 
+        if [ $retries -lt $RETRY_LIMIT ]; then
             echo "$cmd"
             echo "Retrying: $retries"
             sleep 1;
@@ -989,10 +989,10 @@ s3cp()
     local from=$1
     local to=$2
     local cmd=""
-    
+
     if [ $cloud == "gcp" ]; then
         cmd="$gsutil $xtra_s3_args cp $from $to"
-    else 
+    else
         # Default AWS
         cmd="$awscli $xtra_s3_args $add_s3_api_flags s3 cp $from $to"
     fi;
@@ -1001,15 +1001,15 @@ s3cp()
 
 }
 
-# Example: s3rm <path to delete> 
+# Example: s3rm <path to delete>
 s3rm()
 {
     local path=$1
     local cmd=""
-    
+
     if [ $cloud == "gcp" ]; then
         cmd="$gsutil $xtra_s3_args -m rm -r $path"
-    else 
+    else
         # Default AWS
         cmd="$awscli $xtra_s3_args $add_s3_api_flags s3 rm $path  --recursive"
     fi;
@@ -1017,15 +1017,15 @@ s3rm()
     $cmd
 }
 
-# Example: s3ls <path to list> 
+# Example: s3ls <path to list>
 s3ls()
 {
     local path=$1
     local cmd=""
-    
+
     if [ $cloud == "gcp" ]; then
         cmd="$gsutil ls $path"
-    else 
+    else
         # Default AWS
         cmd="$awscli $add_s3_api_flags s3 ls $path"
     fi;
@@ -1033,19 +1033,19 @@ s3ls()
     $cmd
 }
 
-clear_read_lock() 
+clear_read_lock()
 {
 
     if [ $mode == "indirect" ] || $skip_locks; then return; fi;
 
-    printf "\nClearing Locks\n"; 
-    # Clear MDB Lock 
+    printf "\nClearing Locks\n";
+    # Clear MDB Lock
     if pidof mariadbd > /dev/null && [ $read_lock ]; then
         printf " - Clearing read-only lock on MariaDB Server ...     ";
         if mariadb -e "UNLOCK TABLES;" && mariadb -qsNe "set global read_only=$ORIGINAL_READONLY_STATUS;"; then
             read_lock=false;
             printf " Done\n"
-        else 
+        else
             handle_early_exit_on_backup "\n[X] Failed clearing readLock\n" true
         fi
     fi
@@ -1053,27 +1053,27 @@ clear_read_lock()
     if [ $pm == "pm1" ]; then
 
         # Clear CS Lock
-        printf " - Clearing read-only lock on Columnstore Engine ...  "; 
-        if ! $columnstore_online; then 
+        printf " - Clearing read-only lock on Columnstore Engine ...  ";
+        if ! $columnstore_online; then
             printf "Skip since offline\n"
-        elif [ $DBROOT_COUNT == "1" ]; then 
+        elif [ $DBROOT_COUNT == "1" ]; then
             if dbrmctl readwrite ; then
                 printf " ";
-            else 
+            else
                 handle_early_exit_on_backup "\n[X] Failed clearing columnstore BRM lock via dbrmctl\n" true;
             fi
         elif command -v mcs &> /dev/null && command -v jq &> /dev/null ; then
             if ! mcs cluster set mode --mode readwrite | jq -r tostring ;then
-                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n"; 
+                handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via cmapi\n";
             fi
-        elif curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header "x-api-key:$cmapi_key" --data '{"timeout":20, "mode": "readwrite"}' -k  ; then 
+        elif curl -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/mode-set --header 'Content-Type:application/json' --header "x-api-key:$cmapi_key" --data '{"timeout":20, "mode": "readwrite"}' -k  ; then
             printf " \n"
         else
             handle_early_exit_on_backup "\n[X] Failed clearing columnstore BRM lock\n" true;
         fi
     fi
-    
-} 
+
+}
 
 # handle_ called when certain checks/functionality fails
 handle_failed_dependencies()
@@ -1086,7 +1086,7 @@ handle_failed_dependencies()
 # first argument is the error message
 # 2nd argument true = skip clear_read_lock, false= dont skip
 handle_early_exit_on_backup()
-{   
+{
     skip_clear_locks=${2:-false}
     if ! $skip_clear_locks; then clear_read_lock; fi;
     printf "\nBackup Failed: $1\n"
@@ -1124,11 +1124,11 @@ wait_on_rsync()
     local total=0
 
     local w=0;
-    while [ $rsyncInProgress -gt "$concurrentThreshHold" ]; do 
-        if ! $quiet && $visualize && [ $(($w % 10)) -eq 0 ]; then 
-            if [[ $total == 0 ]]; then 
-                total=$(du -sh /var/lib/columnstore/data$dbrootToSync/) 
-            else  
+    while [ $rsyncInProgress -gt "$concurrentThreshHold" ]; do
+        if ! $quiet && $visualize && [ $(($w % 10)) -eq 0 ]; then
+            if [[ $total == 0 ]]; then
+                total=$(du -sh /var/lib/columnstore/data$dbrootToSync/)
+            else
                 echo -E "$rsyncInProgress rsync processes running ... seconds: $w"
                 echo "Status: $(du -sh $backup_location$today/data$dbrootToSync/)"
                 echo "Goal:   $total"
@@ -1142,12 +1142,12 @@ wait_on_rsync()
     done
 }
 
-initiate_rsyncs() 
+initiate_rsyncs()
 {
     local dbrootToSync=$1
     parallel_rysnc_flags=" -a "
     if $incremental ; then parallel_rysnc_flags+=" --inplace --no-whole-file --delete"; fi;
-    
+
     deepParallelRsync /var/lib/columnstore/data$dbrootToSync 1 $DEPTH data$dbrootToSync &
     sleep 2;
     #jobs
@@ -1155,19 +1155,19 @@ initiate_rsyncs()
     wait
 }
 
-# A recursive function that increments depthCurrent+1 each directory it goes deeper and issuing rsync on each directory remaing at the target depth  
-# Example values:   
+# A recursive function that increments depthCurrent+1 each directory it goes deeper and issuing rsync on each directory remaing at the target depth
+# Example values:
 #   path: /var/lib/columnstore/data1
 #   depthCurrent: 1
 #   depthTarget: 3
 #   depthCurrent: data1
-deepParallelRsync() 
+deepParallelRsync()
 {
     path=$1
     depthCurrent=$2
     depthTarget=$3
     relativePath=$4
-    # echo "DEBUG: 
+    # echo "DEBUG:
     # path=$1
     # depthCurrent=$2
     # depthTarget=$3
@@ -1187,15 +1187,15 @@ deepParallelRsync()
                 #echo "DEBUG - copy to relative: $backup_location$today/$relativePath/"
                 if ls $fullFilePath | xargs -P $PARALLEL_THREADS -I {} rsync $parallel_rysnc_flags $fullFilePath/{} $backup_location$today/$relativePath/$fileName ; then
                     echo "   + Completed: $backup_location$today/$relativePath/$fileName"
-                else 
+                else
                     echo "Failed: $backup_location$today/$relativePath/$fileName"
                     exit 1;
                 fi
-                
+
             else
-                # echo "DEBUG - Fork Deeper - $fullFilePath "    
+                # echo "DEBUG - Fork Deeper - $fullFilePath "
                 wait_on_rsync false "0.5" $PARALLEL_FOLDERS
-                # Since target depth not reached, recursively call for each directory 
+                # Since target depth not reached, recursively call for each directory
                 deepParallelRsync $fullFilePath "$((depthCurrent+1))" $depthTarget "$relativePath/$fileName" &
             fi
 
@@ -1203,8 +1203,8 @@ deepParallelRsync()
         elif [ -f $fullFilePath ]; then
             rsync $additional_rysnc_flags $fullFilePath $backup_location$today/$relativePath/
 
-        # If filename is * then the directory is empty 
-        elif [ "$fileName" == "*" ]; then 
+        # If filename is * then the directory is empty
+        elif [ "$fileName" == "*" ]; then
             # echo "DEBUG - Skipping $relativePath - empty";
             continue
         else
@@ -1215,8 +1215,8 @@ deepParallelRsync()
 }
 
 run_backup()
-{   
-    if [ $storage == "LocalStorage" ]; then 
+{
+    if [ $storage == "LocalStorage" ]; then
         if [ $backup_destination == "Local" ]; then
 
             printf "\nLocal Storage Backup\n"
@@ -1227,34 +1227,34 @@ run_backup()
                 mkdir -p $backup_location$today
             else
                 mkdir -p $backup_location$today/mysql
-                mkdir -p $backup_location$today/configs 
+                mkdir -p $backup_location$today/configs
                 mkdir -p $backup_location$today/configs/mysql
-            
+
                 # Check/Create CS Data Directories
                 i=1
                 while [ $i -le $DBROOT_COUNT ]; do
                     if [[ $ASSIGNED_DBROOT == "$i" || $HA == true ]]; then mkdir -p $backup_location$today/data$i ; fi
                     ((i++))
-                done 
+                done
             fi
-            printf " Done\n"   
-            
+            printf " Done\n"
+
             # Backup Columnstore data
             i=1
             while [ $i -le $DBROOT_COUNT ]; do
-                if [[ $ASSIGNED_DBROOT == "$i" || $HA == true ]]; then 
+                if [[ $ASSIGNED_DBROOT == "$i" || $HA == true ]]; then
                     if [[ -n "$compress_format" ]]; then
                         # For compression keep track of dirs & files to include and compress/stream in the end - $compress_paths
-                       compress_paths="/var/lib/columnstore/data$i/* "  
+                       compress_paths="/var/lib/columnstore/data$i/* "
 
-                    elif $parrallel_rsync ; then 
+                    elif $parrallel_rsync ; then
                         printf " - Parallel Rsync CS Data$i...       \n"
                         initiate_rsyncs $i
-                        printf " Done\n"      
+                        printf " Done\n"
                     else
                         printf " - Syncing Columnstore Data$i...      "
                         eval "rsync $additional_rysnc_flags /var/lib/columnstore/data$i/* $backup_location$today/data$i/ $xtra_cmd_args";
-                        printf " Done\n"  
+                        printf " Done\n"
                     fi;
                 fi
                 ((i++))
@@ -1262,7 +1262,7 @@ run_backup()
 
             # Backup MariaDB data
             if [ $ASSIGNED_DBROOT == "1" ]; then
-                
+
                 # logic to increment mysql and keep count if we want to backup incremental mysql data
                 # i=1
                 # latestMysqlIncrement=0
@@ -1271,7 +1271,7 @@ run_backup()
                 # done
 
                 # MariaDB backup wont rerun if folder exists - so clear it before running mariadb-backup
-                if [ -d $backup_location$today/mysql ]; then 
+                if [ -d $backup_location$today/mysql ]; then
                     rm -rf $backup_location$today/mysql
                 fi
 
@@ -1282,20 +1282,20 @@ run_backup()
                         mbd_prefix="$backup_location$today/$split_file_mdb_prefix.$compress_format"
                         case $compress_format in
                             pigz)
-                                # Handle Cloud 
+                                # Handle Cloud
                                 if !  mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $mbd_prefix 2>> $logfile; then
                                     handle_early_exit_on_backup "\nFailed  mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $mbd_prefix 2>> $logfile \n"
                                 fi
                                 printf " Done @ $mbd_prefix\n"
                                 ;;
                             *)  # unknown option
-                                handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n" 
+                                handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n"
                         esac
                     else
                         printf " - Copying MariaDB Data...           "
                         if eval "mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root $xtra_cmd_args" ; then printf " Done \n"; else printf "\n Failed: mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root\n"; handle_early_exit_on_backup; fi
                     fi
-                else 
+                else
                     echo "[!] Skipping mariadb-backup"
                 fi
 
@@ -1327,13 +1327,13 @@ run_backup()
                     compress_paths+=" $MARIADB_SERVER_CONFIGS_PATH/*"
                 fi
             fi
-            
+
             # Handle compression for Columnstore Data & Configs
             if [[ -n "$compress_format" ]]; then
                 cs_prefix="$backup_location$today/$split_file_cs_prefix.$compress_format"
                 compressed_split_size="250M";
                 case $compress_format in
-                    pigz) 
+                    pigz)
                         printf " - Compressing CS Data & Configs...  "
                         if ! eval "tar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $cs_prefix 2>> $logfile"; then
                             handle_early_exit_on_backup "[!] - Compression Failed \ntar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $cs_prefix 2>> $logfile \n"
@@ -1341,26 +1341,26 @@ run_backup()
                         printf " Done @ $cs_prefix\n"
                         ;;
                     *)  # unknown option
-                        handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n" 
+                        handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n"
                 esac
             fi
 
-            if $incremental ; then 
+            if $incremental ; then
                 # Log each incremental run
                 now=$(date "+%m-%d-%Y %H:%M:%S"); echo "$pm updated on $now" >> $backup_location$today/incrementallyUpdated.txt
                 final_message="Incremental Backup Complete"
-            else 
+            else
                 # Create restore job file
                 extra_flags=""
-                if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi; 
-                if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
+                if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi;
+                if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi;
                 echo "./$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT -m $mode $extra_flags --quiet" > $backup_location$today/restore.job
             fi
 
             final_message+=" @ $backup_location$today"
-            
+
         elif [ $backup_destination == "Remote" ]; then
-        
+
             # Check/Create Directories on remote server
             printf "[+] Checking Remote Directories... "
             i=1
@@ -1372,16 +1372,16 @@ run_backup()
             echo $makeDirectories
             ssh $scp " mkdir -p $backup_location$today/mysql ;
             $makeDataDirectories
-            mkdir -p $backup_location$today/configs ; 
-            mkdir -p $backup_location$today/configs/mysql; 
+            mkdir -p $backup_location$today/configs ;
+            mkdir -p $backup_location$today/configs/mysql;
             mkdir -p $backup_location$today/configs/mysql/$pm "
             printf " Done\n"
-            
+
             printf "[~] Rsync Remote Columnstore Data... \n"
             i=1
             while [ $i -le $DBROOT_COUNT ]; do
                 #if [ $pm == "pm$i" ]; then rsync -a $additional_rysnc_flags /var/lib/columnstore/data$i/* $scp:$backup_location$today/data$i/ ; fi
-                if [ $pm == "pm$i" ]; then 
+                if [ $pm == "pm$i" ]; then
                     find /var/lib/columnstore/data$i/*  -mindepth 1 -maxdepth 2 | xargs -P $PARALLEL_THREADS -I {} rsync $additional_rysnc_flags /var/lib/columnstore/data$i/* $scp:$backup_location$today/data$i/
                 fi
                 ((i++))
@@ -1400,27 +1400,27 @@ run_backup()
                 if ! $skip_mdb; then
                     printf "[~] Backing up mysql... \n"
                     mkdir -p $backup_location$today
-                    if mariadb-backup --backup --target-dir=$backup_location$today --user=root ; then 
+                    if mariadb-backup --backup --target-dir=$backup_location$today --user=root ; then
                         rsync -a $backup_location$today/* $scp:$backup_location$today/mysql
                         rm -rf $backup_location$today
-                    else 
-                        printf "\n Failed: mariadb-backup --backup --target-dir=$backup_location$today --user=root\n\n"; 
-                        handle_early_exit_on_backup 
+                    else
+                        printf "\n Failed: mariadb-backup --backup --target-dir=$backup_location$today --user=root\n\n";
+                        handle_early_exit_on_backup
                     fi
-                else 
+                else
                     echo "[!] Skipping mariadb-backup"
                 fi;
-                
+
                 # Backup CS configurations
-                rsync $additional_rysnc_flags $CS_CONFIGS_PATH/Columnstore.xml $scp:$backup_location$today/configs/ 
+                rsync $additional_rysnc_flags $CS_CONFIGS_PATH/Columnstore.xml $scp:$backup_location$today/configs/
                 rsync $additional_rysnc_flags $STORAGEMANGER_CNF $scp:$backup_location$today/configs/
-                if [ -f $CS_CONFIGS_PATH/cmapi_server.conf ]; then  
-                    rsync $additional_rysnc_flags $CS_CONFIGS_PATH/cmapi_server.conf $scp:$backup_location$today/configs/; 
+                if [ -f $CS_CONFIGS_PATH/cmapi_server.conf ]; then
+                    rsync $additional_rysnc_flags $CS_CONFIGS_PATH/cmapi_server.conf $scp:$backup_location$today/configs/;
                 fi
             fi
-        
-        
-            if  $incremental ; then 
+
+
+            if  $incremental ; then
                 now=$(date "+%m-%d-%Y +%H:%M:%S")
                 ssh $scp "echo \"$pm updated on $now\" >> $backup_location$today/incrementallyUpdated.txt"
                 final_message="Incremental Backup Complete"
@@ -1454,14 +1454,14 @@ run_backup()
         if [[ -z "$compress_format" ]]; then
 
             printf " - Syncing Columnstore Metadata \n"
-            if $HA; then 
+            if $HA; then
                 s3sync $STORAGEMANAGER_PATH $backup_bucket/$today/storagemanager " - Done storagemanager/*\n" "\n\n[!!!] sync failed - storagemanager/*\n\n";
-            else 
+            else
                 s3sync $cs_cache/data$ASSIGNED_DBROOT $backup_bucket/$today/storagemanager/cache/data$ASSIGNED_DBROOT "   + cache/data$ASSIGNED_DBROOT\n" "\n\n[!!!] sync failed - cache/data$ASSIGNED_DBROOT\n\n";
                 s3sync $cs_metadata/data$ASSIGNED_DBROOT $backup_bucket/$today/storagemanager/metadata/data$ASSIGNED_DBROOT "   + metadata/data$ASSIGNED_DBROOT\n" "\n\n[!!!] sync failed - metadata/data$ASSIGNED_DBROOT\n\n"
                 s3sync $cs_journal/data$ASSIGNED_DBROOT $backup_bucket/$today/storagemanager/journal/data$ASSIGNED_DBROOT "   + journal/data$ASSIGNED_DBROOT\n" "\n\n[!!!] sync failed - journal/data$ASSIGNED_DBROOT\n\n"
             fi;
-            
+
         else
             # For compression keep track of dirs & files to include and compress/stream in the end - $compress_paths
             compress_paths="$cs_cache/data$ASSIGNED_DBROOT $cs_metadata/data$ASSIGNED_DBROOT $cs_journal/data$ASSIGNED_DBROOT "
@@ -1469,7 +1469,7 @@ run_backup()
 
         # PM1 mostly backups everything else
         if [ $ASSIGNED_DBROOT == "1" ]; then
-            
+
             # Backup CS configurations
             if [[ -z "$compress_format" ]]; then
                 s3sync $CS_CONFIGS_PATH/ $backup_bucket/$today/configs/ "   + $CS_CONFIGS_PATH/\n" "\n\n[!!!] sync failed - $CS_CONFIGS_PATH/\n\n";
@@ -1481,7 +1481,7 @@ run_backup()
             if ! $skip_bucket_data; then
                 printf " - Saving Columnstore data ...                       "
                 s3sync $protocol://$bucket $backup_bucket/$today/columnstoreData " Done \n"
-            else 
+            else
                 printf " - [!] Skipping columnstore bucket data \n"
             fi
 
@@ -1493,12 +1493,12 @@ run_backup()
                     mbd_prefix="$backup_bucket/$today/$split_file_mdb_prefix.$compress_format"
                     case $compress_format in
                         pigz)
-                            # Handle Cloud 
+                            # Handle Cloud
                             if [ $cloud == "gcp" ]; then
                                 if ! mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="gsutil cp - ${mbd_prefix}_\$FILE 2>$logfile" - chunk 2>$logfile; then
                                     handle_early_exit_on_backup "\nFailed mariadb-backup --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter=\"gsutil cp - ${mbd_prefix}_\$FILE 2>$logfile\" - chunk 2>$logfile \n"
                                 fi
-                                
+
                             elif [ $cloud == "aws" ]; then
                                 if ! mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="aws s3 cp - ${mbd_prefix}_\$FILE 2>$logfile 1>&2" - chunk 2>$logfile; then
                                     handle_early_exit_on_backup "\nFailed mariadb-backup --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter=\"aws s3 cp - ${mbd_prefix}_\$FILE 2>$logfile 1>&2\" - chunk 2>$logfile\n"
@@ -1507,7 +1507,7 @@ run_backup()
                             printf " Done @ $mbd_prefix\n"
                             ;;
                         *)  # unknown option
-                            handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                            handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
                     esac
 
                 else
@@ -1524,11 +1524,11 @@ run_backup()
                         s3rm $backup_bucket/$today/mysql/
                         s3sync $backup_location$today/mysql $backup_bucket/$today/mysql/ "   + mariadb-backup to bucket @ $backup_bucket/$today/mysql/ \n"
                         rm -rf $backup_location$today/mysql
-                    else 
+                    else
                         handle_early_exit_on_backup "\nFailed making directory for MariaDB backup\ncommand: mkdir -p $backup_location$today/mysql\n"
                     fi
                 fi
-            else 
+            else
                 echo "[!] Skipping mariadb-backup"
             fi
         fi
@@ -1548,13 +1548,13 @@ run_backup()
             cs_prefix="$backup_bucket/$today/$split_file_cs_prefix.$compress_format"
             compressed_split_size="250M";
             case $compress_format in
-                pigz) 
+                pigz)
                     printf " - Compressing CS local files -> bucket ...          "
                     if [ $cloud == "gcp" ]; then
                         if ! eval "tar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b $compressed_split_size --filter=\"gsutil cp - ${cs_prefix}_\\\$FILE 2>$logfile 1>&2\" - chunk 2>$logfile"; then
                             handle_early_exit_on_backup "[!] - Compression/Split/Upload Failed \n"
                         fi
-                        
+
                     elif [ $cloud == "aws" ]; then
                         if ! eval "tar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b $compressed_split_size --filter=\"aws s3 cp - ${cs_prefix}_\\\$FILE 2>$logfile 1>&2\" - chunk 2>$logfile"; then
                             handle_early_exit_on_backup "[!] - Compression/Split/Upload Failed \n"
@@ -1563,15 +1563,15 @@ run_backup()
                     printf " Done @ $cs_prefix\n"
                     ;;
                 *)  # unknown option
-                    handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                    handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
             esac
         fi
 
         # Create restore job file & update incremental log
-        if  $incremental ; then 
+        if  $incremental ; then
             now=$(date "+%m-%d-%Y +%H:%M:%S")
             increment_file="incremental_history.txt"
-            
+
             # download S3 file, append to it and reupload
             if [[ $(s3ls "$backup_bucket/$today/$increment_file")  ]]; then
                 s3cp $backup_bucket/$today/$increment_file $increment_file
@@ -1584,18 +1584,18 @@ run_backup()
         else
             # Create restore job file
             extra_flags=""
-            if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi; 
-            if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
-            if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
+            if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi;
+            if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi;
+            if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi;
             if [ -n "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
             echo "./$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
         fi
         final_message+=" @ $backup_bucket/$today"
-    
+
     fi
-    
+
     clear_read_lock
     end=$(date +%s)
     runtime=$((end-start))
@@ -1622,19 +1622,19 @@ load_default_restore_variables()
     scp=""
 
     # What storage topogoly was used by Columnstore in the backup - found in storagemanager.cnf
-    # Options: "LocalStorage" or "S3" 
+    # Options: "LocalStorage" or "S3"
     storage="LocalStorage"
 
     # Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)
     HA=false
 
     # When set to true skips the enforcement that new_bucket should be empty prior to starting a restore
-    continue=false 
+    continue=false
 
     # modes ['direct','indirect'] - direct backups run on the columnstore nodes themselves. indirect run on another machine that has read-only mounts associated with columnstore/mariadb
     mode="direct"
 
-    # Name of the Configuration file to load variables from 
+    # Name of the Configuration file to load variables from
     config_file=".cs-backup-config"
 
     # Only used if storage=S3
@@ -1816,7 +1816,7 @@ parse_restore_variables()
                 shift # past argument
                 ;;
             -nv-ssl| --no-verify-ssl)
-                no_verify_ssl=true 
+                no_verify_ssl=true
                 shift # past argument
                 ;;
             -h|--help|-help|help)
@@ -1849,11 +1849,11 @@ print_restore_help_text()
         -nv-ssl| --no-verify-ssl)       Skips verifying ssl certs, useful for onpremise s3 storage
         -s   | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
         -pm  | --nodeid                 Forces the handling of the restore as this node as opposed to whats detected on disk
-        -nb  | --new-bucket             Defines the new bucket to copy the s3 data to from the backup bucket. 
+        -nb  | --new-bucket             Defines the new bucket to copy the s3 data to from the backup bucket.
                                         Use -nb if the new restored cluster should use a different bucket than the backup bucket itself
-        -nr  | --new-region             Defines the region of the new bucket to copy the s3 data to from the backup bucket   
-        -nk  | --new-key                Defines the aws key to connect to the new_bucket  
-        -ns  | --new-secret             Defines the aws secret of the aws key to connect to the new_bucket  
+        -nr  | --new-region             Defines the region of the new bucket to copy the s3 data to from the backup bucket
+        -nk  | --new-key                Defines the aws key to connect to the new_bucket
+        -ns  | --new-secret             Defines the aws secret of the aws key to connect to the new_bucket
         -f   | --config-file            Path to backup configuration file to load variables from
         -cont| --continue               This acknowledges data in your --new_bucket is ok to delete when restoring S3
         -smdb| --skip-mariadb-backup    Skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore
@@ -1862,12 +1862,12 @@ print_restore_help_text()
         -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
-                                            HA S3           ( /var/lib/columnstore/storagemanager/ )  
+                                            HA S3           ( /var/lib/columnstore/storagemanager/ )
 
         Local Storage Examples:
             ./$0 restore -s LocalStorage -bl /tmp/backups/ -bd Local -l 12-29-2021
             ./$0 restore -s LocalStorage -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -l 12-29-2021
-        
+
         S3 Storage Examples:
             ./$0 restore -s S3 -bb s3://my-cs-backups  -l 12-29-2021
             ./$0 restore -s S3 -bb gs://on-premise-bucket -l 12-29-2021 -url http://127.0.0.1:8000
@@ -1887,7 +1887,7 @@ print_restore_variables()
         printf "%-${s1}s  %-${s2}s\n" "Configuration File:" "$config_file";
         source $config_file
     fi
-    if [ $mode == "indirect" ] || $skip_mdb || $skip_bucket_data; then 
+    if [ $mode == "indirect" ] || $skip_mdb || $skip_bucket_data; then
         echo "------------------------------------------------"
         echo "Skips: MariaDB($skip_mdb) Bucket($skip_bucket_data)";
     fi;
@@ -1895,10 +1895,10 @@ print_restore_variables()
     if [[ -n "$compress_format" ]]; then
         echo "Compression:        true"
         echo "Compression Format: $compress_format";
-    else 
+    else
         echo "Compression:        false"
     fi
-    if [ $storage == "LocalStorage" ]; then 
+    if [ $storage == "LocalStorage" ]; then
         echo "Backup Location:    $backup_location"
         echo "Backup Destination: $backup_destination"
         echo "Scp:                $scp"
@@ -1910,7 +1910,7 @@ print_restore_variables()
         echo "PM Number:          $pm_number"
 
     elif [ $storage == "S3" ]; then
-        echo "Backup Location:    $backup_location"  
+        echo "Backup Location:    $backup_location"
         echo "Storage:            $storage"
         echo "Load Date:          $load_date"
         echo "timestamp:          $(date +%m-%d-%Y-%H%M%S)"
@@ -1933,7 +1933,7 @@ print_restore_variables()
 validation_prechecks_for_restore() {
 
     echo "Prechecks ..."
-    if [ $storage != "LocalStorage" ] && [ $storage != "S3" ]; then handle_early_exit_on_restore "Invalid script variable storage: $storage\n"; fi   
+    if [ $storage != "LocalStorage" ] && [ $storage != "S3" ]; then handle_early_exit_on_restore "Invalid script variable storage: $storage\n"; fi
     if [ -z "$load_date" ]; then handle_early_exit_on_restore "\n[!!!] Required field --load: $load_date - is empty\n" ; fi
     if [ -z "$mode" ]; then handle_early_exit_on_restore "\n[!!!] Required field --mode: $mode - is empty\n" ; fi
     if [ "$mode" != "direct" ] && [ "$mode" != "indirect" ] ; then handle_early_exit_on_restore "\n[!!!] Invalid field --mode: $mode\n"; fi
@@ -1945,7 +1945,7 @@ validation_prechecks_for_restore() {
     if [ -n "$s3_url" ];  then add_s3_api_flags+=" --endpoint-url $s3_url"; fi
     if $no_verify_ssl; then add_s3_api_flags+=" --no-verify-ssl"; fi;
 
-    # If remote backup - Validate that scp works 
+    # If remote backup - Validate that scp works
     if [ $backup_destination == "Remote" ]; then
         if ssh $scp echo ok 2>&1 ;then
             printf 'SSH Works\n\n'
@@ -1955,17 +1955,17 @@ validation_prechecks_for_restore() {
     fi
 
     # Make sure the database is offline
-    if [ "$mode" == "direct" ]; then 
-        if [ -z $(pidof PrimProc) ]; then 
-            printf " - Columnstore Status ...               Offline\n"; 
-        else 
-            handle_early_exit_on_restore "\n[X] Columnstore is ONLINE - please turn off \n\n";  
+    if [ "$mode" == "direct" ]; then
+        if [ -z $(pidof PrimProc) ]; then
+            printf " - Columnstore Status ...               Offline\n";
+        else
+            handle_early_exit_on_restore "\n[X] Columnstore is ONLINE - please turn off \n\n";
         fi
-        
-        if [ -z $(pidof mariadbd) ]; then 
-            printf " - MariaDB Server Status ...            Offline\n"; 
-        else 
-            handle_early_exit_on_restore "\n[X] MariaDB is ONLINE - please turn off \n\n"; 
+
+        if [ -z $(pidof mariadbd) ]; then
+            printf " - MariaDB Server Status ...            Offline\n";
+        else
+            handle_early_exit_on_restore "\n[X] MariaDB is ONLINE - please turn off \n\n";
         fi
     fi
 
@@ -1973,7 +1973,7 @@ validation_prechecks_for_restore() {
     check_package_managers
     cmapi_installed_command=""
     case $package_manager in
-        yum ) 
+        yum )
             cmapi_installed_command="yum list installed MariaDB-columnstore-cmapi &> /dev/null;";
             ;;
         apt )
@@ -1985,33 +1985,33 @@ validation_prechecks_for_restore() {
     esac
 
     if eval $cmapi_installed_command ; then
-        if [ -z $(pidof /usr/share/columnstore/cmapi/python/bin/python3) ]; then 
-            printf " - Columnstore Management API Status .. Offline\n"; 
-        else 
-            handle_early_exit_on_restore "\n[X] Cmapi is ONLINE - please turn off \n\n"; 
+        if ! sudo mcs cmapi is-ready ; then
+            printf " - Columnstore Management API Status .. Offline\n";
+        else
+            handle_early_exit_on_restore "\n[X] Cmapi is ONLINE - please turn off \n\n";
         fi
     else
-        printf " - Columnstore Management API Status .. Not Installed - Skipping\n";  
+        printf " - Columnstore Management API Status .. Not Installed - Skipping\n";
     fi
 
     # Validate addtional relevant arguments per storage option
-    if [ $storage == "LocalStorage" ]; then 
-        
+    if [ $storage == "LocalStorage" ]; then
+
         if [ -z "$backup_location" ]; then handle_early_exit_on_restore "Invalid --backup_location: $backup_location - is empty";  fi
         if [ -z "$backup_destination" ]; then handle_early_exit_on_restore "Invalid --backup_destination: $backup_destination - is empty"; fi
         if [ $backup_destination == "Remote" ] && [ -d $backup_location$load_date ]; then echo "Switching to '-bd Local'"; backup_destination="Local"; fi
         if [ $backup_destination == "Local" ]; then
-            
+
             if [ ! -d $backup_location ]; then handle_early_exit_on_restore "Invalid directory --backup_location: $backup_location - doesnt exist"; fi
             if [ -z "$(ls -A "$backup_location")" ]; then echo "Invalid --backup_location: $backup_location - directory is empty."; fi;
             if [ ! -d $backup_location$load_date ]; then handle_early_exit_on_restore "Invalid directory --load: $backup_location$load_date - doesnt exist"; else printf " - Backup directory exists\n"; fi
         fi;
 
         local files=$(ls $backup_location$load_date)
-        if [[ -n "$compress_format" ]]; then   
+        if [[ -n "$compress_format" ]]; then
             case "$compress_format" in
-                pigz) 
-                    flag_cs_local=false 
+                pigz)
+                    flag_cs_local=false
                     flag_mysql=$skip_mdb
 
                     while read -r line; do
@@ -2032,17 +2032,17 @@ validation_prechecks_for_restore() {
                     fi
                 ;;
                 *)  # unknown option
-                    handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n" 
+                    handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n"
             esac
-        else 
-            
+        else
+
             flag_configs=false
             flag_data=false
             flag_mysql=$skip_mdb
             files=$(ls $backup_location$load_date )
             while read -r line; do
                 folder_name=$(echo "$line" | awk '{ print $NF }')
-           
+
                 case "$folder_name" in
                     *configs*) flag_configs=true ;;
                     *data*) flag_data=true ;;
@@ -2060,15 +2060,15 @@ validation_prechecks_for_restore() {
                 handle_early_exit_on_restore " Backup is missing subdirectories... \nls $backup_location$load_date\n"
             fi
         fi
-    
-    elif [ $storage == "S3" ]; then 
-        
+
+    elif [ $storage == "S3" ]; then
+
         # Check for concurrency settings - https://docs.aws.amazon.com/cli/latest/topic/s3-config.html
         if [ $cloud == "aws" ]; then cli_concurrency=$(sudo grep max_concurrent_requests ~/.aws/config 2>/dev/null ); if [ -z "$cli_concurrency" ]; then echo "[!!!] check: '~/.aws/config' - We recommend increasing s3 concurrency for better throughput to/from S3. This value should scale with avaialble CPU and networking capacity"; printf "example: aws configure set default.s3.max_concurrent_requests 200\n";  fi; fi;
 
         # Validate addtional relevant arguments
         if [ -z "$backup_bucket" ]; then handle_early_exit_on_restore "Invalid --backup_bucket: $backup_bucket - is empty";  fi
-        
+
         # Prepare commands for each cloud
         if [ $cloud == "gcp" ]; then
             check1="$gsutil ls $backup_bucket";
@@ -2076,7 +2076,7 @@ validation_prechecks_for_restore() {
             check3="$gsutil ls $new_bucket";
             check4="$gsutil ls $backup_bucket/$load_date";
             check5="$gsutil ls $backup_bucket/$load_date/";
-        else 
+        else
             check1="$awscli $add_s3_api_flags s3 ls $backup_bucket"
             check2="$awscli $add_s3_api_flags s3 ls | grep $new_bucket"
             check3="$awscli $add_s3_api_flags s3 ls $new_bucket"
@@ -2087,33 +2087,33 @@ validation_prechecks_for_restore() {
         # Check aws cli access to bucket
         if $check1 > /dev/null ; then
             echo -e " - Success listing backup bucket"
-        else 
+        else
             handle_early_exit_on_restore "[X] Failed to list bucket contents...\n$check1\n"
         fi
 
         # New bucket exists and empty check
-        if [ "$new_bucket" ] && [ $pm == "pm1" ]; then 
+        if [ "$new_bucket" ] && [ $pm == "pm1" ]; then
             # Removing as storage.buckets.get permission likely not needed
-            # new_bucket_exists=$($check2); if [ -z "$new_bucket_exists" ]; then handle_early_exit_on_restore "[!!!] Didnt find new bucket - Check:  $check2\n"; fi; echo "[+] New Bucket exists"; 
+            # new_bucket_exists=$($check2); if [ -z "$new_bucket_exists" ]; then handle_early_exit_on_restore "[!!!] Didnt find new bucket - Check:  $check2\n"; fi; echo "[+] New Bucket exists";
             # Throw warning if new bucket is NOT empty
-            if ! $continue; then nb_contents=$($check3 | wc -l); 
-                if [ $nb_contents -lt 1 ]; then 
-                    echo " - New Bucket is empty"; 
-                else 
-                    echo "[!!!] New bucket is NOT empty... $nb_contents files exist... exiting"; 
-                    echo "add "--continue" to skip this exit"; 
-                    echo -e "\nExample empty bucket command:\n     aws s3 rm $new_bucket --recursive\n     gsutil -m rm -r $new_bucket/* \n"; 
-                    handle_early_exit_on_restore "Please empty bucket or add --continue \n"; 
-                fi; 
-            else 
-                echo " - [!] Skipping empty new_bucket check"; 
-            fi; 
+            if ! $continue; then nb_contents=$($check3 | wc -l);
+                if [ $nb_contents -lt 1 ]; then
+                    echo " - New Bucket is empty";
+                else
+                    echo "[!!!] New bucket is NOT empty... $nb_contents files exist... exiting";
+                    echo "add "--continue" to skip this exit";
+                    echo -e "\nExample empty bucket command:\n     aws s3 rm $new_bucket --recursive\n     gsutil -m rm -r $new_bucket/* \n";
+                    handle_early_exit_on_restore "Please empty bucket or add --continue \n";
+                fi;
+            else
+                echo " - [!] Skipping empty new_bucket check";
+            fi;
         fi
 
         # Check if s3 bucket load date exists
         if $check4 > /dev/null ; then
             echo -e " - Backup directory exists"
-        else 
+        else
             handle_early_exit_on_restore "\n[X] Backup directory load date ($backup_bucket/$load_date) DOES NOT exist in S3 \nCheck - $check4 \n\n";
         fi
 
@@ -2122,8 +2122,8 @@ validation_prechecks_for_restore() {
             if [[ -n "$compress_format" ]]; then
                 # when compressed, storagemanager/configs wont exist but rather pigz_chunkXXX does. and mysql could be split up
                 case "$compress_format" in
-                    pigz) 
-                        flag_cs_local=false 
+                    pigz)
+                        flag_cs_local=false
                         flag_mysql=$skip_mdb
                         flag_columnstoreData=$skip_bucket_data
 
@@ -2147,7 +2147,7 @@ validation_prechecks_for_restore() {
                         fi
                     ;;
                     *)  # unknown option
-                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
                 esac
             else
                 flag_configs=false
@@ -2165,7 +2165,7 @@ validation_prechecks_for_restore() {
                         *configs*) flag_configs=true ;;
                         #*) echo "unknown: $folder_name" ;;
                     esac
-                done <<< "$folders" 
+                done <<< "$folders"
 
                 if $flag_storagemanager && $flag_mysql && $flag_columnstoreData && $flag_configs; then
                     echo " - Backup subdirectories exist"
@@ -2178,7 +2178,7 @@ validation_prechecks_for_restore() {
                     handle_early_exit_on_restore " Backup is missing subdirectories... \n$check5\n"
                 fi
             fi;
-        else 
+        else
              handle_early_exit_on_restore " Failed to list backup contents...\n$check5\n"
         fi;
     fi;
@@ -2186,10 +2186,10 @@ validation_prechecks_for_restore() {
     if $quiet; then xtra_cmd_args+="  2> /dev/null"; rsync_flags=" -a"; fi
 }
 
-# Restore Columnstore.xml by updating critical parameters 
+# Restore Columnstore.xml by updating critical parameters
 # Depends on $CS_CONFIGS_PATH/$col_xml_backup
 restore_columnstore_values() {
-    
+
     printf "\nRestore Columnstore.xml Values"
     if ! $quiet; then printf "\n"; else printf "...      "; fi;
     columnstore_config_pairs_to_transfer=(
@@ -2210,20 +2210,20 @@ restore_columnstore_values() {
     for pair in "${columnstore_config_pairs_to_transfer[@]}"; do
         level_one=$(echo "$pair" | cut -d ' ' -f 1)
         level_two=$(echo "$pair" | cut -d ' ' -f 2)
-        
+
         # Get the source value using mcsGetConfig -c
         source_value=$(mcsGetConfig -c "$CS_CONFIGS_PATH/$col_xml_backup" "$level_one" "$level_two")
-        
+
         if [ -n "$source_value" ]; then
             # Set the value in the active Columnstore.xml using mcsSetConfig
             if mcsSetConfig "$level_one" "$level_two" "$source_value"; then
                 # echo instead of printf to avoid escaping % from HashJoin TotalUmMemory
-                if ! $quiet; then echo " - Set $level_one $level_two $source_value"; fi; 
+                if ! $quiet; then echo " - Set $level_one $level_two $source_value"; fi;
             else
                 printf "\n[!] Failed to Set $level_one $level_two $source_value \n";
             fi
         else
-            if ! $quiet; then printf " - N/A: $level_one $level_two \n"; fi; 
+            if ! $quiet; then printf " - N/A: $level_one $level_two \n"; fi;
         fi
     done
     if $quiet; then printf " Done\n"; fi;
@@ -2232,11 +2232,11 @@ restore_columnstore_values() {
 run_restore()
 {
     # Branch logic based on topology
-    if [ $storage == "LocalStorage" ]; then 
+    if [ $storage == "LocalStorage" ]; then
 
         # Branch logic based on where the backup resides
         if [ $backup_destination == "Local" ]; then
-            
+
             # MariaDB Columnstore Restore
             printf "\nRestore MariaDB Columnstore LocalStorage\n"
 
@@ -2247,18 +2247,18 @@ run_restore()
                 i=1;
                 while [ $i -le $DBROOT_COUNT ]; do
                     if [[ $pm == "pm$i" || $HA == true ]]; then
-                        printf " - Deleting Columnstore Data$i ...      "; 
-                        rm -rf /var/lib/columnstore/data$i/*; 
-                        printf " Done \n"; 
+                        printf " - Deleting Columnstore Data$i ...      ";
+                        rm -rf /var/lib/columnstore/data$i/*;
+                        printf " Done \n";
                     fi
                     ((i++))
-                done    
+                done
 
                 tar_flags="xf"
                 if ! $quiet; then tar_flags+="v"; fi;
                 cs_prefix="$backup_location$load_date/$split_file_cs_prefix.$compress_format"
                 case $compress_format in
-                    pigz) 
+                    pigz)
                         printf " - Decompressing CS Files -> local ... "
                         cd /
                         if ! eval "pigz -dc -p $PARALLEL_THREADS $cs_prefix | tar $tar_flags - "; then
@@ -2267,16 +2267,16 @@ run_restore()
                         printf " Done \n"
                         ;;
                     *)  # unknown option
-                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
                 esac
 
                 # Set permissions after restoring files
                 i=1;
                 while [ $i -le $DBROOT_COUNT ]; do
                     if [[ $pm == "pm$i" || $HA == true ]]; then
-                        printf " - Chowning Columnstore Data$i ...      "; 
-                        chown $columnstore_user:$columnstore_user -R /var/lib/columnstore/data$i/; 
-                        printf " Done \n"; 
+                        printf " - Chowning Columnstore Data$i ...      ";
+                        chown $columnstore_user:$columnstore_user -R /var/lib/columnstore/data$i/;
+                        printf " Done \n";
                     fi
                     ((i++))
                 done
@@ -2288,25 +2288,25 @@ run_restore()
                 while [ $i -le $DBROOT_COUNT ]; do
                     if [[ $pm == "pm$i" || $HA == true ]]; then
                         printf " - Restoring Columnstore Data$i ...     ";
-                        rm -rf /var/lib/columnstore/data$i/*; 
+                        rm -rf /var/lib/columnstore/data$i/*;
                         rsync $rsync_flags $backup_location$load_date/data$i/ /var/lib/columnstore/data$i/;
-                        chown $columnstore_user:$columnstore_user -R /var/lib/columnstore/data$i/; 
-                        printf " Done Data$i \n"; 
+                        chown $columnstore_user:$columnstore_user -R /var/lib/columnstore/data$i/;
+                        printf " Done Data$i \n";
                     fi
                     ((i++))
-                done    
-                
-                # Put configs in place  
+                done
+
+                # Put configs in place
                 printf " - Columnstore Configs ...             "
                 rsync $rsync_flags $backup_location$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF
                 rsync $rsync_flags $backup_location$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup
                 rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/
-                if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then 
-                    rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ; 
+                if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then
+                    rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ;
                 fi;
-                printf " Done\n" 
+                printf " Done\n"
             fi
-        
+
         elif [ $backup_destination == "Remote" ]; then
             printf "[~] Copy MySQL Data..."
             tmp="localscpcopy-$load_date"
@@ -2318,36 +2318,36 @@ run_restore()
             # Loop through per dbroot
             printf "[~] Columnstore Data..."; i=1;
             while [ $i -le $DBROOT_COUNT ]; do
-                if [[ $pm == "pm$i" || $HA == true ]]; then 
-                    rm -rf /var/lib/columnstore/data$i/; 
-                    rsync -av $scp:$backup_location$load_date/data$i/ /var/lib/columnstore/data$i/ ; 
+                if [[ $pm == "pm$i" || $HA == true ]]; then
+                    rm -rf /var/lib/columnstore/data$i/;
+                    rsync -av $scp:$backup_location$load_date/data$i/ /var/lib/columnstore/data$i/ ;
                     chown $columnstore_user:$columnstore_user -R /var/lib/columnstore/data$i/;
                 fi
                 ((i++))
             done
-            printf "[+] Columnstore Data... Done\n" 
+            printf "[+] Columnstore Data... Done\n"
 
             # Put configs in place
             printf " - Columnstore Configs ...             "
             rsync $rsync_flags $backup_location$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF
-            rsync $rsync_flags $backup_location$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup  
-            rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/ 
-            if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then 
-                rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ; 
+            rsync $rsync_flags $backup_location$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup
+            rsync $rsync_flags $backup_location$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/
+            if [ -f "$backup_location$load_date/configs/cmapi_server.conf" ]; then
+                rsync $rsync_flags $backup_location$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup ;
             fi;
             printf " Done\n"
             load_date=$tmp
-        else 
+        else
             handle_early_exit_on_restore "Invalid Script Variable --backup_destination: $backup_destination"
         fi
 
-        # MariaDB Server Restore 
+        # MariaDB Server Restore
         printf "\nRestore MariaDB Server\n"
         if [[ -n "$compress_format" ]]; then
             # Handle compressed mariadb-backup restore
             mbd_prefix="$backup_location$load_date/$split_file_mdb_prefix.$compress_format"
             case $compress_format in
-                pigz) 
+                pigz)
                     printf " - Decompressing MariaDB Files -> $MARIADB_PATH ... "
                     rm -rf $MARIADB_PATH/*
                     cd /
@@ -2356,14 +2356,14 @@ run_restore()
                     fi;
                     printf " Done \n"
                     printf " - Running mariabackup --prepare ...   "
-                    if eval "mariabackup --prepare --target-dir=$MARIADB_PATH $xtra_cmd_args"; then 
-                        printf " Done\n"; 
-                    else 
-                        handle_early_exit_on_restore "Failed to --prepare\nmariabackup --prepare --target-dir=$MARIADB_PATH"; 
-                    fi; 
+                    if eval "mariabackup --prepare --target-dir=$MARIADB_PATH $xtra_cmd_args"; then
+                        printf " Done\n";
+                    else
+                        handle_early_exit_on_restore "Failed to --prepare\nmariabackup --prepare --target-dir=$MARIADB_PATH";
+                    fi;
                     ;;
                 *)  # unknown option
-                    handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n" 
+                    handle_early_exit_on_backup "\nUnknown compression flag: $compress_format\n"
             esac
         else
             eval "mariabackup --prepare --target-dir=$backup_location$load_date/mysql/ $xtra_cmd_args"
@@ -2380,18 +2380,18 @@ run_restore()
         printf "\nRestore MariaDB Columnstore S3\n"
 
         # Sync the columnstore data from the backup bucket to the new bucket
-        if ! $skip_bucket_data && [ "$new_bucket" ] && [ $pm == "pm1" ]; then 
+        if ! $skip_bucket_data && [ "$new_bucket" ] && [ $pm == "pm1" ]; then
             printf "[+] Starting Bucket Sync:\n - $backup_bucket/$load_date/columnstoreData to $new_bucket\n"
             s3sync $backup_bucket/$load_date/columnstoreData/ $new_bucket/ " - Done with S3 Bucket sync\n"
-        else 
+        else
             printf "[!] Skipping Columnstore Bucket\n"
         fi;
-    
+
         printf "[+] Starting Columnstore Configurations & Metadata: \n"
         if [[ -n "$compress_format" ]]; then
             cs_prefix="$backup_bucket/$load_date/$split_file_cs_prefix.$compress_format"
             case $compress_format in
-                pigz) 
+                pigz)
                     printf " - Decompressing CS Files bucket -> local ... "
                     if [ $cloud == "gcp" ]; then
                         # gsutil supports simple "cat prefix*" to standard out unlike awscli
@@ -2400,11 +2400,11 @@ run_restore()
                             handle_early_exit_on_restore "Failed to decompress and untar columnstore localfiles\ncommand:\n$gsutil cat $cs_prefix* | gzip -dc | tar xf - \n\n"
                         fi
                     elif [ $cloud == "aws" ]; then
-                        
+
                         # List all the pigz compressed chunks in the S3 prefix - should I clear prior local files?
                         chunk_list=$($awscli s3 ls "$cs_prefix" | awk '{print $NF}')
                         cd /
-                    
+
                         # Use process substitution to concatenate the compressed chunks and pipe to pigz and extract using tar
                         if ! eval "pigz -dc -p $PARALLEL_THREADS <(for chunk in \$chunk_list; do $awscli s3 cp \"$backup_bucket/$load_date/\$chunk\" - ; done) | tar xf - "; then
                             handle_early_exit_on_restore "Failed to decompress and untar columnstore localfiles\ncommand:\npigz -dc -p $PARALLEL_THREADS <(for chunk in \$chunk_list; do $awscli s3 cp \"$backup_bucket/$load_date/\$chunk\" - ; done) | tar xf - \n\n"
@@ -2413,21 +2413,21 @@ run_restore()
                     printf " Done \n"
                     ;;
                 *)  # unknown option
-                    handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                    handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
             esac
-         
+
         else
-            # Columnstore.xml and cmapi are renamed so that only specifc values are restored 
+            # Columnstore.xml and cmapi are renamed so that only specifc values are restored
             s3cp $backup_bucket/$load_date/configs/Columnstore.xml $CS_CONFIGS_PATH/$col_xml_backup
             s3cp $backup_bucket/$load_date/configs/cmapi_server.conf $CS_CONFIGS_PATH/$cmapi_backup
-            s3cp $backup_bucket/$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF 
+            s3cp $backup_bucket/$load_date/configs/storagemanager.cnf $STORAGEMANGER_CNF
             s3sync $backup_bucket/$load_date/storagemanager/cache/data$pm_number $cs_cache/data$pm_number/ " - Done cache/data$pm_number/\n"
             s3sync $backup_bucket/$load_date/storagemanager/metadata/data$pm_number $cs_metadata/data$pm_number/ " - Done metadata/data$pm_number/\n"
             if ! $skip_mdb; then s3sync $backup_bucket/$load_date/configs/mysql/$pm/ $MARIADB_SERVER_CONFIGS_PATH/ " - Done $MARIADB_SERVER_CONFIGS_PATH/\n"; fi
 
             if s3ls "$backup_bucket/$today/storagemanager/journal/data$ASSIGNED_DBROOT" > /dev/null 2>&1; then
                 s3sync $backup_bucket/$load_date/storagemanager/journal/data$pm_number $cs_journal/data$pm_number/ " - Done journal/data$pm_number/\n"
-            else 
+            else
                 echo " - Done journal/data$pm_number was empty"
             fi
         fi;
@@ -2436,44 +2436,44 @@ run_restore()
         printf "[+] Adjusting storagemanager.cnf ... \n"
         target_bucket=$backup_bucket
         target_prefix="prefix = $load_date\/columnstoreData\/"
-        if [ -n "$new_bucket" ]; then 
-            target_bucket=$new_bucket;  
-            target_prefix="# prefix \= cs\/";  
+        if [ -n "$new_bucket" ]; then
+            target_bucket=$new_bucket;
+            target_prefix="# prefix \= cs\/";
         fi
 
-        if [ -n "$new_region" ];  then 
+        if [ -n "$new_region" ];  then
             if [ $cloud == "gcp" ]; then endpoint="storage.googleapis.com"; else endpoint="s3.$new_region.amazonaws.com"; fi;
-            sed -i "s|^endpoint =.*|endpoint = ${endpoint}|g" $STORAGEMANGER_CNF; 
-            sed -i "s|^region =.*|region = ${new_region}|g" $STORAGEMANGER_CNF; 
+            sed -i "s|^endpoint =.*|endpoint = ${endpoint}|g" $STORAGEMANGER_CNF;
+            sed -i "s|^region =.*|region = ${new_region}|g" $STORAGEMANGER_CNF;
             echo " - Adjusted endpoint & region";
         fi
 
         # Removes prefix of the protocol and escapes / for sed
         target_bucket_name=$(echo "${target_bucket#$protocol://}" | sed "s/\//\\\\\//g")
-        if [ -n "$new_key" ];  then 
-            sed -i "s|aws_access_key_id =.*|aws_access_key_id = ${new_key}|g" $STORAGEMANGER_CNF; 
-            echo " - Adjusted aws_access_key_id";  
+        if [ -n "$new_key" ];  then
+            sed -i "s|aws_access_key_id =.*|aws_access_key_id = ${new_key}|g" $STORAGEMANGER_CNF;
+            echo " - Adjusted aws_access_key_id";
         fi
 
-        if [ -n "$new_secret" ];  then 
-            sed -i "s|aws_secret_access_key =.*|aws_secret_access_key = ${new_secret}|g" $STORAGEMANGER_CNF; 
-            echo " - Adjusted aws_secret_access_key"; 
+        if [ -n "$new_secret" ];  then
+            sed -i "s|aws_secret_access_key =.*|aws_secret_access_key = ${new_secret}|g" $STORAGEMANGER_CNF;
+            echo " - Adjusted aws_secret_access_key";
         fi
 
-        bucket=$( grep -m 1 "^bucket =" $STORAGEMANGER_CNF | sed "s/\//\\\\\//g"); 
+        bucket=$( grep -m 1 "^bucket =" $STORAGEMANGER_CNF | sed "s/\//\\\\\//g");
         sed -i "s/$bucket/bucket = $target_bucket_name/g" $STORAGEMANGER_CNF;
         echo " - Adjusted bucket";
-        
+
         prefix=$( grep -m 1 "^prefix =" $STORAGEMANGER_CNF | sed "s/\//\\\\\//g");
-        if [ ! -z "$prefix" ]; then 
-            sed -i "s/$prefix/$target_prefix/g" $STORAGEMANGER_CNF; 
-            echo " - Adjusted prefix"; 
+        if [ ! -z "$prefix" ]; then
+            sed -i "s/$prefix/$target_prefix/g" $STORAGEMANGER_CNF;
+            echo " - Adjusted prefix";
         fi;
 
         # Check permissions
         chown -R $columnstore_user:$columnstore_user /var/lib/columnstore/
         chown -R root:root $MARIADB_SERVER_CONFIGS_PATH/
-    
+
         # Confirm S3 connection works
         if [ $mode == "direct" ]; then echo "[+] Checking S3 Connection ..."; if testS3Connection $xtra_cmd_args; then echo " - S3 Connection passes" ; else handle_early_exit_on_restore "\n[X] S3 Connection issues - retest/configure\n"; fi; fi;
         printf "[+] MariaDB Columnstore Done\n\n"
@@ -2481,10 +2481,10 @@ run_restore()
         if ! $skip_mdb; then
             printf "Restore MariaDB Server\n"
             if [[ -n "$compress_format" ]]; then
-                # Handle compressed mariadb-backup restore 
+                # Handle compressed mariadb-backup restore
                 mbd_prefix="$backup_bucket/$load_date/$split_file_mdb_prefix.$compress_format"
                 case $compress_format in
-                    pigz) 
+                    pigz)
                         printf "[+] Decompressing mariadb-backup bucket -> local ... "
                         rm -rf $MARIADB_PATH/*
                         if [ $cloud == "gcp" ]; then
@@ -2495,7 +2495,7 @@ run_restore()
 
                             chunk_list=$($awscli s3 ls "$mbd_prefix" | awk '{print $NF}')
                             cd /
-                            
+
                             if ! eval "pigz -dc -p $PARALLEL_THREADS <(for chunk in \$chunk_list; do $awscli s3 cp "$backup_bucket/$load_date/\$chunk" -; done) |  mbstream -p $PARALLEL_THREADS -x -C $MARIADB_PATH"; then
                                 handle_early_exit_on_restore "Failed to decompress mariadb backup\ncommand:\npigz -dc -p $PARALLEL_THREADS <(for chunk in \$chunk_list; do $awscli s3 cp "$backup_bucket/$load_date/\$chunk" -; done) |  mbstream -p $PARALLEL_THREADS -x -C $MARIADB_PATH \n"
                             fi;
@@ -2505,29 +2505,29 @@ run_restore()
                         if eval "mariabackup --prepare --target-dir=$MARIADB_PATH $xtra_cmd_args"; then printf " Done\n"; else handle_early_exit_on_restore "Failed to --prepare\nmariabackup --prepare --target-dir=$MARIADB_PATH"; fi;
                         ;;
                     *)  # unknown option
-                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n" 
+                        handle_early_exit_on_backup "\nunknown compression flag: $compress_format\n"
                 esac
-                
+
             else
                 # Copy the MariaDB data, prepare and put in place
                 printf " - Copying down MariaDB data ...                     "
-                rm -rf $backup_location$load_date/mysql/   
+                rm -rf $backup_location$load_date/mysql/
                 mkdir -p $backup_location$load_date/mysql/
                 s3sync $backup_bucket/$load_date/mysql/ $backup_location$load_date/mysql " Done\n"
 
                 # Run prepare and copy back
                 printf " - Running mariabackup --prepare ...                 "
-                if eval "mariabackup --prepare --target-dir=$backup_location$load_date/mysql/ $xtra_cmd_args"; then 
-                    printf " Done\n"; 
-                else 
-                    echo "failed"; 
+                if eval "mariabackup --prepare --target-dir=$backup_location$load_date/mysql/ $xtra_cmd_args"; then
+                    printf " Done\n";
+                else
+                    echo "failed";
                 fi;
                 rm -rf /var/lib/mysql/* > /dev/null
                 printf " - Running mariabackup --copy-back ...               "
-                if eval "mariabackup --copy-back --target-dir=$backup_location$load_date/mysql/ $xtra_cmd_args"; then 
-                    printf " Done\n"; 
-                else 
-                    echo "failed"; 
+                if eval "mariabackup --copy-back --target-dir=$backup_location$load_date/mysql/ $xtra_cmd_args"; then
+                    printf " Done\n";
+                else
+                    echo "failed";
                 fi;
             fi;
 
@@ -2544,13 +2544,13 @@ run_restore()
     fi
 
     if [[ $pm == "pm1" ]]; then restore_columnstore_values; fi;
-    
+
     end=$(date +%s)
     runtime=$((end-start))
     printf "\n[+] Runtime: $runtime\n"
     printf "[+] $final_message\n\n"
-    if ! $quiet; then 
-        if [ $pm == "pm1" ]; then 
+    if ! $quiet; then
+        if [ $pm == "pm1" ]; then
             echo -e  " - Last you need to manually configure mariadb replication between nodes"
             echo -e  " - systemctl start mariadb "
             echo -e  " - systemctl start mariadb-columnstore-cmapi "
@@ -2574,9 +2574,9 @@ load_default_dbrm_variables() {
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
     mode="once"
     quiet=false
-    
+
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
-    if [ "$storage" == "S3" ]; then 
+    if [ "$storage" == "S3" ]; then
         dbrm_dir="/var/lib/columnstore/storagemanager"
     fi
 }
@@ -2589,7 +2589,7 @@ load_default_dbrm_restore_variables() {
     backup_folder_to_restore=""
 
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
-    if [ "$storage" == "S3" ]; then 
+    if [ "$storage" == "S3" ]; then
         dbrm_dir="/var/lib/columnstore/storagemanager"
     fi
 }
@@ -2598,8 +2598,8 @@ print_dbrm_backup_help_text() {
     echo "
     Columnstore DBRM Backup
 
-        -m   | --mode              'loop' or 'once' ; Determines if this script runs in a forever loop sleeping -i minutes or just once 
-        -i   | --interval          Number of minutes to sleep when --mode loop 
+        -m   | --mode              'loop' or 'once' ; Determines if this script runs in a forever loop sleeping -i minutes or just once
+        -i   | --interval          Number of minutes to sleep when --mode loop
         -r   | --retention-days    Number of days of dbrm backups to retain - script will delete based on last update file time
         -p   | --path              path of where to save the dbrm backups on disk
         -nb  | --name-backup       custom name to prefex dbrm backups with
@@ -2609,7 +2609,7 @@ print_dbrm_backup_help_text() {
         Examples:
             ./$0 dbrm_backup --mode loop --interval 90 --retention-days 7 --path /mnt/dbrm_backups
             ./$0 dbrm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
-            
+
         Cron Example:
         */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
     ";
@@ -2623,10 +2623,10 @@ print_dbrm_restore_help_text() {
         -d   | --directory         date or directory chose to restore from
         -ns  | --no-start          do not attempt columnstore startup post dbrm_restore
 
-        Default: ./$0 dbrm_restore --path /tmp/dbrm_backups 
+        Default: ./$0 dbrm_restore --path /tmp/dbrm_backups
 
         Examples:
-            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842    
+            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842
             ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
     ";
 }
@@ -2759,9 +2759,9 @@ validation_prechecks_for_dbrm_backup() {
     confirm_numerical_or_decimal_else_fail "$retention_days" "Retention"
 
     # Check backup location exists
-    if [ ! -d $backup_location ]; then 
+    if [ ! -d $backup_location ]; then
         echo "[+] Created: $backup_location"
-        mkdir "$backup_location"; 
+        mkdir "$backup_location";
     fi;
 
     # Confirm bucket connection
@@ -2774,30 +2774,30 @@ validation_prechecks_for_dbrm_backup() {
 }
 
 validation_prechecks_for_dbrm_restore() {
-    
+
     printf "Prechecks\n"
     echo "--------------------------------------------------------------------------"
     # Confirm storage not empty
     if [ -z "$storage" ]; then printf "[!] Empty storage: \ncheck: grep -m 1 \"^service = \" \$STORAGEMANGER_CNF | awk '{print \$3}' \n\n"; fi;
 
     # Check backup directory exists
-    if [ ! -d $backup_location ]; then 
+    if [ ! -d $backup_location ]; then
         printf "[!] \$backup_location: Path of backups does Not exist\n"
         printf "Path: $backup_location\n\n"
         exit 2;
     fi
 
-    # Check specific backup exists 
+    # Check specific backup exists
     backup_folder_to_restore_dbrms=$backup_folder_to_restore
     if [ $storage == "S3" ]; then
         backup_folder_to_restore_dbrms="${backup_folder_to_restore}/dbrms"
     fi
 
-    if [ ! -d "${backup_location}/${backup_folder_to_restore_dbrms}" ]; then 
+    if [ ! -d "${backup_location}/${backup_folder_to_restore_dbrms}" ]; then
         printf "[!] \$backup_folder_to_restore: Path of backup to restore does Not exist\n"
         printf "Path: ${backup_location}/${backup_folder_to_restore_dbrms}\n\n"
         exit 2;
-    else   
+    else
         echo " - Backup directory exists"
         if [ "$(ls -A ${backup_location}/${backup_folder_to_restore_dbrms})" ]; then
 
@@ -2816,7 +2816,7 @@ validation_prechecks_for_dbrm_restore() {
                 "oidbitmap"
                 "SMTxnID"
             )
-            
+
             # Check if all expected files exist
             for file in "${expected_files[@]}"; do
                 if [ ! -f "${backup_location}/${backup_folder_to_restore_dbrms}/${file}" ]; then
@@ -2842,19 +2842,21 @@ validation_prechecks_for_dbrm_restore() {
         else
             printf "\n[!] Failed testS3Connection\n\n"
             exit 1;
+        else
+            echo " - S3 Connection works"
         fi
     fi;
 
     # Download cs_package_manager.sh if not exists
     if [ ! -f "cs_package_manager.sh" ]; then
         wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/extra/cs_package_manager.sh; chmod +x cs_package_manager.sh;
-    fi; 
-    if source cs_package_manager.sh source ;then 
+    fi;
+    if source cs_package_manager.sh source ;then
         echo " - Sourced cs_package_manager.sh"
     else
         printf "\n[!!] Failed to source cs_package_manager.sh\n\n"
         exit 1;
-        
+
     fi
 
     # Confirm the function exists and the source of cs_package_manager.sh worked
@@ -2874,12 +2876,12 @@ process_dbrm_backup() {
     parse_dbrms_variables "$@";
 
     if ! $quiet ; then
-        printf "\n[+] Inputs\n"; 
-        printf "    CS Storage: $storage\n"; 
-        printf "    Source:     $dbrm_dir\n"; 
-        printf "    Backups:    $backup_location\n"; 
-        if [ "$mode" == "loop" ]; then 
-            printf "    Interval:   $backup_interval_minutes minutes\n"; 
+        printf "\n[+] Inputs\n";
+        printf "    CS Storage: $storage\n";
+        printf "    Source:     $dbrm_dir\n";
+        printf "    Backups:    $backup_location\n";
+        if [ "$mode" == "loop" ]; then
+            printf "    Interval:   $backup_interval_minutes minutes\n";
         fi;
         printf "    Retention:  $retention_days day(s)\n"
         printf "    Mode:       $mode\n\n"
@@ -2893,11 +2895,11 @@ process_dbrm_backup() {
         timestamp=$(date +%Y%m%d_%H%M%S)
         backup_folder="$backup_location/${backup_base_name}_${timestamp}"
         mkdir -p "$backup_folder"
-        
+
         # Copy files to the backup directory
         cp -arp "$dbrm_dir"/* "$backup_folder"
 
-        if [ "$storage" == "S3" ]; then 
+        if [ "$storage" == "S3" ]; then
             # smcat em files to disk
             mkdir $backup_folder/dbrms/
             smls /data1/systemFiles/dbrm 2>/dev/null > $backup_folder/dbrms/dbrms.txt
@@ -2916,7 +2918,7 @@ process_dbrm_backup() {
             smcat /data1/systemFiles/dbrm/SMTxnID 2>/dev/null > $backup_folder/dbrms/SMTxnID
             smcat /data1/systemFiles/dbrm/tablelocks 2>/dev/null > $backup_folder/dbrms/tablelocks
         fi
-        
+
         # Clean up old backups
         # example: find /tmp/dbrmBackups/ -maxdepth 1 -type d -name "dbrm_backup_*" -mtime +1 -exec rm -r {} \;
         find "$backup_location" -maxdepth 1 -type d -name "${backup_base_name}_*" -mtime +$retention_days -exec rm -r {} \;
@@ -2961,7 +2963,7 @@ confirm_cmapi_online_and_configured() {
         if [ "$(ps -p 1 -o comm=)" = "systemd" ]; then
             if systemctl start mariadb-columnstore-cmapi; then
                 cmapi_check_ready
-            else 
+            else
                 echo "[!!] Failed to start CMAPI"
                 exit 1;
             fi
@@ -2969,7 +2971,7 @@ confirm_cmapi_online_and_configured() {
             printf "systemd is not running - cant start cmapi\n\n"
             exit 1;
         fi
-    else 
+    else
 
         # Check if the JSON string is in the expected format
         if ! echo "$cmapi_current_status" | jq -e '.started | type == "boolean"' >/dev/null; then
@@ -3002,7 +3004,7 @@ is_cmapi_installed() {
 
     cmapi_installed_command=""
     case $package_manager in
-        yum ) 
+        yum )
             cmapi_installed_command="yum list installed MariaDB-columnstore-cmapi &> /dev/null;";
             ;;
         apt )
@@ -3029,7 +3031,7 @@ start_mariadb_cmapi_columnstore() {
     else
         echo "[!!] Failed to start mariadb"
         exit 1;
-       
+
     fi
 
     if is_cmapi_installed ; then
@@ -3037,7 +3039,7 @@ start_mariadb_cmapi_columnstore() {
         if confirm_cmapi_online_and_configured ; then
             printf "Done\n"
         fi
-    fi 
+    fi
 
     printf " - Starting columnstore ... "
     if start_cs_cmapi_via_curl 1> /dev/null; then
@@ -3049,14 +3051,14 @@ start_mariadb_cmapi_columnstore() {
 
 shutdown_columnstore_mariadb_cmapi() {
 
-    init_cs_down 
-    wait_cs_down 0 
+    init_cs_down
+    wait_cs_down 0
 
     printf " - Stopping MariaDB Server ... "
     if ! systemctl stop mariadb; then
         echo "[!!] Failed to stop mariadb"
         exit 1;
-    else 
+    else
         printf "Done\n"
     fi
 
@@ -3065,7 +3067,7 @@ shutdown_columnstore_mariadb_cmapi() {
         if ! systemctl stop mariadb-columnstore-cmapi; then
             echo "[!!] Failed to stop CMAPI"
             exit 1;
-        else 
+        else
             printf "Done\n"
         fi
     fi
@@ -3096,7 +3098,7 @@ get_latest_em_from_directory() {
         if [ ! -f $latest_em_file ]; then
             echo "S3 List Option: Failed to find $latest_em_file"
             exit;
-        fi        
+        fi
     else
         subdir_dbrms="$1"
         latest_em_file=$(find "${subdir_dbrms}" -maxdepth 1 -type f -name "BRM_saves*_em" -exec ls -lat {} + | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1)
@@ -3130,20 +3132,20 @@ list_restore_options_from_backups() {
     printf "\nExample: \n"
     printf " --directory dbrm_backup_20240103_183536 \n\n"
     printf "Define which backup to restore via flag --directory \n"
-    echo "Rerun:    $0 $@ --directory xxxxxxx" 
+    echo "Rerun:    $0 $@ --directory xxxxxxx"
     echo ""
     exit 1;
 }
 
 process_dbrm_restore() {
-    
+
     load_default_dbrm_restore_variables
     parse_dbrm_restore_variables "$@"
 
     # print current job variables
     printf "\nDBRM Restore Variables\n"
     echo "--------------------------------------------------------------------------"
-    printf "CS Storage:           $storage \n" 
+    printf "CS Storage:           $storage \n"
     printf "Backups Directory:    $backup_location \n"
     printf "Backup to Restore:    $backup_folder_to_restore \n"
     echo ""
@@ -3154,7 +3156,7 @@ process_dbrm_restore() {
         printf "ls -la $backup_location\n\n"
         exit 1;
     fi
-    
+
     # Check if backup directory is empty
     if [ -z "$(find "$backup_location" -mindepth 1)" ]; then
         printf "[!!] Backups Directory is empty --path $backup_location \n"
@@ -3162,16 +3164,16 @@ process_dbrm_restore() {
         exit 1
     fi
 
-    # Display restore options 
-    if [ -z "$backup_folder_to_restore" ]; then 
+    # Display restore options
+    if [ -z "$backup_folder_to_restore" ]; then
         list_restore_options_from_backups "$@"
     fi;
-    
+
     validation_prechecks_for_dbrm_restore
     shutdown_columnstore_mariadb_cmapi
 
     # Take an automated backup
-    if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then 
+    if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then
         echo "[!!] Failed to take a DBRM backup before restoring"
         echo "exiting ..."
         exit 1;
@@ -3179,7 +3181,7 @@ process_dbrm_restore() {
 
     # Detect newest date _em from the set, if smaller than the current one throw a warning
     get_latest_em_from_directory "${backup_location}/${backup_folder_to_restore}"
-    if [ ! -f $em_file_full_path ]; then 
+    if [ ! -f $em_file_full_path ]; then
         echo "[!] Failed to parse _em file: $em_file_full_path doesnt exist"
         exit 1;
     fi;
@@ -3193,7 +3195,7 @@ process_dbrm_restore() {
     fi
 
     # split logic between S3 & LocalStorage
-    if [ $storage == "S3" ]; then 
+    if [ $storage == "S3" ]; then
         process_s3_dbrm_restore
     else
         process_localstorage_dbrm_restore
@@ -3208,12 +3210,12 @@ smput_or_error() {
         printf "[!] Failed to smput: $1\n"
     else
         printf "."
-    fi  
+    fi
 }
 
 process_s3_dbrm_restore() {
-    
-    # Depends on 
+
+    # Depends on
     # em_file - most recent EM
     # em_file_full_path - full path to most recent EM
     # em_file_name - Just the file name of the EM
@@ -3224,10 +3226,10 @@ process_s3_dbrm_restore() {
     if ! command -v smls  > /dev/null; then
         printf "[!] smls not installed ... Exiting\n\n"
         exit 1
-    else 
+    else
         current_status=$(smls /data1/systemFiles/dbrm/ 2>/dev/null);
         if [ $? -ne 0 ]; then
-            printf "\n[!] Failed to get smls status\n\n" 
+            printf "\n[!] Failed to get smls status\n\n"
             exit 1
         fi
         echo "$current_status" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current|oidbitmap"
@@ -3267,7 +3269,7 @@ process_s3_dbrm_restore() {
         printf "[!] Failed to smput: BRM_saves_current\n"
     else
         printf "."
-    fi 
+    fi
 
     em_files=(
         "BRM_saves_journal"
@@ -3293,7 +3295,7 @@ process_s3_dbrm_restore() {
         printf "Done\n"
     fi
     printf " - clearShm ... "
-    clearShm 
+    clearShm
     printf "Done\n"
     sleep 2
 
@@ -3311,7 +3313,7 @@ process_s3_dbrm_restore() {
     echo "--------------------------------------------------------------------------"
     current_status=$(smls /data1/systemFiles/dbrm/ 2>/dev/null);
     if [ $? -ne 0 ]; then
-        printf "\n[!] Failed to get smls status\n\n" 
+        printf "\n[!] Failed to get smls status\n\n"
         exit 1
     fi
     echo "$current_status" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current|oidbitmap"
@@ -3338,7 +3340,7 @@ process_s3_dbrm_restore() {
 
 process_localstorage_dbrm_restore() {
 
-    # Depends on 
+    # Depends on
     # em_file - most recent EM
     # em_file_full_path - full path to most recent EM
     # em_file_name - Just the file name of the EM
@@ -3350,9 +3352,9 @@ process_localstorage_dbrm_restore() {
     printf " - Clearing active DBRMs ... "
     if rm -rf $dbrm_dir ; then
         printf "Done\n"
-    else 
+    else
         echo "Failed to delete files in $dbrm_dir "
-        exit 1; 
+        exit 1;
     fi
 
     printf "\nRestoring DBRMs\n"
@@ -3360,7 +3362,7 @@ process_localstorage_dbrm_restore() {
     printf " - Desired EM: $em_file_full_path\n"
     printf " - Copying DBRMs: \"${backup_location}/${backup_folder_to_restore_dbrms}\" -> \"$dbrm_dir\" \n"
     cp -arp "${backup_location}/${backup_folder_to_restore_dbrms}" $dbrm_dir
-    
+
 
     if [ "$prefix" != "BRM_saves" ]; then
         printf " - Restoring Prefix: $prefix \n"
@@ -3376,7 +3378,7 @@ process_localstorage_dbrm_restore() {
     sleep 2
 
     manually_run_loadbrm_and_savebrm
-    
+
     printf "\nAfter DBRM Restore\n"
     echo "--------------------------------------------------------------------------"
     ls -la "${dbrm_dir}" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current"
@@ -3415,13 +3417,13 @@ manually_run_loadbrm_and_savebrm() {
         exit 1;
     else
         printf "Done\n"
-    fi;    
+    fi;
 
     printf " - Confirming extent map readable... "
     if ! editem -i >/dev/null ; then
         echo "[!!] Failed to run editem -i (read the EM)"
         exit 1;
-    else 
+    else
         printf "Done\n"
     fi;
 
@@ -3438,8 +3440,8 @@ manually_run_loadbrm_and_savebrm() {
     else
         printf "Done\n"
     fi
-    
-    if [ $storage == "S3" ]; then 
+
+    if [ $storage == "S3" ]; then
         printf " - Stopping mcs-storagemanager ... "
         if ! systemctl stop mcs-storagemanager ; then
             echo "[!!] Failed to stop mcs-storagemanager "
@@ -3450,7 +3452,7 @@ manually_run_loadbrm_and_savebrm() {
     fi;
 
     printf " - clearShm... "
-    clearShm 
+    clearShm
     printf "Done\n"
     sleep 2
 
@@ -3458,7 +3460,7 @@ manually_run_loadbrm_and_savebrm() {
 
 
 process_backup()
-{   
+{
     load_default_backup_variables;
     parse_backup_variables "$@";
     print_backup_variables;
@@ -3480,23 +3482,23 @@ process_restore()
 }
 
 case "$action" in
-    'help' | '--help' | '-help' | '-h') 	
+    'help' | '--help' | '-help' | '-h')
         print_action_help_text
         ;;
-    'backup') 
+    'backup')
         process_backup "$@";
         ;;
-    'dbrm_backup') 	
+    'dbrm_backup')
         process_dbrm_backup "$@";
         ;;
-    'dbrm_restore') 	
+    'dbrm_restore')
         process_dbrm_restore "$@";
         ;;
-    'restore') 	
+    'restore')
         process_restore "$@";
         ;;
-    *) 
-        printf "\nunknown action: $action\n" 
+    *)
+        printf "\nunknown action: $action\n"
         print_action_help_text
         ;;
 esac
