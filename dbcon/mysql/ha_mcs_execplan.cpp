@@ -4388,6 +4388,13 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       ct.colWidth = 8;
       fc->resultType(ct);
     }
+    if (funcName == "last_day")
+    {
+        CalpontSystemCatalog::ColType ct;
+        ct.colDataType = CalpontSystemCatalog::DATE;
+        ct.colWidth = 4;
+        fc->resultType(ct);
+    }
 
 #if 0
 
