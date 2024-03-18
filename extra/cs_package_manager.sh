@@ -956,7 +956,6 @@ do_install() {
 prompt_user_for_os() {
 
     # Prompt the user to select an operating system
-    # TODO: populate minior versions from an option list from the downloads site
     echo "Please select an operating system to search for:"
     os_options=("centos" "rhel" "rocky" "ubuntu" "debian")
     select opt in "${os_options[@]}"; do
@@ -1042,7 +1041,6 @@ do_check() {
 
             url_base="https://dlm.mariadb.com"
             url_page="/browse/$enterprise_token/mariadb_enterprise_server/"
-            # aaaa
             ignore="/login"
             at_least_one=false
             curl -s "$url_base$url_page" > $dbm_tmp_file
