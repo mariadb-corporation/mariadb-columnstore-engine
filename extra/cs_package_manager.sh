@@ -30,19 +30,20 @@ Example Check:
 
 wait_cs_down() {
     retries=$1;
+    max_number_of_retries=20
 
-    if [ $retries -gt 6 ]; then
+    if [ $retries -gt $max_number_of_retries ]; then
         printf "\n[!!!] Columnstore is still online ... exiting \n\n"
         exit 2;
     fi;
 
     # if columnstore still online stop
     if [ -z $(pidof PrimProc) ]; then 
-        printf "[+] Confirmation: columnstore OFFLINE \n";
+        # printf " - Confirmation: columnstore OFFLINE \n";
         mcs_offine=true
         return 1; 
     else 
-        printf "\n[+] Columnstore is ONLINE - waiting 5s to retry, attempt: $retries...\n"; 
+        printf "\n[!] Columnstore is ONLINE - waiting 5s to retry, attempt: $retries...\n"; 
         sleep 5
         ((retries++))
         wait_cs_down $retries
@@ -88,13 +89,14 @@ init_cs_down() {
                 fi
 
                 # Stop columnstore
-                printf "\n[+] Stopping columnstore ... \n";
+                printf " - Stopping Columnstore Engine... ";
                 if command -v mcs &> /dev/null; then
                     if ! mcs_output=$(mcs cluster stop); then
                         echo "[!] Failed stopping via mcs ... trying cmapi curl"
                         stop_cs_cmapi_via_curl
                     fi
-                    echo $mcs_output;
+                    printf "Done - $(date)\n" 
+
                     # Handle Errors with exit 0 code
                     if [ ! -z "$(echo $mcs_output | grep "Internal Server Error")" ];then
                         stop_cs_via_systemctl_override
@@ -253,7 +255,41 @@ check_package_managers() {
     fi;
 }
 
+check_mac_dependancies() {
+    
+    if ! which ggrep >/dev/null 2>&1; then
+        echo "Attempting Auto install of ggrep"
+
+        if ! which brew >/dev/null 2>&1; then
+            echo "Attempting Auto install of brew" 
+            bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        brew install grep
+    fi
+
+    if ! which ggrep >/dev/null 2>&1; then
+        echo "Failed to install ggrep"
+        echo "which ggrep"
+        echo ""
+        exit 1;
+    fi
+
+}
+
 check_operating_system() {
+
+    if [[ -e "/System/Library/CoreServices/SystemVersion.plist" ]]; then
+        echo "Running on macOS"
+        check_mac_dependancies
+
+        # on action=check - these values are used as triggers to prompt the user to select what OS/version they want to check against
+        distro_info="mac"
+        distro="mac"
+        version_id_exact=$(grep -A1 ProductVersion "/System/Library/CoreServices/SystemVersion.plist" | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+        version_id=$( echo "$version_id_exact" | awk -F. '{print $1}')
+        distro_short="${distro_info:0:3}${version_id}"
+        return
+    fi;
 
     distro_info=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
     version_id_exact=$( grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
@@ -654,7 +690,7 @@ add_node_cmapi_via_curl() {
     --header 'Content-Type:application/json' \
     --header "x-api-key:$api_key" \
     --data "{\"timeout\": 120, \"node\": \"$node_ip\"}"; then
-        printf "\n[+] Success adding $node_ip\n"
+        printf "\n - Success adding $node_ip\n"
     else
         echo "Failed adding node"
         exit 1;
@@ -664,9 +700,9 @@ add_node_cmapi_via_curl() {
 
 start_cs_via_systemctl() {
     if systemctl start mariadb-columnstore ; then
-        echo "[+] Started Columnstore"
+        echo " - Started Columnstore"
     else
-        echo "[!!] Failed to start columnstore"
+        echo "[!!] Failed to start columnstore via systemctl"
         exit 1;
     fi;
 }
@@ -679,9 +715,9 @@ start_cs_cmapi_via_curl() {
     --header 'Content-Type:application/json' \
     --header "x-api-key:$api_key" \
     --data '{"timeout":20}'; then
-        echo "[+] Started Columnstore"
+        echo " - Started Columnstore"
     else 
-        echo " - [!] Failed to start columnstore"
+        echo " - [!] Failed to start columnstore via cmapi curl"
         echo " - Trying via systemctl ..."
         start_cs_via_systemctl
     fi;
@@ -701,7 +737,7 @@ stop_cs_via_systemctl_override() {
 
 stop_cs_via_systemctl() {
     if systemctl stop mariadb-columnstore ; then
-        echo "[+] Stopped Columnstore via systemctl"
+        echo " - Stopped Columnstore via systemctl"
     else
         echo "[!!] Failed to stop columnstore"
         exit 1;
@@ -716,7 +752,7 @@ stop_cs_cmapi_via_curl() {
     --header 'Content-Type:application/json' \
     --header "x-api-key:$api_key" \
     --data '{"timeout":20}'; then
-        echo "[+] Stopped Columnstore via curl"
+        echo " - Stopped Columnstore via curl"
     else 
         echo " - [!] Failed to stop columnstore via cmapi"
         echo " - Trying via systemctl ..."
@@ -732,21 +768,21 @@ add_primary_node_cmapi() {
     if ! command -v mcs &> /dev/null ; then
         echo "mcs - binary could not be found"
         add_node_cmapi_via_curl $primary_ip
-        echo "[+] Starting Columnstore ..."
+        echo " - Starting Columnstore Engine..."
         start_cs_cmapi_via_curl
         
     else 
         if [ "$(mcs cluster status | jq -r '.num_nodes')" == "0" ]; then
 
-            printf "\n[+] Adding primary node ...\n"
+            printf "\n - Adding primary node ...\n"
             if timeout 30s mcs cluster node add --node $primary_ip; then 
-                echo "[+] Success adding $primary_ip"
+                echo " - Success adding $primary_ip"
             else 
                 echo "[!] Failed ... trying cmapi curl"
                 add_node_cmapi_via_curl $primary_ip
             fi;
         fi;
-        echo "[+] Starting Columnstore ..."
+        echo " - Starting Columnstore Engine ..."
         mcs cluster start
     fi
 }
@@ -917,13 +953,81 @@ do_install() {
     printf "\nDone\n\n"
 }
 
+prompt_user_for_os() {
+
+    # Prompt the user to select an operating system
+    # TODO: populate minior versions from an option list from the downloads site
+    echo "Please select an operating system to search for:"
+    os_options=("centos" "rhel" "rocky" "ubuntu" "debian")
+    select opt in "${os_options[@]}"; do
+        case $opt in
+            "centos" |  "rhel" | "rocky" )
+                distro_info=$opt
+                echo "What major version of $distro_info:"
+                short_options=("7" "8" "9")
+                select short in "${short_options[@]}"; do
+                         case $short in
+                            "7" | "8" | "9")
+                                version_id=$short
+                                distro_short="${distro_info:0:3}${version_id}"
+                                break
+                                ;;
+                
+                            *) 
+                                echo "Invalid option, please try again."
+                                ;;
+                        esac
+                done
+                break
+                ;;
+            "ubuntu")
+                distro_info=$opt
+                echo "What major version of $distro_info:"
+                short_options=("20.04" "22.04" "23.04" "23.10")
+                select short in "${short_options[@]}"; do
+                         case $short in
+                            "20.04" | "22.04" | "23.04" | "23.10")
+                                version_id=${short//./}
+                                #version_id=$short
+                                distro_short="${distro_info:0:3}${version_id}"
+                                break
+                                ;;
+                
+                            *) 
+                                echo "Invalid option, please try again."
+                                ;;
+                        esac
+                done
+                break
+                ;;
+
+            *) 
+                echo "Invalid option, please try again."
+                ;;
+        esac
+    done
+
+    echo "Distro: $distro_info"
+    echo "Version: $version_id"
+    
+}
+
+
+
 do_check() {
     
     check_operating_system
     check_cpu_architecture   
-    
+
     repo=$2
     dbm_tmp_file="mdb-tmp.html"
+    grep=$(which grep)
+    if [ $distro_info == "mac" ]; then 
+        grep=$(which ggrep)
+
+        prompt_user_for_os
+    fi
+
     echo "Repository: $repo"
     case $repo in
         enterprise )
@@ -938,6 +1042,7 @@ do_check() {
 
             url_base="https://dlm.mariadb.com"
             url_page="/browse/$enterprise_token/mariadb_enterprise_server/"
+            # aaaa
             ignore="/login"
             at_least_one=false
             curl -s "$url_base$url_page" > $dbm_tmp_file
@@ -951,14 +1056,14 @@ do_check() {
                 printf "See: https://customers.mariadb.com/downloads/token/ \n\n"
                 exit 1
             fi
-
-            major_version_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
+       
+            major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
             #echo $major_version_links
             for major_link in ${major_version_links[@]}
             do
                 #echo "Major: $major_link"
                 curl -s "$url_base$major_link" > $dbm_tmp_file
-                minor_version_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
+                minor_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
                 for minor_link in ${minor_version_links[@]}
                 do
                     if [ "$minor_link" != "$url_page" ]; then
@@ -967,7 +1072,7 @@ do_check() {
                         centos | rhel | rocky )
                             path="rpm/rhel/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
-                            package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
+                            package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
                             if [ ! -z "$package_links" ]; then
                                 #echo "----------"
                                 #echo "$package_links"
@@ -988,14 +1093,14 @@ do_check() {
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
 
                             # unqiue - this link/path can change
-                            mariadb_version_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep -v $ignore | grep -v cmapi | grep ^mariadb )
+                            mariadb_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep -v $ignore | grep -v cmapi | grep ^mariadb )
                             #echo "$url_base$minor_link$path"
                             for mariadb_link in ${mariadb_version_links[@]}
                             do
                                 #echo $mariadb_link
                                 path="deb/pool/main/m/$mariadb_link"
                                 curl -s "$url_base$minor_link$path" > $dbm_tmp_file
-                                package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore_" | grep -v debug | grep $distro_short | tail -1 )
+                                package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore_" | grep -v debug | grep $distro_short | tail -1 )
                                 if [ ! -z "$package_links" ]; then
                                     # echo "$package_links"
                                     # echo "----------"
@@ -1029,13 +1134,13 @@ do_check() {
             ignore="/login"
             at_least_one=false
             curl -s "$url_base$url_page" > $dbm_tmp_file
-            major_version_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
+            major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
 
             for major_link in ${major_version_links[@]}
             do
                 #echo "Major: $major_link"
                 curl -s "$url_base$major_link" > $dbm_tmp_file
-                minor_version_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
+                minor_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
                 for minor_link in ${minor_version_links[@]}
                 do
                     if [ "$minor_link" != "$url_page" ]; then
@@ -1044,7 +1149,7 @@ do_check() {
                         centos | rhel | rocky )
                             path="yum/centos/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
-                            package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
+                            package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
                             if [ ! -z "$package_links" ]; then
                                 # echo "$package_links"
                                 # echo "----------"
@@ -1060,7 +1165,7 @@ do_check() {
                         ubuntu | debian )
                             path="repo/$distro_info/pool/main/m/mariadb/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
-                            package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore_" | grep -v debug | grep $distro_short | tail -1 )
+                            package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore_" | grep -v debug | grep $distro_short | tail -1 )
                             if [ ! -z "$package_links" ]; then
                                 # echo "$package_links"
                                 # echo "----------"
@@ -1068,7 +1173,7 @@ do_check() {
                                 mariadb_version="${package_links#*mariadb-}"
                                 columnstore_version="${mariadb_version#*columnstore-engine-}"
                                 mariadb_version="$( echo $mariadb_version | awk -F/ '{print $1}' )"
-                                columnstore_version="$( echo $columnstore_version | awk -F"columnstore_" '{print $2}' | awk -F"-" '{print $2}' | awk -F'\+maria' '{print $1}' 2>/dev/null) "
+                                columnstore_version="$( echo $columnstore_version | awk -F"columnstore_" '{print $2}' | awk -F"-" '{print $2}' | awk -F'\\+maria' '{print $1}' 2>/dev/null) "
                                 # echo "MariaDB: $mariadb_version      Columnstore: $columnstore_version"
                                 printf "%-8s  %-12s %-12s %-12s\n" "MariaDB:" "$mariadb_version" "Columnstore:" "$columnstore_version";
                             fi;
@@ -1077,9 +1182,7 @@ do_check() {
                             printf "Not implemented for: $distro_info\n"
                             exit 2;
                         esac
-
-                        
-                    fi;
+                    fi
                 done
             done
             
@@ -1139,6 +1242,9 @@ case $action in
         ;;
     add )
         add_node_cmapi_via_curl "127.0.0.1"
+        ;;
+    source )
+        return 0;
         ;;
     *)  # unknown option
         printf "Unknown Action: $1\n"
