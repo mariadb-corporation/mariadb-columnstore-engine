@@ -4099,6 +4099,18 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
+
+  if (more)
+  {
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
@@ -4558,9 +4570,17 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  fAggregator->finalAggregation();  // TODO: figure out how to move this to tupleaggregatestep.cpp
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextOutputRowGroup())
   {
     fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+    if (fFunctionCols.size() == 1 && fFunctionCols[0]->fAggFunction == ROWAGG_COUNT_DISTINCT_COL_NAME)
+    {
+      const auto colOut = fFunctionCols[0]->fOutputColumnIndex;
+      fRow.setUintField<8>(fRow.getUintField<8>(colOut) + fRowGroupIn.getRowCount(), colOut);
+      continue;
+    }
 
     Row rowIn;
     fRowGroupIn.initRow(&rowIn);
@@ -4570,6 +4590,7 @@ void RowAggregationDistinct::doDistinctAggregation()
     {
       aggregateRow(rowIn);
     }
+    // fRowAggStorage->dump(); TODO: check if there are cases where this might be necessary
   }
 }
 

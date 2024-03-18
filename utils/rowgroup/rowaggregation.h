@@ -679,6 +679,8 @@ class RowAggregationUM : public RowAggregation
    */
   bool nextRowGroup();
 
+  bool nextOutputRowGroup();
+
   /** @brief Add an aggregator for DISTINCT aggregation
    */
   void distinctAggregator(const boost::shared_ptr<RowAggregation>& da)
