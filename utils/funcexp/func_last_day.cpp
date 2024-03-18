@@ -163,6 +163,12 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
 
   uint32_t lastday = day;
 
+  if (month < 1 || month > 12)
+  {
+    isNull = true;
+    return -1;
+  }
+
   if (isLeapYear(year) && (month == 2))
   {
     lastday = 29;
@@ -180,6 +186,16 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
   {
     isNull = true;
     return -1;
+  }
+
+  if (op_ct.colDataType == datatypes::SystemCatalog::DATE)
+  {
+    dataconvert::Date aDay;
+    aDay.year = year;
+    aDay.month = month;
+    aDay.day = lastday;
+    val = *(reinterpret_cast<uint64_t*>(&aDay));
+    return val;
   }
 
   dataconvert::DateTime aDay;
