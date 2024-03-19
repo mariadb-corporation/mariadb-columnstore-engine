@@ -97,6 +97,12 @@ class RowAggStorage
    */
   std::unique_ptr<RGData> getNextRGData();
 
+  /** @brief Remove last RGData from in-memory storage or disk.
+   * Iterates over all generations on disk if available.
+   * @returns True if RGData is returned in parameter or false if no more RGDatas can be returned.
+   */
+  bool getNextOutputRGData(std::unique_ptr<RGData>& rgdata);
+
   /** @brief TODO
    *
    * @param mergeFunc

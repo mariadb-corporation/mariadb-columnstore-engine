@@ -4099,6 +4099,18 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
+
+  if (more)
+  {
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
@@ -4558,7 +4570,8 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  fAggregator->finalAggregation();  // TODO: Perhaps move somewhere else?
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextOutputRowGroup())
   {
     fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
 

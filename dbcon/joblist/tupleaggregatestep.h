@@ -161,6 +161,7 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   void doThreadedSecondPhaseAggregate(uint32_t threadID);
   bool nextDeliveredRowGroup();
   void pruneAuxColumns();
+  bool cleanUpAndOutputRowGroup(messageqcpp::ByteStream& bs, RowGroupDL* dlp);
   void formatMiniStats();
   void printCalTrace();
   template <class GroupByMap>
