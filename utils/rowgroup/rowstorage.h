@@ -20,6 +20,7 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "idbcompress.h"
+#include <cstdint>
 #include <random>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -34,6 +35,10 @@ class MemManager;
 class RowPosHashStorage;
 using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
+
+using RGDataUnPtr = std::unique_ptr<RGData>;
+using PosOpos = std::pair<uint64_t, uint64_t>;
+using FgidTgid = std::pair<uint64_t, uint64_t>;
 
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
