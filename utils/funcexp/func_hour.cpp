@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <llvm/IR/Constants.h>
 using namespace std;
 
 #include "functor_int.h"
@@ -182,7 +183,6 @@ llvm::Value* Func_hour::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::V
 {
   llvm::Value* val;
   llvm::Function* func;
-  bool isTime = false;
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
@@ -240,21 +240,18 @@ llvm::Value* Func_hour::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::V
       }
       break;
     case CalpontSystemCatalog::TIME:
+    {
       val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIME);
-      isTime = true;
-      break;
+      llvm::Value* mask = b.CreateSelect(b.CreateAnd(b.CreateLShr(val, 40), 0x800),
+                                         b.getInt64(0xfffffffffffff000), b.getInt64(0));
+      llvm::Value* value = b.CreateOr(mask, b.CreateAnd(b.CreateLShr(val, 40), 0xfff));
+      llvm::Value* cmp = b.CreateICmpSGE(value, llvm::ConstantInt::get(value->getType(), 0));
+      return b.CreateSelect(cmp, value, b.CreateNeg(value));
+    }
+
     default: throw ::logic_error("Func_month::compile: unsupported type");
   }
-  if (isTime)
-  {
-    llvm::Value* mask = b.CreateSelect(b.CreateAnd(b.CreateLShr(val, 40), 0x800),
-                                       b.getInt64(0xfffffffffffff000), b.getInt64(0));
-    llvm::Value* value = b.CreateOr(mask, b.CreateAnd(b.CreateLShr(val, 40), 0xfff));
-    return b.CreateSelect(b.CreateIsNotNeg(value), value, b.CreateNeg(value));
-  }
-  else
-  {
-    return b.CreateAnd(b.CreateLShr(val, 32), 0x3f);
-  }
+
+  return b.CreateAnd(b.CreateLShr(val, 32), 0x3f);
 }
 }  // namespace funcexp
