@@ -3281,12 +3281,6 @@ int64_t DataConvert::timestampValueToInt(long long timestampvalue, long timeZone
   return intToDatetime(timestamp.convertToMySQLint(timeZone));
 }
 
-int64_t DataConvert::timestampToInt(long long timestampvalue, long timeZone)
-{
-  TimeStamp timestamp(timestampvalue);
-  return intToDatetime(timestamp.convertToMySQLint(timeZone));
-}
-
 void DataConvert::joinColTypeForUnion(datatypes::TypeHolderStd& unionedType,
                                       const datatypes::TypeHolderStd& type, unsigned int& rc)
 {

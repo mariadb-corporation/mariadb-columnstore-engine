@@ -15,7 +15,8 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/MC/SubtargetFeature.h>
-#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/TargetRegistry.h>
+// WIP #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>

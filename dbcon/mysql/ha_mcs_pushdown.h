@@ -21,6 +21,10 @@
 #include "ha_mcs.h"
 #include "ha_mcs_sysvars.h"
 #include "ha_mcs_common.h"
+
+// This undef is necessary to avoid conflict with the macro defined in llvm
+// used for JIT.
+#undef MB
 #define NEED_CALPONT_EXTERNS
 #include "ha_mcs_impl.h"
 #include "ha_mcs_impl_if.h"
