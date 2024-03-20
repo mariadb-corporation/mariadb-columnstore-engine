@@ -5800,7 +5800,8 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
           done = true;
         }
 
-        if (done) {
+        if (done)
+        {
           fEndOfResult = true;
         }
       }
@@ -5821,8 +5822,10 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
             {
               // The distinctAggregator accumulates the aggregation results of all row groups by being added
               // all row groups of each bucket aggregator and doing an aggregation step after each addition.
-              auto* bucketMultiDistinctAggregator = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
-              auto* bucketDistinctAggregator = dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
+              auto* bucketMultiDistinctAggregator =
+                  dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
+              auto* bucketDistinctAggregator =
+                  dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
               distinctAggregator->aggregator(bucketDistinctAggregator->aggregator());
 
               if (bucketMultiDistinctAggregator)
@@ -5857,26 +5860,20 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         if (done)
           fEndOfResult = true;
       }
-    } else if (hasGroupByColumns) {
-      // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
-      // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
-      // As the aggregation algorithm of first phase calculates aggregation results online, e.g. for SUM()
-      // the aggregation here is already finished and the row groups just need to be delivered.
-      // TODO: Previous code meant that no more aggregation steps are done here. Is this always the case?
-
-      if (!fEndOfResult)
+    }
+    // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
+    // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
+    // As the aggregation algorithm of first phase calculates aggregation results online, e.g. for SUM()
+    // the aggregation here is already finished and the row groups just need to be delivered.
+    else if (hasGroupByColumns)
+    {
+      if (!fEndOfResult && !fDoneAggregate)
       {
-        if (!fDoneAggregate)
+        // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
+        // easy way of multi-threading this and it's done in a single thread for now.
+        for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; ++bucketNum)
         {
-          // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
-          // easy way of multi-threading this and it's done in a single thread for now.
-          for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; bucketNum++)
-          {
-            if (fEndOfResult == false)
-            {
-              fAggregator->append(fAggregators[bucketNum].get());
-            }
-          }
+          fAggregator->append(fAggregators[bucketNum].get());
         }
       }
 
@@ -5960,14 +5957,12 @@ bool TupleAggregateStep::cleanUpAndOutputRowGroup(ByteStream& bs, RowGroupDL* dl
   {
     RGData rgData = fRowGroupDelivered.duplicate();
     dlp->insert(rgData);
+    return true;
   }
-  else
-  {
-    bs.restart();
-    fRowGroupDelivered.serializeRGData(bs);
-    return false;
-  }
-  return true;
+
+  bs.restart();
+  fRowGroupDelivered.serializeRGData(bs);
+  return false;
 }
 
 void TupleAggregateStep::pruneAuxColumns()

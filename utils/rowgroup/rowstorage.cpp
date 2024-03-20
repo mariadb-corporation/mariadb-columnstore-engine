@@ -80,6 +80,11 @@ std::string errorString(int errNo)
   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
   return {buf};
 }
+
+size_t findFirstSetBit(const uint64_t mask)
+{
+  return __builtin_ffsll(mask);
+}
 }  // anonymous namespace
 
 namespace rowgroup
@@ -623,20 +628,20 @@ class RowGroupStorage
     fRowGroupOut->setData(rgdata.get());
     for (auto i = fgid; i < tgid; ++i)
     {
-      if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
+      if ((i - fgid) * HashMaskElements >= fRowGroupOut->getRowCount())
         break;
       uint64_t mask = ~fFinalizedRows[i];
-      if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
+      if ((i - fgid + 1) * HashMaskElements > fRowGroupOut->getRowCount())
       {
-        mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
+        mask &= (~0ULL) >> ((i - fgid + 1) * HashMaskElements - fRowGroupOut->getRowCount());
       }
-      opos = (i - fgid) * 64;
+      opos = (i - fgid) * HashMaskElements;
 
       if (mask == ~0ULL)
       {
         if (LIKELY(pos != opos))
-          moveRows(rgdata.get(), pos, opos, 64);
-        pos += 64;
+          moveRows(rgdata.get(), pos, opos, HashMaskElements);
+        pos += HashMaskElements;
         continue;
       }
 
@@ -645,10 +650,10 @@ class RowGroupStorage
 
       while (mask != 0)
       {
-        // assmp.: find position until block full of not finalized rows?
-        size_t b = __builtin_ffsll(mask);
-        size_t e = __builtin_ffsll(~(mask >> b)) + b;
-        if (UNLIKELY(e >= 64))
+        // find position until block full of not finalized rows.
+        size_t b = findFirstSetBit(mask);
+        size_t e = findFirstSetBit(~(mask >> b)) + b;
+        if (UNLIKELY(e >= HashMaskElements))
           mask = 0;
         else
           mask >>= e;
@@ -732,8 +737,8 @@ class RowGroupStorage
   {
     // Calculate from first and last uint64_t entry in fFinalizedRows BitMap
     // which contains information about rows in the RGData.
-    uint64_t fgid = rgid * fMaxRows / 64;
-    uint64_t tgid = fgid + fMaxRows / 64;
+    uint64_t fgid = rgid * fMaxRows / HashMaskElements;
+    uint64_t tgid = fgid + fMaxRows / HashMaskElements;
     return {fgid, tgid};
   }
 
@@ -807,15 +812,10 @@ class RowGroupStorage
         }
       }
 
-      // TODO: Finish comments (make statements out of assumptions)
-      // assumption: this shifts data within RGData such that it compacts the non finalized rows
-      // move next non-finalized rows on finalized row positions
       auto [pos, opos] = shiftRowsInRowGroup(rgdata, fgid, tgid);
 
-      // assmp.:: nothing got shifted at all -> all rows must be finalized? (but shouldn't it be the
-      // other way around?) if all rows finalized remove RGData and file and don't give it out why would
-      // we check this here again? see: fRowGroupOut->setRowCount(pos); -> pos is the number of valid
-      // rows, interesting
+      // Nothing got shifted at all -> all rows must be finalized. If all rows finalized remove
+      // RGData and file and don't give it out.
       if (pos == 0)
       {
         fLRU->remove(rgid);
@@ -1884,7 +1884,6 @@ RGDataUnPtr RowAggStorage::getNextRGData()
 
 bool RowAggStorage::getNextOutputRGData(RGDataUnPtr& rgdata)
 {
-  // TODO: defensive needed if only for output?
   if (!fStorage)
   {
     return {};

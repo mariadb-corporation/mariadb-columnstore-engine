@@ -44,6 +44,7 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
 constexpr const size_t MaxConstStrSize = 2048ULL;
 constexpr const size_t MaxConstStrBufSize = MaxConstStrSize << 1;
+constexpr const uint64_t HashMaskElements = 64ULL;
 
 class RowAggStorage
 {
