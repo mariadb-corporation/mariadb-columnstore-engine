@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.5
+# Version: 3.6
 #
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date>
 #
 ########################################################################
-
+mcs_bk_manager_version="3.6"
 start=$(date +%s)
 action=$1
 
@@ -55,19 +55,10 @@ check_operating_system() {
 
     # Supported OS
     case $OPERATING_SYSTEM in
-        centos )
+        centos | rhel | rocky )
             return 1;
             ;;
-        rhel )
-            return 1
-            ;;
-        debian )
-            return 1;
-            ;;
-        rocky )
-            return 1;
-            ;;
-        ubuntu )
+        ubuntu | debian )
             return 1;
             ;;
         *)  # unknown option
@@ -191,6 +182,9 @@ load_default_backup_variables()
     # Example: "http://127.0.0.1:8000"
     s3_url=""
     no_verify_ssl=false
+
+    # Deletes backups older than this variable retention_days
+    retention_days=0
 
     # Tracks if flush read lock has been run
     read_lock=false
@@ -318,6 +312,11 @@ parse_backup_variables()
                 shift # past argument
                 shift # past value
                 ;;
+            -r|--retention-days)
+                retention_days="$2"
+                shift # past argument
+                shift # past value
+                ;;
             -h|--help|-help|help)
                 print_backup_help_text;
                 exit 1;
@@ -348,7 +347,7 @@ print_backup_help_text()
         -url   | --endpoint-url           Onprem url to s3 storage api example: http://127.0.0.1:8000
         -nv-ssl| --no-verify-ssl          Skips verifying ssl certs, useful for onpremise s3 storage
         -s     | --storage                The storage used by columnstore data 'LocalStorage' or 'S3'
-        -i     | --incremental            Adds columnstore deltas to an existing full backup
+        -i     | --incremental            Adds columnstore deltas to an existing full backup [ <Folder>, auto_most_recent ]
         -P     | --parallel               Number of parallel rsync/compression threads to run
         -f     | --config-file            Path to backup configuration file to load variables from
         -sbrm  | --skip-save-brm          Skip saving brm prior to running a backup - ideal for dirty backups
@@ -361,6 +360,7 @@ print_backup_help_text()
         -q     | --quiet                  Silence verbose copy command outputs
         -c     | --compress               Compress backup in X format - Options: [ pigz ]
         -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
+        -r     | --retention-days         Retain backups created within the last X days, default 0 = keep all backups
         -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )
@@ -368,13 +368,13 @@ print_backup_help_text()
         Local Storage Examples:
             ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage
             ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage -P 8
-            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage --incremental 02-18-2022
+            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage --incremental auto_most_recent
             ./$0 backup -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
 
         S3 Examples:
             ./$0 backup -bb s3://my-cs-backups -s S3
             ./$0 backup -bb s3://my-cs-backups -c pigz --quiet -sb
-            ./$0 backup -bb gs://my-cs-backups -s S3 --incremental 02-18-2022
+            ./$0 backup -bb gs://my-cs-backups -s S3 --incremental 12-18-2023
             ./$0 backup -bb s3://my-onpremise-bucket -s S3 -url http://127.0.0.1:8000
 
         Cron Example:
@@ -406,6 +406,7 @@ print_backup_variables()
     printf "%-${s1}s  %-${s2}s\n" "Highly Available:" "$HA";
     printf "%-${s1}s  %-${s2}s\n" "Incremental:" "$incremental";
     printf "%-${s1}s  %-${s2}s\n" "Timestamp:" "$(date +%m-%d-%Y-%H%M%S)";
+    printf "%-${s1}s  %-${s2}s\n" "Retention:" "$retention_days";
 
     if [[ -n "$compress_format" ]]; then
         printf "%-${s1}s  %-${s2}s\n" "Compression:" "true";
@@ -687,17 +688,32 @@ validation_prechecks_for_backup()
     if [ $storage == "LocalStorage" ]; then
 
         # Incremental Job checks
-        if  $incremental; then
+        if $incremental; then
+
+            # $backup_location must exist to find an existing full back to add to
+            if [ ! -d $backup_location ]; then
+                handle_early_exit_on_backup "[X] Backup directory ($backup_location) DOES NOT exist ( -bl <directory> ) \n\n" true;
+            fi
+
+            if [ "$today" == "auto_most_recent" ]; then
+                auto_select_most_recent_backup_for_incremental
+            fi
+
+            # Validate $today is a non-empty value
+            if [ -z "$today" ]; then
+                handle_early_exit_on_backup "\nUndefined folder to increment on ($backup_location$today)\nTry --incremental <folder> or --incremental auto_most_recent \n" true
+            fi
+
             # Cant continue if this folder (which represents a full backup) doesnt exists
             if [ $backup_destination == "Local" ]; then
                 if [ -d $backup_location$today ]; then
-                    printf "[+] Full backup directory exists\n";
+                    printf " - Full backup directory exists\n";
                 else
                     handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist \n\n" true;
                 fi;
             elif [ $backup_destination == "Remote" ]; then
                 if [[ $(ssh $scp test -d $backup_location$today && echo exists) ]]; then
-                    printf "[+] Full backup directory exists\n";
+                    printf " - Full backup directory exists\n";
                 else
                     handle_early_exit_on_backup "[X] Full backup directory ($backup_location$today) DOES NOT exist on remote $scp \n\n" true;
                 fi
@@ -734,18 +750,27 @@ validation_prechecks_for_backup()
             fi
         fi;
 
-         # Incremental Job checks
+        # Incremental Job checks
         if $incremental; then
+            if [ "$today" == "auto_most_recent" ]; then
+                auto_select_most_recent_backup_for_incremental
+            fi
+
+            # Validate $today is a non-empty value
+            if [ -z "$today" ]; then
+                handle_early_exit_on_backup "\nUndefined folder to increment on ($backup_bucket/$today)\nTry --incremental <folder> or --incremental auto_most_recent \n" true
+            fi
+
             # Cant continue if this folder (which represents a full backup) doesnt exists
             if [ $cloud == "gcp" ]; then
                 if [[ $( $gsutil ls $backup_bucket/$today | head ) ]]; then
-                    printf "[+] Full backup directory exists\n";
+                    printf " - Full backup directory exists\n";
                 else
                     handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in GCS \nCheck - $gsutil ls $backup_bucket/$today | head \n\n" true;
                 fi
             else
-                if [[ $( $awscli $add_s3_api_flags s3 ls $backup_bucket/$today | head ) ]]; then
-                    printf "[+] Full backup directory exists\n";
+                if [[ $( $awscli $add_s3_api_flags s3 ls $backup_bucket/$today/ | head ) ]]; then
+                    printf " - Full backup directory exists\n";
                 else
                     handle_early_exit_on_backup "[X] Full backup directory ($backup_bucket/$today) DOES NOT exist in S3 \nCheck - aws $add_s3_api_flags s3 ls $backup_bucket/$today | head \n\n" true;
                 fi
@@ -754,6 +779,115 @@ validation_prechecks_for_backup()
     else
         handle_early_exit_on_backup "Invalid Variable storage: $storage" true
     fi
+}
+
+auto_select_most_recent_backup_for_incremental() {
+
+    printf " - Searching for most recent backup ...."
+    if [ $storage == "LocalStorage" ]; then
+        most_recent_backup=$(ls -td  "${backup_location}"* 2>/dev/null | head -n 1)
+        if [[ -z "$most_recent_backup" ]]; then
+            handle_early_exit_on_backup "\n[!!!] No backup found to increment in '$backup_location', please run a full backup or define a folder that exists --incremental <folder>\n" true
+        else
+            today=$(basename $most_recent_backup 2>/dev/null)
+        fi
+
+    elif [ $storage == "S3" ]; then
+        current_date=$(date +%s)
+        backups=$(s3ls $backup_bucket)
+        most_recent_backup=""
+        most_recent_backup_time_diff=$((2**63 - 1));
+
+        while IFS= read -r line; do
+
+            folder=$(echo "$line" | awk '{print substr($2, 1, length($2)-1)}')
+            date_time=$(s3ls "${backup_bucket}/${folder}/restore --recursive" |  awk '{print $1,$2}')
+
+            if [[ -n "$date_time" ]]; then
+
+                # Parse the date
+                backup_date=$(date -d "$date_time" +%s)
+
+                # Calculate the difference in days
+                time_diff=$(( (current_date - backup_date) ))
+                # echo "date_time: $date_time"
+                # echo "backup_date: $backup_date"
+                # echo "time_diff: $time_diff"
+                # echo "days_diff: $((time_diff / (60*60*24) ))"
+
+                if [ $time_diff -lt $most_recent_backup_time_diff ]; then
+                    most_recent_backup=$folder
+                    most_recent_backup_time_diff=$time_diff
+                fi
+            fi
+            printf "."
+        done <<< "$backups"
+
+        # printf "\n\nMost Recent: $most_recent_backup \n"
+        # printf "Time Diff: $most_recent_backup_time_diff \n"
+
+        if [[ -z "$most_recent_backup" ]]; then
+            handle_early_exit_on_backup "\n[!!!] No backup found to increment, please run a full backup or define a folder that exists --incremental <folder>\n" true
+            exit 1;
+        else
+            today=$most_recent_backup
+        fi
+    fi
+    printf " selected: $today \n"
+}
+
+apply_backup_retention_policy() {
+
+    if [ $retention_days -eq 0 ]; then
+        printf " - Skipping Backup Rentention Policy\n"
+        return 0;
+    fi
+
+    printf " - Applying Backup Rentention Policy...."
+    if [ $storage == "LocalStorage" ]; then
+        # example: find /tmp/backups/ -mindepth 1 -maxdepth 1 -type d -name "*" -amin +0
+        find "$backup_location" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec rm -r {} \;
+
+    elif [ $storage == "S3" ]; then
+
+        current_date=$(date +%s)
+        backups=$(s3ls $backup_bucket)
+
+        while IFS= read -r line; do
+
+            delete_backup=false
+            folder=$(echo "$line" | awk '{print substr($2, 1, length($2)-1)}')
+            date_time=$(s3ls "${backup_bucket}/${folder}/restore --recursive" |  awk '{print $1,$2}')
+
+            if [[ -n "$date_time" ]]; then
+
+                # Parse the date
+                backup_date=$(date -d "$date_time" +%s)
+
+                # Calculate the difference in days
+                days_diff=$(( (current_date - backup_date) / (60*60*24) ))
+                # echo "line: $line"
+                # echo "date_time: $date_time"
+                # echo "backup_date: $backup_date"
+                # echo "days_diff: $days_diff"
+
+                if [ $days_diff -gt "$retention_days" ]; then
+                    delete_backup=true
+                fi
+            else
+                delete_backup=true
+            fi
+
+            if $delete_backup; then
+                s3rm "${backup_bucket}/${folder}"
+                #echo "Deleting ${backup_bucket}/${folder}"
+            fi
+            printf "."
+
+        done <<< "$backups"
+    fi
+    printf " Done\n"
+
 }
 
 cs_read_only_wait_loop() {
@@ -803,7 +937,7 @@ issue_write_locks()
             read_lock=true
             printf " Done\n";
         else
-            handle_early_exit_on_backup "\n[X] Failed issuing read-only lock\n\n"
+            handle_early_exit_on_backup "\n[X] Failed issuing read-only lock\n"
         fi
     fi
 
@@ -813,7 +947,7 @@ issue_write_locks()
         startreadonly_exists=$(dbrmctl -h 2>&1 | grep "startreadonly")
         printf " - Issuing read-only lock to Columnstore Engine ...   ";
         if ! $columnstore_online; then
-            printf "Skip since offline\n\n";
+            printf "Skip since offline\n";
         elif [ $DBROOT_COUNT == "1" ] && [[ -n "$startreadonly_exists" ]]; then
             if dbrmctl startreadonly ; then
                 cs_read_only_wait_loop
@@ -823,9 +957,7 @@ issue_write_locks()
             fi;
 
         elif [ $DBROOT_COUNT == "1" ]; then
-            if dbrmctl readonly ; then
-                printf " \n";
-            else
+            if ! dbrmctl readonly ; then
                 handle_early_exit_on_backup "\n[X] Failed issuing columnstore BRM lock via dbrmctl readonly \n"
             fi
         else
@@ -1433,7 +1565,7 @@ run_backup()
 
     elif [ $storage == "S3" ]; then
 
-        printf "S3 Backup\n"
+        printf "\nS3 Backup\n"
         # Conconsistency check - wait for assigned journal dir to be empty
         trap handle_ctrl_c_backup SIGINT
         i=1
@@ -2600,7 +2732,7 @@ print_dbrm_backup_help_text() {
 
         -m   | --mode              'loop' or 'once' ; Determines if this script runs in a forever loop sleeping -i minutes or just once
         -i   | --interval          Number of minutes to sleep when --mode loop
-        -r   | --retention-days    Number of days of dbrm backups to retain - script will delete based on last update file time
+        -r   | --retention-days    Retain dbrm backups created within the last X days
         -p   | --path              path of where to save the dbrm backups on disk
         -nb  | --name-backup       custom name to prefex dbrm backups with
 
@@ -3466,6 +3598,7 @@ process_backup()
     print_backup_variables;
     check_for_dependancies "backup";
     validation_prechecks_for_backup;
+    apply_backup_retention_policy
     issue_write_locks;
     run_save_brm;
     run_backup;
@@ -3479,6 +3612,11 @@ process_restore()
     check_for_dependancies "restore";
     validation_prechecks_for_restore;
     run_restore;
+}
+
+print_version_info() {
+    echo "MariaDB Columnstore Backup Manager"
+    echo "Version: $mcs_bk_manager_version"
 }
 
 case "$action" in
@@ -3496,6 +3634,9 @@ case "$action" in
         ;;
     'restore')
         process_restore "$@";
+        ;;
+    'version')
+        print_version_info
         ;;
     *)
         printf "\nunknown action: $action\n"
