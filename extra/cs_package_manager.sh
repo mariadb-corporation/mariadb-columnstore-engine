@@ -122,6 +122,10 @@ do_yum_remove() {
 
     wait_cs_down 0
 
+    if command -v clearShm &> /dev/null ; then
+        clearShm
+    fi
+
     printf "[+] Removing packages - $(date) ...   \n"
 
     if yum list installed MariaDB-server &>/dev/null; then
@@ -170,6 +174,10 @@ do_apt_remove() {
     init_cs_down
 
     wait_cs_down 0
+
+    if command -v clearShm &> /dev/null ; then
+        clearShm
+    fi
 
     printf "[+] Removing packages - $(date) ...   \n"
 
