@@ -37,8 +37,8 @@ set(ARROW_INCLUDE_DIR "${ARROW_PREFIX}/include")
 set(ARROW_BUILD_BYPRODUCTS "${ARROW_STATIC_LIB}" "${PARQUET_STATIC_LIB}")
 
 externalproject_add(external_arrow
-        URL https://github.com/apache/arrow/archive/refs/tags/go/v13.0.0.tar.gz
-        URL_HASH SHA256=ea4a79a4103379573ecbcf19229437a4ba547c0146a7f3c3be0a7e0b3de5de6c
+        URL https://github.com/apache/arrow/archive/refs/tags/apache-arrow-15.0.0.tar.gz
+        URL_HASH SHA256=ab74c60c46938505c8cd7599b1d2826c68450645d5860d0ff40f67e371a5d0b5
         SOURCE_SUBDIR cpp
         BINARY_DIR "${ARROW_BINARY_DIR}"
         CMAKE_ARGS "${ARROW_CMAKE_ARGS}"
