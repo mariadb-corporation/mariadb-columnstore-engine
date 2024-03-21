@@ -78,7 +78,7 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 
-SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng")
+SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng" "llvm")
 
 SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storage_engine.sh)
 SET(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_storage_engine.sh)
