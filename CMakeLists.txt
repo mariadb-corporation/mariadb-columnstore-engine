@@ -147,6 +147,7 @@ endif()
 
 MESSAGE(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 MESSAGE(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+MESSAGE(STATUS "Using LLVM include dir: ${LLVM_INCLUDEDIR}")
 
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
@@ -154,12 +155,6 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
 llvm_map_components_to_libnames(LLVM_LIBS support core irreader mcjit native orcjit)
-set(LLVM_INCLUDEDIR ${LLVM_INCLUDE_DIRS})
-set(LLVM_INCLUDEDIR "/usr/include/llvm-13")
-set(LLVM_C_INCLUDEDIR "/usr/include/llvm-c-13/")
-MESSAGE(STATUS "Using LLVM include dir: ${LLVM_INCLUDEDIR}")
-
-
 
 check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
 check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
