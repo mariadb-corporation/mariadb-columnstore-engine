@@ -185,12 +185,54 @@ class StoreFieldMariaDB : public StoreField
   int store_decimal64(const datatypes::Decimal& dec) override
   {
     std::string decAsAStr = dec.toString();
+    Field_new_decimal* NDField = dynamic_cast<Field_new_decimal*>(m_field);
+    if (NDField)
+    {
+	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale)
+	    	<< ", field p " << NDField->precision << ", field csn " << int(m_field->charset()->number)
+		<< " str " << decAsAStr);
+    }
+    else
+    {
+	    idblog("dec 64, p " << int(dec.precision) << ", s " << int(dec.scale) << " str " << decAsAStr);
+    }
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
   int store_decimal128(const datatypes::Decimal& dec) override
   {
     std::string decAsAStr = dec.toString(true);
+    Field_new_decimal* NDField = dynamic_cast<Field_new_decimal*>(m_field);
+    if (NDField)
+    {
+	    idblog("dec 128, p " << int(dec.precision) << ", s " << int(dec.scale)
+	    	<< ", field p " << NDField->precision
+		<< ", field l " << NDField->field_length << ", str " << decAsAStr);
+    }
+    else
+    {
+	    idblog("dec 128, p " << int(dec.precision) << ", s " << int(dec.scale) << " str " << decAsAStr);
+    }
+    // look at decimal.h in MDB's include dir. it uses int32 to hold values that
+    // consist of 9 digits (000000000..999999999). All numbers with precision 9
+    // or less will use one int32 element in the decimal_t's buf.
+    // It appears that we need to correct precision for numbers that
+    // are represented with 9 digits or less and we do not need to correct
+    // for precisions that are wider. Most probably it is due to some corner
+    // case in server's code.
+#if 0
+    if (NDField && NDField->precision < 10 && NDField->precision < dec.precision)
+    {
+       NDField->precision = dec.precision;
+    }
+#endif
+#if 0
+    uint32_t reqLength = dec.precision + 2;
+    if (m_field->field_length < reqLength)
+    {
+      m_field->field_length = reqLength;
+    }
+#endif
     return m_field->store(decAsAStr.c_str(), decAsAStr.length(), m_field->charset());
   }
 
