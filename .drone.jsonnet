@@ -40,7 +40,7 @@ local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang 
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
                        'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
-                       'expect createrepo ';
+                       'expect createrepo llvm-devel';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
                            '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
