@@ -139,7 +139,8 @@ IF (NOT BISON_FOUND)
     return()
 ENDIF()
 
-FIND_PACKAGE(LLVM REQUIRED CONFIG PATHS "/usr/lib64/llvm14/")
+
+FIND_PACKAGE(LLVM REQUIRED CONFIG PATHS "/usr/lib/llvm-16" "/usr/lib64/llvm14/" "/usr/lib/llvm-12")
 if (NOT LLVM_FOUND)
     MESSAGE_ONCE(CS_NO_LLVM "Could not find a usable llvm development environment!")
     return()
