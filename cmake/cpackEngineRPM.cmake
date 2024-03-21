@@ -78,6 +78,16 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 
+
+if (${REDHAT_VERSION_NUMBER} EQUAL 7)
+  SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES
+       "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng" "llvm14")
+else ()
+  SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES
+       "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng" "llvm")
+endif()
+
+
 SETA(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES "snappy" "net-tools" "MariaDB-server" "python3" "jemalloc" "procps-ng" "llvm")
 
 SET(CPACK_RPM_columnstore-engine_PRE_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preInstall_storage_engine.sh)
