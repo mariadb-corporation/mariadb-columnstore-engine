@@ -43,7 +43,7 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
                        'expect createrepo llvm-devel';
 
 local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
+                           '&& yum install -y llvm14-devel pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
                            '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
 
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
@@ -125,13 +125,13 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel llvm14',
+    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel llvm',
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel llvm',
+    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev llvm',
+    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev llvm',
+    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev llvm',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev llvm',
   };
   platform_map[platform];
 
