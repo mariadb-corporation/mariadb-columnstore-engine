@@ -60,6 +60,7 @@ usr/lib/*/libcommon.so
 usr/lib/*/libcompress.so
 usr/lib/*/libconfigcpp.so
 usr/lib/*/libdataconvert.so
+usr/lib/*/libdatatypes.so
 usr/lib/*/libddlcleanuputil.so
 usr/lib/*/libddlpackage.so
 usr/lib/*/libddlpackageproc.so
@@ -68,6 +69,7 @@ usr/lib/*/libdmlpackageproc.so
 usr/lib/*/libexecplan.so
 usr/lib/*/libfuncexp.so
 usr/lib/*/libidbdatafile.so
+usr/lib/*/libjit.so
 usr/lib/*/libjoblist.so
 usr/lib/*/libjoiner.so
 usr/lib/*/liblibmysql_client.so
@@ -86,7 +88,6 @@ usr/lib/*/libwindowfunction.so
 usr/lib/*/libwriteengine.so
 usr/lib/*/libwriteengineclient.so
 usr/lib/*/libwriteengineredistribute.so
-usr/lib/*/libdatatypes.so
 usr/lib/mysql/plugin/ha_columnstore.so
 usr/lib/mysql/plugin/libregr_mysql.so
 usr/lib/mysql/plugin/libudf_mysql.so
