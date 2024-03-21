@@ -9,7 +9,7 @@ Depends: binutils,
          net-tools,
          python3,
          procps,
-         llvm,
+         llvm | llvm-12 | llvm-16,
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-columnstore-libs,
