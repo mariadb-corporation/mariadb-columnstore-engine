@@ -15,8 +15,16 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/MC/SubtargetFeature.h>
-#include <llvm/Support/TargetRegistry.h>
-// WIP #include <llvm/MC/TargetRegistry.h>
+
+
+#include "llvm/Config/llvm-config.h"
+
+#if LLVM_VERSION_MAJOR < 14
+#  include <llvm/Support/TargetRegistry.h>
+#else
+#  include <llvm/MC/TargetRegistry.h>
+#endif
+
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>
