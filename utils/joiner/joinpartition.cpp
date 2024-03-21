@@ -31,7 +31,6 @@ using namespace rowgroup;
 using namespace messageqcpp;
 using namespace logging;
 
-
 namespace joiner
 {
 // FIXME: Possible overflow, we have to null it after clearing files.
@@ -165,6 +164,13 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode, uint32_t c
   smallFilename = filenamePrefix + "-small";
   largeFilename = filenamePrefix + "-large";
 
+  // FIXME(MCOL-5597):Tuning issue: with the defaults, each 100MB bucket would split s.t.
+  // the children could store another 4GB total.
+  // Given a good hash and evenly distributed data,
+  // the first level of expansion would happen for all JPs at once, giving a total
+  // capacity of (4GB * 40) = 160GB, when actual usage at that point is a little over 4GB.
+  // Instead, each will double in size, giving a capacity of 8GB -> 16 -> 32, and so on.
+  bucketCount = 2;
   smallSizeOnDisk = largeSizeOnDisk = 0;
 
   buffer.reinit(smallRG);
@@ -442,7 +448,6 @@ int64_t JoinPartition::convertToSplitMode()
     }
   }
 
-
   boost::filesystem::remove(smallFilename);
   smallFilename.clear();
 
@@ -481,8 +486,8 @@ int64_t JoinPartition::processSmallBuffer(RGData& rgData)
 
     ret = writeByteStream(0, bs);
 
-    if (rg.getRowCount())
-      htSizeEstimate += rg.getDataSize();
+    // FIXME(MCOL-5597): Properly calculate the size of the bucket.
+    htSizeEstimate += rg.getRowCount() * rg.getColumnCount();
     // Check whether this partition is now too big -> convert to split mode.
     if (htTargetSize < htSizeEstimate && canConvertToSplitMode())
       ret += convertToSplitMode();
