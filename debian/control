@@ -1,12 +1,15 @@
 Package: mariadb-plugin-columnstore
-Architecture: amd64
+Architecture: amd64 arm64
 Depends: binutils,
          libjemalloc1 | libjemalloc2,
          libsnappy1 | libsnappy1v5,
          liblz4-1,
-         mariadb-server-10.6 (= ${server:Version}),
+         mariadb-server (= ${server:Version}),
+         libmariadb3 (= ${server:Version}),
          net-tools,
          python3,
+         procps,
+         llvm,
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-columnstore-libs,
