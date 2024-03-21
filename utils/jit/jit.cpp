@@ -16,13 +16,12 @@
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/MC/SubtargetFeature.h>
 
-
 #include "llvm/Config/llvm-config.h"
 
 #if LLVM_VERSION_MAJOR < 14
-#  include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/TargetRegistry.h>
 #else
-#  include <llvm/MC/TargetRegistry.h>
+#include <llvm/MC/TargetRegistry.h>
 #endif
 
 #include <llvm/Support/DynamicLibrary.h>
@@ -454,10 +453,12 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   pass_manager_builder.OptLevel = 3;
   pass_manager_builder.SLPVectorize = true;
   pass_manager_builder.LoopVectorize = true;
-  pass_manager_builder.RerollLoops = true;
   pass_manager_builder.VerifyInput = true;
   pass_manager_builder.VerifyOutput = true;
+#if LLVM_VERSION_MAJOR < 16
+  pass_manager_builder.RerollLoops = true;
   target_machine->adjustPassManager(pass_manager_builder);
+#endif
 
   fpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
   mpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
