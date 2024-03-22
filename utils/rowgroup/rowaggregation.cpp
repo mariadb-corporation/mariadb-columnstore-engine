@@ -4570,8 +4570,6 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  fAggregator->finalAggregation();  // TODO: Perhaps move somewhere else?
-
   auto* umAggregator = dynamic_cast<RowAggregationUM*>(fAggregator.get());
   if (umAggregator)
   {

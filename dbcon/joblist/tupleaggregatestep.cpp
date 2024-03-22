@@ -5834,6 +5834,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
                     ->subAggregators(bucketMultiDistinctAggregator->subAggregators());
               }
 
+              distinctAggregator->aggregator()->finalAggregation();
               distinctAggregator->doDistinctAggregation();
             }
           }
@@ -5863,14 +5864,12 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     }
     // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
     // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
-    // As the aggregation algorithm of first phase calculates aggregation results online, e.g. for SUM()
-    // the aggregation here is already finished and the row groups just need to be delivered.
+    // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
+    // easy way of multi-threading this and it's done in a single thread for now.
     else if (hasGroupByColumns)
     {
       if (!fEndOfResult && !fDoneAggregate)
       {
-        // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
-        // easy way of multi-threading this and it's done in a single thread for now.
         for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; ++bucketNum)
         {
           fAggregator->append(fAggregators[bucketNum].get());
