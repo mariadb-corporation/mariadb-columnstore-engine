@@ -4099,6 +4099,18 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
+
+  if (more)
+  {
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
@@ -4558,18 +4570,28 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  auto* umAggregator = dynamic_cast<RowAggregationUM*>(fAggregator.get());
+  if (umAggregator)
   {
-    fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
-
-    Row rowIn;
-    fRowGroupIn.initRow(&rowIn);
-    fRowGroupIn.getRow(0, &rowIn);
-
-    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+    while (umAggregator->nextOutputRowGroup())
     {
-      aggregateRow(rowIn);
+      fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+      Row rowIn;
+      fRowGroupIn.initRow(&rowIn);
+      fRowGroupIn.getRow(0, &rowIn);
+
+      for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+      {
+        aggregateRow(rowIn);
+      }
     }
+  }
+  else
+  {
+    std::ostringstream errmsg;
+    errmsg << "RowAggregationDistinct: incorrect fAggregator class.";
+    cerr << errmsg.str() << endl;
   }
 }
 
