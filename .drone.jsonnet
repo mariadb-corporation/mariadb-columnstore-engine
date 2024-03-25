@@ -308,8 +308,17 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: ['publish pkg'],
     image: 'docker',
     volumes: [pipeline._volumes.docker],
+    environment: {
+      EXTERNAL_PACKAGES_USERNAME: {
+        from_secret: 'basic_auth_user',
+      },
+      EXTERNAL_PACKAGES_PASSWORD: {
+        from_secret: 'basic_auth_pass',
+      },
+      EXTERNAL_PACKAGES_URL: '${EXTERNAL_PACKAGES_URL}',
+    },
     commands: [
-      'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --env-file <(env | grep EXTERNAL) --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage("smoke"), pkg_format, result, true) + [
       installEngine(dockerImage("smoke"), pkg_format),
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
@@ -372,9 +381,16 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     environment: {
       MTR_SUITE_LIST: '${MTR_SUITE_LIST:-' + mtr_suite_list + '}',
       MTR_FULL_SUITE: '${MTR_FULL_SUITE:-false}',
+      EXTERNAL_PACKAGES_USERNAME: {
+        from_secret: 'basic_auth_user',
+      },
+      EXTERNAL_PACKAGES_PASSWORD: {
+        from_secret: 'basic_auth_pass',
+      },
+      EXTERNAL_PACKAGES_URL: '${EXTERNAL_PACKAGES_URL}',
     },
     commands: [
-      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --env-file <(env | grep EXTERNAL) --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage('mtr$${DRONE_BUILD_NUMBER}', pkg_format, result, true) + [
       installEngine(dockerImage("mtr"), pkg_format),
       'docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/suite/',
@@ -443,6 +459,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     environment: {
       REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
       REGRESSION_REF_AUX: regression_ref,
+      EXTERNAL_PACKAGES_USERNAME: {
+        from_secret: 'basic_auth_user',
+      },
+      EXTERNAL_PACKAGES_PASSWORD: {
+        from_secret: 'basic_auth_pass',
+      },
+      EXTERNAL_PACKAGES_URL: '${EXTERNAL_PACKAGES_URL}',
     },
     commands: [
       // compute branch.
@@ -461,7 +484,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --env-file <(env | grep EXTERNAL) --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage('regression'), pkg_format, result, true) + [
 
       if (platform == 'centos:7') then
