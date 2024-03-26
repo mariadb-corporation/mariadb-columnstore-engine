@@ -781,6 +781,10 @@ validation_prechecks_for_backup()
     fi
 }
 
+# Used when "--incremental auto_most_recent" passed in during incremental backups
+# This function identifies which backup directory is the most recent and sets today=x so that the incremental backup applies to said last full backup
+# For LocalStorage: based on ls -td <backup_dir> | head -n 1
+# For S3: using the awscli/gsutil, compare the dates of the backup folders restoreS3.job file to find the most recent S3 backup to increment ont top off
 auto_select_most_recent_backup_for_incremental() {
 
     printf " - Searching for most recent backup ...."
