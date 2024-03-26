@@ -4387,7 +4387,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" || funcName == "regexp_instr")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" ||
+        funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
@@ -6726,7 +6727,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
 
   // check INTERSECT or EXCEPT, that are not implemented
-  auto * nextSelect = select_lex.master_unit()->first_select()->next_select();
+  auto* nextSelect = select_lex.master_unit()->first_select()->next_select();
   if (nextSelect)
   {
     if (nextSelect->get_linkage() == INTERSECT_TYPE)
@@ -8101,18 +8102,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
         SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
-	if (sc)
-	{
-	  bool found = false;
+        if (sc)
+        {
+          bool found = false;
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (sc->sameColumn(gwi.returnedCols[j].get()))
             {
               sc->orderPos(j);
-	      found = true;
+              found = true;
               break;
             }
-	  }
+          }
           for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
           {
             if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
@@ -8122,9 +8123,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
-	else
-	{
+        }
+        else
+        {
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
@@ -8134,7 +8135,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
+        }
 
         if (!rc)
         {
@@ -9856,7 +9857,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             }
           }
 
-	  srcp->orderPos(groupcol->counter - 1);
+          srcp->orderPos(groupcol->counter - 1);
           gwi.groupByCols.push_back(srcp);
           continue;
         }
