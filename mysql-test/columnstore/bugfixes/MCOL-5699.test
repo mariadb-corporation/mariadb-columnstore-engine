@@ -1,0 +1,25 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5699 ;
+--enable_warnings
+CREATE DATABASE mcol_5699 ;
+USE mcol_5699 ;
+CREATE TABLE cs1(a text) ENGINE=columnstore;
+INSERT INTO cs1 VALUES('a'),('b'),('c'),('x');
+
+CREATE TABLE cs2(a text) ENGINE=columnstore;
+INSERT INTO cs1 VALUES('y'),('z'),('x');
+
+SELECT a from cs1 UNION ALL select a from cs2;
+SELECT a from cs1 UNION DISTINCT select a from cs2;
+
+--ERROR 1815
+SELECT a from cs1 INTERSECT ALL select a from cs2;
+--ERROR 1815
+SELECT a from cs1 INTERSECT DISTINCT select a from cs2;
+--ERROR 1815
+SELECT a from cs1 EXCEPT ALL select a from cs2;
+--ERROR 1815
+SELECT a from cs1 EXCEPT DISTINCT select a from cs2;
+
+DROP DATABASE mcol_5699 ;
