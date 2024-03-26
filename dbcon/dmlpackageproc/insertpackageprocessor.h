@@ -45,14 +45,10 @@ class InsertPackageProcessor : public DMLPackageProcessor
   InsertPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
   {
   }
-  /** @brief process an InsertDMLPackage
-   *
-   * @param cpackage the InsertDMLPackage to process
-   */
-  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
  protected:
  private:
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) override;
 };
 
 }  // namespace dmlpackageprocessor

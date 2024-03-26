@@ -39,14 +39,14 @@ class MarkPartitionProcessor : public DDLPackageProcessor
   MarkPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
+
+ protected:
+ private:
   /** @brief process a create table statement
    *
    * @param createTableStmt the CreateTableStatement
    */
-  EXPORT DDLResult processPackage(ddlpackage::MarkPartitionStatement& MarkPartitionStmt);
-
- protected:
- private:
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* MarkPartitionStmt);
 };
 
 }  // namespace ddlpackageprocessor

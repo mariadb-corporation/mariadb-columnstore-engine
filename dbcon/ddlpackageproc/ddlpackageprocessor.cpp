@@ -562,10 +562,9 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
 {
   SUMMARY_INFO("DDLPackageProcessor::createFiles");
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-    CalpontSystemCatalog::makeCalpontSystemCatalog(1);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(1);
   CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(aTableName);
-  CalpontSystemCatalog::OID tableAUXColOid =
-    systemCatalogPtr->tableAUXColumnOID(aTableName);
+  CalpontSystemCatalog::OID tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(aTableName);
 
   if (tableAUXColOid > 3000)
   {
@@ -1125,6 +1124,37 @@ void DDLPackageProcessor::createWriteTruncateTableLogFile(
 
   if (rc != 0)
     throw std::runtime_error(errorMsg);
+}
+
+DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackage(SqlStatement* sqlStmt)
+{
+  auto result = processPackageInternal(sqlStmt);
+  uint32_t tries = 0;
+  while ((result.result == PP_LOST_CONNECTION) && (tries < 5))
+  {
+    std::cerr << "DDLPackageProcessor: NETWORK ERROR; attempt # " << tries << std::endl;
+    joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+    joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+    if (fEc->Setup())
+      return result;
+
+    result = processPackageInternal(sqlStmt);
+    ++tries;
+  }
+  return result;
+}
+
+DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackageInternal(SqlStatement* sqlStmt)
+{
+  // This should not be called.
+  DDLPackageProcessor::DDLResult result;
+  result.result = NOT_ACCEPTING_PACKAGES;
+  return result;
+}
+
+bool DDLPackageProcessor::checkPPLostConnection(std::string error)
+{
+  return error.find(PPLostConnectionErrorCode) != std::string::npos;
 }
 
 void DDLPackageProcessor::returnOIDs(execplan::CalpontSystemCatalog::RIDList& ridList,

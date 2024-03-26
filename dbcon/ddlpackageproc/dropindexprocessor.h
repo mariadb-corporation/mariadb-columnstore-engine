@@ -38,7 +38,7 @@ class DropIndexProcessor : public DDLPackageProcessor
    *
    * @param dropIndexStmt the drop index statement
    */
-  DDLResult processPackage(ddlpackage::DropIndexStatement& dropIndexStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement& dropIndexStmt);
 
  protected:
  private:
