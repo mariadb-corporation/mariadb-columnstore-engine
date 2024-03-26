@@ -255,8 +255,11 @@ check_package_managers() {
     fi;
 }
 
-check_mac_dependancies() {
+# Confirms mac have critical binaries to run this script
+# As of 3/2024 mac only supports cs_package_manager.sh check 
+check_mac_dependencies() {
     
+    # Install ggrep if not exists
     if ! which ggrep >/dev/null 2>&1; then
         echo "Attempting Auto install of ggrep"
 
@@ -267,6 +270,7 @@ check_mac_dependancies() {
         brew install grep
     fi
 
+    # Exit if ggrep still doesnt exist
     if ! which ggrep >/dev/null 2>&1; then
         echo "Failed to install ggrep"
         echo "which ggrep"
@@ -278,9 +282,9 @@ check_mac_dependancies() {
 
 check_operating_system() {
 
-    if [[ -e "/System/Library/CoreServices/SystemVersion.plist" ]]; then
+    if [[ $OSTYPE == 'darwin'* ]]; then
         echo "Running on macOS"
-        check_mac_dependancies
+        check_mac_dependencies
 
         # on action=check - these values are used as triggers to prompt the user to select what OS/version they want to check against
         distro_info="mac"
@@ -953,6 +957,8 @@ do_install() {
     printf "\nDone\n\n"
 }
 
+# A quick way for mac users to select an OS when running "cs_package_manager.sh check" 
+# since theres no /etc/os-release to auto detect what OS & version to search the mariadb repos on mac
 prompt_user_for_os() {
 
     # Prompt the user to select an operating system
@@ -1010,8 +1016,6 @@ prompt_user_for_os() {
     echo "Version: $version_id"
     
 }
-
-
 
 do_check() {
     

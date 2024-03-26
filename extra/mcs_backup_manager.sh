@@ -2837,11 +2837,11 @@ validation_prechecks_for_dbrm_restore() {
 
     # Confirm bucket connection
     if [ "$storage" == "S3" ]; then
-        if ! testS3Connection 1>/dev/null 2>/dev/null; then
+        if testS3Connection 1>/dev/null 2>/dev/null; then
+            echo " - S3 Connection works"
+        else
             printf "\n[!] Failed testS3Connection\n\n"
             exit 1;
-        else
-            echo " - S3 Connection works"
         fi
     fi;
 
@@ -2849,11 +2849,12 @@ validation_prechecks_for_dbrm_restore() {
     if [ ! -f "cs_package_manager.sh" ]; then
         wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/extra/cs_package_manager.sh; chmod +x cs_package_manager.sh;
     fi; 
-    if ! source cs_package_manager.sh source ;then 
+    if source cs_package_manager.sh source ;then 
+        echo " - Sourced cs_package_manager.sh"
+    else
         printf "\n[!!] Failed to source cs_package_manager.sh\n\n"
         exit 1;
-    else
-        echo " - Sourced cs_package_manager.sh"
+        
     fi
 
     # Confirm the function exists and the source of cs_package_manager.sh worked
@@ -2930,17 +2931,42 @@ process_dbrm_backup() {
     if ! $quiet; then printf "[+] Complete\n\n"; fi;
 }
 
+# Small augmentation of https://github.com/mariadb-corporation/mariadb-columnstore-engine/blob/develop/cmapi/check_ready.sh
+cmapi_check_ready() {
+    SEC_TO_WAIT=15
+    cmapi_success=false
+    for i in  $(seq 1 $SEC_TO_WAIT); do
+        printf "."
+        if ! $(curl -k -s --output /dev/null --fail https://127.0.0.1:8640/cmapi/ready); then
+            sleep 1
+        else
+            cmapi_success=true
+            break
+        fi
+    done
+
+    if $cmapi_success; then
+        return 0;
+    else
+        printf "\nCMAPI not ready after waiting $SEC_TO_WAIT seconds. Check log file for further details.\n\n"
+        exit 1;
+    fi
+}
+
 confirm_cmapi_online_and_configured() {
     cmapi_current_status=$(mcs cmapi is-ready 2> /dev/null);
     if [ $? -ne 0 ]; then
 
         # if cmapi is not online - check systemd is running and start cmapi
-            if [ "$(ps -p 1 -o comm=)" = "systemd" ]; then
-            eval $cmapi_start_command
-            sleep 2;
+        if [ "$(ps -p 1 -o comm=)" = "systemd" ]; then
+            if systemctl start mariadb-columnstore-cmapi; then
+                cmapi_check_ready
+            else 
+                echo "[!!] Failed to start CMAPI"
+                exit 1;
+            fi
         else
-            echo "systemd is not running - cant start cmapi"
-            echo ""
+            printf "systemd is not running - cant start cmapi\n\n"
             exit 1;
         fi
     else 
@@ -2959,11 +2985,11 @@ confirm_cmapi_online_and_configured() {
         fi
     fi
 
-    confirm_cmapi_configured
+    confirm_nodes_configured
 }
 
 # currently supports singlenode only
-confirm_cmapi_configured() {
+confirm_nodes_configured() {
     # Check for edge case of cmapi not configured
     if [ "$(mcs cluster status | jq -r '.num_nodes')" == "0" ]; then
         printf "[!!] Noticed cmapi installed but no nodes configured...\n"
@@ -2975,7 +3001,6 @@ confirm_cmapi_configured() {
 is_cmapi_installed() {
 
     cmapi_installed_command=""
-    cmapi_start_command="systemctl start mariadb-columnstore-cmapi";
     case $package_manager in
         yum ) 
             cmapi_installed_command="yum list installed MariaDB-columnstore-cmapi &> /dev/null;";
@@ -2999,21 +3024,17 @@ is_cmapi_installed() {
 start_mariadb_cmapi_columnstore() {
 
     printf " - Starting MariaDB Server ... "
-    if ! systemctl start mariadb; then
+    if systemctl start mariadb; then
+        printf "Done\n"
+    else
         echo "[!!] Failed to start mariadb"
         exit 1;
-    else 
-        printf "Done\n"
+       
     fi
 
     if is_cmapi_installed ; then
-
-        confirm_cmapi_online_and_configured
         printf " - Starting CMAPI ... "
-        if ! systemctl start mariadb-columnstore-cmapi; then
-            echo "[!!] Failed to start CMAPI"
-            exit 1;
-        else 
+        if confirm_cmapi_online_and_configured ; then
             printf "Done\n"
         fi
     fi 
@@ -3040,7 +3061,6 @@ shutdown_columnstore_mariadb_cmapi() {
     fi
 
     if is_cmapi_installed ; then
-        confirm_cmapi_online_and_configured
         printf " - Stopping CMAPI ... "
         if ! systemctl stop mariadb-columnstore-cmapi; then
             echo "[!!] Failed to stop CMAPI"
