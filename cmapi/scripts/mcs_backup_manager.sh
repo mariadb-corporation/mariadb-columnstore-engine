@@ -2974,8 +2974,6 @@ validation_prechecks_for_dbrm_restore() {
         else
             printf "\n[!] Failed testS3Connection\n\n"
             exit 1;
-        else
-            echo " - S3 Connection works"
         fi
     fi;
 
@@ -2988,7 +2986,6 @@ validation_prechecks_for_dbrm_restore() {
     else
         printf "\n[!!] Failed to source cs_package_manager.sh\n\n"
         exit 1;
-
     fi
 
     # Confirm the function exists and the source of cs_package_manager.sh worked
@@ -3163,7 +3160,6 @@ start_mariadb_cmapi_columnstore() {
     else
         echo "[!!] Failed to start mariadb"
         exit 1;
-
     fi
 
     if is_cmapi_installed ; then
