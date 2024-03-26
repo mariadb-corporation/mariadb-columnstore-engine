@@ -6744,7 +6744,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
 
   // check INTERSECT or EXCEPT, that are not implemented
-  auto * nextSelect = select_lex.master_unit()->first_select()->next_select();
+  auto* nextSelect = select_lex.master_unit()->first_select()->next_select();
   if (nextSelect)
   {
     if (nextSelect->get_linkage() == INTERSECT_TYPE)
