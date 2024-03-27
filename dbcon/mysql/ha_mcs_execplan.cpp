@@ -3180,7 +3180,15 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
 
         if (item->field_type() == MYSQL_TYPE_BLOB)
         {
+          // We default to BLOB, but then try to correct type,
+	  // because many textual types in server have type_handler_blob
+	  // (and variants) as their type.
           ct.colDataType = CalpontSystemCatalog::BLOB;
+          const Item_result_field* irf = dynamic_cast<const Item_result_field*>(item);
+	  if (irf && irf->result_field && !irf->result_field->binary())
+          {
+            ct.colDataType = CalpontSystemCatalog::TEXT;
+	  }
         }
       }
 

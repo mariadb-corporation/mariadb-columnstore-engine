@@ -1,0 +1,34 @@
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5056;
+--enable_warnings
+
+CREATE DATABASE MCOL5056;
+
+USE MCOL5056;
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+CREATE TABLE foo5 (a TEXT);
+CREATE TABLE bar5 (b TEXT) ENGINE=COLUMNSTORE;
+# no data, just the fact that we can run this SELECT without errors.
+SELECT * FROM foo5, bar5 WHERE foo5.a=bar5.b;
+
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE MCOL5056;
+
