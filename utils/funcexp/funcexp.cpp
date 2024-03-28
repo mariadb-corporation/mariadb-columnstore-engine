@@ -43,7 +43,6 @@ using namespace joblist;
 #endif
 
 #include "mcs_decimal.h"
-
 namespace funcexp
 {
 /* static */
@@ -298,7 +297,6 @@ Func* FuncExp::getFunctor(std::string& funcName)
 void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expression)
 {
   bool isNull;
-
   for (uint32_t i = 0; i < expression.size(); i++)
   {
     isNull = false;
@@ -381,7 +379,6 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
       case CalpontSystemCatalog::BIGINT:
       {
         int64_t val = expression[i]->getIntVal(row, isNull);
-
         if (isNull)
           row.setIntField<8>(BIGINTNULL, expression[i]->outputIndex());
         else

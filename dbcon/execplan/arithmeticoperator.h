@@ -225,6 +225,16 @@ class ArithmeticOperator : public Operator
 
   long fTimeZone;
   bool fDecimalOverflowCheck;
+
+ public:
+  using Operator::compile;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop,
+                              ParseTree* rop) override;
+  inline llvm::Value* compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  inline llvm::Value* compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  using Operator::isCompilable;
+  inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
 };
 
 // Can be easily replaced with a template over T if MDB changes the result return type.
@@ -491,5 +501,87 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
   }
 }
 
+inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                                rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
+{
+  switch (fOperationType.colDataType)
+  {
+    case execplan::CalpontSystemCatalog::BIGINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+      return compileInt_(b, lop->compile(b, data, isNull, row, dataType),
+                         rop->compile(b, data, isNull, row, dataType));
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+      return compileFloat_(b, lop->compile(b, data, isNull, row, dataType),
+                           rop->compile(b, data, isNull, row, dataType));
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operand type: " << fOperationType.colDataType;
+      throw logging::InvalidArgumentExcept(oss.str());
+    }
+  }
+}
+inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateAdd(l, r);
+
+    case OP_SUB: return b.CreateSub(l, r);
+
+    case OP_MUL: return b.CreateMul(l, r);
+
+    case OP_DIV:
+      if (l->getType()->isIntegerTy())
+        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
+      else
+        return b.CreateFDiv(l, r);
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+inline llvm::Value* ArithmeticOperator::compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateFAdd(l, r);
+
+    case OP_SUB: return b.CreateFSub(l, r);
+
+    case OP_MUL: return b.CreateFMul(l, r);
+
+    case OP_DIV:
+      if (l->getType()->isIntegerTy())
+        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
+      else
+        return b.CreateFDiv(l, r);
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+inline bool ArithmeticOperator::isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+{
+  return lop->isCompilable(row) && rop->isCompilable(row);
+}
 std::ostream& operator<<(std::ostream& os, const ArithmeticOperator& rhs);
 }  // namespace execplan

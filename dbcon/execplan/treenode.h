@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <unordered_set>
+#include <llvm/IR/IRBuilder.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -149,6 +150,7 @@ struct Result
    , strVal()
    , decimalVal(IDB_Decimal())
    , valueConverted(false)
+   , compiledBlock(nullptr)
   {
   }
   int64_t intVal;
@@ -164,6 +166,7 @@ struct Result
   utils::NullString strVal;
   IDB_Decimal decimalVal;
   bool valueConverted;
+  llvm::Value* compiledBlock;
 };
 
 /**
@@ -327,6 +330,15 @@ class TreeNode
   virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
   {
     return fResult.intVal;
+  }
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType)
+  {
+    return fResult.compiledBlock;
+  }
+  virtual bool isCompilable(rowgroup::Row& row)
+  {
+    return false;
   }
   virtual void evaluate(rowgroup::Row& row, bool& isNull)
   {

@@ -23,8 +23,11 @@
 
 #include <cstdlib>
 #include <string>
+
 #include <sstream>
-#define __STDC_LIMIT_MACROS
+#ifndef __STDC_LIMIT_MACROS
+#  define __STDC_LIMIT_MACROS
+#endif
 #include <stdint.h>
 using namespace std;
 

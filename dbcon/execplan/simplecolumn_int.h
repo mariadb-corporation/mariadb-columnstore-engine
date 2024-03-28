@@ -86,6 +86,20 @@ class SimpleColumn_INT : public SimpleColumn
 
  private:
   void setNullVal();
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType dataType) override
+  {
+    auto offset = row.getOffset(fInputIndex);
+    CalpontSystemCatalog::ColDataType colType = row.getColType(fInputIndex);
+    msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
+    return msc_jit::CompileHelper::compileIntField<len>(b, data, offset);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return true;
+  }
 };
 
 template <int len>
