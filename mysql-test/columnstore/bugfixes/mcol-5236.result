@@ -1,0 +1,22 @@
+DROP DATABASE IF EXISTS mcol_5236;
+CREATE DATABASE mcol_5236;
+USE mcol_5236;
+create table test_having_columnstore (someString varchar(1000), someInt int, FK int) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+insert into test_having_columnstore values ('bla', 1, 17), ('xyz', 2, 17);
+create table dim_having_columnstore (PK int, someString varchar(1000)) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+insert into dim_having_columnstore values(17, 'test');
+create view test_having_columnstore_view as
+select someString as someString, someInt as someInt, FK as FK from test_having_columnstore;
+create view dim_having_columnstore_view as
+select * from dim_having_columnstore;
+select `dim`.`someString` as `c0`
+from `dim_having_columnstore_view` as `dim`, `test_having_columnstore_view` as `fact`
+where `fact`.`FK` = `dim`.`PK`
+group by `dim`.`someString`
+having NOT((sum(`fact`.`someInt`) is null))
+order by ISNULL(`dim`.`someString`) ASC,
+`dim`.`someString` ASC;
+c0
+test
+DROP DATABASE mcol_5236;
+ok
