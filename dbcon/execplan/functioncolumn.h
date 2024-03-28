@@ -332,10 +332,11 @@ class FunctionColumn : public ReturnedColumn
   bool fFixed = false;
   // JIT part
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
-    return fFunctor->compile(b, data, isNull, row, fFunctionParms, fOperationType);
+    return fFunctor->compile(b, data, isNull, dataConditionError, row, fFunctionParms, fOperationType);
   }
   bool isCompilable(rowgroup::Row& row) override
   {

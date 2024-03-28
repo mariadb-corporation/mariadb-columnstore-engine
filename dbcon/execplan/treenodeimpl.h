@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_TREENODEIMPL_H
-#define EXECPLAN_TREENODEIMPL_H
+#pragma once
 #include <string>
 #include <iosfwd>
 
@@ -66,13 +65,13 @@ class TreeNodeImpl : public TreeNode
   /**
    * Operations
    */
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
-  virtual const std::string data() const
+  virtual const std::string data() const override
   {
     return fData;
   }
-  virtual void data(const std::string data)
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
@@ -81,7 +80,7 @@ class TreeNodeImpl : public TreeNode
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual TreeNodeImpl* clone() const
+  inline virtual TreeNodeImpl* clone() const override
   {
     return new TreeNodeImpl(*this);
   }
@@ -89,15 +88,15 @@ class TreeNodeImpl : public TreeNode
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -111,7 +110,7 @@ class TreeNodeImpl : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -119,6 +118,9 @@ class TreeNodeImpl : public TreeNode
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
   bool operator!=(const TreeNodeImpl& t) const;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
 
  private:
   // default okay
@@ -130,4 +132,3 @@ class TreeNodeImpl : public TreeNode
 std::ostream& operator<<(std::ostream& os, const TreeNodeImpl& rhs);
 
 }  // namespace execplan
-#endif  // EXECPLAN_TREENODEIMPL_H

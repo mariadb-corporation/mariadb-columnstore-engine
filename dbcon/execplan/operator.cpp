@@ -177,6 +177,22 @@ const string Operator::toString() const
   return oss.str();
 }
 
+string Operator::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("operator.h");
+  stringstream ss;
+  ss << "Operator(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
+std::string Operator::toExpressionString() const
+{
+  ostringstream oss;
+  oss << "(" << fData << ")";
+  return oss.str();
+}
+
 Operator* Operator::opposite() const
 {
   if (fData.compare(">") == 0)
@@ -271,12 +287,12 @@ void Operator::reverseOp()
 
     case OP_NE:
       fOp = OP_EQ;
-      fData = "=";
+      fData = '=';
       break;
 
     case OP_GT:
       fOp = OP_LT;
-      fData = "<";
+      fData = '<';
       break;
 
     case OP_GE:
@@ -286,7 +302,7 @@ void Operator::reverseOp()
 
     case OP_LT:
       fOp = OP_GT;
-      fData = ">";
+      fData = '>';
       break;
 
     case OP_LE:

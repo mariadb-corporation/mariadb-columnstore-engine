@@ -31,9 +31,7 @@
 #include <iterator>
 using namespace std;
 
-#include <boost/shared_array.hpp>
 #include <numeric>
-using namespace boost;
 
 #include "bytestream.h"
 using namespace messageqcpp;
@@ -48,21 +46,6 @@ using namespace execplan;
 
 namespace rowgroup
 {
-using cscType = execplan::CalpontSystemCatalog::ColDataType;
-
-StringStore::StringStore() : empty(true), fUseStoreStringMutex(false)
-{
-}
-
-StringStore::StringStore(const StringStore&)
-{
-  throw logic_error("Don't call StringStore copy ctor");
-}
-
-StringStore& StringStore::operator=(const StringStore&)
-{
-  throw logic_error("Don't call StringStore operator=");
-}
 
 StringStore::~StringStore()
 {
@@ -86,16 +69,16 @@ StringStore::~StringStore()
 
 uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 {
-  MemChunk* lastMC = NULL;
+  MemChunk* lastMC = nullptr;
   uint64_t ret = 0;
 
-  empty = false;  // At least a NULL is being stored.
+  empty = false;  // At least a nullptr is being stored.
 
   // Sometimes the caller actually wants "" to be returned.......   argggghhhh......
   // if (len == 0)
   //	return numeric_limits<uint32_t>::max();
 
-  if ((len == 8 || len == 9) && *((uint64_t*)data) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()))
+  if (!data)
     return numeric_limits<uint64_t>::max();
 
   //@bug6065, make StringStore::storeString() thread safe
@@ -109,7 +92,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 
   if ((len + 4) >= CHUNK_SIZE)
   {
-    shared_array<uint8_t> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
+    std::shared_ptr<uint8_t[]> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
     longStrings.push_back(newOne);
     lastMC = (MemChunk*)longStrings.back().get();
     lastMC->capacity = lastMC->currentSize = len + 4;
@@ -121,12 +104,12 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   }
   else
   {
-    if ((lastMC == NULL) || (lastMC->capacity - lastMC->currentSize < (len + 4)))
+    if ((lastMC == nullptr) || (lastMC->capacity - lastMC->currentSize < (len + 4)))
     {
       // mem usage debugging
       // if (lastMC)
       // cout << "Memchunk efficiency = " << lastMC->currentSize << "/" << lastMC->capacity << endl;
-      shared_array<uint8_t> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
+      std::shared_ptr<uint8_t[]> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
       mem.push_back(newOne);
       lastMC = (MemChunk*)mem.back().get();
       lastMC->currentSize = 0;
@@ -208,19 +191,11 @@ void StringStore::deserialize(ByteStream& bs)
 
 void StringStore::clear()
 {
-  vector<shared_array<uint8_t> > emptyv;
-  vector<shared_array<uint8_t> > emptyv2;
+  vector<std::shared_ptr<uint8_t[]> > emptyv;
+  vector<std::shared_ptr<uint8_t[]> > emptyv2;
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
   empty = true;
-}
-
-UserDataStore::UserDataStore() : fUseUserDataMutex(false)
-{
-}
-
-UserDataStore::~UserDataStore()
-{
 }
 
 uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
@@ -228,7 +203,7 @@ uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
 {
   uint32_t ret = 0;
 
-  if (len == 0 || data == NULL)
+  if (len == 0 || data == nullptr)
   {
     return numeric_limits<uint32_t>::max();
   }
@@ -305,7 +280,7 @@ void UserDataStore::deserialize(ByteStream& bs)
     }
 
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    mcsv1sdk::UserData* userData = NULL;
+    mcsv1sdk::UserData* userData = nullptr;
     rc = funcIter->second->createUserData(userData, vStoreData[i].length);
 
     if (rc != mcsv1sdk::mcsv1_UDAF::SUCCESS)
@@ -323,11 +298,6 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-RGData::RGData()
-{
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-}
-
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
   // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
@@ -335,6 +305,8 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 
   if (rg.usesStringTable() && rowCount > 0)
     strings.reset(new StringStore());
+
+  userDataStore.reset();
 
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
@@ -344,6 +316,8 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
 #endif
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 RGData::RGData(const RowGroup& rg)
@@ -354,6 +328,8 @@ RGData::RGData(const RowGroup& rg)
   if (rg.usesStringTable())
     strings.reset(new StringStore());
 
+  userDataStore.reset();
+
 #ifdef VALGRIND
   /* In a PM-join, we can serialize entire tables; not every value has been
    * filled in yet.  Need to look into that.  Valgrind complains that
@@ -361,11 +337,14 @@ RGData::RGData(const RowGroup& rg)
    */
   memset(rowData.get(), 0, rg.getMaxDataSize());
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  userDataStore.reset();
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
@@ -379,6 +358,8 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -386,21 +367,13 @@ void RGData::reinit(const RowGroup& rg)
   reinit(rg, 8192);
 }
 
-RGData::RGData(const RGData& r) : rowData(r.rowData), strings(r.strings), userDataStore(r.userDataStore)
-{
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-}
-
-RGData::~RGData()
-{
-  // cout << "rgdata-- = " << __sync_sub_and_fetch(&rgDataCount, 1) << endl;
-}
-
 void RGData::serialize(ByteStream& bs, uint32_t amount) const
 {
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
+  bs << columnCount;
+  bs << rowSize;
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -427,11 +400,26 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   uint8_t tmp8;
 
   bs.peek(sig);
-
   if (sig == RGDATA_SIG)
   {
     bs >> sig;
     bs >> amount;
+    uint32_t colCountTemp;
+    uint32_t rowSizeTemp;
+    bs >> colCountTemp;
+    bs >> rowSizeTemp;
+    if (rowSize != 0 || columnCount != 0)
+    {
+      idbassert(rowSize == rowSizeTemp && colCountTemp == columnCount);
+    }
+    else
+    {
+      // if deserializing into an empty RGData created by default constructor
+      // which sets columnCount = 0 and rowSize = 0, set columnCount and rowSize
+      // from deserialized bytestream
+      columnCount = colCountTemp;
+      rowSize = rowSizeTemp;
+    }
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);
@@ -465,6 +453,7 @@ void RGData::clear()
 {
   rowData.reset();
   strings.reset();
+  userDataStore.reset();
 }
 
 // UserDataStore is only used for UDAF.
@@ -477,10 +466,6 @@ UserDataStore* RGData::getUserDataStore()
   }
 
   return userDataStore.get();
-}
-
-Row::Row() : data(NULL), strings(NULL), userDataStore(NULL)
-{
 }
 
 Row::Row(const Row& r)
@@ -502,11 +487,7 @@ Row::Row(const Row& r)
  , hasLongStringField(r.hasLongStringField)
  , sTableThreshold(r.sTableThreshold)
  , forceInline(r.forceInline)
- , userDataStore(NULL)
-{
-}
-
-Row::~Row()
+ , userDataStore(nullptr)
 {
 }
 
@@ -589,7 +570,7 @@ string Row::toString(uint32_t rownum) const
         case CalpontSystemCatalog::UDECIMAL:
           if (colWidths[i] == datatypes::MAXDECIMALWIDTH)
           {
-            datatypes::Decimal dec(0, scale[i], precision[i], getBinaryField<int128_t>(i));
+            datatypes::Decimal dec(getTSInt128Field(i), scale[i], precision[i]);
             os << dec << " ";
             break;
           }
@@ -618,7 +599,7 @@ string Row::toCSV() const
       switch (types[i])
       {
         case CalpontSystemCatalog::CHAR:
-        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).c_str(); break;
+        case CalpontSystemCatalog::VARCHAR: os << getStringField(i).safeString(); break;
 
         case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT: os << getFloatField(i); break;
@@ -653,135 +634,143 @@ string Row::toCSV() const
   return os.str();
 }
 
+void Row::setToNull(uint32_t colIndex)
+{
+  setNullMark(colIndex, true);  // mark as null.
+  switch (types[colIndex])
+  {
+    case CalpontSystemCatalog::TINYINT: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
+
+    case CalpontSystemCatalog::SMALLINT:
+      *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
+      break;
+
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::INT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL);
+      break;
+
+    case CalpontSystemCatalog::FLOAT:
+    case CalpontSystemCatalog::UFLOAT:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::FLOATNULL);
+      break;
+
+    case CalpontSystemCatalog::DATE:
+      *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::DATENULL);
+      break;
+
+    case CalpontSystemCatalog::BIGINT:
+      if (precision[colIndex] != MagicPrecisionForCountAgg)
+        *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
+      else  // work around for count() in outer join result.
+        *((uint64_t*)&data[offsets[colIndex]]) = 0;
+
+      break;
+
+    case CalpontSystemCatalog::DOUBLE:
+    case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DOUBLENULL; break;
+
+    case CalpontSystemCatalog::LONGDOUBLE:
+      *((long double*)&data[offsets[colIndex]]) = joblist::LONGDOUBLENULL;
+      break;
+
+    case CalpontSystemCatalog::DATETIME:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL;
+      break;
+
+    case CalpontSystemCatalog::TIMESTAMP:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL;
+      break;
+
+    case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMENULL; break;
+
+    case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::STRINT:
+    {
+      if (inStringTable(colIndex))
+      {
+        utils::NullString nullstr;
+        setStringField(nullstr, colIndex);
+        break;
+      }
+
+      uint32_t len = getColumnWidth(colIndex);
+
+      switch (len)
+      {
+        case 1: data[offsets[colIndex]] = joblist::CHAR1NULL; break;
+
+        case 2: *((uint16_t*)&data[offsets[colIndex]]) = joblist::CHAR2NULL; break;
+
+        case 3:
+        case 4: *((uint32_t*)&data[offsets[colIndex]]) = joblist::CHAR4NULL; break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 8: *((uint64_t*)&data[offsets[colIndex]]) = joblist::CHAR8NULL; break;
+
+        default: setNullMark(colIndex, true); break;
+      }
+
+      break;
+    }
+
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+    {
+      uint32_t len = getColumnWidth(colIndex);
+
+      switch (len)
+      {
+        case 1: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
+
+        case 2: *((int16_t*)&data[offsets[colIndex]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
+
+        case 4: *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::INTNULL); break;
+
+        case 16:
+        {
+          int128_t* s128ValuePtr = (int128_t*)(&data[offsets[colIndex]]);
+          datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
+        }
+        break;
+        default: *((int64_t*)&data[offsets[colIndex]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
+      }
+
+      break;
+    }
+
+    case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
+
+    case CalpontSystemCatalog::USMALLINT:
+      *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL;
+      break;
+
+    case CalpontSystemCatalog::UMEDINT:
+    case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[colIndex]]) = joblist::UINTNULL; break;
+
+    case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[colIndex]]) = joblist::UBIGINTNULL; break;
+
+    default:
+      ostringstream os;
+      os << "Row::initToNull(): got bad column type (" << types[colIndex]
+         << ").  Width=" << getColumnWidth(colIndex) << endl;
+      os << toString();
+      throw logic_error(os.str());
+  }
+}
 void Row::initToNull()
 {
   uint32_t i;
 
   for (i = 0; i < columnCount; i++)
   {
-    switch (types[i])
-    {
-      case CalpontSystemCatalog::TINYINT: data[offsets[i]] = joblist::TINYINTNULL; break;
-
-      case CalpontSystemCatalog::SMALLINT:
-        *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL);
-        break;
-
-      case CalpontSystemCatalog::MEDINT:
-      case CalpontSystemCatalog::INT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL);
-        break;
-
-      case CalpontSystemCatalog::FLOAT:
-      case CalpontSystemCatalog::UFLOAT:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::FLOATNULL);
-        break;
-
-      case CalpontSystemCatalog::DATE:
-        *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::DATENULL);
-        break;
-
-      case CalpontSystemCatalog::BIGINT:
-        if (precision[i] != 9999)
-          *((uint64_t*)&data[offsets[i]]) = joblist::BIGINTNULL;
-        else  // work around for count() in outer join result.
-          *((uint64_t*)&data[offsets[i]]) = 0;
-
-        break;
-
-      case CalpontSystemCatalog::DOUBLE:
-      case CalpontSystemCatalog::UDOUBLE: *((uint64_t*)&data[offsets[i]]) = joblist::DOUBLENULL; break;
-
-      case CalpontSystemCatalog::LONGDOUBLE:
-        *((long double*)&data[offsets[i]]) = joblist::LONGDOUBLENULL;
-        break;
-
-      case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[i]]) = joblist::DATETIMENULL; break;
-
-      case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[i]]) = joblist::TIMESTAMPNULL; break;
-
-      case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[i]]) = joblist::TIMENULL; break;
-
-      case CalpontSystemCatalog::CHAR:
-      case CalpontSystemCatalog::VARCHAR:
-      case CalpontSystemCatalog::TEXT:
-      case CalpontSystemCatalog::STRINT:
-      {
-        if (inStringTable(i))
-        {
-          setStringField(joblist::CPNULLSTRMARK, i);
-          break;
-        }
-
-        uint32_t len = getColumnWidth(i);
-
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::CHAR1NULL; break;
-
-          case 2: *((uint16_t*)&data[offsets[i]]) = joblist::CHAR2NULL; break;
-
-          case 3:
-          case 4: *((uint32_t*)&data[offsets[i]]) = joblist::CHAR4NULL; break;
-
-          case 5:
-          case 6:
-          case 7:
-          case 8: *((uint64_t*)&data[offsets[i]]) = joblist::CHAR8NULL; break;
-
-          default:
-            *((uint64_t*)&data[offsets[i]]) = *((uint64_t*)joblist::CPNULLSTRMARK.c_str());
-            memset(&data[offsets[i] + 8], 0, len - 8);
-            break;
-        }
-
-        break;
-      }
-
-      case CalpontSystemCatalog::VARBINARY:
-      case CalpontSystemCatalog::BLOB: *((uint16_t*)&data[offsets[i]]) = 0; break;
-
-      case CalpontSystemCatalog::DECIMAL:
-      case CalpontSystemCatalog::UDECIMAL:
-      {
-        uint32_t len = getColumnWidth(i);
-
-        switch (len)
-        {
-          case 1: data[offsets[i]] = joblist::TINYINTNULL; break;
-
-          case 2: *((int16_t*)&data[offsets[i]]) = static_cast<int16_t>(joblist::SMALLINTNULL); break;
-
-          case 4: *((int32_t*)&data[offsets[i]]) = static_cast<int32_t>(joblist::INTNULL); break;
-
-          case 16:
-          {
-            int128_t* s128ValuePtr = (int128_t*)(&data[offsets[i]]);
-            datatypes::TSInt128::storeUnaligned(s128ValuePtr, datatypes::Decimal128Null);
-          }
-          break;
-          default: *((int64_t*)&data[offsets[i]]) = static_cast<int64_t>(joblist::BIGINTNULL); break;
-        }
-
-        break;
-      }
-
-      case CalpontSystemCatalog::UTINYINT: data[offsets[i]] = joblist::UTINYINTNULL; break;
-
-      case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[i]]) = joblist::USMALLINTNULL; break;
-
-      case CalpontSystemCatalog::UMEDINT:
-      case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[i]]) = joblist::UINTNULL; break;
-
-      case CalpontSystemCatalog::UBIGINT: *((uint64_t*)&data[offsets[i]]) = joblist::UBIGINTNULL; break;
-
-      default:
-        ostringstream os;
-        os << "Row::initToNull(): got bad column type (" << types[i] << ").  Width=" << getColumnWidth(i)
-           << endl;
-        os << toString();
-        throw logic_error(os.str());
-    }
+    setToNull(i);
   }
 }
 
@@ -800,7 +789,8 @@ template <>
 inline bool Row::isNullValue_offset<execplan::CalpontSystemCatalog::DECIMAL, 16>(uint32_t offset) const
 {
   const int128_t* intPtr = reinterpret_cast<const int128_t*>(&data[offset]);
-  return datatypes::Decimal::isWideDecimalNullValue(*intPtr);
+  const datatypes::TSInt128 value(intPtr);
+  return datatypes::Decimal::isWideDecimalNullValue(value.getValue());
 }
 
 template <>
@@ -862,6 +852,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 
     case CalpontSystemCatalog::TIME: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::TIMENULL);
 
+    case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
+    case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::STRINT:
@@ -875,8 +868,8 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
-      if (data[offsets[colIndex]] == 0)  // empty string
-        return true;
+      //      if (data[offsets[colIndex]] == 0)  // empty string
+      //        return true;
 
       switch (len)
       {
@@ -892,7 +885,9 @@ bool Row::isNullValue(uint32_t colIndex) const
         case 7:
         case 8: return (*((uint64_t*)&data[offsets[colIndex]]) == joblist::CHAR8NULL);
         default:
-          return (*((uint64_t*)&data[offsets[colIndex]]) == *((uint64_t*)joblist::CPNULLSTRMARK.c_str()));
+          // a case for value stored with NULL flag prefix.
+          // see setStringField method.
+          return getNullMark(colIndex);
       }
 
       break;
@@ -914,28 +909,6 @@ bool Row::isNullValue(uint32_t colIndex) const
 
         default: return (*((int64_t*)&data[offsets[colIndex]]) == static_cast<int64_t>(joblist::BIGINTNULL));
       }
-
-      break;
-    }
-
-    case CalpontSystemCatalog::BLOB:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARBINARY:
-    {
-      uint32_t pos = offsets[colIndex];
-
-      if (inStringTable(colIndex))
-      {
-        uint64_t offset;
-        offset = *((uint64_t*)&data[pos]);
-        return strings->isNullValue(offset);
-      }
-
-      if (*((uint16_t*)&data[pos]) == 0)
-        return true;
-      else if ((strncmp((char*)&data[pos + 2], joblist::CPNULLSTRMARK.c_str(), 8) == 0) &&
-               *((uint16_t*)&data[pos]) == joblist::CPNULLSTRMARK.length())
-        return true;
 
       break;
     }
@@ -1022,7 +995,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
       }
       else if (UNLIKELY(datatypes::isWideDecimalType(columnType, colWidths[col])))
       {
-        if (*getBinaryField<int128_t>(col) != *r2.getBinaryField<int128_t>(col))
+        if (getTSInt128Field(col).getValue() != r2.getTSInt128Field(col).getValue())
           return false;
       }
       else if (getUintField(col) != r2.getUintField(col))
@@ -1036,7 +1009,7 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
 
 const CHARSET_INFO* Row::getCharset(uint32_t col) const
 {
-  if (charsets[col] == NULL)
+  if (charsets[col] == nullptr)
   {
     const_cast<CHARSET_INFO**>(charsets)[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
@@ -1044,14 +1017,6 @@ const CHARSET_INFO* Row::getCharset(uint32_t col) const
 }
 
 RowGroup::RowGroup()
- : columnCount(0)
- , data(NULL)
- , rgData(NULL)
- , strings(NULL)
- , useStringTable(true)
- , hasCollation(false)
- , hasLongStringField(false)
- , sTableThreshold(20)
 {
   // 1024 is too generous to waste.
   oldOffsets.reserve(10);
@@ -1064,13 +1029,20 @@ RowGroup::RowGroup()
   precision.reserve(10);
 }
 
+RowGroup::RowGroup(const RowGroupComponents& rgc, uint32_t stringTableThreshold, bool useStringTable,
+                   const std::vector<bool>& forceInlineData)
+ : RowGroup(rgc.oids.size(), rgc.pos, rgc.oids, rgc.keys, rgc.types, rgc.csNums, rgc.scales, rgc.precisions,
+            stringTableThreshold, useStringTable, forceInlineData)
+{
+}
+
 RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const vector<uint32_t>& roids,
                    const vector<uint32_t>& tkeys, const vector<CalpontSystemCatalog::ColDataType>& colTypes,
                    const vector<uint32_t>& csNumbers, const vector<uint32_t>& cscale,
                    const vector<uint32_t>& cprecision, uint32_t stringTableThreshold, bool stringTable,
                    const vector<bool>& forceInlineData)
  : columnCount(colCount)
- , data(NULL)
+ , data(nullptr)
  , oldOffsets(positions)
  , oids(roids)
  , keys(tkeys)
@@ -1078,8 +1050,8 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
  , charsetNumbers(csNumbers)
  , scale(cscale)
  , precision(cprecision)
- , rgData(NULL)
- , strings(NULL)
+ , rgData(nullptr)
+ , strings(nullptr)
  , sTableThreshold(stringTableThreshold)
 {
   uint32_t i;
@@ -1120,8 +1092,8 @@ RowGroup::RowGroup(uint32_t colCount, const vector<uint32_t>& positions, const v
   useStringTable = (stringTable && hasLongStringField);
   offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
 
-  // Set all the charsets to NULL for jit initialization.
-  charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  // Set all the charsets to nullptr for jit initialization.
+  charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
 RowGroup::RowGroup(const RowGroup& r)
@@ -1188,14 +1160,6 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
 }
 
 RowGroup::RowGroup(ByteStream& bs)
- : columnCount(0)
- , data(nullptr)
- , rgData(nullptr)
- , strings(nullptr)
- , useStringTable(true)
- , hasCollation(false)
- , hasLongStringField(false)
- , sTableThreshold(20)
 {
   this->deserialize(bs);
 }
@@ -1266,42 +1230,33 @@ void RowGroup::deserialize(ByteStream& bs)
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
 
-  // Set all the charsets to NULL for jit initialization.
-  charsets.insert(charsets.begin(), charsetNumbers.size(), NULL);
+  // Set all the charsets to nullptr for jit initialization.
+  charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
 void RowGroup::serializeRGData(ByteStream& bs) const
 {
-  // cout << "****** serializing\n" << toString() << en
-  //	if (useStringTable || !hasLongStringField)
   rgData->serialize(bs, getDataSize());
-  //	else {
-  //		uint64_t size;
-  //		RGData *compressed = convertToStringTable(&size);
-  //		compressed->serialize(bs, size);
-  //		if (compressed != rgData)
-  //			delete compressed;
-  //	}
 }
 
 uint32_t RowGroup::getDataSize() const
 {
-  return headerSize + (getRowCount() * offsets[columnCount]);
+  return getDataSize(getRowCount());
 }
 
 uint32_t RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * offsets[columnCount]);
+  return headerSize + (n * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * offsets[columnCount]);
+  return headerSize + (8192 * getRowSize());
 }
 
 uint32_t RowGroup::getMaxDataSizeWithStrings() const
 {
-  return headerSize + (8192 * oldOffsets[columnCount]);
+  return headerSize + (8192 * (oldOffsets[columnCount] + columnCount));
 }
 
 uint32_t RowGroup::getEmptySize() const
@@ -1366,7 +1321,7 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
 
   // os << "strings = " << hex << (int64_t) strings << "\n";
   // os << "data = " << (int64_t) data << "\n" << dec;
-  if (data != NULL)
+  if (data != nullptr)
   {
     Row r;
     initRow(&r);
@@ -1397,9 +1352,9 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
   return os.str();
 }
 
-boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2)
+std::shared_ptr<int[]> makeMapping(const RowGroup& r1, const RowGroup& r2)
 {
-  shared_array<int> ret(new int[r1.getColumnCount()]);
+  std::shared_ptr<int[]> ret(new int[r1.getColumnCount()]);
   // bool reserved[r2.getColumnCount()];
   bool* reserved = (bool*)alloca(r2.getColumnCount() * sizeof(bool));
   uint32_t i, j;
@@ -1424,7 +1379,7 @@ boost::shared_array<int> makeMapping(const RowGroup& r1, const RowGroup& r2)
   return ret;
 }
 
-void applyMapping(const boost::shared_array<int>& mapping, const Row& in, Row* out)
+void applyMapping(const std::shared_ptr<int[]>& mapping, const Row& in, Row* out)
 {
   applyMapping(mapping.get(), in, out);
 }
@@ -1444,9 +1399,13 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
                    in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
+      {
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isLongString(i)))
+      {
         out->setStringField(in.getConstString(i), mapping[i]);
+      }
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
       else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
@@ -1455,7 +1414,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       // Migrate to offset based methods here
       // code precision 2 width convertor
       else if (UNLIKELY(datatypes::isWideDecimalType(in.getColTypes()[i], in.getColumnWidth(i))))
-        out->setBinaryField_offset(in.getBinaryField<int128_t>(i), 16, out->getOffset(mapping[i]));
+        out->setInt128Field(in.getTSInt128Field(i).getValue(), mapping[i]);
       else if (in.isUnsigned(i))
         out->setUintField(in.getUintField(i), mapping[i]);
       else
@@ -1465,7 +1424,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
 
 RowGroup& RowGroup::operator+=(const RowGroup& rhs)
 {
-  boost::shared_array<bool> tmp;
+  std::shared_ptr<bool[]> tmp;
   uint32_t i, j;
   // not appendable if data is set
   assert(!data);
@@ -1564,8 +1523,8 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
             default:
             {
-              string s = row.getStringField(j);
-              cr->PutStringData(string(s.c_str(), strlen(s.c_str())));
+              NullString s = row.getStringField(j);
+              cr->PutStringData(s.str(), s.isNull() ? 0 : strlen(s.str()));
             }
           }
 
@@ -1588,7 +1547,7 @@ void RowGroup::addToSysDataList(execplan::CalpontSystemCatalog::NJLSysDataList& 
 
 const CHARSET_INFO* RowGroup::getCharset(uint32_t col)
 {
-  if (charsets[col] == NULL)
+  if (charsets[col] == nullptr)
   {
     charsets[col] = &datatypes::Charset(charsetNumbers[col]).getCharset();
   }
@@ -1608,6 +1567,8 @@ RGData RowGroup::duplicate()
   {
     // this isn't a straight memcpy of everything b/c it might be remapping strings.
     // think about a big memcpy + a remap operation; might be faster.
+    // SZ: copy columns (can even be donw COW style), not rows. even memcpy approach for
+    // columns is safer.
     Row r1, r2;
     RowGroup rg(*this);
     rg.setData(&ret);
@@ -1628,35 +1589,11 @@ RGData RowGroup::duplicate()
     }
   }
   else
+  {
     memcpy(ret.rowData.get(), data, getDataSize());
+  }
 
   return ret;
-}
-
-void Row::setStringField(const std::string& val, uint32_t colIndex)
-{
-  uint64_t offset;
-  uint64_t length;
-
-  // length = strlen(val.c_str()) + 1;
-  length = val.length();
-
-  if (length > getColumnWidth(colIndex))
-    length = getColumnWidth(colIndex);
-
-  if (inStringTable(colIndex))
-  {
-    offset = strings->storeString((const uint8_t*)val.data(), length);
-    *((uint64_t*)&data[offsets[colIndex]]) = offset;
-    //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
-    //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
-    //				<< endl;
-  }
-  else
-  {
-    memcpy(&data[offsets[colIndex]], val.data(), length);
-    memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
-  }
 }
 
 void RowGroup::append(RGData& rgd)
@@ -1750,5 +1687,3 @@ RowGroup RowGroup::truncate(uint32_t cols)
 }
 
 }  // namespace rowgroup
-
-// vim:ts=4 sw=4:

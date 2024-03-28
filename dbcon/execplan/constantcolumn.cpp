@@ -39,27 +39,17 @@ namespace execplan
 /**
  *  Constructors/Destructors
  */
-ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(0)
+ConstantColumn::ConstantColumn() : ReturnedColumn(), fType(NULLDATA)
 {
 }
 
 ConstantColumn::ConstantColumn(const string& sql, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
 
-  if (type == LITERAL && sql.length() < 9)
-  {
-    memcpy(tmp, sql.c_str(), sql.length());
-    memset(tmp + sql.length(), 0, 8);
-    fResult.uintVal = uint64ToStr(*((uint64_t*)tmp));
-    fResult.intVal = (int64_t)fResult.uintVal;
-  }
-  else
-  {
-    fResult.intVal = atoll(sql.c_str());
-    fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
-  }
+  fResult.intVal = atoll(sql.c_str());
+  fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
 
   fResult.floatVal = atof(sql.c_str());
   fResult.doubleVal = atof(sql.c_str());
@@ -91,7 +81,7 @@ ConstantColumn::ConstantColumn(const string& sql, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.doubleVal = val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -106,7 +96,7 @@ ConstantColumn::ConstantColumn(const string& sql, const double val)
 ConstantColumn::ConstantColumn(const string& sql, const long double val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.doubleVal = (double)val;
   fResult.intVal = (int64_t)val;
   fResult.uintVal = (uint64_t)val;
@@ -121,7 +111,7 @@ ConstantColumn::ConstantColumn(const string& sql, const long double val)
 ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -135,7 +125,7 @@ ConstantColumn::ConstantColumn(const string& sql, const int64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
  : ReturnedColumn(), fConstval(sql), fType(type), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.uintVal = val;
   fResult.intVal = (int64_t)fResult.uintVal;
   fResult.floatVal = (float)fResult.uintVal;
@@ -149,7 +139,7 @@ ConstantColumn::ConstantColumn(const string& sql, const uint64_t val, TYPE type)
 ConstantColumn::ConstantColumn(const string& sql, const IDB_Decimal& val)
  : ReturnedColumn(), fConstval(sql), fType(NUM), fData(sql)
 {
-  fResult.strVal = sql;
+  fResult.strVal.assign(sql);
   fResult.intVal = (int64_t)atoll(sql.c_str());
   fResult.uintVal = strtoull(sql.c_str(), NULL, 0);
   fResult.floatVal = atof(sql.c_str());
@@ -177,9 +167,9 @@ ConstantColumn::ConstantColumn(const int64_t val, TYPE type) : ReturnedColumn(),
 {
   ostringstream oss;
   oss << val;
-  fConstval = oss.str();
+  fConstval.assign(oss.str());
   fData = oss.str();
-  fResult.strVal = fData;
+  fResult.strVal.assign(fData);
   fResult.intVal = val;
   fResult.uintVal = (uint64_t)fResult.intVal;
   fResult.floatVal = (float)fResult.intVal;
@@ -195,9 +185,9 @@ ConstantColumn::ConstantColumn(const uint64_t val, TYPE type, int8_t scale, uint
 {
   ostringstream oss;
   oss << val;
-  fConstval = oss.str();
+  fConstval.assign(oss.str());
   fData = oss.str();
-  fResult.strVal = fData;
+  fResult.strVal.assign(fData);
   fResult.intVal = (int64_t)val;
   fResult.uintVal = val;
   fResult.floatVal = (float)fResult.uintVal;
@@ -215,7 +205,8 @@ ConstantColumn::~ConstantColumn()
 const string ConstantColumn::toString() const
 {
   ostringstream oss;
-  oss << "ConstantColumn: " << fConstval << " intVal=" << fResult.intVal << " uintVal=" << fResult.uintVal;
+  oss << "ConstantColumn: " << fConstval.safeString("<<NuLL>>") << " intVal=" << fResult.intVal
+      << " uintVal=" << fResult.uintVal;
   oss << '(';
 
   if (fType == LITERAL)
@@ -231,6 +222,22 @@ const string ConstantColumn::toString() const
   if (fAlias.length() > 0)
     oss << "/Alias: " << fAlias;
 
+  return oss.str();
+}
+
+std::string ConstantColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("constantcolumn.h");
+  std::stringstream ss;
+  ss << "ConstantColumn(" << std::quoted(fData) << ", " << fConstval.safeString() << ")";
+
+  return ss.str();
+}
+
+std::string ConstantColumn::toExpressionString() const
+{
+  ostringstream oss;
+  oss << "Const(" << fResultType.colDataType << ")";
   return oss.str();
 }
 
@@ -296,6 +303,64 @@ void ConstantColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 
+RollupMarkColumn::RollupMarkColumn()
+{
+  fExpressionId = 0x55667788ULL;
+  fResultType.colDataType = CalpontSystemCatalog::INT;
+  fResultType.colWidth = 4;
+  // no-op.
+}
+RollupMarkColumn::~RollupMarkColumn()
+{
+  // no-op
+}
+void RollupMarkColumn::serialize(messageqcpp::ByteStream& b) const
+{
+  b << (ObjectReader::id_t)ObjectReader::ROLLUPMARKCOLUMN;
+  ReturnedColumn::serialize(b);
+  messageqcpp::ByteStream::octbyte timeZone = fTimeZone;
+  b << timeZone;
+  b << static_cast<ByteStream::doublebyte>(fReturnAll);
+  b << (uint64_t)fResult.intVal;
+  b << fResult.uintVal;
+  b << fResult.doubleVal;
+  b << fResult.longDoubleVal;
+  b << fResult.floatVal;
+  b << (uint8_t)fResult.boolVal;
+  b << fResult.strVal;
+  b << (uint64_t)fResult.decimalVal.value;
+  b << fResult.decimalVal.s128Value;
+  b << (uint8_t)fResult.decimalVal.scale;
+  b << (uint8_t)fResult.decimalVal.precision;
+}
+void RollupMarkColumn::unserialize(messageqcpp::ByteStream& b)
+{
+  ObjectReader::checkType(b, ObjectReader::ROLLUPMARKCOLUMN);
+  ReturnedColumn::unserialize(b);
+  // uint64_t val;
+
+  messageqcpp::ByteStream::octbyte timeZone;
+  b >> timeZone;
+  fTimeZone = timeZone;
+  b >> reinterpret_cast<ByteStream::doublebyte&>(fReturnAll);
+  b >> (uint64_t&)fResult.intVal;
+  b >> fResult.uintVal;
+  b >> fResult.doubleVal;
+  b >> fResult.longDoubleVal;
+  b >> fResult.floatVal;
+  b >> (uint8_t&)fResult.boolVal;
+  b >> fResult.strVal;
+  b >> (uint64_t&)fResult.decimalVal.value;
+  b >> fResult.decimalVal.s128Value;
+  b >> (uint8_t&)fResult.decimalVal.scale;
+  b >> (uint8_t&)fResult.decimalVal.precision;
+}
+static utils::NullString ns;
+const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& row, bool& isNull)
+{
+  return ns;
+}
+
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {
   const ReturnedColumn *rc1, *rc2;
@@ -306,7 +371,10 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
   if (*rc1 != *rc2)
     return false;
 
-  if (fConstval != t.fConstval)
+  if (fConstval.isNull() != t.fConstval.isNull())
+    return false;
+
+  if (!fConstval.isNull() && fConstval.unsafeStringRef() != t.fConstval.unsafeStringRef())
     return false;
 
   if (fType != t.fType)
@@ -347,4 +415,3 @@ bool ConstantColumn::operator!=(const TreeNode* t) const
 }
 
 }  // namespace execplan
-// vim:ts=4 sw=4:

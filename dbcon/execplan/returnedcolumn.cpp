@@ -33,6 +33,7 @@ using namespace messageqcpp;
 
 namespace execplan
 {
+
 /**
  * Constructors/Destructors
  */
@@ -50,7 +51,6 @@ ReturnedColumn::ReturnedColumn()
  , fColPosition(-1)
  , fHasAggregate(false)
  , fInputIndex(-1)
- , fInputOffset(-1)
  , fOutputIndex(-1)
  , fExpressionId((uint32_t)-1)
 {
@@ -71,7 +71,6 @@ ReturnedColumn::ReturnedColumn(const string& sql)
  , fHasAggregate(false)
  , fData(sql)
  , fInputIndex(-1)
- , fInputOffset(-1)
  , fOutputIndex(-1)
  , fExpressionId((uint32_t)-1)
 {
@@ -91,7 +90,6 @@ ReturnedColumn::ReturnedColumn(const uint32_t sessionID, const bool returnAll)
  , fColPosition(-1)
  , fHasAggregate(false)
  , fInputIndex(-1)
- , fInputOffset(-1)
  , fOutputIndex(-1)
  , fExpressionId((uint32_t)-1)
 {
@@ -113,7 +111,6 @@ ReturnedColumn::ReturnedColumn(const ReturnedColumn& rhs, const uint32_t session
  , fHasAggregate(rhs.fHasAggregate)
  , fData(rhs.fData)
  , fInputIndex(rhs.fInputIndex)
- , fInputOffset(rhs.fInputOffset)
  , fOutputIndex(rhs.fOutputIndex)
  , fExpressionId(rhs.fExpressionId)
 {
@@ -146,7 +143,6 @@ void ReturnedColumn::serialize(messageqcpp::ByteStream& b) const
   b << (uint64_t)fColSource;
   b << (int64_t)fColPosition;
   b << (uint32_t)fInputIndex;
-  b << (uint32_t)fInputOffset;
   b << (uint32_t)fOutputIndex;
   b << (int32_t)fSequence;
   b << (uint8_t)fReturnAll;
@@ -169,7 +165,6 @@ void ReturnedColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint64_t&)fColSource;
   b >> (int64_t&)fColPosition;
   b >> (uint32_t&)fInputIndex;
-  b >> (uint32_t&)fInputOffset;
   b >> (uint32_t&)fOutputIndex;
   b >> (int32_t&)fSequence;
   b >> (uint8_t&)fReturnAll;
@@ -245,6 +240,22 @@ const string ReturnedColumn::toString() const
 {
   ostringstream oss;
   oss << ">ReturnedColumn " << fJoinInfo << "<" << endl;
+  return oss.str();
+}
+
+string ReturnedColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("returnedcolumn.h");
+
+  ostringstream oss;
+  oss << "ReturnedColumn(" << std::quoted(fData) << ")";
+  return oss.str();
+}
+
+std::string ReturnedColumn::toExpressionString() const
+{
+  ostringstream oss;
+  oss << fResultType.colDataType;
   return oss.str();
 }
 

@@ -60,7 +60,6 @@
 #include "outerjoinonfilter.h"
 
 #include "bytestream.h"
-#include "expressionparser.h"
 #include "objectreader.h"
 
 using namespace std;
@@ -113,6 +112,8 @@ TreeNode* ObjectReader::createTreeNode(messageqcpp::ByteStream& b)
     case ARITHMETICCOLUMN: ret = new ArithmeticColumn(); break;
 
     case CONSTANTCOLUMN: ret = new ConstantColumn(); break;
+
+    case ROLLUPMARKCOLUMN: ret = new RollupMarkColumn(); break;
 
     case FUNCTIONCOLUMN: ret = new FunctionColumn(); break;
 
@@ -195,33 +196,102 @@ void ObjectReader::writeParseTree(const ParseTree* tree, messageqcpp::ByteStream
     return;
   }
 
-  b << (id_t)PARSETREE;
-  writeParseTree(tree->left(), b);
-  writeParseTree(tree->right(), b);
-
-  if (tree->data() == NULL)
-    b << (id_t)NULL_CLASS;
-  else
-    tree->data()->serialize(b);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(tree));
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (node == NULL)
+    {
+      b << (id_t)NULL_CLASS;
+      stack.pop_back();
+      continue;
+    }
+    if (dir == execplan::GoTo::Left)
+    {
+      b << (id_t)PARSETREE;
+      stack.back().direction = execplan::GoTo::Right;
+      stack.emplace_back(node->left());
+    }
+    else if (dir == execplan::GoTo::Right)
+    {
+      stack.back().direction = execplan::GoTo::Up;
+      stack.emplace_back(node->right());
+    }
+    else
+    {
+      if (node->data() == NULL)
+        b << (id_t)NULL_CLASS;
+      else
+        node->data()->serialize(b);
+      stack.pop_back();
+    }
+  }
 }
 
 ParseTree* ObjectReader::createParseTree(messageqcpp::ByteStream& b)
 {
   CLASSID id = ZERO;
   ParseTree* ret;
-
+  DFSStack stack;
   b >> (id_t&)id;
 
   if (id == NULL_CLASS)
     return NULL;
-
   if (id != PARSETREE)
     throw UnserializeException("Not a ParseTree");
 
   ret = new ParseTree();
-  ret->left(createParseTree(b));
-  ret->right(createParseTree(b));
-  ret->data(createTreeNode(b));
+  stack.emplace_back(ret);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == execplan::GoTo::Left)
+    {
+      id = ZERO;
+      ParseTree* cur = NULL;
+      b >> (id_t&)id;
+
+      if (id == NULL_CLASS)
+      {
+        stack.back().node->left(cur);
+        stack.back().direction = execplan::GoTo::Right;
+        continue;
+      }
+      if (id != PARSETREE)
+        throw UnserializeException("Not a ParseTree");
+
+      cur = new ParseTree();
+      stack.back().direction = execplan::GoTo::Right;
+      stack.back().node->left(cur);
+      stack.emplace_back(node->left());
+    }
+    else if (dir == execplan::GoTo::Right)
+    {
+      id = ZERO;
+      ParseTree* cur = NULL;
+      b >> (id_t&)id;
+
+      if (id == NULL_CLASS)
+      {
+        stack.back().node->right(cur);
+        stack.back().direction = execplan::GoTo::Up;
+        continue;
+      }
+      if (id != PARSETREE)
+        throw UnserializeException("Not a ParseTree");
+
+      cur = new ParseTree();
+      stack.back().direction = execplan::GoTo::Up;
+      stack.back().node->right(cur);
+      stack.emplace_back(node->right());
+    }
+    else
+    {
+      stack.back().node->data(createTreeNode(b));
+      stack.pop_back();
+    }
+  }
   return ret;
 }
 

@@ -23,8 +23,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef ARITHMETICCOLUMN_H
-#define ARITHMETICCOLUMN_H
+#pragma once
 #include <string>
 #include <iosfwd>
 #include <stack>
@@ -87,7 +86,7 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * get asc flag
    */
-  inline bool asc() const
+  inline bool asc() const override
   {
     return fAsc;
   }
@@ -95,7 +94,7 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * set asc flag
    */
-  inline void asc(const bool asc)
+  inline void asc(const bool asc) override
   {
     fAsc = asc;
   }
@@ -103,7 +102,7 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * get SQL representation of this object
    */
-  virtual const std::string data() const
+  virtual const std::string data() const override
   {
     return fData;
   }
@@ -111,7 +110,7 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * set SQL representation of this object
    */
-  virtual void data(const std::string data)
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
@@ -119,13 +118,13 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * virtual stream method
    */
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual ArithmeticColumn* clone() const
+  inline virtual ArithmeticColumn* clone() const override
   {
     return new ArithmeticColumn(*this);
   }
@@ -133,15 +132,15 @@ class ArithmeticColumn : public ReturnedColumn
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -155,7 +154,7 @@ class ArithmeticColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -165,16 +164,16 @@ class ArithmeticColumn : public ReturnedColumn
   bool operator!=(const ArithmeticColumn& t) const;
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate();
-  virtual bool hasWindowFunc();
+  virtual bool hasAggregate() override;
+  virtual bool hasWindowFunc() override;
 
-  virtual void setDerivedTable();
-  virtual void replaceRealCol(std::vector<SRCP>&);
-  virtual const std::vector<SimpleColumn*>& simpleColumnList() const
+  virtual void setDerivedTable() override;
+  virtual void replaceRealCol(std::vector<SRCP>&) override;
+  virtual const std::vector<SimpleColumn*>& simpleColumnList() const override
   {
     return fSimpleColumnList;
   }
-  virtual void setSimpleColumnList();
+  virtual void setSimpleColumnList() override;
 
   /**
    * Return the table that the column arguments belong to.
@@ -182,11 +181,14 @@ class ArithmeticColumn : public ReturnedColumn
    * @return tablename, if all arguments belong to one table
    *         empty string "", if multiple tables are involved in this func
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan);
+  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
 
  private:
   std::string fTableAlias;  // table alias for this column
-  bool fAsc;                // asc flag for order by column
+  bool fAsc = false;        // asc flag for order by column
   std::string fData;
 
   /** build expression tree
@@ -210,78 +212,79 @@ class ArithmeticColumn : public ReturnedColumn
    *                 F&E framework                           *
    ***********************************************************/
  public:
-  virtual const std::string& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getStrVal(row, isNull);
   }
 
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getIntVal(row, isNull);
   }
 
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getUintVal(row, isNull);
   }
 
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getFloatVal(row, isNull);
   }
 
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getDoubleVal(row, isNull);
   }
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getLongDoubleVal(row, isNull);
   }
 
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getDecimalVal(row, isNull);
   }
 
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getDateIntVal(row, isNull);
   }
 
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getDatetimeIntVal(row, isNull);
   }
 
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getTimestampIntVal(row, isNull);
   }
 
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getTimeIntVal(row, isNull);
   }
 
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     return fExpression->getBoolVal(row, isNull);
   }
 
  private:
-  ParseTree* fExpression;
+  ParseTree* fExpression = nullptr;
   using TreeNode::evaluate;
   void evaluate(rowgroup::Row& row)
   {
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
-    return fExpression->compile(b, data, isNull, row, dataType);
+    return fExpression->compile(b, data, isNull, dataConditionError, row, dataType);
   }
   bool isCompilable(rowgroup::Row& row) override
   {
@@ -295,4 +298,3 @@ class ArithmeticColumn : public ReturnedColumn
 std::ostream& operator<<(std::ostream& output, const ArithmeticColumn& rhs);
 
 }  // namespace execplan
-#endif  // ARITHMETICCOLUMN_H

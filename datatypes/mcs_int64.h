@@ -16,10 +16,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_INT64_H_INCLUDED
-#define MCS_INT64_H_INCLUDED
+#pragma once
 
+#include <algorithm>
 #include "exceptclasses.h"
+#include "mcs_datatypes_limits.h"
 
 namespace datatypes
 {
@@ -61,6 +62,18 @@ class TUInt64
   {
     *(uint64_t*)dst = mValue;
   }
+
+  uint64_t toMCSUInt64() const
+  {
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return mValue == joblist::UBIGINTNULL ? MAX_UBIGINT : mValue;
+  }
+
+  int64_t toMCSInt64() const
+  {
+    //@Bug 4632 and 4648: Don't return marker value for NULL, but allow return of marker value for EMPTYROW.
+    return std::max(static_cast<int64_t>(mValue), static_cast<int64_t>(joblist::BIGINTEMPTYROW));
+  }
 };
 
 class TSInt64
@@ -84,6 +97,16 @@ class TSInt64
   explicit operator uint64_t() const
   {
     return mValue < 0 ? 0 : static_cast<uint64_t>(mValue);
+  }
+
+  uint64_t toMCSUInt64() const
+  {
+    return static_cast<uint64_t>(mValue);
+  }
+
+  int64_t toMCSInt64() const
+  {
+    return std::max(static_cast<int64_t>(mValue), static_cast<int64_t>(joblist::BIGINTEMPTYROW));
   }
 };
 
@@ -179,6 +202,3 @@ class TSInt64Null : public TSInt64, public TNullFlag
 };
 
 }  // end of namespace datatypes
-
-#endif  // MCS_INT64_H_INCLUDED
-// vim:ts=2 sw=2:

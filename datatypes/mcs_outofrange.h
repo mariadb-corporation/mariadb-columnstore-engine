@@ -1,5 +1,4 @@
-/*
-   Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2021 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -14,42 +13,27 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.
-*/
+   MA 02110-1301, USA. */
+
 #pragma once
 
-#include "mcs_datatypes_limits.h"
+#include <string>
+
+#include "exceptclasses.h"
 
 namespace datatypes
 {
-class TDouble
+
+inline void throwOutOfRangeExceptionIfNeeded(const bool isNull, const bool isOutOfRange)
 {
- protected:
-  double mValue;
-
- public:
-  TDouble() : mValue(0)
+  if (!isNull && isOutOfRange)
   {
+    logging::Message::Args args;
+    static const std::string sqlType{"BIGINT UNSIGNED"};
+    args.add(sqlType);
+    const auto errcode = logging::ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT;
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
   }
+}
 
-  explicit TDouble(double value) : mValue(value)
-  {
-  }
-
-  explicit operator double() const
-  {
-    return mValue;
-  }
-
-  int64_t toMCSSInt64Round() const
-  {
-    return xFloatToMCSSInt64Round<double>(mValue);
-  }
-
-  uint64_t toMCSUInt64Round() const
-  {
-    return xFloatToMCSUInt64Round<double>(mValue);
-  }
-};
-
-}  // end of namespace datatypes
+}  // namespace datatypes

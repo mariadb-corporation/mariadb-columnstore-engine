@@ -23,8 +23,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef SIMPLECOLUMNINT_H
-#define SIMPLECOLUMNINT_H
+#pragma once
 #include <iostream>
 #include <string>
 
@@ -64,30 +63,33 @@ class SimpleColumn_INT : public SimpleColumn
   {
   }
 
-  inline virtual SimpleColumn_INT* clone() const
+  inline virtual SimpleColumn_INT* clone() const override
   {
     return new SimpleColumn_INT<len>(*this);
   }
 
   /** Evaluate methods */
-  virtual inline const std::string& getStrVal(rowgroup::Row& row, bool& isNull);
-  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull);
-  virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull);
-  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull);
-  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull);
-  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull);
+  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override;
 
   /** The serialize interface */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
   uint64_t fNullVal;
+
+  virtual std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   void setNullVal();
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
     auto offset = row.getOffset(fInputIndex);
@@ -100,6 +102,17 @@ class SimpleColumn_INT : public SimpleColumn
     return true;
   }
 };
+
+template <int len>
+std::string SimpleColumn_INT<len>::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("simplecolumn_int.h");
+  std::stringstream ss;
+  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName)
+     << ", " << std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
+
+  return ss.str();
+}
 
 template <int len>
 SimpleColumn_INT<len>::SimpleColumn_INT() : SimpleColumn()
@@ -148,10 +161,13 @@ void SimpleColumn_INT<len>::setNullVal()
 }
 
 template <int len>
-inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
+  {
     isNull = true;
+    fResult.strVal.dropString();
+  }
   else
   {
 #ifndef __LP64__
@@ -159,9 +175,9 @@ inline const std::string& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, b
 #else
     snprintf(tmp, 20, "%ld", (int64_t)row.getIntField<len>(fInputIndex));
 #endif
+    fResult.strVal.assign(std::string(tmp));
   }
 
-  fResult.strVal = std::string(tmp);
   return fResult.strVal;
 }
 
@@ -257,4 +273,3 @@ void SimpleColumn_INT<len>::unserialize(messageqcpp::ByteStream& b)
 }
 
 }  // namespace execplan
-#endif  // SIMPLECOLUMN_INT_H

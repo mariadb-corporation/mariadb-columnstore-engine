@@ -22,8 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef EXECPLAN_FILTER_H
-#define EXECPLAN_FILTER_H
+#pragma once
 #include <string>
 #include <iosfwd>
 
@@ -76,13 +75,17 @@ class Filter : public TreeNode
   /**
    * Operations
    */
-  virtual const std::string toString() const;
+  virtual const std::string toString() const override;
 
-  virtual const std::string data() const
+  virtual std::string toCppCode(IncludeSet& includes) const override;
+
+  virtual std::string toExpressionString() const override;
+
+  virtual const std::string data() const override
   {
     return fData;
   }
-  virtual void data(const std::string data)
+  virtual void data(const std::string data) override
   {
     fData = data;
   }
@@ -91,7 +94,7 @@ class Filter : public TreeNode
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual Filter* clone() const
+  inline virtual Filter* clone() const override
   {
     return new Filter(*this);
   }
@@ -99,15 +102,15 @@ class Filter : public TreeNode
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  virtual void serialize(messageqcpp::ByteStream&) const override;
+  virtual void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const;
+  virtual bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -121,7 +124,7 @@ class Filter : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const;
+  virtual bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -151,15 +154,9 @@ class Filter : public TreeNode
 
  protected:
   uint64_t fCardinality;
-
- private:
-  // default okay
-  // Filter& operator=(const Filter& rhs);
-
   std::string fData;
 };
 
 std::ostream& operator<<(std::ostream& os, const Filter& rhs);
 
 }  // namespace execplan
-#endif  // EXECPLAN_FILTER_H

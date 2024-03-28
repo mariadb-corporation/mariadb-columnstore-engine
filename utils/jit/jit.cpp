@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "jit.h"
 
 #include <sys/mman.h>
@@ -251,6 +253,7 @@ class JITCompiler
       // TODO: throw a more specific exception
       throw std::logic_error("Failed to materialize module: " + error_message);
     }
+    // WIP constant size?
     llvm::SmallVector<char, 4096> buffer;
     llvm::raw_svector_ostream ostream(buffer);
     llvm::legacy::PassManager pass_manager;
@@ -260,6 +263,11 @@ class JITCompiler
       // TODO: throw a more specific exception
       throw std::logic_error("Failed to create MC pass manager");
     }
+
+    // std::cout << "compile " << std::endl;
+    // module.print(llvm::outs(), nullptr);
+    // std::cout.flush();
+
     pass_manager.run(module);
 
     std::unique_ptr<llvm::MemoryBuffer> compiled_memory_buffer =
@@ -330,11 +338,16 @@ JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compil
   return module_info;
 }
 
+// #include "llvm/Support/raw_ostream.h"
+
 JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
+  // std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
+  // module->print(llvm::outs(), nullptr);
   runOptimizationPassesOnModule(*module);
 
   auto buffer = compiler->compile(*module);
+
   llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>> object_file =
       llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
   if (!object_file)
@@ -359,6 +372,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
       continue;
     }
     auto function_name = function.getName().str();
+    // std::cout << "function name " << function_name << std::endl;
     auto function_mangled_name = getMangledName(function_name);
     auto jit_symbol = runtime_dynamic_link.getSymbol(function_mangled_name);
     if (!jit_symbol)
@@ -446,11 +460,14 @@ void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
   symbol_resolver->registerSymbol(symbol_name, address);
 }
 
+// Optimization passes are not well defined.
+// Module PassManager removes the function.
 void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
 {
   llvm::PassManagerBuilder pass_manager_builder;
   llvm::legacy::PassManager mpm;
   llvm::legacy::FunctionPassManager fpm(&module);
+
   pass_manager_builder.OptLevel = 3;
   pass_manager_builder.SLPVectorize = true;
   pass_manager_builder.LoopVectorize = true;
@@ -468,11 +485,18 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   pass_manager_builder.populateModulePassManager(mpm);
 
   fpm.doInitialization();
+
   for (auto& function : module)
+  {
     fpm.run(function);
+  }
+
   fpm.doFinalization();
 
-  mpm.run(module);
+  // // WIP the module opt pass removes the function compiled
+  // Module opt passes aggresivelly remove "unreferenced" functions from
+  // a module.
+  // mpm.run(module);
 }
 JIT::~JIT()
 {

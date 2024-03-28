@@ -1,5 +1,4 @@
-/*
-   Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2016-2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -14,42 +13,39 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.
-*/
+   MA 02110-1301, USA. */
+
 #pragma once
 
-#include "mcs_datatypes_limits.h"
+#include <iostream>
 
-namespace datatypes
+namespace execplan
 {
-class TDouble
+enum OpType
 {
- protected:
-  double mValue;
-
- public:
-  TDouble() : mValue(0)
-  {
-  }
-
-  explicit TDouble(double value) : mValue(value)
-  {
-  }
-
-  explicit operator double() const
-  {
-    return mValue;
-  }
-
-  int64_t toMCSSInt64Round() const
-  {
-    return xFloatToMCSSInt64Round<double>(mValue);
-  }
-
-  uint64_t toMCSUInt64Round() const
-  {
-    return xFloatToMCSUInt64Round<double>(mValue);
-  }
+  OP_ADD = 0,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
+  OP_EQ,
+  OP_NE,
+  OP_GT,
+  OP_GE,
+  OP_LT,
+  OP_LE,
+  OP_LIKE,
+  OP_NOTLIKE,
+  OP_AND,
+  OP_OR,
+  OP_ISNULL,
+  OP_ISNOTNULL,
+  OP_BETWEEN,
+  OP_NOTBETWEEN,
+  OP_IN,
+  OP_NOTIN,
+  OP_XOR,
+  OP_UNKNOWN,
 };
 
-}  // end of namespace datatypes
+std::ostream& operator<<(std::ostream& os, execplan::OpType type);
+}  // namespace execplan

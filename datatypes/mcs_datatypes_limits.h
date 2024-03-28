@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2021 MariaDB Corporation
+   Copyright (C) 2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@ namespace datatypes
 template <SystemCatalog::ColDataType CT>
 struct ranges_limits
 {
-  using T = typename ColTypeToIntegral<CT>::type;
+  using T = ColTypeToIntegral<CT>::type;
   static constexpr T min()
   {
     if constexpr (std::is_signed_v<T>)

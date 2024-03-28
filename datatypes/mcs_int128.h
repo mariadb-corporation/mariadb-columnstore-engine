@@ -16,14 +16,15 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#ifndef MCS_INT128_H_INCLUDED
-#define MCS_INT128_H_INCLUDED
+#pragma once
 
 #include <cfloat>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <type_traits>
-#include <string>
+
+#include "mcs_datatypes_limits.h"
 #include "mcs_float128.h"
 
 // Inline asm has three argument lists: output, input and clobber list
@@ -190,6 +191,11 @@ class TSInt128
     return s128Value == static_cast<int128_t>(x);
   }
 
+  inline operator bool() const
+  {
+    return s128Value != 0;
+  }
+
   inline operator double() const
   {
     return toDouble();
@@ -250,6 +256,18 @@ class TSInt128
     return static_cast<uint64_t>(s128Value);
   }
 
+  // This can be replaced with a template based on SQL data type
+  std::optional<uint64_t> toUBIGINTWithDomainCheck() const
+  {
+    if (s128Value > static_cast<int128_t>(datatypes::ranges_limits<SystemCatalog::UBIGINT>::max()) ||
+        s128Value < datatypes::ranges_limits<SystemCatalog::UBIGINT>::min())
+    {
+      return std::nullopt;
+    }
+
+    return static_cast<uint64_t>(s128Value);
+  }
+
   inline operator TFloat128() const
   {
     return toTFloat128();
@@ -272,6 +290,7 @@ class TSInt128
     return TSInt128(s128Value % rhs);
   }
 
+  // These math operators don't do out-of-range checks.
   inline TSInt128 operator*(const TSInt128& rhs) const
   {
     return TSInt128(s128Value * rhs.s128Value);
@@ -280,6 +299,16 @@ class TSInt128
   inline TSInt128 operator+(const TSInt128& rhs) const
   {
     return TSInt128(s128Value + rhs.s128Value);
+  }
+
+  inline TSInt128 operator-(const TSInt128& rhs) const
+  {
+    return TSInt128(s128Value - rhs.s128Value);
+  }
+
+  inline TSInt128 operator/(const TSInt128& rhs) const
+  {
+    return TSInt128(s128Value / rhs.s128Value);
   }
 
   inline bool operator>(const TSInt128& rhs) const
@@ -322,6 +351,3 @@ class TSInt128
 };  // end of class
 
 }  // end of namespace datatypes
-
-#endif  // MCS_TSINT128_H_INCLUDED
-// vim:ts=2 sw=2:
