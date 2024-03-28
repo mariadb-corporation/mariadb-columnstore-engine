@@ -25,8 +25,8 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -785,35 +785,40 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
   CalpontSystemCatalog::OID tableOid = mit->second.fTableOid;
   JobStepVector& exps = mit->second.fOneTableExpSteps;
   JobStepVector& fjs = mit->second.fFuncJoinExps;
-  ExpressionStep* exp0 = NULL;
+  ExpressionStep* exp0 = (exps.size() > 0) ? dynamic_cast<ExpressionStep*>(exps[0].get())
+                                           : dynamic_cast<ExpressionStep*>(fjs[0].get());
 
-  if (exps.size() > 0)
-    exp0 = dynamic_cast<ExpressionStep*>(exps[0].get());
-  else
-    exp0 = dynamic_cast<ExpressionStep*>(fjs[0].get());
-
-  if (bps == NULL)
+  if (!bps)
   {
     if (tableOid > 0)
     {
-      uint32_t key0 = exp0->columnKey();
-      CalpontSystemCatalog::ColType ct = jobInfo.keyInfo->colType[key0];
-      map<uint32_t, CalpontSystemCatalog::ColType>::iterator dkMit;
+      // Check if dynamic_cast failed.
+      if (exp0)
+      {
+        uint32_t key0 = exp0->columnKey();
+        CalpontSystemCatalog::ColType ct = jobInfo.keyInfo->colType[key0];
+        map<uint32_t, CalpontSystemCatalog::ColType>::iterator dkMit;
 
-      if (jobInfo.keyInfo->token2DictTypeMap.find(key0) != jobInfo.keyInfo->token2DictTypeMap.end())
-        ct = jobInfo.keyInfo->token2DictTypeMap[key0];
+        if (jobInfo.keyInfo->token2DictTypeMap.find(key0) != jobInfo.keyInfo->token2DictTypeMap.end())
+          ct = jobInfo.keyInfo->token2DictTypeMap[key0];
 
-      scoped_ptr<pColScanStep> pcss(new pColScanStep(exp0->oid(), tableOid, ct, jobInfo));
+        scoped_ptr<pColScanStep> pcss(new pColScanStep(exp0->oid(), tableOid, ct, jobInfo));
 
-      sjsp.reset(new TupleBPS(*pcss, jobInfo));
-      TupleBPS* tbps = dynamic_cast<TupleBPS*>(sjsp.get());
-      tbps->setJobInfo(&jobInfo);
-      tbps->setFirstStepType(SCAN);
+        sjsp.reset(new TupleBPS(*pcss, jobInfo));
+        TupleBPS* tbps = dynamic_cast<TupleBPS*>(sjsp.get());
+        tbps->setJobInfo(&jobInfo);
+        tbps->setFirstStepType(SCAN);
 
-      // add the first column to BPP's filterSteps
-      tbps->setBPP(pcss.get());
+        // add the first column to BPP's filterSteps
+        tbps->setBPP(pcss.get());
 
-      bps = tbps;
+        bps = tbps;
+      }
+      else
+      {
+        // This is save b/c the upper level must have try.
+        throw runtime_error("Cannot cast to ExpressionStep in addExpresssionStepsToBps().");
+      }
     }
     else
     {
@@ -822,20 +827,13 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
       bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
     }
   }
+  if (!bps)
+  {
+    throw runtime_error("Cannot cast to BatchPrimitive in addExpresssionStepsToBps().");
+  }
 
-  // rowgroup for evaluating the one table expression
-  vector<uint32_t> pos;
-  vector<uint32_t> oids;
-  vector<uint32_t> keys;
-  vector<uint32_t> scale;
-  vector<uint32_t> precision;
-  vector<CalpontSystemCatalog::ColDataType> types;
-  vector<uint32_t> csNums;
-  pos.push_back(2);
-
-  vector<uint32_t> cols;
   JobStepVector& fjExp = mit->second.fFuncJoinExps;
-
+  vector<uint32_t> cols;
   for (JobStepVector::iterator it = fjExp.begin(); it != fjExp.end(); it++)
   {
     ExpressionStep* e = dynamic_cast<ExpressionStep*>(it->get());
@@ -847,6 +845,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
   uint32_t index = 0;                     // index in the rowgroup
   map<uint32_t, uint32_t> keyToIndexMap;  // maps key to the index in the RG
 
+  RowGroupComponents rgc;
   for (vector<uint32_t>::iterator kit = cols.begin(); kit != cols.end(); kit++)
   {
     uint32_t key = *kit;
@@ -863,17 +862,11 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
 
     // add the tuple info of the column into the RowGroup
     TupleInfo ti(getTupleInfo(key, jobInfo));
-    pos.push_back(pos.back() + ti.width);
-    oids.push_back(ti.oid);
-    keys.push_back(ti.key);
-    types.push_back(ti.dtype);
-    csNums.push_back(ti.csNum);
-    scale.push_back(ti.scale);
-    precision.push_back(ti.precision);
+    rgc.addColumn(ti.width, ti.oid, ti.key, ti.scale, ti.precision, ti.dtype, ti.csNum);
   }
 
   // construct RowGroup and add to TBPS
-  RowGroup rg(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
+  RowGroup rg(rgc, jobInfo.stringTableThreshold);
   bps->setFE1Input(rg);
 
   if (jobInfo.trace)
@@ -910,7 +903,11 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
       fjCols.push_back(e->expression());
     }
 
-    bps->addFcnJoinExp(fjCols);
+    // Do nothing if all fjs are virtual steps.
+    if (!fjCols.empty())
+    {
+      bps->addFcnJoinExp(fjCols);
+    }
   }
 }
 

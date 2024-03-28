@@ -39,7 +39,6 @@
 #include <cfloat>
 #include <execinfo.h>
 
-
 #include "hasher.h"
 
 #include "joblisttypes.h"
@@ -143,7 +142,7 @@ class StringStore
   // returns the offset.
   // it may receive nullptr as data and it is proper way to store NULL values.
   uint64_t storeString(const uint8_t* data, uint32_t length);
-  //please note getPointer can return nullptr.
+  // please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
   inline utils::ConstString getConstString(uint64_t offset) const
@@ -222,7 +221,6 @@ class UserDataStore
   UserDataStore& operator=(const UserDataStore&) = delete;
   UserDataStore& operator=(UserDataStore&&) = delete;
 
-
   void serialize(messageqcpp::ByteStream&) const;
   void deserialize(messageqcpp::ByteStream&);
 
@@ -243,13 +241,11 @@ class UserDataStore
   boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t offset) const;
 
  private:
-
   std::vector<StoreData> vStoreData;
 
   bool fUseUserDataMutex = false;
   boost::mutex fMutex;
 };
-
 
 class RowGroup;
 class Row;
@@ -266,8 +262,6 @@ class RGData
   RGData(const RGData&) = default;
   RGData(RGData&&) = default;
   virtual ~RGData() = default;
-
-
 
   // amount should be the # returned by RowGroup::getDataSize()
   void serialize(messageqcpp::ByteStream&, uint32_t amount) const;
@@ -320,8 +314,8 @@ class RGData
   }
 
  private:
-  uint32_t rowSize = 0; // can't be.
-  uint32_t columnCount = 0; // shouldn't be, but...
+  uint32_t rowSize = 0;      // can't be.
+  uint32_t columnCount = 0;  // shouldn't be, but...
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
@@ -371,7 +365,7 @@ class Row
   inline uint32_t getColumnWidth(uint32_t colIndex) const;
   inline uint32_t getColumnCount() const;
   inline uint32_t getInternalSize() const;  // this is only accurate if there is no string table
-  inline uint32_t getSize() const;  // this is only accurate if there is no string table
+  inline uint32_t getSize() const;          // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
   inline uint32_t getOffset(uint32_t colIndex) const;
@@ -606,10 +600,10 @@ class Row
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
 
-private:
- inline bool inStringTable(uint32_t col) const;
+ private:
+  inline bool inStringTable(uint32_t col) const;
 
-private:
+ private:
   uint32_t columnCount = 0;
   uint64_t baseRid = 0;
 
@@ -695,7 +689,7 @@ inline uint32_t Row::getRealSize() const
   if (!useStringTable)
     return getSize();
 
-  uint32_t ret = columnCount; // account for NULL flags.
+  uint32_t ret = columnCount;  // account for NULL flags.
 
   for (uint32_t i = 0; i < columnCount; i++)
   {
@@ -862,8 +856,7 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
 
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
-    default:
-      idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
+    default: idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
 
@@ -1045,12 +1038,13 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   else
   {
     uint8_t* buf = &data[offsets[colIndex]];
-    memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length)); // needed for memcmp in equals().
+    memset(buf + length, 0,
+           offsets[colIndex + 1] - (offsets[colIndex] + length));  // needed for memcmp in equals().
     if (str.str())
     {
       memcpy(buf, str.str(), length);
     }
-    else if (colWidth <= 8) // special magic value.
+    else if (colWidth <= 8)  // special magic value.
     {
       setToNull(colIndex);
     }
@@ -1428,6 +1422,38 @@ inline bool Row::equals(const Row& r2) const
   return equals(r2, columnCount - 1);
 }
 
+struct RowGroupComponents
+{
+  static constexpr uint32_t INIT_POS = 2;
+
+ public:
+  RowGroupComponents()
+  {
+    pos.push_back(INIT_POS);
+  }
+
+  void addColumn(const uint32_t width, const uint32_t oid, const uint32_t key, const uint32_t scale,
+                 const uint32_t precision, const CalpontSystemCatalog::ColDataType dtype,
+                 const uint32_t csNum)
+  {
+    pos.push_back(pos.back() + width);
+    oids.push_back(oid);
+    keys.push_back(key);
+    types.push_back(dtype);
+    csNums.push_back(csNum);
+    scales.push_back(scale);
+    precisions.push_back(precision);
+  }
+
+  vector<uint32_t> pos;
+  vector<uint32_t> oids;
+  vector<uint32_t> keys;
+  vector<uint32_t> scales;
+  vector<uint32_t> precisions;
+  vector<CalpontSystemCatalog::ColDataType> types;
+  vector<uint32_t> csNums;
+};
+
 /** @brief RowGroup is a lightweight interface for processing packed row data
 
         A RowGroup is an interface for parsing and/or modifying row data as described at the top
@@ -1466,6 +1492,9 @@ class RowGroup : public messageqcpp::Serializeable
            const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
            const std::vector<uint32_t>& charsetNumbers, const std::vector<uint32_t>& scale,
            const std::vector<uint32_t>& precision, uint32_t stringTableThreshold, bool useStringTable = true,
+           const std::vector<bool>& forceInlineData = std::vector<bool>());
+
+  RowGroup(const RowGroupComponents& rgc, uint32_t stringTableThreshold, bool useStringTable = true,
            const std::vector<bool>& forceInlineData = std::vector<bool>());
 
   /** @brief The copiers.  It copies metadata, not the row data */
@@ -1599,7 +1628,7 @@ class RowGroup : public messageqcpp::Serializeable
 
   std::vector<uint32_t> oldOffsets;  // inline data offsets
   std::vector<uint32_t> stOffsets;   // string table offsets
-  uint32_t* offsets = nullptr;                 // offsets either points to oldOffsets or stOffsets
+  uint32_t* offsets = nullptr;       // offsets either points to oldOffsets or stOffsets
   std::vector<uint32_t> colWidths;
   // oids: the real oid of the column, may have duplicates with alias.
   // This oid is necessary for front-end to decide the real column width.
@@ -2048,7 +2077,6 @@ inline void copyRowInline(const Row& in, Row* out, uint32_t colCount)
   copyRow(in, out, colCount);
 }
 
-
 inline utils::NullString StringStore::getString(uint64_t off) const
 {
   uint32_t length;
@@ -2128,7 +2156,7 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
 
 inline bool StringStore::isNullValue(uint64_t off) const
 {
- if (off == std::numeric_limits<uint64_t>::max())
+  if (off == std::numeric_limits<uint64_t>::max())
     return true;
   return false;
 }
