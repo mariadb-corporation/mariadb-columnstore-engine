@@ -522,26 +522,29 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
   // order by columns may be not in the select and [group by] clause
   const CalpontSelectExecutionPlan::OrderByColumnList& orderByCols = csep->orderByCols();
 
-  for (uint64_t i = 0; i < orderByCols.size(); i++)
+  if (csep->groupByCols().size() == csep->groupByKeysCount())
   {
-    if (orderByCols[i]->orderPos() == (uint64_t)(-1))
+    for (uint64_t i = 0; i < orderByCols.size(); i++)
     {
-      // @bug 4531, skip window functions, should be already added.
-      if (dynamic_cast<WindowFunctionColumn*>(orderByCols[i].get()) != NULL ||
-          orderByCols[i]->windowfunctionColumnList().size() > 0)
-        continue;
-
-      jobInfo.deliveredCols.push_back(orderByCols[i]);
-
-      // @bug 3025
-      // Append the non-aggregate orderby column to group by, if there is group by clause.
-      // Duplicates will be removed by next if block.
-      if (csep->groupByCols().size() > 0)
+      if (orderByCols[i]->orderPos() == (uint64_t)(-1))
       {
-        // Not an aggregate column and not an expression of aggregation.
-        if (dynamic_cast<AggregateColumn*>(orderByCols[i].get()) == NULL &&
-            orderByCols[i]->aggColumnList().empty())
-          csep->groupByCols().push_back(orderByCols[i]);
+        // @bug 4531, skip window functions, should be already added.
+        if (dynamic_cast<WindowFunctionColumn*>(orderByCols[i].get()) != NULL ||
+            orderByCols[i]->windowfunctionColumnList().size() > 0)
+          continue;
+
+        jobInfo.deliveredCols.push_back(orderByCols[i]);
+
+        // @bug 3025
+        // Append the non-aggregate orderby column to group by, if there is group by clause.
+        // Duplicates will be removed by next if block.
+        if (0 && csep->groupByCols().size() > 0)
+        {
+          // Not an aggregate column and not an expression of aggregation.
+          if (dynamic_cast<AggregateColumn*>(orderByCols[i].get()) == NULL &&
+              orderByCols[i]->aggColumnList().empty())
+            csep->groupByCols().push_back(orderByCols[i]);
+        }
       }
     }
   }
@@ -604,7 +607,11 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     }
 
     if (csep->groupByCols().size() != uniqGbCols.size())
-      (csep)->groupByCols(uniqGbCols);
+    {
+      idbassert(csep->groupByCols().size() == csep->groupByKeysCount()); // related to MCOL-4234: this asserts that ORDER BY columns were not included into GROUP BY columns behind the scenes.
+      csep->groupByCols(uniqGbCols);
+      csep->groupByKeysCount(uniqGbCols.size());
+    }
   }
 }
 
@@ -806,6 +813,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       throw logic_error(errmsg.str());
     }
   }
+
+  // copy the actual GB key count.
+  jobInfo.keysInGbCols = csep->groupByKeysCount();
 
   // process the returned columns
   RetColsVector& retCols = jobInfo.projectionCols;

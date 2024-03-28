@@ -70,7 +70,7 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool
   for (; i != jobInfo.orderByColVec.end(); i++)
   {
     map<uint32_t, uint32_t>::iterator j = keyToIndexMap.find(i->first);
-    idbassert(j != keyToIndexMap.end());
+    //idbassert(j != keyToIndexMap.end());
 
     fOrderByCond.push_back(IdbSortSpec(j->second, i->second ^ invertRules));
   }

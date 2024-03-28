@@ -150,6 +150,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
 
   CalpontSelectExecutionPlan(const ReturnedColumnList& returnedCols, ParseTree* filters,
                              const SelectList& subSelects, const GroupByColumnList& groupByCols,
+                             uint32_t groupByKeysCount,
                              ParseTree* having, const OrderByColumnList& orderByCols, const std::string alias,
                              const int location, const bool dependent, const bool withRollup);
 
@@ -242,6 +243,22 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   void groupByCols(const GroupByColumnList& groupByCols)
   {
     fGroupByCols = groupByCols;
+  }
+
+  /**
+   * The size of GROUP BY key.
+   *
+   * We keep track of the actual GROUP BY keys count because in some places
+   * (tupleaggregatestep is one) we need to insert keys after GROUP BY keys,
+   * but before ORDER BY keys we added in ha_mcs_execplan.
+   */
+  uint32_t groupByKeysCount() const
+  {
+    return fGroupByKeysCount;
+  }
+  void groupByKeysCount(uint32_t keysCount)
+  {
+    fGroupByKeysCount = keysCount;
   }
 
   /**
@@ -872,6 +889,12 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * A list of group by columns
    */
   GroupByColumnList fGroupByCols;
+
+  /**
+   * Number of columns that are actual keys.
+   */
+  uint32_t fGroupByKeysCount;
+
   /**
    * A tree of having clause condition associated with group by clause
    */

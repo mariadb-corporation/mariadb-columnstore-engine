@@ -100,12 +100,13 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(const int location)
 
 CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(
     const ReturnedColumnList& returnedCols, ParseTree* filters, const SelectList& subSelects,
-    const GroupByColumnList& groupByCols, ParseTree* having, const OrderByColumnList& orderByCols,
+    const GroupByColumnList& groupByCols, uint32_t groupByKeysCount, ParseTree* having, const OrderByColumnList& orderByCols,
     const string alias, const int location, const bool dependent, const bool withRollup)
  : fReturnedCols(returnedCols)
  , fFilters(filters)
  , fSubSelects(subSelects)
  , fGroupByCols(groupByCols)
+ , fGroupByKeysCount(groupByKeysCount)
  , fHaving(having)
  , fOrderByCols(orderByCols)
  , fTableAlias(alias)
@@ -473,6 +474,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
   b << timeZone;
   b << fPron;
   b << (uint8_t)fWithRollup;
+  b << fGroupByKeysCount;
 }
 
 void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
@@ -677,6 +679,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   utils::Pron::instance().pron(fPron);
   b >> tmp8;
   fWithRollup = tmp8;
+  b >> fGroupByKeysCount;
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const
