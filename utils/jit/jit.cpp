@@ -470,8 +470,6 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   for (auto& function : module)
     fpm.run(function);
   fpm.doFinalization();
-
-  mpm.run(module);
 }
 JIT::~JIT()
 {
