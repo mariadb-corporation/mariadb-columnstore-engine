@@ -23,5 +23,13 @@ INSERT INTO t2 VALUES (1,'name');
 SELECT t1.spID, t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
 
+CREATE TABLE bug3025(value INTEGER(5)) ENGINE=cOLUMNSTORE;
+INSERT INTO bug3025 VALUES (1), (1001), (24), (2123), (NULL), (123), (888), (8421), (231), (-100), (NULL);
+
+SELECT value, IF(value<=1000,'<=1000', '>1000')
+FROM bug3025
+GROUP BY value, IF(value<=1000,'<=1000', '>1000')
+ORDER BY ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
 DROP DATABASE MCOL4234;
 
