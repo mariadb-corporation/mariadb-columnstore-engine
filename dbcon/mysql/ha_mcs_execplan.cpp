@@ -498,9 +498,18 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     // is either Field or Func
     // Consider nonConstFunc() check here
     if (!found && sort_item->type() == Item::FUNC_ITEM &&
-        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM))
+        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM ||
+         group_item->type() == Item::REF_ITEM))
     {
-      found = sortItemIsInGroupRec(sort_item, group_item);
+      // MCOL-5236: see @bug5993 and @bug5916.
+      Item* item = group_item;
+      while (item->type() == Item::REF_ITEM)
+      {
+        Item_ref* item_ref = static_cast<Item_ref*>(item);
+        item = *item_ref->ref;
+      }
+
+      found = sortItemIsInGroupRec(sort_item, item);
     }
   }
 
@@ -8192,18 +8201,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
         SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
-	if (sc)
-	{
-	  bool found = false;
+        if (sc)
+        {
+          bool found = false;
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (sc->sameColumn(gwi.returnedCols[j].get()))
             {
               sc->orderPos(j);
-	      found = true;
+              found = true;
               break;
             }
-	  }
+          }
           for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
           {
             if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
@@ -8213,9 +8222,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
-	else
-	{
+        }
+        else
+        {
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
@@ -8225,7 +8234,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
+        }
 
         if (!rc)
         {
@@ -9947,7 +9956,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             }
           }
 
-	  srcp->orderPos(groupcol->counter - 1);
+          srcp->orderPos(groupcol->counter - 1);
           gwi.groupByCols.push_back(srcp);
           continue;
         }
