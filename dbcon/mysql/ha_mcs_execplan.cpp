@@ -8327,6 +8327,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         // instead of reporting an error, mark column as not in GROUP BY.
         outOfGB = true;
       }
+      idblog("OB item #" << ordercol << " is " << (outOfGB ? "not " : " ") << "in GB");
       orderbyOutOfGroupBy.push_back(outOfGB);
     }
 
