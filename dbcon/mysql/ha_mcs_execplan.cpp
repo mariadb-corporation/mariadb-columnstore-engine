@@ -493,7 +493,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     found = true;
   }
 
-#if 01
+#if 0
   for (; !found && groupcol; groupcol = groupcol->next)
   {
     Item* group_item = *(groupcol->item);
