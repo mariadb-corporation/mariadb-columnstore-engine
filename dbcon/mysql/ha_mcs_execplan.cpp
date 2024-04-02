@@ -489,6 +489,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     found = true;
   }
 
+#if 0
   for (; !found && groupcol; groupcol = groupcol->next)
   {
     Item* group_item = *(groupcol->item);
@@ -512,6 +513,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
       found = sortItemIsInGroupRec(sort_item, item);
     }
   }
+#endif
 
   return found;
 }
@@ -3444,6 +3446,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     }
     case Item::FUNC_ITEM:
     {
+	    idblog("a func item");
       if (item->const_item())
       {
         rc = buildConstantColumnMaybeNullUsingValStr(item, gwi);
@@ -3985,6 +3988,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
   else if ((functor = funcExp->getFunctor(funcName)))
   {
+	  idblog("functor for func name " << funcName);
     // where clause isnull still treated as predicate operator
     // MCOL-686: between also a predicate operator so that extent elimination can happen
     if ((funcName == "isnull" || funcName == "isnotnull" || funcName == "between") &&
@@ -4052,6 +4056,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         funcName = "not" + funcName;
     }
 
+    idblog("actual func column");
     // @todo non-support function as argument. need to do post process. Assume all support for now
     fc = new FunctionColumn();
     fc->data(funcName);
@@ -8327,7 +8332,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         // instead of reporting an error, mark column as not in GROUP BY.
         outOfGB = true;
       }
-      idblog("OB item #" << ordercol << " is " << (outOfGB ? "not " : " ") << "in GB");
+      idblog("OB item #" << orderbyOutOfGroupBy.size() << " is " << (outOfGB ? "not " : " ") << "in GB");
       orderbyOutOfGroupBy.push_back(outOfGB);
     }
 
@@ -8386,6 +8391,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           }
           else
           {
+		  idblog("building a returned column");
             rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
           }
           // @bug5501 try item_ptr if item can not be fixed. For some
