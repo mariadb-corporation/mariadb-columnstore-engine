@@ -390,8 +390,10 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
 
   // base cases for Item_field and Item_ref. The second arg is binary cmp switch
   found = group_item->eq(sort_item, false);
+  idblog("group item " << group_item << ", sort item " << sort_item << (found ? " are equal" : " are not equal"));
   if (!found && sort_item->type() == Item::REF_ITEM)
   {
+	  idblog("reference");
     Item_ref* ifp_sort_ref = static_cast<Item_ref*>(sort_item);
     found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
   }
@@ -402,6 +404,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
 
   Item_func* ifp_sort = static_cast<Item_func*>(sort_item);
 
+  idblog("is a function");
   // seeking for a group_item match
   for (uint32_t i = 0; !found && i < ifp_sort->argument_count(); i++)
   {
@@ -490,7 +493,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     found = true;
   }
 
-#if 0
+#if 01
   for (; !found && groupcol; groupcol = groupcol->next)
   {
     Item* group_item = *(groupcol->item);
@@ -515,6 +518,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     }
   }
 #endif
+  idblog("found that we'll return " << ((int)found));
 
   return found;
 }
