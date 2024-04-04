@@ -493,7 +493,7 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     found = true;
   }
 
-#if 0
+#if 01
   for (; !found && groupcol; groupcol = groupcol->next)
   {
     Item* group_item = *(groupcol->item);
@@ -8331,7 +8331,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       // MCOL-2166 Looking for this sorting item in GROUP_BY items list.
       // Shouldn't look into this if query doesn't have GROUP BY or
       // aggregations
-      if (select_lex.group_list.first &&
+      if (select_lex.agg_func_used() && select_lex.group_list.first &&
           !sortItemIsInGrouping(*ordercol->item, select_lex.group_list.first))
       {
         // instead of reporting an error, mark column as not in GROUP BY.
