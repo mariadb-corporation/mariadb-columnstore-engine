@@ -148,30 +148,6 @@ class DMLPackageProcessor
       spare = 0x3E;
     }
   };
-  /** @brief a structure to hold a datetime
-   */
-  struct dateTime
-  {
-    unsigned msecond : 20;
-    unsigned second : 6;
-    unsigned minute : 6;
-    unsigned hour : 6;
-    unsigned day : 6;
-    unsigned month : 4;
-    unsigned year : 16;
-    // NULL column value = 0xFFFFFFFFFFFFFFFE
-    dateTime()
-    {
-      year = 0xFFFF;
-      month = 0xF;
-      day = 0x3F;
-      hour = 0x3F;
-      minute = 0x3F;
-      second = 0x3F;
-      msecond = 0xFFFFE;
-    }
-  };
-
   /** @brief ctor
    */
   DMLPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid)
