@@ -7,9 +7,9 @@ n_clms TINYINT(3) UNSIGNED
 ) ENGINE=COLUMNSTORE;
 INSERT INTO test_mult (indemnity_paid, n_clms) VALUES (-10, 1);
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "*" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "+" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult;
 indemnity_paid	n_clms	(indemnity_paid + 9) + n_clms
 -10	1	0
@@ -19,9 +19,9 @@ n_clms TINYINT UNSIGNED
 ) ENGINE=COLUMNSTORE;
 INSERT INTO test_mult2 (indemnity_paid, n_clms) VALUES (-10, 1);
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult2;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "*" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult2;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "+" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult2;
 indemnity_paid	n_clms	(indemnity_paid + 9) + n_clms
 -10	1	0
@@ -31,9 +31,9 @@ n_clms TINYINT UNSIGNED
 ) ENGINE=COLUMNSTORE;
 INSERT INTO test_mult3 (indemnity_paid, n_clms) VALUES (-10, 1);
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult3;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "*" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult3;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "+" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult3;
 indemnity_paid	n_clms	(indemnity_paid + 9) + n_clms
 -10	1	0
@@ -43,19 +43,19 @@ n_clms TINYINT UNSIGNED
 ) ENGINE=COLUMNSTORE;
 INSERT INTO test_mult4 (indemnity_paid, n_clms) VALUES (-10, 1);
 SELECT indemnity_paid, n_clms, indemnity_paid * n_clms FROM test_mult4;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "*" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, indemnity_paid + n_clms FROM test_mult4;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "+" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, (indemnity_paid + 9) + n_clms FROM test_mult4;
 indemnity_paid	n_clms	(indemnity_paid + 9) + n_clms
 -10	1	0
 SELECT indemnity_paid, n_clms, n_clms * indemnity_paid FROM test_mult4;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "*" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, n_clms + indemnity_paid FROM test_mult4;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "+" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 SELECT indemnity_paid, n_clms, n_clms + (indemnity_paid + 9) FROM test_mult4;
 indemnity_paid	n_clms	n_clms + (indemnity_paid + 9)
 -10	1	0
 SELECT indemnity_paid, n_clms, n_clms - 2 FROM test_mult4;
-ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range in '`unk`.`unk`.`unk` "-" `unk`.`unk`.`unk`'
+ERROR HY000: Internal error: MCS-2061: BIGINT UNSIGNED value is out of range.
 DROP DATABASE MCOL5568;

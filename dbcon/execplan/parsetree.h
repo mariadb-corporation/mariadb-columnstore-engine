@@ -361,17 +361,18 @@ class ParseTree
   void evaluate(rowgroup::Row& row, bool& isNull);
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType)
   {
     if (fLeft && fRight)
     {
       return (reinterpret_cast<Operator*>(fData))
-          ->compile(b, data, isNull, row, dataType, fLeft, fRight);
+          ->compile(b, data, isNull, dataConditionError, row, dataType, fLeft, fRight);
     }
     else
     {
-      return fData->compile(b, data, isNull, row, dataType);
+      return fData->compile(b, data, isNull, dataConditionError, row, dataType);
     }
   }
   bool isCompilable(rowgroup::Row& row)

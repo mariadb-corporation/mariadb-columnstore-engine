@@ -184,10 +184,11 @@ class ArithmeticColumn : public ReturnedColumn
   virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
 
  private:
   std::string fTableAlias;  // table alias for this column
-  bool fAsc = false;                // asc flag for order by column
+  bool fAsc = false;        // asc flag for order by column
   std::string fData;
 
   /** build expression tree
@@ -279,10 +280,11 @@ class ArithmeticColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
-    return fExpression->compile(b, data, isNull, row, dataType);
+    return fExpression->compile(b, data, isNull, dataConditionError, row, dataType);
   }
   bool isCompilable(rowgroup::Row& row) override
   {

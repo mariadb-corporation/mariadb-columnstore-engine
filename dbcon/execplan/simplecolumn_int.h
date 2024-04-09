@@ -88,7 +88,8 @@ class SimpleColumn_INT : public SimpleColumn
   void setNullVal();
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
     auto offset = row.getOffset(fInputIndex);
@@ -107,8 +108,8 @@ std::string SimpleColumn_INT<len>::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplecolumn_int.h");
   std::stringstream ss;
-  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " <<
-    std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
+  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName)
+     << ", " << std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
 
   return ss.str();
 }
@@ -160,7 +161,7 @@ void SimpleColumn_INT<len>::setNullVal()
 }
 
 template <int len>
-inline const utils::NullString & SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
   {

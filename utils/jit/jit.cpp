@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "jit.h"
 
 #include <sys/mman.h>
@@ -329,11 +331,17 @@ JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compil
   return module_info;
 }
 
+// #include "llvm/Support/raw_ostream.h"
+
 JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
+  std::cout << "JIT::compileModule !!!!!!!!!!1" << std::endl;
+  module->print(llvm::outs(), nullptr);
   runOptimizationPassesOnModule(*module);
 
   auto buffer = compiler->compile(*module);
+  // std::cout << "JIT::compileModule 2" << std::endl;
+  // module->print(llvm::outs(), nullptr);
   llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>> object_file =
       llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
   if (!object_file)
@@ -351,6 +359,8 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
   module_memory_manager->finalizeMemory(nullptr);
 
   CompiledModule compiled_module;
+  // std::cout << "JIT::compileModule 3" << std::endl;
+  // module->print(llvm::outs(), nullptr);
   for (const auto& function : *module)
   {
     if (function.isDeclaration())
@@ -358,6 +368,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
       continue;
     }
     auto function_name = function.getName().str();
+    // std::cout << "function name " << function_name << std::endl;
     auto function_mangled_name = getMangledName(function_name);
     auto jit_symbol = runtime_dynamic_link.getSymbol(function_mangled_name);
     if (!jit_symbol)
@@ -445,11 +456,14 @@ void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
   symbol_resolver->registerSymbol(symbol_name, address);
 }
 
+// Optimization passes are not well defined.
+// Module PassManager removes the function.
 void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
 {
   llvm::PassManagerBuilder pass_manager_builder;
   llvm::legacy::PassManager mpm;
   llvm::legacy::FunctionPassManager fpm(&module);
+
   pass_manager_builder.OptLevel = 3;
   pass_manager_builder.SLPVectorize = true;
   pass_manager_builder.LoopVectorize = true;
@@ -467,11 +481,27 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   pass_manager_builder.populateModulePassManager(mpm);
 
   fpm.doInitialization();
-  for (auto& function : module)
-    fpm.run(function);
-  fpm.doFinalization();
+  std::cout << "JIT::runOptimizationPassesOnModule 1" << std::endl;
+  module.print(llvm::outs(), nullptr);
 
-  mpm.run(module);
+  for (auto& function : module)
+  {
+    fpm.run(function);
+  }
+
+  std::cout << "JIT::runOptimizationPassesOnModule 2" << std::endl;
+  module.print(llvm::outs(), nullptr);
+  fpm.doFinalization();
+  std::cout << "JIT::runOptimizationPassesOnModule 3" << std::endl;
+  module.print(llvm::outs(), nullptr);
+
+  // // WIP the module opt pass removes the function compiled
+  // Module opt passes aggresivelly remove "unreferenced" functions from
+  // a module.
+  // mpm.run(module);
+
+  std::cout << "JIT::runOptimizationPassesOnModule 4" << std::endl;
+  module.print(llvm::outs(), nullptr);
 }
 JIT::~JIT()
 {

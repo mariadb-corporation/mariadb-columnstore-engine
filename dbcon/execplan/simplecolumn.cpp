@@ -280,7 +280,7 @@ string SimpleColumn::toCppCode(IncludeSet& includes) const
   includes.insert("simplecolumn.h");
   stringstream ss;
 
-  ss << "SimpleColumn(" << std::quoted(fData)  << ", SimpleColumn::ForTestPurposeWithoutOID{})";
+  ss << "SimpleColumn(" << std::quoted(fData) << ", SimpleColumn::ForTestPurposeWithoutOID{})";
 
   return ss.str();
 }
@@ -717,7 +717,8 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
   }
 }
 llvm::Value* SimpleColumn::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                   rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType)
+                                   llvm::Value* dataConditionError, rowgroup::Row& row,
+                                   CalpontSystemCatalog::ColDataType dataType)
 {
   switch (dataType)
   {

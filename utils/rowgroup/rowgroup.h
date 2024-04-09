@@ -61,6 +61,7 @@
 namespace rowgroup
 {
 const int16_t rgCommonSize = 8192;
+using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
 /*
     The RowGroup family of classes encapsulate the data moved through the
@@ -371,9 +372,9 @@ class Row
   inline uint32_t getOffset(uint32_t colIndex) const;
   inline uint32_t getScale(uint32_t colIndex) const;
   inline uint32_t getPrecision(uint32_t colIndex) const;
-  inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
-  inline execplan::CalpontSystemCatalog::ColDataType* getColTypes();
-  inline const execplan::CalpontSystemCatalog::ColDataType* getColTypes() const;
+  inline cscType getColType(uint32_t colIndex) const;
+  inline cscType* getColTypes();
+  inline const cscType* getColTypes() const;
   inline uint32_t getCharsetNumber(uint32_t colIndex) const;
 
   // this returns true if the type is not CHAR or VARCHAR
@@ -612,7 +613,7 @@ class Row
   uint32_t* stOffsets = nullptr;
   uint32_t* offsets = nullptr;
   uint32_t* colWidths = nullptr;
-  execplan::CalpontSystemCatalog::ColDataType* types = nullptr;
+  cscType* types = nullptr;
   uint32_t* charsetNumbers = nullptr;
   CHARSET_INFO** charsets = nullptr;
   uint8_t* data = nullptr;
@@ -712,17 +713,17 @@ inline uint32_t Row::getPrecision(uint32_t col) const
   return precision[col];
 }
 
-inline execplan::CalpontSystemCatalog::ColDataType Row::getColType(uint32_t colIndex) const
+inline cscType Row::getColType(uint32_t colIndex) const
 {
   return types[colIndex];
 }
 
-inline execplan::CalpontSystemCatalog::ColDataType* Row::getColTypes()
+inline cscType* Row::getColTypes()
 {
   return types;
 }
 
-inline const execplan::CalpontSystemCatalog::ColDataType* Row::getColTypes() const
+inline const cscType* Row::getColTypes() const
 {
   return types;
 }
@@ -1433,7 +1434,7 @@ struct RowGroupComponents
   }
 
   void addColumn(const uint32_t width, const uint32_t oid, const uint32_t key, const uint32_t scale,
-                 const uint32_t precision, const CalpontSystemCatalog::ColDataType dtype,
+                 const uint32_t precision, const datatypes::SystemCatalog::ColDataType dtype,
                  const uint32_t csNum)
   {
     pos.push_back(pos.back() + width);
@@ -1450,7 +1451,7 @@ struct RowGroupComponents
   vector<uint32_t> keys;
   vector<uint32_t> scales;
   vector<uint32_t> precisions;
-  vector<CalpontSystemCatalog::ColDataType> types;
+  vector<datatypes::SystemCatalog::ColDataType> types;
   vector<uint32_t> csNums;
 };
 
@@ -1488,8 +1489,7 @@ class RowGroup : public messageqcpp::Serializeable
   @param precision An array specifying the precision of DECIMAL types (0 for non-decimal)
   */
   RowGroup(uint32_t colCount, const std::vector<uint32_t>& positions, const std::vector<uint32_t>& cOids,
-           const std::vector<uint32_t>& tkeys,
-           const std::vector<execplan::CalpontSystemCatalog::ColDataType>& colTypes,
+           const std::vector<uint32_t>& tkeys, const std::vector<cscType>& colTypes,
            const std::vector<uint32_t>& charsetNumbers, const std::vector<uint32_t>& scale,
            const std::vector<uint32_t>& precision, uint32_t stringTableThreshold, bool useStringTable = true,
            const std::vector<bool>& forceInlineData = std::vector<bool>());
@@ -1550,9 +1550,9 @@ class RowGroup : public messageqcpp::Serializeable
   inline const std::vector<uint32_t>& getOIDs() const;
   inline const std::vector<uint32_t>& getKeys() const;
   inline const std::vector<uint32_t>& getColWidths() const;
-  inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
-  inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes() const;
-  inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& getColTypes();
+  inline cscType getColType(uint32_t colIndex) const;
+  inline const std::vector<cscType>& getColTypes() const;
+  inline std::vector<cscType>& getColTypes();
   inline const std::vector<uint32_t>& getCharsetNumbers() const;
   inline uint32_t getCharsetNumber(uint32_t colIndex) const;
   inline std::shared_ptr<bool[]>& getForceInline();
@@ -1636,7 +1636,7 @@ class RowGroup : public messageqcpp::Serializeable
   // keys: the unique id for pair(oid, alias). bug 1632.
   // Used to map the projected column and rowgroup index
   std::vector<uint32_t> keys;
-  std::vector<execplan::CalpontSystemCatalog::ColDataType> types;
+  std::vector<cscType> types;
   // For string collation
   std::vector<uint32_t> charsetNumbers;
   std::vector<CHARSET_INFO*> charsets;
@@ -1766,7 +1766,7 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
   if (LIKELY(!types.empty()))
   {
     r->colWidths = (uint32_t*)&colWidths[0];
-    r->types = (execplan::CalpontSystemCatalog::ColDataType*)&(types[0]);
+    r->types = (cscType*)&(types[0]);
     r->charsetNumbers = (uint32_t*)&(charsetNumbers[0]);
     r->charsets = (CHARSET_INFO**)&(charsets[0]);
     r->scale = (uint32_t*)&(scale[0]);
@@ -1862,17 +1862,17 @@ inline const std::vector<uint32_t>& RowGroup::getKeys() const
   return keys;
 }
 
-inline execplan::CalpontSystemCatalog::ColDataType RowGroup::getColType(uint32_t colIndex) const
+inline cscType RowGroup::getColType(uint32_t colIndex) const
 {
   return types[colIndex];
 }
 
-inline const std::vector<execplan::CalpontSystemCatalog::ColDataType>& RowGroup::getColTypes() const
+inline const std::vector<cscType>& RowGroup::getColTypes() const
 {
   return types;
 }
 
-inline std::vector<execplan::CalpontSystemCatalog::ColDataType>& RowGroup::getColTypes()
+inline std::vector<cscType>& RowGroup::getColTypes()
 {
   return types;
 }

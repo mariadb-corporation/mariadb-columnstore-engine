@@ -467,4 +467,13 @@ bool ArithmeticColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
   return true;
 }
 
+std::string ArithmeticColumn::toExpressionString() const
+{
+  // WIP this should return the expression string in prefix form.
+  stringstream ss;
+  ss << "ArithmeticColumn(" << std::quoted(fData) << ", " << sessionID() << ")";
+
+  return ss.str();
+}
+
 }  // namespace execplan

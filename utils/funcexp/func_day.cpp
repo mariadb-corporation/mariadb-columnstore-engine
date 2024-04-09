@@ -81,7 +81,8 @@ int64_t Func_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
+      val =
+          dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
       {
@@ -166,7 +167,7 @@ bool Func_day::isCompilable(const execplan::CalpontSystemCatalog::ColType& colTy
 }
 
 llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, FunctionParm& fp,
+                               llvm::Value* dataConditionError, rowgroup::Row& row, FunctionParm& fp,
                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   llvm::Value* val;
@@ -174,20 +175,22 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
-      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 6), 0x3f), b.getInt32Ty());
     case CalpontSystemCatalog::DATETIME:
-      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
     case CalpontSystemCatalog::TIMESTAMP:
       func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
           "dataconvert::DataConvert::timestampValueToInt");
       if (!func)
       {
-        throw ::logic_error("Func_day::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+        throw ::logic_error(
+            "Func_day::compile: dataconvert::DataConvert::timestampValueToInt function not found");
       }
-      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
-                                b.getInt64(op_ct.getTimeZone())});
+      val = b.CreateCall(
+          func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
+                 b.getInt64(op_ct.getTimeZone())});
       b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                     isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
@@ -202,7 +205,9 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
       {
         throw ::logic_error("Func_day::compile: dataconvert::DataConvert::intToDatetime function not found");
       }
-      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      val = b.CreateCall(
+          func,
+          {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
       b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                     isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());
@@ -217,7 +222,9 @@ llvm::Value* Func_day::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Va
           throw ::logic_error(
               "Func_day::compile: dataconvert::DataConvert::intToDatetime function not found");
         }
-        val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+        val = b.CreateCall(
+            func,
+            {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
         b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                       isNull);
         return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 38), 0x3f), b.getInt32Ty());

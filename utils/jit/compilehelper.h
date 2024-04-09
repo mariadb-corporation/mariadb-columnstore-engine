@@ -1,8 +1,10 @@
+#include <sstream>
+
 #include "llvm/IR/Value.h"
 #include "llvm/IR/IRBuilder.h"
-#include "datatypes/mcs_datatype.h"
 
-using namespace execplan;
+#include "mcs_datatype_basic.h"
+
 namespace msc_jit
 {
 class CompileHelper
@@ -67,87 +69,87 @@ class CompileHelper
   }
 
   static void compileIsNull(llvm::IRBuilder<>& b, llvm::Value* dataValue, llvm::Value* isNull,
-                            uint32_t offset, CalpontSystemCatalog::ColDataType& dataType)
+                            uint32_t offset, datatypes::SystemCatalog::ColDataType& dataType)
   {
     auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
     switch (dataType)
     {
-      case CalpontSystemCatalog::TINYINT:
+      case datatypes::SystemCatalog::TINYINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<1>(b, dataValue, offset, false),
                                                 b.getInt8(joblist::TINYINTNULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::SMALLINT:
+      case datatypes::SystemCatalog::SMALLINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<2>(b, dataValue, offset, false),
                                                 b.getInt16(static_cast<int16_t>(joblist::SMALLINTNULL))),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::MEDINT:
-      case CalpontSystemCatalog::INT:
+      case datatypes::SystemCatalog::MEDINT:
+      case datatypes::SystemCatalog::INT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, offset, false),
                                                 b.getInt32(static_cast<int32_t>(joblist::INTNULL))),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::FLOAT:
-      case CalpontSystemCatalog::UFLOAT:
+      case datatypes::SystemCatalog::FLOAT:
+      case datatypes::SystemCatalog::UFLOAT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, offset, false),
                                                 b.getInt32(static_cast<int32_t>(joblist::FLOATNULL))),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::DATE:
+      case datatypes::SystemCatalog::DATE:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<4>(b, dataValue, offset, false),
                                                 b.getInt32(static_cast<int32_t>(joblist::DATENULL))),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::BIGINT:
+      case datatypes::SystemCatalog::BIGINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, offset, false),
                                                 b.getInt64(static_cast<int64_t>(joblist::BIGINTNULL))),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::DOUBLE:
+      case datatypes::SystemCatalog::DOUBLE:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, offset, false),
                                                 b.getInt64(joblist::DOUBLENULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::UDOUBLE:
+      case datatypes::SystemCatalog::UDOUBLE:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<8>(b, dataValue, offset, false),
                                                 b.getInt64(joblist::DOUBLENULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::DATETIME:
+      case datatypes::SystemCatalog::DATETIME:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, offset, false),
                                                 b.getInt64(joblist::DATETIMENULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::UTINYINT:
+      case datatypes::SystemCatalog::UTINYINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<1>(b, dataValue, offset, false),
                                                 b.getInt8(joblist::UTINYINTNULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::USMALLINT:
+      case datatypes::SystemCatalog::USMALLINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<2>(b, dataValue, offset, false),
                                                 b.getInt16(joblist::USMALLINTNULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::UMEDINT:
-      case CalpontSystemCatalog::UINT:
+      case datatypes::SystemCatalog::UMEDINT:
+      case datatypes::SystemCatalog::UINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<4>(b, dataValue, offset, false),
                                                 b.getInt32(joblist::UINTNULL)),
                                  isNullVal),
                       isNull);
         break;
-      case CalpontSystemCatalog::UBIGINT:
+      case datatypes::SystemCatalog::UBIGINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<8>(b, dataValue, offset, false),
                                                 b.getInt64(joblist::UBIGINTNULL)),
                                  isNullVal),
@@ -155,11 +157,11 @@ class CompileHelper
         break;
       default:
       {
-        ostringstream os;
+        std::ostringstream os;
         os << "Row::compileIsNull(): got bad column type (";
         os << dataType;
         os << ").  ";
-        throw logic_error(os.str());
+        throw std::logic_error(os.str());
       }
     }
   }

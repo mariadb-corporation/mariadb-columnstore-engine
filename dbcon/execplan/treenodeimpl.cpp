@@ -66,15 +66,25 @@ const string TreeNodeImpl::toString() const
 
 std::string TreeNodeImpl::toCppCode(IncludeSet& includes) const
 {
- includes.insert("treenodeimpl.h");
- stringstream ss;
+  includes.insert("treenodeimpl.h");
+  stringstream ss;
 
- ss << "TreeNodeImpl(" << std::quoted(fData) << ")";
+  ss << "TreeNodeImpl(" << std::quoted(fData) << ")";
 
- return ss.str();
+  return ss.str();
 }
 
-  bool TreeNodeImpl::operator==(const TreeNodeImpl& t) const
+// WIP refactor
+std::string TreeNodeImpl::toExpressionString() const
+{
+  stringstream ss;
+
+  ss << "TreeNodeImpl(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
+bool TreeNodeImpl::operator==(const TreeNodeImpl& t) const
 {
   if (data() == t.data())
     return true;

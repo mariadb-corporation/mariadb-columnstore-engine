@@ -28,6 +28,8 @@
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
 #include <llvm/IR/IRBuilder.h>
+
+#include "optype.h"
 #include "treenode.h"
 
 namespace messageqcpp
@@ -39,32 +41,6 @@ namespace execplan
 {
 class ParseTree;
 class ReturnedColumn;
-
-enum OpType
-{
-  OP_ADD = 0,
-  OP_SUB,
-  OP_MUL,
-  OP_DIV,
-  OP_EQ,
-  OP_NE,
-  OP_GT,
-  OP_GE,
-  OP_LT,
-  OP_LE,
-  OP_LIKE,
-  OP_NOTLIKE,
-  OP_AND,
-  OP_OR,
-  OP_ISNULL,
-  OP_ISNOTNULL,
-  OP_BETWEEN,
-  OP_NOTBETWEEN,
-  OP_IN,
-  OP_NOTIN,
-  OP_XOR,
-  OP_UNKNOWN,
-};
 
 class Operator : public TreeNode
 {
@@ -246,15 +222,19 @@ class Operator : public TreeNode
  public:
   using TreeNode::compile;
   virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
+                               llvm::Value* dataConditionError, rowgroup::Row& row,
+                               CalpontSystemCatalog::ColDataType dataType, ParseTree* lop, ParseTree* rop)
   {
     return fResult.compiledBlock;
   }
+
   using TreeNode::isCompilable;
   virtual bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
   {
     return false;
   }
+
+  virtual std::string toExpressionString() const override;
 };
 
 typedef boost::shared_ptr<Operator> SOP;

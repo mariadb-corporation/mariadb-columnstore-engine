@@ -60,7 +60,6 @@
 #include "outerjoinonfilter.h"
 
 #include "bytestream.h"
-#include "expressionparser.h"
 #include "objectreader.h"
 
 using namespace std;

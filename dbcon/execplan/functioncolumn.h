@@ -290,9 +290,10 @@ class FunctionColumn : public ReturnedColumn
       if (fResultType.scale > decimal.scale)
         decimal.value *= IDB_pow[fResultType.scale - decimal.scale];
       else
-        decimal.value = (int64_t)(
-            decimal.value > 0 ? (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5
-                              : (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
+        decimal.value =
+            (int64_t)(decimal.value > 0
+                          ? (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] + 0.5
+                          : (double)decimal.value / IDB_pow[decimal.scale - fResultType.scale] - 0.5);
     }
 
     decimal.scale = fResultType.scale;
@@ -337,10 +338,11 @@ class FunctionColumn : public ReturnedColumn
   bool fFixed = false;
   // JIT part
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
-    return fFunctor->compile(b, data, isNull, row, fFunctionParms, fOperationType);
+    return fFunctor->compile(b, data, isNull, dataConditionError, row, fFunctionParms, fOperationType);
   }
   bool isCompilable(rowgroup::Row& row) override
   {

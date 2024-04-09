@@ -57,7 +57,9 @@ class SimpleColumn : public ReturnedColumn
   /**
    * Constructors
    */
-  class ForTestPurposeWithoutOID{};
+  class ForTestPurposeWithoutOID
+  {
+  };
 
   SimpleColumn();
 
@@ -380,7 +382,8 @@ class SimpleColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override;
 
   bool isCompilable(rowgroup::Row& row) override

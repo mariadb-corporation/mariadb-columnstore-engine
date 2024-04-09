@@ -243,6 +243,8 @@ class ReturnedColumn : public TreeNode
 
   virtual const std::string toString() const override;
   virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
+
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
@@ -377,15 +379,15 @@ class ReturnedColumn : public TreeNode
   uint32_t fOutputIndex;   /// index to the output rowgroup
   uint32_t fExpressionId;  /// unique id for this expression
  public:
-//  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
-//                       CalpontSystemCatalog::ColDataType dataType) override
-//  {
-//    return b.getInt64(0);
-//  }
-//  bool isCompilable(rowgroup::Row& row) override
-//  {
-//    return false;
-//  }
+  //  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  //                       CalpontSystemCatalog::ColDataType dataType) override
+  //  {
+  //    return b.getInt64(0);
+  //  }
+  //  bool isCompilable(rowgroup::Row& row) override
+  //  {
+  //    return false;
+  //  }
 };
 
 std::ostream& operator<<(std::ostream& os, const ReturnedColumn& rhs);

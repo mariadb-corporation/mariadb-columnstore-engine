@@ -79,6 +79,8 @@ class Filter : public TreeNode
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
 
+  virtual std::string toExpressionString() const override;
+
   virtual const std::string data() const override
   {
     return fData;
