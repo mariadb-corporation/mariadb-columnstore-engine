@@ -24,11 +24,10 @@
 /** @file */
 
 #pragma once
-#include <llvm-16/llvm/IR/BasicBlock.h>
-#include <llvm-16/llvm/IR/Instructions.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instructions.h>
 #include <string>
 #include <iosfwd>
-#include <cmath>
 #include <sstream>
 
 #include "mcs_data_condition.h"
