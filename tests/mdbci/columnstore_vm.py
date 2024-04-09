@@ -4,12 +4,11 @@ from argparse import ArgumentParser
 import json
 import os
 
-import pathlib
-import sys
 import time
 
-sys.path.append(str(pathlib.Path(__file__).parent.absolute()))
-import common
+from mdb_buildbot_scripts.operations import host
+from mdb_buildbot_scripts.operations import mdbci
+from mdb_buildbot_scripts.constants import products_names
 
 
 def generateColumnstoreTemplate(N, product="mdbe", maxscaleProduct="MaxscaleProduction",
@@ -26,7 +25,7 @@ def generateColumnstoreTemplate(N, product="mdbe", maxscaleProduct="MaxscaleProd
                         "name": "core_dump"
                     },
                     {
-                        "name": common.PRODS[maxscaleProduct],
+                        "name": products_names.PRODS[maxscaleProduct],
                         "version": maxscaleVersion
                     }
                 ]
@@ -43,7 +42,7 @@ def generateColumnstoreTemplate(N, product="mdbe", maxscaleProduct="MaxscaleProd
                     "name": "core_dump"
                 },
                 {
-                    "name": common.PRODS[product],
+                    "name": products_names.PRODS[product],
                     "version": version
                 },
                 {
@@ -62,24 +61,24 @@ def generateColumnstoreTemplate(N, product="mdbe", maxscaleProduct="MaxscaleProd
 def main():
     arguments = parseArguments()
 
-    common.setupMdbciEnvironment()
+    mdbci.setupMdbciEnvironment()
 
     machine_name = arguments.machine_name.replace('/', '-')
 
-    template_path = common.MDBCI_VM_PATH + machine_name + '.json'
+    template_path = mdbci.MDBCI_VM_PATH + machine_name + '.json'
 
     if arguments.destroy:
         if arguments.destroy_all:
             commands = ['destroy', '--all', os.path.expanduser(arguments.config_dir), '--force']
         else:
             commands = ['destroy', machine_name, '--force']
-        if common.runMdbci(*commands) != 0:
-            common.printInfo('MDBCI failed to destroy VM')
+        if mdbci.runMdbci(*commands) != 0:
+            host.printInfo('MDBCI failed to destroy VM')
             if os.path.exists(template_path):
                 os.remove(template_path)
             exit(1)
         else:
-            common.printInfo('VM killed!')
+            host.printInfo('VM killed!')
             exit(0)
 
     template = generateColumnstoreTemplate(int(arguments.num),
@@ -97,7 +96,7 @@ def main():
         templateJson = json.dumps(template, indent=2)
         template_file.write(templateJson)
 
-    common.printInfo(template)
+    host.printInfo(template)
 
     forceVersion = ''
     if arguments.forceVersion == 'True':
@@ -107,14 +106,15 @@ def main():
     delay = 2
 
     for attempt in range(attempts - 1):
-        if common.runMdbci('generate', machine_name, '--template', template_path, '--override', forceVersion) != 0:
+        if mdbci.runMdbci('generate', machine_name, '--template', template_path, '--override',
+                          forceVersion) != 0:
             print('MDBCI failed to generate VM', flush=True)
-            common.runMdbci('destroy', machine_name)
+            mdbci.runMdbci('destroy', machine_name)
             exit(1)
 
-        if common.runMdbci('up', machine_name) != 0:
+        if mdbci.runMdbci('up', machine_name) != 0:
             print('MDBCI failed to bring VM up', flush=True)
-            common.runMdbci('destroy', machine_name, '--keep-template')
+            mdbci.runMdbci('destroy', machine_name, '--keep-template')
             if attempt != attempts:
                 for waiting in range(delay - 1):
                     print('Waiting ...', flush=True)
@@ -123,7 +123,7 @@ def main():
             exit(0)
 
     print(f'MDBCI failed to bring VM up after {attempts} attempts! Give up!', flush=True)
-    common.runMdbci('destroy', machine_name)
+    mdbci.runMdbci('destroy', machine_name)
     exit(1)
 
 
@@ -143,7 +143,7 @@ def parseArguments():
     parser.add_argument("--filesystem", help="Filesystem for data (if defined, block device will added, "
                                              "but mounting and formatting can be done only from run_mtr.py")
     parser.add_argument("--subscription", help="If False, RHEL or SLES system will not be registered",
-                        type=common.stringArgumentToBool, default=True)
+                        type=host.stringArgumentToBool, default=True)
     # used only by Columstore
     parser.add_argument("--server-product", help="MariaDB product "
                                                  "(MariaDBServerCommunity, MariaDBServerCommunityProduction, "

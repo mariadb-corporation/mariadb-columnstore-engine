@@ -6,10 +6,14 @@
 
 from argparse import ArgumentParser
 import os
-import common
 import requests
 import json
 import time
+
+from mdb_buildbot_scripts.operations import host
+from mdb_buildbot_scripts.operations import ssh_tools
+from mdb_buildbot_scripts.operations import mdbci
+from mdb_buildbot_scripts.constants import cli_commands
 
 REPL_PASS = 'ct570c3521fCCR#'
 REPL_USER = 'repl'
@@ -79,75 +83,81 @@ def createGlusterFS(nodes, csVM, ssh, N):
     for i in range(0, N):
         pkgmgrOpt = ''
         if csVM[i].platform in ['centos', 'rhel', 'rocky'] and csVM[i].platform_version in ['7']:
-            common.interactiveExec(ssh[i],
-                                   f'{common.CMDS[common.DISTRO_CLASSES[csVM[i].platform]]} centos-release-gluster',
-                                   common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      f'{cli_commands.CMDS[cli_commands.DISTRO_CLASSES[csVM[i].platform]]} centos-release-gluster',
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
         if csVM[i].platform in ['centos', 'rocky', 'rhel'] and csVM[i].platform_version in ['8', '9']:
             pkgmgrOpt = "--enablerepo=powertools"
 
         if csVM[i].platform in ['debian']:
-            common.interactiveExec(ssh[i], 'wget -O - https://download.gluster.org/pub/gluster/glusterfs/11/rsa.pub '
-                                           '| sudo apt-key add -;'
-                                           "DEBID=$(grep 'VERSION_ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '\"');"
-                                           "DEBVER=$(grep 'VERSION=' /etc/os-release | grep -Eo '[a-z]+');"
-                                           "DEBARCH=$(dpkg --print-architecture);"
-                                           "echo deb https://download.gluster.org/pub/gluster/glusterfs/LATEST/"
-                                           "Debian/${DEBID}/${DEBARCH}/apt ${DEBVER} main | "
-                                           "sudo tee /etc/apt/sources.list.d/gluster.list",
-                                   common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      'wget -O - https://download.gluster.org/pub/gluster/glusterfs/11/rsa.pub '
+                                      '| sudo apt-key add -;'
+                                      "DEBID=$(grep 'VERSION_ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '\"');"
+                                      "DEBVER=$(grep 'VERSION=' /etc/os-release | grep -Eo '[a-z]+');"
+                                      "DEBARCH=$(dpkg --print-architecture);"
+                                      "echo deb https://download.gluster.org/pub/gluster/glusterfs/LATEST/"
+                                      "Debian/${DEBID}/${DEBARCH}/apt ${DEBVER} main | "
+                                      "sudo tee /etc/apt/sources.list.d/gluster.list",
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
 
         if csVM[i].platform in ['centos', 'rocky']:
-            common.interactiveExec(ssh[i], f'{common.CMDS[common.DISTRO_CLASSES[csVM[i].platform]]} {pkgmgrOpt} '
-                                           f'centos-release-gluster10',
-                                   common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      f'{cli_commands.CMDS[cli_commands.DISTRO_CLASSES[csVM[i].platform]]} {pkgmgrOpt} '
+                                      f'centos-release-gluster10',
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
         glusterPackage = 'glusterfs-server'
-        common.interactiveExec(ssh[i], f'{common.CMDS[common.DISTRO_CLASSES[csVM[i].platform]]} {pkgmgrOpt} '
-                                       f'{glusterPackage}',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'sudo systemctl start glusterd',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'sudo systemctl enable glusterd',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i],
+                                  f'{cli_commands.CMDS[cli_commands.DISTRO_CLASSES[csVM[i].platform]]} {pkgmgrOpt} '
+                                  f'{glusterPackage}',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo systemctl start glusterd',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo systemctl enable glusterd',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     for i in range(1, N):
-        common.interactiveExec(ssh[0], f'sudo gluster peer probe {nodes[i]}', common.printAndSaveText, l,
-                               echoCommand=True)
+        ssh_tools.interactiveExec(ssh[0], f'sudo gluster peer probe {nodes[i]}', ssh_tools.printAndSaveText,
+                                  l,
+                                  echoCommand=True)
 
-    common.interactiveExec(ssh[1], f'sudo gluster peer probe {nodes[0]}', common.printAndSaveText, l,
-                           echoCommand=True)
+    ssh_tools.interactiveExec(ssh[1], f'sudo gluster peer probe {nodes[0]}', ssh_tools.printAndSaveText, l,
+                              echoCommand=True)
     for i in range(0, N):
         for j in range(0, N):
-            common.interactiveExec(ssh[i], f'sudo mkdir -p /brick/data{j + 1}', common.printAndSaveText, l,
-                                   echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i], f'sudo mkdir -p /brick/data{j + 1}', ssh_tools.printAndSaveText,
+                                      l,
+                                      echoCommand=True)
     for i in range(0, N):
         str = ''
         for j in range(0, N):
             str = str + f' {nodes[j]}:/brick/data{i + 1}'
-        common.interactiveExec(ssh[0], f'sudo gluster volume create data{i + 1} replica {N} {str} force',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[0], f'sudo gluster volume create data{i + 1} replica {N} {str} force',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
     for i in range(0, N):
-        common.interactiveExec(ssh[0], f'sudo gluster volume start data{i + 1}',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[0], f'sudo gluster volume start data{i + 1}',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
     for i in range(0, N):
         for j in range(0, N):
-            common.interactiveExec(ssh[i], f'sudo mkdir -p /var/lib/storage/data{j + 1}', common.printAndSaveText,
-                                   l, echoCommand=True)
-            common.interactiveExec(ssh[i],
-                                   f'echo 127.0.0.1:data{j + 1} /var/lib/storage/data{j + 1} '
-                                   f'glusterfs defaults,_netdev 0 0 | '
-                                   f'sudo tee -a /etc/fstab',
-                                   common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'sudo mount -a', common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i], f'sudo mkdir -p /var/lib/storage/data{j + 1}',
+                                      ssh_tools.printAndSaveText,
+                                      l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      f'echo 127.0.0.1:data{j + 1} /var/lib/storage/data{j + 1} '
+                                      f'glusterfs defaults,_netdev 0 0 | '
+                                      f'sudo tee -a /etc/fstab',
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo mount -a', ssh_tools.printAndSaveText, l, echoCommand=True)
     for i in range(0, N):
-        common.interactiveExec(ssh[i], f'sudo chown mysql:mysql -R /var/lib/storage',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], f'sudo mv /var/lib/columnstore/data1/* /var/lib/storage/data1/;'
-                                       f'sudo rmdir /var/lib/columnstore/data1',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f'sudo chown mysql:mysql -R /var/lib/storage',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f'sudo mv /var/lib/columnstore/data1/* /var/lib/storage/data1/;'
+                                          f'sudo rmdir /var/lib/columnstore/data1',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
         for j in range(0, N):
-            common.interactiveExec(ssh[i],
-                                   f'sudo -u mysql ln -s /var/lib/storage/data{j + 1} /var/lib/columnstore/data{j + 1}',
-                                   common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      f'sudo -u mysql ln -s /var/lib/storage/data{j + 1} /var/lib/columnstore/data{j + 1}',
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
     l.close()
 
 
@@ -155,96 +165,96 @@ def noStorage(nodes, csVM, ssh, N):
     l = open('nostorage_setup.log', "w")
     for i in range(0, N):
         for j in range(0, N):
-            common.interactiveExec(ssh[i],
-                                   f'sudo mkdir -p /var/lib/columnstore/data{j + 1}',
-                                   common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i],
-                               'sudo chown mysql:mysql /var/lib/columnstore -R -L;'
-                               'sudo chmod 755 /var/lib/columnstore -R',
-                               common.printAndSaveText, l, echoCommand=True)
+            ssh_tools.interactiveExec(ssh[i],
+                                      f'sudo mkdir -p /var/lib/columnstore/data{j + 1}',
+                                      ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i],
+                                  'sudo chown mysql:mysql /var/lib/columnstore -R -L;'
+                                  'sudo chmod 755 /var/lib/columnstore -R',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
         l.close()
 
 
 def setupMaxscale(nodes, csVM, ssh, N):
     l = open('maxscale_setup.log', "w")
     # Put maxscale.cnf
-    common.interactiveExec(ssh[N], f'sudo systemctl stop maxscale;'
-                                   f'sudo rm -rf /etc/maxscale.cnf*;'
-                                   f'printf "{MAXSCALE_CONFIG}" | sudo tee /etc/maxscale.cnf',
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], f'sudo systemctl stop maxscale;'
+                                      f'sudo rm -rf /etc/maxscale.cnf*;'
+                                      f'printf "{MAXSCALE_CONFIG}" | sudo tee /etc/maxscale.cnf',
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     # start Maxscale
-    common.interactiveExec(ssh[N], "sudo systemctl start maxscale",
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], "sudo systemctl start maxscale",
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     # create servers
     serversStr = ""
     for i in range(0, N):
-        common.interactiveExec(ssh[N], f'sudo maxctrl create server cs{i:03d} {csVM[i].ip_address}',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[N], f'sudo maxctrl create server cs{i:03d} {csVM[i].ip_address}',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
         serversStr = f"{serversStr} cs{i:03d}"
     # create monitor
-    common.interactiveExec(ssh[N], f"sudo maxctrl create monitor columnstore_monitor mariadbmon "
-                                   f"user={MAX_USER} password='{MAX_PASS}' "
-                                   f"replication_user={REPL_USER} replication_password='{REPL_PASS}' "
-                                   f"--servers {serversStr}",
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], f"sudo maxctrl create monitor columnstore_monitor mariadbmon "
+                                      f"user={MAX_USER} password='{MAX_PASS}' "
+                                      f"replication_user={REPL_USER} replication_password='{REPL_PASS}' "
+                                      f"--servers {serversStr}",
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     # create router
-    common.interactiveExec(ssh[N], f"sudo maxctrl create service query_router_service readwritesplit  "
-                                   f"user={MAX_USER} password='{MAX_PASS}' "
-                                   f"--servers {serversStr}",
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], f"sudo maxctrl create service query_router_service readwritesplit  "
+                                      f"user={MAX_USER} password='{MAX_PASS}' "
+                                      f"--servers {serversStr}",
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     # create listener
-    common.interactiveExec(ssh[N], f"sudo maxctrl create listener query_router_service "
-                                   f"query_router_listener 4006  protocol=MariaDBClient",
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], f"sudo maxctrl create listener query_router_service "
+                                      f"query_router_listener 4006  protocol=MariaDBClient",
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     # check status
-    common.interactiveExec(ssh[N], f"sudo maxctrl show maxscale;"
-                                   f"sudo maxctrl show servers;"
-                                   f"sudo maxctrl show services;",
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[N], f"sudo maxctrl show maxscale;"
+                                      f"sudo maxctrl show servers;"
+                                      f"sudo maxctrl show services;",
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     l.close()
 
 
 def createUsers(ssh, N):
     l = open('create_users.log', "w")
-    common.interactiveExec(ssh[0], f'echo "CREATE USER \'{UTIL_USER}\'@\'127.0.0.1\' IDENTIFIED BY'
-                                   f' \'{UTIL_PASS}\'" | sudo mariadb;'
-                                   f'echo "GRANT SELECT, PROCESS ON *.* TO \'{UTIL_USER}\'@\'127.0.0.1\'" '
-                                   f'| sudo mariadb;',
-                           common.printAndSaveText, l, echoCommand=True)
-    common.interactiveExec(ssh[0], f'echo "CREATE USER \'{MAX_USER}\'@\'%\' IDENTIFIED BY'
-                                   f' \'{MAX_PASS}\'" | sudo mariadb;',
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[0], f'echo "CREATE USER \'{UTIL_USER}\'@\'127.0.0.1\' IDENTIFIED BY'
+                                      f' \'{UTIL_PASS}\'" | sudo mariadb;'
+                                      f'echo "GRANT SELECT, PROCESS ON *.* TO \'{UTIL_USER}\'@\'127.0.0.1\'" '
+                                      f'| sudo mariadb;',
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[0], f'echo "CREATE USER \'{MAX_USER}\'@\'%\' IDENTIFIED BY'
+                                      f' \'{MAX_PASS}\'" | sudo mariadb;',
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     for grant in MAX_USER_GRANTS:
-        common.interactiveExec(ssh[0], f'echo "GRANT {grant} TO \'{MAX_USER}\'@\'%\'" '
-                                       f'| sudo mariadb;', common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[0], f'echo "GRANT {grant} TO \'{MAX_USER}\'@\'%\'" '
+                                          f'| sudo mariadb;', ssh_tools.printAndSaveText, l, echoCommand=True)
     l.close()
 
 
 def setupReplication(ssh, N, csVM):
     l = open('setup_replication.log', "w")
-    common.interactiveExec(ssh[0], 'echo "RESET MASTER" | sudo mariadb;'
-                                   'echo "SET GLOBAL gtid_slave_pos=\'0-1-0\'" | sudo mariadb',
-                           common.printAndSaveText, l, echoCommand=True)
-    common.interactiveExec(ssh[0], f'echo "CREATE USER \'{REPL_USER}\'@\'%\' IDENTIFIED BY \'{REPL_PASS}\'" '
-                                   '| sudo mariadb;'
-                                   'echo "GRANT REPLICA MONITOR, REPLICATION REPLICA, '
-                                   'REPLICATION REPLICA ADMIN, REPLICATION MASTER ADMIN '
-                                   f'ON *.* TO \'{REPL_USER}\'@\'%\'" | sudo mariadb',
-                           common.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[0], 'echo "RESET MASTER" | sudo mariadb;'
+                                      'echo "SET GLOBAL gtid_slave_pos=\'0-1-0\'" | sudo mariadb',
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
+    ssh_tools.interactiveExec(ssh[0], f'echo "CREATE USER \'{REPL_USER}\'@\'%\' IDENTIFIED BY \'{REPL_PASS}\'" '
+                                      '| sudo mariadb;'
+                                      'echo "GRANT REPLICA MONITOR, REPLICATION REPLICA, '
+                                      'REPLICATION REPLICA ADMIN, REPLICATION MASTER ADMIN '
+                                      f'ON *.* TO \'{REPL_USER}\'@\'%\'" | sudo mariadb',
+                              ssh_tools.printAndSaveText, l, echoCommand=True)
     for i in range(1, N):
-        common.interactiveExec(ssh[i], "sudo systemctl start mariadb",
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'echo "STOP REPLICA" | sudo mariadb;'
-                                       'echo "RESET MASTER" | sudo mariadb;'
-                                       'echo "SET GLOBAL gtid_slave_pos=\'0-1-0\'" | sudo mariadb',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], f'echo "CHANGE MASTER TO MASTER_HOST=\'{csVM[0].ip_address}\', '
-                                       f'MASTER_USER=\'{REPL_USER}\', MASTER_PASSWORD=\'{REPL_PASS}\', '
-                                       f'MASTER_USE_GTID=slave_pos" | sudo mariadb',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'echo "START REPLICA" | sudo mariadb; '
-                                       'echo "SET GLOBAL read_only=ON" | sudo mariadb',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], "sudo systemctl start mariadb",
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'echo "STOP REPLICA" | sudo mariadb;'
+                                          'echo "RESET MASTER" | sudo mariadb;'
+                                          'echo "SET GLOBAL gtid_slave_pos=\'0-1-0\'" | sudo mariadb',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f'echo "CHANGE MASTER TO MASTER_HOST=\'{csVM[0].ip_address}\', '
+                                          f'MASTER_USER=\'{REPL_USER}\', MASTER_PASSWORD=\'{REPL_PASS}\', '
+                                          f'MASTER_USE_GTID=slave_pos" | sudo mariadb',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'echo "START REPLICA" | sudo mariadb; '
+                                          'echo "SET GLOBAL read_only=ON" | sudo mariadb',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
         l.close()
 
 
@@ -261,10 +271,10 @@ def main():
     arguments = parseArguments()
 
     if arguments.storage not in list(storageInit.keys()):
-        common.printInfo("Unknown storage type")
+        host.printInfo("Unknown storage type")
         exit(1)
 
-    common.setupMdbciEnvironment()
+    mdbci.setupMdbciEnvironment()
     csVM = []
     hosts = []
     N = int(arguments.num)
@@ -277,93 +287,95 @@ def main():
     l = open('columnstore_bootstrap.log', "w")
 
     for i in range(0, N + 1):
-        csVM.append(common.Machine(arguments.machine_name, nodes[i]))
+        csVM.append(mdbci.Machine(arguments.machine_name, nodes[i]))
         hosts.append(f'{csVM[i].ip_address}\t{nodes[i]}')
 
     hostsStr = '\n'.join(hosts)
-    common.printInfo(hostsStr)
+    host.printInfo(hostsStr)
 
     # Open ssh connections, disable security, create /etc/hosts
     ssh = []
     for i in range(0, N + 1):
-        ssh.append(common.loadSSH())
+        ssh.append(ssh_tools.loadSSH())
         ssh[i].connect(csVM[i].ip_address, username=csVM[i].ssh_user, key_filename=csVM[i].ssh_key)
-        common.interactiveExec(ssh[i], f'printf "{hostsStr}" | sudo tee -a /etc/hosts', common.printAndSaveText, l,
-                               echoCommand=True)
-        common.interactiveExec(ssh[i], f'printf "{SYS_CONF}" | '
-                                       f'sudo tee /etc/sysctl.d/90-mariadb-enterprise-columnstore.conf',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'sudo systemctl disable apparmor; '
-                                       'sudo ufw disable; '
-                                       'sudo setenforce permissive;'
-                                       'sudo localedef -i en_US -f UTF-8 en_US.UTF-8;'
-                                       'sudo iptables -I INPUT -j ACCEPT',
-                               common.printAndSaveText, l, echoCommand=True)
-        common.interactiveExec(ssh[i], 'sudo sysctl --load=/etc/sysctl.d/90-mariadb-enterprise-columnstore.conf',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f'printf "{hostsStr}" | sudo tee -a /etc/hosts',
+                                  ssh_tools.printAndSaveText, l,
+                                  echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f'printf "{SYS_CONF}" | '
+                                          f'sudo tee /etc/sysctl.d/90-mariadb-enterprise-columnstore.conf',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo systemctl disable apparmor; '
+                                          'sudo ufw disable; '
+                                          'sudo setenforce permissive;'
+                                          'sudo localedef -i en_US -f UTF-8 en_US.UTF-8;'
+                                          'sudo iptables -I INPUT -j ACCEPT',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i],
+                                  'sudo sysctl --load=/etc/sysctl.d/90-mariadb-enterprise-columnstore.conf',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     storageInit[arguments.storage](nodes, csVM, ssh, N)
-    common.interactiveExec(ssh[i], "ls -la /var/lib/columnstore", common.printAndSaveText, l,
-                           echoCommand=True)
+    ssh_tools.interactiveExec(ssh[i], "ls -la /var/lib/columnstore", ssh_tools.printAndSaveText, l,
+                              echoCommand=True)
 
     # Create MariaDB .cnf files, initialize MariaDB DB
     for i in range(0, N):
         s = []
-        common.interactiveExec(ssh[i], 'sudo find /etc/ | grep "my\.cnf\.d$"', common.addTextToList, s)
+        ssh_tools.interactiveExec(ssh[i], 'sudo find /etc/ | grep "my\.cnf\.d$"', ssh_tools.addTextToList, s)
         cnfPath = s[0].strip()
-        common.printInfo(f"Path to my.cnf.d '{cnfPath}'")
-        common.interactiveExec(ssh[i], f'sudo systemctl stop mariadb; '
-                                       f'sudo systemctl stop mariadb-columnstore;'
-                                       f'sudo rm -rf /var/lib/mysql;'
-                                       f'echo "[server]" | sudo tee {cnfPath}/server{i + 1}.cnf; '
-                                       f'echo "bind-address  = {csVM[i].ip_address}" '
-                                       f'| sudo tee -a {cnfPath}/server{i + 1}.cnf;'
-                                       f'echo "server-id  = {i + 1}" '
-                                       f'| sudo tee -a {cnfPath}/server{i + 1}.cnf;'
-                                       f'printf "{SERVER_CONF}" | sudo tee -a {cnfPath}/server{i + 1}.cnf;'
-                                       f'sudo mariadb-install-db; sudo chown mysql:mysql -R /var/lib/mysql;'
-                                       f'sudo systemctl start mariadb',
-                               common.printAndSaveText, l, echoCommand=True)
+        host.printInfo(f"Path to my.cnf.d '{cnfPath}'")
+        ssh_tools.interactiveExec(ssh[i], f'sudo systemctl stop mariadb; '
+                                          f'sudo systemctl stop mariadb-columnstore;'
+                                          f'sudo rm -rf /var/lib/mysql;'
+                                          f'echo "[server]" | sudo tee {cnfPath}/server{i + 1}.cnf; '
+                                          f'echo "bind-address  = {csVM[i].ip_address}" '
+                                          f'| sudo tee -a {cnfPath}/server{i + 1}.cnf;'
+                                          f'echo "server-id  = {i + 1}" '
+                                          f'| sudo tee -a {cnfPath}/server{i + 1}.cnf;'
+                                          f'printf "{SERVER_CONF}" | sudo tee -a {cnfPath}/server{i + 1}.cnf;'
+                                          f'sudo mariadb-install-db; sudo chown mysql:mysql -R /var/lib/mysql;'
+                                          f'sudo systemctl start mariadb',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     for i in range(0, N):
-        common.interactiveExec(ssh[i],
-                               'sudo chown mysql:mysql /var/lib/columnstore -R -L; '
-                               'sudo chmod 755 /var/lib/columnstore -R',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i],
+                                  'sudo chown mysql:mysql /var/lib/columnstore -R -L; '
+                                  'sudo chmod 755 /var/lib/columnstore -R',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     setupReplication(ssh, N, csVM)
     createUsers(ssh, N)
 
     # Start CMAPI
     for i in range(0, N):
-        common.interactiveExec(ssh[i], 'sudo systemctl stop mariadb-columnstore;'
-                                       'sudo systemctl start mariadb-columnstore-cmapi;'
-                                       'sudo systemctl enable mariadb-columnstore-cmapi',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo systemctl stop mariadb-columnstore;'
+                                          'sudo systemctl start mariadb-columnstore-cmapi;'
+                                          'sudo systemctl enable mariadb-columnstore-cmapi',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     # Configure Columnstore
     for i in range(0, N):
-        common.interactiveExec(ssh[i], 'sudo mcsSetConfig CrossEngineSupport Host 127.0.0.1;'
-                                       'sudo mcsSetConfig CrossEngineSupport Port 3306;'
-                                       f'sudo mcsSetConfig CrossEngineSupport User {UTIL_USER}',
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], 'sudo mcsSetConfig CrossEngineSupport Host 127.0.0.1;'
+                                          'sudo mcsSetConfig CrossEngineSupport Port 3306;'
+                                          f'sudo mcsSetConfig CrossEngineSupport User {UTIL_USER}',
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     for i in range(0, N):
-        common.interactiveExec(ssh[i], f"sudo mcsSetConfig CrossEngineSupport Password '{UTIL_PASS}'",
-                               common.printAndSaveText, l, echoCommand=True)
+        ssh_tools.interactiveExec(ssh[i], f"sudo mcsSetConfig CrossEngineSupport Password '{UTIL_PASS}'",
+                                  ssh_tools.printAndSaveText, l, echoCommand=True)
 
     # Start Columnstore cluster
     for i in range(0, N):
         x = requests.put(f"https://{csVM[0].ip_address}:8640/cmapi/0.4.0/cluster/node",
                          headers={"Content-Type": "application/json", "x-api-key": f"{IP_KEY}"},
                          json={"timeout": 120, "node": f"{csVM[i].ip_address}"}, verify=False)
-        common.printInfo(json.dumps(x.json(), indent=2))
+        host.printInfo(json.dumps(x.json(), indent=2))
         time.sleep(10)
 
     x = requests.get(f"https://{csVM[0].ip_address}:8640/cmapi/0.4.0/cluster/status",
                      headers={"Content-Type": "application/json", "x-api-key": f"{IP_KEY}"},
                      verify=False)
-    common.printInfo(json.dumps(x.json(), indent=2))
+    host.printInfo(json.dumps(x.json(), indent=2))
 
     setupMaxscale(nodes, csVM, ssh, N)
 

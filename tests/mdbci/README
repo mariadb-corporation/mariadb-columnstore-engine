@@ -1,3 +1,11 @@
+Install library:
+download lib from
+https://mdbe-ci-repo.mariadb.net/packages/mdb_buildbot_scripts/mdb-buildbot-scripts-2024.4.2.tar.gz
+
+pip install mdb-buildbot-scripts-2024.4.2.tar.gz
+
+
+
 Example:
 
 ./columnstore_vm.py --machine-name cs --num 3 --box rocky_linux_8_libvirt --maxscale-box rocky_linux_8_libvirt --target 10.6.14 --server-product MariaDBEnterpriseProduction
@@ -6,9 +14,3 @@ Example:
 ./columnstore_vm.py --machine-name cs --destroy; 
 
 
-Files 
- common.py
- constants/*
- generate_plugins_list.py
- remove_product.py
-will be moved to the library to make them available for bot Columsntore tests and other BuildBot tests
