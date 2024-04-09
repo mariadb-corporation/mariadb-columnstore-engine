@@ -72,7 +72,17 @@ const string Filter::toString() const
 
 string Filter::toCppCode(IncludeSet& includes) const
 {
+  // WIP this should return the expression string in prefix form.
+  // WIP not used yet though.
   includes.insert("filter.h");
+  stringstream ss;
+  ss << "Filter(" << std::quoted(fData) << ")";
+
+  return ss.str();
+}
+
+std::string Filter::toExpressionString() const
+{
   stringstream ss;
   ss << "Filter(" << std::quoted(fData) << ")";
 

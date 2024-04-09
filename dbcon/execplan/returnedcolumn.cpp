@@ -33,6 +33,15 @@ using namespace messageqcpp;
 
 namespace execplan
 {
+// Helper
+std::string toExpressionString_(const std::string id)
+{
+  stringstream ss;
+  ss << "ReturnedColumn(" << std::quoted(id) << ")";
+
+  return ss.str();
+}
+
 /**
  * Constructors/Destructors
  */
@@ -245,11 +254,12 @@ const string ReturnedColumn::toString() const
 string ReturnedColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("returnedcolumn.h");
-  stringstream ss;
+  return toExpressionString_(fData);
+}
 
-  ss << "ReturnedColumn(" << std::quoted(fData) << ")";
-
-  return ss.str();
+std::string ReturnedColumn::toExpressionString() const
+{
+  return toExpressionString_(fAlias);
 }
 
 // All columns that may have simple column added to the list need to implement

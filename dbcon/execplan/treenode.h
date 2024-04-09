@@ -218,6 +218,10 @@ class TreeNode
   virtual bool operator!=(const TreeNode* t) const = 0;
 
   virtual std::string toCppCode(IncludeSet& includes) const = 0;
+
+  // This method is used by JIT to generate a name for the expression.
+  virtual std::string toExpressionString() const = 0;
+
   // derivedTable mutator and accessor
   virtual const std::string& derivedTable() const
   {
@@ -272,7 +276,9 @@ class TreeNode
    ***********************************************************************/
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    isNull = isNull || fResult.strVal.isNull(); // XXX: NullString returns isNull, we should remove that parameter altogether.
+    isNull = isNull ||
+             fResult.strVal
+                 .isNull();  // XXX: NullString returns isNull, we should remove that parameter altogether.
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
@@ -332,10 +338,12 @@ class TreeNode
     return fResult.intVal;
   }
   virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, CalpontSystemCatalog::ColDataType dataType)
+                               llvm::Value* dataConditionError, rowgroup::Row& row,
+                               CalpontSystemCatalog::ColDataType dataType)
   {
     return fResult.compiledBlock;
   }
+
   virtual bool isCompilable(rowgroup::Row& row)
   {
     return false;
@@ -487,19 +495,20 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
       {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char* intAsChar = (const char*)(&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
       break;
 
     case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::VARBINARY: // XXX: TODO: we don't have varbinary support now, but it may be handled just like varchar.
+    case CalpontSystemCatalog::VARBINARY:  // XXX: TODO: we don't have varbinary support now, but it may be
+                                           // handled just like varchar.
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 8)
       {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char* intAsChar = (const char*)(&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
@@ -896,7 +905,7 @@ inline double TreeNode::getDoubleVal()
       if (fResultType.colWidth <= 7)
         return strtod((char*)(&fResult.origIntVal), NULL);
 
-      //idbassert(fResult.strVal.str());
+      // idbassert(fResult.strVal.str());
       return strtod(fResult.strVal.safeString("").c_str(), NULL);
 
     case CalpontSystemCatalog::BIGINT:

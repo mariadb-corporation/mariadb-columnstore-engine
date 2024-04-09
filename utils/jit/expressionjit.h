@@ -1,10 +1,13 @@
 #include <queue>
 #include <utility>
 
+// WIP reorder
 #include "compileoperator.h"
+#include "mcs_data_condition.h"
 #include "returnedcolumn.h"
-#include "arithmeticcolumn.h"
+#include "mcs_outofrange.h"
 #include "dataconvert.h"
+#include "rowgroup.h"
 
 using namespace execplan;
 
@@ -60,9 +63,15 @@ class CompiledColumn : public execplan::ReturnedColumn
   {
     return compiledOperator.compiled_function_int64(row.getData(), isNull);
   }
+  // Unfortunately there are compiled and enterpreted parts of getUintVal().
+  // The former calculates and the latter checks if the value is out of range
+  // b/c exceptions in JIT is hard to handle.
   uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
-    return compiledOperator.compiled_function_int64(row.getData(), isNull);
+    datatypes::DataCondition::ErrorType error;
+    auto result = compiledOperator.compiled_function_uint64(row.getData(), isNull, error);
+    datatypes::throwOutOfRangeExceptionIfNeeded(isNull, datatypes::DataCondition::isOutOfRange(error));
+    return result;
   }
   double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
@@ -74,57 +83,65 @@ class CompiledColumn : public execplan::ReturnedColumn
   }
 };
 // TODO: Optimize code structure, maybe it should be implemented using recursion.
-static void compileExpression(std::vector<execplan::SRCP>& expression, rowgroup::Row& row)
+static void compileExpression(std::vector<execplan::SRCP>& expressions, rowgroup::Row& row)
 {
-  for (int i = expression.size() - 1; i >= 0; --i)
+  for (auto it = expressions.rbegin(); it != expressions.rend(); ++it)
   {
-    if (expression[i]->isCompilable(row))
+    auto& expression = *it;
+    if (expression->isCompilable(row))
     {
-      CompiledOperator compiledOperator = compileOperator(getJITInstance(), expression[i], row);
-      expression[i] = boost::make_shared<CompiledColumn>(compiledOperator, expression[i].get());
+      // auto a = expression->operationType();
+      // The next call must share a module to try to find the same function in the module.
+      CompiledOperator compiledOperator = compileOperator(getJITInstance(), expression, row);
+      expression = boost::make_shared<CompiledColumn>(compiledOperator, expression.get());
     }
-    else
-    {
-      ParseTree* root = nullptr;
-      if (boost::dynamic_pointer_cast<ArithmeticColumn>(expression[i]) != nullptr)
-      {
-        boost::shared_ptr<ArithmeticColumn> arithmeticcolumn =
-            boost::dynamic_pointer_cast<ArithmeticColumn>(expression[i]);
-        root = arithmeticcolumn->expression();
-      }
-      else
-      {
-        // TODO: other type
-      }
-      if (root)
-      {
-        std::queue<ParseTree*> nodeQueue;
-        nodeQueue.emplace(root);
-        size_t identifier = 0;
-        while (!nodeQueue.empty())
-        {
-          ParseTree* node = nodeQueue.front();
-          nodeQueue.pop();
-          if (!node->isCompilable(row))
-          {
-            if (node->left() && node->right())
-            {
-              nodeQueue.emplace(node->left());
-              nodeQueue.emplace(node->right());
-            }
-          }
-          else
-          {
-            auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
-            execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
-            ptr->alias(expression[i]->alias() + to_string(++identifier));
-            CompiledOperator compiledOperator = compileOperator(getJITInstance(), ptr, row);
-            auto* compiledColumn = new CompiledColumn(compiledOperator, c_ptr);
-            node->data(compiledColumn);
-          }
-        }
-      }
-    }
+    // WIP
+    // The else block below tries to compile a sub-tree and replace it in the expression.
+    // It is problematic and causes double free in ParseTree dtor.
+    // else
+    // {
+    //   [[maybe_unused]] ParseTree* root = nullptr;
+    //   if (boost::dynamic_pointer_cast<ArithmeticColumn>(expression) != nullptr)
+    //   {
+    //     boost::shared_ptr<ArithmeticColumn> arithmeticcolumn =
+    //         boost::dynamic_pointer_cast<ArithmeticColumn>(expression);
+    //     root = arithmeticcolumn->expression();
+    //   }
+    //   else
+    //   {
+    //     // TODO: other type
+    //   }
+
+    //   if (root)
+    //   {
+    //     std::queue<ParseTree*> nodeQueue;
+    //     nodeQueue.emplace(root);
+    //     size_t identifier = 0;
+    //     while (!nodeQueue.empty())
+    //     {
+    //       ParseTree* node = nodeQueue.front();
+    //       nodeQueue.pop();
+    //       std::cout << "compileExpression node " << std::hex << (uint64_t)(node) << std::dec << std::endl;
+    //       if (!node->isCompilable(row))
+    //       {
+    //         if (node->left() && node->right())
+    //         {
+    //           nodeQueue.emplace(node->left());
+    //           nodeQueue.emplace(node->right());
+    //         }
+    //       }
+    //       else
+    //       {
+    //         [[maybe_unused]] auto* c_ptr = dynamic_cast<ReturnedColumn*>(node->data());
+    //         execplan::SRCP ptr = boost::shared_ptr<ReturnedColumn>(c_ptr);
+    //         ptr->alias(expression.alias() + to_string(++identifier));
+    //         CompiledOperator compiledOperator = compileOperator(getJITInstance(), ptr, row);
+    //         auto* compiledColumn = new CompiledColumn(compiledOperator);
+    //         node->data(compiledColumn);
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
 }  // namespace msc_jit

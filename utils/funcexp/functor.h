@@ -106,7 +106,7 @@ class Func
    *
    * */
   virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                               rowgroup::Row& row, FunctionParm& fp,
+                               llvm::Value* dataConditionError, rowgroup::Row& row, FunctionParm& fp,
                                execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     return nullptr;
@@ -138,7 +138,7 @@ class Func
   virtual std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
   utils::NullString getNullStrVal(rowgroup::Row& row, FunctionParm& fp,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     bool isNull;
     std::string val = getStrVal(row, fp, isNull, op_ct);

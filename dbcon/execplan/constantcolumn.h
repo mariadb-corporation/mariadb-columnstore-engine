@@ -398,7 +398,8 @@ class ConstantColumn : public ReturnedColumn
   }
 
  public:
-  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row,
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
                        CalpontSystemCatalog::ColDataType dataType) override
   {
     auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
@@ -427,7 +428,7 @@ class ConstantColumn : public ReturnedColumn
       case execplan::CalpontSystemCatalog::UDOUBLE:
       case execplan::CalpontSystemCatalog::UFLOAT:
       {
-        return llvm::ConstantFP::get(b.getDoubleTy(),fResult.doubleVal);
+        return llvm::ConstantFP::get(b.getDoubleTy(), fResult.doubleVal);
       }
       default:
       {
@@ -531,7 +532,6 @@ std::ostream& operator<<(std::ostream& output, const ConstantColumn& rhs);
 class RollupMarkColumn : public ReturnedColumn
 {
  public:
-
   /**
    * ctor
    */

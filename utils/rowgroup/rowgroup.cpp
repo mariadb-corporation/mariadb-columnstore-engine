@@ -46,7 +46,6 @@ using namespace execplan;
 
 namespace rowgroup
 {
-using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
 StringStore::~StringStore()
 {

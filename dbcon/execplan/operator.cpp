@@ -186,6 +186,13 @@ string Operator::toCppCode(IncludeSet& includes) const
   return ss.str();
 }
 
+std::string Operator::toExpressionString() const
+{
+  ostringstream oss;
+  oss << "(" << fData << ")";
+  return oss.str();
+}
+
 Operator* Operator::opposite() const
 {
   if (fData.compare(">") == 0)

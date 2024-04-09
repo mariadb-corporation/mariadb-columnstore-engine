@@ -98,60 +98,70 @@ template <>
 struct ColTypeToIntegral<SystemCatalog::TINYINT>
 {
   using type = int8_t;
+  constexpr static size_t bitWidth = 8;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::UTINYINT>
 {
   using type = uint8_t;
+  constexpr static size_t bitWidth = 8;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::SMALLINT>
 {
   using type = int16_t;
+  constexpr static size_t bitWidth = 16;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::USMALLINT>
 {
   using type = uint16_t;
+  constexpr static size_t bitWidth = 16;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::MEDINT>
 {
   using type = int32_t;
+  constexpr static size_t bitWidth = 32;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::UMEDINT>
 {
   using type = uint32_t;
+  constexpr static size_t bitWidth = 32;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::INT>
 {
   using type = int32_t;
+  constexpr static size_t bitWidth = 32;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::UINT>
 {
   using type = uint32_t;
+  constexpr static size_t bitWidth = 32;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::BIGINT>
 {
   using type = int64_t;
+  constexpr static size_t bitWidth = 64;
 };
 
 template <>
 struct ColTypeToIntegral<SystemCatalog::UBIGINT>
 {
   using type = uint64_t;
+  constexpr static size_t bitWidth = 64;
 };
 
 template <SystemCatalog::ColDataType CT>

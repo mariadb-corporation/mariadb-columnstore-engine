@@ -108,7 +108,7 @@
 
 2060	ERR_UNION_DECIMAL_OVERFLOW	Union operation exceeds maximum DECIMAL precision of 38.
 
-2061	ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT	%1% value is out of range in '`unk`.`unk`.`unk` %2% `unk`.`unk`.`unk`'
+2061	ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT	%1% value is out of range.
 
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.

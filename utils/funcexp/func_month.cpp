@@ -163,7 +163,7 @@ bool Func_month::isCompilable(const execplan::CalpontSystemCatalog::ColType& col
   }
 }
 llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
-                                 rowgroup::Row& row, FunctionParm& fp,
+                                 llvm::Value* dataConditionError, rowgroup::Row& row, FunctionParm& fp,
                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   llvm::Value* val;
@@ -171,10 +171,10 @@ llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::
   switch (fp[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
-      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 12), 0xf), b.getInt32Ty());
     case CalpontSystemCatalog::DATETIME:
-      val = fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT);
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
     case execplan::CalpontSystemCatalog::TIMESTAMP:
       func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
@@ -184,8 +184,9 @@ llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::
         throw ::logic_error(
             "Func_month::compile: dataconvert::DataConvert::timestampValueToInt function not found");
       }
-      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::TIMESTAMP),
-                                b.getInt64(op_ct.getTimeZone())});
+      val = b.CreateCall(
+          func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
+                 b.getInt64(op_ct.getTimeZone())});
       b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                     isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
@@ -201,7 +202,9 @@ llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::
         throw ::logic_error(
             "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
       }
-      val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+      val = b.CreateCall(
+          func,
+          {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
       b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                     isNull);
       return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
@@ -216,7 +219,9 @@ llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::
           throw ::logic_error(
               "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
         }
-        val = b.CreateCall(func, {fp[0]->compile(b, data, isNull, row, CalpontSystemCatalog::INT), isNull});
+        val = b.CreateCall(
+            func,
+            {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
         b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
                       isNull);
         return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
