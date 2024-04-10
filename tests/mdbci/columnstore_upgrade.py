@@ -15,6 +15,8 @@ from mdb_buildbot_scripts.operations import ssh_tools
 from mdb_buildbot_scripts.operations import mdbci
 from mdb_buildbot_scripts.methods import versions_processing
 from mdb_buildbot_scripts.constants import products_names
+from mdb_buildbot_scripts.operations import product_removing
+from mdb_buildbot_scripts.operations import install
 
 
 def main():
@@ -65,29 +67,27 @@ def main():
     host.printInfo("Upgrade")
     for i in range(0, N):
         host.printInfo("Removing old version")
-        str = f"{os.path.dirname(os.path.realpath(__file__))}/remove_product.py " \
-              f"--machine-name {arguments.machine_name} " \
-              f"--machine {nodes[i]} " \
-              f"--mdbci-product {products_names.PRODS[arguments.product]} " \
-              f"--use-mdbci False --all-packages True " \
-              f"--include-columnstore True"
-        host.printInfo(str)
-        os.system(str)
+        product_removing.removeProduct(
+            machineName=arguments.machine_name,
+            machine=nodes[i],
+            mdbciProduct=products_names.PRODS[arguments.product],
+            useMdbci=False,
+            allPackages=True,
+            includeColumnstore=True,
+        )
         host.printInfo("Configure apt/yum/apt for repo with new version")
         mdbci.runMdbci('setup_repo',
                        '--product', products_names.PRODS[arguments.product],
                        '--product-version', arguments.target,
                        arguments.machine_name + f'/{nodes[i]}')
         host.printInfo("Installing new version")
-        str = f"{os.path.dirname(os.path.realpath(__file__))}/install_test_one_step.py " \
-              f"--machine-name {arguments.machine_name} " \
-              f"--machine {nodes[i]} " \
-              f"--product {arguments.product} " \
-              f"--target-version {arguments.target_version} " \
-              f"--mariadb-version {versions_processing.majorVersion(arguments.target_version)} " \
-              f"--architecture {csVM[i].architecture}"
-        host.printInfo(str)
-        os.system(str)
+        install.installServer(
+            machineName=arguments.machine_name,
+            machine=nodes[i],
+            product=arguments.product,
+            targetVersion=arguments.target_version,
+            mariadbVersion=versions_processing.majorVersion(arguments.target_version),
+            architecture=csVM[i].architecture)
 
     host.printInfo("Restoring nodes after upgrade")
     for i in range(0, N):
@@ -108,9 +108,10 @@ def main():
         s = []
         ssh_tools.interactiveExec(ssh[i], 'sudo find /etc/ | grep "my\.cnf\.d$"', ssh_tools.addTextToList, s)
         cnfPath = s[0].strip()
-        ssh_tools.interactiveExec(ssh[i],
-                                  f'sudo find {cnfPath} -type f -exec sed -i "s/#gtid_strict_mode/gtid_strict_mode/" {x} \;',
-                                  ssh_tools.printAndSaveText, logFile)
+        ssh_tools.interactiveExec(
+            ssh[i],
+            f'sudo find {cnfPath} -type f -exec sed -i "s/#gtid_strict_mode/gtid_strict_mode/" {x} \;',
+            ssh_tools.printAndSaveText, logFile)
 
     x = requests.get(f"https://{csVM[0].ip_address}:8640/cmapi/0.4.0/cluster/status",
                      headers={"Content-Type": "application/json", "x-api-key": f"{IP_KEY}"},
