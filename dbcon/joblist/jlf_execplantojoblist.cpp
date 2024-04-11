@@ -93,7 +93,7 @@ using namespace logging;
 // 'typeid'
 #endif
 
-#define OLD_PATH (1)
+#define OLD_PATH (0)
 
 namespace
 {
