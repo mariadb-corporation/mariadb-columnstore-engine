@@ -93,6 +93,8 @@ using namespace logging;
 // 'typeid'
 #endif
 
+#define OLD_PATH (1)
+
 namespace
 {
 using namespace joblist;
@@ -1554,9 +1556,13 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       pcs->schema(sc->schemaName());
       pcs->cardinality(sc->cardinality());
 
+#if OLD_PATH
       if (ct.colDataType == execplan::CalpontSystemCatalog::TEXT ||
           ct.colDataType == execplan::CalpontSystemCatalog::BLOB ||
           filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
+#else
+      if (1)
+#endif
       {
         pDictionaryStep* pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
         jobInfo.keyInfo->dictOidToColOid[dictOid] = sc->oid();
@@ -2630,9 +2636,13 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
       pcs->schema(sc->schemaName());
       pcs->cardinality(sc->cardinality());
 
+#if OLD_PATH
       if (ct.colDataType == execplan::CalpontSystemCatalog::TEXT ||
           ct.colDataType == execplan::CalpontSystemCatalog::BLOB ||
           filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
+#else
+      if (1)
+#endif
       {
         pDictionaryStep* pds = new pDictionaryStep(dictOid, tbOID, ct, jobInfo);
         jobInfo.keyInfo->dictOidToColOid[dictOid] = sc->oid();
