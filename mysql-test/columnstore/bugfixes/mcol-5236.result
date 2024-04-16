@@ -19,4 +19,3 @@ order by ISNULL(`dim`.`someString`) ASC,
 c0
 test
 DROP DATABASE mcol_5236;
-ok
