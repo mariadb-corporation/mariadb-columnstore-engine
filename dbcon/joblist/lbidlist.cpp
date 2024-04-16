@@ -38,6 +38,9 @@ using namespace std;
 using namespace execplan;
 using namespace BRM;
 
+#if 1
+#define	idblog(x)
+#else
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -55,6 +58,7 @@ using namespace BRM;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#endif
 
 namespace joblist
 {

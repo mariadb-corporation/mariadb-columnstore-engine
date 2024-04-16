@@ -38,6 +38,9 @@
 
 using namespace std;
 using namespace messageqcpp;
+#if 1
+#define	idblog(x)
+#else
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -55,7 +58,7 @@ using namespace messageqcpp;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
-
+#endif
 
 namespace joblist
 {
