@@ -114,7 +114,6 @@ void DictStepJL::createCommand(ByteStream& bs) const
   bs << charsetNumber;
   bs << filterCount;
   bs << (uint8_t)hasEqFilter;
-  bs << (uint8_t)needRTrim;
 
   if (hasEqFilter)
   {
