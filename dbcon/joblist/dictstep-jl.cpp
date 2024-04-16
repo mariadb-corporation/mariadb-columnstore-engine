@@ -226,7 +226,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       bs << roundFlag;
       filterStringCopy >> size;
       ptr = filterStringCopy.buf();
-      std::string ts(ptr, size);
+      std::string ts(static_cast<const char*>(ptr), size);
 	  idblog(" op " << int(cop) << ", <<" << ts << ">>");
       encodedPrefix = encodeStringPrefix(ptr, size, cset);
       bs << encodedPrefix;
