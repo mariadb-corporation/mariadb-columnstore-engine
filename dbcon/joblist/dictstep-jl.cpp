@@ -32,6 +32,7 @@
 #include <cctype>
 #include <locale>
 
+#include "calpontsystemcatalog.h"
 #include "bpp-jl.h"
 #include "string_prefixes.h"
 
@@ -66,7 +67,7 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
   needRTrim = false;
-  case (dict.colType().colDataType)
+  switch (dict.colType().colDataType)
   {
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
