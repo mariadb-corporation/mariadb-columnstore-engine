@@ -155,9 +155,9 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       std::string efs = eqFilter[i];
       if (needRTrim && efs.length() > 0)
       {
-        efs.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        efs.erase(std::find_if(efs.rbegin(), efs.rend(), [](unsigned char ch) {
            return !std::isspace(ch);
-          }).base(), s.end());
+          }).base(), efs.end());
       }
       int64_t encodedPrefix = encodeStringPrefix((unsigned char*)efs.c_str(), efs.size(), cset);
       bs << eqOp;
