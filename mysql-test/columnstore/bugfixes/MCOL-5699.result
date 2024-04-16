@@ -4,7 +4,9 @@ USE mcol_5699 ;
 CREATE TABLE cs1(a text) ENGINE=columnstore;
 INSERT INTO cs1 VALUES('a'),('b'),('c'),('x');
 CREATE TABLE cs2(a text) ENGINE=columnstore;
-INSERT INTO cs1 VALUES('y'),('z'),('x');
+INSERT INTO cs2 VALUES('y'),('z'),('x');
+CREATE TABLE cs3(a text) ENGINE=columnstore;
+INSERT INTO cs3 VALUES('r'),('t'),('z');
 SELECT a from cs1 UNION ALL select a from cs2;
 a
 a
@@ -29,5 +31,13 @@ ERROR HY000: Internal error: INTERSECT is not supported by Columnstore engine
 SELECT a from cs1 EXCEPT ALL select a from cs2;
 ERROR HY000: Internal error: EXCEPT is not supported by Columnstore engine
 SELECT a from cs1 EXCEPT DISTINCT select a from cs2;
+ERROR HY000: Internal error: EXCEPT is not supported by Columnstore engine
+SELECT a from cs1 UNION select a from cs2 INTERSECT ALL select a from cs3;
+ERROR HY000: Internal error: INTERSECT is not supported by Columnstore engine
+SELECT a from cs1 UNION select a from cs2 INTERSECT DISTINCT select a from cs3;
+ERROR HY000: Internal error: INTERSECT is not supported by Columnstore engine
+SELECT a from cs1 UNION select a from cs2 EXCEPT ALL select a from cs3;
+ERROR HY000: Internal error: EXCEPT is not supported by Columnstore engine
+SELECT a from cs1 UNION select a from cs2 EXCEPT DISTINCT select a from cs3;
 ERROR HY000: Internal error: EXCEPT is not supported by Columnstore engine
 DROP DATABASE mcol_5699 ;
