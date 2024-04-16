@@ -226,9 +226,15 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       bs << roundFlag;
       filterStringCopy >> size;
       ptr = filterStringCopy.buf();
-      std::string ts(reinterpret_cast<const char*>(ptr), size);
-      encodedPrefix = encodeStringPrefix(ptr, size, cset);
-	  idblog(" op " << int(cop) << ", <<" << ts << ">>, prefix " << std::hex << encodedPrefix);
+      std::string fs(reinterpret_cast<const char*>(ptr), size);
+      if (needRTrim && fs.length() > 0)
+      {
+        fs.erase(std::find_if(fs.rbegin(), fs.rend(), [](unsigned char ch) {
+           return !std::isspace(ch);
+          }).base(), fs.end());
+      }
+      encodedPrefix = encodeStringPrefix(fs.c_ptr(), fs.size(), cset);
+	  idblog(" op " << int(cop) << ", <<" << fs << ">>, prefix " << std::hex << encodedPrefix);
       bs << encodedPrefix;
       filterStringCopy.advance(size);
     }
