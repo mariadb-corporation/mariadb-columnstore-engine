@@ -89,10 +89,15 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   switch (dict.colType().colDataType)
   {
     case execplan::CalpontSystemCatalog::CHAR:
+  idblog("CHAR");
+      needRTrim = true;
+      break;
     case execplan::CalpontSystemCatalog::VARCHAR:
+  idblog("VARCHAR");
       needRTrim = true;
       break;
     default:
+      idblog("dict.colType().colDataType is " << int(dict.colType().colDataType));
       break;
   }
 }
@@ -167,6 +172,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
   {
     idbassert(filterCount == eqFilter.size());
 
+    idblog("needRTrim " << int(needRTrim));
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
@@ -187,6 +193,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
   }
   else
   {
+	  idblog("not eq");
     messageqcpp::ByteStream filterStringCopy(
         filterString);  // XXX I am not sure about real semantics of messagecpp::ByteStream. So - copy.
     // please erfer to pdictionary.cpp in this dicrectory, addFilter function for a proper encoding of string
