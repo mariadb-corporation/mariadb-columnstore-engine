@@ -38,6 +38,24 @@ using namespace std;
 using namespace execplan;
 using namespace BRM;
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace joblist
 {
 LBIDList::LBIDList()
@@ -655,6 +673,7 @@ bool LBIDList::checkSingleValue(T min, T max, T value, const execplan::CalpontSy
 {
   if (isCharType(type.colDataType))
   {
+	  idblog("char type");
     // MCOL-641 LBIDList::CasualPartitionDataType() returns false if
     // width > 8 for a character type, so T cannot be int128_t here
     datatypes::Charset cs(const_cast<execplan::CalpontSystemCatalog::ColType&>(type).getCharset());
@@ -663,6 +682,7 @@ bool LBIDList::checkSingleValue(T min, T max, T value, const execplan::CalpontSy
   }
   else if (isUnsigned(type.colDataType))
   {
+	  idblog("unsigned type");
     return (static_cast<uint64_t>(value) >= static_cast<uint64_t>(min) &&
             static_cast<uint64_t>(value) <= static_cast<uint64_t>(max));
   }
@@ -816,6 +836,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
 
     if (bIsChar)
     {
+	    idblog(" is char");
       datatypes::Charset cs(ct.charsetNumber);
       utils::ConstString sMin((const char*)&cpRange.loVal, ct.colWidth);
       utils::ConstString sMax((const char*)&cpRange.hiVal, ct.colWidth);
@@ -825,6 +846,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     }
     else if (bIsUnsigned)
     {
+	    idblog("is unsigned");
       scan = compareVal(static_cast<uint64_t>(cpRange.loVal), static_cast<uint64_t>(cpRange.hiVal),
                         static_cast<uint64_t>(value), op, lcf);
     }
