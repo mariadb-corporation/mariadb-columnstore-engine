@@ -28,6 +28,10 @@
 //
 //
 
+#include <algorithm> 
+#include <cctype>
+#include <locale>
+
 #include "bpp-jl.h"
 #include "string_prefixes.h"
 
@@ -61,6 +65,16 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   }
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
+  needRTrim = false;
+  case (dict.colType().colDataType)
+  {
+    case CalpontSystemCatalog::CHAR:
+    case CalpontSystemCatalog::VARCHAR:
+      needRTrim = true;
+      break;
+    default:
+      break;
+  }
 }
 
 DictStepJL::~DictStepJL()
@@ -80,6 +94,7 @@ void DictStepJL::createCommand(ByteStream& bs) const
   bs << charsetNumber;
   bs << filterCount;
   bs << (uint8_t)hasEqFilter;
+  bs << (uint8_t)needRTrim;
 
   if (hasEqFilter)
   {
@@ -122,6 +137,8 @@ void DictStepJL::setWidth(uint16_t w)
   colWidth = w;
 }
 
+// Please note that this function gets called rarely and
+// any inefficiences you might find here are for clarity.
 messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
 {
   messageqcpp::ByteStream bs;
@@ -134,7 +151,14 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
-      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), cset);
+      std::string efs = eqFilter[i];
+      if (needRTrim && efs.length() > 0)
+      {
+        efs.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+           return !std::isspace(ch);
+          }).base(), s.end());
+      }
+      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)efs.c_str(), efs.size(), cset);
       bs << eqOp;
       bs << roundFlag;
       bs << encodedPrefix;
