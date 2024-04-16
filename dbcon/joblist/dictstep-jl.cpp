@@ -69,8 +69,8 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   needRTrim = false;
   switch (dict.colType().colDataType)
   {
-    case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
       needRTrim = true;
       break;
     default:
