@@ -38,6 +38,24 @@
 
 using namespace std;
 using namespace messageqcpp;
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 
 namespace joblist
 {
@@ -67,6 +85,7 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
   needRTrim = false;
+  idblog("checking dict's coltype");
   switch (dict.colType().colDataType)
   {
     case execplan::CalpontSystemCatalog::CHAR:
@@ -155,9 +174,11 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       std::string efs = eqFilter[i];
       if (needRTrim && efs.length() > 0)
       {
+  idblog("before trimming");
         efs.erase(std::find_if(efs.rbegin(), efs.rend(), [](unsigned char ch) {
            return !std::isspace(ch);
           }).base(), efs.end());
+  idblog("after trimming");
       }
       int64_t encodedPrefix = encodeStringPrefix((unsigned char*)efs.c_str(), efs.size(), cset);
       bs << eqOp;
