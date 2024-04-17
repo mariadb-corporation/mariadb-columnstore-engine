@@ -887,6 +887,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     cout << "CPPredicate " << (scan == true ? "TRUE" : "FALSE") << endl;
 
 #endif
+  idblog("scan; " << int(scan));
 
   return scan;
 }  // CasualPartitioningPredicate

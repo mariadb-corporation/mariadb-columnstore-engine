@@ -79,6 +79,27 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
+#if 0
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
 extern boost::mutex fileLock_g;
 
 namespace
@@ -1104,6 +1125,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
       colCmd = cpColVec[i];
       const EMEntry& extent = colCmd->getExtents()[idx];
 
+      idblog("scanFlags[" << idx << "] = " << int(scanFlags[idx]));
       /* If any column filter eliminates an extent, it doesn't get scanned */
       scanFlags[idx] =
           scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
@@ -1112,6 +1134,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
            lbidListVec[i]->CasualPartitionPredicate(extent.partition.cprange, &(colCmd->getFilterString()),
                                                     colCmd->getFilterCount(), colCmd->getColType(),
                                                     colCmd->getBOP(), colCmd->getIsDict()));
+      idblog("and after scanFlags[" << idx << "] = " << int(scanFlags[idx]));
     }
   }
 
