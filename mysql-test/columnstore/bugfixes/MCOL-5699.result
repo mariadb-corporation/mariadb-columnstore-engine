@@ -13,9 +13,9 @@ a
 b
 c
 x
+x
 y
 z
-x
 SELECT a from cs1 UNION DISTINCT select a from cs2;
 a
 a
