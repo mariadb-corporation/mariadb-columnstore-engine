@@ -13,8 +13,9 @@ INSERT INTO cs2 VALUES('y'),('z'),('x');
 CREATE TABLE cs3(a text) ENGINE=columnstore;
 INSERT INTO cs3 VALUES('r'),('t'),('z');
 
-
+--sorted_result
 SELECT a from cs1 UNION ALL select a from cs2;
+--sorted_result
 SELECT a from cs1 UNION DISTINCT select a from cs2;
 
 --ERROR 1815
