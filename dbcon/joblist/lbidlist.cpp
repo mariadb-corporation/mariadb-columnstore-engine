@@ -850,7 +850,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
     }
     else if (bIsUnsigned)
     {
-	    idblog("is unsigned");
+	    idblog("is unsigned, min " << std::hex << cpRange.loVal << ", max " << cpRange.hiVal);
       scan = compareVal(static_cast<uint64_t>(cpRange.loVal), static_cast<uint64_t>(cpRange.hiVal),
                         static_cast<uint64_t>(value), op, lcf);
     }
