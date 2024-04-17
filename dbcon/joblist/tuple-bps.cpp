@@ -2920,7 +2920,7 @@ inline bool TupleBPS::scanit(uint64_t rid)
 
   fbo = rid >> rpbShift;
   extentIndex = fbo >> divShift;
-  idblog("scanFlags[" << extentIndex << "] = " << int(scanFlags[extentIndex]) << " && runtimeCPFlags[" << extentIndex << "] = " << int(runtimeCPFlags[extentIndex]))
+  idblog("scanFlags[" << extentIndex << "] = " << int(scanFlags[extentIndex]) << " && runtimeCPFlags[" << extentIndex << "] = " << int(runtimeCPFlags[extentIndex]));
   return scanFlags[extentIndex] && runtimeCPFlags[extentIndex];
 }
 
