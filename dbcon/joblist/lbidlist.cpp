@@ -598,6 +598,7 @@ inline bool LBIDList::compareVal(const T& Min, const T& Max, const T& value, cha
     case COMPARE_NGT:
       if (value < Min)
       {
+	      idblog("LE: false");
         return false;
       }
 
@@ -639,7 +640,7 @@ inline bool LBIDList::compareVal(const T& Min, const T& Max, const T& value, cha
 
       break;
   }
-
+idblog("compare: true");
   return true;
 }
 
