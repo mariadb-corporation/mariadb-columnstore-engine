@@ -1125,7 +1125,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
       colCmd = cpColVec[i];
       const EMEntry& extent = colCmd->getExtents()[idx];
 
-      idblog("scanFlags[" << idx << "] = " << int(scanFlags[idx]));
+      idblog("1: scanFlags[" << idx << "] = " << int(scanFlags[idx]));
       /* If any column filter eliminates an extent, it doesn't get scanned */
       scanFlags[idx] =
           scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
@@ -1225,7 +1225,7 @@ void TupleBPS::prepCasualPartitioning()
     if (fOid >= 3000)
     {
       scanFlags[i] = scanFlags[i] && runtimeCPFlags[i];
-      idblog("scanFlags["<<i<<"] = " << int(scanFlags[i]));
+      idblog("2: scanFlags["<<i<<"] = " << int(scanFlags[i]));
 
       if (scanFlags[i] && lbidList->CasualPartitionDataType(fColType.colDataType, fColType.colWidth))
       {
@@ -2067,6 +2067,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       continue;
     }
 
+    idblog("3: scanFlags[" << i << "] = " << int(scanFlags[i]));
     if (!scanFlags[i])
     {
       fNumBlksSkipped += lbidsToScan;
