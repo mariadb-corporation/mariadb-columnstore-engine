@@ -1225,6 +1225,7 @@ void TupleBPS::prepCasualPartitioning()
     if (fOid >= 3000)
     {
       scanFlags[i] = scanFlags[i] && runtimeCPFlags[i];
+      idblog("scanFlags["<<i<<"] = " << int(scanFlags[i]));
 
       if (scanFlags[i] && lbidList->CasualPartitionDataType(fColType.colDataType, fColType.colWidth))
       {
@@ -2919,6 +2920,7 @@ inline bool TupleBPS::scanit(uint64_t rid)
 
   fbo = rid >> rpbShift;
   extentIndex = fbo >> divShift;
+  idblog("scanFlags[" << extentIndex << "] = " << int(scanFlags[extentIndex]) << " && runtimeCPFlags[" << extentIndex << "] = " << int(runtimeCPFlags[extentIndex]))
   return scanFlags[extentIndex] && runtimeCPFlags[extentIndex];
 }
 
