@@ -38,7 +38,7 @@ using namespace std;
 using namespace execplan;
 using namespace BRM;
 
-#if 1
+#if 0
 #define	idblog(x)
 #else
 #define idblog(x)                                                                       \
