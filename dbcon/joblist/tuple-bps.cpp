@@ -2041,7 +2041,9 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   idbassert(ffirstStepType == SCAN);
 
   if (fOid >= 3000 && bop == BOP_AND)
+  {
     storeCasualPartitionInfo(false);
+  }
 
   totalMsgs = 0;
 
@@ -2095,13 +2097,17 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
     // Bug5741 If we are local only and this doesn't belongs to us, skip it
     if (fLocalQuery == execplan::CalpontSelectExecutionPlan::LOCAL_QUERY)
     {
+	    idblog("local query");
       if (localPMId == 0)
       {
         throw IDBExcept(ERR_LOCAL_QUERY_UM);
       }
 
       if (dbRootPMMap->find(scannedExtents[i].dbRoot)->second != localPMId)
+      {
+	      idblog("skipping local");
         continue;
+      }
     }
 
     // a necessary DB root is offline
@@ -2135,6 +2141,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
     bool isExeMgrDEC = fDec->isExeMgrDEC();
     while (blocksToScan > 0)
     {
+	    idblog("blocks to scan " << blocksToScan);
       uint32_t blocksThisJob = min(blocksToScan, blocksPerJob);
 
       fBPP->setLBID(startingLBID, scannedExtents[i]);
