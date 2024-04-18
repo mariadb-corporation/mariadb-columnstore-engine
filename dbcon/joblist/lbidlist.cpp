@@ -625,7 +625,7 @@ inline bool LBIDList::compareVal(const T& Min, const T& Max, const T& value, cha
     case COMPARE_EQ:
       if (value < Min || value > Max || lcf > 0)
       {
-	      idblog(" COMPARE_EQ: false, min " << std::hex << Min << ", max " << Max << ", val " << value << ", lcf " << int(lcf));
+	      if constexpr (sizeof(T) <= 8) { idblog(" COMPARE_EQ: false, min " << std::hex << Min << ", max " << Max << ", val " << value << ", lcf " << int(lcf)); }
         return false;
       }
 
