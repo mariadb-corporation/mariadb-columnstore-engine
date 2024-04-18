@@ -2076,6 +2076,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 
     if (!processPseudoColFilters(i, dbRootPMMap))
     {
+      idblog("elimination due to speudocolsfilters");
       fNumBlksSkipped += lbidsToScan;
       continue;
     }
