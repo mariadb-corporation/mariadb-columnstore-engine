@@ -2064,12 +2064,14 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 
     if (!inBounds)
     {
+      idblog("elimination due to not in bounds");
       continue;
     }
 
     idblog("3: scanFlags[" << i << "] = " << int(scanFlags[i]));
     if (!scanFlags[i])
     {
+      idblog("elimination due to scanflags");
       fNumBlksSkipped += lbidsToScan;
       continue;
     }
