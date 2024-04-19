@@ -83,11 +83,15 @@ def main():
         host.printInfo("Installing new version")
         install.installServer(
             machineName=arguments.machine_name,
-            machine=nodes[i],
+            machine=csVM[i],
+            machineSSH=ssh[i],
             product=arguments.product,
             targetVersion=arguments.target_version,
             mariadbVersion=versions_processing.majorVersion(arguments.target_version),
-            architecture=csVM[i].architecture)
+            architecture=csVM[i].architecture,
+            includeUnsupported=False,
+            removeMariadbLibs=False,
+        )
 
     host.printInfo("Restoring nodes after upgrade")
     for i in range(0, N):
