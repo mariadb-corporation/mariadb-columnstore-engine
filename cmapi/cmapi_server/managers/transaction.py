@@ -75,9 +75,9 @@ class TransactionManager(ContextDecorator):
     def set_default_signals(self) -> None:
         """Return defalt handlers for specific signals."""
         if self.handle_signals:
-            signal.signal(signal.SIGINT, default_int_handler)
-            signal.signal(signal.SIGTERM, SIG_DFL)
-            signal.signal(signal.SIGHUP, SIG_DFL)
+            signal(SIGINT, default_int_handler)
+            signal(SIGTERM, SIG_DFL)
+            signal(SIGHUP, SIG_DFL)
 
     def rollback_transaction(self) -> None:
         """Rollback transaction."""
