@@ -84,7 +84,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
 
         if (column->fType->fCollate)
         {
-            std::cerr << "getting charset by collation name\n";
+            std::cerr << "getting charset by collation name '" << column->fType->fCollate << "'\n";
             cs = get_charset_by_name(column->fType->fCollate, MYF(0));
         }
         else if (column->fType->fCharset)
@@ -92,7 +92,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
             std::cerr << "getting charset by charset name\n";
             cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
         }
-std::cerr << "charset number is " << cs->number << "\n";
+std::cerr << "charset number is " << cs->number << ", name '" << cs->cs_name.str << "'\n";
 
         column->fType->fCharset = cs->cs_name.str;
         column->fType->fCollate = cs->coll_name.str;
