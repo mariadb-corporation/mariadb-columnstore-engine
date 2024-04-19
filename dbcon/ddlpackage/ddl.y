@@ -82,6 +82,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
     {
         CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
 
+       std::cerr << "default charset is " << (def_cs ? def_cs->cs_name.str : "NULL") << "\n";
         if (column->fType->fCollate)
         {
             std::cerr << "getting charset by collation name '" << column->fType->fCollate << "'\n";
