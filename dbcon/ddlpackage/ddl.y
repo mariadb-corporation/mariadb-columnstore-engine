@@ -47,6 +47,7 @@
 #include "ddl-gram.h"
 
 #include "mariadb_my_sys.h" // CHARSET_INFO
+#include "sql_class.h" // class THD, get_utf8_flag()
 
 #define scanner x->scanner
 
