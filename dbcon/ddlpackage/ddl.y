@@ -81,7 +81,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
         column->fType->fType == DDL_TEXT)
     {
         CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
-        myf utf8_flag = current_thd->get_utf8_flag();
+        myf utf8_flag = _current_thd()->get_utf8_flag();
 
        std::cerr << "default charset is " << (def_cs ? def_cs->cs_name.str : "NULL") << "\n";
         if (column->fType->fCollate)
