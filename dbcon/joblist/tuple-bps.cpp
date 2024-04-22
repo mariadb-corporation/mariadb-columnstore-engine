@@ -79,7 +79,7 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
-#if 0
+#if 01
 #define	idblog(x)
 #else
 #define idblog(x)                                                                       \

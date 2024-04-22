@@ -23,6 +23,7 @@
 
 #include "string_prefixes.h"
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -40,6 +41,9 @@
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(_)
+#endif
 
 // XXX: string (or, actually, a BLOB) with all NUL chars will be encoded into zero. Which corresponds to
 //      encoding of empty string.
