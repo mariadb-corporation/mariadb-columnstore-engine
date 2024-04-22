@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include "collation.h"  // CHARSET_INFO
 #include "ddlpkg.h"
+#include "mariadb_my_sys.h" // myf, MYF()
 
 #define EXPORT
 
