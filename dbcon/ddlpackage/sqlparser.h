@@ -83,8 +83,14 @@ struct pass_to_bison
   std::string fDBSchema;
   void* scanner;
   const CHARSET_INFO* default_table_charset;
+  myf utf8_flag;
 
-  pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL), default_table_charset(NULL){};
+  pass_to_bison(ParseTree* pt) :
+      fParseTree(pt)
+    , scanner(NULL)
+    , default_table_charset(NULL)
+    , utf8_flag(MYF(0))
+  {};
 };
 
 class SqlParser
@@ -94,7 +100,7 @@ class SqlParser
 
   EXPORT virtual ~SqlParser();
 
-  EXPORT int Parse(const char* sqltext);
+  EXPORT int Parse(const char* sqltext, myf utf8_flag);
 
   /** @brief Return the ParseTree if state is Good.  Otherwise
    *	throw a logic_error.
