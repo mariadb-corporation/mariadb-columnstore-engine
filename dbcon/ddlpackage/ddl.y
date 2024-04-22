@@ -721,7 +721,7 @@ ata_add_column:
     }
 	| ADD COLUMN '(' table_element_list ')' {
         for (auto* elem : *$4) {
-            fix_column_length_and_charset(elem, x->default_table_charset, x-->utf8_flag);
+            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
         }
         $$ = new AtaAddColumns($4);
     }

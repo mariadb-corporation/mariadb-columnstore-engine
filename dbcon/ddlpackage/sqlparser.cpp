@@ -130,6 +130,6 @@ int SqlFileParser::Parse(const string& sqlfile)
   // cout << "----------------------" << endl;
   // cout << sqlbuf << endl;
 
-  return SqlParser::Parse(sqlbuf);
+  return SqlParser::Parse(sqlbuf, MYF(0));
 }
 }  // namespace ddlpackage
