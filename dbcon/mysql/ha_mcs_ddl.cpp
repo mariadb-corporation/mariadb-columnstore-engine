@@ -766,7 +766,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
   parser.setDefaultSchema(schema);
   parser.setDefaultCharset(default_table_charset);
   int rc = 0;
-  parser.Parse(ddlStatement.c_str(), thd->get_ut8_flag());
+  parser.Parse(ddlStatement.c_str(), thd->get_utf8_flag());
 
   if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
