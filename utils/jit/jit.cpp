@@ -253,6 +253,7 @@ class JITCompiler
       // TODO: throw a more specific exception
       throw std::logic_error("Failed to materialize module: " + error_message);
     }
+    // WIP constant size?
     llvm::SmallVector<char, 4096> buffer;
     llvm::raw_svector_ostream ostream(buffer);
     llvm::legacy::PassManager pass_manager;
@@ -262,6 +263,11 @@ class JITCompiler
       // TODO: throw a more specific exception
       throw std::logic_error("Failed to create MC pass manager");
     }
+
+    // std::cout << "compile " << std::endl;
+    // module.print(llvm::outs(), nullptr);
+    // std::cout.flush();
+
     pass_manager.run(module);
 
     std::unique_ptr<llvm::MemoryBuffer> compiled_memory_buffer =
@@ -335,13 +341,12 @@ JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compil
 
 JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
-  std::cout << "JIT::compileModule !!!!!!!!!!1" << std::endl;
-  module->print(llvm::outs(), nullptr);
+  // std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
+  // module->print(llvm::outs(), nullptr);
   runOptimizationPassesOnModule(*module);
 
   auto buffer = compiler->compile(*module);
-  // std::cout << "JIT::compileModule 2" << std::endl;
-  // module->print(llvm::outs(), nullptr);
+
   llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>> object_file =
       llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
   if (!object_file)
@@ -359,8 +364,6 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
   module_memory_manager->finalizeMemory(nullptr);
 
   CompiledModule compiled_module;
-  // std::cout << "JIT::compileModule 3" << std::endl;
-  // module->print(llvm::outs(), nullptr);
   for (const auto& function : *module)
   {
     if (function.isDeclaration())
@@ -481,27 +484,18 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   pass_manager_builder.populateModulePassManager(mpm);
 
   fpm.doInitialization();
-  std::cout << "JIT::runOptimizationPassesOnModule 1" << std::endl;
-  module.print(llvm::outs(), nullptr);
 
   for (auto& function : module)
   {
     fpm.run(function);
   }
 
-  std::cout << "JIT::runOptimizationPassesOnModule 2" << std::endl;
-  module.print(llvm::outs(), nullptr);
   fpm.doFinalization();
-  std::cout << "JIT::runOptimizationPassesOnModule 3" << std::endl;
-  module.print(llvm::outs(), nullptr);
 
   // // WIP the module opt pass removes the function compiled
   // Module opt passes aggresivelly remove "unreferenced" functions from
   // a module.
   // mpm.run(module);
-
-  std::cout << "JIT::runOptimizationPassesOnModule 4" << std::endl;
-  module.print(llvm::outs(), nullptr);
 }
 JIT::~JIT()
 {

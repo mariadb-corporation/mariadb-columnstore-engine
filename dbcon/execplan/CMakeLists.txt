@@ -28,6 +28,7 @@ set(execplan_LIB_SRCS
     objectidmanager.cpp
     objectreader.cpp
     operator.cpp
+    optype.cpp
     oracleexecutionplan.cpp
     outerjoinonfilter.cpp
     predicateoperator.cpp

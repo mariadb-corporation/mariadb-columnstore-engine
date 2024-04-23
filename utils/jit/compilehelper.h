@@ -3,7 +3,7 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/IRBuilder.h"
 
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 
 namespace msc_jit
 {

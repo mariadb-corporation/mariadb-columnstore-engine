@@ -26,7 +26,7 @@
 #include <memory>
 #include "exceptclasses.h"
 #include "conststring.h"
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 
 namespace utils
 {

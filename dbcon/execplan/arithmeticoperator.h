@@ -31,7 +31,7 @@
 #include <sstream>
 
 #include "mcs_data_condition.h"
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 #include "mcs_outofrange.h"
 #include "mcs_int128.h"
 #include "operator.h"
@@ -46,8 +46,6 @@ namespace execplan
 {
 class ArithmeticOperator : public Operator
 {
-  using cscType = execplan::CalpontSystemCatalog::ColType;
-
  public:
   ArithmeticOperator();
   ArithmeticOperator(const std::string& operatorName);
@@ -577,45 +575,6 @@ inline llvm::Value* ArithmeticOperator::compileIntWithConditions_(llvm::IRBuilde
 
   return res;
 }
-
-// template <datatypes::SystemCatalog::ColDataType CT>
-// inline llvm::Value* ArithmeticOperator::compileIntWithConditions_(llvm::IRBuilder<>& b, llvm::Value* l,
-//                                                                   llvm::Value* r, llvm::Value* isNull,
-//                                                                   llvm::Value* dataConditionError,
-//                                                                   ParseTree* lop, ParseTree* rop)
-// {
-//   auto* intBigerType = llvm::IntegerType::get(b.getContext(), 128);
-//   auto* intCurrentType = llvm::IntegerType::get(b.getContext(), 64);
-//   auto* intErrorType = llvm::IntegerType::get(b.getContext(), 32);
-
-//   bool signedLeft = lop->data()->resultType().isSignedInteger();
-//   bool signedRight = rop->data()->resultType().isSignedInteger();
-
-//   auto* lCasted = (signedLeft) ? b.CreateSExt(l, intBigerType, "l_to_int128")
-//                                : b.CreateZExt(l, intBigerType, "l_to_int128");
-//   auto* rCasted = (signedRight) ? b.CreateSExt(r, intBigerType, "r_to_int128")
-//                                 : b.CreateZExt(r, intBigerType, "r_to_int128");
-//   auto* operReturn = compileInt_(b, lCasted, rCasted);
-
-//   auto minValue = datatypes::ranges_limits<CT>::min();
-//   auto maxValue = datatypes::ranges_limits<CT>::max();
-//   auto* cmpGTMax = b.CreateICmpSGT(operReturn, llvm::ConstantInt::get(operReturn->getType(), maxValue));
-//   auto* cmpLTMin = b.CreateICmpSLT(operReturn, llvm::ConstantInt::get(operReturn->getType(), minValue));
-//   auto* cmpOutOfRange = b.CreateOr(cmpGTMax, cmpLTMin);
-
-//   auto* getDataConditionError = b.CreateLoad(intErrorType, dataConditionError);
-//   // Left shift might be faster here than multiplication but this would add up another one-time constant in
-//   // DataCondition.
-//   auto* getErrorCode = b.CreateMul(b.CreateZExt(cmpOutOfRange, intErrorType, "castBoolToInt"),
-//                                    b.getInt32(datatypes::DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE));
-//   auto* setOutOfRangeBitInDataCondition = b.CreateOr(getDataConditionError, getErrorCode);
-//   [[maybe_unused]] auto* storeIsOutOfRange =
-//       b.CreateStore(setOutOfRangeBitInDataCondition, dataConditionError);
-
-//   auto* res = b.CreateTrunc(operReturn, intCurrentType, "truncatedToSmaller");
-
-//   return res;
-// }
 
 inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {

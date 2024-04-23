@@ -21,7 +21,7 @@
 #include <boost/any.hpp>
 #include "exceptclasses.h"
 #include "conststring.h"
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
 #include "mcs_decimal.h"

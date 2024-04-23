@@ -234,6 +234,13 @@ std::string ConstantColumn::toCppCode(IncludeSet& includes) const
   return ss.str();
 }
 
+std::string ConstantColumn::toExpressionString() const
+{
+  ostringstream oss;
+  oss << "Const(" << fResultType.colDataType << ")";
+  return oss.str();
+}
+
 const string ConstantColumn::data() const
 {
   return fData;
@@ -353,8 +360,6 @@ const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& row, bool& i
 {
   return ns;
 }
-
-
 
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {
