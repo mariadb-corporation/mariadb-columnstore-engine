@@ -38,7 +38,7 @@ class JIT
   std::unique_ptr<JITCompiler> compiler;
   std::unique_ptr<JITSymbolResolver> symbol_resolver;
   std::unordered_map<uint64_t, std::unique_ptr<JITModuleMemoryManager>> module_identifier_to_memory_manager;
-  uint64_t current_module_key = 0;
+  std::atomic<size_t> current_module_key{0};
   std::atomic<size_t> compiled_code_size;
   // TODO lock when compiling a module
   mutable std::mutex jit_lock;

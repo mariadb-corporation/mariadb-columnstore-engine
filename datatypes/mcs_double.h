@@ -18,7 +18,7 @@
 */
 #pragma once
 
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 
 namespace datatypes
 {
@@ -53,4 +53,3 @@ class TDouble
 };
 
 }  // end of namespace datatypes
-

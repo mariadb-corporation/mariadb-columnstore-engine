@@ -25,15 +25,18 @@
 
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include "treenode.h"
-#include "operator.h"
-#include "mcs_decimal.h"
 #include <boost/core/demangle.hpp>
+
+#include <deque>
+#include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_set>
+
+#include "treenode.h"
+#include "operator.h"
+#include "mcs_decimal.h"
 
 namespace rowgroup
 {
@@ -42,6 +45,13 @@ class Row;
 
 namespace execplan
 {
+enum class GoTo
+{
+  Left,
+  Right,
+  Up
+};
+
 // class Operator;
 /**
  * @brief A template class template to represent an expression tree
@@ -147,6 +157,9 @@ class ParseTree
    */
   inline void walk(void (*fn)(const ParseTree* n, std::ostream& output), std::ostream& output) const;
 
+  template <typename W, typename F>
+  inline void prefixFormExprWalker(W* walker, F* function, std::ostream& output) const;
+
   /** output the tree
    *
    * take user argument to walk and output the tree
@@ -226,13 +239,6 @@ class ParseTree
   }
 
   inline void setDerivedTable();
-
-  enum class GoTo
-  {
-    Left,
-    Right,
-    Up
-  };
 
   struct StackFrame
   {
@@ -422,6 +428,7 @@ inline ParseTree::ParseTree(const ParseTree& rhs)
 }
 
 using DFSStack = std::vector<ParseTree::StackFrame>;
+using BFSStack = std::deque<execplan::ParseTree::StackFrame>;
 
 inline ParseTree::~ParseTree()
 {
@@ -560,6 +567,12 @@ inline void ParseTree::walk(void (*fn)(const ParseTree* n, std::ostream& output)
       stack.pop_back();
     }
   }
+}
+
+template <typename W, typename F>
+inline void ParseTree::prefixFormExprWalker(W* walker, F* fn, std::ostream& output) const
+{
+  walker(this, fn, output);
 }
 
 inline void ParseTree::walk(void (*fn)(const ParseTree* n, void* obj), void* obj) const

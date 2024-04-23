@@ -17,6 +17,11 @@ void compileExternalFunction(llvm::Module& module, llvm::IRBuilder<>& b)
                          "dataconvert::DataConvert::timestampValueToInt", module);
 }
 
+std::string computeFunctionName(const execplan::SRCP& expression)
+{
+  return expression->toExpressionString();
+}
+
 void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row)
 {
   auto columns = expression.get()->simpleColumnList();
@@ -47,11 +52,10 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case CalpontSystemCatalog::UFLOAT: returnType = b.getFloatTy(); break;
     default: throw logic_error("compileOperator: unsupported type");
   }
-  IncludeSet includes;
-  const auto& expressionName = expression->toCppCode(includes);
+  const auto& functionName = computeFunctionName(expression);
 
   auto* funcType = llvm::FunctionType::get(returnType, {dataType, isNullType, dataConditionErrorType}, false);
-  auto* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, expressionName, module);
+  auto* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module);
   func->setDoesNotThrow();
   auto* args = func->args().begin();
   llvm::Value* dataPtr = args++;
@@ -73,11 +77,7 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
       jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
   CompiledOperator compiledOperator{.compiled_module = compiled_module};
 
-  // WIP
-  IncludeSet includes;
-  const auto& expressionName = expression->toCppCode(includes);
-  std::cout << "compileOperator exp name  " << expression->alias() << std::endl;
-  std::cout << "compileOperator toExpressionString  " << expressionName << std::endl;
+  const auto& functionName = computeFunctionName(expression);
 
   switch (expression->resultType().colDataType)
   {
@@ -88,7 +88,7 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::DATE:
       compiledOperator.compiled_function_int64 = reinterpret_cast<JITCompiledOperator<int64_t>>(
-          compiled_module.function_name_to_symbol[expressionName]);
+          compiled_module.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UINT:
@@ -97,17 +97,17 @@ CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expres
     case CalpontSystemCatalog::UTINYINT:
       compiledOperator.compiled_function_uint64 =
           reinterpret_cast<JITIntConditionedCompiledOperator<uint64_t>>(
-              compiled_module.function_name_to_symbol[expressionName]);
+              compiled_module.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
       compiledOperator.compiled_function_double = reinterpret_cast<JITCompiledOperator<double>>(
-          compiled_module.function_name_to_symbol[expressionName]);
+          compiled_module.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
-      compiledOperator.compiled_function_float = reinterpret_cast<JITCompiledOperator<float>>(
-          compiled_module.function_name_to_symbol[expressionName]);
+      compiledOperator.compiled_function_float =
+          reinterpret_cast<JITCompiledOperator<float>>(compiled_module.function_name_to_symbol[functionName]);
       break;
     default: throw logic_error("compileOperator: unsupported type");
   }

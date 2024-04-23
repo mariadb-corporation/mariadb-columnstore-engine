@@ -24,7 +24,7 @@
 #include <optional>
 #include <type_traits>
 
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 #include "mcs_float128.h"
 
 // Inline asm has three argument lists: output, input and clobber list

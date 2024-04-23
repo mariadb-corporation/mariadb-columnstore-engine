@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <iostream>
+
 namespace execplan
 {
 enum OpType
@@ -45,4 +47,5 @@ enum OpType
   OP_UNKNOWN,
 };
 
+std::ostream& operator<<(std::ostream& os, execplan::OpType type);
 }  // namespace execplan

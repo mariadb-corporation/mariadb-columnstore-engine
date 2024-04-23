@@ -207,15 +207,15 @@ void ObjectReader::writeParseTree(const ParseTree* tree, messageqcpp::ByteStream
       stack.pop_back();
       continue;
     }
-    if (dir == ParseTree::GoTo::Left)
+    if (dir == execplan::GoTo::Left)
     {
       b << (id_t)PARSETREE;
-      stack.back().direction = ParseTree::GoTo::Right;
+      stack.back().direction = execplan::GoTo::Right;
       stack.emplace_back(node->left());
     }
-    else if (dir == ParseTree::GoTo::Right)
+    else if (dir == execplan::GoTo::Right)
     {
-      stack.back().direction = ParseTree::GoTo::Up;
+      stack.back().direction = execplan::GoTo::Up;
       stack.emplace_back(node->right());
     }
     else
@@ -246,7 +246,7 @@ ParseTree* ObjectReader::createParseTree(messageqcpp::ByteStream& b)
   while (!stack.empty())
   {
     auto [node, dir] = stack.back();
-    if (dir == ParseTree::GoTo::Left)
+    if (dir == execplan::GoTo::Left)
     {
       id = ZERO;
       ParseTree* cur = NULL;
@@ -255,18 +255,18 @@ ParseTree* ObjectReader::createParseTree(messageqcpp::ByteStream& b)
       if (id == NULL_CLASS)
       {
         stack.back().node->left(cur);
-        stack.back().direction = ParseTree::GoTo::Right;
+        stack.back().direction = execplan::GoTo::Right;
         continue;
       }
       if (id != PARSETREE)
         throw UnserializeException("Not a ParseTree");
 
       cur = new ParseTree();
-      stack.back().direction = ParseTree::GoTo::Right;
+      stack.back().direction = execplan::GoTo::Right;
       stack.back().node->left(cur);
       stack.emplace_back(node->left());
     }
-    else if (dir == ParseTree::GoTo::Right)
+    else if (dir == execplan::GoTo::Right)
     {
       id = ZERO;
       ParseTree* cur = NULL;
@@ -275,14 +275,14 @@ ParseTree* ObjectReader::createParseTree(messageqcpp::ByteStream& b)
       if (id == NULL_CLASS)
       {
         stack.back().node->right(cur);
-        stack.back().direction = ParseTree::GoTo::Up;
+        stack.back().direction = execplan::GoTo::Up;
         continue;
       }
       if (id != PARSETREE)
         throw UnserializeException("Not a ParseTree");
 
       cur = new ParseTree();
-      stack.back().direction = ParseTree::GoTo::Up;
+      stack.back().direction = execplan::GoTo::Up;
       stack.back().node->right(cur);
       stack.emplace_back(node->right());
     }

@@ -30,6 +30,7 @@ using namespace std;
 #include "constantcolumn.h"
 #include "simplecolumn.h"
 #include "operator.h"
+#include "optype.h"
 #include "bytestream.h"
 using namespace messageqcpp;
 
@@ -50,6 +51,50 @@ namespace
 void walkfn(const execplan::ParseTree* n, ostream& output)
 {
   output << *(n->data()) << endl;
+}
+
+void toExpressionStringWalker(const execplan::ParseTree* node,
+                              void (*fn)(const execplan::ParseTree* n, std::ostream& output), ostream& output)
+{
+  execplan::BFSStack stack;
+  stack.emplace_back(const_cast<execplan::ParseTree*>(node));
+
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.front();
+    if (dir == execplan::GoTo::Left)
+    {
+      stack.front().direction = execplan::GoTo::Right;
+      if (node->left() != nullptr)
+        stack.emplace_back(node->left());
+    }
+    else if (dir == execplan::GoTo::Right)
+    {
+      stack.front().direction = execplan::GoTo::Up;
+      if (node->right() != nullptr)
+        stack.emplace_back(node->right());
+    }
+    else
+    {
+      execplan::ParseTree* temp = const_cast<execplan::ParseTree*>(node);
+      fn(temp, output);
+      stack.pop_front();
+    }
+  }
+}
+
+void toExpressionStringPrinter(const execplan::ParseTree* n, ostream& output)
+{
+  // call a method of ParseTree::fData that is polymorphic and add a suffix in the end.
+  auto* op = dynamic_cast<const execplan::Operator*>(n->data());
+  if (op)
+  {
+    output << op->op() << "|";
+  }
+  else
+  {
+    output << n->data()->toExpressionString() << " ";
+  }
 }
 
 }  // namespace
@@ -246,7 +291,6 @@ void ArithmeticColumn::buildTree()
 const string ArithmeticColumn::nextToken(string::size_type& pos, char end) const
 {
   string token;
-  // string fData = ReturnedColumn::data();
 
   // increment num when get '(' and decrement when get ')'
   // to find the mathing ')' when num = 0
@@ -469,11 +513,17 @@ bool ArithmeticColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
 
 std::string ArithmeticColumn::toExpressionString() const
 {
-  // WIP this should return the expression string in prefix form.
-  stringstream ss;
-  ss << "ArithmeticColumn(" << std::quoted(fData) << ", " << sessionID() << ")";
+  stringstream oss;
+  if (fExpression)
+  {
+    fExpression->prefixFormExprWalker(toExpressionStringWalker, toExpressionStringPrinter, oss);
+  }
+  else
+  {
+    oss << "unknown()";
+  }
 
-  return ss.str();
+  return oss.str();
 }
 
 }  // namespace execplan

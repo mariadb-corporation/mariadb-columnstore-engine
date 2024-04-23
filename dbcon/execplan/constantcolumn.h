@@ -158,6 +158,8 @@ class ConstantColumn : public ReturnedColumn
   virtual const std::string toString() const override;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
+
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy

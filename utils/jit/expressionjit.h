@@ -83,7 +83,7 @@ class CompiledColumn : public execplan::ReturnedColumn
   }
 };
 // TODO: Optimize code structure, maybe it should be implemented using recursion.
-static void compileExpression(std::vector<execplan::SRCP>& expressions, rowgroup::Row& row)
+static void compileExpressions(std::vector<execplan::SRCP>& expressions, rowgroup::Row& row)
 {
   for (auto it = expressions.rbegin(); it != expressions.rend(); ++it)
   {
@@ -121,7 +121,7 @@ static void compileExpression(std::vector<execplan::SRCP>& expressions, rowgroup
     //     {
     //       ParseTree* node = nodeQueue.front();
     //       nodeQueue.pop();
-    //       std::cout << "compileExpression node " << std::hex << (uint64_t)(node) << std::dec << std::endl;
+    //       std::cout << "compileExpressions node " << std::hex << (uint64_t)(node) << std::dec << std::endl;
     //       if (!node->isCompilable(row))
     //       {
     //         if (node->left() && node->right())
