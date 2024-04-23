@@ -1130,4 +1130,3 @@ void PrimitiveProcessor::p_IdxList(const IndexListHeader* rqst, IndexListHeader*
 }
 
 }  // namespace primitives
-// vim:ts=4 sw=4:

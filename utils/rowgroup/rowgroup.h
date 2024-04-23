@@ -31,7 +31,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -1525,8 +1525,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
 
   //	RGData *convertToInlineData(uint64_t *size = NULL) const;  // caller manages the memory returned by
-  //this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL) const; 	void
-  //convertToStringTableInPlace();
+  // this 	void convertToInlineDataInPlace(); 	RGData *convertToStringTable(uint64_t *size = NULL)
+  // const; 	void convertToStringTableInPlace();
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
 
@@ -2185,4 +2185,3 @@ inline void RGData::getRow(uint32_t num, Row* row)
 }  // namespace rowgroup
 
 #endif
-// vim:ts=4 sw=4:

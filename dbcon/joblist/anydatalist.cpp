@@ -170,4 +170,3 @@ std::ostream& omitOidInDL(std::ostream& strm)
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

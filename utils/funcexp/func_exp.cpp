@@ -110,4 +110,3 @@ long double Func_exp::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

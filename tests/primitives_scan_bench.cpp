@@ -427,4 +427,3 @@ BENCHMARK_DEFINE_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterVectorizedCode)(
 BENCHMARK_REGISTER_F(FilterBenchFixture, BM_ColumnScan8Byte1FilterVectorizedCode);
 
 BENCHMARK_MAIN();
-// vim:ts=2 sw=2:

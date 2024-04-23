@@ -29,6 +29,4 @@ namespace ddlcleanuputil
 {
 int ddl_cleanup();
 }
-// vim:ts=4 sw=4:
-
 #endif

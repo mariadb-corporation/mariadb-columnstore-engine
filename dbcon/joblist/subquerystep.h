@@ -275,4 +275,3 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
 }  // namespace joblist
 
 #endif  // SUBQUERY_STEP_H
-// vim:ts=4 sw=4:

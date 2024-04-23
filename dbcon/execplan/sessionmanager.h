@@ -69,7 +69,7 @@ namespace execplan
  * immediately, causing all subsequent references to fail.  This only affects
  * 'leakcheck'.
  */
-//#define DESTROYSHMSEG
+// #define DESTROYSHMSEG
 
 class SessionManager
 {
@@ -215,4 +215,3 @@ class SessionManager
 }  // namespace execplan
 
 #endif
-// vim:ts=4 sw=4:

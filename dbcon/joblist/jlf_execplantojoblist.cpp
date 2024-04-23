@@ -3446,7 +3446,6 @@ void JLF_ExecPlanToJobList::addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bo
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:
 
 #ifdef __clang__
 #pragma clang diagnostic pop

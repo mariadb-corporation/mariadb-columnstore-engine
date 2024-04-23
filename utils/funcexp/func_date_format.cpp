@@ -416,4 +416,3 @@ int64_t Func_date_format::getTimestampIntVal(rowgroup::Row& row, FunctionParm& p
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

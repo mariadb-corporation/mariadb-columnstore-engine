@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <sstream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -1636,7 +1636,7 @@ template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t) || siz
                                               T>::type* = nullptr>  // gcc >= 5
 #else
                                                   sizeof(T) == sizeof(int128_t),
-                                              T>::type*>                     // gcc 4.8.5
+                                              T>::type*>  // gcc 4.8.5
 #endif
 #else
                                                   sizeof(T) == sizeof(int128_t),
@@ -1672,7 +1672,7 @@ template <typename T,
 #if ___GNUC__ >= 5
           typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>  // gcc >= 5
 #else
-          typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type*>   // gcc 4.8.5
+          typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type*>  // gcc 4.8.5
 #endif
 #else
           typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>
@@ -1764,4 +1764,3 @@ template void primitives::PrimitiveProcessor::columnScanAndFilter<int128_t>(NewC
                                                                             ColResultHeader*);
 
 }  // namespace primitives
-// vim:ts=4 sw=4:

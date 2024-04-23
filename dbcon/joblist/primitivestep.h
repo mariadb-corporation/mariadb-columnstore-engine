@@ -111,18 +111,24 @@ class pColStep : public JobStep
 
   pColStep(const PassThruStep& rhs);
 
-  virtual ~pColStep(){}
+  virtual ~pColStep()
+  {
+  }
 
   /** @brief Starts processing.  Set at least the RID list before calling.
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run(){}
+  virtual void run()
+  {
+  }
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){}
+  virtual void join()
+  {
+  }
 
   virtual const std::string toString() const;
 
@@ -347,19 +353,25 @@ class pColScanStep : public JobStep
                const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
   pColScanStep(const pColStep& rhs);
-  ~pColScanStep(){}
+  ~pColScanStep()
+  {
+  }
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run(){}
+  virtual void run()
+  {
+  }
 
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){}
+  virtual void join()
+  {
+  }
 
   virtual bool isDictCol() const
   {
@@ -549,12 +561,18 @@ class pDictionaryStep : public JobStep
   pDictionaryStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tabelOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  virtual ~pDictionaryStep(){}
+  virtual ~pDictionaryStep()
+  {
+  }
 
   /** @brief virtual void Run method
    */
-  virtual void run(){}
-  virtual void join(){}
+  virtual void run()
+  {
+  }
+  virtual void join()
+  {
+  }
   // void setOutList(StringDataList* rids);
   void setInputList(DataList_t* rids)
   {
@@ -1506,7 +1524,7 @@ class FilterStep : public JobStep
 
  protected:
   //	void unblockDataLists(FifoDataList* fifo, StringFifoDataList* strFifo, StrDataList* strResult,
-  //DataList_t* result);
+  // DataList_t* result);
 
  private:
   // This i/f is not meaningful in this step
@@ -1677,4 +1695,3 @@ class PseudoColStep : public pColStep
 }  // namespace joblist
 
 #endif  // JOBLIST_PRIMITIVESTEP_H
-// vim:ts=4 sw=4:

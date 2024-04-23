@@ -99,5 +99,4 @@ class TableMetaData
 
 #undef EXPORT
 
-#endif
-// vim:ts=4 sw=4:
+#endif  // WE_TABLEMETADATA_H__

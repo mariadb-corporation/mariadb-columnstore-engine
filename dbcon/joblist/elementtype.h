@@ -245,14 +245,14 @@ extern std::ostream& operator<<(std::ostream& out, const TupleType& rhs);
 
 #ifndef NO_DATALISTS
 
-//#include "bandeddl.h"
-//#include "wsdl.h"
+// #include "bandeddl.h"
+// #include "wsdl.h"
 #include "fifo.h"
-//#include "bucketdl.h"
-//#include "constantdatalist.h"
-//#include "swsdl.h"
-//#include "zdl.h"
-//#include "deliverywsdl.h"
+// #include "bucketdl.h"
+// #include "constantdatalist.h"
+// #include "swsdl.h"
+// #include "zdl.h"
+// #include "deliverywsdl.h"
 
 namespace joblist
 {
@@ -640,4 +640,3 @@ extern std::ostream& omitOidInDL(std::ostream& strm);
 #endif
 
 #endif
-// vim:ts=4 sw=4:

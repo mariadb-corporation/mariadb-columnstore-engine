@@ -148,5 +148,3 @@ class FrameBoundExpressionRow : public FrameBoundConstantRow
 }  // namespace windowfunction
 
 #endif  // UTILS_FRAMEBOUNDROW_H
-
-// vim:ts=4 sw=4:

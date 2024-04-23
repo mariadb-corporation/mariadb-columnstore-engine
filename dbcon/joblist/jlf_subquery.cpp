@@ -875,4 +875,3 @@ SJSTEP doUnionSub(CalpontExecutionPlan* ep, JobInfo& jobInfo)
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

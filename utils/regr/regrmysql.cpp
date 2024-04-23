@@ -1405,4 +1405,3 @@ extern "C"
     return valOut;
   }
 }
-// vim:ts=4 sw=4:

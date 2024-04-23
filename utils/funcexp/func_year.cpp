@@ -140,4 +140,3 @@ int64_t Func_year::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

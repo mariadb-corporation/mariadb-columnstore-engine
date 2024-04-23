@@ -1520,4 +1520,3 @@ void RedistributeWorkerThread::logMessage(const string& msg, int line)
 
 }  // namespace redistribute
 
-// vim:ts=4 sw=4:

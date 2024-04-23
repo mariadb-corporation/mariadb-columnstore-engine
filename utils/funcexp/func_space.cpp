@@ -57,4 +57,3 @@ std::string Func_space::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

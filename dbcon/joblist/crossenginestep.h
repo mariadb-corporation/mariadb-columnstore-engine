@@ -251,5 +251,3 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
 }  // namespace joblist
 
 #endif  // JOBLIST_CROSSENGINESTEP_H
-
-// vim:ts=4 sw=4:

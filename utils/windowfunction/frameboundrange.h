@@ -215,5 +215,3 @@ class FrameBoundExpressionRange : public FrameBoundConstantRange<T>
 }  // namespace windowfunction
 
 #endif  // UTILS_FRAMEBOUNDRANGE_H
-
-// vim:ts=4 sw=4:

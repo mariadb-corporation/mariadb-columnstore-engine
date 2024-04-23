@@ -426,4 +426,3 @@ class Oam
 #undef EXPORT
 
 #endif
-// vim:ts=4 sw=4:

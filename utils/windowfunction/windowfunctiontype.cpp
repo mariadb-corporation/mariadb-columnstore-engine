@@ -797,4 +797,3 @@ void WindowFunctionType::constParms(const std::vector<SRCP>& functionParms)
 }
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

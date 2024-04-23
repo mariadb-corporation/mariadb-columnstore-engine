@@ -121,5 +121,3 @@ class WindowFrame
 }  // namespace windowfunction
 
 #endif  // UTILS_WINDOWFRAME_H
-
-// vim:ts=4 sw=4:

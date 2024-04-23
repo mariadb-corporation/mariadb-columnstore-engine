@@ -137,4 +137,3 @@ int64_t Func_microsecond::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

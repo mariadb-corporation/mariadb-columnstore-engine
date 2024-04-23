@@ -669,4 +669,3 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
 }
 
 }  // namespace config
-// vim:ts=4 sw=4:

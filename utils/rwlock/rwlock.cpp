@@ -746,4 +746,3 @@ LockState RWLock::getLockState()
 }
 
 }  // namespace rwlock
-// vim:ts=4 sw=4:

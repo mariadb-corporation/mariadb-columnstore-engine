@@ -843,5 +843,3 @@ class WriteBatchFieldMariaDB : public WriteBatchField
 }  // end of namespace datatypes
 
 #endif
-
-// vim:ts=2 sw=2:

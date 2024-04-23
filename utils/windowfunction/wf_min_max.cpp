@@ -185,4 +185,3 @@ template boost::shared_ptr<WindowFunctionType> WF_min_max<int64_t>::makeFunction
                                                                                  WindowFunctionColumn*);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

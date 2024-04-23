@@ -284,4 +284,3 @@ int main(int argc, char* argv[])
 
   exit(0);
 }
-// vim:ts=4 sw=4:

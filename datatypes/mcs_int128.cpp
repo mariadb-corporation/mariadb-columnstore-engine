@@ -113,4 +113,3 @@ std::ostream& operator<<(std::ostream& os, const TSInt128& x)
 }
 
 }  // end of namespace datatypes
-// vim:ts=2 sw=2:

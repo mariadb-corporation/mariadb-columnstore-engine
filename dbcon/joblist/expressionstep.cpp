@@ -790,4 +790,3 @@ const string ExpressionStep::toString() const
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

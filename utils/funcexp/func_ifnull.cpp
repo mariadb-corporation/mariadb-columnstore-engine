@@ -205,4 +205,3 @@ bool Func_ifnull::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

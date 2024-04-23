@@ -399,4 +399,3 @@ void ClientRotator::writeToLog(int line, const string& msg, bool critical) const
 }
 
 }  // namespace execplan
-// vim:ts=4 sw=4:

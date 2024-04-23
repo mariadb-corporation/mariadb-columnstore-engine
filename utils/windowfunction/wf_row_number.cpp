@@ -86,4 +86,3 @@ void WF_row_number::operator()(int64_t b, int64_t e, int64_t c)
 }
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

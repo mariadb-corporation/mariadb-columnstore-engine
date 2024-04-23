@@ -110,4 +110,3 @@ uint16_t PassThruCommandJL::getWidth()
 }
 
 };  // namespace joblist
-// vim:ts=4 sw=4:

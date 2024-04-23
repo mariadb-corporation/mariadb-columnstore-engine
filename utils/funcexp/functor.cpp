@@ -361,4 +361,3 @@ string Func::longDoubleToString(long double ld)
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

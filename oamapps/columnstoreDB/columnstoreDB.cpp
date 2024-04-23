@@ -271,7 +271,7 @@ int main(int argc, char** argv)
   Oam oam;
   BRM::DBRM dbrm;
 
-  char c;
+  signed char c;
 
   // Invokes member function `int operator ()(void);'
   while ((c = getopt(argc, argv, "c:h")) != -1)

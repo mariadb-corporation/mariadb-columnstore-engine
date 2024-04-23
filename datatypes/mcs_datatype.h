@@ -2523,5 +2523,3 @@ class TypeHandlerTimestamp : public TypeHandlerTemporal
 }  // end of namespace datatypes
 
 #endif  // MCS_DATATYPE_H_INCLUDED
-
-// vim:ts=2 sw=2:

@@ -80,4 +80,3 @@ int main(int argc, char** argv)
   return ddlcleanuputil::ddl_cleanup();
 }
 
-// vim:ts=4 sw=4:

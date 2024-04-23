@@ -98,4 +98,3 @@ double Func_rand::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isN
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

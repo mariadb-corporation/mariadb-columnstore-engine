@@ -80,4 +80,3 @@ uint64_t xFloatToMCSUInt64Round(SRC value)
 }  // end of namespace datatypes
 
 #endif  // MCS_DATATYPE_BASIC_H_INCLUDED
-// vim:ts=2 sw=2:

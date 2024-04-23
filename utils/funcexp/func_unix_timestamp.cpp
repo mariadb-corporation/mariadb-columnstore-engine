@@ -223,4 +223,3 @@ string Func_unix_timestamp::getStrVal(rowgroup::Row& row, FunctionParm& parm, bo
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

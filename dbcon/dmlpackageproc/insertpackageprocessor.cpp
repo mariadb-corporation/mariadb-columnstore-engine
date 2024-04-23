@@ -432,4 +432,3 @@ DMLPackageProcessor::DMLResult InsertPackageProcessor::processPackage(dmlpackage
 
 }  // namespace dmlpackageprocessor
 
-// vim:ts=4 sw=4:

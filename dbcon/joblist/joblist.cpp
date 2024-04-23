@@ -1233,4 +1233,3 @@ void TupleJobList::abort()
 #pragma clang diagnostic pop
 #endif
 
-// vim:ts=4 sw=4:

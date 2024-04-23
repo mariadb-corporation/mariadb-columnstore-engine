@@ -2667,4 +2667,3 @@ int ChunkManager::checkFixLastDictChunk(const FID& fid, uint16_t root, uint32_t 
 }
 }  // namespace WriteEngine
 
-// vim:ts=4 sw=4:

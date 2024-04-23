@@ -54,7 +54,7 @@
 #define EXPORT
 #endif
 
-//#define IDB_DDL_DEBUG
+// #define IDB_DDL_DEBUG
 namespace ddlpackageprocessor
 {
 #define SUMMARY_INFO(message)          \
@@ -892,4 +892,3 @@ bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&)
 #undef EXPORT
 
 #endif  // DDLPACKAGEPROCESSOR_H
-// vim:ts=4 sw=4:

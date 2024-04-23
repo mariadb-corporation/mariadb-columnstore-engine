@@ -1226,4 +1226,3 @@ void ColumnCommandInt128::issuePrimitive()
 }
 
 }  // namespace primitiveprocessor
-// vim:ts=4 sw=4:

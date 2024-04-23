@@ -1285,4 +1285,3 @@ bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatal
 }  // namespace execplan
 
 #endif  // EXECPLAN_CALPONTSYSTEMCATALOG_H
-// vim:ts=4 sw=4:

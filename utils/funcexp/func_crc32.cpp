@@ -64,4 +64,3 @@ int64_t Func_crc32::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

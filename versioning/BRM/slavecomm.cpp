@@ -2432,4 +2432,3 @@ void SlaveComm::do_dmlReleaseLBIDRanges(ByteStream& msg)
 
 }  // namespace BRM
 
-// vim:ts=4 sw=4:

@@ -107,4 +107,3 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

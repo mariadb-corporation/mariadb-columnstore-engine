@@ -195,5 +195,3 @@ class reservablePQ : private std::priority_queue<T>
 }  // namespace joblist
 
 #endif  // JOBLIST_TUPLEANNEXSTEP_H
-
-// vim:ts=4 sw=4:

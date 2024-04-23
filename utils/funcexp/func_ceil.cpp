@@ -598,4 +598,3 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

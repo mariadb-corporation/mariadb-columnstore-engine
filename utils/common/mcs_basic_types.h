@@ -23,4 +23,3 @@ using int128_t = __int128;
 using uint128_t = unsigned __int128;
 
 #endif  // MCS_BASIC_TYPES_H_INCLUDED
-// vim:ts=2 sw=2:

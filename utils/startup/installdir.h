@@ -54,4 +54,3 @@ class StartUp
 }  // namespace startup
 
 #endif
-// vim:ts=4 sw=4:

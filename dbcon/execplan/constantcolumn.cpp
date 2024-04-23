@@ -347,4 +347,3 @@ bool ConstantColumn::operator!=(const TreeNode* t) const
 }
 
 }  // namespace execplan
-// vim:ts=4 sw=4:

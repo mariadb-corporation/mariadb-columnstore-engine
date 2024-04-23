@@ -64,4 +64,3 @@ void ConfigStream::init(const xmlChar* xp)
 }
 
 }  // namespace config
-// vim:ts=4 sw=4:

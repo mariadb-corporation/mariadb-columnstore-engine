@@ -913,4 +913,3 @@ int DMLPackageProcessor::endTransaction(uint64_t uniqueId, BRM::TxnID txnID, boo
   return rc;
 }
 }  // namespace dmlpackageprocessor
-// vim:ts=4 sw=4:

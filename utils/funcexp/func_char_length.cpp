@@ -121,4 +121,3 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

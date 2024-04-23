@@ -338,4 +338,3 @@ inline void MessageQueueClient::syncProto(bool use)
 #undef EXPORT
 
 #endif  // MESSAGEQCPP_MESSAGEQUEUE_H
-// vim:ts=4 sw=4:

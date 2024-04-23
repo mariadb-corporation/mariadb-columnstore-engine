@@ -892,4 +892,3 @@ class SimdFilterProcessor<
 }  // namespace simd
 
 #endif  // if defined(__x86_64__ )
-// vim:ts=2 sw=2:

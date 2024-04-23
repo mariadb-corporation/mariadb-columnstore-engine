@@ -94,4 +94,3 @@ int64_t Func_period_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:
