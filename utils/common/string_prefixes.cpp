@@ -52,7 +52,7 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& c
   CHARSET_INFO& ci = cset.getCharset();
   std::string s((const char*)str, len);
   idblog("cset #" << ci.number << " encoding <<" << s << ">>");
-  uint8_t fixedLenPrefix[8];
+  uint8_t fixedLenPrefix[16];
   memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
   cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
   int64_t acc = 0;
