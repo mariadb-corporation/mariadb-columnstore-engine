@@ -23,7 +23,7 @@
 
 #include "string_prefixes.h"
 
-#if 0
+#if 01
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
