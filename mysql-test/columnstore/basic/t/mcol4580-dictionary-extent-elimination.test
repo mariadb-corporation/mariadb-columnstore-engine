@@ -43,5 +43,16 @@ SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP
 SELECT COUNT(*) FROM t WHERE c > 'cz';
 SELECT COUNT(*) FROM t WHERE c = 'CH';
 
+DROP TABLE t;
+
+CREATE TABLE t (c VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
+INSERT INTO t(c) VALUES ('ch'), ('ch');
+SELECT COUNT(*) FROM t WHERE c < 'cz';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+
+# and to see we do not broke anything (must be 1):
+SELECT COUNT(*) FROM t WHERE c > 'cz';
+SELECT COUNT(*) FROM t WHERE c = 'CH';
+
 DROP DATABASE MCOL4580;
 --enable_warnings
