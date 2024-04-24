@@ -50,13 +50,36 @@
 int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& cset)
 {
   CHARSET_INFO& ci = cset.getCharset();
+  bool csHasPad = (ci.mstate & MY_CS_NOPAD) == 0;
+  size_t i;
   std::string s((const char*)str, len);
-  idblog("cset #" << ci.number << " encoding <<" << s << ">>");
+  idblog("cset #" << ci.number << " encoding <<" << s << ">>, " << (csHasPad ? "padded" : "not padded"));
+  size_t 
   uint8_t fixedLenPrefix[16];
   memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
-  cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
+  if (csHasPad)
+  {
+    // we have to pad.
+    // we pad to 16 bytes just to be safe. I am worrying that we can
+    // cross symbol boundaries, so I choose to overshoot.
+    const size_t tempN = 16;
+    uint8_t tempBuf[tempN*2];
+    size_t minLen = len < tempN ? len : tempN;
+    for (i = 0; i < minLen; i ++)
+    {
+      tempBuf[i] = str[i];
+    }
+    for (i = 0; i < tempN; i++)
+    {
+      tempBuf[i] = ' '; // XXX: it appears that it is good enough even for binary.
+    }
+    cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, tempBuf, tempN, 0);
+  }
+  else
+  {
+    cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
+  }
   int64_t acc = 0;
-  size_t i;
   for (i = 0; i < 8; i++)
   {
     uint8_t byte = fixedLenPrefix[i];
