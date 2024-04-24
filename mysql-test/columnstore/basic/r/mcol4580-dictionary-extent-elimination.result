@@ -61,4 +61,19 @@ COUNT(*)
 SELECT COUNT(*) FROM t WHERE c = 'CH';
 COUNT(*)
 2
+DROP TABLE t;
+CREATE TABLE t (c VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
+INSERT INTO t(c) VALUES ('ch'), ('ch');
+SELECT COUNT(*) FROM t WHERE c < 'cz';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched        eliminated
+BlocksTouched-0;       PartitionBlocksEliminated-1;
+SELECT COUNT(*) FROM t WHERE c > 'cz';
+COUNT(*)
+2
+SELECT COUNT(*) FROM t WHERE c = 'CH';
+COUNT(*)
+2
 DROP DATABASE MCOL4580;
