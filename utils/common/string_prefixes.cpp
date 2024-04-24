@@ -52,8 +52,8 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& c
   CHARSET_INFO& ci = cset.getCharset();
   bool csHasPad = (ci.state & MY_CS_NOPAD) == 0; // XXX: Look for binary sort too???
   size_t i;
-  std::string s((const char*)str, len);
-  idblog("cset #" << ci.number << " encoding <<" << s << ">>, " << (csHasPad ? "padded" : "not padded"));
+  //std::string s((const char*)str, len);
+  //idblog("cset #" << ci.number << " encoding <<" << s << ">>, " << (csHasPad ? "padded" : "not padded"));
   uint8_t fixedLenPrefix[16];
   memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
   if (csHasPad)
