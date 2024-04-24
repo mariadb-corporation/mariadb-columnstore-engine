@@ -54,7 +54,6 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& c
   size_t i;
   std::string s((const char*)str, len);
   idblog("cset #" << ci.number << " encoding <<" << s << ">>, " << (csHasPad ? "padded" : "not padded"));
-  size_t 
   uint8_t fixedLenPrefix[16];
   memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
   if (csHasPad)
