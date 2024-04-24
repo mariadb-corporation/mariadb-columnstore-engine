@@ -1,6 +1,6 @@
 SELECT @mysqltest_file;
 @mysqltest_file
-ctype_cmp_varchar32_utf8_general_ci
+ctype_cmp_text_utf8_general_ci
 SET @database=CONCAT('mcs_', @mysqltest_file);
 EXECUTE IMMEDIATE CONCAT('DROP DATABASE IF EXISTS ', @database);
 EXECUTE IMMEDIATE CONCAT('CREATE DATABASE ', @database);
@@ -180,7 +180,7 @@ END;
 $$
 SET NAMES utf8;
 SET @datatype='TEXT CHARACTER SET utf8 COLLATE utf8_general_ci';
-CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci);
+CREATE TABLE t1 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci);
 CALL test01_populate(1,3);
 (SELECT engine FROM information_schema.tables WHERE (table_schema,table_name)=(@database,'t1')) =
 @@default_storage_engine
@@ -1621,7 +1621,7 @@ distinct_recno	QUOTE(c1)
 DROP TABLE t1;
 CALL test02_same_table_create_table(@datatype);
 
-CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci, c2 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci)
+CREATE TABLE t1 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci, c2 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci)
 CALL test02_same_table_populate();
 CALL test02_same_table_cmp_field_field();
 
@@ -1657,11 +1657,11 @@ QUOTE(c1)	QUOTE(c2)
 DROP TABLE t1;
 CALL test03(32,@datatype);
 
-CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci, c2 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci)
+CREATE TABLE t1 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci, c2 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci)
 
 INSERT INTO t1 VALUES (LEFT('Hellooooooooooooooooooo',32),LEFT('hellooooooooooooooooooo',32))
 
-CREATE TABLE t2 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci, c2 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci)
+CREATE TABLE t2 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci, c2 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci)
 
 INSERT INTO t2 VALUES (LEFT('Hellooooooooooooooooooo',32),LEFT('hellooooooooooooooooooo',32))
 
@@ -1696,7 +1696,7 @@ Hellooooooooooooooooooo	hellooooooooooooooooooo	Hellooooooooooooooooooo	helloooo
 DROP TABLE t1
 CALL test04_like(32,@datatype);
 
-CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci)
+CREATE TABLE t1 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci)
 
 INSERT INTO t1 VALUES (REPEAT('a',32))
 
@@ -1725,7 +1725,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 DROP TABLE t1
 CALL test05_mcol4726(32, @datatype);
 
-CREATE TABLE t1 (c1 VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci)
+CREATE TABLE t1 (c1 TEXT CHARACTER SET utf8 COLLATE utf8_general_ci)
 
 INSERT INTO t1 VALUES('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
