@@ -46,5 +46,3 @@ class Redistribute
 }  // namespace redistribute
 
 #endif  // WE_REDISTRIBUTE_H
-
-// vim:ts=4 sw=4:

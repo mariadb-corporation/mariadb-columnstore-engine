@@ -672,4 +672,3 @@ std::shared_ptr<CompressInterface> getCompressorByType(
 #endif
 
 }  // namespace compress
-// vim:ts=4 sw=4:

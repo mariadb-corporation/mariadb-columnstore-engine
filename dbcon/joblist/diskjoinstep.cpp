@@ -163,7 +163,7 @@ void DiskJoinStep::smallReader()
   RGData rgData;
   bool more = true;
   int64_t memUsage = 0, combinedMemUsage = 0;
-  int rowCount = 0;
+  [[maybe_unused]] int rowCount = 0;
   RowGroup l_smallRG = smallRG;
 
   try
@@ -224,7 +224,7 @@ void DiskJoinStep::largeReader()
   RGData rgData;
   bool more = true;
   int64_t largeSize = 0;
-  int rowCount = 0;
+  [[maybe_unused]] int rowCount = 0;
   RowGroup l_largeRG = largeRG;
 
   largeIterationCount++;

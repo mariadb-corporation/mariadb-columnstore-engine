@@ -139,4 +139,3 @@ template class FrameBoundExpressionRow<float>;
 template class FrameBoundExpressionRow<uint64_t>;
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

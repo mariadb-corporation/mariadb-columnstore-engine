@@ -531,4 +531,3 @@ std::string Func_mod::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

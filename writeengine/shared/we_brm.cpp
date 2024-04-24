@@ -1741,4 +1741,3 @@ int BRMWrapper::getExtentCPMaxMin(const BRM::LBID_t lbid, BRM::CPMaxMin& cpMaxMi
 }
 
 }  // namespace WriteEngine
-// vim:ts=4 sw=4:

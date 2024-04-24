@@ -1367,4 +1367,3 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
 }  // namespace ddlpackageprocessor
 
-// vim:ts=4 sw=4:

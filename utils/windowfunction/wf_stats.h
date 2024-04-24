@@ -50,5 +50,3 @@ class WF_stats : public WindowFunctionType
 }  // namespace windowfunction
 
 #endif  // UTILS_WF_STATS_H
-
-// vim:ts=4 sw=4:

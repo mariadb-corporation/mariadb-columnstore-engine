@@ -113,5 +113,3 @@ class WindowFunction
 }  // namespace windowfunction
 
 #endif  // UTILS_WINDOWFUNCTION_H
-
-// vim:ts=4 sw=4:

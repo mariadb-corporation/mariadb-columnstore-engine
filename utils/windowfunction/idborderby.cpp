@@ -898,4 +898,3 @@ bool IdbOrderBy::Eq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) 
 }
 
 }  // namespace ordering
-// vim:ts=4 sw=4:

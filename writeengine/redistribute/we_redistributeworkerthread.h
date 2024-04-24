@@ -142,6 +142,4 @@ class RedistributeWorkerThread
 
 }  // namespace redistribute
 
-#endif  // WE_REDISTRIBUTEWORKERTHREAD_H
-
-// vim:ts=4 sw=4:
+#endif

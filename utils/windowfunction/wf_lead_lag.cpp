@@ -306,4 +306,3 @@ template void WF_lead_lag<double>::parseParms(const std::vector<execplan::SRCP>&
 template void WF_lead_lag<string>::parseParms(const std::vector<execplan::SRCP>&);
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

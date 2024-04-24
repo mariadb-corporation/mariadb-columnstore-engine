@@ -349,4 +349,3 @@ double Func_timediff::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

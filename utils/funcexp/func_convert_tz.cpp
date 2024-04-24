@@ -220,4 +220,3 @@ string Func_convert_tz::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

@@ -886,4 +886,3 @@ struct LbidAtVer
 #pragma pack(pop)
 
 #endif  // JOBLIST_PRIMITIVE_H
-// vim:ts=4 sw=4:

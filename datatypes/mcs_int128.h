@@ -324,4 +324,3 @@ class TSInt128
 }  // end of namespace datatypes
 
 #endif  // MCS_TSINT128_H_INCLUDED
-// vim:ts=2 sw=2:

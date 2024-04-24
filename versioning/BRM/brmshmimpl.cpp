@@ -410,4 +410,3 @@ void BRMManagedShmImpl::remap(const bool readOnly)
 
 }  // namespace BRM
 
-// vim:ts=4 sw=4:

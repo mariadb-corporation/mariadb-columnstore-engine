@@ -97,4 +97,3 @@ std::string Func_ltrim_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

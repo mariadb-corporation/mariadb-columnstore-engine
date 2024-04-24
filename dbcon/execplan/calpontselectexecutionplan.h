@@ -941,4 +941,3 @@ inline std::ostream& operator<<(std::ostream& os, const CalpontSelectExecutionPl
 
 }  // namespace execplan
 #endif  // CALPONTSELECTEXECUTIONPLAN_H
-// vim:ts=4 sw=4:

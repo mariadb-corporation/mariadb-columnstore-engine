@@ -97,4 +97,3 @@ AutoincrementData::OIDNextValue& AutoincrementData::getOidNextValueMap()
 
   return fOidNextValueMap;
 }
-// vim:ts=4 sw=4:

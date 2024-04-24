@@ -1442,4 +1442,3 @@ void ioManager::handleBlockReadError(fileRequest* fr, const string& errMsg, bool
 }
 
 }  // namespace dbbc
-// vim:ts=4 sw=4:

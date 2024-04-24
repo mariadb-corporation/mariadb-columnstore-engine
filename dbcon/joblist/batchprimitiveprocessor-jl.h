@@ -44,7 +44,7 @@
 #include "brm.h"
 #include "command-jl.h"
 #include "resourcemanager.h"
-//#include "tableband.h"
+// #include "tableband.h"
 
 namespace joblist
 {
@@ -368,4 +368,3 @@ class BatchPrimitiveProcessorJL
 }  // namespace joblist
 
 #endif
-// vim:ts=4 sw=4:

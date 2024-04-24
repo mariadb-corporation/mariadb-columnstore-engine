@@ -830,4 +830,3 @@ void CreateTableProcessor::rollBackCreateTable(const string& error, BRM::TxnID t
 }
 
 }  // namespace ddlpackageprocessor
-// vim:ts=4 sw=4:

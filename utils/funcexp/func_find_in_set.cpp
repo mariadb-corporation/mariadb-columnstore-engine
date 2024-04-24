@@ -127,4 +127,3 @@ execplan::IDB_Decimal Func_find_in_set::getDecimalVal(rowgroup::Row& row, Functi
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

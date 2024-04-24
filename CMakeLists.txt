@@ -223,6 +223,7 @@ IF (MASK_LONGDOUBLE)
     MY_CHECK_AND_SET_COMPILER_FLAG("-DMASK_LONGDOUBLE")
 ENDIF()
 
+
 SET (CMAKE_REQUIRED_FLAGS "-Werror -Wall")
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)

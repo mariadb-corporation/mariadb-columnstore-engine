@@ -4952,4 +4952,3 @@ void WE_DDLCommandProc::purgeFDCache()
 }
 
 }  // namespace WriteEngine
-// vim:ts=4 sw=4:

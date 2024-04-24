@@ -43,7 +43,7 @@
 #include "fileblockrequestqueue.h"
 #include "filebuffermgr.h"
 
-//#define SHARED_NOTHING_DEMO_2
+// #define SHARED_NOTHING_DEMO_2
 
 namespace dbbc
 {
@@ -149,4 +149,3 @@ void purgeFDCache(std::vector<BRM::FileInfo>& files);
 
 }  // namespace dbbc
 #endif
-// vim:ts=4 sw=4:

@@ -929,4 +929,3 @@ uint16_t pDictionaryScan::planFlagsToPrimFlags(uint32_t planFlags)
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

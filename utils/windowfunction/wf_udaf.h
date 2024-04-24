@@ -114,5 +114,3 @@ class WF_udaf : public WindowFunctionType
 }  // namespace windowfunction
 
 #endif  // UTILS_WF_UDAF_H
-
-// vim:ts=4 sw=4:

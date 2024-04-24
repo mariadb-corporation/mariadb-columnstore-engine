@@ -80,4 +80,3 @@ int64_t Func_from_days::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

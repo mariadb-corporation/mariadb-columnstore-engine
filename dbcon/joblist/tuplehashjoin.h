@@ -654,4 +654,3 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 }  // namespace joblist
 
 #endif
-// vim:ts=4 sw=4:

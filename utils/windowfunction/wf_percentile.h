@@ -50,5 +50,3 @@ class WF_percentile : public WindowFunctionType
 }  // namespace windowfunction
 
 #endif  // UTILS_WF_PERCENTILE_H
-
-// vim:ts=4 sw=4:

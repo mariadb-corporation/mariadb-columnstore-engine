@@ -93,4 +93,3 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

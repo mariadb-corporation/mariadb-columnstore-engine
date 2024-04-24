@@ -32,7 +32,7 @@
 #include <boost/scoped_array.hpp>
 
 #include "bytestream.h"
-//#include "we_message.h"
+// #include "we_message.h"
 #include "threadsafequeue.h"
 #include "rwlock_local.h"
 #include "resourcemanager.h"
@@ -182,4 +182,3 @@ class WEClients
 #undef EXPORT
 
 #endif
-// vim:ts=4 sw=4:

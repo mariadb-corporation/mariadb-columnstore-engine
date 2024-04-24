@@ -181,4 +181,3 @@ class TSInt64Null : public TSInt64, public TNullFlag
 }  // end of namespace datatypes
 
 #endif  // MCS_INT64_H_INCLUDED
-// vim:ts=2 sw=2:

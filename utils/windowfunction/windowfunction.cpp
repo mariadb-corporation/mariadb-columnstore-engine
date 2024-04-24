@@ -259,4 +259,3 @@ void WindowFunction::sort(std::vector<RowPosition>::iterator v, uint64_t n)
 }
 
 }  // namespace windowfunction
-// vim:ts=4 sw=4:

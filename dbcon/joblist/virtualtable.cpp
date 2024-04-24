@@ -158,4 +158,3 @@ const CalpontSystemCatalog::ColType& VirtualTable::columnType(uint32_t i) const
 }
 
 }  // namespace joblist
-// vim:ts=4 sw=4:

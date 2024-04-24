@@ -2276,4 +2276,3 @@ double Func_degrees::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Ca
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

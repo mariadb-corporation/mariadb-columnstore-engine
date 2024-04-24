@@ -40,7 +40,6 @@
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-namespace bi = boost::interprocess;
 
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -1076,8 +1075,8 @@ void VBBM::save(string filename)
   }
 
   var = VBBM_MAGIC_V2;
-  int bytesWritten = 0;
-  int bytesToWrite = 12;
+  [[maybe_unused]] int bytesWritten = 0;
+  [[maybe_unused]] int bytesToWrite = 12;
   bytesWritten += out->write((char*)&var, 4);
   bytesWritten += out->write((char*)&vbbm->vbCurrentSize, 4);
   bytesWritten += out->write((char*)&vbbm->nFiles, 4);

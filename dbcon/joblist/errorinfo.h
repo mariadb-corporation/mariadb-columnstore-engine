@@ -54,4 +54,3 @@ typedef boost::shared_ptr<ErrorInfo> SErrorInfo;
 }  // namespace joblist
 
 #endif  // JOBLIST_ERROR_INFO_H_
-// vim:ts=4 sw=4:

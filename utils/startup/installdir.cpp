@@ -112,4 +112,3 @@ const string StartUp::tmpDir()
 }
 
 }  // namespace startup
-// vim:ts=4 sw=4:

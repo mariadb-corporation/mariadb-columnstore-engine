@@ -231,4 +231,3 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row, Functi
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

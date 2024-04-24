@@ -149,4 +149,3 @@ string Func_date::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 }
 
 }  // namespace funcexp
-// vim:ts=4 sw=4:

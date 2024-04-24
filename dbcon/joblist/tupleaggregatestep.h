@@ -226,5 +226,3 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
 }  // namespace joblist
 
 #endif  // JOBLIST_TUPLEAGGREGATESTEP_H
-
-// vim:ts=4 sw=4:

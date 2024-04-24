@@ -126,5 +126,3 @@ class RedistributeControl
 }  // namespace redistribute
 
 #endif  // WE_REDISTRIBUTECONTROL_H
-
-// vim:ts=4 sw=4:

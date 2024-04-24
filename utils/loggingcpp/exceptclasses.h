@@ -308,4 +308,3 @@ class ProtocolError : public std::logic_error
 }  // namespace logging
 
 #endif
-// vim:ts=4 sw=4:

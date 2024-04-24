@@ -52,4 +52,3 @@ class HashFamily
 
 }  // namespace utils
 #endif
-// vim:ts=2 sw=2:

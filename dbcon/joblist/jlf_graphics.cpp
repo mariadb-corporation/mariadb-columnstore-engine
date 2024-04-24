@@ -418,7 +418,6 @@ ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobSte
 
 }  // end namespace jlf_graphics
 
-// vim:ts=4 sw=4 syntax=cpp:
 
 #ifdef __clang__
 #pragma clang diagnostic pop

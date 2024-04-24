@@ -103,4 +103,3 @@ string ErrorCodes::errorString(uint16_t code) const
   return (fPreamble + msg);
 }
 }  // namespace logging
-// vim:ts=4 sw=4:

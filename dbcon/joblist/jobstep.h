@@ -568,4 +568,3 @@ typedef boost::shared_ptr<JobStep> SJSTEP;
 }  // namespace joblist
 
 #endif  // JOBLIST_JOBSTEP_H_
-// vim:ts=4 sw=4:

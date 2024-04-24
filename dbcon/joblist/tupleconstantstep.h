@@ -191,5 +191,3 @@ class TupleConstantBooleanStep : public TupleConstantStep
 }  // namespace joblist
 
 #endif  // JOBLIST_TUPLECONSTANTSTEP_H
-
-// vim:ts=4 sw=4:

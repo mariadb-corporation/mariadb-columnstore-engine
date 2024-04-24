@@ -305,5 +305,3 @@ extern std::map<int, std::string> colType2String;
 }  // namespace windowfunction
 
 #endif  // UTILS_WINDOWFUNCTIONTYPE_H
-
-// vim:ts=4 sw=4:

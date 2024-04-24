@@ -332,4 +332,3 @@ class RollbackTransactionProcessor : public dmlpackageprocessor::DMLPackageProce
 }  // namespace dmlprocessor
 
 #endif  // DMLPROCESSOR_H
-// vim:ts=4 sw=4:

@@ -1751,4 +1751,3 @@ RowGroup RowGroup::truncate(uint32_t cols)
 
 }  // namespace rowgroup
 
-// vim:ts=4 sw=4:
