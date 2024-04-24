@@ -68,7 +68,7 @@ int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& c
     {
       tempBuf[i] = str[i];
     }
-    for (i = 0; i < tempN; i++)
+    for (; i < tempN; i++)
     {
       tempBuf[i] = ' '; // XXX: it appears that it is good enough even for binary.
     }
