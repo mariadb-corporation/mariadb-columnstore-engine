@@ -4,6 +4,14 @@ CREATE DATABASE MCOL4580;
 USE MCOL4580;
 
 # -----------------------------------------------------------------------------
+# Bugs uncovered first.
+
+CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
+SELECT COUNT(*) FROM t WHERE d IS NOT NULL AND d != 'A';
+DROP TABLE t;
+
+
+# -----------------------------------------------------------------------------
 # Binary collation test.
 
 CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
