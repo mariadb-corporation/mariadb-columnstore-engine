@@ -68,8 +68,8 @@ SELECT COUNT(*) FROM t WHERE c < 'cz';
 COUNT(*)
 0
 SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
-touched        eliminated
-BlocksTouched-0;       PartitionBlocksEliminated-1;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
 SELECT COUNT(*) FROM t WHERE c > 'cz';
 COUNT(*)
 2
