@@ -151,8 +151,20 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
 
   // need to reencode filters.
   //filterString = dictWithFilters.reencodedFilterString();
-  idbassert(dictWithFilters.getBop() == prevCmd.BOP);
-  filterCount = prevCmd.getFilterCount() + dictWithFilters.getFilterCount();
+  if (dictWithFilters.getFilterCount() <= 1)
+  {
+    BOP = prevCmd.BOP;
+  }
+  else if (prevCmd.filterCount <= 1)
+  {
+    BOP = dictWithFilters.getBop();
+  }
+  else
+  {
+    idbassert(dictWithFilters.getBop() == prevCmd.BOP);
+    BOP = dictWithFilters.getBop();
+  }
+  filterCount = prevCmd.filterCount + dictWithFilters.getFilterCount();
   filterString = prevCmd.filterString + dictWithFilters.reencodedFilterString();
   fContainsRanges = dictWithFilters.getFilterCount() > 0;
   // we have a limitation here.
