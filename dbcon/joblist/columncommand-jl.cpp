@@ -153,7 +153,7 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
   //filterString = dictWithFilters.reencodedFilterString();
   idbassert(dictWithFilters.getBop() == prevCmd.BOP);
   filterCount = prevCmd.getFilterCount() + dictWithFilters.getFilterCount();
-  filterString = prevCmd.getFilters() + dictWithFilters.reencodeFilterString();
+  filterString = prevCmd.getFilters() + dictWithFilters.reencodedFilterString();
   fContainsRanges = dictWithFilters.getFilterCount() > 0;
   // we have a limitation here.
   // consider this: textcol IS NULL AND textcol IN ('a', 'b')
