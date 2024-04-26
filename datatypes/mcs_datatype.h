@@ -228,6 +228,44 @@ class SystemCatalog
     UNDEFINED,            /*!< Undefined - used in UDAF API */
   };
 
+  std::string ColDataTypeToString(ColDataType dataType)
+  {
+    switch (dataType)
+    {
+      case BIT: return "BIT";
+      case TINYINT: return "TINYINT";
+      case CHAR: return "CHAR";
+      case SMALLINT: return "SMALLINT";
+      case DECIMAL: return "DECIMAL";
+      case MEDINT: return "MEDINT";
+      case INT: return "INT";
+      case FLOAT: return "FLOAT";
+      case DATE: return "DATE";
+      case BIGINT: return "BIGINT";
+      case DOUBLE: return "DOUBLE";
+      case DATETIME: return "DATETIME";
+      case VARCHAR: return "VARCHAR";
+      case VARBINARY: return "VARBINARY";
+      case CLOB: return "CLOB";
+      case BLOB: return "BLOB";
+      case UTINYINT: return "UTINYINT";
+      case USMALLINT: return "USMALLINT";
+      case UDECIMAL: return "UDECIMAL";
+      case UMEDINT: return "UMEDINT";
+      case UINT: return "UINT";
+      case UFLOAT: return "UFLOAT";
+      case UBIGINT: return "UBIGINT";
+      case UDOUBLE: return "UDOUBLE";
+      case TEXT: return "TEXT";
+      case TIME: return "TIME";
+      case TIMESTAMP: return "TIMESTAMP";
+      case NUM_OF_COL_DATA_TYPE: return "NUM_OF_COL_DATA_TYPE";
+      case LONGDOUBLE: return "LONGDOUBLE";
+      case STRINT: return "STRINT";
+      case UNDEFINED: return "UNDEFINED";
+      default: return "UNKNOWN";
+    }
+  }
   // XXX: It is assumed here that ALL TYPES have width, scale and precision.
   // XXX: And then some of them have the type tag itself.
   // XXX: But, all types have type tag, some need explicit width (decimals, for example)

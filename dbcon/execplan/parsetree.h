@@ -323,8 +323,7 @@ class ParseTree
   {
     if (fLeft && fRight)
     {
-      return (reinterpret_cast<Operator*>(fData))
-          ->compile(b, data, isNull, row, fLeft, fRight, dataType);
+      return (reinterpret_cast<Operator*>(fData))->compile(b, data, isNull, row, fLeft, fRight, dataType);
     }
     else
     {
@@ -518,12 +517,10 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
   r = n->right();
 
   if (l != 0)
-    dotFile << "n" << (void*)n << " -> "
-            << "n" << (void*)l << std::endl;
+    dotFile << "n" << (void*)n << " -> " << "n" << (void*)l << std::endl;
 
   if (r != 0)
-    dotFile << "n" << (void*)n << " -> "
-            << "n" << (void*)r << std::endl;
+    dotFile << "n" << (void*)n << " -> " << "n" << (void*)r << std::endl;
 
   dotFile << "n" << (void*)n << " [label=\"" << n->data()->data() << "\"]" << std::endl;
 }

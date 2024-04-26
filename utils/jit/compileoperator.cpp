@@ -1,5 +1,6 @@
 #include "compileoperator.h"
 #include "llvm/IR/Verifier.h"
+#include <llvm/Support/raw_ostream.h>  // 确保包含了这个头文件
 #include "rowgroup.h"
 
 namespace execplan
