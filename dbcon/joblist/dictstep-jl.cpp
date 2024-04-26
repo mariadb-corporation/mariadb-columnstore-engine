@@ -75,7 +75,7 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
 
   hasEqFilter = dict.hasEqualityFilter;
 
-  if (hasEqFilter && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
+  if (hasEqFilter) // && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
   {
     eqOp = dict.tmpCOP;
     eqFilter = dict.eqFilter;
