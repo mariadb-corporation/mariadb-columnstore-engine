@@ -136,6 +136,8 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
 }
 
 ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJL& dictWithFilters)
+  : filterString()
+  , filterCount(0)
 {
   BRM::DBRM dbrm;
 
@@ -144,26 +146,30 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
   // we should call this constructor only when paired with dictionary
   // and in that case previous command should not have any filters and
   // should be "dict" (tokens) column command.
-  idbassert(dictWithFilters.getFilterCount() == 0 || prevCmd.filterCount == 0);
+  //idbassert(dictWithFilters.getFilterCount() == 0 || prevCmd.filterCount == 0);
   idbassert(prevCmd.fIsDict);
 
   // need to reencode filters.
-  filterString = dictWithFilters.reencodedFilterString();
+  //filterString = dictWithFilters.reencodedFilterString();
+  idbassert(dictWithFilters.getBop() == prevCmd.BOP);
+  appendFilter(prevCmd.getFilters(), prevCmd.getFilterCount());
+  appendFilter(dictWithFilters.reencodeFilterString(), dictWithFilters.getFilterCount());
+  fContainsRanges = dictWithFilters.getFilterCount() > 0;
   // we have a limitation here.
   // consider this: textcol IS NULL AND textcol IN ('a', 'b')
   // XXX: should check.
-  if (filterString.length() > 0 && (BOP = dictWithFilters.getBop() || prevCmd.filterString.length() < 1))
-  {
-    filterCount = dictWithFilters.getFilterCount();
-    BOP = dictWithFilters.getBop();
-    fContainsRanges = true;
-  }
-  else
-  {
-    filterCount = prevCmd.filterCount;
-    filterString = prevCmd.filterString;
-    BOP = prevCmd.BOP;
-  }
+//  if (filterString.length() > 0 && (BOP = dictWithFilters.getBop() || prevCmd.filterString.length() < 1))
+//  {
+//    filterCount = dictWithFilters.getFilterCount();
+//    BOP = dictWithFilters.getBop();
+//    fContainsRanges = true;
+//  }
+//  else
+//  {
+//    filterCount = prevCmd.filterCount;
+//    filterString = prevCmd.filterString;
+//    BOP = prevCmd.BOP;
+//  }
   isScan = prevCmd.isScan;
   hasAuxCol = prevCmd.hasAuxCol;
   extentsAux = prevCmd.extentsAux;
