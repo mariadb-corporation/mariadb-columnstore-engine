@@ -74,6 +74,7 @@ std::unordered_map<uint32_t, FileId> systemCatalogMap = {
     {1034, FileId(1034, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 176128, 0, false)},
     {1026, FileId(1026, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 131072, 0, false)},
     {1041, FileId(1041, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 226304, 0, false)},
+    {1043, FileId(1043, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 238592, 0, false)},
     {1029, FileId(1029, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 143360, 0, false)},
     {2001, FileId(2001, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 8192, 0, true)},
     {2004, FileId(2004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 24576, 0, true)},
@@ -528,7 +529,6 @@ ChunkManagerWrapperDict::ChunkManagerWrapperDict(const std::string& filename, ui
                                                  uint32_t colWidth, uint32_t compressionType)
  : ChunkManagerWrapper(filename, oid, dbRoot, partition, segment, colDataType, colWidth, compressionType)
 {
-
   if (compressionType == 0)
   {
     pFileOp = std::unique_ptr<WriteEngine::DbFileOp>(new WriteEngine::DbFileOp());
