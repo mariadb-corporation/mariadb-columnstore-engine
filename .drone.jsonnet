@@ -189,7 +189,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
   },
 
-  local regression_tests = if (event == 'cron') then [
+  local regression_tests =  [
     'test000.sh',
     'test001.sh',
     'test005.sh',
@@ -216,9 +216,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test300.sh',
     'test400.sh',
     'test500.sh',
-  ] else [
-    'test000.sh',
-    'test001.sh',
   ],
 
   local mdb_server_versions = upgrade_test_lists[result][arch],
@@ -403,12 +400,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
       if (event == 'cron') then
         execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite='
+                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0  --xml-report=mtr.xml --suite='
                          + std.join(',', std.map(function(x) 'columnstore/' + x, std.split(mtr_full_set, ','))),
                          dockerImage('mtr')) + '"'
                          else
         execInnerDocker('bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
+                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/} --xml-report=mtr.xml"',
                         dockerImage('mtr')),
     ],
   },
@@ -427,6 +424,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
       'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"'
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/mtr.xml' + result + '/mtr-logs || echo "missing ' + mtr_path + '/mtr.xml"'
     ] + reportTestStage(dockerImage('mtr'), result, "mtr"),
     when: {
       status: ['success', 'failure'],
@@ -771,8 +769,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                // Disable dh_missing strict check for missing files
                'sed -i s/--fail-missing/--list-missing/ debian/rules',
                // Tweak debian packaging stuff
-               'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
-               "sed -i 's/Depends: galera.*/Depends:/' debian/control",
+               //'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
+               //"sed -i 's/Depends: galera.*/Depends:/' debian/control",
                'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
                // Install build dependencies for deb
                if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
@@ -883,6 +881,16 @@ local FinalPipeline(branch, event) = {
         template: '*' + event + (if event == 'pull_request' then ' <https://github.com/{{repo.owner}}/{{repo.name}}/pull/{{build.pull}}|#{{build.pull}}>' else '') +
                   ' build <{{build.link}}|{{build.number}}> {{#success build.status}}succeeded{{else}}failed{{/success}}*.\n\n*Branch*: <https://github.com/{{repo.owner}}/{{repo.name}}/tree/{{build.branch}}|{{build.branch}}>\n*Commit*: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{truncate build.commit 8}}> {{truncate build.message.title 100 }}\n*Author*: {{ build.author }}\n*Duration*: {{since build.started}}\n*Artifacts*: https://cspkg.s3.amazonaws.com/index.html?prefix={{build.branch}}/{{build.event}}/{{build.number}}',
       },
+    },
+    {
+      name: 'trigggerBuildBot',
+      commands: [
+        'export SSH_USER=timofey_turenko_mariadb_com',
+        'export SSH_ADDRESS=35.202.218.246',
+	'export HOST=localhost:8012',
+	'export DRONE_BUILD_ID={{build.branch}}/{{build.event}}',
+	"ssh $SSH_USER@$SSH_ADDRESS curl --data \"{'\"method\"':'\"force\"', '\"jsonrpc\"':'\"2.0\"', '\"id\"':0, '\"params\"': {'\"droneBuildID\"':\\\"$DRONE_BUILD_ID\\\"}}\" --header '"Content-Type: application/json"' --request POST $HOST/api/v2/forceschedulers/drone_trigger",
+      ]
     },
   ],
   trigger: {
