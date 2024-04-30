@@ -889,7 +889,7 @@ local FinalPipeline(branch, event) = {
         'export SSH_ADDRESS=35.202.218.246',
 	'export HOST=localhost:8012',
 	'export DRONE_BUILD_ID={{build.branch}}/{{build.event}}',
-	"ssh $SSH_USER@$SSH_ADDRESS curl --data \"{'\"method\"':'\"force\"', '\"jsonrpc\"':'\"2.0\"', '\"id\"':0, '\"params\"': {'\"droneBuildID\"':\\\"$DRONE_BUILD_ID\\\"}}\" --header '"Content-Type: application/json"' --request POST $HOST/api/v2/forceschedulers/drone_trigger",
+	'ssh $SSH_USER@$SSH_ADDRESS curl --data \'{\"method\":\"force\", \"jsonrpc\":\"2.0\", \"id\":0, \"params\": {\"droneBuildID\":\"$DRONE_BUILD_ID\"}}\' --header "Content-Type: application/json" --request POST $HOST/api/v2/forceschedulers/drone_trigger',
       ]
     },
   ],
