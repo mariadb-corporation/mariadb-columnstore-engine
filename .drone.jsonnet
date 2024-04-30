@@ -423,8 +423,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('mtr')),
       'echo "---------- end columnstore debug log ----------"',
       'echo "---------- end columnstore debug log ----------"',
-      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"'
-      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/mtr.xml' + result + '/mtr-logs' || echo "missing ' + mtr_path + '/mtr.xml'"
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/var/log /drone/src/' + result + '/mtr-logs || echo "missing ' + mtr_path + '/var/log"',
+      'docker cp mtr$${DRONE_BUILD_NUMBER}:' + mtr_path + '/mtr.xml' + result + '/mtr-logs' || echo "missing ' + mtr_path + '/mtr.xml'",
     ] + reportTestStage(dockerImage('mtr'), result, "mtr"),
     when: {
       status: ['success', 'failure'],
