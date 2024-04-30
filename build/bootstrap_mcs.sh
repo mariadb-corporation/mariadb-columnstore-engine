@@ -346,15 +346,16 @@ build()
 
 check_user_and_group()
 {
-    if [ -z "$(grep mysql /etc/passwd)" ]; then
-        message "Adding user mysql into /etc/passwd"
-        useradd -r -U mysql -d /var/lib/mysql
+    user=$1
+    if [ -z "$(grep $user /etc/passwd)" ]; then
+        message "Adding user $user into /etc/passwd"
+        useradd -r -U $user -d /var/lib/mysql
     fi
 
-    if [ -z "$(grep mysql /etc/group)" ]; then
+    if [ -z "$(grep $user /etc/group)" ]; then
         GroupID = `awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group`
-        message "Adding group mysql with id $GroupID"
-        groupadd -g GroupID mysql
+        message "Adding group $user with id $GroupID"
+        groupadd -g $GroupID $user
     fi
 }
 
@@ -388,14 +389,12 @@ disable_plugins_for_bootstrap()
 {
     find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
     find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
-    find /etc -type f -exec sed -i 's/columnstore_use_import_for_batchinsert = ON//g' {} +
 }
 
 enable_columnstore_back()
 {
     echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
     sed -i '/\[mysqld\]/a\plugin-load-add=ha_columnstore.so' $CONFIG_DIR/columnstore.cnf
-    sed -i '/plugin-load-add=ha_columnstore.so/a\columnstore_use_import_for_batchinsert = ON' $CONFIG_DIR/columnstore.cnf
 }
 
 fix_config_files()
@@ -461,7 +460,9 @@ install()
     make_dir $REPORT_PATH
     chmod 777 $REPORT_PATH
 
-    check_user_and_group
+    check_user_and_group mysql
+    check_user_and_group syslog
+
 
     make_dir $CONFIG_DIR
 

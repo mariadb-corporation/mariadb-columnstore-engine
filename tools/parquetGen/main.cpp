@@ -1099,7 +1099,7 @@ class LargeDataProducer : public arrow::RecordBatchReader
     PARQUET_THROW_NOT_OK(doublebuilder_.Reserve(chunkSize));
   }
 
-  virtual std::shared_ptr<arrow::Schema> schema() const
+  virtual std::shared_ptr<arrow::Schema> schema() const override
   {
     return arrow::schema(
         {arrow::field("col1", arrow::int32()), arrow::field("col2", arrow::timestamp(arrow::TimeUnit::MILLI)),
@@ -1107,7 +1107,12 @@ class LargeDataProducer : public arrow::RecordBatchReader
          arrow::field("col5", arrow::float64()), arrow::field("col6", arrow::utf8())});
   }
 
-  virtual arrow::Status ReadNext(std::shared_ptr<arrow::RecordBatch>* batch)
+  virtual arrow::Result<arrow::RecordBatchWithMetadata> ReadNext() override
+  {
+    return arrow::Status::NotImplemented("ReadNext with custom metadata");
+  }
+
+  virtual arrow::Status ReadNext(std::shared_ptr<arrow::RecordBatch>* batch) override
   {
     if (restChunkSize() == 0)
     {
