@@ -53,6 +53,28 @@
 using namespace std;
 using namespace ddlpackage;	
 
+#if 0
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
@@ -82,18 +104,18 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
     {
         CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
 
-//       std::cerr << "default charset is " << (def_cs ? def_cs->cs_name.str : "NULL") << "\n";
+       idblog("default charset is " << (def_cs ? def_cs->cs_name.str : "NULL") << "\n");
         if (column->fType->fCollate)
         {
-//            std::cerr << "getting charset by collation name '" << column->fType->fCollate << "'\n";
+            idblog("getting charset by collation name '" << column->fType->fCollate << "'\n");
             cs = get_charset_by_name(column->fType->fCollate, MYF(utf8_flag));
         }
         else if (column->fType->fCharset)
         {
-//            std::cerr << "getting charset by charset name\n";
+            idblog("getting charset by charset name\n");
             cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(utf8_flag));
         }
-//std::cerr << "charset number is " << cs->number << ", name '" << cs->cs_name.str << "'\n";
+idblog("charset number is " << cs->number << ", name '" << cs->cs_name.str << "'\n");
 
         column->fType->fCharset = cs->cs_name.str;
         column->fType->fCollate = cs->coll_name.str;
