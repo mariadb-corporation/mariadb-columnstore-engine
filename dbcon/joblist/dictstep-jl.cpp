@@ -88,21 +88,21 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
   needRTrim = false;
-  idblog("checking dict's coltype");
-  switch (dict.colType().colDataType)
-  {
-    case execplan::CalpontSystemCatalog::CHAR:
-  idblog("CHAR");
-      needRTrim = true;
-      break;
-    case execplan::CalpontSystemCatalog::VARCHAR:
-  idblog("VARCHAR");
-      needRTrim = true;
-      break;
-    default:
-      idblog("dict.colType().colDataType is " << int(dict.colType().colDataType));
-      break;
-  }
+//  idblog("checking dict's coltype");
+//  switch (dict.colType().colDataType)
+//  {
+//    case execplan::CalpontSystemCatalog::CHAR:
+//  idblog("CHAR");
+//      needRTrim = true;
+//      break;
+//    case execplan::CalpontSystemCatalog::VARCHAR:
+//  idblog("VARCHAR");
+//      needRTrim = true;
+//      break;
+//    default:
+//      idblog("dict.colType().colDataType is " << int(dict.colType().colDataType));
+//      break;
+//  }
 }
 
 DictStepJL::~DictStepJL()
