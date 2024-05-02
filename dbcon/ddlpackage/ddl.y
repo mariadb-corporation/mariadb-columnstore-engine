@@ -104,10 +104,10 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
     {
         CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
 
-       idblog("default charset is " << (def_cs ? def_cs->cs_name.str : "NULL") << "\n");
+       idblog("default charset is '" << (def_cs ? def_cs->cs_name.str : "NULL") << "'");
         if (column->fType->fCollate)
         {
-            idblog("getting charset by collation name '" << column->fType->fCollate << "'\n");
+            idblog("getting charset by collation name '" << column->fType->fCollate << "'");
             cs = get_charset_by_name(column->fType->fCollate, MYF(utf8_flag));
         }
         else if (column->fType->fCharset)

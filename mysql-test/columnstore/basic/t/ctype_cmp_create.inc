@@ -120,9 +120,11 @@ BEGIN
   CALL exec('SELECT GROUP_CONCAT(CONCAT(''['',c1,'']'') ORDER BY BINARY(c1) SEPARATOR '''') FROM t1 GROUP BY c1 ORDER BY c1');
   CALL exec('SELECT COUNT(DISTINCT c1) FROM t1');
   CREATE TABLE t2 AS SELECT DISTINCT c1 FROM t1;
+  CALL exec('SHOW CREATE TABLE t2');
   CALL exec('SELECT COUNT(*) FROM t2');
 
   CREATE TABLE t3 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_count FROM t1 LIMIT 0;
+  CALL exec('SHOW CREATE TABLE t3');
   FOR rec IN (SELECT c1 FROM t1)
   DO
     INSERT INTO t3 SELECT rec.c1, COUNT(*) FROM t2 WHERE t2.c1=rec.c1;
@@ -131,6 +133,7 @@ BEGIN
   DROP TABLE t3;
 
   CREATE TABLE t4 AS SELECT t1.c1, CAST(0 AS UNSIGNED) AS distinct_recno FROM t1 LIMIT 0;
+  CALL exec('SHOW CREATE TABLE t4');
   FOR rec IN (SELECT c1 FROM t2 ORDER BY c1)
   DO
     INSERT INTO t4 SELECT t1.c1, vrecno FROM t1 WHERE t1.c1=rec.c1 ORDER BY BINARY t1.c1;
@@ -151,6 +154,7 @@ BEGIN
   DECLARE tbl TEXT DEFAULT 'CREATE TABLE t1 (c1 TYPE, c2 TYPE)';
   SET tbl=REPLACE(tbl,'TYPE',dtype);
   CALL exec(tbl);
+  CALL exec('SHOW CREATE TABLE t1');
 END;
 $$
 DELIMITER ;$$
@@ -198,8 +202,10 @@ DELIMITER $$;
 CREATE PROCEDURE test03(len INT, datatype TEXT)
 BEGIN
   CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+  CALL exec('SHOW CREATE TABLE t1');
   CALL exec(REPLACE('INSERT INTO t1 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
   CALL exec(REPLACE('CREATE TABLE t2 (c1 DATATYPE, c2 DATATYPE)', 'DATATYPE', datatype));
+  CALL exec('SHOW CREATE TABLE t2');
   CALL exec(REPLACE('INSERT INTO t2 VALUES (LEFT(''Hellooooooooooooooooooo'',LEN),LEFT(''hellooooooooooooooooooo'',LEN))', 'LEN', len));
   CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('Hellooooooooooooooooooo', len)));
   CALL exec(REPLACE('SELECT * FROM t1 WHERE c1=''VAL''', 'VAL', LEFT('hellooooooooooooooooooo', len)));
@@ -242,6 +248,7 @@ BEGIN
   DECLARE sel VARCHAR(64) CHARACTER SET utf8 DEFAULT 'SELECT c1 FROM t1 WHERE c1=IVAL ORDER BY BINARY c1';
 
   CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
+  CALL exec('SHOW CREATE TABLE t1');
   CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a, '''')));
   CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', cap_a, '''')));
   CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a_with_tilde, '''')));
