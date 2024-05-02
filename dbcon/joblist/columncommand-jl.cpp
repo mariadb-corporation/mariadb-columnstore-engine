@@ -41,6 +41,28 @@ using namespace std;
 
 using namespace messageqcpp;
 
+#if 0
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace joblist
 {
 ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID,
@@ -57,6 +79,7 @@ ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> l
   filterString = scan.fFilterString;
   filterCount = scan.fFilterCount;
   colType = scan.fColType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   BOP = scan.fBOP;
   extents = scan.extents;
   OID = scan.fOid;
@@ -99,6 +122,7 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
   filterString = step.fFilterString;
   filterCount = step.fFilterCount;
   colType = step.fColType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   BOP = step.fBOP;
   extents = step.extents;
   divShift = step.divShift;
@@ -186,6 +210,7 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
   hasAuxCol = prevCmd.hasAuxCol;
   extentsAux = prevCmd.extentsAux;
   colType = prevCmd.colType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   extents = prevCmd.extents;
   OID = prevCmd.OID;
   colName = prevCmd.colName;
