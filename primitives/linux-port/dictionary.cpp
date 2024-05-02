@@ -526,7 +526,10 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
       // MCOL-1246 Trim whitespace before match
       string strData((char*)sigptr.data, sigptr.len);
-      boost::trim_right_if(strData, boost::is_any_of(" "));
+      if (0 == (cs.getCharset().state & MY_CS_NOPAD))
+      {
+        boost::trim_right_if(strData, boost::is_any_of(" "));
+      }
       bool gotIt = eqFilter->find(strData) != eqFilter->end();
 
       if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
