@@ -175,7 +175,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
   {
     idbassert(filterCount == eqFilter.size());
 
-    idblog("needRTrim " << int(needRTrim) << ", charsetNumber " << charsetNumber << ", cset name " << );
+    idblog("needRTrim " << int(needRTrim) << ", charsetNumber " << charsetNumber );
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
