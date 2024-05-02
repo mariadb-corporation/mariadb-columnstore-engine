@@ -49,6 +49,28 @@ using namespace rowgroup;
 #include "messageids.h"
 using namespace logging;
 
+#if 0
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace primitiveprocessor
 {
 extern int noVB;
@@ -978,6 +1000,7 @@ ColumnCommand* ColumnCommandFabric::createCommand(messageqcpp::ByteStream& bs)
   bs.advance(1);  // The higher dispatcher Command::makeCommand calls BS::peek so this increments BS ptr
   execplan::CalpontSystemCatalog::ColType colType;
   colType.unserialize(bs);
+  idblog("coltype charsetNumber " << colType.charsetNumber);
   switch (colType.colWidth)
   {
     case 1: return new ColumnCommandInt8(colType, bs); break;
