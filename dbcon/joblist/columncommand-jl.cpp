@@ -240,6 +240,7 @@ ColumnCommandJL::~ColumnCommandJL()
 // The other leg is in PP, its name is ColumnCommand::makeCommand.
 void ColumnCommandJL::createCommand(ByteStream& bs) const
 {
+	idblog("create command serializing, ct charsetNumber " << colType.charsetNumber);
   bs << (uint8_t)COLUMN_COMMAND;
   colType.serialize(bs);
   bs << (uint8_t)isScan;
