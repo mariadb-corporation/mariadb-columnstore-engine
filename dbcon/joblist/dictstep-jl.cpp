@@ -87,6 +87,7 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   }
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
+  idblog("charsetNumber is " << charsetNumber);
   needRTrim = false;
 //  idblog("checking dict's coltype");
 //  switch (dict.colType().colDataType)
