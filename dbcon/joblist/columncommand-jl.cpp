@@ -189,8 +189,8 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
     BOP = dictWithFilters.getBop();
   }
   filterCount = prevCmd.filterCount + dictWithFilters.getFilterCount();
-  //filterString = prevCmd.filterString + dictWithFilters.reencodedFilterString();
-  filterString = prevCmd.filterString + dictWithFilters.getFilterString();
+  filterString = prevCmd.filterString + dictWithFilters.reencodedFilterString();
+  //filterString = prevCmd.filterString + dictWithFilters.getFilterString();
   fContainsRanges = dictWithFilters.getFilterCount() > 0;
   // we have a limitation here.
   // consider this: textcol IS NULL AND textcol IN ('a', 'b')
