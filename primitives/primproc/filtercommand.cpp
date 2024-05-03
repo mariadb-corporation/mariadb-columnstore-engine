@@ -514,8 +514,7 @@ static inline bool compareString(const datatypes::Charset& cs, const utils::Cons
   {
     return cs.like(fBOP == COMPARE_NLIKE, s0, s1);
   }
-  auto& mcs = cs.getCharset();
-  idblog("cs.charsetNumber " << mcs.number);
+  idblog("cs.charsetNumber " << cs.getCharset().number);
   int cmp = cs.strnncollsp(s0, s1);
   switch (fBOP)
   {
