@@ -4,6 +4,14 @@ CREATE DATABASE MCOL4580;
 USE MCOL4580;
 
 # -----------------------------------------------------------------------------
+# Bugs uncovered first.
+
+CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
+SELECT COUNT(*) FROM t WHERE d IS NOT NULL AND d != 'A';
+DROP TABLE t;
+
+
+# -----------------------------------------------------------------------------
 # Binary collation test.
 
 CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
@@ -35,6 +43,17 @@ DROP TABLE t;
 # We will use the fact that "cz" should go before "ch".
 
 CREATE TABLE t (c TEXT CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
+INSERT INTO t(c) VALUES ('ch'), ('ch');
+SELECT COUNT(*) FROM t WHERE c < 'cz';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+
+# and to see we do not broke anything (must be 1):
+SELECT COUNT(*) FROM t WHERE c > 'cz';
+SELECT COUNT(*) FROM t WHERE c = 'CH';
+
+DROP TABLE t;
+
+CREATE TABLE t (c VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
 INSERT INTO t(c) VALUES ('ch'), ('ch');
 SELECT COUNT(*) FROM t WHERE c < 'cz';
 SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;

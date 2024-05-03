@@ -33,6 +33,28 @@
 using namespace std;
 using namespace messageqcpp;
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace
 {
 uint32_t cc = primitiveprocessor::Command::COLUMN_COMMAND;
@@ -492,6 +514,7 @@ static inline bool compareString(const datatypes::Charset& cs, const utils::Cons
   {
     return cs.like(fBOP == COMPARE_NLIKE, s0, s1);
   }
+  idblog("cs.charsetNumber " << cs.getCharset().number);
   int cmp = cs.strnncollsp(s0, s1);
   switch (fBOP)
   {

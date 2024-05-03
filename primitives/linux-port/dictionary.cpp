@@ -36,6 +36,28 @@ using namespace std;
 
 using namespace logging;
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace
 {
 const char* signatureNotFound = joblist::CPSTRNOTFOUND.c_str();
@@ -406,6 +428,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
   bool cmpResult;
   DictOutput header;
   const datatypes::Charset& cs(charsetNumber);
+  idblog("charsetNumber " << charsetNumber);
 
   // default size of the ouput to something sufficiently large to prevent
   // excessive reallocation and copy when resizing
@@ -503,7 +526,10 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 
       // MCOL-1246 Trim whitespace before match
       string strData((char*)sigptr.data, sigptr.len);
-      boost::trim_right_if(strData, boost::is_any_of(" "));
+      if (0 == (cs.getCharset().state & MY_CS_NOPAD))
+      {
+        boost::trim_right_if(strData, boost::is_any_of(" "));
+      }
       bool gotIt = eqFilter->find(strData) != eqFilter->end();
 
       if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))

@@ -171,7 +171,7 @@ CREATE TABLE `cs_trans_item` (
 `batch_id` longblob DEFAULT NULL,
 `prev_sys_id` bigint(19) DEFAULT NULL,
 `check_num_tmp` bigint(20) DEFAULT NULL,
-`undo_data` varchar(2048) DEFAULT NULL,
+`undo_data` varchar(1990) DEFAULT NULL,
 `tran_lookup_id` bigint(20) DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8;
 CREATE TABLE `tmp_tb_ldh_gpawnv3` (

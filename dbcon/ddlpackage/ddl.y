@@ -41,6 +41,7 @@
    */
 
 %{
+#include <iostream>
 #include "sqlparser.h"
 
 #include "ddl-gram.h"
@@ -52,11 +53,33 @@
 using namespace std;
 using namespace ddlpackage;	
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
-void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_cs)
+void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_cs, myf utf8_flag)
 {
     auto* column = dynamic_cast<ColumnDef*>(elem);
 
@@ -81,10 +104,18 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
     {
         CHARSET_INFO* cs = def_cs ? def_cs : &my_charset_latin1;
 
+       idblog("default charset is '" << (def_cs ? def_cs->coll_name.str : "NULL") << "'");
         if (column->fType->fCollate)
-            cs = get_charset_by_name(column->fType->fCollate, MYF(0));
+        {
+            idblog("getting charset by collation name '" << column->fType->fCollate << "'");
+            cs = get_charset_by_name(column->fType->fCollate, MYF(utf8_flag));
+        }
         else if (column->fType->fCharset)
-            cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(0));
+        {
+            idblog("getting charset by charset name\n");
+            cs = get_charset_by_csname(column->fType->fCharset, MY_CS_PRIMARY, MYF(utf8_flag));
+        }
+idblog("charset number is " << cs->number << ", name '" << cs->coll_name.str << "'\n");
 
         column->fType->fCharset = cs->cs_name.str;
         column->fType->fCollate = cs->coll_name.str;
@@ -338,7 +369,7 @@ create_table_statement:
 	{
         for (auto* elem : *$6)
         {
-            fix_column_length_and_charset(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
         }
 		$$ = new CreateTableStatement(new TableDef($4, $6, $8));
 	}
@@ -702,17 +733,17 @@ ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
      * dynamic_cast here.
      */
-	ADD column_def { fix_column_length_and_charset($2, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
-	| ADD COLUMN column_def { fix_column_length_and_charset($3, x->default_table_charset); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
+	ADD column_def { fix_column_length_and_charset($2, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
+	| ADD COLUMN column_def { fix_column_length_and_charset($3, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
 	| ADD '(' table_element_list ')' {
         for (auto* elem : *$3) {
-            fix_column_length_and_charset(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
         }
         $$ = new AtaAddColumns($3);
     }
 	| ADD COLUMN '(' table_element_list ')' {
         for (auto* elem : *$4) {
-            fix_column_length_and_charset(elem, x->default_table_charset);
+            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
         }
         $$ = new AtaAddColumns($4);
     }

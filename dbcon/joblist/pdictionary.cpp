@@ -50,6 +50,28 @@ using namespace BRM;
 #include "jlf_common.h"
 #include "primitivestep.h"
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace joblist
 {
 // struct pDictionaryStepPrimitive
@@ -110,6 +132,7 @@ pDictionaryStep::pDictionaryStep(CalpontSystemCatalog::OID o, CalpontSystemCatal
  , fRm(jobInfo.rm)
  , hasEqualityFilter(false)
 {
+	idblog("ct charsetNumber " << ct.charsetNumber);
 }
 
 void pDictionaryStep::addFilter(int8_t COP, const string& value)

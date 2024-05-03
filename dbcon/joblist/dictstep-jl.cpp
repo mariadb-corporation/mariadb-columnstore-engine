@@ -28,11 +28,37 @@
 //
 //
 
+#include <algorithm> 
+#include <cctype>
+#include <locale>
+
+#include "calpontsystemcatalog.h"
 #include "bpp-jl.h"
 #include "string_prefixes.h"
 
 using namespace std;
 using namespace messageqcpp;
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
 
 namespace joblist
 {
@@ -49,7 +75,7 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
 
   hasEqFilter = dict.hasEqualityFilter;
 
-  if (hasEqFilter && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
+  if (hasEqFilter) // && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
   {
     eqOp = dict.tmpCOP;
     eqFilter = dict.eqFilter;
@@ -61,6 +87,23 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
   }
   filterCount = dict.fFilterCount;
   charsetNumber = dict.fColType.charsetNumber;
+  idblog("charsetNumber is " << charsetNumber);
+  needRTrim = false;
+//  idblog("checking dict's coltype");
+//  switch (dict.colType().colDataType)
+//  {
+//    case execplan::CalpontSystemCatalog::CHAR:
+//  idblog("CHAR");
+//      needRTrim = true;
+//      break;
+//    case execplan::CalpontSystemCatalog::VARCHAR:
+//  idblog("VARCHAR");
+//      needRTrim = true;
+//      break;
+//    default:
+//      idblog("dict.colType().colDataType is " << int(dict.colType().colDataType));
+//      break;
+//  }
 }
 
 DictStepJL::~DictStepJL()
@@ -122,6 +165,8 @@ void DictStepJL::setWidth(uint16_t w)
   colWidth = w;
 }
 
+// Please note that this function gets called rarely and
+// any inefficiences you might find here are for clarity.
 messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
 {
   messageqcpp::ByteStream bs;
@@ -131,10 +176,20 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
   {
     idbassert(filterCount == eqFilter.size());
 
+    idblog("needRTrim " << int(needRTrim) << ", charsetNumber " << charsetNumber );
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
-      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), cset);
+      std::string efs = eqFilter[i];
+      if (needRTrim && efs.length() > 0)
+      {
+  idblog("before trimming");
+        efs.erase(std::find_if(efs.rbegin(), efs.rend(), [](unsigned char ch) {
+           return !std::isspace(ch);
+          }).base(), efs.end());
+  idblog("after trimming");
+      }
+      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)efs.c_str(), efs.size(), cset);
       bs << eqOp;
       bs << roundFlag;
       bs << encodedPrefix;
@@ -142,6 +197,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
   }
   else
   {
+	  idblog("not eq");
     messageqcpp::ByteStream filterStringCopy(
         filterString);  // XXX I am not sure about real semantics of messagecpp::ByteStream. So - copy.
     // please erfer to pdictionary.cpp in this dicrectory, addFilter function for a proper encoding of string
@@ -174,7 +230,15 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       bs << roundFlag;
       filterStringCopy >> size;
       ptr = filterStringCopy.buf();
-      encodedPrefix = encodeStringPrefix(ptr, size, cset);
+      std::string fs(reinterpret_cast<const char*>(ptr), size);
+      if (needRTrim && fs.length() > 0)
+      {
+        fs.erase(std::find_if(fs.rbegin(), fs.rend(), [](unsigned char ch) {
+           return !std::isspace(ch);
+          }).base(), fs.end());
+      }
+      encodedPrefix = encodeStringPrefix(reinterpret_cast<const uint8_t*>(fs.c_str()), fs.size(), cset);
+	  idblog(" op " << int(cop) << ", <<" << fs << ">>, prefix " << std::hex << encodedPrefix);
       bs << encodedPrefix;
       filterStringCopy.advance(size);
     }

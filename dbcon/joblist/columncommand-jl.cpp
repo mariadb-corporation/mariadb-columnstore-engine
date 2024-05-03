@@ -41,6 +41,28 @@ using namespace std;
 
 using namespace messageqcpp;
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace joblist
 {
 ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> lastLBID,
@@ -57,6 +79,7 @@ ColumnCommandJL::ColumnCommandJL(const pColScanStep& scan, vector<BRM::LBID_t> l
   filterString = scan.fFilterString;
   filterCount = scan.fFilterCount;
   colType = scan.fColType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   BOP = scan.fBOP;
   extents = scan.extents;
   OID = scan.fOid;
@@ -99,6 +122,7 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
   filterString = step.fFilterString;
   filterCount = step.fFilterCount;
   colType = step.fColType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   BOP = step.fBOP;
   extents = step.extents;
   divShift = step.divShift;
@@ -136,6 +160,8 @@ ColumnCommandJL::ColumnCommandJL(const pColStep& step)
 }
 
 ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJL& dictWithFilters)
+  : filterString()
+  , filterCount(0)
 {
   BRM::DBRM dbrm;
 
@@ -144,30 +170,48 @@ ColumnCommandJL::ColumnCommandJL(const ColumnCommandJL& prevCmd, const DictStepJ
   // we should call this constructor only when paired with dictionary
   // and in that case previous command should not have any filters and
   // should be "dict" (tokens) column command.
-  idbassert(dictWithFilters.getFilterCount() == 0 || prevCmd.filterCount == 0);
+  //idbassert(dictWithFilters.getFilterCount() == 0 || prevCmd.filterCount == 0);
   idbassert(prevCmd.fIsDict);
 
   // need to reencode filters.
-  filterString = dictWithFilters.reencodedFilterString();
-  // we have a limitation here.
-  // consider this: textcol IS NULL AND textcol IN ('a', 'b')
-  // XXX: should check.
-  if (filterString.length() > 0 && (BOP = dictWithFilters.getBop() || prevCmd.filterString.length() < 1))
+  //filterString = dictWithFilters.reencodedFilterString();
+  if (dictWithFilters.getFilterCount() <= 1)
   {
-    filterCount = dictWithFilters.getFilterCount();
+    BOP = prevCmd.BOP;
+  }
+  else if (prevCmd.filterCount <= 1)
+  {
     BOP = dictWithFilters.getBop();
-    fContainsRanges = true;
   }
   else
   {
-    filterCount = prevCmd.filterCount;
-    filterString = prevCmd.filterString;
-    BOP = prevCmd.BOP;
+    idbassert(dictWithFilters.getBop() == prevCmd.BOP);
+    BOP = dictWithFilters.getBop();
   }
+  filterCount = prevCmd.filterCount + dictWithFilters.getFilterCount();
+  filterString = prevCmd.filterString + dictWithFilters.reencodedFilterString();
+  //filterString = prevCmd.filterString + dictWithFilters.getFilterString();
+  fContainsRanges = dictWithFilters.getFilterCount() > 0;
+  // we have a limitation here.
+  // consider this: textcol IS NULL AND textcol IN ('a', 'b')
+  // XXX: should check.
+//  if (filterString.length() > 0 && (BOP = dictWithFilters.getBop() || prevCmd.filterString.length() < 1))
+//  {
+//    filterCount = dictWithFilters.getFilterCount();
+//    BOP = dictWithFilters.getBop();
+//    fContainsRanges = true;
+//  }
+//  else
+//  {
+//    filterCount = prevCmd.filterCount;
+//    filterString = prevCmd.filterString;
+//    BOP = prevCmd.BOP;
+//  }
   isScan = prevCmd.isScan;
   hasAuxCol = prevCmd.hasAuxCol;
   extentsAux = prevCmd.extentsAux;
   colType = prevCmd.colType;
+  idblog("colType charsetNumber " << colType.charsetNumber);
   extents = prevCmd.extents;
   OID = prevCmd.OID;
   colName = prevCmd.colName;
@@ -197,6 +241,7 @@ ColumnCommandJL::~ColumnCommandJL()
 // The other leg is in PP, its name is ColumnCommand::makeCommand.
 void ColumnCommandJL::createCommand(ByteStream& bs) const
 {
+	idblog("create command serializing, ct charsetNumber " << colType.charsetNumber);
   bs << (uint8_t)COLUMN_COMMAND;
   colType.serialize(bs);
   bs << (uint8_t)isScan;

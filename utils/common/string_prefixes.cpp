@@ -23,15 +23,62 @@
 
 #include "string_prefixes.h"
 
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
+
 // XXX: string (or, actually, a BLOB) with all NUL chars will be encoded into zero. Which corresponds to
 //      encoding of empty string.
 int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& cset)
 {
-  uint8_t fixedLenPrefix[8];
-  memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
-  cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
-  int64_t acc = 0;
+  CHARSET_INFO& ci = cset.getCharset();
+  bool csHasPad = (ci.state & MY_CS_NOPAD) == 0; // XXX: Look for binary sort too???
   size_t i;
+  //std::string s((const char*)str, len);
+  //idblog("cset #" << ci.number << " encoding <<" << s << ">>, " << (csHasPad ? "padded" : "not padded"));
+  uint8_t fixedLenPrefix[16];
+  memset(fixedLenPrefix, 0, sizeof(fixedLenPrefix));
+  if (csHasPad)
+  {
+    // we have to pad.
+    // we pad to 16 bytes just to be safe. I am worrying that we can
+    // cross symbol boundaries, so I choose to overshoot.
+    const size_t tempN = 16;
+    uint8_t tempBuf[tempN*2];
+    size_t minLen = len < tempN ? len : tempN;
+    for (i = 0; i < minLen; i ++)
+    {
+      tempBuf[i] = str[i];
+    }
+    for (; i < tempN; i++)
+    {
+      tempBuf[i] = ' '; // XXX: it appears that it is good enough even for binary.
+    }
+    cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, tempBuf, tempN, 0);
+  }
+  else
+  {
+    cset.strnxfrm(fixedLenPrefix, sizeof(fixedLenPrefix), 8, str, len, 0);
+  }
+  int64_t acc = 0;
   for (i = 0; i < 8; i++)
   {
     uint8_t byte = fixedLenPrefix[i];

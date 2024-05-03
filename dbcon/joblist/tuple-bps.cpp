@@ -79,6 +79,27 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
+#if 01
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
 extern boost::mutex fileLock_g;
 
 namespace
@@ -1104,6 +1125,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
       colCmd = cpColVec[i];
       const EMEntry& extent = colCmd->getExtents()[idx];
 
+      idblog("1: scanFlags[" << idx << "] = " << int(scanFlags[idx]));
       /* If any column filter eliminates an extent, it doesn't get scanned */
       scanFlags[idx] =
           scanFlags[idx] && (extent.colWid <= utils::MAXCOLUMNWIDTH) &&  // XXX: change to named constant.
@@ -1112,6 +1134,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
            lbidListVec[i]->CasualPartitionPredicate(extent.partition.cprange, &(colCmd->getFilterString()),
                                                     colCmd->getFilterCount(), colCmd->getColType(),
                                                     colCmd->getBOP(), colCmd->getIsDict()));
+      idblog("and after scanFlags[" << idx << "] = " << int(scanFlags[idx]));
     }
   }
 
@@ -1202,6 +1225,7 @@ void TupleBPS::prepCasualPartitioning()
     if (fOid >= 3000)
     {
       scanFlags[i] = scanFlags[i] && runtimeCPFlags[i];
+      idblog("2: scanFlags["<<i<<"] = " << int(scanFlags[i]));
 
       if (scanFlags[i] && lbidList->CasualPartitionDataType(fColType.colDataType, fColType.colWidth))
       {
@@ -2017,7 +2041,9 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   idbassert(ffirstStepType == SCAN);
 
   if (fOid >= 3000 && bop == BOP_AND)
+  {
     storeCasualPartitionInfo(false);
+  }
 
   totalMsgs = 0;
 
@@ -2040,17 +2066,21 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 
     if (!inBounds)
     {
+      idblog("elimination due to not in bounds");
       continue;
     }
 
+    idblog("3: scanFlags[" << i << "] = " << int(scanFlags[i]));
     if (!scanFlags[i])
     {
+      idblog("elimination due to scanflags");
       fNumBlksSkipped += lbidsToScan;
       continue;
     }
 
     if (!processPseudoColFilters(i, dbRootPMMap))
     {
+      idblog("elimination due to speudocolsfilters");
       fNumBlksSkipped += lbidsToScan;
       continue;
     }
@@ -2067,13 +2097,17 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
     // Bug5741 If we are local only and this doesn't belongs to us, skip it
     if (fLocalQuery == execplan::CalpontSelectExecutionPlan::LOCAL_QUERY)
     {
+	    idblog("local query");
       if (localPMId == 0)
       {
         throw IDBExcept(ERR_LOCAL_QUERY_UM);
       }
 
       if (dbRootPMMap->find(scannedExtents[i].dbRoot)->second != localPMId)
+      {
+	      idblog("skipping local");
         continue;
+      }
     }
 
     // a necessary DB root is offline
@@ -2107,6 +2141,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
     bool isExeMgrDEC = fDec->isExeMgrDEC();
     while (blocksToScan > 0)
     {
+	    idblog("blocks to scan " << blocksToScan);
       uint32_t blocksThisJob = min(blocksToScan, blocksPerJob);
 
       fBPP->setLBID(startingLBID, scannedExtents[i]);
@@ -2896,6 +2931,7 @@ inline bool TupleBPS::scanit(uint64_t rid)
 
   fbo = rid >> rpbShift;
   extentIndex = fbo >> divShift;
+  idblog("scanFlags[" << extentIndex << "] = " << int(scanFlags[extentIndex]) << " && runtimeCPFlags[" << extentIndex << "] = " << int(runtimeCPFlags[extentIndex]));
   return scanFlags[extentIndex] && runtimeCPFlags[extentIndex];
 }
 
