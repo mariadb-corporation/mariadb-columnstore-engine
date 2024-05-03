@@ -33,7 +33,7 @@
 using namespace std;
 using namespace messageqcpp;
 
-#if 0
+#if 01
 #define	idblog(x)
 #else
 #define idblog(x)                                                                       \

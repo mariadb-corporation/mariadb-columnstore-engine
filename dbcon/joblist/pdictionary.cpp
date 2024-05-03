@@ -50,7 +50,7 @@ using namespace BRM;
 #include "jlf_common.h"
 #include "primitivestep.h"
 
-#if 0
+#if 01
 #define	idblog(x)
 #else
 #define idblog(x)                                                                       \
