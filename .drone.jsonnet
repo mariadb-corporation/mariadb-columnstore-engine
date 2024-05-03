@@ -25,7 +25,7 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
 local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=enterprise ' +
                    '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
-                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES ';
+                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_WSREP=NO -DWITH_UNITTESTS=YES ';
 
 local clang_version = '16';
 local gcc_version = '11';
@@ -722,7 +722,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'echo $$SERVER_REMOTE',
                'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+               'git -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
                'git reset --hard $$SERVER_SHA',
                'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
                'git config cmake.update-submodules no',
