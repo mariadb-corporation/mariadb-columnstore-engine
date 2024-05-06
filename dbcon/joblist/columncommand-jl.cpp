@@ -403,7 +403,7 @@ string ColumnCommandJL::toString()
 
   if (isDict())
     ret << " (tokens)";
-  else if (datatypes::isCharType(colType.colDataType))
+  if (datatypes::isCharType(colType.colDataType))
     ret << " (is char)";
 
   return ret.str();
