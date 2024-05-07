@@ -15,15 +15,17 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <unistd.h>
-#include <sys/stat.h>
 #include <boost/filesystem.hpp>
 #include <cstdint>
-#include "rowgroup.h"
-#include <resourcemanager.h>
+
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "LRU.h"
+#include <resourcemanager.h>
+#include "rowgroup.h"
 #include "rowstorage.h"
-#include "robin_hood.h"
 
 namespace
 {
@@ -151,126 +153,6 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
   }
   return columnHasher.finalize(ret, lastCol << 2);
 }
-
-/** @brief NoOP interface to LRU-cache used by RowGroupStorage & HashStorage
- */
-struct LRUIface
-{
-  using List = std::list<uint64_t>;
-
-  virtual ~LRUIface() = default;
-  /** @brief Put an ID to cache or set it as last used */
-  virtual void add(uint64_t)
-  {
-  }
-  /** @brief Remove an ID from cache */
-  virtual void remove(uint64_t)
-  {
-  }
-  /** @brief Get iterator of the most recently used ID */
-  virtual List::const_reverse_iterator begin() const
-  {
-    return List::const_reverse_iterator();
-  }
-  /** @brief Get iterator after the latest ID */
-  virtual List::const_reverse_iterator end() const
-  {
-    return List::const_reverse_iterator();
-  }
-  /** @brief Get iterator of the latest ID */
-  virtual List::const_iterator rbegin() const
-  {
-    return {};
-  }
-  /** @brief Get iterator after the most recently used ID */
-  virtual List::const_iterator rend() const
-  {
-    return {};
-  }
-
-  virtual void clear()
-  {
-  }
-  virtual std::size_t size() const
-  {
-    return 0;
-  }
-  virtual bool empty() const
-  {
-    return true;
-  }
-  virtual LRUIface* clone() const
-  {
-    return new LRUIface();
-  }
-};
-
-struct LRU : public LRUIface
-{
-  ~LRU() override
-  {
-    fMap.clear();
-    fList.clear();
-  }
-  inline void add(uint64_t rgid) final
-  {
-    auto it = fMap.find(rgid);
-    if (it != fMap.end())
-    {
-      fList.erase(it->second);
-    }
-    fMap[rgid] = fList.insert(fList.end(), rgid);
-  }
-
-  inline void remove(uint64_t rgid) final
-  {
-    auto it = fMap.find(rgid);
-    if (UNLIKELY(it != fMap.end()))
-    {
-      fList.erase(it->second);
-      fMap.erase(it);
-    }
-  }
-
-  inline List::const_reverse_iterator begin() const final
-  {
-    return fList.crbegin();
-  }
-  inline List::const_reverse_iterator end() const final
-  {
-    return fList.crend();
-  }
-  inline List::const_iterator rbegin() const final
-  {
-    return fList.cbegin();
-  }
-  inline List::const_iterator rend() const final
-  {
-    return fList.cend();
-  }
-  inline void clear() final
-  {
-    fMap.clear();
-    fList.clear();
-  }
-
-  size_t size() const final
-  {
-    return fMap.size();
-  }
-  bool empty() const final
-  {
-    return fList.empty();
-  }
-
-  LRUIface* clone() const final
-  {
-    return new LRU();
-  }
-
-  robin_hood::unordered_flat_map<uint64_t, List::iterator> fMap;
-  List fList;
-};
 
 /** @brief Some service wrapping around ResourceManager (or NoOP) */
 class MemManager
@@ -590,17 +472,17 @@ class RowGroupStorage
       fMM.reset(new RMMemManager(rm, sessLimit, wait, strict));
       if (!wait && !strict)
       {
-        fLRU = std::unique_ptr<LRUIface>(new LRU());
+        fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRU());
       }
       else
       {
-        fLRU = std::unique_ptr<LRUIface>(new LRUIface());
+        fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRUIface());
       }
     }
     else
     {
       fMM.reset(new MemManager());
-      fLRU = std::unique_ptr<LRUIface>(new LRUIface());
+      fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRUIface());
     }
 
     fDumper.reset(new Dumper(fCompressor, fMM.get()));
@@ -1410,7 +1292,7 @@ class RowGroupStorage
   RowGroup* fRowGroupOut{nullptr};
   const size_t fMaxRows;
   std::unique_ptr<MemManager> fMM;
-  std::unique_ptr<LRUIface> fLRU;
+  std::unique_ptr<mcs_lru::LRUIface> fLRU;
   RGDataStorage fRGDatas;
   const void* fUniqId;
 

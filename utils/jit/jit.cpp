@@ -4,6 +4,7 @@
 
 #include <sys/mman.h>
 #include <boost/noncopyable.hpp>
+#include <optional>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DataLayout.h>
@@ -192,7 +193,7 @@ class Arena : private boost::noncopyable
   }
 };
 
-class JITModuleMemoryManager : public llvm::RTDyldMemoryManager
+class ModuleMemoryManager : public llvm::RTDyldMemoryManager
 {
  public:
   uint8_t* allocateCodeSection(uintptr_t size, unsigned alignment, unsigned section_id,
@@ -327,6 +328,10 @@ JIT::JIT()
   symbol_resolver->registerSymbol("memcmp", reinterpret_cast<void*>(&memcmp));
 }
 
+JIT::~JIT()
+{
+}
+
 JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
 {
   auto module = createModuleForCompilation();
@@ -357,7 +362,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
     // TODO: throw a more specific exception
     throw std::logic_error("Failed to create object file: " + error_message);
   }
-  auto module_memory_manager = std::make_unique<JITModuleMemoryManager>();
+  auto module_memory_manager = std::make_unique<ModuleMemoryManager>();
   llvm::RuntimeDyld runtime_dynamic_link = {*module_memory_manager, *symbol_resolver};
   auto linked_object = runtime_dynamic_link.loadObject(*object_file.get());
   runtime_dynamic_link.resolveRelocations();
@@ -384,7 +389,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
   }
   compiled_module.size = module_memory_manager->allocatedMemorySize();
   compiled_module.identifier = current_module_key;
-  module_identifier_to_memory_manager.emplace(current_module_key, std::move(module_memory_manager));
+  moduleIdToMemManager_.emplace(current_module_key, std::move(module_memory_manager));
   compiled_code_size.fetch_add(compiled_module.size, std::memory_order_relaxed);
   return compiled_module;
 }
@@ -444,12 +449,12 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
 void JIT::deleteCompiledModule(JIT::CompiledModule& module)
 {
   std::lock_guard<std::mutex> lock(jit_lock);
-  auto module_memory_manager_it = module_identifier_to_memory_manager.find(module.identifier);
-  if (module_memory_manager_it == module_identifier_to_memory_manager.end())
+  auto module_memory_manager_it = moduleIdToMemManager_.find(module.identifier);
+  if (module_memory_manager_it == moduleIdToMemManager_.end())
   {
     throw std::logic_error("There is no compiled module with identifier");
   }
-  module_identifier_to_memory_manager.erase(module_memory_manager_it);
+  moduleIdToMemManager_.erase(module_memory_manager_it);
   compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);
 }
 
@@ -497,7 +502,25 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   // a module.
   // mpm.run(module);
 }
-JIT::~JIT()
-{
-}
+
+// std::optional<size_t> JIT::moduleIdByExpressionName(const std::string expressionName) const
+// {
+//   auto moduleStoreIt = expressionToModuleStore_.find(expressionName);
+//   if (moduleStoreIt == expressionToModuleStore_.end())
+//   {
+//     return std::nullopt;
+//   }
+//   return {moduleStoreIt->second};
+// }
+
+// std::optional<std::shared_ptr<Module>> JIT::moduleByExpressionName(const std::string& expressionName) const
+// {
+//   auto moduleStoreId = moduleIdByExpressionName(expressionName);
+//   if (moduleStoreId)
+//   {
+//     return {compiledModulesStore_[moduleStoreId.value()]};
+//   }
+//   return std::nullopt_t;
+// }
+
 }  // namespace msc_jit
