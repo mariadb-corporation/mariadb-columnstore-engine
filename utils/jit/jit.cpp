@@ -334,6 +334,7 @@ JIT::~JIT()
 
 JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
 {
+  std::lock_guard<std::mutex> lock(jit_lock);
   auto module = createModuleForCompilation();
   compile_function(*module);
   auto module_info = compileModule(std::move(module));
