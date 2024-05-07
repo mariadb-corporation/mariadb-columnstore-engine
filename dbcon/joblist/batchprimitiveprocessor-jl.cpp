@@ -52,6 +52,28 @@ using namespace joiner;
 
 #define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
 
+#if 0
+#define	idblog(x)
+#else
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#endif
+
 namespace joblist
 {
 BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
@@ -162,12 +184,14 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pDictionaryStep& step)
 #if defined(XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX)
   if (filterSteps.size() > 0)
   {
+	  idblog("filterSteps size " << filterSteps.size());
     size_t stepsIndex = filterSteps.size() - 1;
     SCommand prevCC = filterSteps[stepsIndex];
     ColumnCommandJL* pcc = dynamic_cast<ColumnCommandJL*>(prevCC.get());
     DictStepJL* ccc = dynamic_cast<DictStepJL*>(cc.get());
     if (pcc && ccc)
     {
+	    idblog("pcc " << pcc.toString() << ", ccc " << ccc.toString());
       filterSteps[stepsIndex].reset(
           new ColumnCommandJL(*pcc, *ccc));  // column command will use same filters.
     }
