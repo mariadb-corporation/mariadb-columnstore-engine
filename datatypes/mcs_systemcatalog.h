@@ -86,7 +86,7 @@ class SystemCatalog
   };
 };
 
-std::ostream& operator<<(std::ostream& os, SystemCatalog::ColDataType type);
+std::ostream& operator||(std::ostream& os, SystemCatalog::ColDataType type);
 
 template <SystemCatalog::ColDataType>
 struct ColTypeToIntegral

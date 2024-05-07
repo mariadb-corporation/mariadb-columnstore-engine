@@ -1,4 +1,4 @@
-/* Copyright (C) 2021 MariaDB Corporation
+/* Copyright (C) 2021-2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -15,14 +15,17 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <unistd.h>
-#include <sys/stat.h>
 #include <boost/filesystem.hpp>
-#include "rowgroup.h"
-#include <resourcemanager.h>
+#include <cstdint>
+
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "LRU.h"
+#include <resourcemanager.h>
+#include "rowgroup.h"
 #include "rowstorage.h"
-#include "robin_hood.h"
 
 namespace
 {
@@ -78,6 +81,11 @@ std::string errorString(int errNo)
   char tmp[1024];
   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
   return {buf};
+}
+
+size_t findFirstSetBit(const uint64_t mask)
+{
+  return __builtin_ffsll(mask);
 }
 }  // anonymous namespace
 
@@ -145,126 +153,6 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
   }
   return columnHasher.finalize(ret, lastCol << 2);
 }
-
-/** @brief NoOP interface to LRU-cache used by RowGroupStorage & HashStorage
- */
-struct LRUIface
-{
-  using List = std::list<uint64_t>;
-
-  virtual ~LRUIface() = default;
-  /** @brief Put an ID to cache or set it as last used */
-  virtual void add(uint64_t)
-  {
-  }
-  /** @brief Remove an ID from cache */
-  virtual void remove(uint64_t)
-  {
-  }
-  /** @brief Get iterator of the most recently used ID */
-  virtual List::const_reverse_iterator begin() const
-  {
-    return List::const_reverse_iterator();
-  }
-  /** @brief Get iterator after the latest ID */
-  virtual List::const_reverse_iterator end() const
-  {
-    return List::const_reverse_iterator();
-  }
-  /** @brief Get iterator of the latest ID */
-  virtual List::const_iterator rbegin() const
-  {
-    return {};
-  }
-  /** @brief Get iterator after the most recently used ID */
-  virtual List::const_iterator rend() const
-  {
-    return {};
-  }
-
-  virtual void clear()
-  {
-  }
-  virtual std::size_t size() const
-  {
-    return 0;
-  }
-  virtual bool empty() const
-  {
-    return true;
-  }
-  virtual LRUIface* clone() const
-  {
-    return new LRUIface();
-  }
-};
-
-struct LRU : public LRUIface
-{
-  ~LRU() override
-  {
-    fMap.clear();
-    fList.clear();
-  }
-  inline void add(uint64_t rgid) final
-  {
-    auto it = fMap.find(rgid);
-    if (it != fMap.end())
-    {
-      fList.erase(it->second);
-    }
-    fMap[rgid] = fList.insert(fList.end(), rgid);
-  }
-
-  inline void remove(uint64_t rgid) final
-  {
-    auto it = fMap.find(rgid);
-    if (UNLIKELY(it != fMap.end()))
-    {
-      fList.erase(it->second);
-      fMap.erase(it);
-    }
-  }
-
-  inline List::const_reverse_iterator begin() const final
-  {
-    return fList.crbegin();
-  }
-  inline List::const_reverse_iterator end() const final
-  {
-    return fList.crend();
-  }
-  inline List::const_iterator rbegin() const final
-  {
-    return fList.cbegin();
-  }
-  inline List::const_iterator rend() const final
-  {
-    return fList.cend();
-  }
-  inline void clear() final
-  {
-    fMap.clear();
-    fList.clear();
-  }
-
-  size_t size() const final
-  {
-    return fMap.size();
-  }
-  bool empty() const final
-  {
-    return fList.empty();
-  }
-
-  LRUIface* clone() const final
-  {
-    return new LRU();
-  }
-
-  robin_hood::unordered_flat_map<uint64_t, List::iterator> fMap;
-  List fList;
-};
 
 /** @brief Some service wrapping around ResourceManager (or NoOP) */
 class MemManager
@@ -552,7 +440,7 @@ class Dumper
 class RowGroupStorage
 {
  public:
-  using RGDataStorage = std::vector<std::unique_ptr<RGData>>;
+  using RGDataStorage = std::vector<RGDataUnPtr>;
 
  public:
   /** @brief Default constructor
@@ -584,17 +472,17 @@ class RowGroupStorage
       fMM.reset(new RMMemManager(rm, sessLimit, wait, strict));
       if (!wait && !strict)
       {
-        fLRU = std::unique_ptr<LRUIface>(new LRU());
+        fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRU());
       }
       else
       {
-        fLRU = std::unique_ptr<LRUIface>(new LRUIface());
+        fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRUIface());
       }
     }
     else
     {
       fMM.reset(new MemManager());
-      fLRU = std::unique_ptr<LRUIface>(new LRUIface());
+      fLRU = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRUIface());
     }
 
     fDumper.reset(new Dumper(fCompressor, fMM.get()));
@@ -613,6 +501,54 @@ class RowGroupStorage
     return fRowGroupOut->getSizeWithStrings(fMaxRows);
   }
 
+  // This shifts data within RGData such that it compacts the non finalized rows
+  PosOpos shiftRowsInRowGroup(RGDataUnPtr& rgdata, uint64_t fgid, uint64_t tgid)
+  {
+    uint64_t pos = 0;
+    uint64_t opos = 0;
+
+    fRowGroupOut->setData(rgdata.get());
+    for (auto i = fgid; i < tgid; ++i)
+    {
+      if ((i - fgid) * HashMaskElements >= fRowGroupOut->getRowCount())
+        break;
+      uint64_t mask = ~fFinalizedRows[i];
+      if ((i - fgid + 1) * HashMaskElements > fRowGroupOut->getRowCount())
+      {
+        mask &= (~0ULL) >> ((i - fgid + 1) * HashMaskElements - fRowGroupOut->getRowCount());
+      }
+      opos = (i - fgid) * HashMaskElements;
+
+      if (mask == ~0ULL)
+      {
+        if (LIKELY(pos != opos))
+          moveRows(rgdata.get(), pos, opos, HashMaskElements);
+        pos += HashMaskElements;
+        continue;
+      }
+
+      if (mask == 0)
+        continue;
+
+      while (mask != 0)
+      {
+        // find position until block full of not finalized rows.
+        size_t b = findFirstSetBit(mask);
+        size_t e = findFirstSetBit(~(mask >> b)) + b;
+        if (UNLIKELY(e >= HashMaskElements))
+          mask = 0;
+        else
+          mask >>= e;
+        if (LIKELY(pos != opos + b - 1))
+          moveRows(rgdata.get(), pos, opos + b - 1, e - b);
+        pos += e - b;
+        opos += e;
+      }
+      --opos;
+    }
+    return {pos, opos};
+  }
+
   /** @brief Take away RGDatas from another RowGroupStorage
    *
    *    If some of the RGDatas is not in the memory do not load them,
@@ -626,7 +562,7 @@ class RowGroupStorage
   }
   void append(RowGroupStorage* o)
   {
-    std::unique_ptr<RGData> rgd;
+    RGDataUnPtr rgd;
     std::string ofname;
     while (o->getNextRGData(rgd, ofname))
     {
@@ -666,11 +602,130 @@ class RowGroupStorage
     }
   }
 
+  /** @brief Get the last RGData from fRGDatas, remove it from the vector and return its id.
+   *
+   * @param rgdata The RGData to be retrieved
+   */
+  uint64_t getLastRGData(RGDataUnPtr& rgdata)
+  {
+    assert(!fRGDatas.empty());
+    uint64_t rgid = fRGDatas.size() - 1;
+    rgdata = std::move(fRGDatas[rgid]);
+    fRGDatas.pop_back();
+    return rgid;
+  }
+
+  static FgidTgid calculateGids(const uint64_t rgid, const uint64_t fMaxRows)
+  {
+    // Calculate from first and last uint64_t entry in fFinalizedRows BitMap
+    // which contains information about rows in the RGData.
+    uint64_t fgid = rgid * fMaxRows / HashMaskElements;
+    uint64_t tgid = fgid + fMaxRows / HashMaskElements;
+    return {fgid, tgid};
+  }
+
+  /** @brief Used to output aggregation results from memory and disk in the current generation in the form of
+   * RGData. Returns next RGData, loads from disk if necessary. Skips finalized rows as they would contain
+   * duplicate results, compacts actual rows into start of RGData and adapts number of rows transmitted in
+   * RGData.
+   * @returns A pointer to the next RGData or an empty pointer if there are no more RGDatas in this
+   * generation.
+   */
+  bool getNextOutputRGData(RGDataUnPtr& rgdata)
+  {
+    if (UNLIKELY(fRGDatas.empty()))
+    {
+      fMM->release();
+      return false;
+    }
+
+    while (!fRGDatas.empty())
+    {
+      auto rgid = getLastRGData(rgdata);
+      auto [fgid, tgid] = calculateGids(rgid, fMaxRows);
+
+      if (fFinalizedRows.size() <= fgid)
+      {
+        // There are no finalized rows in this RGData. We can just return it.
+        // Load from disk if necessary and unlink DumpFile.
+        if (!rgdata)
+        {
+          loadRG(rgid, rgdata, true);
+        }
+        return true;
+      }
+
+      if (tgid >= fFinalizedRows.size())
+        fFinalizedRows.resize(tgid + 1, 0ULL);
+
+      // Check if there are rows to process
+      bool hasReturnRows = false;
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if (fFinalizedRows[i] != ~0ULL)
+        {
+          // Not all rows are finalized, we have to return at least parts of this RGData
+          hasReturnRows = true;
+          break;
+        }
+      }
+
+      if (rgdata)
+      {
+        // RGData is currently in memory
+        if (!hasReturnRows)
+        {
+          // All rows are finalized, don't return this RGData
+          continue;
+        }
+      }
+      else
+      {
+        if (hasReturnRows)
+        {
+          // Load RGData from disk, unlink dump file and continue processing
+          loadRG(rgid, rgdata, true);
+        }
+        else
+        {
+          // All rows are finalized. Unlink dump file and continue search for return RGData
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+      }
+
+      auto [pos, opos] = shiftRowsInRowGroup(rgdata, fgid, tgid);
+
+      // Nothing got shifted at all -> all rows must be finalized. If all rows finalized remove
+      // RGData and file and don't give it out.
+      if (pos == 0)
+      {
+        fLRU->remove(rgid);
+        unlink(makeRGFilename(rgid).c_str());
+        continue;
+      }
+
+      // set RGData with number of not finalized rows which have been compacted at front of RGData
+      fRowGroupOut->setData(rgdata.get());
+      fRowGroupOut->setRowCount(pos);
+      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+
+      // Release the memory used by the current rgdata from this MemoryManager.
+      fMM->release(memSz);
+      unlink(makeRGFilename(rgid).c_str());
+
+      // to periodically clean up freed memory so it can be used by other threads.
+      fLRU->remove(rgid);
+      return true;
+    }
+    return false;
+  }
+
   /** @brief Returns next RGData, load it from disk if necessary.
    *
    * @returns pointer to the next RGData or empty pointer if there is nothing
    */
-  std::unique_ptr<RGData> getNextRGData()
+  RGDataUnPtr getNextRGData()
   {
     while (!fRGDatas.empty())
     {
@@ -789,7 +844,6 @@ class RowGroupStorage
   void putKeyRow(uint64_t idx, Row& row)
   {
     uint64_t rgid = idx / fMaxRows;
-    uint64_t rid = idx % fMaxRows;
 
     while (rgid >= fRGDatas.size())
     {
@@ -819,7 +873,7 @@ class RowGroupStorage
 
     fLRU->add(rgid);
 
-    assert(rid == fRowGroupOut->getRowCount());
+    assert(idx % fMaxRows == fRowGroupOut->getRowCount());
     fRowGroupOut->getRow(fRowGroupOut->getRowCount(), &row);
     fRowGroupOut->incRowCount();
   }
@@ -1031,7 +1085,7 @@ class RowGroupStorage
    * @param fname(out)  Filename of the dump if it's not in the memory
    * @returns true if there is available RGData
    */
-  bool getNextRGData(std::unique_ptr<RGData>& rgdata, std::string& fname)
+  bool getNextRGData(RGDataUnPtr& rgdata, std::string& fname)
   {
     if (UNLIKELY(fRGDatas.empty()))
     {
@@ -1040,12 +1094,9 @@ class RowGroupStorage
     }
     while (!fRGDatas.empty())
     {
-      uint64_t rgid = fRGDatas.size() - 1;
-      rgdata = std::move(fRGDatas[rgid]);
-      fRGDatas.pop_back();
+      auto rgid = getLastRGData(rgdata);
+      auto [fgid, tgid] = calculateGids(rgid, fMaxRows);
 
-      uint64_t fgid = rgid * fMaxRows / 64;
-      uint64_t tgid = fgid + fMaxRows / 64;
       if (fFinalizedRows.size() > fgid)
       {
         if (tgid >= fFinalizedRows.size())
@@ -1069,45 +1120,7 @@ class RowGroupStorage
           continue;
         }
 
-        uint64_t pos = 0;
-        uint64_t opos = 0;
-        fRowGroupOut->setData(rgdata.get());
-        for (auto i = fgid; i < tgid; ++i)
-        {
-          if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
-            break;
-          uint64_t mask = ~fFinalizedRows[i];
-          if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
-          {
-            mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
-          }
-          opos = (i - fgid) * 64;
-          if (mask == ~0ULL)
-          {
-            if (LIKELY(pos != opos))
-              moveRows(rgdata.get(), pos, opos, 64);
-            pos += 64;
-            continue;
-          }
-
-          if (mask == 0)
-            continue;
-
-          while (mask != 0)
-          {
-            size_t b = __builtin_ffsll(mask);
-            size_t e = __builtin_ffsll(~(mask >> b)) + b;
-            if (UNLIKELY(e >= 64))
-              mask = 0;
-            else
-              mask >>= e;
-            if (LIKELY(pos != opos + b - 1))
-              moveRows(rgdata.get(), pos, opos + b - 1, e - b);
-            pos += e - b;
-            opos += e;
-          }
-          --opos;
-        }
+        auto [pos, opos] = shiftRowsInRowGroup(rgdata, fgid, tgid);
 
         if (pos == 0)
         {
@@ -1120,6 +1133,7 @@ class RowGroupStorage
         fRowGroupOut->setRowCount(pos);
       }
 
+      // Release the memory used by the current rgdata.
       if (rgdata)
       {
         fRowGroupOut->setData(rgdata.get());
@@ -1131,6 +1145,7 @@ class RowGroupStorage
       {
         fname = makeRGFilename(rgid);
       }
+      // to periodically clean up freed memory so it can be used by other threads.
       fLRU->remove(rgid);
       return true;
     }
@@ -1170,7 +1185,7 @@ class RowGroupStorage
     loadRG(rgid, fRGDatas[rgid]);
   }
 
-  void loadRG(uint64_t rgid, std::unique_ptr<RGData>& rgdata, bool unlinkDump = false)
+  void loadRG(uint64_t rgid, RGDataUnPtr& rgdata, bool unlinkDump = false)
   {
     auto fname = makeRGFilename(rgid);
 
@@ -1277,7 +1292,7 @@ class RowGroupStorage
   RowGroup* fRowGroupOut{nullptr};
   const size_t fMaxRows;
   std::unique_ptr<MemManager> fMM;
-  std::unique_ptr<LRUIface> fLRU;
+  std::unique_ptr<mcs_lru::LRUIface> fLRU;
   RGDataStorage fRGDatas;
   const void* fUniqId;
 
@@ -1496,9 +1511,6 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, R
  , fTmpDir(tmpDir)
  , fRowGroupOut(rowGroupOut)
  , fKeysRowGroup(keysRowGroup)
- , fRD()
- , fRandGen(fRD())
- , fRandDistr(0, 100)
 {
   char suffix[PATH_MAX];
   snprintf(suffix, sizeof(suffix), "/p%u-t%p/", getpid(), this);
@@ -1557,8 +1569,8 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
     if (fExtKeys)
     {
       fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, fKeysRowGroup, fMaxRows, fMM->getResourceManaged(),
-                                         fMM->getSessionLimit(), !fEnabledDiskAggregation,
-                                         !fEnabledDiskAggregation, fCompressor.get()));
+                                                 fMM->getSessionLimit(), !fEnabledDiskAggregation,
+                                                 !fEnabledDiskAggregation, fCompressor.get()));
       fKeysStorage = fRealKeysStorage.get();
     }
     else
@@ -1572,10 +1584,8 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
   {
     increaseSize();
   }
-  size_t idx{};
-  uint32_t info{};
+  auto [info, idx] = rowHashToIdx(hash);
 
-  rowHashToIdx(hash, info, idx);
   nextWhileLess(info, idx);
 
   while (info == fCurData->fInfo[idx])
@@ -1605,9 +1615,8 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
     do
     {
       auto* genData = fGens[gen].get();
-      size_t gidx{};
-      uint32_t ginfo{};
-      rowHashToIdx(hash, ginfo, gidx, genData);
+      auto [ginfo, gidx] = rowHashToIdx(hash, genData->fMask, genData->hashMultiplier_, genData->fInfoInc,
+                                        genData->fInfoHashShift);
       nextWhileLess(ginfo, gidx, genData);
 
       while (ginfo == genData->fInfo[gidx])
@@ -1687,7 +1696,7 @@ void RowAggStorage::dump()
       break;
   }
 
-  int64_t totalMem = fMM->getConfigured();
+  const int64_t totalMem = fMM->getConfigured();
   // If the generations are allowed and there are less than half of
   // rowgroups in memory, then we start a new generation
   if (fAllowGenerations && fStorage->fLRU->size() < fStorage->fRGDatas.size() / 2 &&
@@ -1695,9 +1704,7 @@ void RowAggStorage::dump()
   {
     startNewGeneration();
   }
-  else if (fAllowGenerations &&
-           freeMem < totalMem / 10 * 3 &&
-           fRandDistr(fRandGen) < 30)
+  else if (fAllowGenerations && freeMem < totalMem / 10 * 3 && nextRandDistib() < 30)
   {
     startNewGeneration();
   }
@@ -1745,7 +1752,7 @@ void RowAggStorage::append(RowAggStorage& other)
   }
 }
 
-std::unique_ptr<RGData> RowAggStorage::getNextRGData()
+RGDataUnPtr RowAggStorage::getNextRGData()
 {
   if (!fStorage)
   {
@@ -1754,6 +1761,43 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
   cleanup();
   freeData();
   return fStorage->getNextRGData();
+}
+
+bool RowAggStorage::getNextOutputRGData(RGDataUnPtr& rgdata)
+{
+  if (!fStorage)
+  {
+    return {};
+  }
+
+  cleanup();
+  freeData();
+
+  // fGeneration is an unsigned int, we need a signed int for a comparison >= 0
+  int32_t gen = fGeneration;
+  while (gen >= 0)
+  {
+    bool moreInGeneration = fStorage->getNextOutputRGData(rgdata);
+
+    if (moreInGeneration)
+    {
+      fRowGroupOut->setData(rgdata.get());
+      return true;
+    }
+
+    // all generations have been emptied
+    if (fGeneration == 0)
+    {
+      break;
+    }
+
+    // current generation has no more RGDatas to return
+    // load earlier generation and continue with returning its RGDatas
+    gen--;
+    fGeneration--;
+    fStorage.reset(fStorage->clone(fGeneration));
+  }
+  return false;
 }
 
 void RowAggStorage::freeData()
@@ -1787,18 +1831,6 @@ void RowAggStorage::shiftUp(size_t startIdx, size_t insIdx)
   fCurData->fHashes->shiftUp(startIdx, insIdx);
 }
 
-void RowAggStorage::rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash,
-                             const Data* curData) const
-{
-  hash = hashRow(row, fLastKeyCol);
-  return rowHashToIdx(hash, info, idx, curData);
-}
-
-void RowAggStorage::rowToIdx(const Row& row, uint32_t& info, size_t& idx, uint64_t& hash) const
-{
-  return rowToIdx(row, info, idx, hash, fCurData);
-}
-
 void RowAggStorage::increaseSize()
 {
   if (fCurData->fMask == 0)
@@ -1829,7 +1861,9 @@ void RowAggStorage::increaseSize()
       // we have to resize, even though there would still be plenty of space left!
       // Try to rehash instead. Delete freed memory so we don't steadyily increase mem in case
       // we have to rehash a few times
-      nextHashMultiplier();
+      // adding an *even* number, so that the multiplier will always stay odd. This is necessary
+      // so that the hash stays a mixing function (and thus doesn't have any information loss).
+      fCurData->hashMultiplier_ += 0xc4ceb9fe1a85ec54;
       rehashPowerOfTwo(fCurData->fMask + 1);
     }
     else
@@ -1899,10 +1933,8 @@ void RowAggStorage::insertSwap(size_t oldIdx, RowPosHashStorage* oldHashes)
                              logging::ERR_DISKAGG_OVERFLOW1);
   }
 
-  size_t idx{};
-  uint32_t info{};
   auto pos = oldHashes->get(oldIdx);
-  rowHashToIdx(pos.hash, info, idx);
+  auto [info, idx] = rowHashToIdx(pos.hash);
 
   while (info <= fCurData->fInfo[idx])
   {
@@ -2024,6 +2056,7 @@ void RowAggStorage::dumpInternalData() const
   bs << fCurData->fSize;
   bs << fCurData->fMask;
   bs << fCurData->fMaxSize;
+  bs << fCurData->hashMultiplier_;
   bs << fCurData->fInfoInc;
   bs << fCurData->fInfoHashShift;
   bs.append(fCurData->fInfo.get(), calcBytes(calcSizeWithBuffer(fCurData->fMask + 1, fCurData->fMaxSize)));
@@ -2091,6 +2124,7 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     size_t prevSize;
     size_t prevMask;
     size_t prevMaxSize;
+    size_t prevHashMultiplier;
     uint32_t prevInfoInc;
     uint32_t prevInfoHashShift;
     std::unique_ptr<uint8_t[]> prevInfo;
@@ -2112,7 +2146,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       else
         prevKeyRowStorage = prevRowStorage.get();
 
-      loadGeneration(prevGen, prevSize, prevMask, prevMaxSize, prevInfoInc, prevInfoHashShift, prevInfo);
+      loadGeneration(prevGen, prevSize, prevMask, prevMaxSize, prevHashMultiplier, prevInfoInc,
+                     prevInfoHashShift, prevInfo);
       prevHashes = fCurData->fHashes->clone(prevMask + 1, prevGen, true);
 
       // iterate over current generation rows
@@ -2129,7 +2164,6 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         }
 
         const auto& pos = fCurData->fHashes->get(idx);
-
         if (fKeysStorage->isFinalized(pos.idx))
         {
           // this row was already merged into newer generation, skip it
@@ -2137,8 +2171,9 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         }
 
         // now try to find row in the previous generation
-        uint32_t pinfo = prevInfoInc + static_cast<uint32_t>((pos.hash & INFO_MASK) >> prevInfoHashShift);
-        uint64_t pidx = (pos.hash >> INIT_INFO_BITS) & prevMask;
+        auto [pinfo, pidx] =
+            rowHashToIdx(pos.hash, prevMask, prevHashMultiplier, prevInfoInc, prevInfoHashShift);
+
         while (pinfo < prevInfo[pidx])
         {
           ++pidx;
@@ -2277,12 +2312,12 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
 
 void RowAggStorage::loadGeneration(uint16_t gen)
 {
-  loadGeneration(gen, fCurData->fSize, fCurData->fMask, fCurData->fMaxSize, fCurData->fInfoInc,
-                 fCurData->fInfoHashShift, fCurData->fInfo);
+  loadGeneration(gen, fCurData->fSize, fCurData->fMask, fCurData->fMaxSize, fCurData->hashMultiplier_,
+                 fCurData->fInfoInc, fCurData->fInfoHashShift, fCurData->fInfo);
 }
 
 void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, size_t& maxSize,
-                                   uint32_t& infoInc, uint32_t& infoHashShift,
+                                   size_t& hashMultiplier, uint32_t& infoInc, uint32_t& infoHashShift,
                                    std::unique_ptr<uint8_t[]>& info)
 {
   messageqcpp::ByteStream bs;
@@ -2313,6 +2348,7 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, siz
   bs >> size;
   bs >> mask;
   bs >> maxSize;
+  bs >> hashMultiplier;
   bs >> infoInc;
   bs >> infoHashShift;
   size_t infoSz = calcBytes(calcSizeWithBuffer(mask + 1, maxSize));

@@ -255,7 +255,7 @@ string ReturnedColumn::toCppCode(IncludeSet& includes) const
 std::string ReturnedColumn::toExpressionString() const
 {
   ostringstream oss;
-  oss << fResultType.colDataType;
+  oss || fResultType.colDataType;
   return oss.str();
 }
 
