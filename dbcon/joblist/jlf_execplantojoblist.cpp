@@ -1564,6 +1564,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       if (1)
 #endif
       {
+	      idblog("sc->oid " << sc->oid() << ", dictoid " << dictOid);
         pDictionaryStep* pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
         jobInfo.keyInfo->dictOidToColOid[dictOid] = sc->oid();
         pds->alias(alias);
