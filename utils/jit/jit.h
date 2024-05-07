@@ -1,6 +1,7 @@
-#include <unordered_map>
 #include <atomic>
 #include <mutex>
+// #include <optional>
+#include <unordered_map>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -40,7 +41,7 @@ class JIT
  private:
   std::unique_ptr<llvm::Module> createModuleForCompilation();
   CompiledModule compileModule(std::unique_ptr<llvm::Module> module);
-  std::optional<size_t> moduleIdByExpressionName(const std::string expressionName) const;
+  // std::optional<size_t> moduleIdByExpressionName(const std::string expressionName) const;
 
   static std::unique_ptr<llvm::TargetMachine> getTargetMachine();
   std::string getMangledName(const std::string& name_to_mangle) const;
