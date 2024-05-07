@@ -95,7 +95,7 @@ using namespace logging;
 
 #define OLD_PATH (0)
 
-#if 01
+#if 0
 #define	idblog(x)
 #else
 #define idblog(x)                                                                       \
