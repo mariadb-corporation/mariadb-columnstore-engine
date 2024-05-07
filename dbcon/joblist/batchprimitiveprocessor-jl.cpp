@@ -191,7 +191,7 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pDictionaryStep& step)
     DictStepJL* ccc = dynamic_cast<DictStepJL*>(cc.get());
     if (pcc && ccc)
     {
-	    idblog("pcc " << pcc.toString() << ", ccc " << ccc.toString());
+	    idblog("pcc " << pcc->toString() << ", ccc " << ccc->toString());
       filterSteps[stepsIndex].reset(
           new ColumnCommandJL(*pcc, *ccc));  // column command will use same filters.
     }
