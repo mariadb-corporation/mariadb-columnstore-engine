@@ -52,6 +52,7 @@ ST_FIELD_INFO is_columnstore_columns_fields[] = {
     Show::Column("NUMERIC_SCALE", Show::ULong(0), NOT_NULL),
     Show::Column("IS_AUTOINCREMENT", Show::STiny(0), NOT_NULL),
     Show::Column("COMPRESSION_TYPE", Show::Varchar(64), NOT_NULL),
+    Show::Column("CHARSET", Show::ULong(4), NOT_NULL),
     Show::CEnd()};
 
 static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
@@ -182,6 +183,8 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       }
 
       table->field[15]->store(compression_type.c_str(), compression_type.length(), cs);
+
+      table->field[16]->store(ct.charsetNumber);
 
       if (schema_table_store_record(thd, table))
         return 1;
