@@ -686,7 +686,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sed -i "/^MCS_IMAGE_NAME=/s/=.*/=${MCS_IMAGE_NAME}/" .env',
       'sed -i "/^MAXSCALE=/s/=.*/=false/" .env',
       'docker-compose up -d',
-      'docker exec mcs1 provision',
+      'docker exec mcs1 provision mcs1 mcs2 mcs3',
       'docker cp ../mysql-test/columnstore mcs1:' + mtr_path + '/suite/',
       'docker exec -t mcs1 chown mysql:mysql -R ' + mtr_path,
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
