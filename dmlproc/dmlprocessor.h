@@ -205,6 +205,8 @@ class PackageHandler
     joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
     return fEc->Setup();
   }
+  execplan::CalpontSystemCatalog::ROPair getTableRID(boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc,
+                                                     execplan::CalpontSystemCatalog::TableName& tableName);
 
   messageqcpp::IOSocket fIos;
   boost::shared_ptr<messageqcpp::ByteStream> fByteStream;
