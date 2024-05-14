@@ -66,7 +66,7 @@ PCREOptions::PCREOptions(execplan::CalpontSystemCatalog::ColType& ct)
 
   jpcre2::Uint defaultFlags = 0;
 
-  flags = (cs != &my_charset_bin ? (PCRE2_UTF | PCRE2_UCP) : 0) |
+  flags = (!(cs == &my_charset_bin) ? (PCRE2_UTF | PCRE2_UCP) : 0) |
           ((cs.getCharset().state & (MY_CS_BINSORT | MY_CS_CSSORT)) ? 0 : PCRE2_CASELESS) | defaultFlags;
 
   // Convert text data to utf-8.

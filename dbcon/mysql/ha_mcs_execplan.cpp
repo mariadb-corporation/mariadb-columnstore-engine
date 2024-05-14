@@ -498,9 +498,18 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     // is either Field or Func
     // Consider nonConstFunc() check here
     if (!found && sort_item->type() == Item::FUNC_ITEM &&
-        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM))
+        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM ||
+         group_item->type() == Item::REF_ITEM))
     {
-      found = sortItemIsInGroupRec(sort_item, group_item);
+      // MCOL-5236: see @bug5993 and @bug5916.
+      Item* item = group_item;
+      while (item->type() == Item::REF_ITEM)
+      {
+        Item_ref* item_ref = static_cast<Item_ref*>(item);
+        item = *item_ref->ref;
+      }
+
+      found = sortItemIsInGroupRec(sort_item, item);
     }
   }
 
@@ -3883,15 +3892,23 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
-  const Schema* funcSchema = ifp->schema();
-  if (funcSchema)
+  if ( nullptr != dynamic_cast<Item_func_concat_operator_oracle*>(ifp))
   {
-    idbassert(funcSchema->name().str);
-    string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
-    if (funcSchemaName == "oracle_schema")
+    // the condition above is the only way to recognize this particular case.
+    funcName = "concat_operator_oracle";
+  }
+  else
+  {
+    const Schema* funcSchema = ifp->schema();
+    if (funcSchema)
     {
-      // XXX: this is a shortcut.
-      funcName = funcName + "_oracle";
+      idbassert(funcSchema->name().str);
+      string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
+      if (funcSchemaName == "oracle_schema")
+      {
+        // XXX: this is a shortcut.
+        funcName = funcName + "_oracle";
+      }
     }
   }
   FuncExp* funcExp = FuncExp::instance();
@@ -4387,7 +4404,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" || funcName == "regexp_instr")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" ||
+        funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
@@ -6724,6 +6742,26 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // Existed pushdown handlers won't get in this scope
   // MDEV-25080 Union pushdown would enter this scope
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
+
+  // check INTERSECT or EXCEPT, that are not implemented
+  if (select_lex.master_unit() && select_lex.master_unit()->first_select())
+  {
+    for (auto nextSelect = select_lex.master_unit()->first_select()->next_select(); nextSelect;
+         nextSelect = nextSelect->next_select())
+    {
+      if (nextSelect->get_linkage() == INTERSECT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "INTERSECT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+      else if (nextSelect->get_linkage() == EXCEPT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "EXCEPT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+    }
+  }
+
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
     // MCOL-2178 isUnion member only assigned, never used
@@ -8086,18 +8124,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
         SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
-	if (sc)
-	{
-	  bool found = false;
+        if (sc)
+        {
+          bool found = false;
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (sc->sameColumn(gwi.returnedCols[j].get()))
             {
               sc->orderPos(j);
-	      found = true;
+              found = true;
               break;
             }
-	  }
+          }
           for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
           {
             if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
@@ -8107,9 +8145,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
-	else
-	{
+        }
+        else
+        {
           for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
@@ -8119,7 +8157,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               break;
             }
           }
-	}
+        }
 
         if (!rc)
         {
