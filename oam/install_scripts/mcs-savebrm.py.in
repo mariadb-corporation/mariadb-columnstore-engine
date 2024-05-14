@@ -9,6 +9,7 @@ import ssl
 import struct
 import subprocess
 import sys
+from time import time
 import xml.etree.ElementTree as ET
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -33,6 +34,7 @@ LOCALHOSTS = (
 )
 API_VERSION = '0.4.0'
 API_PORT = '8640'
+BRM_BACKUP_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/{}_BRM_saves'
 
 
 def get_api_key():
@@ -191,43 +193,94 @@ def is_node_primary(conf_root):
     # text in tag have to be hostname or FQDN
     return is_primary_fallback(conf_root.find('./DBRM_Controller/IPAddr').text)
 
+# Placeholder for EM size check
+def em_is_not_empty():
+    """Returns True if EM is not empty.
 
-if __name__ == '__main__':
-    master_addr = ''
-    pm_count = 0
-    logging.basicConfig(
-        format='%(levelname)s: %(message)s', level=logging.DEBUG
-    )
-    logging.debug('Loading Columnstore.xml.')
+    :rtype: Bool
+    """
+    # Add error message if EM is empty
+    return True
+
+def get_config_root_from_file(file_path):
+    """Returns XML root element from file.
+
+    :param file_path: xml config path
+    :return: XML root element or None
+    :rtype: Element or None
+    """
     try:
-        cs_config = ET.parse(MCS_CONFIG_PATH)
-        config_root = cs_config.getroot()
-        master_addr = config_root.find('./DBRM_Controller/IPAddr').text
-        pm_count = int(
-            config_root.find('./SystemModuleConfig/ModuleCount3').text
-        )
-        logging.debug('Succesfully loaded Columnstore.xml.')
-    except (FileNotFoundError, AttributeError, ValueError) as e:
-        # is it correct case?
+        cs_config = ET.parse(file_path)
+        return cs_config.getroot()
+    except (FileNotFoundError, AttributeError, ValueError):
         logging.error(
             'Exception while loading Columnstore.xml. Continue anyway.',
             exc_info=True
         )
+    return None
 
-    logging.debug('Reading SM config.')
-    sm_config = configparser.ConfigParser()
-    files_read = len(sm_config.read(SM_CONFIG_PATH))
-    storage = sm_config.get(
-        'ObjectStorage', 'service', fallback='LocalStorage'
-    )
+def get_epoch_prefix():
+    """Returns a prefix with epoch time
 
-    if is_node_primary(config_root):
+    :rtype: String
+    """
+    epoch_time = int(time())
+    
+    return 'backup_{}'.format(epoch_time)
+
+
+def get_save_brm_path_prefix(a_mcs_config_root):
+    """Returns a path that SM treats as local
+
+    :param file_path: xml config XML root
+    :rtype: String
+    """
+    epoch_prefix = get_epoch_prefix()
+    save_brm_path_prefix = BRM_BACKUP_PATH.format(epoch_prefix)
+    if a_mcs_config_root is not None:
         try:
-            retcode = subprocess.check_call(SAVEBRM, shell=True)
-        except subprocess.CalledProcessError as exc:
-            logging.error('{} exits with {}.'.format(exc.cmd, exc.returncode))
-            sys.exit(1)
+            system_temp_file_dir = a_mcs_config_root.find('./SystemConfig/SystemTempFileDir').text
+            hdfs_rdwr_scratch = a_mcs_config_root.find('./SystemConfig/hdfsRdwrScratch').text
+            # There is a danger to have no '/' in the end of system_temp_file_dir
+            # or have two of them there. In both cases save_brm will fail to store
+            # files locally.
+            save_brm_path_prefix = system_temp_file_dir + hdfs_rdwr_scratch + '/{}_BRM_saves'.format(epoch_prefix)
+        except AttributeError:
+            logging.error('Exception while getting SystemTempFileDir and hdfsRdwrScratch from Columnstore.xml', exc_info=True)
+
+    return save_brm_path_prefix
+
+
+def call_save_brm_with_local_fallback(a_mcs_config_root):
+    """Calls save_brm first and then tries to call it with local path. 
+
+    :param file_path: xml config XML root
+    :rtype: None
+    """
+    try:
+        subprocess.check_call(SAVEBRM, shell=True)
+    except subprocess.CalledProcessError as exc:
+        logging.error('The primary call to {} exits with {}.'.format(exc.cmd, exc.returncode))
+        backup_path = get_save_brm_path_prefix(a_mcs_config_root)
+        logging.debug('Back up BRM files locally to {}.'.format(backup_path))
+        backup_cmd = SAVEBRM + ' ' + backup_path
+        try:
+            subprocess.check_call(backup_cmd, shell=True)
+        except subprocess.CalledProcessError:
+            logging.error('The backup call to {} exits with {}.'.format(exc.cmd, exc.returncode))
         except OSError:
-            logging.error('Os error while calling savebrm', exc_info=True)
-            sys.exit(0)
+            logging.error('Os error while calling savebrm during the backup', exc_info=True)
+
+        sys.exit(1)
+    except OSError:
+        logging.error('Os error while calling savebrm', exc_info=True)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    mcs_config_root = get_config_root_from_file(MCS_CONFIG_PATH)
+    
+    # config_root can be None
+    if is_node_primary(mcs_config_root) and em_is_not_empty():
+        call_save_brm_with_local_fallback(mcs_config_root)
     sys.exit(0)
