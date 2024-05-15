@@ -125,13 +125,13 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
+    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
+    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
   };
   platform_map[platform];
 
@@ -215,6 +215,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test299.sh',
     'test300.sh',
     'test400.sh',
+    'test500.sh',
   ] else [
     'test000.sh',
     'test001.sh',
@@ -601,7 +602,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: img,
     volumes: [pipeline._volumes.mdb],
     environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v3-unknown-linux-gnu-pgo+lto-full.tar.zst',
+      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst',
       PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
     },
     commands: [
@@ -687,7 +688,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sed -i "/^MCS_IMAGE_NAME=/s/=.*/=${MCS_IMAGE_NAME}/" .env',
       'sed -i "/^MAXSCALE=/s/=.*/=false/" .env',
       'docker-compose up -d',
-      'docker exec mcs1 provision',
+      'docker exec mcs1 provision mcs1 mcs2 mcs3',
       'docker cp ../mysql-test/columnstore mcs1:' + mtr_path + '/suite/',
       'docker exec -t mcs1 chown mysql:mysql -R ' + mtr_path,
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
@@ -837,8 +838,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
                "echo 'for installation run:'",
-               "export OS="+result,
-               "export PACKAGES_URL="+packages_url,
+               "echo 'export OS="+result+"'",
+               "echo 'export PACKAGES_URL="+packages_url+"'",
              ],
            },
          ] +

@@ -7,7 +7,7 @@ lxml==4.7.1
 psutil==5.9.1
 pyotp==2.6.0
 requests==2.27.1
-typer==0.4.1
+typer==0.9.0
 
 # indirect dependencies
 aiohttp==3.8.1
@@ -24,7 +24,7 @@ certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
 cheroot==8.6.0
-click==8.1.3
+click==8.1.7
 colorama==0.4.4
 crcmod==1.7
 docutils==0.16
@@ -66,7 +66,7 @@ rsa==4.7.2
 s3transfer==0.6.0
 six==1.16.0
 tempora==5.0.1
-typing-extensions==4.3.0
+typing-extensions==4.8.0
 urllib3==1.26.8
 yarl==1.8.1
 zc.lockfile==2.0

@@ -107,6 +107,9 @@ class ContainerDispatcher(BaseDispatcher):
         :type use_sudo: bool, optional
         :return: True if service is running, otherwise False
         :rtype: bool
+
+        ..Note:
+            Not working with multiple services at a time.
         """
         try:
             cls._get_proc_object(service)

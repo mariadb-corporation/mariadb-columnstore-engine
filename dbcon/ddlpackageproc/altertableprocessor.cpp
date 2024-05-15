@@ -47,6 +47,7 @@ using namespace logging;
 
 #include "we_messages.h"
 #include "we_ddlcommandclient.h"
+#include "we_ddlcommon.h"
 using namespace WriteEngine;
 
 #include "oamcache.h"
@@ -685,10 +686,13 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
     throw std::runtime_error(err);
   }
 
-  if ((columnDefPtr->fType->fType == CalpontSystemCatalog::CHAR && columnDefPtr->fType->fLength > 8) ||
-      (columnDefPtr->fType->fType == CalpontSystemCatalog::VARCHAR && columnDefPtr->fType->fLength > 7) ||
-      (columnDefPtr->fType->fType == CalpontSystemCatalog::VARBINARY && columnDefPtr->fType->fLength > 7) ||
-      (columnDefPtr->fType->fType == CalpontSystemCatalog::BLOB))
+  int dataType = WriteEngine::convertDataType(columnDefPtr->fType->fType);
+
+  if ((dataType == CalpontSystemCatalog::CHAR && columnDefPtr->fType->fLength > 8) ||
+      (dataType == CalpontSystemCatalog::VARCHAR && columnDefPtr->fType->fLength > 7) ||
+      (dataType == CalpontSystemCatalog::VARBINARY && columnDefPtr->fType->fLength > 7) ||
+      (dataType == CalpontSystemCatalog::TEXT) ||
+      (dataType == CalpontSystemCatalog::BLOB))
   {
     isDict = true;
   }

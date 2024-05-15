@@ -192,7 +192,13 @@ do_apt_remove() {
             DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-*
             print_and_delete "/var/lib/mysql/*"
         else
-            apt remove mariadb-* -y
+            if ! apt remove mariadb-columnstore-cmapi -y; then
+                printf "[!!] Failed to remove columnstore \n"
+            fi
+
+            if ! apt remove mariadb-* -y; then
+                printf "[!!] Failed to remove the rest of mariadb \n\n"
+            fi
         fi
     fi
 
@@ -211,7 +217,7 @@ do_remove() {
     check_package_managers
  
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
             do_yum_remove "$@"
             ;;
 
@@ -219,7 +225,7 @@ do_remove() {
             do_apt_remove "$@"
             ;;
         *)  # unknown option
-            echo "\nos & version not implemented: $distro_info\n"
+            echo "\ndo_remove: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 
@@ -250,24 +256,25 @@ check_package_managers() {
 check_operating_system() {
 
     distro_info=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
-    version_id=$(grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}' |  awk -F. '{print $1}')
+    version_id_exact=$( grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
+    version_id=$( echo "$version_id_exact" | awk -F. '{print $1}')
 
     echo "Distro: $distro_info"
     echo "Version: $version_id"
 
     # distros=(centos7 debian11 debian12 rockylinux8 rockylinux9 ubuntu20.04 ubuntu22.04)
     case $distro_info in
-        centos )
+        centos | rhel )
             distro="${distro_info}${version_id}"
             ;;
         debian )
-            distro="${distro_info}${version_id}"
+            distro="${distro_info}${version_id_exact}"
             ;;
         rocky )
             distro="rockylinux${version_id}"
             ;;
         ubuntu )
-            distro="${distro_info}${version_id}"
+            distro="${distro_info}${version_id_exact}"
             ;;
         *)  # unknown option
             printf "\ncheck_operating_system: unknown os & version: $distro_info\n"
@@ -298,13 +305,7 @@ check_no_mdb_installed() {
 
     packages=""
     case $distro_info in
-        centos )
-            packages=$(yum list installed | grep -i mariadb)
-            ;;
-        # debian )
-            
-        #     ;;
-        rocky )
+        centos | rhel | rocky )
             packages=$(yum list installed | grep -i mariadb)
             ;;
         ubuntu | debian )
@@ -328,13 +329,48 @@ check_aws_cli_installed() {
     if ! command -v aws &> /dev/null ; then
         echo "[!] aws cli - binary could not be found"
         echo "[+] Installing aws cli ..."
-        rm -rf aws awscliv2.zip
-        yum install unzip -y;
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip";
-        unzip awscliv2.zip;
-        sudo ./aws/install;
-        mv /usr/local/bin/aws /usr/bin/aws;
-        aws configure set default.s3.max_concurrent_requests 700       
+
+        cli_url="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+        case $architecture in
+            x86_64 )
+                cli_url="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+                ;;
+            aarch64 )
+                cli_url="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+                ;;
+            *)  # unknown option
+                echo "Error: Unsupported architecture ($architecture)"
+        esac    
+
+        case $distro_info in
+            centos | rhel | rocky )
+                rm -rf aws awscliv2.zip
+                yum install unzip -y;
+                curl "$cli_url" -o "awscliv2.zip";
+                unzip -q awscliv2.zip;
+                sudo ./aws/install;
+                mv /usr/local/bin/aws /usr/bin/aws;
+                aws configure set default.s3.max_concurrent_requests 70       
+                ;;
+            ubuntu | debian )
+                rm -rf aws awscliv2.zip
+                if ! sudo apt install unzip -y; then
+                    echo "[!!] Installing Unzip Failed: Trying update"
+                    sudo apt update -y;
+                    sudo apt install unzip -y;
+                fi
+                curl "$cli_url" -o "awscliv2.zip";
+                unzip -q awscliv2.zip;
+                sudo ./aws/install;
+                mv /usr/local/bin/aws /usr/bin/aws;
+                aws configure set default.s3.max_concurrent_requests 70      
+                ;;
+            *)  # unknown option
+                printf "\nos & version not implemented: $distro_info\n"
+                exit 2;
+        esac
+        
+       
     fi
 }
 
@@ -438,14 +474,17 @@ enterprise_install() {
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
-    wget $url ;chmod +x mariadb_es_repo_setup;  
+    curl -LO "$url" -o mariadb_es_repo_setup;
+    chmod +x mariadb_es_repo_setup;  
     if ! bash mariadb_es_repo_setup --token="$enterprise_token" --apply --mariadb-server-version="$version"; then
         printf "\n[!] Failed to apply mariadb_es_repo_setup...\n\n"
         exit 2;
     fi;
 
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
+
+            if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
             if $enterprise_staging; then 
                 sed -i 's/mariadb-es-main/mariadb-es-staging/g' /etc/yum.repos.d/mariadb.repo
@@ -457,6 +496,8 @@ enterprise_install() {
             ;;
         ubuntu | debian )
 
+            if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; exit 1; fi;
+
             if $enterprise_staging; then 
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/apt/sources.list.d/mariadb.list
                 apt update
@@ -466,7 +507,7 @@ enterprise_install() {
             do_enterprise_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\nos & version not implemented: $distro_info\n"
+            printf "\nenterprise_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 }
@@ -491,14 +532,14 @@ community_install() {
     fi;
 
     case $distro_info in
-        centos | rocky )
+        centos | rhel | rocky )
             do_community_yum_install "$@" 
             ;;
         ubuntu | debian )
             do_community_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\nos & version not implemented: $distro_info\n"
+            printf "\ncommunity_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 
@@ -721,22 +762,42 @@ dev_install() {
     branch="$3"
     build="$4"
     product="10.6-enterprise"
+    if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
+    if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
 
     # Construct URLs
-    s3_path="$dronePath/$branch/$build/$product/$arch/$distro"
-    replace="https://$dev_drone_key.s3.amazonaws.com/"
-    # Use sed to replace the s3 path to create https path
-    yum_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|$replace|")
+    s3_path="$dronePath/$branch/$build/$product/$arch"
+    drone_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|https://${dev_drone_key}.s3.amazonaws.com/|")
     echo "Locations:"
-    echo "RPM: $s3_path"
-    echo "Yum: $yum_http"
+    echo "Bucket: $s3_path"
+    echo "Drone: $drone_http"
     echo "###################################"
     
     check_dev_build_exists
+
+    case $distro_info in
+        centos | rhel | rocky )
+            s3_path="${s3_path}/$distro"
+            drone_http="${drone_http}/$distro"
+            do_dev_yum_install "$@" 
+            ;;
+        ubuntu | debian )
+            do_dev_apt_install "$@" 
+            ;;
+        *)  # unknown option
+            printf "\ndev_install: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
     
+
+    add_primary_node_cmapi
+}
+
+do_dev_yum_install() {
+
     echo "[drone]
 name=Drone Repository
-baseurl="$yum_http"
+baseurl="$drone_http"
 gpgcheck=0
 enabled=1
     " > /etc/yum.repos.d/drone.repo
@@ -753,13 +814,73 @@ enabled=1
         exit 1
     fi
 
-    yum install MariaDB-server-*.rpm -y
-    yum install MariaDB-columnstore-engine MariaDB-columnstore-cmapi jq -y
-    systemctl start mariadb
-    systemctl start mariadb-columnstore-cmapi
-    mariadb -e "show status like '%Columnstore%';"
+    # Install MariaDB Server
+    if ! yum install MariaDB-server-*.rpm -y; then
+        printf "\n[!] Failed to install MariaDB-server \n\n"
+        exit 1;
+    fi
 
-    add_primary_node_cmapi
+    # Install Columnstore
+    if ! yum install MariaDB-columnstore-engine -y; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi
+
+     # Install Cmapi
+    if ! yum install MariaDB-columnstore-cmapi jq -y; then
+        printf "\n[!] Failed to install cmapi\n\n"
+        exit 1;
+    else
+        systemctl start mariadb
+        systemctl enable mariadb-columnstore-cmapi
+        systemctl start mariadb-columnstore-cmapi
+        mariadb -e "show status like '%Columnstore%';"
+        sleep 2
+
+        add_primary_node_cmapi
+    fi
+}
+
+do_dev_apt_install() {
+
+    echo "deb [trusted=yes] ${drone_http} ${distro}/" >  /etc/apt/sources.list.d/repo.list
+    cat << EOF > /etc/apt/preferences
+Package: *
+Pin: origin cspkg.s3.amazonaws.com
+Pin-Priority: 1700
+EOF
+
+    # Install MariaDB
+    apt-get clean
+    apt-get update 
+    if ! apt install mariadb-server -y --quiet; then
+        printf "\n[!] Failed to install mariadb-server \n\n"
+        exit 1;
+    fi
+    sleep 2
+    systemctl daemon-reload
+    systemctl enable mariadb
+    systemctl start mariadb
+
+    # Install Columnstore
+    if ! apt install mariadb-plugin-columnstore -y --quiet; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi;
+
+    if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
+        printf "\n[!] Failed to install cmapi \n\n"
+        mariadb -e "show status like '%Columnstore%';"
+    else 
+        systemctl daemon-reload
+        systemctl enable mariadb-columnstore-cmapi
+        systemctl start mariadb-columnstore-cmapi
+        mariadb -e "show status like '%Columnstore%';"
+        sleep 2
+
+        add_primary_node_cmapi
+    fi
+
 }
 
 do_install() {
@@ -843,7 +964,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rocky )
+                        centos | rhel | rocky )
                             path="rpm/rhel/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
@@ -889,7 +1010,7 @@ do_check() {
                      
                             ;;
                         *)  # unknown option
-                            printf "\nNot implemented for: $distro_info\n\n"
+                            printf "\ndo_check: Not implemented for: $distro_info\n\n"
                             exit 2;
                         esac
                     fi;
@@ -920,7 +1041,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rocky )
+                        centos | rhel | rocky )
                             path="yum/centos/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$(grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
@@ -980,12 +1101,7 @@ global_dependencies() {
     if ! command -v curl &> /dev/null; then
         printf "\n[!] curl not found. Please install curl\n\n"
         exit 1; 
-    fi  
-
-    if ! command -v wget &> /dev/null; then
-        printf "\n[!] wget not found. Please install wget\n\n"
-        exit 1; 
-    fi  
+    fi   
 }
 
 check_set_es_token() {

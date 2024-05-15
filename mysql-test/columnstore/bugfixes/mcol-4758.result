@@ -11,4 +11,9 @@ INSERT INTO src VALUES (1, "Pretty Bloby Thing", "This is some text");
 select * from src where c0=1 and substr(cLT, 1, 4)="This";
 c0	cLB	cLT
 1	Pretty Bloby Thing	This is some text
+ALTER TABLE src ADD COLUMN (cLT2 LONGTEXT);
+UPDATE src SET cLT2="My Friday Night" where c0=1;
+select * from src where c0=1 and substr(cLT, 1, 4)="This";
+c0	cLB	cLT	cLT2
+1	Pretty Bloby Thing	This is some text	My Friday Night
 DROP DATABASE `mcol_4758`;
