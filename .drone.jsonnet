@@ -228,6 +228,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local execInnerDocker(command, dockerImage, flags = '') =
     'docker exec ' + flags + ' -t ' + dockerImage + ' ' + command,
 
+  local execInnerDockerNoTTY(command, dockerImage, flags = '') =
+    'docker exec ' + flags + ' ' + dockerImage + ' ' + command,
+
   local installRpmDeb(pkg_format, rpmpackages, debpackages) =
     if (pkg_format == 'rpm')
       then ' bash -c "yum install -y ' + rpmpackages + '"'
@@ -288,7 +291,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
       execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
                       dockerImage("regresion")),
-      execInnerDocker('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
+      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
                       dockerImage("regression"),
                       "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
     ],
@@ -769,7 +772,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                // Disable dh_missing strict check for missing files
                'sed -i s/--fail-missing/--list-missing/ debian/rules',
                // Tweak debian packaging stuff
-               'for i in mariadb-backup mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
+               'for i in mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
                "sed -i 's/Depends: galera.*/Depends:/' debian/control",
                'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
                // Install build dependencies for deb
