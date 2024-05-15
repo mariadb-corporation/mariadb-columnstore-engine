@@ -2,6 +2,7 @@
 import configparser
 import fcntl
 import json
+import glob
 import logging
 import os
 import socket
@@ -9,7 +10,7 @@ import ssl
 import struct
 import subprocess
 import sys
-from time import time
+import time
 import xml.etree.ElementTree as ET
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -22,7 +23,11 @@ MCS_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
 SM_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
 MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
+EM_FILE_SUFFIX = '_em'
+EM_FILE_SIZE_THRESHOLD = 1000
 HALF_A_MINUTE = 30
+NUMBER_OF_FILES_TO_KEEP = 40
+DEFAULT_EM_LOCAL_PATH_PREFIX = ''
 LOCALHOST = '127.0.0.1'
 # according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
 LOCALHOSTS = (
@@ -34,7 +39,8 @@ LOCALHOSTS = (
 )
 API_VERSION = '0.4.0'
 API_PORT = '8640'
-BRM_BACKUP_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/{}_BRM_saves'
+BRM_BACKUP_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/'
+BRM_BACKUP_PATH_PART = '{}_BRM_saves'
 
 
 def get_api_key():
@@ -163,16 +169,13 @@ def is_node_primary(conf_root):
             success = True
         except HTTPError as exc:
             logging.warning(
-                'Something goes wrong while requesting primary status ',
-                'through api.',
-                'Got response code "{}" with reason "{}".'.format(
+                'Something goes wrong while requesting primary status through api. Got response code "{}" with reason "{}".'.format(
                     exc.code, exc.reason
                 )
             )
         except URLError:
             logging.warning(
-                'CMAPI became unavailable while trying',
-                'to request primary status.'
+                'CMAPI became unavailable while trying to request primary status.'
             )
         except Exception:
             logging.error(
@@ -193,14 +196,67 @@ def is_node_primary(conf_root):
     # text in tag have to be hostname or FQDN
     return is_primary_fallback(conf_root.find('./DBRM_Controller/IPAddr').text)
 
-# Placeholder for EM size check
-def em_is_not_empty():
-    """Returns True if EM is not empty.
+
+def get_file_size(file_path):
+    """ Returns the size of the file in bytes. """
+    try:
+        size = os.path.getsize(file_path)
+        return size
+    except OSError as e:
+        logging.error('OSError in get_file_size(): {}.'.format(e))
+        return None
+    
+
+def em_is_empty(file_path_prefix):
+    """Returns True if EM file size is less than EM_FILE_SIZE_THRESHOLD 
+        or its argument is None.
 
     :rtype: Bool
     """
     # Add error message if EM is empty
-    return True
+    is_none = file_path_prefix is None
+    filesize = get_file_size(file_path_prefix + EM_FILE_SUFFIX)
+    is_em_empty = is_none or filesize < EM_FILE_SIZE_THRESHOLD
+    if is_em_empty:
+        logging.error('EM file is none or its size {} is less than {} bytes.'.format(filesize, EM_FILE_SIZE_THRESHOLD))
+    return is_em_empty
+
+
+def clean_up_backup_brm_files(save_brm_dir_path):
+    """ Removes all but 5 last usable sets of BRM files in the specified directory.
+        Usable in the context means having non-empty EM.
+    """
+    filenames = os.listdir(save_brm_dir_path)
+    filenames.sort(reverse=True)
+    files_to_remove = filenames[NUMBER_OF_FILES_TO_KEEP:]
+    for filename in files_to_remove:
+        file_path = os.path.join(save_brm_dir_path, filename)
+        logging.debug('Clean up {}.'.format(file_path))
+        try:
+            os.remove(file_path)
+        except OSError as e:
+            logging.error('OSError exception happens removing {}: {}.'.format(file_path, e))
+
+
+def remove_files_by_prefix_if_exist(file_path_prefix):
+    """ Removes files with the given prefix if they exist. """
+    if file_path_prefix is None:
+        logging.error(
+            'file_path_prefix is None. Cannot remove files.',
+            exc_info=True
+        )
+        return
+    try:
+
+        files_paths = glob.glob(file_path_prefix + '*')
+        for file_path in files_paths:
+            os.remove(file_path)
+    except OSError as e:
+        logging.error(
+            'Error removing file: {} - {}'.format(file_path, e.strerror),
+            exc_info=True
+        )
+
 
 def get_config_root_from_file(file_path):
     """Returns XML root element from file.
@@ -224,9 +280,30 @@ def get_epoch_prefix():
 
     :rtype: String
     """
-    epoch_time = int(time())
+    epoch_time = int(time.time())
     
     return 'backup_{}'.format(epoch_time)
+
+
+def get_save_brm_dir_path(a_mcs_config_root):
+    """Returns a path that SM treats as local
+
+    :param file_path: xml config XML root
+    :rtype
+    """
+    save_brm_dir_path = BRM_BACKUP_PATH
+    if a_mcs_config_root is not None:
+        try:
+            system_temp_file_dir = a_mcs_config_root.find('./SystemConfig/SystemTempFileDir').text
+            hdfs_rdwr_scratch = a_mcs_config_root.find('./SystemConfig/hdfsRdwrScratch').text
+            # There is a danger to have no '/' in the end of system_temp_file_dir
+            # or have two of them there. In both cases save_brm will fail to store
+            # files locally.
+            save_brm_dir_path = system_temp_file_dir + hdfs_rdwr_scratch
+        except AttributeError:
+            logging.error('Exception while getting SystemTempFileDir and hdfsRdwrScratch from Columnstore.xml', exc_info=True)
+    
+    return save_brm_dir_path
 
 
 def get_save_brm_path_prefix(a_mcs_config_root):
@@ -236,19 +313,35 @@ def get_save_brm_path_prefix(a_mcs_config_root):
     :rtype: String
     """
     epoch_prefix = get_epoch_prefix()
-    save_brm_path_prefix = BRM_BACKUP_PATH.format(epoch_prefix)
-    if a_mcs_config_root is not None:
-        try:
-            system_temp_file_dir = a_mcs_config_root.find('./SystemConfig/SystemTempFileDir').text
-            hdfs_rdwr_scratch = a_mcs_config_root.find('./SystemConfig/hdfsRdwrScratch').text
-            # There is a danger to have no '/' in the end of system_temp_file_dir
-            # or have two of them there. In both cases save_brm will fail to store
-            # files locally.
-            save_brm_path_prefix = system_temp_file_dir + hdfs_rdwr_scratch + '/{}_BRM_saves'.format(epoch_prefix)
-        except AttributeError:
-            logging.error('Exception while getting SystemTempFileDir and hdfsRdwrScratch from Columnstore.xml', exc_info=True)
+    return get_save_brm_dir_path(a_mcs_config_root) + '/' + BRM_BACKUP_PATH_PART.format(epoch_prefix)
 
-    return save_brm_path_prefix
+
+def call_save_brm(path):
+    """Calls save_brm first and then tries to call it with local path. 
+
+    :param file_path: xml config XML root
+    :rtype: None
+    """
+    savebrm_cmd = SAVEBRM + ' ' + path
+    try:
+        subprocess.check_call(savebrm_cmd, shell=True)
+    except subprocess.CalledProcessError as exc:
+        logging.error('The call to {} exits with {}.'.format(savebrm_cmd, exc.returncode))
+        return None
+    except OSError:
+        logging.error('Os error while calling savebrm', exc_info=True)
+        return None
+    return path
+
+
+def call_save_brm_locally(a_mcs_config_root):
+    """Calls save_brm first and then tries to call it with local path. 
+
+    :param file_path: xml config XML root
+    :rtype: None
+    """
+    local_path = get_save_brm_path_prefix(a_mcs_config_root)
+    return call_save_brm(local_path)
 
 
 def call_save_brm_with_local_fallback(a_mcs_config_root):
@@ -279,8 +372,16 @@ def call_save_brm_with_local_fallback(a_mcs_config_root):
 
 if __name__ == '__main__':
     mcs_config_root = get_config_root_from_file(MCS_CONFIG_PATH)
-    
     # config_root can be None
-    if is_node_primary(mcs_config_root) and em_is_not_empty():
-        call_save_brm_with_local_fallback(mcs_config_root)
+    if is_node_primary(mcs_config_root):
+        em_local_path_prefix = call_save_brm_locally(mcs_config_root)
+        if not em_local_path_prefix or em_is_empty(em_local_path_prefix):
+            # remove_files_by_prefix_if_exist(em_local_path_prefix)
+            logging.error('Exiting with error.')
+            sys.exit(1)
+        
+        clean_up_backup_brm_files(get_save_brm_dir_path(mcs_config_root))
+
+        call_save_brm(DEFAULT_EM_LOCAL_PATH_PREFIX)
+
     sys.exit(0)

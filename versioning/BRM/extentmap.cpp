@@ -1826,6 +1826,7 @@ void ExtentMap::save(const string& filename)
   }
 
   const char* filename_p = filename.c_str();
+  std::cout << "ExtentMap::save filename " << filename << std::endl;
   scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
                                                 filename_p, "wb", IDBDataFile::USE_VBUF));
 
