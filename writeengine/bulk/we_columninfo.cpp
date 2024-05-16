@@ -1661,8 +1661,7 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
 // Update dictionary store file with string column parquet data, and return the assigned
 // tokens (tokenbuf) to be stored in the corresponding column token file.
 //--------------------------------------------------------------------------------------
-int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos,
-                                         const int totalRow, char* tokenBuf)
+int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow, char* tokenBuf)
 {
   long long truncCount = 0;
 
@@ -1674,8 +1673,7 @@ int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnDat
   Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif
 
-  int rc = fStore->insertDctnryParquet(columnData, tokenPos, totalRow, id, tokenBuf, truncCount, column.cs,
-                                       column.weType);
+  int rc = fStore->insertDctnryParquet(columnData, tokenPos, totalRow, id, tokenBuf, truncCount, column.cs, column.weType);
 
   if (rc != NO_ERROR)
   {
@@ -1690,7 +1688,7 @@ int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnDat
   }
 
   incSaturatedCnt(truncCount);
-
+  
   return NO_ERROR;
 }
 
@@ -1709,7 +1707,8 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
   // column.
   // This only applies to default text mode.  This step is bypassed for
   // binary imports, because in that case, the data is already true binary.
-  if (((curCol.colType == WR_VARBINARY)) && (fpTableInfo->getImportDataMode() == IMPORT_DATA_TEXT))
+  if (((curCol.colType == WR_VARBINARY) || (curCol.colType == WR_BLOB)) &&
+      (fpTableInfo->getImportDataMode() == IMPORT_DATA_TEXT))
   {
 #ifdef PROFILE
     Stats::startParseEvent(WE_STATS_COMPACT_VARBINARY);
