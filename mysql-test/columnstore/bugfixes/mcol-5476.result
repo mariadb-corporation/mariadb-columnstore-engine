@@ -1,0 +1,71 @@
+DROP DATABASE IF EXISTS `mcol-5476`;
+CREATE DATABASE `mcol-5476`;
+USE `mcol-5476`;
+create table t1 (a int, b int) engine=columnstore;
+insert into t1 values (1, 1), (2, 1), (3, 1), (4, 2), (5, 2);
+select sum(a), abs(b), abs(b) from t1 group by abs(b), abs(b);
+sum(a)	abs(b)	abs(b)
+6	1	1
+9	2	2
+select sum(a), abs(b), abs(b) from t1 group by abs(b);
+sum(a)	abs(b)	abs(b)
+6	1	1
+9	2	2
+select sum(distinct a), abs(b), abs(b) from t1 group by abs(b), abs(b);
+sum(distinct a)	abs(b)	abs(b)
+6	1	1
+9	2	2
+select sum(distinct a), abs(b), abs(b) from t1 group by abs(b);
+sum(distinct a)	abs(b)	abs(b)
+6	1	1
+9	2	2
+create table t2 (a int, b int, c varchar(20)) engine=columnstore;
+insert into t2 values (1, 1, "abc"), (2, 1, "abc"), (1, 2, "abcd"), (3, 2, "abcd");
+select sum(a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), length(c);
+sum(a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(a), abs(b), abs(b), length(c), length(c) from t2 group by abs(b), length(c);
+sum(a)	abs(b)	abs(b)	length(c)	length(c)
+3	1	1	3	3
+4	2	2	4	4
+select sum(a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), abs(b), length(c), length(c);
+sum(a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), length(c), length(c), abs(b);
+sum(a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(distinct a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), length(c) order by abs(b);
+sum(distinct a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(distinct a), abs(b), abs(b), length(c), length(c) from t2 group by abs(b), length(c) order by abs(b);
+sum(distinct a)	abs(b)	abs(b)	length(c)	length(c)
+3	1	1	3	3
+4	2	2	4	4
+select sum(distinct a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), abs(b), length(c), length(c);
+sum(distinct a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(distinct a), abs(b), length(c), abs(b), length(c) from t2 group by abs(b), length(c), length(c), abs(b);
+sum(distinct a)	abs(b)	length(c)	abs(b)	length(c)
+3	1	3	1	3
+4	2	4	2	4
+select sum(distinct t1.a), abs(t2.b), abs(t2.b) from t1 join t2 on t1.a = t2.a group by abs(t2.b);
+sum(distinct t1.a)	abs(t2.b)	abs(t2.b)
+3	1	1
+4	2	2
+select sum(t1.a), abs(t2.b), abs(t2.b) from t1 join t2 on t1.a = t2.a group by abs(t2.b);
+sum(t1.a)	abs(t2.b)	abs(t2.b)
+3	1	1
+4	2	2
+create table t3 (a datetime, b int) engine=columnstore;
+insert into t3 values ("2007-01-30 21:31:07", 1), ("2007-01-30 21:31:07", 3), ("2007-01-29 21:31:07", 1), ("2007-01-29 21:31:07", 2);
+select distinct DAYOFWEEK(a) as C1, DAYOFWEEK(a) as C2, SUM(b) from t3 group by DAYOFWEEK(a), DAYOFWEEK(a);
+C1	C2	SUM(b)
+2	2	3
+3	3	4
+DROP TABLE t1, t2, t3;
+DROP DATABASE `mcol-5476`;

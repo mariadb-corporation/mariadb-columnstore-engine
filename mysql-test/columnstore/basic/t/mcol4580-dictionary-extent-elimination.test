@@ -1,0 +1,47 @@
+--disable_warnings # we disable warnings through the test: as we use calsettrace(1), it produces many unnecessary warnings.
+DROP DATABASE IF EXISTS MCOL4580;
+CREATE DATABASE MCOL4580;
+USE MCOL4580;
+
+# -----------------------------------------------------------------------------
+# Binary collation test.
+
+CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
+INSERT INTO t(d) VALUES ('b'),('b'),('b');
+SELECT CALSETTRACE(1);
+SELECT COUNT(*) FROM t WHERE d = 'a';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+# As strict comparisons became soft (strict less '<' became less or equal '<='), these two parts will not work as expected.
+SELECT COUNT(*) FROM t WHERE d < 'b';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+SELECT COUNT(*) FROM t WHERE d > 'b';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+SELECT COUNT(*) FROM t WHERE d <= 'a';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+SELECT COUNT(*) FROM t WHERE d >= 'c';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+# note that extent elimination will eliminate extents with only single value
+# in the case of not-equal predicate.
+SELECT COUNT(*) FROM t WHERE d != 'b';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+INSERT INTO t SELECT * FROM t;
+SELECT COUNT(*) FROM t WHERE d = 'b';
+DROP TABLE t;
+
+# -----------------------------------------------------------------------------
+# Actual collation test.
+
+# Reference chart: https://collation-charts.org/mysql60/mysql604.utf8_czech_ci.html
+# We will use the fact that "cz" should go before "ch".
+
+CREATE TABLE t (c TEXT CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
+INSERT INTO t(c) VALUES ('ch'), ('ch');
+SELECT COUNT(*) FROM t WHERE c < 'cz';
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+
+# and to see we do not broke anything (must be 1):
+SELECT COUNT(*) FROM t WHERE c > 'cz';
+SELECT COUNT(*) FROM t WHERE c = 'CH';
+
+DROP DATABASE MCOL4580;
+--enable_warnings

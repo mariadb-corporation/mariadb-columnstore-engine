@@ -675,19 +675,16 @@ void RowAggregation::initialize(bool hasGroupConcat)
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
 
@@ -768,19 +765,16 @@ void RowAggregation::aggReset()
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
   fRowGroupOut->getRow(0, &fRow);
@@ -4105,6 +4099,18 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
+
+  if (more)
+  {
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
@@ -4564,18 +4570,28 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  auto* umAggregator = dynamic_cast<RowAggregationUM*>(fAggregator.get());
+  if (umAggregator)
   {
-    fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
-
-    Row rowIn;
-    fRowGroupIn.initRow(&rowIn);
-    fRowGroupIn.getRow(0, &rowIn);
-
-    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+    while (umAggregator->nextOutputRowGroup())
     {
-      aggregateRow(rowIn);
+      fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+      Row rowIn;
+      fRowGroupIn.initRow(&rowIn);
+      fRowGroupIn.getRow(0, &rowIn);
+
+      for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+      {
+        aggregateRow(rowIn);
+      }
     }
+  }
+  else
+  {
+    std::ostringstream errmsg;
+    errmsg << "RowAggregationDistinct: incorrect fAggregator class.";
+    cerr << errmsg.str() << endl;
   }
 }
 

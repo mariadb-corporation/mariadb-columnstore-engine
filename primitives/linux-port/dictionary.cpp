@@ -434,6 +434,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
   header.PhysicalIO = 0;
 
   header.NBYTES = sizeof(DictOutput);
+  datatypes::Charset cset(charsetNumber);
 
   for (nextSig(in->NVALS, in->tokens, &sigptr, in->OutputType, (in->InputFlags ? true : false), skipNulls);
        sigptr.len != -1;
@@ -442,7 +443,7 @@ void PrimitiveProcessor::p_Dictionary(const DictInput* in, vector<uint8_t>* out,
 #if defined(XXX_PRIMITIVES_TOKEN_RANGES_XXX)
     if (minMax)
     {
-      uint64_t v = encodeStringPrefix_check_null(sigptr.data, sigptr.len, charsetNumber);
+      uint64_t v = encodeStringPrefix_check_null(sigptr.data, sigptr.len, cset);
       minMax[1] = minMax[1] < v ? v : minMax[1];
       minMax[0] = minMax[0] > v ? v : minMax[0];
     }

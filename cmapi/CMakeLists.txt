@@ -58,6 +58,8 @@ CONFIGURE_FILE(postinst.template postinst)
 CONFIGURE_FILE(prerm.template prerm)
 CONFIGURE_FILE(conffiles.template conffiles)
 CONFIGURE_FILE(mcs.template mcs)
+CONFIGURE_FILE(mcs_aws.template mcs_aws)
+CONFIGURE_FILE(mcs_gsutil.template mcs_gsutil)
 
 INSTALL(DIRECTORY python deps mcs_node_control failover cmapi_server engine_files mcs_cluster_tool
             DESTINATION ${CMAPI_DIR}
@@ -74,6 +76,15 @@ INSTALL(FILES cmapi_server/cmapi_server.conf systemd.env
 INSTALL(FILES ${SYSTEMD_UNIT_NAME}.service
             DESTINATION ${SYSTEMD_UNIT_DIR})
 INSTALL(FILES mcs
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_aws
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_gsutil
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES scripts/mcs_backup_manager.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
 

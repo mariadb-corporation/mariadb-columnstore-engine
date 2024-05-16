@@ -137,11 +137,13 @@ enum BulkModeType
 // Import Mode 0-text Import (default)
 //             1-Binary Import with NULL values
 //             2-Binary Import with saturated NULL values
+//             3-Binary Import with parquet file
 enum ImportDataMode
 {
   IMPORT_DATA_TEXT = 0,
   IMPORT_DATA_BIN_ACCEPT_NULL = 1,
-  IMPORT_DATA_BIN_SAT_NULL = 2
+  IMPORT_DATA_BIN_SAT_NULL = 2,
+  IMPORT_DATA_PARQUET = 3
 };
 
 /**

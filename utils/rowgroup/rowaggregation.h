@@ -425,6 +425,8 @@ class RowAggregation : public messageqcpp::Serializeable
 
   void clearRollup() { fRollupFlag = false; }
 
+  bool hasRollup() const { return fRollupFlag; }
+
   /** @brief Define content of data to be joined
    *
    *    This method must be call after setInputOutput() for PM hashjoin case.
@@ -633,6 +635,10 @@ class RowAggregation : public messageqcpp::Serializeable
   boost::shared_ptr<int64_t> fSessionMemLimit;
   std::unique_ptr<RGData> fCurRGData;
   bool fRollupFlag = false;
+
+  std::string fTmpDir = config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+  std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
+
 };
 
 //------------------------------------------------------------------------------
@@ -672,6 +678,17 @@ class RowAggregationUM : public RowAggregation
    * @returns true if more data, else false if no more data.
    */
   bool nextRowGroup();
+
+  /** @brief Returns aggregated rows in a RowGroup as long as there are still not returned result RowGroups.
+   *
+   * This function should be called repeatedly until false is returned (meaning end of data).
+   * Returns data from in-memory storage, as well as spilled data from disk. If disk-based aggregation is
+   * happening, finalAggregation() should be called before returning result RowGroups to finalize the used
+   * RowAggStorages, merge different spilled generations and obtain correct aggregation results.
+   *
+   * @returns True if there are more result RowGroups, else false if all results have been returned.
+   */
+  bool nextOutputRowGroup();
 
   /** @brief Add an aggregator for DISTINCT aggregation
    */

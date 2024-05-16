@@ -1,7 +1,7 @@
 #!/bin/bash
 # columnstore_review.sh
 # script by Edward Stoever for MariaDB support
-VERSION=1.4.3
+VERSION=1.4.5
 
 function prepare_for_run() {
   unset ERR
@@ -973,13 +973,25 @@ function collect_logs() {
 
   set_data1dir
   ls -lrt $DATA1DIR/systemFiles/dbrm > $LOGSOUTDIR/columnstore/ls_lrt_dbrm.txt
+  if [ ! -z "$STORAGE_TYPE" ] && [ "$STORAGE_TYPE" == "S3" ]; then 
+    dump_log "mcs-storagemanager" $LOGSOUTDIR/columnstore/
+    smls /data1/systemFiles/dbrm/ >  $LOGSOUTDIR/columnstore/s3_dbrms.txt ;
+    smcat /data1/systemFiles/dbrm/BRM_saves_current 2>/dev/null > $LOGSOUTDIR/columnstore/s3_BRM_saves_current ;
+  fi
 
-  #  find /var/log \( -name "messages" -o -name "messages.1" \) -type f -exec cp {} $LOGSOUTDIR/system \;
-  cp /var/log/messages* $LOGSOUTDIR/system
-  find /var/log/syslog -name syslog -type f -exec tail -10000 {} > $LOGSOUTDIR/system/syslog \;
-  find /var/log/daemon.log -name daemon.log -type f -exec tail -10000 {} > $LOGSOUTDIR/system/daemon.log \;
+
+  # System Logs
+  if [ -f "/proc/sys/kernel/threads-max" ]; then cp /proc/sys/kernel/threads-max $LOGSOUTDIR/system/kernal-threads-max; fi;
+  if [ -f "/proc/sys/kernel/pid_max" ]; then cp /proc/sys/kernel/pid_max $LOGSOUTDIR/system/kernal-pid_max; fi;
+  if [ -f "/proc/sys/vm/max_map_count" ]; then cp /proc/sys/vm/max_map_count $LOGSOUTDIR/system/kernal-max_map_count; fi;
+  if [ -f "/var/log/messages" ]; then cp /var/log/messages* $LOGSOUTDIR/system; fi;
+  if [ -f "/var/log/syslog" ]; then find /var/log/syslog -name syslog -type f -exec tail -10000 {} > $LOGSOUTDIR/system/syslog \;; fi;
+  if [ -f "/var/log/daemon.log" ]; then find /var/log/daemon.log -name daemon.log -type f -exec tail -10000 {} > $LOGSOUTDIR/system/daemon.log \;; fi;
+  if command -v ulimit >/dev/null 2>&1; then
+      ulimit -a >  $LOGSOUTDIR/system/kernal-ulimits.txt
+  fi
+  
   cd /var/log/mariadb
-
   find /usr/lib -name "mcs*service" -exec cp {} $LOGSOUTDIR/systemd \;
   find /usr/lib -name "mariadb*service" -exec cp {} $LOGSOUTDIR/systemd \;
 
@@ -1004,7 +1016,7 @@ function collect_logs() {
   fi
   FILE_SIZE=$(stat -c %s /tmp/$COMPRESSFILE)
   if (( $FILE_SIZE > 52428800 )); then
-    print0 "The file /tmp/$COMPRESSFILE is larger than 50MB.\nPlease use MariaDB Large file upload at https://mariadb.com/upload/\nInform us about the upload in the support ticket."
+    print0 "The file /tmp/$COMPRESSFILE is larger than 50MB.\nPlease use MariaDB Large file upload at https://mariadb.com/upload/\nInform us about the upload in the support ticket.\n"
   fi 
   print0 "\nCreated: /tmp/$COMPRESSFILE\n"
   ech0
@@ -2077,18 +2089,8 @@ Switches:
 
 Color output switches:
    --color=none      # print headers without color
-   --color=red       # print headers in red
-   --color=blue      # print headers in blue
-   --color=green     # print headers in green
-   --color=yellow    # print headers in yellow
-   --color=magenta   # print headers in magenta
-   --color=cyan      # print headers in cyan (default color)
-   --color=lred      # print headers in light red
-   --color=lblue     # print headers in light blue
-   --color=lgreen    # print headers in light green
-   --color=lyellow   # print headers in light yellow
-   --color=lmagenta  # print headers in light magenta
-   --color=lcyan     # print headers in light cyan\n"
+   --color=red       # print headers in color
+                     # Options: [none,red,blue,green,yellow,magenta,cyan] prefix color with "l" for light\n"
   ech0
 }
 
@@ -2326,5 +2328,4 @@ fi
 if [ $FIX_TMP_DIR ]; then
   ensure_owner_privs_of_tmp_dir
 fi
-
 

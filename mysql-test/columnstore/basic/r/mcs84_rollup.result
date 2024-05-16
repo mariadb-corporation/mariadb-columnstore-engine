@@ -56,6 +56,15 @@ Paraguay	non-fiction	17790
 Senegal	NULL	171762
 Senegal	fiction	27881
 Senegal	non-fiction	143881
+SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
+country	genre	SUM(sales)
+NULL	NULL	354462
+Paraguay	NULL	182700
+Paraguay	fiction	164910
+Paraguay	non-fiction	17790
+Senegal	NULL	171762
+Senegal	fiction	27881
+Senegal	non-fiction	143881
 CREATE TABLE three_cols ( key1 INTEGER, key2 INTEGER, value DECIMAL(38)) ENGINE=COLUMNSTORE;
 INSERT INTO three_cols(key1, key2, value) VALUES
 (NULL, NULL, NULL)

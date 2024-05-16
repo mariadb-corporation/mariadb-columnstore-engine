@@ -234,11 +234,9 @@ void BPPSendThread::mainLoop()
         bsSize = msg[msgsSent].msg->lengthWithHdrOverhead();
 
         // Same node processing path
-        if (!sock)
+        if (!lock)
         {
-          auto* exeMgrDecPtr = exemgr::globServiceExeMgr->getDec();
-          assert(exeMgrDecPtr);
-          exeMgrDecPtr->addDataToOutput(msg[msgsSent].msg);
+          msg[msgsSent].sock->write(msg[msgsSent].msg);
         }
         else
         {

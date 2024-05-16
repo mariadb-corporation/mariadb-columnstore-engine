@@ -1584,61 +1584,60 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
   constexpr const uint32_t freeShmemThreshold = EM_RB_TREE_INITIAL_SIZE >> 4;
   growEMShmseg(memorySizeNeeded);
 
-  size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
   int err;
-  char* writePos;
+  size_t progress = 0;
 
   if (!upgradeV4ToV5)
   {
-    for (uint32_t i = 0; i < emNumElements; ++i)
-    {
-      progress = 0;
-      EMEntry emEntry;
-      writeSize = sizeof(EMEntry);
-      writePos = reinterpret_cast<char*>(&emEntry);
+    const size_t readSize = emNumElements * sizeof(EMEntry);
+    std::unique_ptr<char[]> emBuffer(new char[readSize]);
 
-      while (progress < writeSize)
+    while (progress < readSize)
+    {
+      err = in->read(&emBuffer[progress], readSize - progress);
+      if (err <= 0)
       {
-        err = in->read(writePos + progress, writeSize - progress);
-        if (err <= 0)
-        {
-          log_errno("ExtentMap::loadVersion4(): read ");
-          throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
-        }
-        progress += (uint)err;
+        log_errno("ExtentMap::loadVersion4(): read ");
+        throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
       }
+      progress += (uint)err;
+    }
+
+    progress = 0;
+    for (uint32_t emIndex = 0; emIndex < emNumElements; ++emIndex)
+    {
       if (fPExtMapRBTreeImpl->getFreeMemory() < freeShmemThreshold)
         growEMShmseg(EM_RB_TREE_INCREMENT);
 
+      EMEntry emEntry = *reinterpret_cast<EMEntry*>(&emBuffer[progress]);
       std::pair<int64_t, EMEntry> lbidEMEntryPair = make_pair(emEntry.range.start, emEntry);
       fExtentMapRBTree->insert(lbidEMEntryPair);
+      progress += sizeof(EMEntry);
     }
   }
   else
   {
-    // We are upgrading extent map from v4 to v5.
-    for (uint32_t i = 0; i < emNumElements; i++)
+    const size_t readSize = emNumElements * sizeof(EMEntry_v4);
+    std::unique_ptr<char[]> emBuffer(new char[readSize]);
+
+    while (progress < readSize)
     {
-      EMEntry_v4 emEntryV4;
-      progress = 0;
-      writeSize = sizeof(EMEntry_v4);
-      writePos = reinterpret_cast<char*>(&emEntryV4);
-
-      while (progress < writeSize)
+      err = in->read(&emBuffer[progress], readSize - progress);
+      if (err <= 0)
       {
-        err = in->read(writePos + progress, writeSize - progress);
-        if (err <= 0)
-        {
-          log_errno("ExtentMap::loadVersion4or5(): read ");
-          throw runtime_error(
-              "ExtentMap::loadVersion4or5(): read failed during upgrade. Check the error log.");
-        }
-        progress += (uint)err;
+        log_errno("ExtentMap::loadVersion4(): read ");
+        throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
       }
+      progress += (uint)err;
+    }
 
+    progress = 0;
+    for (uint32_t emIndex = 0; emIndex < emNumElements; ++emIndex)
+    {
       if (fPExtMapRBTreeImpl->getFreeMemory() < freeShmemThreshold)
         growEMShmseg(EM_RB_TREE_INCREMENT);
 
+      EMEntry_v4 emEntryV4 = *reinterpret_cast<EMEntry_v4*>(&emBuffer[progress]);
       EMEntry emEntry;
       emEntry.range.start = emEntryV4.range.start;
       emEntry.range.size = emEntryV4.range.size;
@@ -1657,6 +1656,7 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
 
       std::pair<int64_t, EMEntry> lbidEMEntryPair = make_pair(emEntry.range.start, emEntry);
       fExtentMapRBTree->insert(lbidEMEntryPair);
+      progress += sizeof(EMEntry_v4);
     }
 
     std::cout << emNumElements << " extents successfully upgraded" << std::endl;
@@ -1859,16 +1859,35 @@ void ExtentMap::save(const string& filename)
     throw;
   }
 
-  for (auto& lbidEMEntryPair : *fExtentMapRBTree)
+  // MCOL-5623 Prepare `ExtentMap` buffer before write.
+  const size_t emNumOfElements = fExtentMapRBTree->size();
+  auto emIterator = fExtentMapRBTree->begin();
+  size_t emIndex = 0;
+  while (emIndex < emNumOfElements)
   {
-    EMEntry& emEntry = lbidEMEntryPair.second;
-    const uint32_t writeSize = sizeof(EMEntry);
-    char* writePos = reinterpret_cast<char*>(&emEntry);
-    uint32_t progress = 0;
+    const size_t emNumOfElementsInBatch = std::min(EM_SAVE_NUM_PER_BATCH, emNumOfElements - emIndex);
+    const size_t emSizeInBatch = emNumOfElementsInBatch * sizeof(EMEntry);
+    std::unique_ptr<char[]> extentMapBuffer(new char[emSizeInBatch]);
 
-    while (progress < writeSize)
+    const size_t endOfBatch = std::min(emIndex + EM_SAVE_NUM_PER_BATCH, emNumOfElements);
+    size_t offset = 0;
+    while (emIndex < endOfBatch)
     {
-      auto err = out->write(writePos + progress, writeSize - progress);
+      EMEntry& emEntry = emIterator->second;
+      const size_t writeSize = sizeof(EMEntry);
+      char* source = reinterpret_cast<char*>(&emEntry);
+      std::memcpy(&extentMapBuffer[offset], source, writeSize);
+      offset += writeSize;
+      std::advance(emIterator, 1);
+      ++emIndex;
+    }
+    // Double check.
+    idbassert(offset == emSizeInBatch);
+
+    offset = 0;
+    while (offset < emSizeInBatch)
+    {
+      auto err = out->write(&extentMapBuffer[offset], emSizeInBatch - offset);
       if (err < 0)
       {
         releaseFreeList(READ);
@@ -1876,7 +1895,7 @@ void ExtentMap::save(const string& filename)
         releaseEMEntryTable(READ);
         throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
       }
-      progress += err;
+      offset += err;
     }
   }
 
