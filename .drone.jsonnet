@@ -15,6 +15,28 @@ local platforms_arm = {
   'stable-23.10': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
+local platforms_multinode_mtr = {
+  'amd64': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'arm64': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04'],
+}; 
+
+local events_multinode_mtr = ['cron', 'custom'];
+
+
+local BOXES = {
+  'centos:7'     : 'centos_7_aws',
+  'rockylinux:8' : 'rocky_8_aws',
+  'rockylinux:9' : 'rocky_9_aws',
+  'debian:11'    : 'debian_bullseye_aws',
+  'debian:12'    : 'debian_bookworm_aws',
+  'ubuntu:20.04' : 'ubuntu_focal_aws',
+  'ubuntu:22.04' : 'ubuntu_jammy_aws',
+  'ubuntu:24.04' : 'ubuntu_noble_aws',
+};
+
+local multinode_host = 'multinode_tests@ci.columnstore.mariadb.net';
+local ssh_opt = '-i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=120';
+
 local any_branch = '**';
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
@@ -161,6 +183,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
+  local mdbci_target = if (event == 'custom') then 'columnstore/' + event + '/${DRONE_BUILD_NUMBER}/' + server else 'columnstore/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
   local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
                       '&& tar xzf sccache.tar.gz ' +
                       '&& install sccache*/sccache /usr/local/bin/',
@@ -435,6 +458,92 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       status: ['success', 'failure'],
     },
   },
+  multinodescripts_preprare_dir:: {
+    name: 'multinodescripts_preprare_dir',
+    depends_on: ['publish pkg', 'publish cmapi build'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      SSH_KEY: {
+        from_secret: 'ssh_key',
+      },
+      box: BOXES[platform],
+    },
+    commands: [
+      'echo $SSH_KEY > id_rsa_base64',
+      'base64 -d id_rsa_base64 > id_rsa',
+      'chmod 400 id_rsa',
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "mkdir -p ~/multinode_scripts/' + mdbci_target + '-$${box}/"',
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
+  multinodescripts_preprare:: {
+    name: 'multinodescripts_preprare',
+    depends_on: ['multinodescripts_preprare_dir'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      SSH_KEY: {
+        from_secret: 'ssh_key',
+      },
+      box: BOXES[platform],
+    },
+    commands: [
+      'scp -i id_rsa ' + ssh_opt + ' -r tests/scripts/mdbci/multinode_mtr/* ' + multinode_host + ':~/multinode_scripts/' + mdbci_target + '-$${box}/',
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
+  multinodescripts:: {
+    name: 'multinodescripts',
+    depends_on: ['multinodescripts_preprare'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      box: BOXES[platform],
+    },
+    commands: [
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./test.sh ' + mdbci_target + ' $${DRONE_BUILD_NUMBER} $${box} "' + arch + '/' + platform,
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
+  multinodescripts_logs:: {
+    name: 'multinodescripts_logs',
+    depends_on: ['multinodescripts'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      box: BOXES[platform],
+    },
+    commands: [
+      'mkdir -p ' + result + '/multinode_mtr',
+      'scp -r -i id_rsa ' + ssh_opt + ' ' + multinode_host + ':~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/* ' + result + '/multinode_mtr/',
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
+  multinodescripts_destroy:: {
+    name: 'multinodescripts_destroy',
+    depends_on: ['multinodescripts_logs'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    environment: {
+      box: BOXES[platform],
+    },
+    commands: [
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./columnstore_vm.py --machine-name ' + mdbci_target + '-$${box} --destroy; rm -rf ~/multinode_scripts/' + mdbci_target + '-$${box}; sudo rm -rf ~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/*;"',
+    ],
+    when: {
+      status: ['success', 'failure'],
+    },
+  },
+
   prepare_regression:: {
     name: 'prepare regression',
     depends_on: ['mtr', 'publish pkg', 'publish cmapi build'],
@@ -767,6 +876,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'cd /mdb/' + builddir,
                'ls -la ../',
                'mkdir ' + result,
+               'rm -rf storage/columnstore/mysql-test',
+               'cp -r storage/columnstore/columnstore/mysql-test storage/columnstore/',
                "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
                if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
                // Remove Debian build flags that could prevent ColumnStore from building
@@ -857,6 +968,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (std.member(platforms_multinode_mtr[arch], platform) && std.member(events_multinode_mtr, event)) then [pipeline.multinodescripts_preprare_dir] + [pipeline.multinodescripts_preprare] + [pipeline.multinodescripts] + [pipeline.multinodescripts_logs] + [pipeline.multinodescripts_destroy] + [pipeline.publish('multinodescripts_logs')] else []) +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
