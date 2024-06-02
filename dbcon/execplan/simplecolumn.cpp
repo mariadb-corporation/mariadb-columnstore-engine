@@ -757,7 +757,7 @@ llvm::Value* SimpleColumn::compileInt(llvm::IRBuilder<>& b, llvm::Value* data, l
   {
     case CalpontSystemCatalog::BIGINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<8>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<8>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::DATETIME:
@@ -765,54 +765,54 @@ llvm::Value* SimpleColumn::compileInt(llvm::IRBuilder<>& b, llvm::Value* data, l
     case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::UBIGINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<8>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<8>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<4>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<4>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<4>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<4>(b, data, offset);
       break;
     }
 
     case CalpontSystemCatalog::SMALLINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<2>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<2>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::USMALLINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<2>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<2>(b, data, offset);
       break;
     }
 
     case CalpontSystemCatalog::TINYINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<1>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<1>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::UTINYINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<1>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<1>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
     {
-      result = b.CreateFPToSI(msc_jit::CompileHelper::compileFloatField(b, data, offset), b.getInt64Ty());
+      result = b.CreateFPToSI(mcs_jit::CompileHelper::compileFloatField(b, data, offset), b.getInt64Ty());
       break;
     }
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
     {
-      result = b.CreateFPToSI(msc_jit::CompileHelper::compileDoubleField(b, data, offset), b.getInt64Ty());
+      result = b.CreateFPToSI(mcs_jit::CompileHelper::compileDoubleField(b, data, offset), b.getInt64Ty());
       break;
     }
     default:
@@ -821,7 +821,7 @@ llvm::Value* SimpleColumn::compileInt(llvm::IRBuilder<>& b, llvm::Value* data, l
     }
   }
 
-  msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
+  mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
   return result;
 }
 
@@ -834,7 +834,7 @@ llvm::Value* SimpleColumn::compileUint(llvm::IRBuilder<>& b, llvm::Value* data, 
   {
     case CalpontSystemCatalog::BIGINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<8>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<8>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::DATETIME:
@@ -842,53 +842,54 @@ llvm::Value* SimpleColumn::compileUint(llvm::IRBuilder<>& b, llvm::Value* data, 
     case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::UBIGINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<8>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<8>(b, data, offset);
       break;
     }
+    case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<4>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<4>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<4>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<4>(b, data, offset);
       break;
     }
 
     case CalpontSystemCatalog::SMALLINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<2>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<2>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::USMALLINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<2>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<2>(b, data, offset);
       break;
     }
 
     case CalpontSystemCatalog::TINYINT:
     {
-      result = msc_jit::CompileHelper::compileIntField<1>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileIntField<1>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::UTINYINT:
     {
-      result = msc_jit::CompileHelper::compileUintField<1>(b, data, offset);
+      result = mcs_jit::CompileHelper::compileUintField<1>(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
     {
-      result = b.CreateFPToUI(msc_jit::CompileHelper::compileFloatField(b, data, offset), b.getInt64Ty());
+      result = b.CreateFPToUI(mcs_jit::CompileHelper::compileFloatField(b, data, offset), b.getInt64Ty());
       break;
     }
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
     {
-      result = b.CreateFPToUI(msc_jit::CompileHelper::compileDoubleField(b, data, offset), b.getInt64Ty());
+      result = b.CreateFPToUI(mcs_jit::CompileHelper::compileDoubleField(b, data, offset), b.getInt64Ty());
       break;
     }
     default:
@@ -897,7 +898,7 @@ llvm::Value* SimpleColumn::compileUint(llvm::IRBuilder<>& b, llvm::Value* data, 
     }
   }
 
-  msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
+  mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
   return result;
 }
 
@@ -911,58 +912,58 @@ llvm::Value* SimpleColumn::compileFloat(llvm::IRBuilder<>& b, llvm::Value* data,
   {
     case CalpontSystemCatalog::BIGINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getFloatTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::UBIGINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getFloatTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getFloatTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getFloatTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getFloatTy());
       break;
     }
 
     case CalpontSystemCatalog::SMALLINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getFloatTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::USMALLINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getFloatTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getFloatTy());
       break;
     }
 
     case CalpontSystemCatalog::TINYINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getFloatTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::UTINYINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getFloatTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getFloatTy());
       break;
     }
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
     {
-      result = msc_jit::CompileHelper::compileFloatField(b, data, offset);
+      result = mcs_jit::CompileHelper::compileFloatField(b, data, offset);
       break;
     }
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
     {
-      result = b.CreateFPTrunc(msc_jit::CompileHelper::compileDoubleField(b, data, offset), b.getFloatTy());
+      result = b.CreateFPTrunc(mcs_jit::CompileHelper::compileDoubleField(b, data, offset), b.getFloatTy());
       break;
     }
     default:
@@ -971,7 +972,7 @@ llvm::Value* SimpleColumn::compileFloat(llvm::IRBuilder<>& b, llvm::Value* data,
     }
   }
 
-  msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
+  mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
   return result;
 }
 
@@ -985,58 +986,58 @@ llvm::Value* SimpleColumn::compileDouble(llvm::IRBuilder<>& b, llvm::Value* data
   {
     case CalpontSystemCatalog::BIGINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getDoubleTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::UBIGINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getDoubleTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<8>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::INT:
     case CalpontSystemCatalog::MEDINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getDoubleTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getDoubleTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<4>(b, data, offset), b.getDoubleTy());
       break;
     }
 
     case CalpontSystemCatalog::SMALLINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getDoubleTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::USMALLINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getDoubleTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<2>(b, data, offset), b.getDoubleTy());
       break;
     }
 
     case CalpontSystemCatalog::TINYINT:
     {
-      result = b.CreateSIToFP(msc_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getDoubleTy());
+      result = b.CreateSIToFP(mcs_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::UTINYINT:
     {
-      result = b.CreateUIToFP(msc_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getDoubleTy());
+      result = b.CreateUIToFP(mcs_jit::CompileHelper::compileIntField<1>(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
     {
-      result = b.CreateFPExt(msc_jit::CompileHelper::compileFloatField(b, data, offset), b.getDoubleTy());
+      result = b.CreateFPExt(mcs_jit::CompileHelper::compileFloatField(b, data, offset), b.getDoubleTy());
       break;
     }
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
     {
-      result = msc_jit::CompileHelper::compileDoubleField(b, data, offset);
+      result = mcs_jit::CompileHelper::compileDoubleField(b, data, offset);
       break;
     }
     default:
@@ -1045,7 +1046,7 @@ llvm::Value* SimpleColumn::compileDouble(llvm::IRBuilder<>& b, llvm::Value* data
     }
   }
 
-  msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
+  mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, dataType);
   return result;
 }
 

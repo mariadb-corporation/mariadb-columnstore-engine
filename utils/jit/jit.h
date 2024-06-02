@@ -1,26 +1,24 @@
 #include <atomic>
 #include <mutex>
-// #include <optional>
 #include <unordered_map>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
 
-#include "LRU.h"
+#include "modules_storage.h"
 
-namespace msc_jit
+namespace mcs_jit
 {
-// using Module = llvm::Module;
-using ModuleUPtr = std::unique_ptr<llvm::Module>;
-using ModuleSPtr = std::shared_ptr<llvm::Module>;
-using ModulesVector = std::vector<ModuleSPtr>;
+// using ModuleUPtr = std::unique_ptr<llvm::Module>;
+// using ModuleSPtr = std::shared_ptr<llvm::Module>;
+// using ModulesVector = std::vector<ModuleSPtr>;
+// using ExprToModulesVectorId = std::unordered_map<std::string, std::size_t>;
+
 class ModuleMemoryManager;
 using ModuleIdToMemManager = std::unordered_map<uint64_t, std::unique_ptr<ModuleMemoryManager>>;
 class JITSymbolResolver;
 class JITCompiler;
-
-// TODO JITIface
 
 class JIT
 {
@@ -56,11 +54,8 @@ class JIT
   std::atomic<size_t> compiled_code_size;
 
   ModuleIdToMemManager moduleIdToMemManager_;
+  // ModuleStorage module_storage_;
 
-  // ExpressionToModulesStoreId expressionToModuleStore_;
-  // ModulesVector modulesStore_;
-  // mcs_lru::LRU lru_;
-  // TODO lock when compiling a module
   mutable std::mutex jit_lock;
 };
-}  // namespace msc_jit
+}  // namespace mcs_jit
