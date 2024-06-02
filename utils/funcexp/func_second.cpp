@@ -148,7 +148,8 @@ bool Func_second::isCompilable(const execplan::CalpontSystemCatalog::ColType& co
     case CalpontSystemCatalog::TIME:
     case CalpontSystemCatalog::DATE:
     case CalpontSystemCatalog::DATETIME:
-    case CalpontSystemCatalog::TIMESTAMP:
+    // TODO add support for gmtSecToMySQLTime
+    // case CalpontSystemCatalog::TIMESTAMP:
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
@@ -174,20 +175,21 @@ llvm::Value* Func_second::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm:
     case CalpontSystemCatalog::DATETIME:
       val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::DATETIME);
       break;
-    case execplan::CalpontSystemCatalog::TIMESTAMP:
-      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
-          "dataconvert::DataConvert::gmtSecToMySQLTime");
-      if (!func)
-      {
-        throw ::logic_error(
-            "Func_second::compile: dataconvert::DataConvert::gmtSecToMySQLTime function not found");
-      }
-      val = b.CreateCall(
-          func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
-                 b.getInt64(op_ct.getTimeZone())});
-      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
-                    isNull);
-      break;
+    // TODO fix the following block
+    // case execplan::CalpontSystemCatalog::TIMESTAMP:
+    //   func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+    //       "dataconvert::DataConvert::gmtSecToMySQLTime");
+    //   if (!func)
+    //   {
+    //     throw ::logic_error(
+    //         "Func_second::compile: dataconvert::DataConvert::gmtSecToMySQLTime function not found");
+    //   }
+    //   val = b.CreateCall(
+    //       func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
+    //              b.getInt64(op_ct.getTimeZone())});
+    //   b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+    //                 isNull);
+    //   break;
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::SMALLINT:
