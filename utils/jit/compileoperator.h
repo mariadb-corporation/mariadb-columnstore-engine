@@ -16,6 +16,23 @@ struct CompiledOperator
   JITCompiledOperator<float> compiled_function_float;
 };
 
+class CompiledOperatorCache
+{
+ public:
+  std::unordered_map<std::string, msc_jit::JIT::CompiledModule> cache;
+
+  static CompiledOperatorCache& getInstance()
+  {
+    static CompiledOperatorCache instance;
+    return instance;
+  }
+
+ private:
+  CompiledOperatorCache() = default;
+  CompiledOperatorCache(const CompiledOperatorCache&) = delete;
+  CompiledOperatorCache& operator=(const CompiledOperatorCache&) = delete;
+};
+
 CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row);
 
 }  // namespace execplan

@@ -7,7 +7,9 @@ set(jit_LIB_SRCS
         compileoperator.cpp
         compileoperator.h
         expressionjit.h
-        compilehelper.h)
+        compilehelper.h
+        adaptive.cpp
+        adaptive.h)
 
 
 add_library(jit SHARED ${jit_LIB_SRCS})

@@ -31,6 +31,7 @@
 
 #include "funcexpwrapper.h"
 #include "objectreader.h"
+#include <pthread.h>
 #include "expressionjit.h"
 using namespace messageqcpp;
 using namespace rowgroup;
@@ -110,6 +111,19 @@ void FuncExpWrapper::deserialize(ByteStream& bs)
   }
 }
 
+bool FuncExpWrapper::containCache()
+{
+  auto expression = rcs[0];
+  string key = colDataTypeToString(expression->resultType().colDataType) + expression->alias();
+
+  if (CompiledOperatorCache::getInstance().cache.find(key) !=
+      CompiledOperatorCache::getInstance().cache.end())
+  {
+    return true;
+  }
+  return false;
+}
+
 bool FuncExpWrapper::evaluate(Row* r)
 {
   uint32_t i;
@@ -117,7 +131,7 @@ bool FuncExpWrapper::evaluate(Row* r)
   for (i = 0; i < filters.size(); i++)
     if (!fe->evaluate(*r, filters[i].get()))
       return false;
-  if (!isCompiled)
+  if (openCompiled && !isCompiled)
   {
     try
     {

@@ -46,6 +46,7 @@ namespace funcexp
 class FuncExpWrapper : public messageqcpp::Serializeable
 {
  public:
+  bool openCompiled = true;
   FuncExpWrapper();
   FuncExpWrapper(const FuncExpWrapper&);
   virtual ~FuncExpWrapper();
@@ -54,6 +55,7 @@ class FuncExpWrapper : public messageqcpp::Serializeable
 
   void serialize(messageqcpp::ByteStream&) const;
   void deserialize(messageqcpp::ByteStream&);
+  bool containCache();
 
   bool evaluate(rowgroup::Row*);
   inline bool evaluateFilter(uint32_t num, rowgroup::Row* r);
