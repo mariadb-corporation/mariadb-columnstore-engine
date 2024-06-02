@@ -5,7 +5,7 @@
 
 #include "mcs_datatypes_limits.h"
 
-namespace msc_jit
+namespace mcs_jit
 {
 class CompileHelper
 {
@@ -130,6 +130,12 @@ class CompileHelper
                                  isNullVal),
                       isNull);
         break;
+        case datatypes::SystemCatalog::TIME:
+        b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileIntField<8>(b, dataValue, offset, false),
+                                                b.getInt64(joblist::TIMENULL)),
+                                 isNullVal),
+                      isNull);
+        break;
       case datatypes::SystemCatalog::UTINYINT:
         b.CreateStore(b.CreateOr(b.CreateICmpEQ(compileUintField<1>(b, dataValue, offset, false),
                                                 b.getInt8(joblist::UTINYINTNULL)),
@@ -167,4 +173,4 @@ class CompileHelper
   }
 };
 
-}  // namespace msc_jit
+}  // namespace mcs_jit

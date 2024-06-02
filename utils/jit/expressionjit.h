@@ -11,7 +11,7 @@
 
 using namespace execplan;
 
-namespace msc_jit
+namespace mcs_jit
 {
 
 static bool initialized = false;
@@ -144,4 +144,4 @@ static void compileExpressions(std::vector<execplan::SRCP>& expressions, rowgrou
     // }
   }
 }
-}  // namespace msc_jit
+}  // namespace mcs_jit

@@ -38,7 +38,7 @@
 #include <llvm/ADT/None.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 
-namespace msc_jit
+namespace mcs_jit
 {
 // Arena Memory pool for JIT
 class Arena : private boost::noncopyable
@@ -348,8 +348,8 @@ JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compil
 JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
   // std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
-  // module->print(llvm::outs(), nullptr);
   runOptimizationPassesOnModule(*module);
+  // module->print(llvm::outs(), nullptr);
 
   auto buffer = compiler->compile(*module);
 
@@ -524,4 +524,4 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
 //   return std::nullopt_t;
 // }
 
-}  // namespace msc_jit
+}  // namespace mcs_jit

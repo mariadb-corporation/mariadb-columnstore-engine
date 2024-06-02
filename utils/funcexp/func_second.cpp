@@ -139,7 +139,6 @@ int64_t Func_second::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isN
 
   if (val < 1000000000)
     return 0;
-
   return (uint32_t)((val >> 20) & 0x3f);
 }
 bool Func_second::isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
@@ -177,11 +176,11 @@ llvm::Value* Func_second::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm:
       break;
     case execplan::CalpontSystemCatalog::TIMESTAMP:
       func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
-          "dataconvert::DataConvert::timestampValueToInt");
+          "dataconvert::DataConvert::gmtSecToMySQLTime");
       if (!func)
       {
         throw ::logic_error(
-            "Func_second::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+            "Func_second::compile: dataconvert::DataConvert::gmtSecToMySQLTime function not found");
       }
       val = b.CreateCall(
           func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
@@ -240,6 +239,8 @@ llvm::Value* Func_second::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm:
   val = b.CreateSelect(b.CreateICmpSLT(val, b.getInt64(1000000000)), b.getInt32(0),
                        b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 20), 0x3f), b.getInt32Ty()));
 
-  return b.CreateSelect(isNull, b.getInt32(0), val);
+  auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
+
+  return b.CreateSelect(b.CreateICmpEQ(isNullVal, b.getTrue()), b.getInt32(0), val);
 }
 }  // namespace funcexp

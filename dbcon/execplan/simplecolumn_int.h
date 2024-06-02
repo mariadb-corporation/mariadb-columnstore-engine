@@ -94,8 +94,8 @@ class SimpleColumn_INT : public SimpleColumn
   {
     auto offset = row.getOffset(fInputIndex);
     CalpontSystemCatalog::ColDataType colType = row.getColType(fInputIndex);
-    msc_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
-    return msc_jit::CompileHelper::compileIntField<len>(b, data, offset);
+    mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
+    return mcs_jit::CompileHelper::compileIntField<len>(b, data, offset);
   }
   bool isCompilable(rowgroup::Row& row) override
   {

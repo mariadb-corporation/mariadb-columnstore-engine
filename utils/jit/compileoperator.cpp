@@ -71,7 +71,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
 }
 
 // change this to a return type
-CompiledOperator compileOperator(msc_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
+CompiledOperator compileOperator(mcs_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
 {
   // WIP pass this into the closure below.
   const auto& functionName = computeFunctionName(expression);
