@@ -1984,7 +1984,7 @@ validation_prechecks_for_restore() {
     esac
 
     if eval $cmapi_installed_command ; then
-        if [ -z $(pidof /usr/share/columnstore/cmapi/python/bin/python3) ]; then 
+        if ! sudo mcs cmapi is-ready ; then
             printf " - Columnstore Management API Status .. Offline\n"; 
         else 
             handle_early_exit_on_restore "\n[X] Cmapi is ONLINE - please turn off \n\n"; 
