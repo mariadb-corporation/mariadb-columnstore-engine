@@ -256,13 +256,13 @@ def restore(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} restore {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
 
 
 @handle_output
-def restore_dbrm(
+def dbrm_restore(
     p: Annotated[
         str,
         typer.Option(
@@ -290,6 +290,6 @@ def restore_dbrm(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} dbrm_restore {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
