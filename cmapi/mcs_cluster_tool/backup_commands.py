@@ -248,13 +248,13 @@ def backup(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} backup {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
 
 
 @handle_output
-def backup_dbrm(
+def dbrm_backup(
     m: Annotated[
         str,
         typer.Option(
@@ -320,6 +320,6 @@ def backup_dbrm(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} dbrm_backup {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
