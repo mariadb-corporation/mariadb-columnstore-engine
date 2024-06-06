@@ -3,9 +3,13 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 # from llvm 10
 # error: bitwise operation between different enumeration types
 # ('FunctionModRefBehavior' and 'llvm::FunctionModRefLocation') is deprecated [-Werror,-Wdeprecated-enum-enum-conversion]
-MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion")
+# non-virtual-dtor and missing-braces come from compilation errors with llvm 16.
+#MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion ")
+string(REPLACE "-Werror " " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces -Wno-non-virtual-dtor")
 
 set(jit_LIB_SRCS
+        # modules_storage.cpp
         jit.cpp
         jit.h
         compileoperator.cpp
