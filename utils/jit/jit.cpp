@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <boost/noncopyable.hpp>
 #include <optional>
+#include "llvm/Config/llvm-config.h"
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DataLayout.h>
@@ -17,7 +18,19 @@
 #include <llvm/ExecutionEngine/JITSymbol.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
-#include <llvm/MC/SubtargetFeature.h>
+
+#if LLVM_VERSION_MAJOR <= 16
+#  include <llvm/MC/SubtargetFeature.h>
+#else
+#  include <llvm/TargetParser/SubtargetFeature.h>
+#endif
+ 
+ #if LLVM_VERSION_MAJOR < 14
+#  include <llvm/Support/TargetRegistry.h>
+ #else
+#  include <llvm/MC/TargetRegistry.h>
+ #endif
+
 
 #include "llvm/Config/llvm-config.h"
 
