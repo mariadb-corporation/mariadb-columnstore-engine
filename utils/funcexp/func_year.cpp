@@ -142,20 +142,20 @@ bool Func_year::isCompilable(const execplan::CalpontSystemCatalog::ColType& colT
 {
   switch (colType.colDataType)
   {
-    case CalpontSystemCatalog::DATE:
-    case CalpontSystemCatalog::DATETIME:
-    case CalpontSystemCatalog::BIGINT:
-    case CalpontSystemCatalog::MEDINT:
-    case CalpontSystemCatalog::SMALLINT:
-    case CalpontSystemCatalog::TINYINT:
-    case CalpontSystemCatalog::INT:
-    case CalpontSystemCatalog::DECIMAL:
-    case CalpontSystemCatalog::UDECIMAL:
-    case CalpontSystemCatalog::TIMESTAMP: return true;
-    case CalpontSystemCatalog::TIME:
-    case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARCHAR: return false;
+    // case CalpontSystemCatalog::DATE:
+    // case CalpontSystemCatalog::DATETIME:
+    // case CalpontSystemCatalog::BIGINT:
+    // case CalpontSystemCatalog::MEDINT:
+    // case CalpontSystemCatalog::SMALLINT:
+    // case CalpontSystemCatalog::TINYINT:
+    // case CalpontSystemCatalog::INT:
+    // case CalpontSystemCatalog::DECIMAL:
+    // case CalpontSystemCatalog::UDECIMAL:
+    // case CalpontSystemCatalog::TIMESTAMP: return true;
+    // case CalpontSystemCatalog::TIME:
+    // case CalpontSystemCatalog::CHAR:
+    // case CalpontSystemCatalog::TEXT:
+    // case CalpontSystemCatalog::VARCHAR: return false;
     default: return false;
   }
 }
