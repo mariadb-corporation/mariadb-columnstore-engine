@@ -224,6 +224,16 @@ def backup(
             hidden=True
         )
     ] = 'direct',
+    r: Annotated[
+        int,
+        typer.Option(
+            '-r', '--retention-days',
+            help=(
+                'Retain backups created within the last X days, '
+                'default 0 == keep all backups.'
+            )
+        )
+    ] = 0,
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -277,8 +287,7 @@ def dbrm_backup(
         typer.Option(
             '-r', '--retention-days',
             help=(
-                'Number of days of dbrm backups to retain - script will '
-                'delete based on last update file time.'
+                'Retain dbrm backups created within the last X days.'
             )
         )
     ] = 7,
