@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.6
+# Version: 3.8
 #
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date>
 #
 ########################################################################
-mcs_bk_manager_version="3.6"
+mcs_bk_manager_version="3.8"
 start=$(date +%s)
 action=$1
 
@@ -360,7 +360,7 @@ print_backup_help_text()
         -q     | --quiet                  Silence verbose copy command outputs
         -c     | --compress               Compress backup in X format - Options: [ pigz ]
         -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
-        -r     | --retention-days         Retain backups created within the last X days, default 0 = keep all backups
+        -r     | --retention-days         Retain backups created within the last X days, the rest are deleted, default 0 = keep all backups
         -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )
@@ -574,13 +574,13 @@ check_for_dependancies()
         cloud="aws"
 
         # Critical argument for S3 - determine which cloud
-        if [ -z "$backup_bucket" ]; then handle_failed_dependencies "\n undefined --backup_bucket: $backup_bucket \nfor examples see: ./$0 backup --help\n"; fi
+        if [ -z "$backup_bucket" ]; then handle_failed_dependencies "\n\n[!] Undefined --backup-bucket: $backup_bucket \nfor examples see: ./$0 backup --help\n\n"; fi
         if [[ $backup_bucket == gs://* ]]; then
             cloud="gcp"; protocol="gs";
         elif [[ $backup_bucket == s3://* ]]; then
             cloud="aws"; protocol="s3";
         else
-            handle_failed_dependencies "\n Invalid --backup_bucket - doesnt lead with gs:// or s3:// - $backup_bucket\n";
+            handle_failed_dependencies "\n\n[!] Invalid --backup-bucket - doesnt lead with gs:// or s3:// - $backup_bucket\n\n";
         fi
 
         if [ $cloud == "gcp" ]; then
@@ -602,7 +602,7 @@ check_for_dependancies()
                 or B) gcloud auth activate-service-account --key-file=user-file.json
                 "
 
-                handle_failed_dependencies "\n\nPlease make sure gsutil cli is installed configured and executable\n"
+                handle_failed_dependencies "\n\n[!] Please make sure gsutil cli is installed configured and executable\n\n"
             else
                 gsutil=$(which gsutil 2>/dev/null)
             fi
@@ -625,7 +625,7 @@ check_for_dependancies()
                 sudo ./aws/install
                 aws configure"
 
-                handle_failed_dependencies "\n\n Please make sure aws cli is installed configured and executable\nSee existing .cnf aws credentials with:  grep aws_ $STORAGEMANGER_CNF \n\n"
+                handle_failed_dependencies "\n\n[!] Please make sure aws cli is installed configured and executable\nSee existing .cnf aws credentials with:  grep aws_ $STORAGEMANGER_CNF \n\n"
             else
                 awscli=$(which aws 2>/dev/null)
             fi
@@ -1042,37 +1042,40 @@ run_save_brm()
     if $skip_save_brm || [ $pm != "pm1" ] || ! $columnstore_online || [ $mode == "indirect" ]; then return; fi;
 
     printf "\nBlock Resolution Manager\n"
-    local tmpDir="/tmp/DBRMbackup-$today"
-    if [ ! -d "$tmpDir" ]; then mkdir -p $tmpDir; fi;
+    local tmp_dir="/tmp/DBRMbackup-$today"
+    if [ ! -d "$tmp_dir" ]; then mkdir -p $tmp_dir; fi;
 
     # Copy extent map locally just in case save_brm fails
     if [ $storage == "LocalStorage" ]; then
-        cp -R $DBRM_PATH/* $tmpDir
+        printf " - Backing up DBRMs @ $tmp_dir ... "
+        cp -R $DBRM_PATH/* $tmp_dir
+        printf " Done \n"
     elif [ $storage == "S3" ]; then
-        cp -R $STORAGEMANAGER_PATH/* $tmpDir
 
+        printf " - Backing up minimal DBRMs @ $tmp_dir ... "
         # Base Set
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_current > $tmpDir/BRM_saves_current $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_journal > $tmpDir/BRM_saves_journal $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_em > $tmpDir/BRM_saves_em $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_vbbm > $tmpDir/BRM_saves_vbbm $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_saves_vss > $tmpDir/BRM_saves_vss $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_current 2>/dev/null > $tmp_dir/BRM_saves_current $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_journal 2>/dev/null > $tmp_dir/BRM_saves_journal $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_em   2>/dev/null > $tmp_dir/BRM_saves_em $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_vbbm 2>/dev/null > $tmp_dir/BRM_saves_vbbm $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_saves_vss  2>/dev/null > $tmp_dir/BRM_saves_vss $xtra_cmd_args"
 
         # A Set
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_em > $tmpDir/BRM_savesA_em $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vbbm > $tmpDir/BRM_savesA_vbbm $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vss > $tmpDir/BRM_savesA_vss $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_em   2>/dev/null > $tmp_dir/BRM_savesA_em $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vbbm 2>/dev/null > $tmp_dir/BRM_savesA_vbbm $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesA_vss  2>/dev/null > $tmp_dir/BRM_savesA_vss $xtra_cmd_args"
 
         # B Set
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_em > $tmpDir/BRM_savesB_em $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vbbm > $tmpDir/BRM_savesB_vbbm $xtra_cmd_args"
-        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vss > $tmpDir/BRM_savesB_vss $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_em   2>/dev/null > $tmp_dir/BRM_savesB_em $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vbbm 2>/dev/null > $tmp_dir/BRM_savesB_vbbm $xtra_cmd_args"
+        eval "smcat /data1/systemFiles/dbrm/BRM_savesB_vss  2>/dev/null > $tmp_dir/BRM_savesB_vss $xtra_cmd_args"
+        printf " Done \n"
     fi
 
     printf " - Saving BRMs... \n"
-    brmOwner=$(stat -c "%U" $DBRM_PATH/)
-    if sudo -u $brmOwner /usr/bin/save_brm ; then
-        rm -rf $tmpDir
+    brm_owner=$(stat -c "%U" $DBRM_PATH/)
+    if sudo -u $brm_owner /usr/bin/save_brm ; then
+        rm -rf $tmp_dir
     else
         printf "\n Failed: save_brm error - see /var/log/messages - backup @ $tmpDir \n\n";
         handle_early_exit_on_backup
@@ -1097,12 +1100,16 @@ s3sync()
 
         # gsutil throws WARNINGS if not directed to /dev/null
         if $quiet; then cmd+="  2>/dev/null"; fi
+        eval "$cmd"
     else
         # Default AWS
         cmd="$awscli $xtra_s3_args $add_s3_api_flags s3 sync $from $to"
+        $cmd
     fi
 
-    if eval $cmd; then
+    local exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
         if [ -n "$success_message" ]; then printf "$success_message"; fi;
     else
         if [ $retries -lt $RETRY_LIMIT ]; then
@@ -1577,8 +1584,8 @@ run_backup()
         max_wait=180
         printf " - Checking storagemanager/journal/data$ASSIGNED_DBROOT/*           "
         while [[ $j_counts -gt 0 ]]; do
-            if [ $i -gt $max_wait ]; then handle_early_exit_on_backup "\n[!] max_wait exceeded for $cs_journal/data$ASSIGNED_DBROOT/* to sync with bucket "; fi;
-            if (( $i%10 == 0 )); then printf "\n[!] Not empty yet - found $j_counts files @ $cs_journal/data$ASSIGNED_DBROOT/*\n"; fi;
+            if [ $i -gt $max_wait ]; then printf "[!] Maybe you have orphaned journal files, active writes or an unreachable bucket \n"; handle_early_exit_on_backup "\n[!] max_wait exceeded for $cs_journal/data$ASSIGNED_DBROOT/* to sync with bucket "; ls -la $cs_journal/data$ASSIGNED_DBROOT/*; fi;
+            if (( $i%10 == 0 )); then printf "\n[!] Not empty yet - found $j_counts files @ $cs_journal/data$ASSIGNED_DBROOT/*\n"; printf " - Checking storagemanager/journal/data$ASSIGNED_DBROOT/*           "; fi;
             sleep 1
             i=$(($i+1))
             j_counts=$(find $cs_journal/data$ASSIGNED_DBROOT/* -type f 2>/dev/null | wc -l)
@@ -1735,8 +1742,8 @@ run_backup()
     clear_read_lock
     end=$(date +%s)
     runtime=$((end-start))
-    printf "\n[+] Runtime: $runtime\n"
-    printf "[+] $final_message\n\n"
+    printf "\nRuntime: $runtime\n"
+    printf "$final_message\n\n"
 }
 
 load_default_restore_variables()
@@ -2683,8 +2690,8 @@ run_restore()
 
     end=$(date +%s)
     runtime=$((end-start))
-    printf "\n[+] Runtime: $runtime\n"
-    printf "[+] $final_message\n\n"
+    printf "\nRuntime: $runtime\n"
+    printf "$final_message\n\n"
     if ! $quiet; then
         if [ $pm == "pm1" ]; then
             echo -e  " - Last you need to manually configure mariadb replication between nodes"
@@ -2708,9 +2715,11 @@ load_default_dbrm_variables() {
     backup_location=/tmp/dbrm_backups
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
+    skip_storage_manager=false
     mode="once"
     quiet=false
 
+    list_dbrm_backups=false
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then
         dbrm_dir="/var/lib/columnstore/storagemanager"
@@ -2723,6 +2732,8 @@ load_default_dbrm_restore_variables() {
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
     backup_folder_to_restore=""
+    skip_dbrm_backup=false
+    skip_storage_manager=false
 
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then
@@ -2734,11 +2745,12 @@ print_dbrm_backup_help_text() {
     echo "
     Columnstore DBRM Backup
 
-        -m   | --mode              'loop' or 'once' ; Determines if this script runs in a forever loop sleeping -i minutes or just once
-        -i   | --interval          Number of minutes to sleep when --mode loop
-        -r   | --retention-days    Retain dbrm backups created within the last X days
-        -p   | --path              path of where to save the dbrm backups on disk
-        -nb  | --name-backup       custom name to prefex dbrm backups with
+        -m   | --mode                  ['loop','once']; Determines if this script runs in a forever loop sleeping -i minutes or just once
+        -i   | --interval              Number of minutes to sleep when --mode loop
+        -r   | --retention-days        Retain dbrm backups created within the last X days, the rest are deleted
+        -p   | --path                  path of where to save the dbrm backups on disk
+        -nb  | --name-backup           custom name to prefex dbrm backups with
+        -ssm | --skip-storage-manager  skip backing up storagemanager directory
 
         Default: ./$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups
 
@@ -2755,9 +2767,11 @@ print_dbrm_restore_help_text() {
     echo "
     Columnstore DBRM Restore
 
-        -p   | --path              path of where to save the dbrm backups on disk
-        -d   | --directory         date or directory chose to restore from
-        -ns  | --no-start          do not attempt columnstore startup post dbrm_restore
+        -p   | --path                  path of where to save the dbrm backups on disk
+        -d   | --directory             date or directory chose to restore from
+        -ns  | --no-start              do not attempt columnstore startup post dbrm_restore
+        -sdbk| --skip-dbrm-backup      skip backing up dbrms brefore restoring
+        -ssm | --skip-storage-manager  skip restoring storagemanager directory
 
         Default: ./$0 dbrm_restore --path /tmp/dbrm_backups
 
@@ -2801,6 +2815,10 @@ parse_dbrms_variables() {
                 shift # past argument
                 shift # past value
                 ;;
+            -ssm|--skip-storage-manager)
+                skip_storage_manager=true
+                shift # past argument
+                ;;
             -q | --quiet)
                 quiet=true
                 shift # past argument
@@ -2808,6 +2826,10 @@ parse_dbrms_variables() {
             -h|--help|-help|help)
                 print_dbrm_backup_help_text;
                 exit 1;
+                ;;
+            "list")
+                list_dbrm_backups=true
+                shift # past argument
                 ;;
             *)  # unknown option
                 printf "\nunknown flag: $1\n"
@@ -2838,6 +2860,14 @@ parse_dbrm_restore_variables() {
                 ;;
             -ns  | --no-start)
                 auto_start=false
+                shift # past argument
+                ;;
+            -sdbk| --skip-dbrm-backup)
+                skip_dbrm_backup=true
+                shift # past argument
+                ;;
+            -ssm|--skip-storage-manager)
+                skip_storage_manager=true
                 shift # past argument
                 ;;
             -h|--help|-help|help)
@@ -2909,6 +2939,23 @@ validation_prechecks_for_dbrm_backup() {
     fi;
 }
 
+validation_prechecks_before_listing_restore_options() {
+
+    # confirm backup directory exists
+    if [ ! -d $backup_location ]; then
+        printf "[!!] Backups Directory does NOT exist --path $backup_location \n"
+        printf "ls -la $backup_location\n\n"
+        exit 1;
+    fi
+
+    # Check if backup directory is empty
+    if [ -z "$(find "$backup_location" -mindepth 1 | head )" ]; then
+        printf "[!!] Backups Directory is empty --path $backup_location \n"
+        printf "ls -la $backup_location\n\n"
+        exit 1
+    fi
+}
+
 validation_prechecks_for_dbrm_restore() {
 
     printf "Prechecks\n"
@@ -2962,6 +3009,16 @@ validation_prechecks_for_dbrm_restore() {
                 fi
             done
 
+            # For S3 check storagemanager dir exists in backup unless skip storagemanager is passed
+            if [ "$storage" == "S3" ] && [ $skip_storage_manager == false ]; then
+                if [ ! -d "${backup_location}/${backup_folder_to_restore}/metadata" ]; then
+                    printf "\n[!!] Path Not Found: ${backup_location}/${backup_folder_to_restore}/metadata \n"
+                    printf "Retry with a different backup to restore or use flag --skip-storage-manager\n\n"
+                    exit 2;
+                fi;
+            fi
+
+
             printf " - Backup contains all files\n"
 
         else
@@ -2990,6 +3047,7 @@ validation_prechecks_for_dbrm_restore() {
     else
         printf "\n[!!] Failed to source cs_package_manager.sh\n\n"
         exit 1;
+
     fi
 
     # Confirm the function exists and the source of cs_package_manager.sh worked
@@ -3000,7 +3058,20 @@ validation_prechecks_for_dbrm_restore() {
         echo "Error: 'check_package_managers' function not found via cs_package_manager.sh";
         exit 1;
     fi
+    cs_package_manager_functions=(
+        "start_cmapi"
+        "start_mariadb"
+        "init_cs_up"
+    )
 
+    for func in "${cs_package_manager_functions[@]}"; do
+        if command -v $func &> /dev/null; then
+            continue;
+        else
+            echo "Error: '$func' function not found via cs_package_manager.sh";
+            exit 1;
+        fi
+    done
 }
 
 process_dbrm_backup() {
@@ -3008,16 +3079,30 @@ process_dbrm_backup() {
     load_default_dbrm_variables
     parse_dbrms_variables "$@";
 
+    if $list_dbrm_backups; then
+        validation_prechecks_before_listing_restore_options
+        printf "\nExisting DBRM Backups\n";
+        list_restore_options_from_backups "$@"
+        echo "--------------------------------------------------------------------------"
+        printf "Restore with ./$0 dbrm_restore --path $backup_location --directory <backup_folder_from_above>\n\n"
+        exit 0;
+    fi;
+
     if ! $quiet ; then
-        printf "\n[+] Inputs\n";
-        printf "    CS Storage: $storage\n";
-        printf "    Source:     $dbrm_dir\n";
-        printf "    Backups:    $backup_location\n";
+
+        printf "\nDBRM Backup\n";
+        echo "--------------------------------------------------------------------------"
+        if [ "$storage" == "S3" ]; then echo "Skips:  Storagemanager($skip_storage_manager)"; fi;
+        echo "--------------------------------------------------------------------------"
+        printf "CS Storage:  $storage\n";
+        printf "Source:      $dbrm_dir\n";
+        printf "Backups:     $backup_location\n";
         if [ "$mode" == "loop" ]; then
-            printf "    Interval:   $backup_interval_minutes minutes\n";
+            printf "Interval:    $backup_interval_minutes minutes\n";
         fi;
-        printf "    Retention:  $retention_days day(s)\n"
-        printf "    Mode:       $mode\n\n"
+        printf "Retention:   $retention_days day(s)\n"
+        printf "Mode:        $mode\n"
+        echo "--------------------------------------------------------------------------"
     fi;
 
     validation_prechecks_for_dbrm_backup
@@ -3030,10 +3115,15 @@ process_dbrm_backup() {
         mkdir -p "$backup_folder"
 
         # Copy files to the backup directory
-        cp -arp "$dbrm_dir"/* "$backup_folder"
+        if [[ $skip_storage_manager == false || $storage == "LocalStorage" ]]; then
+            if ! $quiet; then  printf " - copying $dbrm_dir ..."; fi;
+            cp -arp "$dbrm_dir"/* "$backup_folder"
+            if ! $quiet; then printf " Done\n"; fi;
+        fi
 
         if [ "$storage" == "S3" ]; then
             # smcat em files to disk
+            if ! $quiet; then  printf " - copying DBRMs from bucket ..."; fi;
             mkdir $backup_folder/dbrms/
             smls /data1/systemFiles/dbrm 2>/dev/null > $backup_folder/dbrms/dbrms.txt
             smcat /data1/systemFiles/dbrm/BRM_saves_current  2>/dev/null > $backup_folder/dbrms/BRM_saves_current
@@ -3050,87 +3140,32 @@ process_dbrm_backup() {
             smcat /data1/systemFiles/dbrm/oidbitmap 2>/dev/null > $backup_folder/dbrms/oidbitmap
             smcat /data1/systemFiles/dbrm/SMTxnID 2>/dev/null > $backup_folder/dbrms/SMTxnID
             smcat /data1/systemFiles/dbrm/tablelocks 2>/dev/null > $backup_folder/dbrms/tablelocks
+            if ! $quiet; then printf " Done\n"; fi;
         fi
 
-        # Clean up old backups
-        # example: find /tmp/dbrmBackups/ -maxdepth 1 -type d -name "dbrm_backup_*" -mtime +1 -exec rm -r {} \;
-        find "$backup_location" -maxdepth 1 -type d -name "${backup_base_name}_*" -mtime +$retention_days -exec rm -r {} \;
+        if [ $retention_days -gt 0 ] ; then
+            # Clean up old backups
+            # example: find /tmp/dbrm_backups -maxdepth 1 -type d -name "dbrm_backup_*" -mtime +1 -exec rm -r {} \;
+            if ! $quiet; then printf " - applying retention policy ..."; fi;
+            find "$backup_location" -maxdepth 1 -type d -name "${backup_base_name}_*" -mtime +$retention_days -exec rm -r {} \;
+            if ! $quiet; then  printf " Done\n"; fi;
+        fi;
 
-        printf "[+] Created: $backup_folder\n"
-        if [ "$mode" == "once" ]; then  break;  fi;
+        printf "Created: $backup_folder\n"
 
-        printf "[+] Sleeping ... $sleep_seconds seconds\n"
+
+        if [ "$mode" == "once" ]; then
+            end=$(date +%s)
+            runtime=$((end-start))
+            if ! $quiet; then  printf "Runtime: $runtime\n"; fi;
+            break;
+        fi;
+
+        printf "Sleeping ... $sleep_seconds seconds\n"
         sleep "$sleep_seconds"
     done
 
-    if ! $quiet; then printf "[+] Complete\n\n"; fi;
-}
-
-# Small augmentation of https://github.com/mariadb-corporation/mariadb-columnstore-engine/blob/develop/cmapi/check_ready.sh
-cmapi_check_ready() {
-    SEC_TO_WAIT=15
-    cmapi_success=false
-    for i in  $(seq 1 $SEC_TO_WAIT); do
-        printf "."
-        if ! $(curl -k -s --output /dev/null --fail https://127.0.0.1:8640/cmapi/ready); then
-            sleep 1
-        else
-            cmapi_success=true
-            break
-        fi
-    done
-
-    if $cmapi_success; then
-        return 0;
-    else
-        printf "\nCMAPI not ready after waiting $SEC_TO_WAIT seconds. Check log file for further details.\n\n"
-        exit 1;
-    fi
-}
-
-confirm_cmapi_online_and_configured() {
-    cmapi_current_status=$(mcs cmapi is-ready 2> /dev/null);
-    if [ $? -ne 0 ]; then
-
-        # if cmapi is not online - check systemd is running and start cmapi
-        if [ "$(ps -p 1 -o comm=)" = "systemd" ]; then
-            if systemctl start mariadb-columnstore-cmapi; then
-                cmapi_check_ready
-            else
-                echo "[!!] Failed to start CMAPI"
-                exit 1;
-            fi
-        else
-            printf "systemd is not running - cant start cmapi\n\n"
-            exit 1;
-        fi
-    else
-
-        # Check if the JSON string is in the expected format
-        if ! echo "$cmapi_current_status" | jq -e '.started | type == "boolean"' >/dev/null; then
-            echo "Error: CMAPI JSON string response is not in the expected format"
-            exit 1
-        fi
-
-        # Check if 'started' is true
-        if ! echo "$cmapi_current_status" | jq -e '.started == true' >/dev/null; then
-            echo "Error: CMAPI 'started' is not true"
-            echo "mcs cmapi is-ready"
-            exit 1
-        fi
-    fi
-
-    confirm_nodes_configured
-}
-
-# currently supports singlenode only
-confirm_nodes_configured() {
-    # Check for edge case of cmapi not configured
-    if [ "$(mcs cluster status | jq -r '.num_nodes')" == "0" ]; then
-        printf "[!!] Noticed cmapi installed but no nodes configured...\n"
-        add_primary_node_cmapi
-        sleep 1;
-    fi
+    if ! $quiet; then printf "Complete\n\n"; fi;
 }
 
 is_cmapi_installed() {
@@ -3158,35 +3193,23 @@ is_cmapi_installed() {
 
 start_mariadb_cmapi_columnstore() {
 
-    printf " - Starting MariaDB Server ... "
-    if systemctl start mariadb; then
-        printf "Done\n"
-    else
-        echo "[!!] Failed to start mariadb"
-        exit 1;
-    fi
+    start_mariadb
+    start_cmapi
+    init_cs_up
 
-    if is_cmapi_installed ; then
-        printf " - Starting CMAPI ... "
-        if confirm_cmapi_online_and_configured ; then
-            printf "Done\n"
-        fi
-    fi
+    # For verbose debugging
+    #grep -i rollbackAll /var/log/mariadb/columnstore/debug.log | tail -n 3 | awk '{ print $1, $2, $3, $(NF-2), $(NF-1), $NF }'
 
-    printf " - Starting columnstore ... "
-    if start_cs_cmapi_via_curl 1> /dev/null; then
-        printf "Done\n"
-        # For verbose debugging
-        #grep -i rollbackAll /var/log/mariadb/columnstore/debug.log | tail -n 3 | awk '{ print $1, $2, $3, $(NF-2), $(NF-1), $NF }'
-    fi
 }
 
+# Currently assumes systemd installed
 shutdown_columnstore_mariadb_cmapi() {
 
+    pf=35
     init_cs_down
     wait_cs_down 0
 
-    printf " - Stopping MariaDB Server ... "
+    printf "%-${pf}s ... " " - Stopping MariaDB Server"
     if ! systemctl stop mariadb; then
         echo "[!!] Failed to stop mariadb"
         exit 1;
@@ -3195,7 +3218,7 @@ shutdown_columnstore_mariadb_cmapi() {
     fi
 
     if is_cmapi_installed ; then
-        printf " - Stopping CMAPI ... "
+        printf "%-${pf}s ... " " - Stopping CMAPI"
         if ! systemctl stop mariadb-columnstore-cmapi; then
             echo "[!!] Failed to stop CMAPI"
             exit 1;
@@ -3213,14 +3236,38 @@ shutdown_columnstore_mariadb_cmapi() {
 # em_file_size
 # em_file_created
 # em_file_full_path
+# storagemanager_dir_exists
 get_latest_em_from_directory() {
+
+    subdir_dbrms=""
+    latest_em_file=""
+    em_file_size=""
+    em_file_created=""
+    em_file_full_path=""
+    storagemanager_dir_exists=true
 
     # Find the most recently modified file in the current subdirectory
     if [ $storage == "S3" ]; then
         subdir_dbrms="${1}/dbrms/"
         subdir_metadata="${1}/metadata/data1/systemFiles/dbrm/"
 
-        latest_em_meta_file=$(find "${subdir_metadata}" -maxdepth 1 -type f -name "BRM_saves*_em.meta" -exec ls -lat {} + | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1 )
+        # Handle missing metadata directory
+        if [ ! -d $subdir_dbrms ]; then
+            printf "%-45s Missing dbrms sub directory\n" "$(basename $1)"
+            return 1;
+        fi
+
+
+        if [ -d "${1}/metadata" ]; then
+            latest_em_meta_file=$(find "${subdir_metadata}" -maxdepth 1 -type f -name "BRM_saves*_em.meta" -exec ls -lat {} + | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1 )
+        else
+            # Handle missing metadata directory & guess the latest em file based on the largest size
+
+            # Example:     find /tmp/dbrm_backups/dbrm_backup_20240605_180906/dbrms -maxdepth 1 -type f -name "BRM_saves*_em" -exec ls -lhS {} +
+            latest_em_meta_file=$(find "${subdir_dbrms}" -maxdepth 1 -type f -name "BRM_saves*_em" -exec ls -lhS  {} + | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1)
+            storagemanager_dir_exists=false
+        fi
+
         em_meta_file_name=$(basename "$latest_em_meta_file")
         latest_em_file="$subdir_dbrms$(echo $em_meta_file_name | sed 's/\.meta$//' )"
         em_file_size=$(ls -la "$latest_em_file" | awk '{print $5}' )
@@ -3242,7 +3289,6 @@ get_latest_em_from_directory() {
 
 list_restore_options_from_backups() {
 
-    printf "[+] Pick Option\n"
     echo "--------------------------------------------------------------------------"
     printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "Options" "Last-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size"
 
@@ -3257,16 +3303,14 @@ list_restore_options_from_backups() {
             journal_file=$(ls -la "${subdir_dbrms}/BRM_saves_journal" 2>/dev/null | awk 'NR==1 {print $5}' )
             vbbm_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vbbm" 2>/dev/null | awk 'NR==1 {print $5}' )
             vss_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vss" 2>/dev/null | awk 'NR==1 {print $5}' )
+            if [ $storagemanager_dir_exists == false ]; then
+                vss_file+=" (No Storagemanager Dir)"
+            fi;
             printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file"
         fi
     done
 
-    printf "\nExample: \n"
-    printf " --directory dbrm_backup_20240103_183536 \n\n"
-    printf "Define which backup to restore via flag --directory \n"
-    echo "Rerun:    $0 $@ --directory xxxxxxx"
-    echo ""
-    exit 1;
+
 }
 
 process_dbrm_restore() {
@@ -3277,38 +3321,37 @@ process_dbrm_restore() {
     # print current job variables
     printf "\nDBRM Restore Variables\n"
     echo "--------------------------------------------------------------------------"
+    echo "Skips:    DBRM Backup($skip_dbrm_backup)    Storagemanager($skip_storage_manager)"
+    echo "--------------------------------------------------------------------------"
     printf "CS Storage:           $storage \n"
     printf "Backups Directory:    $backup_location \n"
-    printf "Backup to Restore:    $backup_folder_to_restore \n"
-    echo ""
+    printf "Backup to Restore:    $backup_folder_to_restore \n\n"
 
-    # confirm backup directory exists
-    if [ ! -d $backup_location ]; then
-        printf "[!!] Backups Directory does NOT exist --path $backup_location \n"
-        printf "ls -la $backup_location\n\n"
-        exit 1;
-    fi
-
-    # Check if backup directory is empty
-    if [ -z "$(find "$backup_location" -mindepth 1)" ]; then
-        printf "[!!] Backups Directory is empty --path $backup_location \n"
-        printf "ls -la $backup_location\n\n"
-        exit 1
-    fi
+    validation_prechecks_before_listing_restore_options
 
     # Display restore options
     if [ -z "$backup_folder_to_restore" ]; then
+        printf "[!] Pick Option\n"
         list_restore_options_from_backups "$@"
+        printf "\nExample: \n"
+        printf " --directory dbrm_backup_20240103_183536 \n\n"
+        printf "Define which backup to restore via flag --directory \n"
+        echo "Rerun:    $0 $@ --directory xxxxxxx"
+        echo ""
+        exit 1;
     fi;
 
     validation_prechecks_for_dbrm_restore
     shutdown_columnstore_mariadb_cmapi
 
     # Take an automated backup
-    if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then
-        echo "[!!] Failed to take a DBRM backup before restoring"
-        echo "exiting ..."
-        exit 1;
+    if [[ $skip_dbrm_backup == false ]]; then
+        printf " - Saving a DBRM backup before restoring ... \n"
+        if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then
+            echo "[!!] Failed to take a DBRM backup before restoring"
+            echo "exiting ..."
+            exit 1;
+        fi;
     fi;
 
     # Detect newest date _em from the set, if smaller than the current one throw a warning
@@ -3317,8 +3360,18 @@ process_dbrm_restore() {
         echo "[!] Failed to parse _em file: $em_file_full_path doesnt exist"
         exit 1;
     fi;
+    echo "em_file_full_path: $em_file_full_path"
+
+    echo "latest_em_file: $latest_em_file"
+    echo "em_file_size: $em_file_size"
+    echo "em_file_created: $em_file_created"
+    echo "storagemanager_dir_exists: $storagemanager_dir_exists"
+    echo "subdir_dbrms: $subdir_dbrms"
+
     em_file_name=$(basename $em_file_full_path)
     prefix="${em_file_name%%_em}"
+    echo "em_file_name: $em_file_name"
+    echo "prefix: $prefix"
 
     if [ -z "$em_file_name" ]; then
         printf "[!] Undefined EM file name\n"
@@ -3345,14 +3398,14 @@ smput_or_error() {
     fi
 }
 
+# Depends on
+# em_file - most recent EM
+# em_file_full_path - full path to most recent EM
+# em_file_name - Just the file name of the EM
+# prefix - Prefix of the EM file
 process_s3_dbrm_restore() {
 
-    # Depends on
-    # em_file - most recent EM
-    # em_file_full_path - full path to most recent EM
-    # em_file_name - Just the file name of the EM
-    # prefix - Prefix of the EM
-
+    printf_offset=45
     printf "\nBefore DBRMs Restore\n"
     echo "--------------------------------------------------------------------------"
     if ! command -v smls  > /dev/null; then
@@ -3369,9 +3422,11 @@ process_s3_dbrm_restore() {
 
     printf "\nRestoring DBRMs\n"
     echo "--------------------------------------------------------------------------"
-    printf " - Desired EM: $em_file_full_path\n"
-    printf " - Copying DBRMs: \"${backup_location}/${backup_folder_to_restore_dbrms}\" -> S3 Bucket \n"
-    printf " - Clearing storagemanager caches ..."
+    printf " - Desired EM:    $em_file_full_path\n"
+    printf " - Copying DBRMs: ${backup_location}/${backup_folder_to_restore_dbrms} -> S3 Bucket \n"
+
+    printf "\nPreparing\n"
+    printf "%-${printf_offset}s ..." " - Clearing storagemanager caches"
     if [ ! -d "$dbrm_dir/cache" ]; then
         echo "Directory $dbrm_dir/cache does not exist."
         exit 1
@@ -3383,9 +3438,9 @@ process_s3_dbrm_restore() {
             printf "."
         fi
     done
-    printf " Done\n"
+    printf " Success\n"
 
-    printf " - Starting mcs-storagemanager ... "
+    printf "%-${printf_offset}s ... " " - Starting mcs-storagemanager"
     if ! systemctl start mcs-storagemanager ; then
         echo "[!!] Failed to start mcs-storagemanager "
         exit 1;
@@ -3393,7 +3448,8 @@ process_s3_dbrm_restore() {
         printf "Done\n"
     fi
 
-    printf " - Restoring Prefix: $prefix "
+    printf "\nRestoring\n"
+    printf "%-${printf_offset}s " " - Restoring Prefix: $prefix "
     smput_or_error "${backup_location}/${backup_folder_to_restore_dbrms}/${prefix}_em" "/data1/systemFiles/dbrm/BRM_saves_em"
     smput_or_error "${backup_location}/${backup_folder_to_restore_dbrms}/${prefix}_vbbm" "/data1/systemFiles/dbrm/BRM_saves_vbbm"
     smput_or_error "${backup_location}/${backup_folder_to_restore_dbrms}/${prefix}_vss" "/data1/systemFiles/dbrm/BRM_saves_vss"
@@ -3417,21 +3473,21 @@ process_s3_dbrm_restore() {
         fi
         smput_or_error "${backup_location}/${backup_folder_to_restore_dbrms}/${file}" "/data1/systemFiles/dbrm/${file}"
     done
-    printf " Done\n"
+    printf " Success\n"
 
-    printf " - Stopping mcs-storagemanager ... "
+    printf "%-${printf_offset}s ... " " - Stopping mcs-storagemanager"
     if ! systemctl stop mcs-storagemanager ; then
         echo "[!!] Failed to stop mcs-storagemanager "
         exit 1;
     else
         printf "Done\n"
     fi
-    printf " - clearShm ... "
+    printf "%-${printf_offset}s ... " " - clearShm"
     clearShm
     printf "Done\n"
     sleep 2
 
-    printf " - Starting mcs-storagemanager ... "
+    printf "%-${printf_offset}s ... " " - Starting mcs-storagemanager"
     if ! systemctl start mcs-storagemanager ; then
         echo "[!!] Failed to start mcs-storagemanager "
         exit 1;
@@ -3470,13 +3526,12 @@ process_s3_dbrm_restore() {
     printf "\nDBRM Restore Complete\n\n"
 }
 
+# Depends on
+# em_file - most recent EM
+# em_file_full_path - full path to most recent EM
+# em_file_name - Just the file name of the EM
+# prefix - Prefix of the EM
 process_localstorage_dbrm_restore() {
-
-    # Depends on
-    # em_file - most recent EM
-    # em_file_full_path - full path to most recent EM
-    # em_file_name - Just the file name of the EM
-    # prefix - Prefix of the EM
 
     printf "\nBefore DBRMs Restore\n"
     echo "--------------------------------------------------------------------------"
@@ -3537,13 +3592,14 @@ process_localstorage_dbrm_restore() {
 
 manually_run_loadbrm_and_savebrm() {
 
-    printf " - Running load_brm... "
+    pf_offset=45
+    printf "%-${pf_offset}s ... " " - Running load_brm"
     if ! sudo -su mysql /usr/bin/load_brm /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves ; then
         printf "\n[!!] Failed to complete load_brm successfully\n\n"
         exit 1;
     fi;
 
-    printf " - Starting mcs-controllernode... "
+    printf "%-${pf_offset}s ... " " - Starting mcs-controllernode"
     if ! systemctl start mcs-controllernode ; then
         echo "[!!] Failed to start mcs-controllernode "
         exit 1;
@@ -3551,7 +3607,7 @@ manually_run_loadbrm_and_savebrm() {
         printf "Done\n"
     fi;
 
-    printf " - Confirming extent map readable... "
+    printf "%-${pf_offset}s ... " " - Confirming extent map readable"
     if ! editem -i >/dev/null ; then
         echo "[!!] Failed to run editem -i (read the EM)"
         exit 1;
@@ -3559,13 +3615,13 @@ manually_run_loadbrm_and_savebrm() {
         printf "Done\n"
     fi;
 
-    printf " - Running save_brm...\n"
+    printf "%-${pf_offset}s ... \n" " - Running save_brm"
     if ! sudo -u mysql /usr/bin/save_brm ; then
         echo "[!!] Failed to run save_brm"
         exit 1;
     fi
 
-    printf " - Stopping mcs-controllernode... "
+    printf "%-${pf_offset}s ... " " - Stopping mcs-controllernode"
     if ! systemctl stop mcs-controllernode; then
         echo "[!!] Failed to stop mcs-controllernode"
         exit 1;
@@ -3574,7 +3630,7 @@ manually_run_loadbrm_and_savebrm() {
     fi
 
     if [ $storage == "S3" ]; then
-        printf " - Stopping mcs-storagemanager ... "
+        printf "%-${pf_offset}s ... " " - Stopping mcs-storagemanager"
         if ! systemctl stop mcs-storagemanager ; then
             echo "[!!] Failed to stop mcs-storagemanager "
             exit 1;
@@ -3583,7 +3639,7 @@ manually_run_loadbrm_and_savebrm() {
         fi
     fi;
 
-    printf " - clearShm... "
+    printf "%-${pf_offset}s ... " " - clearShm"
     clearShm
     printf "Done\n"
     sleep 2
@@ -3614,7 +3670,7 @@ process_restore()
     run_restore;
 }
 
-print_version_info() {
+print_mcs_bk_mgr_version_info() {
     echo "MariaDB Columnstore Backup Manager"
     echo "Version: $mcs_bk_manager_version"
 }
@@ -3635,8 +3691,11 @@ case "$action" in
     'restore')
         process_restore "$@";
         ;;
-    'version')
-        print_version_info
+    '-v' | 'version' )
+        print_mcs_bk_mgr_version_info
+        ;;
+    'source' )
+        return 0;
         ;;
     *)
         printf "\nunknown action: $action\n"
