@@ -277,13 +277,24 @@ def dbrm_restore(
             help='Date or directory chose to restore from.'
         )
     ] = '',
+    ns: Annotated[
+        bool,
+        typer.Option(
+            '-ns', '--no-start',
+            help=(
+                'Do not attempt columnstore startup post dbrm_restore.'
+            )
+        )
+    ] = False,
+
 ):
     """Restore Columnstore DBRM data."""
 
     # Default: ./$0 dbrm_restore --path /tmp/dbrm_backups
 
-    #         Examples:
-    #             ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup12252023
+    # Examples:
+    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842
+    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
     arguments = []
     for arg_name, value in locals().items():
         sh_arg = cook_sh_arg(arg_name, value)
