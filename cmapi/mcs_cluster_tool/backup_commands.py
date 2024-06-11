@@ -13,6 +13,7 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 
 
 logger = logging.getLogger('mcs_cli')
+# pylint: disable=unused-argument
 
 
 @handle_output
@@ -287,7 +288,8 @@ def dbrm_backup(
         typer.Option(
             '-r', '--retention-days',
             help=(
-                'Retain dbrm backups created within the last X days.'
+                'Retain dbrm backups created within the last X days, '
+                'the rest are deleted'
             )
         )
     ] = 7,
@@ -311,7 +313,14 @@ def dbrm_backup(
             '-q/-no-q', '--quiet/--no-quiet',
             help='Silence verbose copy command outputs.'
         )
-    ] = False
+    ] = False,
+    ssm: Annotated[
+        bool,
+        typer.Option(
+            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
+            help='Skip backing up storagemanager directory.'
+        )
+    ] = False,
 ):
     """Columnstore DBRM Backup."""
 

@@ -12,6 +12,7 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 
 
 logger = logging.getLogger('mcs_cli')
+# pylint: disable=unused-argument
 
 
 @handle_output
@@ -286,7 +287,22 @@ def dbrm_restore(
             )
         )
     ] = False,
-
+    sdbk: Annotated[
+        bool,
+        typer.Option(
+            '-sdbk/-no-sdbk', '--skip-dbrm-backup/--no-skip-dbrm-backup',
+            help=(
+                'Skip backing up dbrms before restoring.'
+            )
+        )
+    ] = True,
+    ssm: Annotated[
+        bool,
+        typer.Option(
+            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
+            help='Skip backing up storagemanager directory.'
+        )
+    ] = True,
 ):
     """Restore Columnstore DBRM data."""
 
