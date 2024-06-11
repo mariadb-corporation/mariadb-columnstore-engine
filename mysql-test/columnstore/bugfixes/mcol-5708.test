@@ -1,0 +1,31 @@
+#
+# MCOL-5708
+#
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5708;
+--enable_warnings
+CREATE DATABASE mcol_5708;
+USE mcol_5708;
+
+CREATE TABLE test (
+  `f_int` int(10) unsigned NOT NULL DEFAULT 0,
+  `f_dec14x2` decimal(14,2) NOT NULL DEFAULT 0.00,
+  `f_dec14x4` decimal(14,4) NOT NULL DEFAULT 0.0000
+) ENGINE=columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+
+insert into test (f_int,f_dec14x4, f_dec14x2) values (1, 0.1, 0.1);
+
+select
+f_int, sum(f_dec14x2), sum(f_dec14x4),
+sum(-200.000001), sum(0), sum(0.0), sum(11.000011), sum(12e-4), sum(1e+4),
+sum(-0.0), sum(-1 - 1.1), sum(--12), sum(+20), sum(13)
+from test group by 1;
+
+
+--disable_warnings
+DROP DATABASE mcol_5708;
+--enable_warnings
