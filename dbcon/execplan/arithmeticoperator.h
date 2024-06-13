@@ -240,6 +240,7 @@ class ArithmeticOperator : public Operator
   inline llvm::Value* compileIntWithConditions_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r,
                                                 llvm::Value* isNull, llvm::Value* dataConditionError,
                                                 ParseTree* lop, ParseTree* rop);
+  template <datatypes::SystemCatalog::ColDataType CT>
   inline llvm::Value* compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
   using Operator::isCompilable;
   inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
@@ -519,11 +520,15 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
                          rop->compile(b, data, isNull, dataConditionError, row, dataType));
 
     case execplan::CalpontSystemCatalog::DOUBLE:
-    case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UDOUBLE:
+      return compileFloat_<datatypes::SystemCatalog::DOUBLE>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
+          rop->compile(b, data, isNull, dataConditionError, row, dataType));
+    case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UFLOAT:
-      return compileFloat_(b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
-                           rop->compile(b, data, isNull, dataConditionError, row, dataType));
+      return compileFloat_<datatypes::SystemCatalog::FLOAT>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
+          rop->compile(b, data, isNull, dataConditionError, row, dataType));
     default:
     {
       std::ostringstream oss;
@@ -603,21 +608,36 @@ inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::
   }
 }
 
+// TODO Use filtering and provide an empty template as an alternative.
+template <datatypes::SystemCatalog::ColDataType CT>
+inline llvm::Value* convertArgToFP(llvm::IRBuilder<>& b, llvm::Value* arg)
+{
+  if (arg->getType()->isIntegerTy())
+  {
+    if constexpr (CT == datatypes::SystemCatalog::DOUBLE)
+      return b.CreateSIToFP(arg, b.getDoubleTy());
+    else
+      return b.CreateSIToFP(arg, b.getFloatTy());
+  }
+
+  return arg;
+}
+
+template <datatypes::SystemCatalog::ColDataType CT>
 inline llvm::Value* ArithmeticOperator::compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {
+  llvm::Value* l_ = convertArgToFP<CT>(b, l);
+  llvm::Value* r_ = convertArgToFP<CT>(b, r);
+
   switch (fOp)
   {
-    case OP_ADD: return b.CreateFAdd(l, r);
+    case OP_ADD: return b.CreateFAdd(l_, r_);
 
-    case OP_SUB: return b.CreateFSub(l, r);
+    case OP_SUB: return b.CreateFSub(l_, r_);
 
-    case OP_MUL: return b.CreateFMul(l, r);
+    case OP_MUL: return b.CreateFMul(l_, r_);
 
-    case OP_DIV:
-      if (l->getType()->isIntegerTy())
-        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
-      else
-        return b.CreateFDiv(l, r);
+    case OP_DIV: return b.CreateFDiv(l_, r_);
     default:
     {
       std::ostringstream oss;
