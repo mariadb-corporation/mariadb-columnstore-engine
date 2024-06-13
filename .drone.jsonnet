@@ -48,7 +48,7 @@ local BOXES_ARM = {
 local BOXES = {
   'amd': BOXES_AMD,
   'arm': BOXES_ARM,
-}
+};
 
 local multinode_host = 'multinode_tests@ci.columnstore.mariadb.net';
 local ssh_opt = '-i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=120';
