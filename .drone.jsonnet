@@ -23,7 +23,7 @@ local platforms_multinode_mtr = {
 local events_multinode_mtr = ['cron', 'custom'];
 
 
-local BOXES = {
+local BOXES_AMD = {
   'centos:7'     : 'centos_7_aws',
   'rockylinux:8' : 'rocky_8_aws',
   'rockylinux:9' : 'rocky_9_aws',
@@ -33,6 +33,22 @@ local BOXES = {
   'ubuntu:22.04' : 'ubuntu_jammy_aws',
   'ubuntu:24.04' : 'ubuntu_noble_aws',
 };
+
+local BOXES_ARM = {
+  'centos:7'     : 'aarch64_centos_7_aws',
+  'rockylinux:8' : 'aarch64_rocky_8_aws',
+  'rockylinux:9' : 'aarch64_rocky_9_aws',
+  'debian:11'    : 'aarch64_debian_bullseye_aws',
+  'debian:12'    : 'aarch64_debian_bookworm_aws',
+  'ubuntu:20.04' : 'aarch64_ubuntu_focal_aws',
+  'ubuntu:22.04' : 'aarch64_ubuntu_jammy_aws',
+  'ubuntu:24.04' : 'aarch64_ubuntu_noble_aws',
+};
+
+local BOXES = {
+  'amd': BOXES_AMD,
+  'arm': BOXES_ARM,
+}
 
 local multinode_host = 'multinode_tests@ci.columnstore.mariadb.net';
 local ssh_opt = '-i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=120';
@@ -467,7 +483,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       SSH_KEY: {
         from_secret: 'ssh_key',
       },
-      box: BOXES[platform],
+      box: BOXES[arch][platform],
     },
     commands: [
       'echo $SSH_KEY > id_rsa_base64',
@@ -488,7 +504,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       SSH_KEY: {
         from_secret: 'ssh_key',
       },
-      box: BOXES[platform],
+      box: BOXES[arch][platform],
     },
     commands: [
       'scp -i id_rsa ' + ssh_opt + ' -r tests/scripts/mdbci/multinode_mtr/* ' + multinode_host + ':~/multinode_scripts/' + mdbci_target + '-$${box}/',
@@ -503,7 +519,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     environment: {
-      box: BOXES[platform],
+      box: BOXES[arch][platform],
     },
     commands: [
       'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./test.sh ' + mdbci_target + ' $${DRONE_BUILD_NUMBER} $${box} "' + arch + '/' + platform,
@@ -518,7 +534,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     environment: {
-      box: BOXES[platform],
+      box: BOXES[arch][platform],
     },
     commands: [
       'mkdir -p ' + result + '/multinode_mtr',
@@ -534,7 +550,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     environment: {
-      box: BOXES[platform],
+      box: BOXES[arch][platform],
     },
     commands: [
       'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./columnstore_vm.py --machine-name ' + mdbci_target + '-$${box} --destroy; rm -rf ~/multinode_scripts/' + mdbci_target + '-$${box}; sudo rm -rf ~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/*;"',
@@ -601,7 +617,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('systemctl start mariadb',dockerImage('regression')),
       execInnerDocker('systemctl restart mariadb-columnstore',dockerImage('regression')),
       // delay regression for manual debugging on live instance
-      'sleep $${REGRESSION_DELAY_SECONDS:-1s}',
+      'sleep $${REGRESsSION_DELAY_SECONDS:-1s}',
       execInnerDocker('/usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',dockerImage('regression')),
     ],
   },
