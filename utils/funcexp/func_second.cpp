@@ -145,21 +145,21 @@ bool Func_second::isCompilable(const execplan::CalpontSystemCatalog::ColType& co
 {
   switch (colType.colDataType)
   {
-    case CalpontSystemCatalog::TIME:
-    case CalpontSystemCatalog::DATE:
-    case CalpontSystemCatalog::DATETIME:
-    // TODO add support for gmtSecToMySQLTime
-    // case CalpontSystemCatalog::TIMESTAMP:
-    case CalpontSystemCatalog::BIGINT:
-    case CalpontSystemCatalog::MEDINT:
-    case CalpontSystemCatalog::SMALLINT:
-    case CalpontSystemCatalog::TINYINT:
-    case CalpontSystemCatalog::INT:
-    case CalpontSystemCatalog::DECIMAL:
-    case CalpontSystemCatalog::UDECIMAL: return true;
-    case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::TEXT:
-    case CalpontSystemCatalog::VARCHAR: return false;
+    // case CalpontSystemCatalog::TIME:
+    // case CalpontSystemCatalog::DATE:
+    // case CalpontSystemCatalog::DATETIME:
+    // // TODO add support for gmtSecToMySQLTime
+    // // case CalpontSystemCatalog::TIMESTAMP:
+    // case CalpontSystemCatalog::BIGINT:
+    // case CalpontSystemCatalog::MEDINT:
+    // case CalpontSystemCatalog::SMALLINT:
+    // case CalpontSystemCatalog::TINYINT:
+    // case CalpontSystemCatalog::INT:
+    // case CalpontSystemCatalog::DECIMAL:
+    // case CalpontSystemCatalog::UDECIMAL: return true;
+    // case CalpontSystemCatalog::CHAR:
+    // case CalpontSystemCatalog::TEXT:
+    // case CalpontSystemCatalog::VARCHAR: return false;
     default: return false;
   }
 }
