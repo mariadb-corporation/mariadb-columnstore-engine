@@ -46,8 +46,8 @@ local BOXES_ARM = {
 };
 
 local BOXES = {
-  'amd': BOXES_AMD,
-  'arm': BOXES_ARM,
+  'amd64': BOXES_AMD,
+  'arm64': BOXES_ARM,
 };
 
 local multinode_host = 'multinode_tests@ci.columnstore.mariadb.net';
