@@ -16,8 +16,8 @@ local platforms_arm = {
 };
 
 local platforms_multinode_mtr = {
-  'amd64': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'arm64': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'amd64': ['rockylinux:9', 'ubuntu:22.04'],
+  'arm64': ['rockylinux:8', 'debian:12'],
 }; 
 
 local events_multinode_mtr = ['cron', 'custom'];
@@ -35,7 +35,6 @@ local BOXES_AMD = {
 };
 
 local BOXES_ARM = {
-  'centos:7'     : 'aarch64_centos_7_aws',
   'rockylinux:8' : 'aarch64_rocky_8_aws',
   'rockylinux:9' : 'aarch64_rocky_9_aws',
   'debian:11'    : 'aarch64_debian_bullseye_aws',
