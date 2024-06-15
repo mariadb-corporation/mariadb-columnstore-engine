@@ -15,8 +15,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "modules_storage.h"
+// TODO remove
+#include <iostream>
 #include <mutex>
+
+#include "modules_storage.h"
 #include "LRU.h"
 
 namespace mcs_jit
@@ -27,6 +30,7 @@ CompiledModuleStorage::CompiledModuleStorage(const size_t maxSize) : maxSize_(ma
   lru_ = std::unique_ptr<mcs_lru::LRUIface>(new mcs_lru::LRU());
 }
 
+// TODO refactor
 void CompiledModuleStorage::add(CompiledModule module)
 {
   std::lock_guard<std::mutex> lg(modulesMutex_);
@@ -34,6 +38,8 @@ void CompiledModuleStorage::add(CompiledModule module)
   if (modules_.size() >= maxSize_)
   {
     const auto leastUsedId = *lru_->end();
+    std::cout << "Replace the LRU element of the cache " << leastUsedId << std::endl;
+
     lru_->remove(leastUsedId);
     // remove all functions from the map
     for (auto& expressionString : modules_[leastUsedId].getExpressionStringList())
@@ -41,10 +47,17 @@ void CompiledModuleStorage::add(CompiledModule module)
       exprToModules_.erase(expressionString);
     }
 
-    modules_[leastUsedId] = std::move(module);
-    lru_->add(leastUsedId);
+    for (auto& expressionString : module.getExpressionStringList())
+    {
+      exprToModules_[expressionString] = leastUsedId;
+    }
 
-    return;
+    // swap module with the least used one
+    modules_[leastUsedId] = std::move(module);
+    // TODO need to register funcs added to the map
+    lru_->add(leastUsedId);
+    // remove the pre-empted module memory
+    deleteCompiledModuleMemory(module);
   }
 
   // TODO needs sync mech here
