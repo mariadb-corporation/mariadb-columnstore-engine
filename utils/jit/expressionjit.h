@@ -41,9 +41,8 @@ class CompiledColumn : public execplan::ReturnedColumn
   CompiledOperator compiledOperator;
 
  public:
-  CompiledColumn()
-  {
-  }
+  CompiledColumn() = delete;
+
   CompiledColumn(CompiledOperator compiledOperator, ReturnedColumn* expression)
    : ReturnedColumn(*expression), compiledOperator(std::move(compiledOperator))
   {
@@ -61,7 +60,7 @@ class CompiledColumn : public execplan::ReturnedColumn
  public:
   int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
-    return compiledOperator.compiled_function_int64(row.getData(), isNull);
+    return compiledOperator.int64CompiledFunc(row.getData(), isNull);
   }
   // Unfortunately there are compiled and enterpreted parts of getUintVal().
   // The former calculates and the latter checks if the value is out of range
@@ -69,21 +68,21 @@ class CompiledColumn : public execplan::ReturnedColumn
   uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     datatypes::DataCondition::ErrorType error;
-    auto result = compiledOperator.compiled_function_uint64(row.getData(), isNull, error);
+    auto result = compiledOperator.uint64CompiledFunction(row.getData(), isNull, error);
     datatypes::throwOutOfRangeExceptionIfNeeded(isNull, datatypes::DataCondition::isOutOfRange(error));
     return result;
   }
   double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
-    return compiledOperator.compiled_function_double(row.getData(), isNull);
+    return compiledOperator.doubleCompiledFunction(row.getData(), isNull);
   }
   float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
-    return compiledOperator.compiled_function_float(row.getData(), isNull);
+    return compiledOperator.floatCompiledFunction(row.getData(), isNull);
   }
 };
 // TODO: Optimize code structure, maybe it should be implemented using recursion.
-static void compileExpressions(std::vector<execplan::SRCP>& expressions, rowgroup::Row& row)
+static void compileOrFindExpressions(std::vector<execplan::SRCP>& expressions, rowgroup::Row& row)
 {
   for (auto it = expressions.rbegin(); it != expressions.rend(); ++it)
   {
@@ -92,7 +91,7 @@ static void compileExpressions(std::vector<execplan::SRCP>& expressions, rowgrou
     {
       // auto a = expression->operationType();
       // The next call must share a module to try to find the same function in the module.
-      CompiledOperator compiledOperator = compileOperator(getJITInstance(), expression, row);
+      CompiledOperator compiledOperator(getJITInstance(), expression, row);
       expression = boost::make_shared<CompiledColumn>(compiledOperator, expression.get());
     }
     // WIP

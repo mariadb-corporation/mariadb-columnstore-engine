@@ -22,7 +22,8 @@ std::string computeFunctionName(const execplan::SRCP& expression)
   return expression->toExpressionString();
 }
 
-void compileOperator(llvm::Module& module, const execplan::SRCP& expression, rowgroup::Row& row)
+void compileOperator(llvm::Module& module, const string& functionName, const execplan::SRCP& expression,
+                     rowgroup::Row& row)
 {
   auto columns = expression.get()->simpleColumnList();
   llvm::IRBuilder<> b(module.getContext());
@@ -52,7 +53,7 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
     case CalpontSystemCatalog::UFLOAT: returnType = b.getFloatTy(); break;
     default: throw logic_error("compileOperator: unsupported type");
   }
-  const auto& functionName = computeFunctionName(expression);
+  // const auto& functionName = computeFunctionName(expression);
 
   auto* funcType = llvm::FunctionType::get(returnType, {dataType, isNullType, dataConditionErrorType}, false);
   auto* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module);
@@ -70,16 +71,16 @@ void compileOperator(llvm::Module& module, const execplan::SRCP& expression, row
   llvm::verifyFunction(*func);
 }
 
-// change this to a return type
-CompiledOperator compileOperator(mcs_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
+CompiledOperator::CompiledOperator(mcs_jit::JIT& jit, const execplan::SRCP& expression, rowgroup::Row& row)
 {
-  // WIP pass this into the closure below.
   const auto& functionName = computeFunctionName(expression);
 
   // findOrCompile method
-  auto compiled_module =
-      jit.compileModule([&](llvm::Module& module) { compileOperator(module, expression, row); });
-  CompiledOperator compiledOperator{.compiled_module = compiled_module};
+  // auto compiledModule_ = jit.compileModule([&](llvm::Module& module)
+  //                                          { compileOperator(module, functionName, expression, row); });
+
+  compiledModule_ = jit.findOrCompileModule(
+      functionName, [&](llvm::Module& module) { compileOperator(module, functionName, expression, row); });
 
   switch (expression->resultType().colDataType)
   {
@@ -89,32 +90,29 @@ CompiledOperator compileOperator(mcs_jit::JIT& jit, const execplan::SRCP& expres
     case CalpontSystemCatalog::SMALLINT:
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::DATE:
-      compiledOperator.compiled_function_int64 = reinterpret_cast<JITCompiledOperator<int64_t>>(
-          compiled_module.function_name_to_symbol[functionName]);
+      int64CompiledFunc = reinterpret_cast<JITCompiledOperator<int64_t>>(
+          compiledModule_.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UINT:
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UTINYINT:
-      compiledOperator.compiled_function_uint64 =
-          reinterpret_cast<JITIntConditionedCompiledOperator<uint64_t>>(
-              compiled_module.function_name_to_symbol[functionName]);
+      uint64CompiledFunction = reinterpret_cast<JITIntConditionedCompiledOperator<uint64_t>>(
+          compiledModule_.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE:
-      compiledOperator.compiled_function_double = reinterpret_cast<JITCompiledOperator<double>>(
-          compiled_module.function_name_to_symbol[functionName]);
+      doubleCompiledFunction = reinterpret_cast<JITCompiledOperator<double>>(
+          compiledModule_.function_name_to_symbol[functionName]);
       break;
     case CalpontSystemCatalog::FLOAT:
     case CalpontSystemCatalog::UFLOAT:
-      compiledOperator.compiled_function_float =
-          reinterpret_cast<JITCompiledOperator<float>>(compiled_module.function_name_to_symbol[functionName]);
+      floatCompiledFunction =
+          reinterpret_cast<JITCompiledOperator<float>>(compiledModule_.function_name_to_symbol[functionName]);
       break;
     default: throw logic_error("compileOperator: unsupported type");
   }
-
-  return compiledOperator;
 }
 
 }  // namespace execplan

@@ -20,17 +20,16 @@
 #include <llvm/ExecutionEngine/JITEventListener.h>
 
 #if LLVM_VERSION_MAJOR <= 16
-#  include <llvm/MC/SubtargetFeature.h>
+#include <llvm/MC/SubtargetFeature.h>
 #else
-#  include <llvm/TargetParser/SubtargetFeature.h>
+#include <llvm/TargetParser/SubtargetFeature.h>
 #endif
- 
- #if LLVM_VERSION_MAJOR < 14
-#  include <llvm/Support/TargetRegistry.h>
- #else
-#  include <llvm/MC/TargetRegistry.h>
- #endif
 
+#if LLVM_VERSION_MAJOR < 14
+#include <llvm/Support/TargetRegistry.h>
+#else
+#include <llvm/MC/TargetRegistry.h>
+#endif
 
 #include "llvm/Config/llvm-config.h"
 
@@ -53,198 +52,198 @@
 
 namespace mcs_jit
 {
-// Arena Memory pool for JIT
-class Arena : private boost::noncopyable
-{
- public:
-  Arena() : page_size(4096)
-  {
-  }
-  ~Arena()
-  {
-    protect(PROT_READ | PROT_WRITE);
+// // Arena Memory pool for JIT
+// class Arena : private boost::noncopyable
+// {
+//  public:
+//   Arena() : page_size(4096)
+//   {
+//   }
+//   ~Arena()
+//   {
+//     protect(PROT_READ | PROT_WRITE);
 
-    for (auto& block : blocks)
-    {
-      free(block.base());
-    }
-  }
-  /*
-   * param: size: the size of the memory to be allocated
-   * return: the address of the allocated memory
-   * */
-  char* allocateAligned(size_t size, size_t alignment)
-  {
-    for (size_t i = 0; i < blocks.size(); ++i)
-    {
-      char* result = allocateFromBlockWithIndex(size, alignment, i);
-      if (result)
-      {
-        return result;
-      }
-    }
-    allocateNewBlock(size);
-    size_t allocated_index = blocks.size() - 1;
-    char* result = allocateFromBlockWithIndex(size, alignment, allocated_index);
-    assert(result);
-    return result;
-  }
+//     for (auto& block : blocks)
+//     {
+//       free(block.base());
+//     }
+//   }
+//   /*
+//    * param: size: the size of the memory to be allocated
+//    * return: the address of the allocated memory
+//    * */
+//   char* allocateAligned(size_t size, size_t alignment)
+//   {
+//     for (size_t i = 0; i < blocks.size(); ++i)
+//     {
+//       char* result = allocateFromBlockWithIndex(size, alignment, i);
+//       if (result)
+//       {
+//         return result;
+//       }
+//     }
+//     allocateNewBlock(size);
+//     size_t allocated_index = blocks.size() - 1;
+//     char* result = allocateFromBlockWithIndex(size, alignment, allocated_index);
+//     assert(result);
+//     return result;
+//   }
 
-  void protect(int flag)
-  {
-#if defined(__NetBSD__) && defined(PROT_MPROTECT)
-    flag |= PROT_MPROTECT(PROT_READ | PROT_WRITE | PROT_EXEC);
-#endif
+//   void protect(int flag)
+//   {
+// #if defined(__NetBSD__) && defined(PROT_MPROTECT)
+//     flag |= PROT_MPROTECT(PROT_READ | PROT_WRITE | PROT_EXEC);
+// #endif
 
-    bool invalidate_cache = (flag & PROT_EXEC);
+//     bool invalidate_cache = (flag & PROT_EXEC);
 
-    for (const auto& block : blocks)
-    {
-#if defined(__arm__) || defined(__aarch64__)
-      /// Certain ARM implementations treat icache clear instruction as a memory read,
-      /// and CPU segfaults on trying to clear cache on !PROT_READ page.
-      /// Therefore we need to temporarily add PROT_READ for the sake of flushing the instruction caches.
-      if (invalidate_cache && !(flag & PROT_READ))
-      {
-        int res = mprotect(block.base(), block.blockSize(), flag | PROT_READ);
-        if (res != 0)
-          throw std::logic_error("Cannot mprotect memory region");
+//     for (const auto& block : blocks)
+//     {
+// #if defined(__arm__) || defined(__aarch64__)
+//       /// Certain ARM implementations treat icache clear instruction as a memory read,
+//       /// and CPU segfaults on trying to clear cache on !PROT_READ page.
+//       /// Therefore we need to temporarily add PROT_READ for the sake of flushing the instruction caches.
+//       if (invalidate_cache && !(flag & PROT_READ))
+//       {
+//         int res = mprotect(block.base(), block.blockSize(), flag | PROT_READ);
+//         if (res != 0)
+//           throw std::logic_error("Cannot mprotect memory region");
 
-        llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
-        invalidate_cache = false;
-      }
-#endif
-      int res = mprotect(block.base(), block.blockSize(), flag);
-      if (res != 0)
-        throw std::logic_error("Cannot mprotect memory region");
+//         llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
+//         invalidate_cache = false;
+//       }
+// #endif
+//       int res = mprotect(block.base(), block.blockSize(), flag);
+//       if (res != 0)
+//         throw std::logic_error("Cannot mprotect memory region");
 
-      if (invalidate_cache)
-        llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
-    }
-  }
+//       if (invalidate_cache)
+//         llvm::sys::Memory::InvalidateInstructionCache(block.base(), block.blockSize());
+//     }
+//   }
 
-  inline size_t getAllocatedSize() const
-  {
-    return allocated_size;
-  }
+//   inline size_t getAllocatedSize() const
+//   {
+//     return allocated_size;
+//   }
 
-  inline size_t getPageSize() const
-  {
-    return page_size;
-  }
+//   inline size_t getPageSize() const
+//   {
+//     return page_size;
+//   }
 
- private:
-  size_t page_size = 0;
-  size_t allocated_size = 0;
-  struct Block
-  {
-   public:
-    Block(void* pages_base_, size_t pages_size_, size_t page_size_)
-     : pages_base(pages_base_), pages_size(pages_size_), page_size(page_size_)
-    {
-    }
-    inline void* base() const
-    {
-      return pages_base;
-    }
-    inline size_t pagesSize() const
-    {
-      return pages_size;
-    }
-    inline size_t pageSize() const
-    {
-      return page_size;
-    }
-    inline size_t blockSize() const
-    {
-      return pages_size * page_size;
-    }
+//  private:
+//   size_t page_size = 0;
+//   size_t allocated_size = 0;
+//   struct Block
+//   {
+//    public:
+//     Block(void* pages_base_, size_t pages_size_, size_t page_size_)
+//      : pages_base(pages_base_), pages_size(pages_size_), page_size(page_size_)
+//     {
+//     }
+//     inline void* base() const
+//     {
+//       return pages_base;
+//     }
+//     inline size_t pagesSize() const
+//     {
+//       return pages_size;
+//     }
+//     inline size_t pageSize() const
+//     {
+//       return page_size;
+//     }
+//     inline size_t blockSize() const
+//     {
+//       return pages_size * page_size;
+//     }
 
-   private:
-    void* pages_base;
-    size_t pages_size;
-    size_t page_size;
-  };
-  std::vector<Block> blocks;
-  std::vector<size_t> blocks_allocated_size;
+//    private:
+//     void* pages_base;
+//     size_t pages_size;
+//     size_t page_size;
+//   };
+//   std::vector<Block> blocks;
+//   std::vector<size_t> blocks_allocated_size;
 
-  char* allocateFromBlockWithIndex(size_t size, size_t alignment, size_t block_index)
-  {
-    assert(block_index < blocks.size());
-    auto& block = blocks[block_index];
+//   char* allocateFromBlockWithIndex(size_t size, size_t alignment, size_t block_index)
+//   {
+//     assert(block_index < blocks.size());
+//     auto& block = blocks[block_index];
 
-    size_t block_size = block.blockSize();
-    size_t& block_allocated_size = blocks_allocated_size[block_index];
-    size_t block_free_size = block_size - block_allocated_size;
+//     size_t block_size = block.blockSize();
+//     size_t& block_allocated_size = blocks_allocated_size[block_index];
+//     size_t block_free_size = block_size - block_allocated_size;
 
-    uint8_t* block_base = static_cast<uint8_t*>(block.base());
-    void* offset = block_base + block_allocated_size;
-    auto* result = std::align(alignment, size, offset, block_free_size);
-    if (result)
-    {
-      block_allocated_size = reinterpret_cast<uint8_t*>(result) - block_base;
-      block_allocated_size += size;
-      return static_cast<char*>(result);
-    }
-    return nullptr;
-  }
-  void allocateNewBlock(size_t size)
-  {
-    size_t allocate_page_num = ((size / page_size) + 1) * 2;
-    size_t allocate_size = page_size * allocate_page_num;
+//     uint8_t* block_base = static_cast<uint8_t*>(block.base());
+//     void* offset = block_base + block_allocated_size;
+//     auto* result = std::align(alignment, size, offset, block_free_size);
+//     if (result)
+//     {
+//       block_allocated_size = reinterpret_cast<uint8_t*>(result) - block_base;
+//       block_allocated_size += size;
+//       return static_cast<char*>(result);
+//     }
+//     return nullptr;
+//   }
+//   void allocateNewBlock(size_t size)
+//   {
+//     size_t allocate_page_num = ((size / page_size) + 1) * 2;
+//     size_t allocate_size = page_size * allocate_page_num;
 
-    void* buf = nullptr;
-    int res = posix_memalign(&buf, page_size, allocate_size);
-    if (res != 0)
-    {
-      throw std::logic_error("Cannot allocate memory");
-    }
-    blocks.emplace_back(buf, allocate_page_num, page_size);
-    blocks_allocated_size.emplace_back(0);
+//     void* buf = nullptr;
+//     int res = posix_memalign(&buf, page_size, allocate_size);
+//     if (res != 0)
+//     {
+//       throw std::logic_error("Cannot allocate memory");
+//     }
+//     blocks.emplace_back(buf, allocate_page_num, page_size);
+//     blocks_allocated_size.emplace_back(0);
 
-    allocated_size += allocate_size;
-  }
-};
+//     allocated_size += allocate_size;
+//   }
+// };
 
-class ModuleMemoryManager : public llvm::RTDyldMemoryManager
-{
- public:
-  uint8_t* allocateCodeSection(uintptr_t size, unsigned alignment, unsigned section_id,
-                               llvm::StringRef section_name) override
-  {
-    return reinterpret_cast<uint8_t*>(ex_memory_page.allocateAligned(size, alignment));
-  }
-  uint8_t* allocateDataSection(uintptr_t size, unsigned alignment, unsigned, llvm::StringRef,
-                               bool is_read_only) override
-  {
-    if (is_read_only)
-    {
-      return reinterpret_cast<uint8_t*>(ro_memory_page.allocateAligned(size, alignment));
-    }
-    else
-    {
-      return reinterpret_cast<uint8_t*>(rw_memory_page.allocateAligned(size, alignment));
-    }
-  }
+// class ModuleMemoryManager : public llvm::RTDyldMemoryManager
+// {
+//  public:
+//   uint8_t* allocateCodeSection(uintptr_t size, unsigned alignment, unsigned section_id,
+//                                llvm::StringRef section_name) override
+//   {
+//     return reinterpret_cast<uint8_t*>(ex_memory_page.allocateAligned(size, alignment));
+//   }
+//   uint8_t* allocateDataSection(uintptr_t size, unsigned alignment, unsigned, llvm::StringRef,
+//                                bool is_read_only) override
+//   {
+//     if (is_read_only)
+//     {
+//       return reinterpret_cast<uint8_t*>(ro_memory_page.allocateAligned(size, alignment));
+//     }
+//     else
+//     {
+//       return reinterpret_cast<uint8_t*>(rw_memory_page.allocateAligned(size, alignment));
+//     }
+//   }
 
-  bool finalizeMemory(std::string* err_msg) override
-  {
-    ro_memory_page.protect(PROT_READ);
-    ex_memory_page.protect(PROT_READ | PROT_EXEC);
-    return true;
-  }
+//   bool finalizeMemory(std::string* err_msg) override
+//   {
+//     ro_memory_page.protect(PROT_READ);
+//     ex_memory_page.protect(PROT_READ | PROT_EXEC);
+//     return true;
+//   }
 
-  inline size_t allocatedMemorySize() const
-  {
-    return rw_memory_page.getAllocatedSize() + ro_memory_page.getAllocatedSize() +
-           ex_memory_page.getAllocatedSize();
-  }
+//   inline size_t allocatedMemorySize() const
+//   {
+//     return rw_memory_page.getAllocatedSize() + ro_memory_page.getAllocatedSize() +
+//            ex_memory_page.getAllocatedSize();
+//   }
 
- private:
-  Arena rw_memory_page;
-  Arena ro_memory_page;
-  Arena ex_memory_page;
-};
+//  private:
+//   Arena rw_memory_page;
+//   Arena ro_memory_page;
+//   Arena ex_memory_page;
+// };
 
 class JITCompiler
 {
@@ -345,9 +344,9 @@ JIT::~JIT()
 {
 }
 
-JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
+// Needs a mutex lock
+mcs_jit::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compile_function)
 {
-  std::lock_guard<std::mutex> lock(jit_lock);
   auto module = createModuleForCompilation();
   compile_function(*module);
   auto module_info = compileModule(std::move(module));
@@ -356,9 +355,34 @@ JIT::CompiledModule JIT::compileModule(std::function<void(llvm::Module&)> compil
   return module_info;
 }
 
+// Needs a mutex lock
+mcs_jit::CompiledModule JIT::compileAndCacheModule(std::function<void(llvm::Module&)> compile_function)
+{
+  auto compiledModule = compileModule(compile_function);
+  moduleStorage_.add(compiledModule);
+  return compiledModule;
+}
+
+mcs_jit::CompiledModule JIT::findOrCompileModule(const std::string& expressionString,
+                                                 std::function<void(llvm::Module&)> compile_function)
+{
+  std::lock_guard<std::mutex> lock(jit_lock);
+
+  auto cachedCompiledModule = moduleStorage_.get(expressionString);
+  if (cachedCompiledModule)
+  {
+    std::cout << " JIT cache hit " << expressionString << std::endl;
+    return cachedCompiledModule.value();
+  }
+  std::cout << " JIT cache miss " << expressionString << std::endl;
+
+  return compileAndCacheModule(compile_function);
+}
+
 // #include "llvm/Support/raw_ostream.h"
 
-JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
+// Needs a mutex lock
+mcs_jit::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
   // std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
   runOptimizationPassesOnModule(*module);
@@ -382,7 +406,7 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
   runtime_dynamic_link.resolveRelocations();
   module_memory_manager->finalizeMemory(nullptr);
 
-  CompiledModule compiled_module;
+  mcs_jit::CompiledModule compiledModule_;
   for (const auto& function : *module)
   {
     if (function.isDeclaration())
@@ -399,13 +423,16 @@ JIT::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
       throw std::logic_error("Failed to find symbol " + function_mangled_name);
     }
     auto* jit_symbol_address = reinterpret_cast<void*>(jit_symbol.getAddress());
-    compiled_module.function_name_to_symbol.emplace(std::move(function_name), jit_symbol_address);
+    compiledModule_.function_name_to_symbol.emplace(std::move(function_name), jit_symbol_address);
   }
-  compiled_module.size = module_memory_manager->allocatedMemorySize();
-  compiled_module.identifier = current_module_key;
-  moduleIdToMemManager_.emplace(current_module_key, std::move(module_memory_manager));
-  compiled_code_size.fetch_add(compiled_module.size, std::memory_order_relaxed);
-  return compiled_module;
+  compiledModule_.size = module_memory_manager->allocatedMemorySize();
+  compiledModule_.identifier = current_module_key;
+  moduleStorage_.addMemoryManager(current_module_key, std::move(module_memory_manager),
+                                  compiledModule_.size);  // TODO here is a race
+  // moduleStorage_.getModuleIdToMemManager().emplace(current_module_key, std::move(module_memory_manager));
+  // compiled_code_size += compiledModule_.size;
+
+  return compiledModule_;
 }
 
 std::unique_ptr<llvm::Module> JIT::createModuleForCompilation()
@@ -460,17 +487,17 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
   return std::unique_ptr<llvm::TargetMachine>(target_machine);
 }
 
-void JIT::deleteCompiledModule(JIT::CompiledModule& module)
-{
-  std::lock_guard<std::mutex> lock(jit_lock);
-  auto module_memory_manager_it = moduleIdToMemManager_.find(module.identifier);
-  if (module_memory_manager_it == moduleIdToMemManager_.end())
-  {
-    throw std::logic_error("There is no compiled module with identifier");
-  }
-  moduleIdToMemManager_.erase(module_memory_manager_it);
-  compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);
-}
+// void JIT::deleteCompiledModule(mcs_jit::CompiledModule& module)
+// {
+//   std::lock_guard<std::mutex> lock(jit_lock);
+//   auto module_memory_manager_it = moduleStorage_.getModuleIdToMemManager().find(module.identifier);
+//   if (module_memory_manager_it == moduleStorage_.getModuleIdToMemManager().end())
+//   {
+//     throw std::logic_error("There is no compiled module with identifier");
+//   }
+//   moduleStorage_.getModuleIdToMemManager().erase(module_memory_manager_it);
+//   compiled_code_size.fetch_sub(module.size, std::memory_order_relaxed);
+// }
 
 void JIT::registerExternalSymbol(const std::string& symbol_name, void* address)
 {
@@ -516,25 +543,5 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   // a module.
   // mpm.run(module);
 }
-
-// std::optional<size_t> JIT::moduleIdByExpressionName(const std::string expressionName) const
-// {
-//   auto moduleStoreIt = expressionToModuleStore_.find(expressionName);
-//   if (moduleStoreIt == expressionToModuleStore_.end())
-//   {
-//     return std::nullopt;
-//   }
-//   return {moduleStoreIt->second};
-// }
-
-// std::optional<std::shared_ptr<Module>> JIT::moduleByExpressionName(const std::string& expressionName) const
-// {
-//   auto moduleStoreId = moduleIdByExpressionName(expressionName);
-//   if (moduleStoreId)
-//   {
-//     return {compiledModulesStore_[moduleStoreId.value()]};
-//   }
-//   return std::nullopt_t;
-// }
 
 }  // namespace mcs_jit

@@ -1,12 +1,10 @@
-#include <atomic>
 #include <mutex>
-#include <unordered_map>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
 
-// #include "modules_storage.h"
+#include "modules_storage.h"
 
 namespace mcs_jit
 {
@@ -25,14 +23,12 @@ class JIT
  public:
   JIT();
   ~JIT();
-  struct CompiledModule
-  {
-    size_t size;
-    uint64_t identifier;
-    std::unordered_map<std::string, void*> function_name_to_symbol;
-  };
-  CompiledModule compileModule(std::function<void(llvm::Module&)> compile_function);
-  void deleteCompiledModule(CompiledModule& module);
+
+  mcs_jit::CompiledModule compileModule(std::function<void(llvm::Module&)> compile_function);
+  mcs_jit::CompiledModule compileAndCacheModule(std::function<void(llvm::Module&)> compile_function);
+  mcs_jit::CompiledModule findOrCompileModule(const std::string& expressionString,
+                                              std::function<void(llvm::Module&)> compile_function);
+  // void deleteCompiledModule(CompiledModule& module);
   void registerExternalSymbol(const std::string& symbol_name, void* address);
   // std::optional<std::shared_ptr<Module>> moduleByExpressionName(const std::string& expressionName) const;
 
@@ -49,11 +45,11 @@ class JIT
   llvm::DataLayout data_layout;
   std::unique_ptr<JITCompiler> compiler;
   std::unique_ptr<JITSymbolResolver> symbol_resolver;
-  std::atomic<size_t> current_module_key{0};
-  std::atomic<size_t> compiled_code_size;
+  size_t current_module_key = 0;
+  // std::atomic<size_t> compiled_code_size;
 
-  ModuleIdToMemManager moduleIdToMemManager_;
-  // ModuleStorage module_storage_;
+  // ModuleIdToMemManager moduleIdToMemManager_;
+  CompiledModuleStorage moduleStorage_;
 
   mutable std::mutex jit_lock;
 };

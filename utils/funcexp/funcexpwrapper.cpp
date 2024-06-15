@@ -121,7 +121,7 @@ bool FuncExpWrapper::evaluate(Row* r)
   {
     try
     {
-      mcs_jit::compileExpressions(rcs, *r);
+      mcs_jit::compileOrFindExpressions(rcs, *r);
     }
     catch (const std::logic_error& e)
     {
