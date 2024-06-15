@@ -300,6 +300,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
     commands: [
+      'apk add bash',
+      'bash -c "RUNNERPID=`pidof drone-runner-docker`; if [[ $RUNNERPID ]]; then echo \"drone docker runner pid is $RUNNERPID\"; echo -n \"-999\" > /proc/$RUNNERPID/oom_score_adj; fi"',
       execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
       execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
                       dockerImage("regresion")),
@@ -475,7 +477,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --memory 12g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --memory 10g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage('regression'), pkg_format, result, true) + [
 
       if (platform == 'centos:7') then
