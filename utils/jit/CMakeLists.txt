@@ -9,9 +9,9 @@ string(REPLACE "-Werror " " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces -Wno-non-virtual-dtor")
 
 set(jit_LIB_SRCS
-        # modules_storage.cpp
         jit.cpp
         jit.h
+        modules_storage.cpp
         compileoperator.cpp
         compileoperator.h
         expressionjit.h
