@@ -31,16 +31,24 @@ CompiledModuleStorage::CompiledModuleStorage(const size_t maxSize) : maxSize_(ma
 }
 
 // TODO refactor
-void CompiledModuleStorage::add(CompiledModule module)
+void CompiledModuleStorage::add(const CompiledModule& module)
 {
   std::lock_guard<std::mutex> lg(modulesMutex_);
 
   if (modules_.size() >= maxSize_)
   {
-    const auto leastUsedId = *lru_->end();
-    std::cout << "Replace the LRU element of the cache " << leastUsedId << std::endl;
-
+    const auto leastUsedId = *lru_->rbegin();
     lru_->remove(leastUsedId);
+
+    std::cout << "Replace the LRU element of the cache " << leastUsedId << " with modules_.size() "
+              << modules_.size() << std::endl;
+
+    assert(leastUsedId < modules_.size() && "LRU cache is corrupted");
+    const auto& lruModule = modules_[leastUsedId];
+
+    // remove the pre-empted module memory
+    deleteCompiledModuleMemory(lruModule);
+
     // remove all functions from the map
     for (auto& expressionString : modules_[leastUsedId].getExpressionStringList())
     {
@@ -53,15 +61,16 @@ void CompiledModuleStorage::add(CompiledModule module)
     }
 
     // swap module with the least used one
-    modules_[leastUsedId] = std::move(module);
+    modules_[leastUsedId] = module;
     // TODO need to register funcs added to the map
     lru_->add(leastUsedId);
-    // remove the pre-empted module memory
-    deleteCompiledModuleMemory(module);
+
+    return;
   }
 
   // TODO needs sync mech here
   const auto id = modules_.size();
+  lru_->add(id);
 
   for (auto& expressionString : module.getExpressionStringList())
   {
@@ -70,6 +79,8 @@ void CompiledModuleStorage::add(CompiledModule module)
 
   // TODO check if copy ctor is fine here
   modules_.emplace_back(module);
+
+  std::cout << "Cache miss add to LRU id " << id << " with modules_.size() " << modules_.size() << std::endl;
 }
 
 CompiledModuleOpt CompiledModuleStorage::get(const std::string& expressionString)
@@ -95,9 +106,9 @@ void CompiledModuleStorage::addMemoryManager(const size_t moduleKey,
   compiledCodeSize += moduleSize;
 }
 
-void CompiledModuleStorage::deleteCompiledModuleMemory(CompiledModule& module)
+// Needs modulesMutex_ mutex
+void CompiledModuleStorage::deleteCompiledModuleMemory(const CompiledModule& module)
 {
-  std::lock_guard<std::mutex> lock(modulesMutex_);
   auto module_memory_manager_it = moduleIdToMemManager_.find(module.identifier);
   if (module_memory_manager_it == moduleIdToMemManager_.end())
   {

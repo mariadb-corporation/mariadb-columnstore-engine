@@ -40,7 +40,7 @@ class CompiledModuleStorageIface
 {
  public:
   virtual ~CompiledModuleStorageIface() = default;
-  virtual void add(CompiledModule) = 0;
+  virtual void add(const CompiledModule& module) = 0;
   virtual CompiledModuleOpt get(const std::string&) = 0;
   virtual void clear() = 0;
   virtual std::size_t size() const = 0;
@@ -52,7 +52,7 @@ class CompiledModuleStorage : public CompiledModuleStorageIface
 {
  public:
   CompiledModuleStorage(const size_t maxSize = MaxLRUCacheSize);
-  void add(CompiledModule module) override;
+  void add(const CompiledModule& module) override;
   std::optional<CompiledModule> get(const std::string& expressionString) override;
   void addMemoryManager(const size_t moduleKey, std::unique_ptr<ModuleMemoryManager> manager,
                         const size_t moduleSize);
@@ -65,7 +65,7 @@ class CompiledModuleStorage : public CompiledModuleStorageIface
   }
 
  private:
-  void deleteCompiledModuleMemory(CompiledModule& module);
+  void deleteCompiledModuleMemory(const CompiledModule& module);
   std::mutex modulesMutex_;  // This mutex protection might overlap with JIT::jit_lock
   ModulesVector modules_;
   ExprToModulesVectorId exprToModules_;
