@@ -300,8 +300,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
     commands: [
-      'apk add bash',
-      'bash -c "RUNNERPID=`pidof drone-runner-docker`; if [[ $RUNNERPID ]]; then echo \"drone docker runner pid is $RUNNERPID\"; echo -n \"-999\" > /proc/$RUNNERPID/oom_score_adj; fi"',
       execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
       execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
                       dockerImage("regresion")),
