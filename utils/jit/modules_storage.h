@@ -34,7 +34,7 @@ namespace mcs_jit
 using ExprToModulesVectorId = std::unordered_map<std::string, std::size_t>;
 class ModuleMemoryManager;
 using ModuleIdToMemManager = std::unordered_map<uint64_t, std::unique_ptr<ModuleMemoryManager>>;
-const constexpr size_t MaxLRUCacheSize = 3;
+const constexpr size_t MaxLRUCacheSize = 8192;
 
 class CompiledModuleStorageIface
 {

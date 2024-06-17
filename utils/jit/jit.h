@@ -8,11 +8,6 @@
 
 namespace mcs_jit
 {
-// using ModuleUPtr = std::unique_ptr<llvm::Module>;
-// using ModuleSPtr = std::shared_ptr<llvm::Module>;
-// using ModulesVector = std::vector<ModuleSPtr>;
-// using ExprToModulesVectorId = std::unordered_map<std::string, std::size_t>;
-
 class ModuleMemoryManager;
 using ModuleIdToMemManager = std::unordered_map<uint64_t, std::unique_ptr<ModuleMemoryManager>>;
 class JITSymbolResolver;
