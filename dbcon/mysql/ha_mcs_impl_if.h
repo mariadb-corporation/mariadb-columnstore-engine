@@ -141,6 +141,9 @@ struct gp_walk_info
   std::vector<execplan::CalpontSystemCatalog::TableAliasName> correlatedTbNameVec;
   ClauseType clauseType;
   execplan::CalpontSystemCatalog::TableAliasName viewName;
+  // we can have explicit GROUP BY and implicit one, triggered by aggregate in pojection or ORDER BY.
+  // this flag tells us whether we have either case.
+  bool implicitExplicitGroupBy;
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
@@ -186,6 +189,7 @@ struct gp_walk_info
    , subSelectType(uint64_t(-1))
    , subQuery(0)
    , clauseType(INIT)
+   , implicitExplicitGroupBy(false)
    , aggOnSelect(false)
    , hasWindowFunc(false)
    , hasSubSelect(false)

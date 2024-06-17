@@ -124,6 +124,8 @@ inline RowAggFunctionType functionIdMap(int planFuncId)
 
     case AggregateColumn::MULTI_PARM: return ROWAGG_MULTI_PARM;
 
+    case AggregateColumn::SELECT_SOME: return ROWAGG_SELECT_SOME;
+
     default: return ROWAGG_FUNCT_UNDEFINE;
   }
 }
@@ -1204,6 +1206,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     {
       case ROWAGG_MIN:
       case ROWAGG_MAX:
+      case ROWAGG_SELECT_SOME:
       {
         oidsAgg.push_back(oidsProj[colProj]);
         keysAgg.push_back(key);
@@ -1766,6 +1769,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+	case ROWAGG_SELECT_SOME:
         {
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
@@ -3127,6 +3131,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+	case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
@@ -4044,6 +4049,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+	case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
