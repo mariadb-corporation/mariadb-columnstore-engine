@@ -33,7 +33,7 @@ namespace datatypes
 template <SystemCatalog::ColDataType CT>
 struct ranges_limits
 {
-  using T = ColTypeToIntegral<CT>::type;
+  using T = typename ColTypeToIntegral<CT>::type;
   static constexpr T min()
   {
     if constexpr (std::is_signed_v<T>)
