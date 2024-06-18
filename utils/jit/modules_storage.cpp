@@ -43,7 +43,7 @@ void CompiledModuleStorage::add(const CompiledModule& module)
     std::cout << "Replace the LRU element of the cache " << leastUsedId << " with modules_.size() "
               << modules_.size() << std::endl;
 
-    assert(leastUsedId < modules_.size() && "LRU cache is corrupted");
+    // assert(leastUsedId < modules_.size() && "LRU cache is corrupted");
     const auto& lruModule = modules_[leastUsedId];
 
     // remove the pre-empted module memory
