@@ -237,7 +237,17 @@ std::string ConstantColumn::toCppCode(IncludeSet& includes) const
 std::string ConstantColumn::toExpressionString() const
 {
   ostringstream oss;
-  oss << "Const(" << fResultType.colDataType << ")";
+  oss << "Const(" << fResultType.colDataType << " ";
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT: oss << fResult.intVal; break;
+    case CalpontSystemCatalog::UBIGINT: oss << fResult.uintVal; break;
+    case CalpontSystemCatalog::DOUBLE: oss << fResult.doubleVal; break;
+    case CalpontSystemCatalog::DECIMAL: oss << fResult.decimalVal.value; break;
+    case CalpontSystemCatalog::VARCHAR: oss << fResult.strVal.safeString(); break;
+    default: oss << "Unknown"; break;  // TODO add more types
+  }
+  oss << ")";
   return oss.str();
 }
 
