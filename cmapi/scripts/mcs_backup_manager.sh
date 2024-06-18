@@ -3040,7 +3040,7 @@ validation_prechecks_for_dbrm_restore() {
 
     # Download cs_package_manager.sh if not exists
     if [ ! -f "cs_package_manager.sh" ]; then
-        wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/extra/cs_package_manager.sh; chmod +x cs_package_manager.sh;
+        wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/cmapi/scripts/cs_package_manager.sh; chmod +x cs_package_manager.sh;
     fi;
     if source cs_package_manager.sh source ;then
         echo " - Sourced cs_package_manager.sh"
