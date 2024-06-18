@@ -1480,7 +1480,7 @@ confirm_dbrmctl_ok() {
 pre_upgrade_dbrm_backup() {
 
     if [ ! -f "mcs_backup_manager.sh" ]; then
-        wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/extra/mcs_backup_manager.sh; chmod +x mcs_backup_manager.sh;
+        wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/cmapi/scripts/mcs_backup_manager.sh; chmod +x mcs_backup_manager.sh;
     fi;
     if ! source mcs_backup_manager.sh source ;then
         printf "\n[!!] Failed to source mcs_backup_manager.sh\n\n"
