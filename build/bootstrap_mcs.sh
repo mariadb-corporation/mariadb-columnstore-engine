@@ -501,6 +501,7 @@ socket=/run/mysqld/mysqld.sock" > $CONFIG_DIR/socket.cnf
 
     fix_config_files
 
+    make_dir /etc/my.cnf.d
     if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
         message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
         cp -rp /etc/mysql/mariadb.conf.d/* /etc/my.cnf.d
