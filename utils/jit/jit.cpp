@@ -48,7 +48,7 @@
 #include <llvm/ADT/None.h>
 #else
 #include "llvm/Passes/PassBuilder.h"
-#include "llvm/Passes/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 #endif
 
