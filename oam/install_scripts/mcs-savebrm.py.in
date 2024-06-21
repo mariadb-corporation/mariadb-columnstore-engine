@@ -214,9 +214,11 @@ def em_is_empty(file_path_prefix):
     :rtype: Bool
     """
     # Add error message if EM is empty
-    is_none = file_path_prefix is None
-    filesize = get_file_size(file_path_prefix + EM_FILE_SUFFIX)
-    is_em_empty = is_none or filesize < EM_FILE_SIZE_THRESHOLD
+    if file_path_prefix is None:
+        is_em_empty = True
+    else:
+        filesize = get_file_size(file_path_prefix + EM_FILE_SUFFIX)
+        is_em_empty = filesize < EM_FILE_SIZE_THRESHOLD
     if is_em_empty:
         logging.error('EM file is none or its size {} is less than {} bytes.'.format(filesize, EM_FILE_SIZE_THRESHOLD))
     return is_em_empty
