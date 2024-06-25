@@ -2003,6 +2003,7 @@ print_restore_help_text()
         -sb  | --skip-bucket-data       Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
         -q   | --quiet                  Silence verbose copy command outputs
         -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
+        -P   | --parallel               Number of parallel decompression and mbstream threads to run
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )
@@ -2038,6 +2039,7 @@ print_restore_variables()
     if [[ -n "$compress_format" ]]; then
         echo "Compression:        true"
         echo "Compression Format: $compress_format";
+        echo "Decompression Threads:" "$PARALLEL_THREADS";
     else
         echo "Compression:        false"
     fi
