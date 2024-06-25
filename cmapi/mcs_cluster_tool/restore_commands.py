@@ -12,6 +12,7 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 
 
 logger = logging.getLogger('mcs_cli')
+# pylint: disable=unused-argument
 
 
 @handle_output
@@ -256,13 +257,13 @@ def restore(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} restore {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
 
 
 @handle_output
-def restore_dbrm(
+def dbrm_restore(
     p: Annotated[
         str,
         typer.Option(
@@ -277,19 +278,45 @@ def restore_dbrm(
             help='Date or directory chose to restore from.'
         )
     ] = '',
+    ns: Annotated[
+        bool,
+        typer.Option(
+            '-ns', '--no-start',
+            help=(
+                'Do not attempt columnstore startup post dbrm_restore.'
+            )
+        )
+    ] = False,
+    sdbk: Annotated[
+        bool,
+        typer.Option(
+            '-sdbk/-no-sdbk', '--skip-dbrm-backup/--no-skip-dbrm-backup',
+            help=(
+                'Skip backing up dbrms before restoring.'
+            )
+        )
+    ] = True,
+    ssm: Annotated[
+        bool,
+        typer.Option(
+            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
+            help='Skip backing up storagemanager directory.'
+        )
+    ] = True,
 ):
     """Restore Columnstore DBRM data."""
 
     # Default: ./$0 dbrm_restore --path /tmp/dbrm_backups
 
-    #         Examples:
-    #             ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup12252023
+    # Examples:
+    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842
+    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
     arguments = []
     for arg_name, value in locals().items():
         sh_arg = cook_sh_arg(arg_name, value)
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} dbrm_restore {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}

@@ -39,11 +39,6 @@ class AlterTableProcessor : public DDLPackageProcessor
   AlterTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
-  /** @brief process an alter table statement
-   *
-   * @param alterTableStmt the AlterTableStatement
-   */
-  EXPORT DDLResult processPackage(ddlpackage::AlterTableStatement& alterTableStmt);
   /** @brief add a physical column file
    *
    * @param result the result of the operation
@@ -151,6 +146,11 @@ class AlterTableProcessor : public DDLPackageProcessor
                      uint64_t uniqueId);
 
  private:
+  /** @brief process an alter table statement
+   *
+   * @param alterTableStmt the AlterTableStatement
+   */
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* alterTableStmt) override;
 };
 
 }  // namespace ddlpackageprocessor
