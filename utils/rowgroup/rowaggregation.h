@@ -113,7 +113,10 @@ enum RowAggFunctionType
   ROWAGG_DUP_FUNCT,    // duplicate aggregate Function(), except AVG and UDAF, in select
   ROWAGG_DUP_AVG,      // duplicate AVG(column_name) in select
   ROWAGG_DUP_STATS,    // duplicate statistics functions in select
-  ROWAGG_DUP_UDAF      // duplicate UDAF function in select
+  ROWAGG_DUP_UDAF,     // duplicate UDAF function in select
+
+  // a dummy "select some" aggregate needed for non-group-by values in SELECT's with GROUP BY's
+  ROWAGG_SELECT_SOME
 };
 
 //------------------------------------------------------------------------------
@@ -540,6 +543,7 @@ class RowAggregation : public messageqcpp::Serializeable
   virtual void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
   void mergeEntries(const Row& row);
   virtual void doMinMax(const Row&, int64_t, int64_t, int);
+  virtual void doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOut);
   virtual void doSum(const Row&, int64_t, int64_t, int);
   virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
   virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);

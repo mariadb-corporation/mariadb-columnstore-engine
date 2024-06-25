@@ -309,9 +309,9 @@ if __name__ == '__main__':
     if s3_enabled:
         # start SM using systemd
         if use_systemd:
-            cmd = 'systemctl start mcs-storagemanager'
+            CMD = 'systemctl start mcs-storagemanager'
             try:
-                subprocess.check_call(cmd, shell=True)
+                subprocess.check_call(CMD, shell=True)
             except subprocess.CalledProcessError as exc:
                 logging.error(
                     'Failed to start storagemanager. '
@@ -393,8 +393,7 @@ if __name__ == '__main__':
                             shutil.chown(current_name, USER, GROUP)
                         else:
                             logging.info(
-                                'Cmapi is not running on primary node. '
-                                'Skip loading metafiles.'
+                                'Cmapi is not running on primary node. Skip loading metafiles.'
                             )
             except Exception as exc:
                 logging.error(
