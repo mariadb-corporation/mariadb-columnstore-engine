@@ -4977,11 +4977,15 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_
     groupcol = groupcol->next;
   }
 
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
   AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
   ac->timeZone(gwi.timeZone);
   ac->alias(rc->alias());
   ac->aggOp(AggregateColumn::SELECT_SOME);
   ac->asc(rc->asc());
+  ac->charsetNumber(rc->charsetNumber());
+  ac->expressionId(ci->expressionId++);
 
   ac->aggParms().push_back(SRCP(rc));
   return ac;
