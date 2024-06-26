@@ -2,6 +2,8 @@
 #include "returnedcolumn.h"
 #include "simplecolumn.h"
 
+#pragma once
+
 namespace execplan
 {
 template <typename T>

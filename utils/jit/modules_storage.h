@@ -43,8 +43,8 @@ class CompiledModuleStorageIface
   virtual void add(const CompiledModule& module) = 0;
   virtual CompiledModuleOpt get(const std::string&) = 0;
   virtual void clear() = 0;
-  virtual std::size_t size() const = 0;
-  virtual bool empty() const = 0;
+  virtual std::size_t size() = 0;
+  virtual bool empty() = 0;
 };
 
 // Need to take Modules MemManager_ into.
@@ -57,8 +57,8 @@ class CompiledModuleStorage : public CompiledModuleStorageIface
   void addMemoryManager(const size_t moduleKey, std::unique_ptr<ModuleMemoryManager> manager,
                         const size_t moduleSize);
   void clear() override;
-  std::size_t size() const override;
-  bool empty() const override;
+  std::size_t size() override;
+  bool empty() override;
   ModuleIdToMemManager& getModuleIdToMemManager()
   {
     return moduleIdToMemManager_;

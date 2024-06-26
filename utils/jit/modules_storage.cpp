@@ -120,18 +120,24 @@ void CompiledModuleStorage::deleteCompiledModuleMemory(const CompiledModule& mod
 
 void CompiledModuleStorage::clear()
 {
+  std::lock_guard<std::mutex> lock(modulesMutex_);
+
   modules_.clear();
   exprToModules_.clear();
   lru_->clear();
 }
 
-std::size_t CompiledModuleStorage::size() const
+std::size_t CompiledModuleStorage::size()
 {
+  std::lock_guard<std::mutex> lock(modulesMutex_);
+
   return modules_.size();
 }
 
-bool CompiledModuleStorage::empty() const
+bool CompiledModuleStorage::empty()
 {
+  std::lock_guard<std::mutex> lock(modulesMutex_);
+
   return modules_.empty();
 }
 

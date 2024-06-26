@@ -199,9 +199,9 @@ mcs_jit::CompiledModule JIT::findOrCompileModule(const std::string& expressionSt
 // Needs a mutex lock
 mcs_jit::CompiledModule JIT::compileModule(std::unique_ptr<llvm::Module> module)
 {
-  // std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
+  std::cout << "JIT::compileModule !!!!!!!!!!" << std::endl;
   runOptimizationPassesOnModule(*module);
-  // module->print(llvm::outs(), nullptr);
+  module->print(llvm::outs(), nullptr);
 
   auto buffer = compiler->compile(*module);
 
@@ -291,8 +291,6 @@ std::unique_ptr<llvm::TargetMachine> JIT::getTargetMachine()
   llvm::TargetOptions options;
 
   bool jit = true;
-  // target->createTargetMachine(StringRef TT, StringRef CPU, StringRef Features, const TargetOptions
-  // &Options, std::optional<Reloc::Model> RM)
 #if LLVM_VERSION_MAJOR < 17
   auto* target_machine = target->createTargetMachine(triple, cpu, features.getString(), options, llvm::None,
                                                      llvm::None, llvm::CodeGenOpt::Aggressive, jit);
@@ -321,11 +319,11 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   llvm::legacy::PassManager mpm;
   llvm::legacy::FunctionPassManager fpm(&module);
 
-  pass_manager_builder.OptLevel = 3;
-  pass_manager_builder.SLPVectorize = true;
-  pass_manager_builder.LoopVectorize = true;
-  pass_manager_builder.VerifyInput = true;
-  pass_manager_builder.VerifyOutput = true;
+  pass_manager_builder.OptLevel = 0;
+  // pass_manager_builder.SLPVectorize = true;
+  // pass_manager_builder.LoopVectorize = true;
+  // pass_manager_builder.VerifyInput = true;
+  // pass_manager_builder.VerifyOutput = true;
 #if LLVM_VERSION_MAJOR < 16
   pass_manager_builder.RerollLoops = true;
   target_machine->adjustPassManager(pass_manager_builder);
@@ -370,8 +368,8 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   PassBuilder.crossRegisterProxies(lam, fam, cgam, mam);
 
   // Create the pass manager.
-  auto mpm = PassBuilder.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
-  auto fpm = PassBuilder.buildFunctionSimplificationPipeline(llvm::OptimizationLevel::O3,
+  auto mpm = PassBuilder.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
+  auto fpm = PassBuilder.buildFunctionSimplificationPipeline(llvm::OptimizationLevel::O0,
                                                              llvm::ThinOrFullLTOPhase::None);
 
   // TODO LoopPassManager with vectorization enabled
@@ -381,39 +379,6 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   {
     fpm.run(function, fam);
   }
-
-  // llvm::legacy::PassManager mpm;
-  // llvm::legacy::FunctionPassManager fpm(&module);
-
-  // pass_manager_builder.OptLevel = 3;
-  // pass_manager_builder.SLPVectorize = true;
-  // pass_manager_builder.LoopVectorize = true;
-  // pass_manager_builder.VerifyInput = true;
-  // pass_manager_builder.VerifyOutput = true;
-  // #if LLVM_VERSION_MAJOR < 16
-  //     pass_manager_builder.RerollLoops = true;
-  //     target_machine->adjustPassManager(pass_manager_builder);
-  // #endif
-
-  // fpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
-  // mpm.add(llvm::createTargetTransformInfoWrapperPass(target_machine->getTargetIRAnalysis()));
-
-  // pass_manager_builder.populateFunctionPassManager(fpm);
-  // pass_manager_builder.populateModulePassManager(mpm);
-
-  // fpm.doInitialization();
-
-  // for (auto& function : module)
-  // {
-  //   fpm.run(function);
-  // }
-
-  // fpm.doFinalization();
-
-  // // WIP the module opt pass removes the function compiled
-  // Module opt passes aggresivelly remove "unreferenced" functions from
-  // a module.
-  // mpm.run(module);
 }
 #endif
 

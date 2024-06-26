@@ -256,6 +256,7 @@ std::string ReturnedColumn::toExpressionString() const
 {
   ostringstream oss;
   oss || fResultType.colDataType;
+  oss << "(" << fSessionID << " " << fInputIndex << ")";
   return oss.str();
 }
 
