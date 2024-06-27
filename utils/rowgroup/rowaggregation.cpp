@@ -3702,10 +3702,13 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
           auto width = fRow.getColumnWidth(colOut);
           if (width == datatypes::MAXDECIMALWIDTH)
           {
+            int precision, scale;
+            // MCOL-5708 Calculate precision and scale based on the given value.
+            datatypes::decimalPrecisionAndScale(aggData.fConstValue, precision, scale);
             execplan::CalpontSystemCatalog::TypeHolderStd colType;
             colType.colWidth = width;
-            colType.precision = fRow.getPrecision(i);
-            colType.scale = fRow.getScale(i);
+            colType.precision = precision;
+            colType.scale = scale;
             colType.colDataType = colDataType;
             int128_t constValue = colType.decimal128FromString(aggData.fConstValue);
             int128_t sum;
