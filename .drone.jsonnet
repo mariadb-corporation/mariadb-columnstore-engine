@@ -16,22 +16,22 @@ local platforms_arm = {
 };
 
 local platforms_multinode_mtr = {
-  'amd64': ['rockylinux:9', 'ubuntu:22.04'],
-  'arm64': ['rockylinux:8', 'debian:12'],
+  'amd64': ['rockylinux:9', 'debina:11', 'ubuntu:22.04'],
+  'arm64': [],
 }; 
 
 local events_multinode_mtr = ['cron', 'custom'];
 
 
 local BOXES_AMD = {
-  'centos:7'     : 'centos_7_aws',
-  'rockylinux:8' : 'rocky_8_aws',
-  'rockylinux:9' : 'rocky_9_aws',
-  'debian:11'    : 'debian_bullseye_aws',
-  'debian:12'    : 'debian_bookworm_aws',
-  'ubuntu:20.04' : 'ubuntu_focal_aws',
-  'ubuntu:22.04' : 'ubuntu_jammy_aws',
-  'ubuntu:24.04' : 'ubuntu_noble_aws',
+  'centos:7'     : 'centos_7_libvirt',
+  'rockylinux:8' : 'rocky_8_libvirt',
+  'rockylinux:9' : 'rocky_9_libvirt',
+  'debian:11'    : 'debian_bullseye_libvirt',
+  'debian:12'    : 'debian_bookworm_libvirt',
+  'ubuntu:20.04' : 'ubuntu_focal_libvirt',
+  'ubuntu:22.04' : 'ubuntu_jammy_libvirt',
+  'ubuntu:24.04' : 'ubuntu_noble_libvirt',
 };
 
 local BOXES_ARM = {
@@ -49,7 +49,10 @@ local BOXES = {
   'arm64': BOXES_ARM,
 };
 
-local multinode_host = 'multinode_tests@ci.columnstore.mariadb.net';
+local multinode_host = {
+  'amd64': 'vagrant@max-tst-01.mariadb.com',
+  'arm64': 'multinode_tests@ci.columnstore.mariadb.net',
+};
 local ssh_opt = '-i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=120';
 
 local any_branch = '**';
@@ -499,7 +502,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'echo $SSH_KEY > id_rsa_base64',
       'base64 -d id_rsa_base64 > id_rsa',
       'chmod 400 id_rsa',
-      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "mkdir -p ~/multinode_scripts/' + mdbci_target + '-$${box}/"',
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host[arch] + ' "mkdir -p ~/multinode_scripts/' + mdbci_target + '-$${box}/"',
     ],
     when: {
       status: ['success', 'failure'],
@@ -517,7 +520,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       box: BOXES[arch][platform],
     },
     commands: [
-      'scp -i id_rsa ' + ssh_opt + ' -r tests/scripts/mdbci/multinode_mtr/* ' + multinode_host + ':~/multinode_scripts/' + mdbci_target + '-$${box}/',
+      'scp -i id_rsa ' + ssh_opt + ' -r tests/scripts/mdbci/multinode_mtr/* ' + multinode_host[arch] + ':~/multinode_scripts/' + mdbci_target + '-$${box}/',
     ],
     when: {
       status: ['success', 'failure'],
@@ -532,7 +535,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       box: BOXES[arch][platform],
     },
     commands: [
-      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./test.sh ' + mdbci_target + ' $${DRONE_BUILD_NUMBER} $${box} "' + arch + '/' + platform,
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host[arch] + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./test.sh ' + mdbci_target + ' $${DRONE_BUILD_NUMBER} $${box} "' + arch + '/' + platform,
     ],
     when: {
       status: ['success', 'failure'],
@@ -548,7 +551,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'mkdir -p ' + result + '/multinode_mtr',
-      'scp -r -i id_rsa ' + ssh_opt + ' ' + multinode_host + ':~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/* ' + result + '/multinode_mtr/',
+      'scp -r -i id_rsa ' + ssh_opt + ' ' + multinode_host[arch] + ':~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/* ' + result + '/multinode_mtr/',
     ],
     when: {
       status: ['success', 'failure'],
@@ -563,7 +566,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       box: BOXES[arch][platform],
     },
     commands: [
-      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./columnstore_vm.py --machine-name ' + mdbci_target + '-$${box} --destroy; rm -rf ~/multinode_scripts/' + mdbci_target + '-$${box}; sudo rm -rf ~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/*;"',
+      'ssh -i id_rsa ' + ssh_opt + ' ' + multinode_host[arch] + ' "cd ~/multinode_scripts/' + mdbci_target + '-$${box}/; ./columnstore_vm.py --machine-name ' + mdbci_target + '-$${box} --destroy; rm -rf ~/multinode_scripts/' + mdbci_target + '-$${box}; sudo rm -rf ~/multinode_logs/MariaDBEnterprise/' +  mdbci_target + '/$${box}/mtr-columnstore-test/$${DRONE_BUILD_NUMBER}/*;"',
     ],
     when: {
       status: ['success', 'failure'],
