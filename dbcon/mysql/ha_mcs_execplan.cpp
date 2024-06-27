@@ -8409,7 +8409,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }
-  idblog("group by cols size: " << gwi.groupByCols.size() << ", union sel " << int(unionSel));
+  idblog("group by cols size: " << gwi.groupByCols.size() << ", union sel " << int(unionSel) << " gb list head " << (static_cast<ORDER*>(select_lex.group_list.first) != nullptr ? "not NULL" : "NULL"));
 
   // ORDER BY processing
   {
