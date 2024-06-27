@@ -8414,7 +8414,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 	  ORDER* o;
 	  for(o=static_cast<ORDER*>(select_lex.group_list.first);o;o=o->next) {
 		  Item* oi = o->item;
-		  idblog("  gb item name: " << (oi->name.length ? string(io-.name.str) : "--"));
+		  idblog("  gb item name: " << (oi->name.length ? std::string(io->name.str) : "--"));
 	  }
   }
 
