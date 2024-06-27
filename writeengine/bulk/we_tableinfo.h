@@ -77,7 +77,7 @@ class TableInfo : public WeUIDGID
   FILE* fHandle;           // Handle to the input load file
   int fCurrentReadBuffer;  // Id of current buffer being popu-
   //   lated by the read thread
-  RID fTotalReadRows;               // Total number of rows read
+  RID fTotalReadRows;      // Total number of rows read
   unsigned fTotalErrRows;  // Total error rows among all input
   //   for this table.  Is volatile to
   //   insure parser & reader threads
@@ -458,6 +458,8 @@ class TableInfo : public WeUIDGID
   void markTableComplete();
 
   void setJobUUID(const boost::uuids::uuid& jobUUID);
+
+  bool readFromSTDIN();
 
  public:
   friend class BulkLoad;
