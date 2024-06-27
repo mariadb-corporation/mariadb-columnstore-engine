@@ -8410,6 +8410,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
   }
   idblog("group by cols size: " << gwi.groupByCols.size() << ", union sel " << int(unionSel) << " gb list head " << (static_cast<ORDER*>(select_lex.group_list.first) != nullptr ? "not NULL" : "NULL"));
+  {
+	  ORDER* o;
+	  for(o=static_cast<ORDER*>(select_lex.group_list.first);o;o=o->next) {
+		  Item* oi = o->item;
+		  idblog("  gb item name: " << (oi->name.length ? string(io-.name.str) : "--"));
+	  }
+  }
 
   // ORDER BY processing
   {
