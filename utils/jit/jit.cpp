@@ -183,12 +183,12 @@ mcs_jit::CompiledModule JIT::findOrCompileModule(const std::string& expressionSt
 {
   std::lock_guard<std::mutex> lock(jit_lock);
 
-  auto cachedCompiledModule = moduleStorage_.get(expressionString);
-  if (cachedCompiledModule)
-  {
-    std::cout << " JIT cache hit " << expressionString << std::endl;
-    return cachedCompiledModule.value();
-  }
+  // auto cachedCompiledModule = moduleStorage_.get(expressionString);
+  // if (cachedCompiledModule)
+  // {
+  //   std::cout << " JIT cache hit " << expressionString << std::endl;
+  //   return cachedCompiledModule.value();
+  // }
   std::cout << " JIT cache miss " << expressionString << std::endl;
 
   return compileAndCacheModule(compile_function);
