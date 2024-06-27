@@ -1,0 +1,21 @@
+DROP DATABASE IF EXISTS MCOL_5175;
+CREATE DATABASE MCOL_5175;
+USE MCOL_5175;
+create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8;
+show create table testtext2;
+Table	Create Table
+testtext2	CREATE TABLE `testtext2` (
+  `myvalue` varchar(100) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
+alter table testtext2 add column myvalue2 text;
+show create table testtext2;
+Table	Create Table
+testtext2	CREATE TABLE `testtext2` (
+  `myvalue` varchar(100) DEFAULT NULL,
+  `myvalue2` text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
+insert into testtext2 (myvalue2) VALUES ('myvalue');
+select * from testtext2;
+myvalue	myvalue2
+NULL	myvalue
+DROP DATABASE MCOL_5175;
