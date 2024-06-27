@@ -65,10 +65,12 @@ INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-CONFIG_DIR="/etc/my.cnf.d"
+RPM_CONFIG_DIR="/etc/my.cnf.d"
+DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+CONFIG_DIR=$RPM_CONFIG_DIR
 
 if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
-    CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+    CONFIG_DIR=$DEB_CONFIG_DIR
 fi
 
 export CLICOLOR_FORCE=1
@@ -204,6 +206,8 @@ clean_old_installation()
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
     rm -rf /etc/mysql
+    rm -rf /etc/my.cnf.d/columnstore.cnf
+    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf
 }
 
 build()
@@ -447,25 +451,30 @@ fix_config_files()
     systemctl daemon-reload
 }
 
+make_dir()
+{
+    mkdir -p $1
+    chown mysql:mysql $1
+}
+
 install()
 {
     message_split
     message "Installing MariaDB"
     disable_plugins_for_bootstrap
 
-    mkdir -p $REPORT_PATH
+    make_dir $REPORT_PATH
     chmod 777 $REPORT_PATH
 
     check_user_and_group
 
-    mkdir -p /etc/my.cnf.d
+    make_dir $CONFIG_DIR
 
-    bash -c 'echo "[client-server]
-socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
+    echo "[client-server]
+socket=/run/mysqld/mysqld.sock" > $CONFIG_DIR/socket.cnf
 
     mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
-    mkdir -p /var/lib/mysql
-    chown mysql:mysql /var/lib/mysql
+    make_dir /var/lib/mysql
 
     message "Running mysql_install_db"
     sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
@@ -473,7 +482,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     enable_columnstore_back
 
-    mkdir -p /etc/columnstore
+    make_dir /etc/columnstore
 
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
@@ -482,8 +491,8 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
-        mkdir -p /usr/share/mysql
-        mkdir -p /etc/mysql/
+        make_dir /usr/share/mysql
+        make_dir /etc/mysql/
         cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
         cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
         > /etc/mysql/debian.cnf
@@ -501,15 +510,11 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
         cp -rp /etc/mysql/conf.d/* /etc/my.cnf.d
     fi
 
-    mkdir -p /var/lib/columnstore/data1
-    mkdir -p /var/lib/columnstore/data1/systemFiles
-    mkdir -p /var/lib/columnstore/data1/systemFiles/dbrm
-    mkdir -p /run/mysqld/
-
-    mkdir -p $DATA_DIR
-    chown -R mysql:mysql $DATA_DIR
-    chown -R mysql:mysql /var/lib/columnstore/
-    chown -R mysql:mysql /run/mysqld/
+    make_dir /var/lib/columnstore/data1
+    make_dir /var/lib/columnstore/data1/systemFiles
+    make_dir /var/lib/columnstore/data1/systemFiles/dbrm
+    make_dir /run/mysqld/
+    make_dir $DATA_DIR
 
     chmod +x $INSTALL_PREFIX/bin/mariadb*
 
@@ -518,7 +523,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     start_storage_manager_if_needed
 
     message "Running columnstore-post-install"
-    mkdir -p /var/lib/columnstore/local
+    make_dir /var/lib/columnstore/local
     columnstore-post-install --rpmmode=install
     message "Running install_mcs_mysql"
     install_mcs_mysql.sh
