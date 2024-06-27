@@ -4414,7 +4414,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" || funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
@@ -6914,6 +6914,26 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // Existed pushdown handlers won't get in this scope
   // MDEV-25080 Union pushdown would enter this scope
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
+
+  // check INTERSECT or EXCEPT, that are not implemented
+  if (select_lex.master_unit() && select_lex.master_unit()->first_select())
+  {
+    for (auto nextSelect = select_lex.master_unit()->first_select()->next_select(); nextSelect;
+         nextSelect = nextSelect->next_select())
+    {
+      if (nextSelect->get_linkage() == INTERSECT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "INTERSECT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+      else if (nextSelect->get_linkage() == EXCEPT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "EXCEPT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+    }
+  }
+
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
     // MCOL-2178 isUnion member only assigned, never used

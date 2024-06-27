@@ -146,6 +146,23 @@ class Charset
   Charset(CHARSET_INFO* cs = nullptr) : mCharset(cs ? cs : &my_charset_bin)
   {
   }
+
+  bool operator==(const Charset& rhs)
+  {
+     return rhs.getCharset().cs_name.str == getCharset().cs_name.str;
+  }
+
+  std::string convert(const std::string& from, const datatypes::Charset& fromCs) const
+  {
+     std::string result;
+     uint dummy_errors;
+     result.resize(from.size() * getCharset().mbmaxlen);
+     size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), &getCharset(), from.c_str(),
+                                       from.size(), &fromCs.getCharset(), &dummy_errors);
+     result.resize(resultingSize);
+     return result;
+  }
+
   Charset(uint32_t charsetNumber);
   void setCharset(uint32_t charsetNumber);
   CHARSET_INFO& getCharset() const
