@@ -8409,6 +8409,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }
+  idblog("group by cols size: " << gwi.groupByCols.size());
 
   // ORDER BY processing
   {
