@@ -854,7 +854,15 @@ uint64_t JoinPartition::writeByteStream(int which, ByteStream& bs)
   bs.advance(len);
 
   offset = fs.tellp();
+
   fs.close();
+
+  if (fs.fail())
+  {
+    ostringstream os;
+    os << "Disk join file " << filename << ": close() failure, probable exhaustion of disk space." << endl;
+    throw IDBExcept(os.str().c_str(), ERR_DBJ_FILE_IO_ERROR);
+  }
   return ret;
 }
 
