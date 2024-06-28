@@ -182,15 +182,12 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
     return -1;
   }
 
-  dataconvert::DateTime aDay;
+  dataconvert::Date aDay;
   aDay.year = year;
   aDay.month = month;
   aDay.day = lastday;
-  aDay.hour = 0;
-  aDay.minute = 0;
-  aDay.second = 0;
-  aDay.msecond = 0;
-  val = *(reinterpret_cast<uint64_t*>(&aDay));
+  aDay.spare = 0;
+  val = *(reinterpret_cast<uint32_t*>(&aDay));
   return val;
 }
 
