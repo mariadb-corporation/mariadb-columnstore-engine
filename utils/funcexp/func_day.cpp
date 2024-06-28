@@ -49,6 +49,7 @@ int64_t Func_day::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   dataconvert::DateTime aDateTime;
   dataconvert::Time aTime;
 
+  idblog("day() colDataType " << int(parm[0]->data()->resultType().colDataType));
   switch (parm[0]->data()->resultType().colDataType)
   {
     case CalpontSystemCatalog::DATE:
