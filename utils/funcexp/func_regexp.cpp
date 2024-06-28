@@ -60,18 +60,19 @@ struct PCREOptions
 PCREOptions::PCREOptions(execplan::CalpontSystemCatalog::ColType& ct)
 {
   datatypes::Charset cs = ct.getCharset();
+  datatypes::Charset myCharsetBin = my_charset_bin;
 
   // TODO use system variable instead if hardcode default_regex_flags_pcre(_current_thd());
   // PCRE2_DOTALL | PCRE2_DUPNAMES | PCRE2_EXTENDED | PCRE2_EXTENDED_MORE | PCRE2_MULTILINE | PCRE2_UNGREEDY;
 
   jpcre2::Uint defaultFlags = 0;
 
-  flags = (cs != &my_charset_bin ? (PCRE2_UTF | PCRE2_UCP) : 0) |
+  flags = (cs != myCharsetBin ? (PCRE2_UTF | PCRE2_UCP) : 0) |
           ((cs.getCharset().state & (MY_CS_BINSORT | MY_CS_CSSORT)) ? 0 : PCRE2_CASELESS) | defaultFlags;
 
   // Convert text data to utf-8.
   dataCharset = cs;
-  libraryCharset = cs == my_charset_bin ? my_charset_bin : my_charset_utf8mb3_general_ci;
+  libraryCharset = cs == myCharsetBin ? my_charset_bin : my_charset_utf8mb3_general_ci;
 }
 
 struct RegExpParams
