@@ -147,20 +147,25 @@ class Charset
   {
   }
 
-  bool operator==(const Charset& rhs)
+  bool operator==(const Charset& rhs) const
   {
-     return rhs.getCharset().cs_name.str == getCharset().cs_name.str;
+    return rhs.getCharset().cs_name.str == getCharset().cs_name.str;
+  }
+
+  bool operator!=(const Charset& rhs) const
+  {
+    return !(*this == rhs);
   }
 
   std::string convert(const std::string& from, const datatypes::Charset& fromCs) const
   {
-     std::string result;
-     uint dummy_errors;
-     result.resize(from.size() * getCharset().mbmaxlen);
-     size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), &getCharset(), from.c_str(),
-                                       from.size(), &fromCs.getCharset(), &dummy_errors);
-     result.resize(resultingSize);
-     return result;
+    std::string result;
+    uint dummy_errors;
+    result.resize(from.size() * getCharset().mbmaxlen);
+    size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), &getCharset(),
+                                      from.c_str(), from.size(), &fromCs.getCharset(), &dummy_errors);
+    result.resize(resultingSize);
+    return result;
   }
 
   Charset(uint32_t charsetNumber);
@@ -187,7 +192,7 @@ class Charset
     // please note that ConstString has an assertion so that nullptr data has zero length.
     const char* s1 = str1.str();
     const char* s2 = str2.str();
-    return mCharset->strnncollsp(s1 ? s1 : "", str1.length(), s2 ? s2 : "" , str2.length());
+    return mCharset->strnncollsp(s1 ? s1 : "", str1.length(), s2 ? s2 : "", str2.length());
   }
   int strnncollsp(const char* str1, size_t length1, const char* str2, size_t length2) const
   {
