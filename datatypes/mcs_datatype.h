@@ -125,6 +125,8 @@ struct WidthToSIntegralType<16> : _WidthToSIntegralType<16, int128_t>
 {
 };
 
+void decimalPrecisionAndScale(const utils::NullString& value, int &precision, int &scale);
+
 // XXX: It is assumed here that ALL TYPES have width, scale and precision.
 // XXX: And then some of them have the type tag itself.
 // XXX: But, all types have type tag, some need explicit width (decimals, for example)

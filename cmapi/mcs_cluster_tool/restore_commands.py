@@ -12,7 +12,8 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 
 
 logger = logging.getLogger('mcs_cli')
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, too-many-arguments, too-many-locals
+# pylint: disable=invalid-name, line-too-long
 
 
 @handle_output
@@ -143,17 +144,6 @@ def restore(
             )
         )
     ] = '',
-    P: Annotated[
-        int,
-        typer.Option(
-            '-P', '--parallel',
-            help=(
-                'Determines if columnstore data directories will have '
-                'multiple rsync running at the same time for different '
-                'subfolders to parallelize writes.'
-            )
-        )
-    ] = 4,
     ha: Annotated[
         bool,
         typer.Option(
@@ -180,9 +170,10 @@ def restore(
         str,
         typer.Option(
             '-f', '--config-file',
-            help='Path to backup configuration file to load variables from.'
+            help='Path to backup configuration file to load variables from.',
+            show_default=False
         )
-    ] = '.cs-backup-config',
+    ] = '',
     smdb: Annotated[
         bool,
         typer.Option(
@@ -223,9 +214,20 @@ def restore(
             help=(
                 'Hint that the backup is compressed in X format. '
                 'Options: [ pigz ].'
-            )
+            ),
+            show_default=False
         )
     ] = '',
+    P: Annotated[
+        int,
+        typer.Option(
+            '-P', '--parallel',
+            help=(
+                'Determines number of decompression and mdbstream threads. '
+                'Ignored if "-c/--compress" argument not set.'
+            )
+        )
+    ] = 4,
     q: Annotated[
         bool,
         typer.Option(
