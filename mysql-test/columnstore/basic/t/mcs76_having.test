@@ -18,7 +18,7 @@ SELECT col2 FROM t1 GROUP BY col2 HAVING col2 LIKE '%o%' ORDER BY col2;
 SELECT col1 FROM t1 GROUP BY col1 HAVING col1 > 1 ORDER BY col1;
 SELECT col1, col2 FROM t1 GROUP BY col1, col2 HAVING col1 > 1 AND col2 LIKE '%o%' ORDER BY col1;
 SELECT col1, col2 FROM t1 GROUP BY col1, col2 HAVING col1 > 1 OR col2 LIKE '%o%' ORDER BY col1;
---error ER_INTERNAL_ERROR
+--sorted_result
 SELECT col1, col2, SUM(LENGTH(col2)) FROM t1 GROUP BY col1 HAVING col1 > 1 AND col2 LIKE '%o%' ORDER BY col1;
 
 CREATE TABLE t2(col1 INT, col2 DATETIME)ENGINE=Columnstore;
