@@ -8,7 +8,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 string(REPLACE "-Werror " " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces -Wno-non-virtual-dtor")
 
-find_library(STDCPP_LIB stdc++)
+# find_library(STDCPP_LIB stdc++)
 
 set(jit_LIB_SRCS
         jit.cpp
@@ -21,10 +21,13 @@ set(jit_LIB_SRCS
 
 add_library(jit SHARED ${jit_LIB_SRCS})
 add_dependencies(jit loggingcpp)
-if(STDCPP_LIB)
-    target_link_libraries(jit PRIVATE ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${STDCPP_LIB})
-else()
-    target_link_libraries(jit PRIVATE ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS})
-endif()
+
+target_link_options(jit PRIVATE -static-libstdc++ -static-libgcc)
+
+# if(STDCPP_LIB)
+#     target_link_libraries(jit PRIVATE ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS} ${STDCPP_LIB})
+# else()
+#     target_link_libraries(jit PRIVATE ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS} ${LLVM_LDFLAGS})
+# endif()
 
 install(TARGETS jit DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

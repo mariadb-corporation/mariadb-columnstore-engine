@@ -319,11 +319,11 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   llvm::legacy::PassManager mpm;
   llvm::legacy::FunctionPassManager fpm(&module);
 
-  pass_manager_builder.OptLevel = 0;
-  // pass_manager_builder.SLPVectorize = true;
-  // pass_manager_builder.LoopVectorize = true;
-  // pass_manager_builder.VerifyInput = true;
-  // pass_manager_builder.VerifyOutput = true;
+  pass_manager_builder.OptLevel = 3;
+  pass_manager_builder.SLPVectorize = true;
+  pass_manager_builder.LoopVectorize = true;
+  pass_manager_builder.VerifyInput = true;
+  pass_manager_builder.VerifyOutput = true;
 #if LLVM_VERSION_MAJOR < 16
   pass_manager_builder.RerollLoops = true;
   target_machine->adjustPassManager(pass_manager_builder);
@@ -368,8 +368,8 @@ void JIT::runOptimizationPassesOnModule(llvm::Module& module) const
   PassBuilder.crossRegisterProxies(lam, fam, cgam, mam);
 
   // Create the pass manager.
-  auto mpm = PassBuilder.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
-  auto fpm = PassBuilder.buildFunctionSimplificationPipeline(llvm::OptimizationLevel::O0,
+  auto mpm = PassBuilder.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
+  auto fpm = PassBuilder.buildFunctionSimplificationPipeline(llvm::OptimizationLevel::O3,
                                                              llvm::ThinOrFullLTOPhase::None);
 
   // TODO LoopPassManager with vectorization enabled
