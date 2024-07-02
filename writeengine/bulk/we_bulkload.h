@@ -241,6 +241,7 @@ class BulkLoad : public FileOp
   // Private Functions
   //--------------------------------------------------------------------------
 
+  void spawnWorkersCsv();
   // Spawn the worker threads.
   void spawnWorkers();
 
@@ -263,7 +264,7 @@ class BulkLoad : public FileOp
 
   // The thread method for the read thread.
   void read(int id);
-
+  void readCsv();
   // The thread method for the parse thread.
   void parse(int id);
 

@@ -447,6 +447,12 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
   return NO_ERROR;
 }
 
+
+void BulkLoad::spawnWorkersCsv()
+{
+  BulkLoad::readCsv();
+}
+
 //------------------------------------------------------------------------------
 // DESCRIPTION:
 //    Spawns and joins the Read and Parsing threads to import the data.
@@ -1154,8 +1160,8 @@ int BulkLoad::processJob()
   totalRunTime += getTotalRunTime();
 
   startTimer();
-
-  spawnWorkers();
+  spawnWorkersCsv();
+  // spawnWorkers();
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {

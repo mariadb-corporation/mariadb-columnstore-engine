@@ -263,6 +263,16 @@ bool TableInfo::lockForRead(const int& locker)
   return false;
 }
 
+int TableInfo::readTableDataCsv()
+{
+  // int filesTBProcessed = fLoadFileList.size();  // default 1 when dev
+  // int fileCounter = 0;
+
+  // read data with arrow-csv
+  std::cout << "here" << std::endl;
+  return NO_ERROR;
+}
+
 //------------------------------------------------------------------------------
 // Loop thru reading the import file(s) assigned to this TableInfo object.
 //------------------------------------------------------------------------------

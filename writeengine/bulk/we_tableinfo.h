@@ -380,6 +380,8 @@ class TableInfo : public WeUIDGID
    */
   int readTableData();
 
+  int readTableDataCsv();
+
   /** @brief parse method
    */
   int parseColumn(const int& columnId, const int& bufferId, double& processingTime);
