@@ -190,6 +190,7 @@ class TableInfo : public WeUIDGID
   bool isBufferAvailable(bool report);  // Is tbl buffer available for reading
   int openTableFileParquet(
       int64_t& totalRowsParquet);        // Open parquet data file and set batch reader for each buffer
+  int openTableFileCsv();
   int openTableFile();                   // Open data file and set the buffer
   void reportTotals(double elapsedSec);  // Report summary totals
   void sleepMS(long int ms);             // Sleep method

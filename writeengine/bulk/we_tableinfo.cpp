@@ -263,13 +263,21 @@ bool TableInfo::lockForRead(const int& locker)
   return false;
 }
 
+
+class CsvSniffer
+{
+
+}
+
 int TableInfo::readTableDataCsv()
 {
   // int filesTBProcessed = fLoadFileList.size();  // default 1 when dev
   // int fileCounter = 0;
 
   // read data with arrow-csv
-  std::cout << "here" << std::endl;
+  // std::cout << "here" << std::endl;
+  fFileName = fLoadFileList[0];
+  int rc = openTableFileCsv();
   return NO_ERROR;
 }
 
@@ -1334,6 +1342,191 @@ int TableInfo::openTableFileParquet(int64_t& totalRowsParquet)
     buffer.setParquetReader(fParquetReader);
   }
   return NO_ERROR;
+}
+
+bool try_parse_line(int64_t start_pos, int64_t buf_size, char* buf, uint64_t col_num)
+{
+  const string quote = "\"";
+  const string delimiter = ",";
+
+
+	bool finished_part = false;
+	uint64_t column = 0;
+	uint64_t offset = 0;	// used for what?
+	bool has_quotes = false;
+	int64_t cur_pos = 0;
+	int64_t buffer_start = start_pos;
+	goto value_start;
+
+	value_start :
+	{
+		cout << "value start" << endl;
+		offset = 0;
+		if (buf[cur_pos] == quote[0])
+		{
+			buffer_start = cur_pos + 1;
+			goto in_quotes;
+		}
+		else
+		{
+			buffer_start = cur_pos;
+			goto normal;
+		}
+	}	
+
+	in_quotes :
+	{
+		has_quotes = true;
+		cur_pos++;
+		for (; cur_pos < buf_size; cur_pos++)
+		{
+			if (buf[cur_pos] == quote[0])
+			{
+				goto unquote;
+			}
+			// don't support escape now
+			// else if (buf[cur_pos] == escape[0])
+		}
+		goto final_state;
+	}
+
+	unquote:
+	{
+		cur_pos++;
+		if (buf[cur_pos] == delimiter[0])
+		{
+			offset = 1;
+			goto add_value;
+		}
+		else if (isNewLineChar(buf[cur_pos]))
+		{
+			offset = 1;
+			assert(column == col_num - 1);
+			goto add_row;
+		}
+		else if (cur_pos >= buf_size)
+		{
+			offset = 1;
+			goto final_state;
+		}
+	}
+
+	normal:
+	{
+		cout << "normal" << endl;
+		for (; cur_pos < buf_size; cur_pos++)
+		{
+			if (buf[cur_pos] == delimiter[0])
+			{
+				goto add_value;
+			}
+			else if (isNewLineChar(buf[cur_pos]))
+			{
+				if (column == col_num - 1)
+				{
+					goto add_row;
+				}
+			}
+		}
+
+		goto final_state;
+	}
+
+	add_row:
+	{
+		cout << "add row" << endl;
+		bool carriage_return = buf[cur_pos] == '\r';
+
+		// addValue
+		column++;
+
+		return true;
+	}
+	final_state:
+	{
+
+	}
+
+	add_value:
+	{
+		cout << "add value" << endl;
+		cur_pos++;
+		column++;
+		offset = 0;
+		has_quotes = false;	
+		goto value_start;
+	}
+}
+
+int get_newline_pos(std::shared_ptr<arrow::io::RandomAccessFile> in,
+					int64_t pos,
+					int64_t bytes_read,
+					uint64_t col_num)
+{
+	std::shared_ptr<arrow::Buffer> buffer;
+	auto res = in->ReadAt(pos, bytes_read);
+	buffer = res.ValueOrDie();
+	char* buf = const_cast<char *>(reinterpret_cast<const char*>(buffer->data()));
+	int64_t part_start_pos = 0;
+	int64_t part_end_pos = bytes_read;
+	int64_t origin_start_pos = pos;
+	int64_t cur_pos = 0;
+	bool is_newline_char_find = false;
+	while (!is_newline_char_find)
+	{
+		for (; cur_pos < part_end_pos; cur_pos++)
+		{
+			if (isNewLineChar(buf[cur_pos]))
+			{
+				cur_pos++;
+				part_start_pos = cur_pos;
+				break;
+			}
+		}
+		if (cur_pos == bytes_read && isNewLineChar(buf[cur_pos-1]))
+		{
+			break;
+		}
+		is_newline_char_find = try_parse_line(cur_pos, bytes_read, buf, col_num);
+		if (is_newline_char_find)
+		{
+			break;
+		}
+	}
+	if (is_newline_char_find)
+		return part_start_pos;
+	return -1;
+}
+
+
+int TableInfo::openTableFileCsv()
+{
+  arrow::MemoryPool *pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::RandomAccessFile> input;
+  ARROW_ASSIGN_OR_RAISE(input, arrow::io::ReadableFile::Open(fFileName));
+  // divide into different part
+  ARROW_ASSIGN_OR_RAISE(auto file_size, input->GetSize());
+  // assume 2 threads
+  const int threadNum = 2;
+  int part_size = file_size / threadNum;
+  // process each part : compute start pos
+  // if each part data is loaded here, we still pay the cost(TODO:)
+  std::shared_ptr<arrow::Buffer> buffer;
+  int64_t after_header = 0;
+  // TODO:parse header first
+  // int64_t cur_pos = after_header;
+  // no header now or skip header
+  int64_t cur_pos = after_header;
+  // PARAM:
+  const int col_num = 2;
+  for (int i = 0; i < threadNum; i++)
+  {
+    // ARROW_ASSIGN_OR_RAISE(buffer, input->ReadAt(part_size * i, part_size));
+    // auto res = input->ReadAt(part_size * i, part_size);
+    // buffer = res.ValueOrDie();
+    int newlineStartPos = get_newline_pos(input, part_size * i, part_size, col_num);
+    
+  }
 }
 
 //------------------------------------------------------------------------------
