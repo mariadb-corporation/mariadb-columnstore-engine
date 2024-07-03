@@ -580,10 +580,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
-      MCS_REPO: 'columnstore',
       DEV: 'true',
+      MCS_REPO: 'columnstore',
       // branchp has slash if not empty
       MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      FDB_REPO: 'foundationdb',
+      FDB_BASEURL: 'https://cspkg.s3.amazonaws.com/FoundationDB/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
       CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
     },
@@ -591,7 +593,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       repo: 'mariadb/enterprise-columnstore-dev',
       context: 'docker',
       dockerfile: 'docker/Dockerfile',
-      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV'],
+      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV', 'FDB_REPO', 'FDB_BASEURL'],
       tags: container_tags,
       username: {
         from_secret: 'dockerhub_user',
