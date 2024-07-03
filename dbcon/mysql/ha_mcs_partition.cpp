@@ -1343,6 +1343,102 @@ extern "C"
     *length = output.str().length();
     return initid->ptr;
   }
+
+  /**
+   * mcs_analyze_partition_bloat
+   */
+  my_bool mcs_analyze_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool err = false;
+
+    if (args->arg_count < 2 || args->arg_count > 3)
+    {
+      err = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT ||
+             (args->arg_count == 3 && args->arg_type[2] != STRING_RESULT))
+    {
+      err = true;
+    }
+    else if (!args->args[0] || !args->args[1] || (args->arg_count == 3 && !args->args[2]))
+    {
+      err = true;
+    }
+
+    if (err)
+    {
+      strcpy(message, "usage: MCS_ANALYZE_PARTITION_BLOAT (schema, table, partition_num)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_analyze_partition_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_analyze_partition_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result,
+                                          unsigned long* length, char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    string schema, table, partitionNumStr;
+    set<LogicalPartition> partitionNums;
+    LogicalPartition partitionNum;
+
+    string errMsg;
+
+    ostringstream output;
+
+    try
+    {
+      schema = (char*)(args->args[0]);
+      table = (char*)(args->args[1]);
+      partitionNumStr = (char*)(args->args[2]);
+      parsePartitionString(args, 2, partitionNums, errMsg, tableName);
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+      partitionNum = *partitionNums.begin();
+      tableName = make_table(schema, table, lower_case_table_names);
+
+      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
+
+      uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true);
+
+      std::string header = std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+      std::string values = std::format("  {:<20} {:<.2f}%", partitionNumStr,
+                                       (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+
+      output << header << "\n";
+      output << values;
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_ANALYZE_PARTITION_BLOAT");
+      return result;
+    }
+
+    initid->ptr = new char[output.str().length() + 1];
+    memcpy(initid->ptr, output.str().c_str(), output.str().length());
+    *length = output.str().length();
+    return initid->ptr;
+  }
 }
 
 }  // namespace
