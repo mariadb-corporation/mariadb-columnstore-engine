@@ -30,7 +30,7 @@
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
-
+#include <arrow/api.h>
 namespace WriteEngine
 {
 class Log;
@@ -84,6 +84,9 @@ class BulkLoadBuffer
   char* fOverflowBuf;      // Overflow data held for next buffer
   unsigned fOverflowSize;  // Current size of fOverflowBuf
 
+  std::shared_ptr<arrow::RecordBatch> fParquetBatch;          // Batch of parquet file to be parsed
+  std::shared_ptr<arrow::RecordBatch> fParquetBatchParser;    // for temporary use by parser
+  std::shared_ptr<::arrow::RecordBatchReader> fParquetReader; // Reader for read batches of parquet data
   // Information about the locker and status for each column in this buffer.
   // Note that TableInfo::fSyncUpdatesTI mutex is used to synchronize
   // access to fColumnLocks and fParseComplete from both read and parse
@@ -137,7 +140,7 @@ class BulkLoadBuffer
   char fColDelim;                // Character to delimit columns in a row
   unsigned fBufferSize;          // Size of input read buffer (fData)
   unsigned fReadSize;            // Number of bytes in read buffer(fData)
-  std::mutex fSyncUpdatesBLB;  // Mutex to synchronize updates
+  boost::mutex fSyncUpdatesBLB;  // Mutex to synchronize updates
   Log* fLog;                     // Logger object
   bool fNullStringMode;          // Indicates if "NULL" string is to be
   //   treated as a NULL value or not
@@ -174,6 +177,19 @@ class BulkLoadBuffer
   void convert(char* field, int fieldLength, bool nullFlag, unsigned char* output, const JobColumn& column,
                BLBufferStats& bufStats);
 
+  /** @brief Parse a batch of parquet data in read buffer for a nonDictionary column
+   */
+  int parseColParquet(ColumnInfo& columnInfo);
+
+  /** @brief Convert batch parquet data depending upon the data type
+   */
+  void convertParquet(std::shared_ptr<arrow::Array> columnData, unsigned char* buf, const JobColumn& column,
+                      BLBufferStats& bufStats, RID& lastInputRowInExtent, ColumnInfo& columnInfo,
+                      bool& updateCPInfoPendingFlag, ColumnBufferSection* section);
+
+
+  inline void updateCPMinMax(ColumnInfo& columnInfo, RID& lastInputRowInExtent, BLBufferStats& bufStats,
+                                           bool& updateCPInfoPendingFlag, ColumnBufferSection* section, uint32_t curRow);
   /** @brief Copy the overflow data
    */
   void copyOverflow(const BulkLoadBuffer& buffer);
@@ -263,6 +279,11 @@ class BulkLoadBuffer
     fStatusBLB = status;
   }
 
+  void setParquetReader(std::shared_ptr<::arrow::RecordBatchReader> reader)
+  {
+    fParquetReader = reader;
+  }
+
   /** @brief Try to lock a column for the buffer
    * TableInfo::fSyncUpdatesTI mutex should be locked when calling this
    * function (see fColumnLocks discussion).
@@ -272,6 +293,10 @@ class BulkLoadBuffer
   int fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const char* input, size_t length,
                      size_t* parse_length, RID& totalReadRows, RID& correctTotalRows,
                      const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
+
+  /** @brief Read the batch data into the buffer
+   */
+  int fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows);
 
   /** @brief Read the table data into the buffer
    */

@@ -72,8 +72,7 @@ using namespace rowgroup;
 #include "installdir.h"
 
 #include <boost/thread/thread.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/version.hpp>
 
 
@@ -370,7 +369,7 @@ void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& 
 }
 
 /*static*/
-std::mutex CalpontSystemCatalog::map_mutex;
+boost::mutex CalpontSystemCatalog::map_mutex;
 /*static*/
 CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/
@@ -502,7 +501,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     checkSysCatVer();
   }
 
-  std::unique_lock lk2(fOIDmapLock);
+  boost::mutex::scoped_lock lk2(fOIDmapLock);
 
   if (fOIDmap.size() > 0)
   {
@@ -554,8 +553,9 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   string autoincrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextVal = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
   string nullable = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NULLABLE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -573,6 +573,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   col[14] = new SimpleColumn(autoincrement, fSessionID);
   col[15] = new SimpleColumn(nextVal, fSessionID);
   col[16] = new SimpleColumn(nullable, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -610,13 +611,15 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   colMap.insert(CMVT_(nextVal, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nullable, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   // ignore returnedcolumn, because it's not read by Joblist for now
   csep.returnedCols(returnedColumnList);
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   // Filters
@@ -710,6 +713,8 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
         ct.constraintType = NOTNULL_CONSTRAINT;
       }
     }
+    else if ((*it)->ColumnOID() == oid[17])
+      ct.charsetNumber = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == DICTOID_SYSCOLUMN_DEFAULTVAL)
     {
       ct.defaultValue = ((*it)->GetStringData(0));
@@ -732,7 +737,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   // delete col[9];
   ct.columnOID = coloid;
   // populate colinfomap cache and oidbitmap
-  std::unique_lock lk3(fColinfomapLock);
+  boost::mutex::scoped_lock lk3(fColinfomapLock);
   fColinfomap[coloid] = ct;
   return coloid;
 }
@@ -1037,7 +1042,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   }
 
   // check colinfomap first for system table column or cached column type
-  std::unique_lock lk3(fColinfomapLock);
+  boost::mutex::scoped_lock lk3(fColinfomapLock);
 
   if (fColinfomap.size() > 0)
   {
@@ -1078,8 +1083,9 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   string compressionType = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoincrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextvalue = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -1097,6 +1103,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   col[14] = new SimpleColumn(compressionType, fSessionID);
   col[15] = new SimpleColumn(autoincrement, fSessionID);
   col[16] = new SimpleColumn(nextvalue, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -1135,14 +1142,16 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
   colMap.insert(CMVT_(autoincrement, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextvalue, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
 
   csep.columnMapNonStatic(colMap);
 
   // ignore returnedcolumn, because it's not read by Joblist for now
   csep.returnedCols(returnedColumnList);
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   // Filters
@@ -1232,6 +1241,8 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     }
     else if ((*it)->ColumnOID() == oid[16])
       ct.nextvalue = ((*it)->GetData(0));
+    else if ((*it)->ColumnOID() == oid[17])
+      ct.charsetNumber = ((*it)->GetData(0));
 
     ct.columnOID = Oid;
   }
@@ -1246,7 +1257,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 
   // populate colinfomap cache and oidbitmap
   lk3.lock();
-  std::unique_lock lk2(fOIDmapLock);
+  boost::mutex::scoped_lock lk2(fOIDmapLock);
   fColinfomap[Oid] = ct;
   fOIDmap[tcn] = Oid;
 
@@ -1367,7 +1378,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
   }
 
   // check oidmap for system table columns and cached columns
-  std::unique_lock lk2(fOIDmapLock);
+  boost::mutex::scoped_lock lk2(fOIDmapLock);
   OIDmap::const_iterator iter = fOIDmap.begin();
 
   while (iter != fOIDmap.end())
@@ -1872,7 +1883,7 @@ const CalpontSystemCatalog::SCN CalpontSystemCatalog::scn(void) const
 /* static */
 boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemCatalog(uint32_t sessionID)
 {
-  std::unique_lock lock(map_mutex);
+  boost::mutex::scoped_lock lock(map_mutex);
   boost::shared_ptr<CalpontSystemCatalog> instance;
   CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
 
@@ -1917,7 +1928,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 /* static */
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
-  std::unique_lock lock(map_mutex);
+  boost::mutex::scoped_lock lock(map_mutex);
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
   fCatalogMap.erase(sessionID);
   /*
@@ -2294,9 +2305,9 @@ const CalpontSystemCatalog::IndexNameList CalpontSystemCatalog::colValueSysconst
     boost::algorithm::to_lower(aTableColName.column);
 
 #if BOOST_VERSION < 104000
-    std::unique_lock lk1(fColIndexListmapLock, false);
+    boost::mutex::scoped_lock lk1(fColIndexListmapLock, false);
 #else
-    std::unique_lock lk1(fColIndexListmapLock, std::defer_lock);
+    boost::mutex::scoped_lock lk1(fColIndexListmapLock, boost::defer_lock);
 #endif
 
     if (useCache)
@@ -2926,7 +2937,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::columnRID(const TableCo
      tablename=tableColName.table and columnname=tableColName.column;*/
   // this function is duplicate to lookupOID() and will be deprecated soon
   rp.objnum = lookupOID(tableColName);
-  std::unique_lock lk2(fOIDmapLock);
+  boost::mutex::scoped_lock lk2(fOIDmapLock);
 
   ColRIDmap::const_iterator iter = fColRIDmap.find(aTableColName);
 
@@ -2962,18 +2973,18 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     checkSysCatVer();
   }
 
-  std::unique_lock lk1(fTableInfoMapLock);
+  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
 
   // search fOIDmap for system catalog tables
   // or if fTableInfoMap has entry for this table, column oids are cached.
   // because columnRIDs(), colType() and tableInfo() are actually binded.
 #if BOOST_VERSION < 103800
-  std::unique_lock lk2(fOIDmapLock, false);
+  boost::mutex::scoped_lock lk2(fOIDmapLock, false);
 #else
-  std::unique_lock lk2(fOIDmapLock, std::defer_lock);
+  boost::mutex::scoped_lock lk2(fOIDmapLock, boost::defer_lock);
 #endif
-  std::unique_lock lk3(fColinfomapLock);
+  boost::mutex::scoped_lock lk3(fColinfomapLock);
 
   if (aTableName.schema == CALPONT_SCHEMA || (useCache && ti_iter != fTableInfoMap.end()))
   {
@@ -3056,8 +3067,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   string compressiontype = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoIncrement = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextVal = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -3075,6 +3087,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   col[14] = new SimpleColumn(compressiontype, fSessionID);
   col[15] = new SimpleColumn(autoIncrement, fSessionID);
   col[16] = new SimpleColumn(nextVal, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -3112,15 +3125,17 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   colMap.insert(CMVT_(autoIncrement, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextVal, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(col[1]->clone());
   returnedColumnList.push_back(srcp);
   csep.returnedCols(returnedColumnList);
 
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   oid[12] = DICTOID_SYSCOLUMN_COLNAME;
@@ -3304,6 +3319,11 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       for (int i = 0; i < (*it)->dataCount(); i++)
         ctList[i].nextvalue = ((*it)->GetData(i));
     }
+    else if ((*it)->ColumnOID() == oid[17])
+    {
+      for (int i = 0; i < (*it)->dataCount(); i++)
+        ctList[i].charsetNumber = ((*it)->GetData(i));
+    }
   }
 
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
@@ -3356,7 +3376,7 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
   }
 
   // check cache
-  std::unique_lock lk(fTableNameMapLock);
+  boost::mutex::scoped_lock lk(fTableNameMapLock);
 
   if (fTableNameMap.size() > 0)
   {
@@ -3478,7 +3498,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
   //     rp.rid = -1; @bug1866  use default
 
   // calpontsys only needs oid
-  std::unique_lock lk1(fTableInfoMapLock);
+  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
   Tablemap::const_iterator iter = fTablemap.find(aTableName);
 
   if (aTableName.schema.compare("calpontsys") == 0 && iter != fTablemap.end())
@@ -3635,7 +3655,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
 
   checkSysCatVer();
 
-  std::unique_lock lk1(fTableAUXColumnOIDMapLock);
+  boost::mutex::scoped_lock lk1(fTableAUXColumnOIDMapLock);
   TableOIDmap::const_iterator iter = fTableAUXColumnOIDMap.find(aTableName);
 
   if (iter != fTableAUXColumnOIDMap.end())
@@ -3748,7 +3768,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
 
   checkSysCatVer();
 
-  std::unique_lock lk1(fAUXColumnOIDToTableOIDMapLock);
+  boost::mutex::scoped_lock lk1(fAUXColumnOIDToTableOIDMapLock);
   AUXColumnOIDTableOIDmap::const_iterator iter = fAUXColumnOIDToTableOIDMap.find(oid);
 
   if (iter != fAUXColumnOIDToTableOIDMap.end())
@@ -5129,7 +5149,7 @@ const CalpontSystemCatalog::TableInfo CalpontSystemCatalog::tableInfo(const Tabl
     return ti;
   }
 
-  std::unique_lock lk1(fTableInfoMapLock);
+  boost::mutex::scoped_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
 
   if (ti_iter != fTableInfoMap.end())
@@ -5506,7 +5526,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   // Check whether cache needs to be flushed
   checkSysCatVer();
 
-  std::unique_lock lk(fSchemaCacheLock);
+  boost::mutex::scoped_lock lk(fSchemaCacheLock);
   set<string>::iterator setIt = fSchemaCache.find(schema);
 
   if (setIt != fSchemaCache.end())
@@ -5547,8 +5567,9 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   string compressiontype = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + COMPRESSIONTYPE_COL;
   string autoinc = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + AUTOINC_COL;
   string nextval = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + NEXTVALUE_COL;
+  string charsetnum = CALPONT_SCHEMA + "." + SYSCOLUMN_TABLE + "." + CHARSETNUM_COL;
 
-  SimpleColumn* col[17];
+  SimpleColumn* col[18];
   col[0] = new SimpleColumn(columnlength, fSessionID);
   col[1] = new SimpleColumn(objectid, fSessionID);
   col[2] = new SimpleColumn(datatype, fSessionID);
@@ -5566,6 +5587,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   col[14] = new SimpleColumn(compressiontype, fSessionID);
   col[15] = new SimpleColumn(autoinc, fSessionID);
   col[16] = new SimpleColumn(nextval, fSessionID);
+  col[17] = new SimpleColumn(charsetnum, fSessionID);
 
   SRCP srcp;
   srcp.reset(col[0]);
@@ -5604,15 +5626,17 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
   colMap.insert(CMVT_(autoinc, srcp));
   srcp.reset(col[16]);
   colMap.insert(CMVT_(nextval, srcp));
+  srcp.reset(col[17]);
+  colMap.insert(CMVT_(charsetnum, srcp));
   csep.columnMapNonStatic(colMap);
 
   srcp.reset(col[1]->clone());
   returnedColumnList.push_back(srcp);
   csep.returnedCols(returnedColumnList);
 
-  OID oid[17];
+  OID oid[18];
 
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < 18; i++)
     oid[i] = col[i]->oid();
 
   oid[12] = DICTOID_SYSCOLUMN_COLNAME;
@@ -5806,10 +5830,15 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
       for (int i = 0; i < (*it)->dataCount(); i++)
         ctList[i].nextvalue = ((*it)->GetData(i));
     }
+    else if ((*it)->ColumnOID() == oid[17])
+    {
+      for (int i = 0; i < (*it)->dataCount(); i++)
+        ctList[i].charsetNumber = ((*it)->GetData(i));
+    }
   }
 
   // populate colinfo cache
-  // std::unique_lock lk3(fColinfomapLock);
+  // boost::mutex::scoped_lock lk3(fColinfomapLock);
   for (uint32_t i = 0; i < ctList.size(); i++)
     fColinfomap[ctList[i].columnOID] = ctList[i];
 
@@ -5858,32 +5887,32 @@ ostream& operator<<(ostream& os, const CalpontSystemCatalog::TableColName& rhs)
 
 void CalpontSystemCatalog::flushCache()
 {
-  std::unique_lock lk1(fOIDmapLock);
+  boost::mutex::scoped_lock lk1(fOIDmapLock);
   fOIDmap.clear();
   buildSysOIDmap();
   lk1.unlock();
 
-  std::unique_lock lk2(fColinfomapLock);
+  boost::mutex::scoped_lock lk2(fColinfomapLock);
   fColinfomap.clear();
   buildSysColinfomap();
   lk2.unlock();
 
-  std::unique_lock lk3(fTableInfoMapLock);
+  boost::mutex::scoped_lock lk3(fTableInfoMapLock);
   fTableInfoMap.clear();
   fTablemap.clear();
   fTableRIDmap.clear();
   buildSysTablemap();
   lk3.unlock();
 
-  std::unique_lock namemaplk(fTableNameMapLock);
+  boost::mutex::scoped_lock namemaplk(fTableNameMapLock);
   fTableNameMap.clear();
   namemaplk.unlock();
 
-  std::unique_lock auxlk(fTableAUXColumnOIDMapLock);
+  boost::mutex::scoped_lock auxlk(fTableAUXColumnOIDMapLock);
   fTableAUXColumnOIDMap.clear();
   auxlk.unlock();
 
-  std::unique_lock auxtotableoidlk(fAUXColumnOIDToTableOIDMapLock);
+  boost::mutex::scoped_lock auxtotableoidlk(fAUXColumnOIDToTableOIDMapLock);
   fAUXColumnOIDToTableOIDMap.clear();
   auxtotableoidlk.unlock();
 
@@ -5898,7 +5927,7 @@ void CalpontSystemCatalog::flushCache()
 
 void CalpontSystemCatalog::updateColinfoCache(CalpontSystemCatalog::OIDNextvalMap& oidNextvalMap)
 {
-  std::unique_lock lk(fColinfomapLock);
+  boost::mutex::scoped_lock lk(fColinfomapLock);
   CalpontSystemCatalog::OIDNextvalMap::const_iterator iter = oidNextvalMap.begin();
   OID oid = 0;
   long long nextVal = 0;
@@ -5913,317 +5942,132 @@ void CalpontSystemCatalog::updateColinfoCache(CalpontSystemCatalog::OIDNextvalMa
 }
 void CalpontSystemCatalog::buildSysColinfomap()
 {
-  ColType aCol;
-  // aCol.defaultValue = "";
-  aCol.scale = 0;
-  aCol.precision = 10;
-  aCol.compressionType = 0;
+  int32_t scale = 0, precision = 10, compressionType = 0, colPosition = 0;
 
   ResourceManager* rm = ResourceManager::instance();
 
   if (rm->useHdfs())
-    aCol.compressionType = 2;
+    compressionType = 2;
 
   DictOID notDict;
 
   // @bug 4433 - Increase object width from 64 to 128 for schema names, table names, and column names.
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSTABLE_TABLENAME;
-  aCol.ddn.listOID = LISTOID_SYSTABLE_TABLENAME;
-  aCol.ddn.treeOID = TREEOID_SYSTABLE_TABLENAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition = 0;
-  aCol.columnOID = OID_SYSTABLE_TABLENAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_TABLENAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSTABLE_TABLENAME, LISTOID_SYSTABLE_TABLENAME, TREEOID_SYSTABLE_TABLENAME, compressionType),
+    colPosition++, compressionType, OID_SYSTABLE_TABLENAME, VARCHAR);
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSTABLE_SCHEMA;
-  aCol.ddn.listOID = LISTOID_SYSTABLE_SCHEMA;
-  aCol.ddn.treeOID = TREEOID_SYSTABLE_SCHEMA;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_SCHEMA;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_SCHEMA] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSTABLE_SCHEMA, LISTOID_SYSTABLE_SCHEMA, TREEOID_SYSTABLE_SCHEMA, compressionType),
+    colPosition++, compressionType, OID_SYSTABLE_SCHEMA, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_OBJECTID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_OBJECTID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_OBJECTID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_CREATEDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_CREATEDATE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_CREATEDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_LASTUPDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_LASTUPDATE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_LASTUPDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_INIT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_INIT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_INIT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NEXT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NEXT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NEXT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NUMOFROWS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NUMOFROWS] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NUMOFROWS, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AVGROWLEN;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AVGROWLEN] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AVGROWLEN, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_NUMOFBLOCKS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_NUMOFBLOCKS] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_NUMOFBLOCKS, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AUTOINCREMENT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AUTOINCREMENT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AUTOINCREMENT, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSTABLE_AUXCOLUMNOID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSTABLE_AUXCOLUMNOID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSTABLE_AUXCOLUMNOID, INT);
 
   fTablemap[make_table(CALPONT_SCHEMA, SYSCOLUMN_TABLE)] = SYSCOLUMN_BASE;
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_SCHEMA;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition = 0;
-  aCol.columnOID = OID_SYSCOLUMN_SCHEMA;
-  fColinfomap[aCol.columnOID] = aCol;
+  colPosition = 0;
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_TABLENAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_TABLENAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_SCHEMA] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_SCHEMA, LISTOID_SYSCOLUMN_SCHEMA, TREEOID_SYSCOLUMN_SCHEMA, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_SCHEMA, VARCHAR);
 
-  aCol.colWidth = 129;  // @bug 4433
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_COLNAME;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLNAME;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_TABLENAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_TABLENAME, LISTOID_SYSCOLUMN_TABLENAME, TREEOID_SYSCOLUMN_TABLENAME, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_TABLENAME, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_OBJECTID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLNAME] = ColType(129, scale, precision, NOTNULL_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_COLNAME, LISTOID_SYSCOLUMN_COLNAME, TREEOID_SYSCOLUMN_COLNAME, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_COLNAME, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DICTOID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_OBJECTID] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_OBJECTID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_LISTOBJID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DICTOID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DICTOID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_TREEOBJID;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_LISTOBJID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_LISTOBJID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DATATYPE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_TREEOBJID] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_TREEOBJID, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLUMNLEN;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DATATYPE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DATATYPE, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COLUMNPOS;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLUMNLEN] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COLUMNLEN, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = DATE;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_LASTUPDATE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COLUMNPOS] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COLUMNPOS, INT);
 
-  aCol.colWidth = 64;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_DEFAULTVAL;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DEFAULTVAL;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_LASTUPDATE] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_LASTUPDATE, DATE);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NULLABLE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DEFAULTVAL] = ColType(64, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_DEFAULTVAL, LISTOID_SYSCOLUMN_DEFAULTVAL, TREEOID_SYSCOLUMN_DEFAULTVAL, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_DEFAULTVAL, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_SCALE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_NULLABLE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NULLABLE, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_PRECISION;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_SCALE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_SCALE, INT);
 
-  aCol.colWidth = 1;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = CHAR;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_AUTOINC;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_PRECISION] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_PRECISION, INT);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_DISTCOUNT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_AUTOINC] = ColType(1, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_AUTOINC, CHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NULLCOUNT;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_DISTCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_DISTCOUNT, INT);
 
-  aCol.colWidth = 65;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_MINVALUE;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_MINVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_NULLCOUNT] = ColType(4, scale, precision, NO_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NULLCOUNT, INT);
 
-  aCol.colWidth = 65;
-  aCol.constraintType = NO_CONSTRAINT;
-  aCol.colDataType = VARCHAR;
-  aCol.ddn.dictOID = DICTOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.listOID = LISTOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.treeOID = TREEOID_SYSCOLUMN_MAXVALUE;
-  aCol.ddn.compressionType = aCol.compressionType;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_MAXVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_MINVALUE] = ColType(65, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_MINVALUE, LISTOID_SYSCOLUMN_MINVALUE, TREEOID_SYSCOLUMN_MINVALUE, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_MINVALUE, VARCHAR);
 
-  aCol.colWidth = 4;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = INT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_COMPRESSIONTYPE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_MAXVALUE] = ColType(65, scale, precision, NO_CONSTRAINT,
+    DictOID(DICTOID_SYSCOLUMN_MAXVALUE, LISTOID_SYSCOLUMN_MAXVALUE, TREEOID_SYSCOLUMN_MAXVALUE, compressionType),
+    colPosition++, compressionType, OID_SYSCOLUMN_MAXVALUE, VARCHAR);
 
-  aCol.colWidth = 8;
-  aCol.constraintType = NOTNULL_CONSTRAINT;
-  aCol.colDataType = UBIGINT;
-  aCol.ddn = notDict;
-  aCol.colPosition++;
-  aCol.columnOID = OID_SYSCOLUMN_NEXTVALUE;
-  fColinfomap[aCol.columnOID] = aCol;
+  fColinfomap[OID_SYSCOLUMN_COMPRESSIONTYPE] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_COMPRESSIONTYPE, INT);
+
+  fColinfomap[OID_SYSCOLUMN_NEXTVALUE] = ColType(8, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_NEXTVALUE, UBIGINT);
+
+  fColinfomap[OID_SYSCOLUMN_CHARSETNUM] = ColType(4, scale, precision, NOTNULL_CONSTRAINT,
+    notDict, colPosition++, compressionType, OID_SYSCOLUMN_CHARSETNUM, INT);
 }
 
 void CalpontSystemCatalog::buildSysOIDmap()
@@ -6262,6 +6106,7 @@ void CalpontSystemCatalog::buildSysOIDmap()
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, MAXVALUE_COL)] = OID_SYSCOLUMN_MAXVALUE;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, COMPRESSIONTYPE_COL)] = OID_SYSCOLUMN_COMPRESSIONTYPE;
   fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, NEXTVALUE_COL)] = OID_SYSCOLUMN_NEXTVALUE;
+  fOIDmap[make_tcn(CALPONT_SCHEMA, SYSCOLUMN_TABLE, CHARSETNUM_COL)] = OID_SYSCOLUMN_CHARSETNUM;
 }
 
 void CalpontSystemCatalog::buildSysTablemap()
@@ -6293,24 +6138,12 @@ void CalpontSystemCatalog::checkSysCatVer()
     newScn = fSessionManager->sysCatVerID().currentScn;
   }
 
-  std::unique_lock sysCatLk(fSyscatSCNLock);
+  boost::mutex::scoped_lock sysCatLk(fSyscatSCNLock);
 
   if (fSyscatSCN != newScn)
   {
     flushCache();
   }
-}
-
-CalpontSystemCatalog::ColType::ColType()
- : constraintType(NO_CONSTRAINT)
- , colPosition(-1)
- , compressionType(NO_COMPRESSION)
- , columnOID(0)
- , autoincrement(0)
- , nextvalue(0)
- , cs(NULL)
-{
-  charsetNumber = default_charset_info->number;
 }
 
 CalpontSystemCatalog::ColType::ColType(const ColType& rhs) : TypeHolderStd(rhs)
@@ -6325,6 +6158,21 @@ CalpontSystemCatalog::ColType::ColType(const ColType& rhs) : TypeHolderStd(rhs)
   nextvalue = rhs.nextvalue;
   charsetNumber = rhs.charsetNumber;
   cs = rhs.cs;
+}
+
+CalpontSystemCatalog::ColType::ColType(int32_t colWidth_, int32_t scale_, int32_t precision_,
+  const ConstraintType& constraintType_, const DictOID& ddn_, int32_t colPosition_,
+  int32_t compressionType_, OID columnOID_, const ColDataType& colDataType_)
+  : constraintType(constraintType_),
+    ddn(ddn_),
+    colPosition(colPosition_),
+    compressionType(compressionType_),
+    columnOID(columnOID_)
+{
+  colWidth = colWidth_;
+  scale = scale_;
+  precision = precision_;
+  colDataType = colDataType_;
 }
 
 CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const ColType& rhs)

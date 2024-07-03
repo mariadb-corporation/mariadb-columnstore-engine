@@ -29,6 +29,7 @@
 #include <cmath>
 #include <sstream>
 
+#include "mcs_int128.h"
 #include "operator.h"
 #include "parsetree.h"
 
@@ -109,7 +110,8 @@ class ArithmeticOperator : public Operator
   inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override;
 
   using Operator::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                             ParseTree* rop) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull, lop, rop);
@@ -141,7 +143,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDoubleVal();
   }
   using Operator::getLongDoubleVal;
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                       ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getLongDoubleVal();
@@ -178,7 +181,8 @@ class ArithmeticOperator : public Operator
     return TreeNode::getDatetimeIntVal();
   }
   using Operator::getTimestampIntVal;
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop,
+                                     ParseTree* rop) override
   {
     evaluate(row, isNull, lop, rop);
     return TreeNode::getTimestampIntVal();
@@ -218,11 +222,33 @@ class ArithmeticOperator : public Operator
   template <typename result_t>
   inline result_t execute(result_t op1, result_t op2, bool& isNull);
   inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
+
   long fTimeZone;
   bool fDecimalOverflowCheck;
 };
 
-#include "parsetree.h"
+// Can be easily replaced with a template over T if MDB changes the result return type.
+inline uint64_t rangesCheck(const datatypes::TSInt128 x, const OpType op, const bool isNull)
+{
+  auto result = x.toUBIGINTWithDomainCheck();
+  if (!isNull && !result)
+  {
+    logging::Message::Args args;
+    static const std::string sqlType{"BIGINT UNSIGNED"};
+    args.add(sqlType);
+    switch (op)
+    {
+      case OP_ADD: args.add("\"+\""); break;
+      case OP_SUB: args.add("\"-\""); break;
+      case OP_MUL: args.add("\"*\""); break;
+      case OP_DIV: args.add("\"/\""); break;
+      default: args.add("<unknown>"); break;
+    }
+    const auto errcode = logging::ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT;
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+  }
+  return result.value();  // if isNull returns some value
+}
 
 inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
 {
@@ -238,6 +264,19 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
+    {
+      // XXX: this is bandaid solution for specific customer case (MCOL-5568).
+      // Despite that I tried to implement a proper solution: to have operations
+      // performed using int128_t amd then check the result.
+      bool signedLeft = lop->data()->resultType().isSignedInteger();
+      bool signedRight = rop->data()->resultType().isSignedInteger();
+      const datatypes::TSInt128 x((signedLeft) ? static_cast<int128_t>(lop->getIntVal(row, isNull))
+                                               : lop->getUintVal(row, isNull));
+      const datatypes::TSInt128 y((signedRight) ? static_cast<int128_t>(rop->getIntVal(row, isNull))
+                                                : rop->getUintVal(row, isNull));
+      fResult.uintVal = rangesCheck(execute(x, y, isNull), fOp, isNull);  // throws
+    }
+    break;
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
@@ -271,8 +310,8 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
   }
 }
 
-template <typename result_t>
-inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& isNull)
+template <typename T>
+inline T ArithmeticOperator::execute(T op1, T op2, bool& isNull)
 {
   switch (fOp)
   {
@@ -284,11 +323,22 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
 
     case OP_DIV:
       if (op2)
+      {
         return op1 / op2;
+      }
       else
+      {
         isNull = true;
+      }
 
-      return 0;
+      if constexpr (std::is_same<T, datatypes::TSInt128>::value)
+      {
+        return datatypes::TSInt128();  // returns 0
+      }
+      else
+      {
+        return T{0};
+      }
 
     default:
     {

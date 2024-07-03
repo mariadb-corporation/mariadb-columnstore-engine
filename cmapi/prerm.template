@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+systemctl stop ${SYSTEMD_UNIT_NAME}
+
+find ${CMAPI_DIR} -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
+
+systemctl disable ${SYSTEMD_UNIT_NAME}
+
+systemctl unmask ${SYSTEMD_ENGINE_UNIT_NAME}

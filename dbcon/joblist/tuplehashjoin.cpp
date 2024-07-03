@@ -81,7 +81,7 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
  , isExeMgr(jobInfo.isExeMgr)
  , lastSmallOuterJoiner(-1)
  , fTokenJoin(-1)
- , fStatsMutexPtr(new std::mutex())
+ , fStatsMutexPtr(new boost::mutex())
  , fFunctionJoinKeys(jobInfo.keyInfo->functionJoinKeys)
  , sessionMemLimit(jobInfo.umMemLimit)
  , rgdLock(false)
@@ -106,6 +106,8 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
   djsSmallLimit = jobInfo.smallSideLimit;
   djsLargeLimit = jobInfo.largeSideLimit;
   djsPartitionSize = jobInfo.partitionSize;
+  djsMaxPartitionTreeDepth = jobInfo.djsMaxPartitionTreeDepth;
+  djsForceRun = jobInfo.djsForceRun;
   isDML = jobInfo.isDML;
 
   config::Config* config = config::Config::makeConfig();
@@ -148,7 +150,7 @@ void TupleHashJoinStep::run()
 {
   uint32_t i;
 
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
 
   if (runRan)
     return;
@@ -190,7 +192,7 @@ void TupleHashJoinStep::run()
 
 void TupleHashJoinStep::join()
 {
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
 
   if (joinRan)
     return;
@@ -198,10 +200,10 @@ void TupleHashJoinStep::join()
   joinRan = true;
   jobstepThreadPool.join(mainRunner);
 
-  if (djs)
+  if (djs.size())
   {
-    for (int i = 0; i < (int)djsJoiners.size(); i++)
-      djs[i].join();
+    for (auto& diskJoinStep : djs)
+      diskJoinStep->join();
 
     jobstepThreadPool.join(djsReader);
     jobstepThreadPool.join(djsRelay);
@@ -218,7 +220,7 @@ void TupleHashJoinStep::trackMem(uint index)
   ssize_t memBefore = 0, memAfter = 0;
   bool gotMem;
 
-  std::unique_lock<std::mutex> scoped(memTrackMutex);
+  boost::unique_lock<boost::mutex> scoped(memTrackMutex);
   while (!stopMemTracking)
   {
     memAfter = joiner->getMemUsage();
@@ -232,7 +234,7 @@ void TupleHashJoinStep::trackMem(uint index)
 
       memBefore = memAfter;
     }
-    memTrackDone.wait_for(scoped, std::chrono::seconds(1));
+    memTrackDone.timed_wait(scoped, boost::posix_time::seconds(1));
   }
 
   // one more iteration to capture mem usage since last poll, for this one
@@ -271,7 +273,11 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   std::shared_ptr<TupleJoiner> joiner;
 
   jt = joinTypes[index];
-  extendedInfo += toString();
+
+  if (traceOn())
+  {
+    extendedInfo += toString();
+  }
 
   if (typelessJoin[index])
   {
@@ -349,36 +355,47 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       " size = " << joiner->size() << endl;
   */
 
-  extendedInfo += "\n";
+  if (traceOn())
+  {
+    extendedInfo += "\n";
+  }
 
   ostringstream oss;
   if (!joiner->onDisk())
   {
     // add extended info, and if not aborted then tell joiner
     // we're done reading the small side.
-    if (joiner->inPM())
+    if (traceOn())
     {
-      oss << "PM join (" << index << ")" << endl;
-#ifdef JLF_DEBUG
-      cout << oss.str();
-#endif
-      extendedInfo += oss.str();
-    }
-    else if (joiner->inUM())
-    {
-      oss << "UM join (" << index << ")" << endl;
-#ifdef JLF_DEBUG
-      cout << oss.str();
-#endif
-      extendedInfo += oss.str();
+      if (joiner->inPM())
+      {
+        {
+          oss << "PM join (" << index << ")" << endl;
+  #ifdef JLF_DEBUG
+          cout << oss.str();
+  #endif
+          extendedInfo += oss.str();
+        }
+      }
+      else if (joiner->inUM())
+      {
+        oss << "UM join (" << index << ")" << endl;
+  #ifdef JLF_DEBUG
+        cout << oss.str();
+  #endif
+        extendedInfo += oss.str();
+      }
     }
     if (!cancelled())
       joiner->doneInserting();
   }
 
-  std::unique_lock lk(*fStatsMutexPtr);
-  fExtendedInfo += extendedInfo;
-  formatMiniStats(index);
+  if (traceOn())
+  {
+    boost::mutex::scoped_lock lk(*fStatsMutexPtr);
+    fExtendedInfo += extendedInfo;
+    formatMiniStats(index);
+  }
 }
 
 /* Index is which small input to read. */
@@ -427,7 +444,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
             if disk join is enabled, use it.
             else abort.
         */
-        std::unique_lock<std::mutex> sl(saneErrMsg);
+        boost::unique_lock<boost::mutex> sl(saneErrMsg);
         if (cancelled())
           return;
         if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
@@ -614,10 +631,10 @@ void TupleHashJoinStep::djsReaderFcn(int index)
   while (more)
     more = fifos[index]->next(it, &rgData);
 
-  for (int i = 0; i < (int)djsJoiners.size(); i++)
+  for (auto& diskJoinStep : djs)
   {
-    fExtendedInfo += djs[i].extendedInfo();
-    fMiniInfo += djs[i].miniInfo();
+    fExtendedInfo += diskJoinStep->extendedInfo();
+    fMiniInfo += diskJoinStep->miniInfo();
   }
 
   outputDL->endOfInput();
@@ -733,19 +750,19 @@ void TupleHashJoinStep::hjRunner()
       outputIt = outputDL->getIterator();
     }
 
-    djs.reset(new DiskJoinStep[smallSideCount]);
     fifos.reset(new boost::shared_ptr<RowGroupDL>[smallSideCount + 1]);
 
     for (i = 0; i <= smallSideCount; i++)
       fifos[i].reset(new RowGroupDL(1, 5));
 
-    std::unique_lock sl(djsLock);
+    boost::mutex::scoped_lock sl(djsLock);
 
     for (i = 0; i < smallSideCount; i++)
     {
       // these link themselves fifos[0]->DSJ[0]->fifos[1]->DSJ[1] ... ->fifos[smallSideCount],
       // THJS puts data into fifos[0], reads it from fifos[smallSideCount]
-      djs[i] = DiskJoinStep(this, i, djsJoinerMap[i], (i == smallSideCount - 1));
+      djs.push_back(std::shared_ptr<DiskJoinStep>(
+          new DiskJoinStep(this, i, djsJoinerMap[i], (i == smallSideCount - 1))));
     }
 
     sl.unlock();
@@ -757,7 +774,7 @@ void TupleHashJoinStep::hjRunner()
         vector<RGData> empty;
         resourceManager->returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
         atomicops::atomicZero(&memUsedByEachJoin[i]);
-        djs[i].loadExistingData(rgData[djsJoinerMap[i]]);
+        djs[i]->loadExistingData(rgData[djsJoinerMap[i]]);
         rgData[djsJoinerMap[i]].swap(empty);
       }
     }
@@ -784,7 +801,7 @@ void TupleHashJoinStep::hjRunner()
       reader = true;
 
       for (i = 0; i < smallSideCount; i++)
-        djs[i].run();
+        djs[i]->run();
     }
     catch (thread_resource_error&)
     {
@@ -866,7 +883,7 @@ void TupleHashJoinStep::hjRunner()
   }
 
   // todo: forwardCPData needs to grab data from djs
-  if (!djs)
+  if (djs.empty())
     forwardCPData();  // this fcn has its own exclusion list
 
   // decide if perform aggregation on PM
@@ -916,7 +933,7 @@ void TupleHashJoinStep::hjRunner()
   {
     largeBPS->useJoiners(tbpsJoiners);
 
-    if (djs)
+    if (djs.size())
       largeBPS->setJoinedResultRG(largeRG + outputRG);
     else
       largeBPS->setJoinedResultRG(outputRG);
@@ -931,7 +948,7 @@ void TupleHashJoinStep::hjRunner()
     For now, the alg is "assume if any joins are done on the UM, fe2 has to go on
     the UM."  The structs and logic aren't in place yet to track all of the tables
     through a joblist. */
-    if (fe2 && !djs)
+    if (fe2 && !djs.size())
     {
       /* Can't do a small outer join when the PM sends back joined rows */
       runFE2onPM = true;
@@ -957,7 +974,7 @@ void TupleHashJoinStep::hjRunner()
     else if (fe2)
       runFE2onPM = false;
 
-    if (!fDelivery && !djs)
+    if (!fDelivery && !djs.size())
     {
       /* connect the largeBPS directly to the next step */
       JobStepAssociation newJsa;
@@ -976,7 +993,7 @@ void TupleHashJoinStep::hjRunner()
     // there are no in-mem UM or PM joins, only disk-joins
     startAdjoiningSteps();
   }
-  else if (!djs)
+  else if (!djs.size())
     // if there's no largeBPS, all joins are either done by DJS or join threads,
     // this clause starts the THJS join threads.
     startJoinThreads();
@@ -1000,7 +1017,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
 
   idbassert(fDelivery);
 
-  std::unique_lock lk(deliverMutex);
+  boost::mutex::scoped_lock lk(deliverMutex);
 
   RowGroup* deliveredRG;
 
@@ -1009,7 +1026,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream& bs)
   else
     deliveredRG = &outputRG;
 
-  if (largeBPS && !djs)
+  if (largeBPS && !djs.size())
   {
     dl = largeDL;
     it = largeIt;
@@ -1099,7 +1116,8 @@ const string TupleHashJoinStep::toString() const
 
   for (size_t i = 0; i < idlsz; ++i)
   {
-    RowGroupDL* idl = fInputJobStepAssociation.outAt(i)->rowGroupDL();
+    const AnyDataListSPtr& dl = fInputJobStepAssociation.outAt(i);
+    RowGroupDL* idl = dl->rowGroupDL();
     CalpontSystemCatalog::OID oidi = 0;
 
     if (idl)
@@ -1111,7 +1129,7 @@ const string TupleHashJoinStep::toString() const
       oss << "*";
 
     oss << "tb/col:" << fTableOID1 << "/" << oidi;
-    oss << " " << fInputJobStepAssociation.outAt(i);
+    oss << " " << dl;
   }
 
   idlsz = fOutputJobStepAssociation.outSize();
@@ -1672,7 +1690,7 @@ void TupleHashJoinStep::processFE2(RowGroup& input, RowGroup& output, Row& inRow
 
 void TupleHashJoinStep::sendResult(const vector<RGData>& res)
 {
-  std::unique_lock lock(outputDLLock);
+  boost::mutex::scoped_lock lock(outputDLLock);
 
   for (uint32_t i = 0; i < res.size(); i++)
     // INSERT_ADAPTER(outputDL, res[i]);
@@ -1681,7 +1699,7 @@ void TupleHashJoinStep::sendResult(const vector<RGData>& res)
 
 void TupleHashJoinStep::grabSomeWork(vector<RGData>* work)
 {
-  std::unique_lock lock(inputDLLock);
+  boost::mutex::scoped_lock lock(inputDLLock);
   work->clear();
 
   if (!moreInput)
@@ -1876,6 +1894,19 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
         // Count the memory
         if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
         {
+          // MCOL-5512
+          if (fe2)
+          {
+            RowGroup l_fe2RG;
+            Row fe2InRow;
+            Row fe2OutRow;
+
+            l_fe2RG = fe2Output;
+            l_outputRG.initRow(&fe2InRow);
+            l_fe2RG.initRow(&fe2OutRow);
+
+            processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
+          }
           // Don't let the join results buffer get out of control.
           sendResult(outputData);
           outputData.clear();
@@ -1934,7 +1965,7 @@ void TupleHashJoinStep::segregateJoiners()
     }
 #endif
 
-  std::unique_lock sl(djsLock);
+  boost::mutex::scoped_lock sl(djsLock);
   /* For now if there is no largeBPS all joins need to either be DJS or not, not mixed */
   if (!largeBPS)
   {
@@ -1955,53 +1986,55 @@ void TupleHashJoinStep::segregateJoiners()
     return;
   }
 
-  /* If they are all inner joins they can be segregated w/o respect to
-  ordering; if they're not, the ordering has to stay consistent therefore
-  the first joiner that isn't finished and everything after has to be
-  done by DJS. */
-
-  if (allInnerJoins)
+  // Force all joins into disk based.
+  if (djsForceRun)
   {
-    for (i = 0; i < smallSideCount; i++)
+    for (i = 0; i < smallSideCount; ++i)
     {
-      // if (joiners[i]->isFinished() && (rand() % 2)) {    // for debugging
-      if (joiners[i]->isFinished())
-      {
-        // cout << "1joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> TBPS" << endl;
-        tbpsJoiners.push_back(joiners[i]);
-      }
-      else
-      {
-        joinIsTooBig = true;
-        joiners[i]->setConvertToDiskJoin();
-        // cout << "1joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> DJS" << endl;
-        djsJoiners.push_back(joiners[i]);
-        djsJoinerMap.push_back(i);
-      }
+      joinIsTooBig = true;
+      joiners[i]->setConvertToDiskJoin();
+      djsJoiners.push_back(joiners[i]);
+      djsJoinerMap.push_back(i);
     }
   }
   else
   {
-    // uint limit = rand() % smallSideCount;
-    for (i = 0; i < smallSideCount; i++)
+    /* If they are all inner joins they can be segregated w/o respect to
+    ordering; if they're not, the ordering has to stay consistent therefore
+    the first joiner that isn't finished and everything after has to be
+    done by DJS. */
+    if (allInnerJoins)
     {
-      // if (joiners[i]->isFinished() && i < limit) {  // debugging
-      if (joiners[i]->isFinished())
+      for (i = 0; i < smallSideCount; i++)
       {
-        // cout << "2joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> TBPS" << endl;
-        tbpsJoiners.push_back(joiners[i]);
+        if (joiners[i]->isFinished())
+          tbpsJoiners.push_back(joiners[i]);
+        else
+        {
+          joinIsTooBig = true;
+          joiners[i]->setConvertToDiskJoin();
+          djsJoiners.push_back(joiners[i]);
+          djsJoinerMap.push_back(i);
+        }
       }
-      else
-        break;
     }
-
-    for (; i < smallSideCount; i++)
+    else
     {
-      joinIsTooBig = true;
-      joiners[i]->setConvertToDiskJoin();
-      // cout << "2joiner " << i << "  " << hex << (uint64_t) joiners[i].get() << dec << " -> DJS" << endl;
-      djsJoiners.push_back(joiners[i]);
-      djsJoinerMap.push_back(i);
+      for (i = 0; i < smallSideCount; i++)
+      {
+        if (joiners[i]->isFinished())
+          tbpsJoiners.push_back(joiners[i]);
+        else
+          break;
+      }
+
+      for (; i < smallSideCount; i++)
+      {
+        joinIsTooBig = true;
+        joiners[i]->setConvertToDiskJoin();
+        djsJoiners.push_back(joiners[i]);
+        djsJoinerMap.push_back(i);
+      }
     }
   }
 }
@@ -2009,12 +2042,12 @@ void TupleHashJoinStep::segregateJoiners()
 void TupleHashJoinStep::abort()
 {
   JobStep::abort();
-  std::unique_lock sl(djsLock);
+  boost::mutex::scoped_lock sl(djsLock);
 
-  if (djs)
+  if (djs.size())
   {
-    for (uint32_t i = 0; i < djsJoiners.size(); i++)
-      djs[i].abort();
+    for (uint32_t i = 0, e = djs.size(); e < i; i++)
+      djs[i]->abort();
   }
 }
 

@@ -15,10 +15,81 @@ year	SUM(sales)
 2015	180518
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
 ERROR HY000: Incorrect usage of CUBE/ROLLUP and ORDER BY
+SELECT year, sales, MAX(country) FROM booksales GROUP BY year, sales;
+year	sales	MAX(country)
+2014	12234	Senegal
+2014	64980	Senegal
+2014	8760	Paraguay
+2014	87970	Paraguay
+2015	15647	Senegal
+2015	76940	Paraguay
+2015	78901	Senegal
+2015	9030	Paraguay
+SELECT year, MAX(country) FROM booksales GROUP BY year;
+year	MAX(country)
+2014	Senegal
+2015	Senegal
+SELECT year, sales, MAX(country) FROM booksales GROUP BY year, sales WITH ROLLUP;
+year	sales	MAX(country)
+2014	12234	Senegal
+2014	64980	Senegal
+2014	8760	Paraguay
+2014	87970	Paraguay
+2014	NULL	Senegal
+2015	15647	Senegal
+2015	76940	Paraguay
+2015	78901	Senegal
+2015	9030	Paraguay
+2015	NULL	Senegal
+NULL	NULL	Senegal
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
-SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
-SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
-ERROR 42000: The storage engine for the table doesn't support MCS-1014: Rollup is currently not supported.
+year	SUM(sales)
+2014	173944
+2015	180518
+NULL	354462
+SELECT country, genre, SUM(sales) FROM booksales GROUP BY country, genre WITH ROLLUP;
+country	genre	SUM(sales)
+NULL	NULL	354462
+Paraguay	NULL	182700
+Paraguay	fiction	164910
+Paraguay	non-fiction	17790
+Senegal	NULL	171762
+Senegal	fiction	27881
+Senegal	non-fiction	143881
+SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
+country	genre	SUM(sales)
+NULL	NULL	354462
+Paraguay	NULL	182700
+Paraguay	fiction	164910
+Paraguay	non-fiction	17790
+Senegal	NULL	171762
+Senegal	fiction	27881
+Senegal	non-fiction	143881
+CREATE TABLE three_cols ( key1 INTEGER, key2 INTEGER, value DECIMAL(38)) ENGINE=COLUMNSTORE;
+INSERT INTO three_cols(key1, key2, value) VALUES
+(NULL, NULL, NULL)
+, (NULL, NULL,    1)
+, (NULL,    1,    2)
+, (   1,    1,    3)
+, (   1,    2,    4)
+, (   1,    2,    5)
+, (   2,    3,    6)
+, (   2,    3,    7);
+SELECT key1, key2, SUM(value), AVG(value), MIN(value), MAX(value), COUNT(value), COUNT(*) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+key1	key2	SUM(value)	AVG(value)	MIN(value)	MAX(value)	COUNT(value)	COUNT(*)
+1	1	3	3.0000	3	3	1	1
+1	2	9	4.5000	4	5	2	2
+1	NULL	12	4.0000	3	5	3	3
+2	3	13	6.5000	6	7	2	2
+2	NULL	13	6.5000	6	7	2	2
+NULL	1	2	2.0000	2	2	1	1
+NULL	NULL	1	1.0000	1	1	1	2
+NULL	NULL	28	4.0000	1	7	7	8
+NULL	NULL	3	1.5000	1	2	2	3
+SELECT key1, key2, GROUP_CONCAT(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+ERROR HY000: Internal error: GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used
+SELECT key1, key2, JSON_ARRAYAGG(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+ERROR HY000: Internal error: GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used
+SELECT 100, SUM(value) FROM three_cols GROUP BY 1 WITH ROLLUP;
+ERROR HY000: Internal error: constant GROUP BY columns are not supported when WITH ROLLUP is used
 DROP DATABASE IF EXISTS mcs84_db;

@@ -40,7 +40,7 @@ ThreadPool::ThreadPool(uint num_threads, bool _processQueueOnExit)
 
 ThreadPool::~ThreadPool()
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   die = true;
   if (!processQueueOnExit)
     jobs.clear();
@@ -60,7 +60,7 @@ void ThreadPool::setName(const string& _name)
 
 void ThreadPool::addJob(const boost::shared_ptr<Job>& j)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   if (die)
     return;
 
@@ -81,7 +81,7 @@ void ThreadPool::addJob(const boost::shared_ptr<Job>& j)
 void ThreadPool::prune()
 {
   set<ID_Thread>::iterator it;
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   while (1)
   {
@@ -105,19 +105,19 @@ void ThreadPool::prune()
 
 void ThreadPool::setMaxThreads(uint newMax)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   maxThreads = newMax;
 }
 
 int ThreadPool::currentQueueSize() const
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   return jobs.size();
 }
 
 void ThreadPool::processingLoop()
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   try
   {
     _processingLoop(s);
@@ -134,7 +134,7 @@ void ThreadPool::processingLoop()
   //      " live thread count = " << threads.size() - pruneable.size() << endl;
 }
 
-void ThreadPool::_processingLoop(std::unique_lock<std::mutex>& s)
+void ThreadPool::_processingLoop(boost::unique_lock<boost::mutex>& s)
 {
   // cout << "Thread started" << endl;
   while (threads.size() - pruneable.size() <=
@@ -143,7 +143,7 @@ void ThreadPool::_processingLoop(std::unique_lock<std::mutex>& s)
     while (jobs.empty() && !die)
     {
       threadsWaiting++;
-      bool timedout = (jobAvailable.wait_for(s, idleThreadTimeout) == std::cv_status::timeout);
+      bool timedout = !jobAvailable.timed_wait<>(s, idleThreadTimeout);
       threadsWaiting--;
       if (timedout && jobs.empty())
       {

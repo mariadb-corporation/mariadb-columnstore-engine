@@ -227,6 +227,22 @@ class ParseTree
 
   inline void setDerivedTable();
 
+  enum class GoTo
+  {
+    Left,
+    Right,
+    Up
+  };
+
+  struct StackFrame
+  {
+    ParseTree* node;
+    GoTo direction;
+    StackFrame(ParseTree* node_, GoTo direction_ = GoTo::Left) : node(node_), direction(direction_)
+    {
+    }
+  };
+
  private:
   TreeNode* fData;
   ParseTree* fLeft;
@@ -378,65 +394,174 @@ inline ParseTree::ParseTree(const ParseTree& rhs)
   copyTree(rhs);
 }
 
+using DFSStack = std::vector<ParseTree::StackFrame>;
+
 inline ParseTree::~ParseTree()
 {
-  if (fLeft != NULL)
-    delete fLeft;
-
-  if (fRight != NULL)
-    delete fRight;
-
-  if (fData != NULL)
+  if (fLeft == nullptr && fRight == nullptr)
+  {
     delete fData;
-
-  fLeft = NULL;
-  fRight = NULL;
-  fData = NULL;
+    fData = nullptr;
+  }
+  else
+  {
+    DFSStack stack;
+    stack.emplace_back(this);
+    while (!stack.empty())
+    {
+      auto [node, dir] = stack.back();
+      if (dir == GoTo::Left)
+      {
+        stack.back().direction = GoTo::Right;
+        if (node->fLeft != nullptr)
+        {
+          stack.emplace_back(node->fLeft);
+        }
+      }
+      else if (dir == GoTo::Right)
+      {
+        stack.back().direction = GoTo::Up;
+        if (node->fRight != nullptr)
+        {
+          stack.emplace_back(node->fRight);
+        }
+      }
+      else
+      {
+        if (stack.size() == 1)
+        {
+          node->fLeft = nullptr;
+          node->fRight = nullptr;
+          delete fData;
+          fData = nullptr;
+          stack.pop_back();
+        }
+        else
+        {
+          node->fLeft = nullptr;
+          node->fRight = nullptr;
+          delete node;
+          stack.pop_back();
+        }
+      }
+    }
+  }
 }
 
 inline void ParseTree::walk(void (*fn)(ParseTree* n)) const
 {
-  if (fLeft != 0)
-    fLeft->walk(fn);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(this));
 
-  if (fRight != 0)
-    fRight->walk(fn);
-
-  ParseTree* temp = const_cast<ParseTree*>(this);
-  fn(temp);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == GoTo::Left)
+    {
+      stack.back().direction = GoTo::Right;
+      if (node->fLeft != nullptr)
+        stack.emplace_back(node->fLeft);
+    }
+    else if (dir == GoTo::Right)
+    {
+      stack.back().direction = GoTo::Up;
+      if (node->fRight != nullptr)
+        stack.emplace_back(node->fRight);
+    }
+    else
+    {
+      ParseTree* temp = const_cast<ParseTree*>(node);
+      fn(temp);
+      stack.pop_back();
+    }
+  }
 }
 
 inline void ParseTree::walk(void (*fn)(const ParseTree* n)) const
 {
-  if (fLeft != 0)
-    fLeft->walk(fn);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(this));
 
-  if (fRight != 0)
-    fRight->walk(fn);
-
-  fn(this);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == GoTo::Left)
+    {
+      stack.back().direction = GoTo::Right;
+      if (node->fLeft != nullptr)
+        stack.emplace_back(node->fLeft);
+    }
+    else if (dir == GoTo::Right)
+    {
+      stack.back().direction = GoTo::Up;
+      if (node->fRight != nullptr)
+        stack.emplace_back(node->fRight);
+    }
+    else
+    {
+      ParseTree* temp = const_cast<ParseTree*>(node);
+      fn(temp);
+      stack.pop_back();
+    }
+  }
 }
 
 inline void ParseTree::walk(void (*fn)(const ParseTree* n, std::ostream& output), std::ostream& output) const
 {
-  if (fLeft != 0)
-    fLeft->walk(fn, output);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(this));
 
-  if (fRight != 0)
-    fRight->walk(fn, output);
-
-  fn(this, output);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == GoTo::Left)
+    {
+      stack.back().direction = GoTo::Right;
+      if (node->fLeft != nullptr)
+        stack.emplace_back(node->fLeft);
+    }
+    else if (dir == GoTo::Right)
+    {
+      stack.back().direction = GoTo::Up;
+      if (node->fRight != nullptr)
+        stack.emplace_back(node->fRight);
+    }
+    else
+    {
+      ParseTree* temp = const_cast<ParseTree*>(node);
+      fn(temp, output);
+      stack.pop_back();
+    }
+  }
 }
 
 inline void ParseTree::walk(void (*fn)(const ParseTree* n, void* obj), void* obj) const
 {
-  if (fLeft != 0)
-    fLeft->walk(fn, obj);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(this));
 
-  if (fRight != 0)
-    fRight->walk(fn, obj);
-
-  fn(this, obj);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == GoTo::Left)
+    {
+      stack.back().direction = GoTo::Right;
+      if (node->fLeft != nullptr)
+        stack.emplace_back(node->fLeft);
+    }
+    else if (dir == GoTo::Right)
+    {
+      stack.back().direction = GoTo::Up;
+      if (node->fRight != nullptr)
+        stack.emplace_back(node->fRight);
+    }
+    else
+    {
+      ParseTree* temp = const_cast<ParseTree*>(node);
+      fn(temp, obj);
+      stack.pop_back();
+    }
+  }
 }
 
 inline std::string ParseTree::toString() const
@@ -448,13 +573,31 @@ inline std::string ParseTree::toString() const
 
 inline void ParseTree::walk(void (*fn)(ParseTree* n, void* obj), void* obj) const
 {
-  if (fLeft != 0)
-    fLeft->walk(fn, obj);
+  DFSStack stack;
+  stack.emplace_back(const_cast<ParseTree*>(this));
 
-  if (fRight != 0)
-    fRight->walk(fn, obj);
-
-  fn(const_cast<ParseTree*>(this), obj);
+  while (!stack.empty())
+  {
+    auto [node, dir] = stack.back();
+    if (dir == GoTo::Left)
+    {
+      stack.back().direction = GoTo::Right;
+      if (node->fLeft != nullptr)
+        stack.emplace_back(node->fLeft);
+    }
+    else if (dir == GoTo::Right)
+    {
+      stack.back().direction = GoTo::Up;
+      if (node->fRight != nullptr)
+        stack.emplace_back(node->fRight);
+    }
+    else
+    {
+      ParseTree* temp = const_cast<ParseTree*>(node);
+      fn(temp, obj);
+      stack.pop_back();
+    }
+  }
 }
 
 inline ParseTree& ParseTree::operator=(const ParseTree& rhs)

@@ -49,7 +49,6 @@ using namespace rowgroup;
 #include "messageids.h"
 using namespace logging;
 
-
 namespace primitiveprocessor
 {
 extern int noVB;
@@ -177,7 +176,7 @@ void ColumnCommand::_loadData()
     {
       // fill remaining blocks with empty values when col scan
       uint32_t blockLen = BLOCK_SIZE / W;
-      auto attrs = datatypes::SystemCatalog::TypeAttributesStd(W, 0, -1);
+      auto attrs = datatypes::TypeAttributesStd(W, 0, -1);
       const auto* typeHandler = datatypes::TypeHandler::find(colType.colDataType, attrs);
       const uint8_t* emptyValue = typeHandler->getEmptyValueForType(attrs);
       uint8_t* blockDataPtr = &bpp->blockData[i * BLOCK_SIZE];
@@ -206,9 +205,9 @@ void ColumnCommand::_loadData()
     uint8_t** blockPtrsAux = (uint8_t**)alloca(1 * sizeof(uint8_t*));
     blockPtrsAux[0] = &bpp->blockDataAux[0];
     lbidsAux[0] = lbidAux;
-    wasCached = primitiveprocessor::loadBlocks(lbidsAux, bpp->versionInfo, bpp->txnID, 2,
-                                               blockPtrsAux, &blocksRead, bpp->LBIDTrace, bpp->sessionID,
-                                               1, &wasVersioned, true, &bpp->vssCache);
+    wasCached = primitiveprocessor::loadBlocks(lbidsAux, bpp->versionInfo, bpp->txnID, 2, blockPtrsAux,
+                                               &blocksRead, bpp->LBIDTrace, bpp->sessionID, 1, &wasVersioned,
+                                               true, &bpp->vssCache);
     bpp->cachedIO += wasCached;
     bpp->physIO += blocksRead;
     bpp->touchedBlocks += 1;
@@ -631,8 +630,7 @@ void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const 
   size_t inputMsgBufSize = baseMsgLength + (LOGICAL_BLOCK_RIDS * sizeof(primitives::RIDType));
 
   if (!inputMsg)
-    inputMsg.reset(new(std::align_val_t(utils::MAXCOLUMNWIDTH)) uint8_t[inputMsgBufSize]);
-
+    inputMsg.reset(new (std::align_val_t(utils::MAXCOLUMNWIDTH)) uint8_t[inputMsgBufSize]);
 
   primMsg = (NewColRequestHeader*)inputMsg.get();
   outMsg = (ColResultHeader*)bpp->outputMsg.get();

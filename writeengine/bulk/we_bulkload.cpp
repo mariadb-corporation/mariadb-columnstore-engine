@@ -71,7 +71,7 @@ const std::string ERR_LOG_SUFFIX = ".err";  // Job err log file suffix
 namespace WriteEngine
 {
 /* static */ boost::ptr_vector<TableInfo> BulkLoad::fTableInfo;
-/* static */ std::mutex* BulkLoad::fDDLMutex = 0;
+/* static */ boost::mutex* BulkLoad::fDDLMutex = 0;
 
 /* static */ const std::string BulkLoad::DIR_BULK_JOB("job");
 /* static */ const std::string BulkLoad::DIR_BULK_TEMP_JOB("tmpjob");
@@ -165,7 +165,7 @@ BulkLoad::BulkLoad()
   fTableInfo.clear();
   setDebugLevel(DEBUG_0);
 
-  fDDLMutex = new std::mutex();
+  fDDLMutex = new boost::mutex();
   memset(&fStartTime, 0, sizeof(timeval));
   memset(&fEndTime, 0, sizeof(timeval));
 }
@@ -355,7 +355,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -364,7 +364,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(...)
+    catch (...)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -378,10 +378,11 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     // tableAUXColOid = 0
     if (tableAUXColOid > 3000)
     {
-      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING,
-        execplan::AUX_COL_WIDTH, execplan::AUX_COL_WIDTH,
-        execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_COMPRESSION_TYPE,
-        execplan::AUX_COL_MINVALUE, execplan::AUX_COL_MAXVALUE, true, 1);
+      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING, execplan::AUX_COL_WIDTH,
+                          execplan::AUX_COL_WIDTH, execplan::AUX_COL_COMPRESSION_TYPE,
+                          execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_MINVALUE,
+                          execplan::AUX_COL_MAXVALUE, true, 1);
+      curColumn.fFldColRelation = BULK_FLDCOL_COLUMN_DEFAULT;
       curJob.jobTableList[i].colList.push_back(curColumn);
       JobFieldRef fieldRef(BULK_FLDCOL_COLUMN_DEFAULT, curJob.jobTableList[i].colList.size() - 1);
       curJob.jobTableList[i].fFldRefs.push_back(fieldRef);
@@ -1209,6 +1210,27 @@ int BulkLoad::manageImportDataFileList(Job& job, int tableNo, TableInfo* tableIn
   std::vector<std::string> loadFilesList;
   bool bUseStdin = false;
 
+  // Check if all the import files are the same type.
+  const auto& fileNameA = (fCmdLineImportFiles.empty()) ? "" : fCmdLineImportFiles.front();
+  bool allFilesHaveSameType =
+      !fCmdLineImportFiles.empty() &&
+      std::all_of(std::next(fCmdLineImportFiles.begin()), fCmdLineImportFiles.end(),
+                  [&fileNameA](auto& fileName) { return fileName.rfind(fileNameA) != std::string::npos; });
+
+  if (!fCmdLineImportFiles.empty() && !allFilesHaveSameType)
+  {
+    ostringstream oss;
+    oss << "Input files have different types.";
+    fLog.logMsg(oss.str(), ERR_FILE_TYPE_DIFF, MSGLVL_ERROR);
+    return ERR_FILE_TYPE_DIFF;
+  }
+  const bool isParquet = allFilesHaveSameType && fileNameA.rfind(".parquet") != std::string::npos;
+
+  if (isParquet)
+  {
+    setImportDataMode(IMPORT_DATA_PARQUET);
+  }
+
   // Take loadFileName from command line argument override "if" one exists,
   // else we take from the Job xml file
   std::string loadFileName;
@@ -1383,7 +1405,6 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
       fullPath = location;
       fullPath += token;
     }
-
 
     // If running mode2, then support a filename with wildcards
     if (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC)
@@ -1584,7 +1605,7 @@ int BulkLoad::updateNextValue(OID columnOid, uint64_t nextAutoIncVal)
   // job for 2 tables; so we put a mutex here just in case the DDLClient code
   // won't work well with 2 competing WE_DDLCommandClient objects in the same
   // process (ex: if there is any static data in WE_DDLCommandClient).
-  std::unique_lock lock(*fDDLMutex);
+  boost::mutex::scoped_lock lock(*fDDLMutex);
   WE_DDLCommandClient ddlCommandClt;
   unsigned int rc = ddlCommandClt.UpdateSyscolumnNextval(columnOid, nextAutoIncVal);
 

@@ -33,7 +33,7 @@
 #pragma once
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/scoped_array.hpp>
 #include <condition_variable>
 #include <ifaddrs.h>
@@ -47,7 +47,7 @@
 #include "bytestream.h"
 #include "primitivemsg.h"
 #include "threadsafequeue.h"
-
+#include "rwlock_local.h"
 #include "resourcemanager.h"
 #include "messagequeue.h"
 
@@ -226,10 +226,14 @@ class DistributedEngineComm
   // A queue of ByteStreams coming in from PrimProc heading for a JobStep
   typedef ThreadSafeQueue<messageqcpp::SBS> StepMsgQueue;
 
+  // Creates a ByteStream as a command for Primitive Server and initializes it with a given `command`,
+  // `uniqueID` and `size`.
+  messageqcpp::SBS createBatchPrimitiveCommand(ISMPACKETCOMMAND command, uint32_t uniqueID, uint16_t size);
+
   /* To keep some state associated with the connection.  These aren't copyable. */
   struct MQE : public boost::noncopyable
   {
-    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue);
+    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue, const uint64_t recvQueueSize);
     uint32_t getNextConnectionId(const size_t pmIndex, const size_t pmConnectionsNumber,
                                  const uint32_t DECConnectionsPerQuery);
     messageqcpp::Stats stats;
@@ -284,12 +288,12 @@ class DistributedEngineComm
   std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
   bool fBusy;
   volatile uint32_t pmCount;
-  std::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
-  std::mutex fSetupMutex;
+  boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
+  boost::mutex fSetupMutex;
 
   // event listener data
   std::vector<DECEventListener*> eventListeners;
-  std::mutex eventListenerLock;
+  boost::mutex eventListenerLock;
 
   ClientList newClients;
   std::vector<std::shared_ptr<std::mutex>> newLocks;
@@ -297,9 +301,9 @@ class DistributedEngineComm
   bool fIsExeMgr;
 
   // send-side throttling vars
-  uint64_t throttleThreshold;
-  static const uint32_t targetRecvQueueSize = 50000000;
-  static const uint32_t disableThreshold = 10000000;
+  uint64_t flowControlEnableBytesThresh = 50000000;
+  uint64_t flowControlDisableBytesThresh = 10000000;
+  uint64_t bigMessageSize = 300 * 1024 * 1024;
   uint32_t tbpsThreadCount;
   uint32_t fDECConnectionsPerQuery;
 
@@ -308,8 +312,10 @@ class DistributedEngineComm
   void nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t maxAck, uint32_t* sockIndex, uint16_t* numToAck);
   void setFlowControl(bool enable, uint32_t uniqueID, boost::shared_ptr<MQE> mqe);
   void doHasBigMsgs(boost::shared_ptr<MQE> mqe, uint64_t targetSize);
-  std::mutex ackLock;
+  boost::mutex ackLock;
 
+  // localConnectionId_ is set running Setup() method
+  uint32_t localConnectionId_ = std::numeric_limits<uint32_t>::max();
   std::vector<struct in_addr> localNetIfaceSins_;
   std::mutex inMemoryEM2PPExchMutex_;
   std::condition_variable inMemoryEM2PPExchCV_;

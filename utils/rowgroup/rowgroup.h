@@ -34,8 +34,7 @@
 #include <cassert>
 #include <boost/shared_ptr.hpp>
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <cmath>
 #include <cfloat>
 #include <execinfo.h>
@@ -190,7 +189,7 @@ class StringStore
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
-  std::mutex fMutex;
+  boost::mutex fMutex;
 };
 
 // Where we store user data for UDA(n)F
@@ -248,7 +247,7 @@ class UserDataStore
   std::vector<StoreData> vStoreData;
 
   bool fUseUserDataMutex = false;
-  std::mutex fMutex;
+  boost::mutex fMutex;
 };
 
 
@@ -321,6 +320,8 @@ class RGData
   }
 
  private:
+  uint32_t rowSize = 0; // can't be.
+  uint32_t columnCount = 0; // shouldn't be, but...
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
@@ -1329,8 +1330,11 @@ inline void Row::setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t co
     if (len > getColumnWidth(colIndex))
       len = getColumnWidth(colIndex);
 
+    idbassert(val != nullptr || !len);
+
     *((uint16_t*)&data[offsets[colIndex]]) = len;
-    memcpy(&data[offsets[colIndex] + 2], val, len);
+    if (val != nullptr)
+      memcpy(&data[offsets[colIndex] + 2], val, len);
   }
 }
 
@@ -1544,6 +1548,11 @@ class RowGroup : public messageqcpp::Serializeable
 
   inline bool usesStringTable() const;
   inline void setUseStringTable(bool);
+
+  bool hasLongString() const
+  {
+    return hasLongStringField;
+  }
 
   void serializeRGData(messageqcpp::ByteStream&) const;
   inline uint32_t getStringTableThreshold() const;
@@ -2188,6 +2197,7 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
+  idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
   row->setData(
       Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));

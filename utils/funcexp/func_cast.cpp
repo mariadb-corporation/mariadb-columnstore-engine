@@ -118,7 +118,7 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
-      return (int64_t)parm[0]->data()->getUintVal(row, isNull);
+      return datatypes::TUInt64(parm[0]->data()->getUintVal(row, isNull)).toMCSInt64();
     }
     break;
 
@@ -127,15 +127,13 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE:
     {
-      datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
-      return d.toMCSSInt64Round();
+      return datatypes::TDouble(parm[0]->data()->getDoubleVal(row, isNull)).toMCSSInt64Round();
     }
     break;
 
     case execplan::CalpontSystemCatalog::LONGDOUBLE:
     {
-      datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
-      return d.toMCSSInt64Round();
+      return datatypes::TLongDouble(parm[0]->data()->getLongDoubleVal(row, isNull)).toMCSSInt64Round();
     }
     break;
 
@@ -143,22 +141,14 @@ int64_t Func_cast_signed::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const auto& value = parm[0]->data()->getStrVal(row, isNull);
-
-      if (isNull)
-      {
-        isNull = true;
-        return 0;
-      }
-
-      return atoll(value.str());
+      return parm[0]->data()->getStrVal(row, isNull).toMCSInt64();
     }
     break;
 
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      return parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
+      return parm[0]->data()->getDecimalVal(row, isNull).toMCSInt64Round();
     }
     break;
 
@@ -224,7 +214,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
     case execplan::CalpontSystemCatalog::TINYINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
     {
-      return (int64_t)parm[0]->data()->getUintVal(row, isNull);
+      return parm[0]->data()->getUintVal(row, isNull);
     }
     break;
 
@@ -243,15 +233,13 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE:
     {
-      datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
-      return d.toMCSUInt64Round();
+      return datatypes::TDouble(parm[0]->data()->getDoubleVal(row, isNull)).toMCSUInt64Round();
     }
     break;
 
     case execplan::CalpontSystemCatalog::LONGDOUBLE:
     {
-      datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
-      return d.toMCSUInt64Round();
+      return datatypes::TLongDouble(parm[0]->data()->getLongDoubleVal(row, isNull)).toMCSUInt64Round();
     }
     break;
 
@@ -259,24 +247,14 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row, FunctionParm& parm, bool& isNu
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      const auto& value = parm[0]->data()->getStrVal(row, isNull);
-
-      if (isNull)
-      {
-        isNull = true;
-        return 0;
-      }
-
-      uint64_t ret = strtoul(value.str(), 0, 0);
-      return ret;
+      return parm[0]->data()->getStrVal(row, isNull).toMCSUInt64();
     }
     break;
 
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-      return d.toUInt64Round();
+      return parm[0]->data()->getDecimalVal(row, isNull).toMCSUInt64Round();
     }
     break;
 
@@ -659,7 +637,8 @@ int64_t Func_cast_date::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
+      val =
+          dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;
@@ -821,7 +800,8 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
+      val =
+          dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
         isNull = true;

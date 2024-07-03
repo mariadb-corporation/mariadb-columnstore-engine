@@ -33,8 +33,7 @@
 #include "we_colextinf.h"
 #include "we_dctnrycompress.h"
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <sys/time.h>
 #include <vector>
@@ -200,6 +199,13 @@ class ColumnInfo : public WeUIDGID
    *  an extent boundary.
    */
   void lastInputRowInExtentInc();
+
+  /** @brief Update dictionary for arrow/parquet format
+   *  Parse and store the parquet data into the store file, and
+   *  returns the assigned tokens (tokenBuf) to be stored in the
+   *  corresponding column token file.
+   */
+  int updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow, char* tokenBuf);
 
   /** @brief Update dictionary method.
    *  Parses and stores specified strings into the store file, and
@@ -378,7 +384,7 @@ class ColumnInfo : public WeUIDGID
    * This was formerly the fMgrMutex in ColumnBufferManager.  See comments
    * that precede this class definition for more information.
    */
-  std::mutex& colMutex();
+  boost::mutex& colMutex();
 
   /** @brief Get number of rows per extent
    */
@@ -425,10 +431,10 @@ class ColumnInfo : public WeUIDGID
   // Protected Data Members
   //--------------------------------------------------------------------------
 
-  std::mutex fDictionaryMutex;         // Mutex for dicionary updates
-  std::mutex fColMutex;                // Mutex for column changes
-  std::mutex fAutoIncMutex;            // Mutex to manage fAutoIncLastValue
-  std::mutex fDelayedFileCreateMutex;  // Manage delayed file check/create
+  boost::mutex fDictionaryMutex;         // Mutex for dicionary updates
+  boost::mutex fColMutex;                // Mutex for column changes
+  boost::mutex fAutoIncMutex;            // Mutex to manage fAutoIncLastValue
+  boost::mutex fDelayedFileCreateMutex;  // Manage delayed file check/create
   Log* fLog;                             // Object used for logging
 
   // Blocks to skip at start of bulk load, if starting file has to be created
@@ -501,7 +507,7 @@ inline void ColumnInfo::setUIDGID(const uid_t p_uid, const gid_t p_gid)
     colOp->setUIDGID(this);
 }
 
-inline std::mutex& ColumnInfo::colMutex()
+inline boost::mutex& ColumnInfo::colMutex()
 {
   return fColMutex;
 }

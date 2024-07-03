@@ -52,7 +52,7 @@ using namespace BRM;
 namespace BRM
 {
 /*static*/
-std::mutex MasterSegmentTableImpl::fInstanceMutex;
+boost::mutex MasterSegmentTableImpl::fInstanceMutex;
 
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;
@@ -60,7 +60,7 @@ MasterSegmentTableImpl* MasterSegmentTableImpl::fInstance = 0;
 /*static*/
 MasterSegmentTableImpl* MasterSegmentTableImpl::makeMasterSegmentTableImpl(int key, int size)
 {
-  std::unique_lock lk(fInstanceMutex);
+  boost::mutex::scoped_lock lk(fInstanceMutex);
 
   if (fInstance)
     return fInstance;

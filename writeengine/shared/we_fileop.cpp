@@ -58,9 +58,9 @@ using namespace idbdatafile;
 
 namespace WriteEngine
 {
-/*static*/ std::mutex FileOp::m_createDbRootMutexes;
-/*static*/ std::mutex FileOp::m_mkdirMutex;
-/*static*/ std::map<int, std::mutex> FileOp::m_DbRootAddExtentMutexes;
+/*static*/ boost::mutex FileOp::m_createDbRootMutexes;
+/*static*/ boost::mutex FileOp::m_mkdirMutex;
+/*static*/ std::map<int, boost::mutex> FileOp::m_DbRootAddExtentMutexes;
 // in 1 call to fwrite(), during initialization
 
 // StopWatch timer;
@@ -116,7 +116,7 @@ void FileOp::closeFile(IDBDataFile* pFile) const
  ***********************************************************/
 int FileOp::createDir(const char* dirName, mode_t mode) const
 {
-  std::unique_lock lk(m_mkdirMutex);
+  boost::mutex::scoped_lock lk(m_mkdirMutex);
   int rc = IDBPolicy::mkdir(dirName);
 
   if (rc != 0)
@@ -993,7 +993,7 @@ int FileOp::initColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, c
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 
 #endif
-    std::unique_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
 
     if (bExpandExtent)
@@ -1714,7 +1714,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
       Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
 
-    std::unique_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
+    boost::mutex::scoped_lock lk(m_DbRootAddExtentMutexes[dbRoot]);
 
 #ifdef PROFILE
     if (bExpandExtent)
@@ -1800,7 +1800,7 @@ int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, u
 /* static */
 void FileOp::initDbRootExtentMutexes()
 {
-  std::unique_lock lk(m_createDbRootMutexes);
+  boost::mutex::scoped_lock lk(m_createDbRootMutexes);
 
   if (m_DbRootAddExtentMutexes.size() == 0)
   {

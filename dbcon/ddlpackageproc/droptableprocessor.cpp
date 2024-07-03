@@ -50,14 +50,24 @@ using namespace oam;
 
 namespace ddlpackageprocessor
 {
-DropTableProcessor::DDLResult DropTableProcessor::processPackage(
-    ddlpackage::DropTableStatement& dropTableStmt)
+DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("DropTableProcessor::processPackage");
-
   DDLResult result;
   result.result = NO_ERROR;
   std::string err;
+
+  auto* dropTableStmt = dynamic_cast<ddlpackage::DropTableStatement*>(sqlStmt);
+  if (!dropTableStmt)
+  {
+    Message::Args args;
+    Message message(9);
+    args.add("DropTableStatement wrong cast");
+    message.format(args);
+    result.result = DROP_ERROR;
+    result.message = message;
+    return result;
+  }
   VERBOSE_INFO(dropTableStmt);
 
   // Commit current transaction.
@@ -82,8 +92,8 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     return result;
   }
 
-  string stmt = dropTableStmt.fSql + "|" + dropTableStmt.fTableName->fSchema + "|";
-  SQLLogger logger(stmt, fDDLLoggingId, dropTableStmt.fSessionID, txnID.id);
+  string stmt = dropTableStmt->fSql + "|" + dropTableStmt->fTableName->fSchema + "|";
+  SQLLogger logger(stmt, fDDLLoggingId, dropTableStmt->fSessionID, txnID.id);
 
   std::vector<CalpontSystemCatalog::OID> oidList;
   CalpontSystemCatalog::RIDList tableColRidList;
@@ -130,18 +140,18 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   std::vector<int> moduleIds = oamcache->getModuleIds();
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  std::unique_lock lk(dbrmMutex);
+  boost::mutex::scoped_lock lk(dbrmMutex);
 
   try
   {
     // check table lock
     boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-        CalpontSystemCatalog::makeCalpontSystemCatalog(dropTableStmt.fSessionID);
+        CalpontSystemCatalog::makeCalpontSystemCatalog(dropTableStmt->fSessionID);
     systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-    systemCatalogPtr->sessionID(dropTableStmt.fSessionID);
+    systemCatalogPtr->sessionID(dropTableStmt->fSessionID);
     CalpontSystemCatalog::TableName tableName;
-    tableName.schema = dropTableStmt.fTableName->fSchema;
-    tableName.table = dropTableStmt.fTableName->fName;
+    tableName.schema = dropTableStmt->fTableName->fSchema;
+    tableName.table = dropTableStmt->fTableName->fName;
 
     try
     {
@@ -158,34 +168,42 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     }
     catch (IDBExcept& ie)
     {
-      if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
+      if (checkPPLostConnection(ie.what()))
       {
-        Message::Args args;
-        Message message(1);
-        args.add("Table does not exist in ColumnStore.");
-        message.format(args);
-        result.result = DROP_TABLE_NOT_IN_CATALOG_ERROR;
-        result.message = message;
-        fSessionManager.rolledback(txnID);
+        result.result = PP_LOST_CONNECTION;
         return result;
       }
       else
       {
-        result.result = DROP_ERROR;
-        Message::Args args;
-        Message message(9);
-        args.add("Drop table failed due to ");
-        args.add(ie.what());
-        message.format(args);
-        result.message = message;
-        fSessionManager.rolledback(txnID);
-        return result;
+        if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
+        {
+          Message::Args args;
+          Message message(1);
+          args.add("Table does not exist in ColumnStore.");
+          message.format(args);
+          result.result = DROP_TABLE_NOT_IN_CATALOG_ERROR;
+          result.message = message;
+          fSessionManager.rolledback(txnID);
+          return result;
+        }
+        else
+        {
+          result.result = DROP_ERROR;
+          Message::Args args;
+          Message message(9);
+          args.add("Drop table failed due to ");
+          args.add(ie.what());
+          message.format(args);
+          result.message = message;
+          fSessionManager.rolledback(txnID);
+          return result;
+        }
       }
     }
 
     uint32_t processID = ::getpid();
     int32_t txnid = txnID.id;
-    int32_t sessionId = dropTableStmt.fSessionID;
+    int32_t sessionId = dropTableStmt->fSessionID;
     std::string processName("DDLProc");
     int i = 0;
 
@@ -228,12 +246,11 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
           txnid = txnID.id;
-          sessionId = dropTableStmt.fSessionID;
+          sessionId = dropTableStmt->fSessionID;
           ;
           processName = "DDLProc";
           tableLockId = fDbrm->getTableLock(pms, roPair.objnum, &processName, &processID, &sessionId, &txnid,
@@ -272,8 +289,8 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     // 10.Return the OIDs
 
     CalpontSystemCatalog::TableName userTableName;
-    userTableName.schema = dropTableStmt.fTableName->fSchema;
-    userTableName.table = dropTableStmt.fTableName->fName;
+    userTableName.schema = dropTableStmt->fTableName->fSchema;
+    userTableName.table = dropTableStmt->fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
 
@@ -300,10 +317,10 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
 #endif
     bytestream << (ByteStream::byte)WE_SVR_DELETE_SYSTABLE;
     bytestream << uniqueId;
-    bytestream << (uint32_t)dropTableStmt.fSessionID;
+    bytestream << (uint32_t)dropTableStmt->fSessionID;
     bytestream << (uint32_t)txnID.id;
-    bytestream << dropTableStmt.fTableName->fSchema;
-    bytestream << dropTableStmt.fTableName->fName;
+    bytestream << dropTableStmt->fTableName->fSchema;
+    bytestream << dropTableStmt->fTableName->fName;
 
     // Find out where systable is
     BRM::OID_t sysOid = 1001;
@@ -378,30 +395,39 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
 
     if (rc != 0)
     {
-      cout << fTxnid.id << " Error in dropping table from systables(" << (int)rc << ") " << errorMsg.c_str()
-           << endl;
-      Message::Args args;
-      Message message(9);
-      args.add("Error in dropping table from systables.");
-      args.add(errorMsg);
-      message.format(args);
-      result.result = (ResultCode)rc;
-      result.message = message;
-      // release table lock and session
-      fSessionManager.rolledback(txnID);
-      (void)fDbrm->releaseTableLock(tableLockId);
-      fWEClient->removeQueue(uniqueId);
-      return result;
+      if (checkPPLostConnection(errorMsg))
+      {
+        result.result = PP_LOST_CONNECTION;
+        (void)fDbrm->releaseTableLock(tableLockId);
+        fWEClient->removeQueue(uniqueId);
+        return result;
+      }
+      else
+      {
+        cout << fTxnid.id << " Error in dropping table from systables(" << (int)rc << ") " << errorMsg.c_str()
+             << endl;
+        Message::Args args;
+        Message message(9);
+        args.add("Error in dropping table from systables.");
+        args.add(errorMsg);
+        message.format(args);
+        result.result = (ResultCode)rc;
+        result.message = message;
+        fSessionManager.rolledback(txnID);
+        (void)fDbrm->releaseTableLock(tableLockId);
+        fWEClient->removeQueue(uniqueId);
+        return result;
+      }
     }
 
     // remove from syscolumn
     bytestream.restart();
     bytestream << (ByteStream::byte)WE_SVR_DELETE_SYSCOLUMN;
     bytestream << uniqueId;
-    bytestream << (uint32_t)dropTableStmt.fSessionID;
+    bytestream << (uint32_t)dropTableStmt->fSessionID;
     bytestream << (uint32_t)txnID.id;
-    bytestream << dropTableStmt.fTableName->fSchema;
-    bytestream << dropTableStmt.fTableName->fName;
+    bytestream << dropTableStmt->fTableName->fSchema;
+    bytestream << dropTableStmt->fTableName->fName;
 
     // Find out where syscolumn is
     sysOid = 1021;
@@ -518,7 +544,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
     }
 
     // Log the DDL statement
-    logDDL(dropTableStmt.fSessionID, txnID.id, dropTableStmt.fSql, dropTableStmt.fOwner);
+    logDDL(dropTableStmt->fSessionID, txnID.id, dropTableStmt->fSql, dropTableStmt->fOwner);
   }
   catch (std::exception& ex)
   {
@@ -738,8 +764,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(
   return result;
 }
 
-TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
-    ddlpackage::TruncTableStatement& truncTableStmt)
+TruncTableProcessor::DDLResult TruncTableProcessor::processPackageInternal(ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("TruncTableProcessor::processPackage");
   // 1. lock the table
@@ -756,6 +781,8 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   DDLResult result;
   result.result = NO_ERROR;
   std::string err;
+
+  auto* truncTableStmt = dynamic_cast<ddlpackage::TruncTableStatement*>(sqlStmt);
   VERBOSE_INFO(truncTableStmt);
 
   // @Bug 4150. Check dbrm status before doing anything to the table.
@@ -778,8 +805,8 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   }
 
   //@Bug 5765 log the schema.
-  string stmt = truncTableStmt.fSql + "|" + truncTableStmt.fTableName->fSchema + "|";
-  SQLLogger logger(stmt, fDDLLoggingId, truncTableStmt.fSessionID, txnID.id);
+  string stmt = truncTableStmt->fSql + "|" + truncTableStmt->fTableName->fSchema + "|";
+  SQLLogger logger(stmt, fDDLLoggingId, truncTableStmt->fSessionID, txnID.id);
 
   std::vector<CalpontSystemCatalog::OID> columnOidList;
   std::vector<CalpontSystemCatalog::OID> allOidList;
@@ -789,12 +816,11 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   execplan::CalpontSystemCatalog::ROPair roPair;
   std::string processName("DDLProc");
   uint32_t processID = ::getpid();
-  ;
   int32_t txnid = txnID.id;
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(truncTableStmt.fSessionID);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(truncTableStmt->fSessionID);
   systemCatalogPtr->identity(CalpontSystemCatalog::EC);
-  systemCatalogPtr->sessionID(truncTableStmt.fSessionID);
+  systemCatalogPtr->sessionID(truncTableStmt->fSessionID);
   CalpontSystemCatalog::TableInfo tableInfo;
   uint64_t uniqueId = 0;
 
@@ -840,10 +866,10 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     // check table lock
 
     CalpontSystemCatalog::TableName tableName;
-    tableName.schema = truncTableStmt.fTableName->fSchema;
-    tableName.table = truncTableStmt.fTableName->fName;
+    tableName.schema = truncTableStmt->fTableName->fSchema;
+    tableName.table = truncTableStmt->fTableName->fName;
     roPair = systemCatalogPtr->tableRID(tableName);
-    int32_t sessionId = truncTableStmt.fSessionID;
+    int32_t sessionId = truncTableStmt->fSessionID;
     std::string processName("DDLProc");
     int i = 0;
 
@@ -886,12 +912,11 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
           abs_ts.tv_nsec = rm_ts.tv_nsec;
         } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
         try
         {
           processID = ::getpid();
           txnid = txnID.id;
-          sessionId = truncTableStmt.fSessionID;
+          sessionId = truncTableStmt->fSessionID;
           processName = "DDLProc";
           tableLockId = fDbrm->getTableLock(pms, roPair.objnum, &processName, &processID, &sessionId, &txnid,
                                             BRM::LOADING);
@@ -916,8 +941,8 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
     }
 
     CalpontSystemCatalog::TableName userTableName;
-    userTableName.schema = truncTableStmt.fTableName->fSchema;
-    userTableName.table = truncTableStmt.fTableName->fName;
+    userTableName.schema = truncTableStmt->fTableName->fSchema;
+    userTableName.table = truncTableStmt->fTableName->fName;
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
     tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
@@ -950,30 +975,61 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   }
   catch (std::exception& ex)
   {
-    cerr << "TruncateTableProcessor::processPackage: " << ex.what() << endl;
-
-    Message::Args args;
-    Message message(9);
-    args.add("Truncate table failed: ");
-    args.add(ex.what());
-    args.add("");
-    fSessionManager.rolledback(txnID);
-
-    try
+    if (checkPPLostConnection(ex.what()))
     {
-      (void)fDbrm->releaseTableLock(tableLockId);
+      if (tableLockId != 0)
+      {
+        Message::Args args;
+        Message message(9);
+        args.add("Truncate table failed: ");
+        args.add(ex.what());
+        args.add("");
+        try
+        {
+          (void)fDbrm->releaseTableLock(tableLockId);
+        }
+        catch (std::exception&)
+        {
+          args.add(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
+          fSessionManager.rolledback(txnID);
+          message.format(args);
+          fWEClient->removeQueue(uniqueId);
+          result.result = TRUNC_ERROR;
+          return result;
+        }
+      }
+
+      fWEClient->removeQueue(uniqueId);
+      result.result = PP_LOST_CONNECTION;
+      return result;
     }
-    catch (std::exception&)
+    else
     {
-      args.add(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
+      cerr << "TruncateTableProcessor::processPackage: " << ex.what() << endl;
+
+      Message::Args args;
+      Message message(9);
+      args.add("Truncate table failed: ");
+      args.add(ex.what());
+      args.add("");
+      fSessionManager.rolledback(txnID);
+
+      try
+      {
+        (void)fDbrm->releaseTableLock(tableLockId);
+      }
+      catch (std::exception&)
+      {
+        args.add(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
+      }
+
+      fWEClient->removeQueue(uniqueId);
+      message.format(args);
+
+      result.result = TRUNC_ERROR;
+      result.message = message;
+      return result;
     }
-
-    fWEClient->removeQueue(uniqueId);
-    message.format(args);
-
-    result.result = TRUNC_ERROR;
-    result.message = message;
-    return result;
   }
   catch (...)
   {
@@ -1035,7 +1091,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   ByteStream::byte tmp8;
 
   // MCOL-66 The DBRM can't handle concurrent DDL
-  std::unique_lock lk(dbrmMutex);
+  boost::mutex::scoped_lock lk(dbrmMutex);
 
   try
   {
@@ -1328,7 +1384,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 
   if (rc != 0)
   {
-    rollBackTransaction(uniqueId, txnID, truncTableStmt.fSessionID);  // What to do with the error code
+    rollBackTransaction(uniqueId, txnID, truncTableStmt->fSessionID);  // What to do with the error code
     fSessionManager.rolledback(txnID);
   }
 
@@ -1341,7 +1397,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
   }
 
   // Log the DDL statement
-  logDDL(truncTableStmt.fSessionID, txnID.id, truncTableStmt.fSql, truncTableStmt.fOwner);
+  logDDL(truncTableStmt->fSessionID, txnID.id, truncTableStmt->fSql, truncTableStmt->fOwner);
 
   try
   {
@@ -1380,4 +1436,3 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackage(
 }
 
 }  // namespace ddlpackageprocessor
-

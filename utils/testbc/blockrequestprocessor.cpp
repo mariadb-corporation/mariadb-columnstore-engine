@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "blockrequestprocessor.h"
-
+#include "rwlock_local.h"
 #include "dbrm.h"
 #include <sys/time.h>
 #include <pthread.h>

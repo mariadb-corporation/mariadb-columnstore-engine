@@ -33,7 +33,7 @@
 #include <sstream>
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -184,7 +184,7 @@ class LargeDataList : public DataListImpl<container_t, element_t>
   void setCompressionMode();  // set current compression mode
   void saveRestoreInfo();
 
-  std::condition_variable consumePhase;  // consumers block here until endOfInput()
+  boost::condition consumePhase;  // consumers block here until endOfInput()
   uint64_t filenameCounter;
   std::string fFilename;                                   // LDL file name
   std::vector<std::fstream::pos_type> fSetStartPositions;  // file offsets

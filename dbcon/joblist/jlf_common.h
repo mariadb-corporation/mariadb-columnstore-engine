@@ -93,6 +93,20 @@ struct TupleInfo
   uint32_t csNum;  // For collations
 };
 
+// This struct holds information about `FunctionColumn`.
+struct FunctionColumnInfo
+{
+  // Function argument.
+  uint64_t associatedColumnOid;
+  // Function name.
+  std::string functionName;
+
+  FunctionColumnInfo(uint64_t colOid, std::string funcName)
+   : associatedColumnOid(colOid), functionName(funcName)
+  {
+  }
+};
+
 // for compound join
 struct JoinData
 {
@@ -197,6 +211,7 @@ struct JobInfo
    , constantCol(CONST_COL_NONE)
    , hasDistinct(false)
    , hasAggregation(false)
+   , hasRollup(false)
    , limitStart(0)
    , limitCount(-1)
    , joinNum(0)
@@ -211,6 +226,7 @@ struct JobInfo
    , wfqLimitStart(0)
    , wfqLimitCount(-1)
    , timeZone(0)
+   , maxPmJoinResultCount(1048576)
   {
   }
   ResourceManager* rm;
@@ -238,6 +254,7 @@ struct JobInfo
   // aggregation
   bool hasDistinct;
   bool hasAggregation;
+  bool hasRollup;
   std::vector<uint32_t> groupByColVec;
   std::vector<uint32_t> distinctColVec;
   std::vector<uint32_t> expressionVec;
@@ -364,8 +381,11 @@ struct JobInfo
   int64_t smallSideLimit;  // need to get these from a session var in execplan
   int64_t largeSideLimit;
   uint64_t partitionSize;
+  uint32_t djsMaxPartitionTreeDepth;
+  bool djsForceRun;
   bool isDML;
   long timeZone;
+  uint32_t maxPmJoinResultCount;
 
   // This is for tracking any dynamically allocated ParseTree objects
   // in simpleScalarFilterToParseTree() for later deletion in
@@ -377,6 +397,8 @@ struct JobInfo
   std::map<std::pair<uint32_t, uint32_t>, int64_t> joinEdgesToRestore;
   // Represents a pair of `table` to be on a large side and weight associated with that table.
   std::unordered_map<uint32_t, int64_t> tablesForLargeSide;
+  // Represents a pair of `tupleId` and `FunctionColumnInfo`.
+  std::unordered_map<uint32_t, FunctionColumnInfo> functionColumnMap;
 
  private:
   // defaults okay

@@ -23,8 +23,7 @@
 
 #include <string>
 #include <boost/thread.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
 #include "querytele.h"
@@ -81,33 +80,12 @@ namespace
     return ival;
   }
 
-  void normalizeIntToIntNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
-    out->setIntField(in.getIntField(i), i);
+    out->setIntField(in.getIntField(i), i); 
   }
 
-  void normalizeIntToIntWithScaleInt128(const Row& in, Row* out, uint32_t i)
-  {
-    const int diff = out->getScale(i) - in.getScale(i);
-    idbassert(diff >= 0);
-    int128_t val = datatypes::applySignedScale<int128_t>(in.getIntField(i), diff);
-    out->setInt128Field(val, i);
-  }
-
-  void normalizeIntToIntWithScaleInt64(const Row& in, Row* out, uint32_t i)
-  {
-    const int diff = out->getScale(i) - in.getScale(i);
-    idbassert(diff >= 0);
-    int64_t val = datatypes::applySignedScale<int64_t>(in.getIntField(i), diff);
-    out->setIntField(val, i);
-  }
-
-  void normalizeIntToUintNoScale(const Row& in, Row* out, uint32_t i)
-  {
-    out->setUintField(in.getIntField(i), i);
-  }
-
-  void normalizeIntToUintWithScaleInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -115,7 +93,28 @@ namespace
     out->setInt128Field(val, i);
   }
 
-  void normalizeIntToUintWithScaleInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToIntWithScaleInt64(const Row& in, Row* out, uint32_t i) 
+  {
+    const int diff = out->getScale(i) - in.getScale(i);
+    idbassert(diff >= 0);
+    int64_t val = datatypes::applySignedScale<int64_t>(in.getIntField(i), diff);
+    out->setIntField(val, i);
+  }
+  
+  void normalizeIntToUintNoScale(const Row& in, Row* out, uint32_t i) 
+  {
+    out->setUintField(in.getIntField(i), i); 
+  }
+
+  void normalizeIntToUintWithScaleInt128(const Row& in, Row* out, uint32_t i) 
+  {
+    const int diff = out->getScale(i) - in.getScale(i);
+    idbassert(diff >= 0);
+    int128_t val = datatypes::applySignedScale<int128_t>(in.getIntField(i), diff);
+    out->setInt128Field(val, i);
+  }
+
+  void normalizeIntToUintWithScaleInt64(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -123,7 +122,7 @@ namespace
     out->setIntField(val, i);
   }
 
-  void normalizeIntToStringWithScale(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToStringWithScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     double d = in.getIntField(i);
@@ -134,7 +133,7 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getIntField(i);
@@ -142,25 +141,25 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeIntToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledSInt64FieldAsXFloat<double>(i);
     out->setFloatField((float)d, i);
   }
 
-  void normalizeIntToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledSInt64FieldAsXFloat<double>(i);
     out->setDoubleField(d, i);
   }
 
-  void normalizeIntToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledSInt64FieldAsXFloat<long double>(i);
     out->setLongDoubleField(d, i);
   }
 
-  void normalizeIntToXDecimalInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToXDecimalInt128(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -168,7 +167,7 @@ namespace
     out->setInt128Field(val, i);
   }
 
-  void normalizeIntToXDecimalInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeIntToXDecimalInt64(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -176,12 +175,12 @@ namespace
     out->setIntField(val, i);
   }
 
-  void normalizeUintToIntNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
-    out->setIntField(in.getUintField(i), i);
+    out->setIntField(in.getUintField(i), i); 
   }
 
-  void normalizeUintToIntWithScaleInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -189,7 +188,7 @@ namespace
     out->setInt128Field(val, i);
   }
 
-  void normalizeUntToIntWithScaleInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeUntToIntWithScaleInt64(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -197,12 +196,12 @@ namespace
     out->setIntField(val, i);
   }
 
-  void normalizeUintToUint(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToUint(const Row& in, Row* out, uint32_t i) 
   {
-    out->setUintField(in.getUintField(i), i);
+    out->setUintField(in.getUintField(i), i); 
   }
 
-  void normalizeUintToStringWithScale(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToStringWithScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     double d = in.getUintField(i);
@@ -213,7 +212,7 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
     ostringstream os;
     os << in.getUintField(i);
@@ -221,25 +220,25 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizUintToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizUintToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledUInt64FieldAsXFloat<double>(i);
     out->setFloatField((float)d, i);
   }
 
-  void normalizeUintToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledUInt64FieldAsXFloat<double>(i);
     out->setDoubleField(d, i);
   }
 
-  void normalizeUintToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     auto d = in.getScaledUInt64FieldAsXFloat<long double>(i);
     out->setLongDoubleField(d, i);
   }
 
-  void normalizeUintToXDecimalInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToXDecimalInt128(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -247,7 +246,7 @@ namespace
     out->setInt128Field(val, i);
   }
 
-  void normalizeUintToXDecimalInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeUintToXDecimalInt64(const Row& in, Row* out, uint32_t i) 
   {
     const int diff = out->getScale(i) - in.getScale(i);
     idbassert(diff >= 0);
@@ -255,17 +254,17 @@ namespace
     out->setIntField(val, i);
   }
 
-  void normalizeStringToString(const Row& in, Row* out, uint32_t i)
+  void normalizeStringToString(const Row& in, Row* out, uint32_t i) 
   {
     out->setStringField(in.getStringField(i), i);
   }
 
-  void normalizeDateToDate(const Row& in, Row* out, uint32_t i)
+  void normalizeDateToDate(const Row& in, Row* out, uint32_t i) 
   {
     out->setIntField(in.getIntField(i), i);
   }
 
-  void normalizeDateToDatetime(const Row& in, Row* out, uint32_t i)
+  void normalizeDateToDatetime(const Row& in, Row* out, uint32_t i) 
   {
     uint64_t date = in.getUintField(i);
     date &= ~0x3f;  // zero the 'spare' field
@@ -273,7 +272,7 @@ namespace
     out->setUintField(date, i);
   }
 
-  void normalizeDateToTimestamp(const Row& in, Row* out, uint32_t i, long fTimeZone)
+  void normalizeDateToTimestamp(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     dataconvert::Date date(in.getUintField(i));
     dataconvert::MySQLTime m_time;
@@ -303,26 +302,26 @@ namespace
     out->setUintField(outValue, i);
   }
 
-  void normalizeDateToString(const Row& in, Row* out, uint32_t i)
+  void normalizeDateToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::dateToString(in.getUintField(i));
     utils::NullString ns(d);
     out->setStringField(ns, i);
   }
 
-  void normalizeDatetimeToDatetime(const Row& in, Row* out, uint32_t i)
+  void normalizeDatetimeToDatetime(const Row& in, Row* out, uint32_t i) 
   {
     out->setIntField(in.getIntField(i), i);
   }
 
-  void normalizeDatetimeToDate(const Row& in, Row* out, uint32_t i)
+  void normalizeDatetimeToDate(const Row& in, Row* out, uint32_t i) 
   {
     uint64_t val = in.getUintField(i);
     val >>= 32;
     out->setUintField(val, i);
   }
 
-  void normalizeDatetimeToTimestamp(const Row& in, Row* out, uint32_t i, long fTimeZone)
+  void normalizeDatetimeToTimestamp(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     uint64_t val = in.getUintField(i);
     dataconvert::DateTime dtime(val);
@@ -354,19 +353,19 @@ namespace
     out->setUintField(outValue, i);
   }
 
-  void normalizeDatetimeToString(const Row& in, Row* out, uint32_t i)
+  void normalizeDatetimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::datetimeToString(in.getUintField(i));
     utils::NullString ns(d);
     out->setStringField(ns, i);
   }
 
-  void normalizeTimestampToTimestamp(const Row& in, Row* out, uint32_t i)
+  void normalizeTimestampToTimestamp(const Row& in, Row* out, uint32_t i) 
   {
     out->setIntField(in.getIntField(i), i);
   }
 
-  void normalizeTimestampToDate(const Row& in, Row* out, uint32_t i, long fTimeZone)
+  void normalizeTimestampToDate(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     uint64_t val = in.getUintField(i);
     dataconvert::TimeStamp timestamp(val);
@@ -386,7 +385,7 @@ namespace
     out->setUintField(outValue, i);
   }
 
-  void normalizeTimestampToDatetime(const Row& in, Row* out, uint32_t i, long fTimeZone)
+  void normalizeTimestampToDatetime(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     uint64_t val = in.getUintField(i);
     dataconvert::TimeStamp timestamp(val);
@@ -409,110 +408,110 @@ namespace
     out->setUintField(outValue, i);
   }
 
-  void normalizeTimestampToString(const Row& in, Row* out, uint32_t i, long fTimeZone)
+  void normalizeTimestampToString(const Row& in, Row* out, uint32_t i, long fTimeZone) 
   {
     string d = DataConvert::timestampToString(in.getUintField(i), fTimeZone);
     utils::NullString ns(d);
     out->setStringField(ns, i);
   }
 
-  void normalizeTimeToTime(const Row& in, Row* out, uint32_t i)
+  void normalizeTimeToTime(const Row& in, Row* out, uint32_t i) 
   {
     out->setIntField(in.getIntField(i), i);
   }
 
-  void normalizeTimeToString(const Row& in, Row* out, uint32_t i)
+  void normalizeTimeToString(const Row& in, Row* out, uint32_t i) 
   {
     string d = DataConvert::timeToString(in.getIntField(i));
     utils::NullString ns(d);
     out->setStringField(ns, i);
   }
 
-  void normalizeXFloatToIntWithScaleInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setInt128Field(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXDoubleToIntWithScaleInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setInt128Field(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXFloatToIntWithScaleInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToIntWithScaleInt64(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setIntField(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXDoubleToIntWithScaleInt64(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToIntWithScaleInt64(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setIntField(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXFloatToIntNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setIntField((int64_t)val, i);
   }
 
-  void normalizeXDoubleToIntNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setIntField((int64_t)val, i);
   }
 
-  void normalizeXFloatToUint(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToUint(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setUintField((uint64_t)val, i);
   }
 
-  void normalizeXDoubleToUint(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToUint(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setUintField((uint64_t)val, i);
   }
 
-  void normalizeXFloatToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setFloatField(val, i);
   }
 
-  void normalizeXDoubleToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setFloatField(val, i);
   }
 
-  void normalizeXFloatToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setDoubleField(val, i);
   }
 
-  void normalizeXDoubleToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setDoubleField(val, i);
   }
 
-  void normalizeXFloatToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setLongDoubleField(val, i);
   }
 
-  void normalizeXDoubleToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setLongDoubleField(val, i);
   }
 
-  void normalizeXFloatToString(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     ostringstream os;
@@ -522,7 +521,7 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     ostringstream os;
@@ -532,73 +531,73 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeXFloatToWideXDecimal(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToWideXDecimal(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setInt128Field(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXDoubleToWideXDecimal(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToWideXDecimal(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setInt128Field(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXFloatToXDecimal(const Row& in, Row* out, uint32_t i)
+  void normalizeXFloatToXDecimal(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
     out->setIntField(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeXDoubleToXDecimal(const Row& in, Row* out, uint32_t i)
+  void normalizeXDoubleToXDecimal(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
     out->setIntField(pickScaleForDouble(out, i, val), i);
   }
 
-  void normalizeLongDoubleToIntNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setIntField((int64_t)val, i);
   }
 
-  void normalizeLongDoubleToIntWithScaleInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToIntWithScaleInt128(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setInt128Field(pickScaleForLongDouble(out, i, val), i);
   }
 
-  void normalizeLongDoubleToIntWithScaleInt(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToIntWithScaleInt(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setIntField(pickScaleForLongDouble(out, i, val), i);
   }
 
-  void normalizeLongDoubleToUint(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToUint(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setUintField((uint64_t)val, i);
   }
 
-  void normalizeLongDoubleToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setFloatField(val, i);
   }
 
-  void normalizeLongDoubleToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setDoubleField(val, i);
   }
 
-  void normalizeLongDoubleToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setLongDoubleField(val, i);
   }
 
-  void normalizeLongDoubleToString(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToString(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     ostringstream os;
@@ -608,32 +607,32 @@ namespace
     out->setStringField(ns, i);
   }
 
-  void normalizeLongDoubleToXDecimalInt128(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToXDecimalInt128(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setInt128Field(pickScaleForLongDouble(out, i, val), i);
   }
 
-  void normalizeLongDoubleToXDecimalInt(const Row& in, Row* out, uint32_t i)
+  void normalizeLongDoubleToXDecimalInt(const Row& in, Row* out, uint32_t i) 
   {
     long double val = in.getLongDoubleField(i);
     out->setIntField(pickScaleForLongDouble(out, i, val), i);
   }
 
-  void normalizeWideXDecimalToWideXDecimalNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeWideXDecimalToWideXDecimalNoScale(const Row& in, Row* out, uint32_t i) 
   {
     int128_t val128 = 0;
     in.getInt128Field(i, val128);
     out->setInt128Field(val128, i);
   }
 
-  void normalizeXDecimalToWideXDecimalNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToWideXDecimalNoScale(const Row& in, Row* out, uint32_t i) 
   {
-    int64_t val = in.getIntField(i);
+    int64_t val = in.getIntField(i);      
     out->setInt128Field(val, i);
   }
 
-  void normalizeWideXDecimalToWideXDecimalWithScale(const Row& in, Row* out, uint32_t i)
+  void normalizeWideXDecimalToWideXDecimalWithScale(const Row& in, Row* out, uint32_t i) 
   {
     int128_t val128 = 0;
     in.getInt128Field(i, val128);
@@ -641,48 +640,48 @@ namespace
     out->setInt128Field(temp, i);
   }
 
-  void normalizeXDecimalToWideXDecimalWithScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToWideXDecimalWithScale(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     int128_t temp = datatypes::applySignedScale<int128_t>(val, out->getScale(i) - in.getScale(i));
     out->setInt128Field(temp, i);
   }
 
-  void normalizeXDecimalToOtherNoScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToOtherNoScale(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     out->setIntField(val, i);
   }
 
-  void normalizeXDecimalToOtherWithScale(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToOtherWithScale(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     int64_t temp = datatypes::applySignedScale<int64_t>(val, out->getScale(i) - in.getScale(i));
     out->setIntField(temp, i);
   }
 
-  void normalizeXDecimalToXFloat(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToXFloat(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     float fval = ((float)val) / IDB_pow[in.getScale(i)];
     out->setFloatField(fval, i);
   }
 
-  void normalizeXDecimalToXDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToXDouble(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     double dval = ((double)val) / IDB_pow[in.getScale(i)];
     out->setDoubleField(dval, i);
   }
 
-  void normalizeXDecimalToLongDouble(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToLongDouble(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     long double dval = ((long double)val) / IDB_pow[in.getScale(i)];
     out->setLongDoubleField(dval, i);
   }
 
-  void normalizeWideXDecimalToString(const Row& in, Row* out, uint32_t i)
+  void normalizeWideXDecimalToString(const Row& in, Row* out, uint32_t i) 
   {
     int128_t val128 = 0;
     in.getInt128Field(i, val128);
@@ -690,14 +689,14 @@ namespace
     out->setStringField(dec.toNullString(), i);
   }
 
-  void normalizeXDecimalToString(const Row& in, Row* out, uint32_t i)
+  void normalizeXDecimalToString(const Row& in, Row* out, uint32_t i) 
   {
     int64_t val = in.getIntField(i);
     datatypes::Decimal dec(val, in.getScale(i), in.getPrecision(i));
     out->setStringField(dec.toNullString(), i);
   }
 
-  void normalizeBlobVarbinary(const Row& in, Row* out, uint32_t i)
+  void normalizeBlobVarbinary(const Row& in, Row* out, uint32_t i) 
   {
     // out->setVarBinaryField(in.getVarBinaryStringField(i), i);  // not efficient
     out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
@@ -725,15 +724,15 @@ namespace
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::BIGINT:
             {
-              if (out->getScale(i) || in.getScale(i))
+              if (out->getScale(i) || in.getScale(i)) 
               {
                 if (out->getColumnWidth(i) == datatypes::MAXDECIMALWIDTH)
                   result.emplace_back(normalizeIntToIntWithScaleInt128);
                 else
                   result.emplace_back(normalizeIntToIntWithScaleInt64);
-              }
+              } 
               else
-                result.emplace_back(normalizeIntToIntNoScale);
+                result.emplace_back(normalizeIntToIntNoScale); 
               break;
             }
 
@@ -749,15 +748,15 @@ namespace
                   result.emplace_back(normalizeIntToUintWithScaleInt128);
                 else
                   result.emplace_back(normalizeIntToUintWithScaleInt64);
-              }
+              } 
               else
-                result.emplace_back(normalizeIntToUintNoScale);
+                result.emplace_back(normalizeIntToUintNoScale); 
               break;
             }
 
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
-            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::VARCHAR: 
             {
               if (in.getScale(i))
                 result.emplace_back(normalizeIntToStringWithScale);
@@ -830,9 +829,9 @@ namespace
                   result.emplace_back(normalizeUintToIntWithScaleInt128);
                 else
                   result.emplace_back(normalizeUntToIntWithScaleInt64);
-              }
+              } 
               else
-                result.emplace_back(normalizeUintToIntNoScale);
+                result.emplace_back(normalizeUintToIntNoScale); 
               break;
             }
 
@@ -844,7 +843,7 @@ namespace
 
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
-            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::VARCHAR: 
             {
               if (in.getScale(i))
                 result.emplace_back(normalizeUintToStringWithScale);
@@ -852,7 +851,7 @@ namespace
                 result.emplace_back(normalizeUintToStringNoScale);
               break;
             }
-
+            
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
             case CalpontSystemCatalog::TIME:
@@ -921,7 +920,7 @@ namespace
             case CalpontSystemCatalog::DATETIME: result.emplace_back(normalizeDateToDatetime); break;
 
             case CalpontSystemCatalog::TIMESTAMP: result.emplace_back(std::bind(normalizeDateToTimestamp, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, fTimeZone)); break;
-
+            
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::VARCHAR: result.emplace_back(normalizeDateToString); break;
@@ -966,9 +965,9 @@ namespace
             case CalpontSystemCatalog::TIMESTAMP: result.emplace_back(normalizeTimestampToTimestamp); break;
 
             case CalpontSystemCatalog::DATE: result.emplace_back(std::bind(normalizeTimestampToDate, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, fTimeZone)); break;
-
+          
             case CalpontSystemCatalog::DATETIME: result.emplace_back(std::bind(normalizeTimestampToDatetime, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, fTimeZone)); break;
-
+            
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::VARCHAR: result.emplace_back(std::bind(normalizeTimestampToString, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, fTimeZone)); break;
@@ -1032,7 +1031,7 @@ namespace
                     else
                       result.emplace_back(normalizeXDoubleToIntWithScaleInt64);
                   }
-                }
+                } 
                 else
                 {
                   if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
@@ -1047,7 +1046,7 @@ namespace
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
             case CalpontSystemCatalog::UINT:
-            case CalpontSystemCatalog::UBIGINT:
+            case CalpontSystemCatalog::UBIGINT: 
             {
               if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                 result.emplace_back(normalizeXFloatToUint);
@@ -1057,7 +1056,7 @@ namespace
             }
 
             case CalpontSystemCatalog::FLOAT:
-            case CalpontSystemCatalog::UFLOAT:
+            case CalpontSystemCatalog::UFLOAT: 
             {
               if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                 result.emplace_back(normalizeXFloatToXFloat);
@@ -1065,9 +1064,9 @@ namespace
                 result.emplace_back(normalizeXDoubleToXFloat);
               break;
             }
-
+            
             case CalpontSystemCatalog::DOUBLE:
-            case CalpontSystemCatalog::UDOUBLE:
+            case CalpontSystemCatalog::UDOUBLE: 
             {
               if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                 result.emplace_back(normalizeXFloatToXDouble);
@@ -1075,8 +1074,8 @@ namespace
                 result.emplace_back(normalizeXDoubleToXDouble);
               break;
             }
-
-            case CalpontSystemCatalog::LONGDOUBLE:
+            
+            case CalpontSystemCatalog::LONGDOUBLE: 
             {
               if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                 result.emplace_back(normalizeXFloatToLongDouble);
@@ -1084,18 +1083,18 @@ namespace
                 result.emplace_back(normalizeXDoubleToLongDouble);
               break;
             }
-
+            
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::TEXT:
-            case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::VARCHAR: 
             {
               if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                 result.emplace_back(normalizeXFloatToString);
               else
                 result.emplace_back(normalizeXDoubleToString);
               break;
-            }
-
+            }            
+                        
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
             {
@@ -1113,14 +1112,14 @@ namespace
                   result.emplace_back(normalizeXDoubleToWideXDecimal);
                 break;
               }
-              else
+              else              
               {
                 if (in.getColTypes()[i] == CalpontSystemCatalog::FLOAT || in.getColTypes()[i] == CalpontSystemCatalog::UFLOAT)
                   result.emplace_back(normalizeXFloatToXDecimal);
                 else
                   result.emplace_back(normalizeXDoubleToXDecimal);
                 break;
-              }
+              }              
               break;
             }
 
@@ -1150,9 +1149,9 @@ namespace
                   result.emplace_back(normalizeLongDoubleToIntWithScaleInt128);
                 else
                   result.emplace_back(normalizeLongDoubleToIntWithScaleInt);
-              }
+              } 
               else
-                result.emplace_back(normalizeLongDoubleToIntNoScale);
+                result.emplace_back(normalizeLongDoubleToIntNoScale); 
               break;
             }
 
@@ -1186,7 +1185,7 @@ namespace
                 result.emplace_back(normalizeLongDoubleToXDecimalInt128);
               else
                 result.emplace_back(normalizeLongDoubleToXDecimalInt);
-
+              
               break;
             }
 
@@ -1253,7 +1252,7 @@ namespace
             }
 
             case CalpontSystemCatalog::FLOAT:
-            case CalpontSystemCatalog::UFLOAT: result.emplace_back(normalizeXDecimalToXFloat); break;
+            case CalpontSystemCatalog::UFLOAT: result.emplace_back(normalizeXDecimalToXFloat); break; 
 
             case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UDOUBLE: result.emplace_back(normalizeXDecimalToXDouble); break;
@@ -1463,7 +1462,7 @@ void TupleUnion::readInput(uint32_t which)
 
         l_tmpRG.getRow(0, &tmpRow);
         {
-          std::unique_lock lk(uniquerMutex);
+          boost::mutex::scoped_lock lk(uniquerMutex);
           getOutput(&l_outputRG, &outRow, &outRGData);
           memUsageBefore = allocator.getMemUsage();
 
@@ -1542,8 +1541,8 @@ void TupleUnion::readInput(uint32_t which)
       more = dl->next(it, &inRGData);
 
   {
-    std::unique_lock lock1(uniquerMutex);
-    std::unique_lock lock2(sMutex);
+    boost::mutex::scoped_lock lock1(uniquerMutex);
+    boost::mutex::scoped_lock lock2(sMutex);
 
     if (!distinct && l_outputRG.getRowCount() > 0)
       output->insert(outRGData);
@@ -1641,7 +1640,7 @@ void TupleUnion::addToOutput(Row* r, RowGroup* rg, bool keepit, RGData& data, ui
   {
     rg->setRowCount(8192);
     {
-      std::unique_lock lock(sMutex);
+      boost::mutex::scoped_lock lock(sMutex);
       output->insert(data);
     }
     data = RGData(*rg);
@@ -1678,7 +1677,7 @@ void TupleUnion::run()
 {
   uint32_t i;
 
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
 
   if (runRan)
     return;
@@ -1721,7 +1720,7 @@ void TupleUnion::run()
 
 void TupleUnion::join()
 {
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
 
   if (joinRan)
     return;

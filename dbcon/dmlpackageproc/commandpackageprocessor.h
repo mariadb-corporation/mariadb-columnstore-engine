@@ -30,9 +30,8 @@
 #include <boost/algorithm/string.hpp>
 #include "dmlpackageprocessor.h"
 #include "dmltable.h"
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
 #define EXPORT
 
@@ -48,21 +47,17 @@ class CommandPackageProcessor : public DMLPackageProcessor
   CommandPackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
   {
   }
-  /** @brief process an CommandDMLPackage
-   *
-   * @param cpackage the CommandDMLPackage to process
-   */
-  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
  protected:
  private:
   void viewTableLock(const dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result);
   void clearTableLock(uint64_t uniqueId, const dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result);
   void establishTableLockToClear(uint64_t tableLockID, BRM::TableLockInfo& lockInfo);
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) override;
 
   // Tracks active cleartablelock commands by storing set of table lock IDs
   static std::set<uint64_t> fActiveClearTableLockCmds;
-  static std::mutex fActiveClearTableLockCmdMutex;
+  static boost::mutex fActiveClearTableLockCmdMutex;
 };
 
 }  // namespace dmlpackageprocessor

@@ -104,7 +104,6 @@ const int64_t IDB_pow[19] = {1,
                              100000000000000000LL,
                              1000000000000000000LL};
 
-
 const int32_t SECS_PER_MIN = 60;
 const int32_t MINS_PER_HOUR = 60;
 const int32_t HOURS_PER_DAY = 24;
@@ -1085,13 +1084,11 @@ inline uint64_t string_to_ull(const std::string& data, bool& bSaturate)
 }
 
 template <typename T>
-void number_int_value(const std::string& data, cscDataType typeCode,
-                      const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
-                      bool noRoundup, T& intVal, bool* saturate = 0);
+void number_int_value(const std::string& data, cscDataType typeCode, const datatypes::TypeAttributesStd& ct,
+                      bool& pushwarning, bool noRoundup, T& intVal, bool* saturate = 0);
 
-uint64_t number_uint_value(const string& data, cscDataType typeCode,
-                           const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
-                           bool noRoundup);
+uint64_t number_uint_value(const string& data, cscDataType typeCode, const datatypes::TypeAttributesStd& ct,
+                           bool& pushwarning, bool noRoundup);
 
 /** @brief DataConvert is a component for converting string data to Calpont format
  */
@@ -1174,6 +1171,14 @@ class DataConvert
   static inline void timeToString1(long long timevalue, char* buf, unsigned int buflen);
 
   /**
+   * @brief convert parquet date data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing days
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int32_t convertArrowColumnDate(int32_t dayVal, int& status);
+
+  /**
    * @brief convert a date column data, represnted as a string, to it's native
    * format. This function is for bulkload to use.
    *
@@ -1192,6 +1197,22 @@ class DataConvert
   EXPORT static bool isColumnDateValid(int32_t date);
 
   /**
+   * @brief convert parquet datetime data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing millisecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnDatetime(int64_t timeVal, int& status);
+
+  /**
+   * @brief convert parquet datetime data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing microsecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnDatetimeUs(int64_t timeVal, int& status);
+
+  /**
    * @brief convert a datetime column data, represented as a string,
    * to it's native format. This function is for bulkload to use.
    *
@@ -1204,6 +1225,22 @@ class DataConvert
   EXPORT static int64_t convertColumnDatetime(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
                                               int& status, unsigned int dataOrgLen);
 
+  /**
+   * @brief convert parquet timestamp data(millisecond) to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing millisecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnTimestamp(int64_t timeVal, int& status);
+
+  /**
+   * @brief convert parquet timestamp data(microsecond) to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing millisecond from unix epoch
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnTimestampUs(int64_t timeVal, int& status);
+ 
   /**
    * @brief convert a timestamp column data, represented as a string,
    * to it's native format. This function is for bulkload to use.
@@ -1230,6 +1267,22 @@ class DataConvert
    */
   EXPORT static int64_t convertColumnTime(const char* dataOrg, CalpontDateTimeFormat datetimeFormat,
                                           int& status, unsigned int dataOrgLen);
+
+  /**
+   * @brief convert parquet time data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing milliseconds since midnight
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnTime32(int32_t timeVal, int& status);
+
+  /**
+   * @brief convert parquet time data to its native format. This function is for bulkload to use.
+   * 
+   * @param dayVal the input data representing either microseconds or nanoseconds since midnight
+   * @param status 0 - success, -1 - fail
+   */
+  EXPORT static int64_t convertArrowColumnTime64(int64_t timeVal, int& status);
 
   /**
    * @brief Is specified datetime valid; used by binary bulk load
@@ -1266,19 +1319,18 @@ class DataConvert
   EXPORT static int64_t stringToTime(const std::string& data);
   EXPORT static int64_t stringToTime(const utils::NullString& data);
   // bug4388, union type conversion
-  EXPORT static void joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& unionedType,
-                                         const datatypes::SystemCatalog::TypeHolderStd& type,
-                                         unsigned int& rc);
+  EXPORT static void joinColTypeForUnion(datatypes::TypeHolderStd& unionedType,
+                                         const datatypes::TypeHolderStd& type, unsigned int& rc);
 
-  static boost::any StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  static boost::any StringToBit(const datatypes::TypeAttributesStd& colType,
                                 const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
                                 bool& pushWarning);
 
-  static boost::any StringToSDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  static boost::any StringToSDecimal(const datatypes::TypeAttributesStd& colType,
                                      const datatypes::ConvertFromStringParam& prm, const std::string& data,
                                      bool& pushWarning);
 
-  static boost::any StringToUDecimal(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  static boost::any StringToUDecimal(const datatypes::TypeAttributesStd& colType,
                                      const datatypes::ConvertFromStringParam& prm, const std::string& data,
                                      bool& pushWarning);
 
@@ -1286,15 +1338,15 @@ class DataConvert
 
   static boost::any StringToDouble(cscDataType typeCode, const std::string& dataOrig, bool& pushWarning);
 
-  static boost::any StringToString(const datatypes::SystemCatalog::TypeAttributesStd& colType,
-                                   const std::string& dataOrig, bool& pushWarning);
+  static boost::any StringToString(const datatypes::TypeAttributesStd& colType, const std::string& dataOrig,
+                                   bool& pushWarning);
 
   static boost::any StringToDate(const std::string& data, bool& pushWarning);
 
   static boost::any StringToDatetime(const std::string& data, bool& pushWarning);
 
-  static boost::any StringToTime(const datatypes::SystemCatalog::TypeAttributesStd& colType,
-                                 const std::string& data, bool& pushWarning);
+  static boost::any StringToTime(const datatypes::TypeAttributesStd& colType, const std::string& data,
+                                 bool& pushWarning);
 
   static boost::any StringToTimestamp(const datatypes::ConvertFromStringParam& prm, const std::string& data,
                                       bool& pushWarning);
@@ -1553,7 +1605,6 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
 
   return res;
 }
-
 
 template <class T>
 T decimalRangeUp(int32_t precision)

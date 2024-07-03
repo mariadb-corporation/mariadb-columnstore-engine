@@ -33,8 +33,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
@@ -794,7 +793,7 @@ void* BucketReUseDriver::reuseThread(void* arg)
 
   if (entry->fileStatus() == BucketReuseControlEntry::progress_c)
   {
-    std::unique_lock lock(BucketReuseManager::instance()->getMutex());
+    boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
     dl->reuseControl()->stateChange().wait(lock);
   }
   else
@@ -839,7 +838,7 @@ void* BucketReUseDriver::raceThread(void* arg)
   ResourceManager rm;
   BucketReuseControlEntry* entry = NULL;
   {
-    std::unique_lock lock(BucketReuseManager::instance()->getMutex());
+    boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
     boost::shared_ptr<execplan::CalpontSystemCatalog> c =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0x80000000);
     execplan::CalpontSystemCatalog::TableColName tcn = c->colName(a->oid);
@@ -880,7 +879,7 @@ void* BucketReUseDriver::raceThread(void* arg)
 
     if (entry->fileStatus() == BucketReuseControlEntry::progress_c)
     {
-      std::unique_lock lock(BucketReuseManager::instance()->getMutex());
+      boost::mutex::scoped_lock lock(BucketReuseManager::instance()->getMutex());
       dl->reuseControl()->stateChange().wait(lock);
     }
     else

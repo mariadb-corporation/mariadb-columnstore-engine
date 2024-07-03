@@ -100,7 +100,7 @@ void FileBufferMgr::setReportingFrequency(const uint32_t d)
 
 void FileBufferMgr::flushCache()
 {
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
   {
     filebuffer_uset_t sEmpty;
     filebuffer_list_t lEmpty;
@@ -126,7 +126,7 @@ void FileBufferMgr::flushCache()
 void FileBufferMgr::flushOne(const BRM::LBID_t lbid, const BRM::VER_t ver)
 {
   // similar in function to depleteCache()
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   filebuffer_uset_iter_t iter = fbSet.find(HashObject_t(lbid, ver, 0));
 
@@ -146,7 +146,7 @@ void FileBufferMgr::flushOne(const BRM::LBID_t lbid, const BRM::VER_t ver)
 
 void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
 {
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   BRM::LBID_t lbid;
   BRM::VER_t ver;
@@ -193,7 +193,7 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
   tr1::unordered_set<LBID_t> uniquer;
   tr1::unordered_set<LBID_t>::iterator uit;
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (fReportFrequency)
   {
@@ -258,7 +258,7 @@ void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
   // If there are more than this # of extents to drop, the whole cache will be cleared
   const uint32_t clearThreshold = 50000;
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (fCacheSize == 0 || count == 0)
     return;
@@ -315,7 +315,7 @@ void FileBufferMgr::flushPartition(const vector<OID_t>& oids, const set<BRM::Log
   filebuffer_uset_t::iterator it;
   uint32_t count = oids.size();
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (fReportFrequency)
   {
@@ -388,7 +388,7 @@ bool FileBufferMgr::exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const
 
 FileBuffer* FileBufferMgr::findPtr(const HashObject_t& keyFb)
 {
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   filebuffer_uset_iter_t it = fbSet.find(keyFb);
 
@@ -407,7 +407,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, FileBuffer& fb)
 {
   bool ret = false;
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   filebuffer_uset_iter_t it = fbSet.find(keyFb);
 
@@ -428,7 +428,7 @@ bool FileBufferMgr::find(const HashObject_t& keyFb, void* bufferPtr)
 
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'L');
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(keyFb.lbid, pthread_self(), gSession, 'M');
@@ -467,7 +467,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
     }
   }
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (gPMProfOn && gPMStatsPtr)
   {
@@ -520,7 +520,7 @@ uint32_t FileBufferMgr::bulkFind(const BRM::LBID_t* lbids, const BRM::VER_t* ver
 bool FileBufferMgr::exists(const HashObject_t& fb) const
 {
   bool find_bool = false;
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   filebuffer_uset_iter_t it = fbSet.find(fb);
 
@@ -547,7 +547,7 @@ int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const ui
   if (gPMProfOn && gPMStatsPtr)
     gPMStatsPtr->markEvent(lbid, pthread_self(), gSession, 'I');
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   HashObject_t fbIndex(lbid, ver, 0);
   filebuffer_pair_t pr = fbSet.insert(fbIndex);
@@ -740,7 +740,7 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t>& ops)
   int32_t pi;
   int ret = 0;
 
-  std::unique_lock lk(fWLock);
+  boost::mutex::scoped_lock lk(fWLock);
 
   if (fReportFrequency)
   {

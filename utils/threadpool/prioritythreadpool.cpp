@@ -21,7 +21,6 @@
  *
  ***********************************************************************/
 
-#include <stdexcept>
 #include <unistd.h>
 #include <exception>
 using namespace std;
@@ -35,6 +34,32 @@ using namespace logging;
 using namespace boost;
 
 #include "dbcon/joblist/primitivemsg.h"
+
+namespace error_handling
+{
+messageqcpp::SBS makePrimitiveErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step)
+{
+  ISMPacketHeader ism;
+  ism.Status = status;
+
+  PrimitiveHeader ph = {0, 0, 0, step, id, 0};
+
+  messageqcpp::SBS errorMsg(new messageqcpp::ByteStream(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader)));
+  errorMsg->append((uint8_t*)&ism, sizeof(ism));
+  errorMsg->append((uint8_t*)&ph, sizeof(ph));
+
+  return errorMsg;
+}
+
+void sendErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step,
+                  primitiveprocessor::SP_UM_IOSOCK sock)
+{
+  auto errorMsg = error_handling::makePrimitiveErrorMsg(status, id, step);
+
+  sock->write(errorMsg);
+}
+
+}  // namespace error_handling
 
 namespace threadpool
 {
@@ -72,7 +97,7 @@ PriorityThreadPool::~PriorityThreadPool()
 void PriorityThreadPool::addJob(const Job& job, bool useLock)
 {
   boost::thread* newThread;
-  std::unique_lock lk(mutex, std::defer_lock);
+  boost::mutex::scoped_lock lk(mutex, boost::defer_lock_t());
 
   if (useLock)
     lk.lock();
@@ -129,7 +154,7 @@ void PriorityThreadPool::removeJobs(uint32_t id)
 {
   list<Job>::iterator it;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   for (uint32_t i = 0; i < _COUNT; i++)
     for (it = jobQueues[i].begin(); it != jobQueues[i].end();)
@@ -169,7 +194,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
   {
     while (!_stop)
     {
-      std::unique_lock lk(mutex);
+      boost::mutex::scoped_lock lk(mutex);
 
       queue = pickAQueue(preferredQueue);
 
@@ -267,7 +292,8 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 #endif
 
       if (running)
-        sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
+        error_handling::sendErrorMsg(logging::primitiveServerErr, runList[i].uniqueID, runList[i].stepID,
+                                     runList[i].sock);
     }
     catch (...)
     {
@@ -293,27 +319,13 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 #endif
 
       if (running)
-        sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
+        error_handling::sendErrorMsg(logging::primitiveServerErr, runList[i].uniqueID, runList[i].stepID,
+                                     runList[i].sock);
     }
     catch (...)
     {
     }
   }
-}
-
-void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock)
-{
-  ISMPacketHeader ism;
-  PrimitiveHeader ph = {0, 0, 0, 0, 0, 0};
-
-  ism.Status = logging::primitiveServerErr;
-  ph.UniqueID = id;
-  ph.StepID = step;
-  messageqcpp::ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-  msg.append((uint8_t*)&ism, sizeof(ism));
-  msg.append((uint8_t*)&ph, sizeof(ph));
-
-  sock->write(msg);
 }
 
 void PriorityThreadPool::stop()

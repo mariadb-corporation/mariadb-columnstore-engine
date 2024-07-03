@@ -46,25 +46,21 @@ string Func_concat_oracle::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   string ret;
   string tmp;
-  stringValue(parm[0], row, isNull, ret);
-  // Oracle Mode should replace NULL with "" unless all values are NULL
-  if (isNull)
-  {
-    ret = "";
-    isNull = false;
-  }
+  // we default to true as any non-NULL operand will reset it to false
+  // and all NULL operands will leave it as true, which is intended.
+  isNull = true;
   // TODO: do a better job of cutting down the number re-allocations.
   // look at Item_func_concat::realloc_result for ideas and use
   // std::string:resize() appropriatly.
-  for (unsigned int id = 1; id < parm.size(); id++)
+  for (unsigned int id = 0; id < parm.size(); id++)
   {
-    stringValue(parm[id], row, isNull, tmp);
-    if (isNull)
+    bool tempIsNull = false;
+    stringValue(parm[id], row, tempIsNull, tmp);
+    if (!tempIsNull)
     {
-      tmp = "";
       isNull = false;
+      ret.append(tmp);
     }
-    ret.append(tmp);
   }
 
   return ret;

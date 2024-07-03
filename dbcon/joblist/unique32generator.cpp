@@ -34,7 +34,7 @@
 namespace joblist
 {
 /* static */ UniqueNumberGenerator* UniqueNumberGenerator::fUnique32Generator = 0;
-/* static */ std::mutex UniqueNumberGenerator::fLock;
+/* static */ boost::mutex UniqueNumberGenerator::fLock;
 
 //------------------------------------------------------------------------------
 // Accessor to singleton handle
@@ -42,7 +42,7 @@ namespace joblist
 /* static */
 UniqueNumberGenerator* UniqueNumberGenerator::instance()
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
 
   if (!fUnique32Generator)
   {
@@ -60,7 +60,7 @@ UniqueNumberGenerator* UniqueNumberGenerator::instance()
 /* static */
 void UniqueNumberGenerator::deleteInstance()
 {
-  std::unique_lock lk(fLock);
+  boost::mutex::scoped_lock lk(fLock);
 
   if (fUnique32Generator)
   {

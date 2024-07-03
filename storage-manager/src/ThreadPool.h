@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include <chrono>
 #include <deque>
 #include <set>
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/noncopyable.hpp>
 #include "SMLogging.h"
 
@@ -49,7 +48,7 @@ class ThreadPool : public boost::noncopyable
 
  private:
   void processingLoop();                                    // the fcn run by each thread
-  void _processingLoop(std::unique_lock<std::mutex>&);  // processingLoop() wraps _processingLoop() with
+  void _processingLoop(boost::unique_lock<boost::mutex>&);  // processingLoop() wraps _processingLoop() with
                                                             // thread management stuff.
 
   SMLogging* logger;
@@ -76,13 +75,13 @@ class ThreadPool : public boost::noncopyable
   };
   std::set<ID_Thread, id_compare> s_threads;
 
-  std::condition_variable jobAvailable;
+  boost::condition jobAvailable;
   std::deque<boost::shared_ptr<Job> > jobs;
-  mutable std::mutex mutex;
+  mutable boost::mutex mutex;
 
-  const std::chrono::seconds idleThreadTimeout{60};
+  const boost::posix_time::time_duration idleThreadTimeout = boost::posix_time::seconds(60);
   boost::thread pruner;
-  std::condition_variable somethingToPrune;
+  boost::condition somethingToPrune;
   std::vector<boost::thread::id> pruneable;  // when a thread is about to return it puts its id here
   void prune();
 };

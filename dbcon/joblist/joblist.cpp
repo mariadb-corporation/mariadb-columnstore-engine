@@ -775,21 +775,14 @@ void JobList::graph(uint32_t sessionID)
     for (unsigned int i = 0; i < qsi->get()->outputAssociation().outSize(); i++)
     {
       ptrdiff_t dloutptr = 0;
-      DataList_t* dlout;
-      StrDataList* sdl;
+      RowGroupDL* dlout;
       //			TupleDataList* tdl;
 
-      if ((dlout = qsi->get()->outputAssociation().outAt(i)->dataList()))
+      if ((dlout = qsi->get()->outputAssociation().outAt(i)->rowGroupDL()))
       {
         dloutptr = (ptrdiff_t)dlout;
         outSize = dlout->totalSize();
         diskIo = dlout->totalDiskIoTime(saveTime, loadTime);
-      }
-      else if ((sdl = qsi->get()->outputAssociation().outAt(i)->stringDataList()))
-      {
-        dloutptr = (ptrdiff_t)sdl;
-        outSize = sdl->totalSize();
-        diskIo = sdl->totalDiskIoTime(saveTime, loadTime);
       }
 
       // if HashJoinStep, determine if output fifo was cached to disk
@@ -803,15 +796,10 @@ void JobList::graph(uint32_t sessionID)
         for (unsigned int j = 0; j < queryInputSA.outSize(); j++)
         {
           ptrdiff_t dlinptr = 0;
-          DataList_t* dlin = queryInputSA.outAt(j)->dataList();
-          StrDataList* sdl = 0;
+          RowGroupDL* dlin = queryInputSA.outAt(j)->rowGroupDL();
 
           if (dlin)
             dlinptr = (ptrdiff_t)dlin;
-          else if ((sdl = queryInputSA.outAt(j)->stringDataList()))
-          {
-            dlinptr = (ptrdiff_t)sdl;
-          }
 
           if (dloutptr == dlinptr)
           {
@@ -856,19 +844,8 @@ void JobList::graph(uint32_t sessionID)
 
         for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
         {
-          ptrdiff_t dlinptr;
-          DataList_t* dlin = projectInputSA.outAt(j)->dataList();
-          StrDataList* sdl = 0;
-
-          if (dlin)
-          {
-            dlinptr = (ptrdiff_t)dlin;
-          }
-          else
-          {
-            sdl = projectInputSA.outAt(j)->stringDataList();
-            dlinptr = (ptrdiff_t)sdl;
-          }
+          RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
+          ptrdiff_t dlinptr = (ptrdiff_t)dlin;
 
           if (dloutptr == dlinptr)
           {

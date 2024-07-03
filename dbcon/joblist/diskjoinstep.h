@@ -20,11 +20,14 @@
 #include "tuplehashjoin.h"
 #include "joinpartition.h"
 #include "threadnaming.h"
+#include <mutex>
 
 #pragma once
 
 namespace joblist
 {
+using JoinPartitionJobs = std::vector<std::vector<joiner::JoinPartition*>>;
+
 class DiskJoinStep : public JobStep
 {
  public:
@@ -44,6 +47,15 @@ class DiskJoinStep : public JobStep
 
  protected:
  private:
+  void initializeFIFO(uint32_t threadCount);
+  void processJoinPartitions(const uint32_t threadID, const uint32_t smallSideSizeLimitPerThread,
+                             const vector<joiner::JoinPartition*>& joinPartitions);
+  void prepareJobs(const std::vector<joiner::JoinPartition*>& joinPartitions,
+                   JoinPartitionJobs& joinPartitionsJobs);
+  void outputResult(const std::vector<rowgroup::RGData>& result);
+  void outputResult(const rowgroup::RGData& result);
+  void spawnJobs(const std::vector<std::vector<joiner::JoinPartition*>>& joinPartitionsJobs,
+                 const uint32_t smallSideSizeLimitPerThread);
   boost::shared_ptr<joiner::JoinPartition> jp;
   rowgroup::RowGroup largeRG, smallRG, outputRG, joinFERG;
   std::vector<uint32_t> largeKeyCols, smallKeyCols;
@@ -80,6 +92,26 @@ class DiskJoinStep : public JobStep
 
   uint64_t mainThread;  // thread handle from thread pool
 
+  struct JoinPartitionsProcessor
+  {
+    JoinPartitionsProcessor(DiskJoinStep* djs, const uint32_t threadID, const uint32_t smallSideSizeLimit,
+                            const std::vector<joiner::JoinPartition*>& joinPartitions)
+     : djs(djs), threadID(threadID), smallSideSizeLimit(smallSideSizeLimit), joinPartitions(joinPartitions)
+    {
+    }
+
+    void operator()()
+    {
+      utils::setThreadName("DJSJoinPartitionsProcessor");
+      djs->processJoinPartitions(threadID, smallSideSizeLimit, joinPartitions);
+    }
+
+    DiskJoinStep* djs;
+    uint32_t threadID;
+    uint32_t smallSideSizeLimit;
+    std::vector<joiner::JoinPartition*> joinPartitions;
+  };
+
   /* Loader structs */
   struct LoaderOutput
   {
@@ -87,21 +119,30 @@ class DiskJoinStep : public JobStep
     uint64_t partitionID;
     joiner::JoinPartition* jp;
   };
-  boost::shared_ptr<joblist::FIFO<boost::shared_ptr<LoaderOutput> > > loadFIFO;
+
+  using LoaderOutputFIFO = joblist::FIFO<boost::shared_ptr<LoaderOutput>>;
+  std::vector<boost::shared_ptr<LoaderOutputFIFO>> loadFIFO;
 
   struct Loader
   {
-    Loader(DiskJoinStep* d) : djs(d)
+    Loader(DiskJoinStep* d, const uint32_t threadID, const uint32_t smallSideSizeLimit,
+           const std::vector<joiner::JoinPartition*>& joinPartitions)
+     : djs(d), threadID(threadID), smallSideSizeLimit(smallSideSizeLimit), joinPartitions(joinPartitions)
     {
     }
     void operator()()
     {
       utils::setThreadName("DJSLoader");
-      djs->loadFcn();
+      djs->loadFcn(threadID, smallSideSizeLimit, joinPartitions);
     }
+
     DiskJoinStep* djs;
+    uint32_t threadID;
+    uint32_t smallSideSizeLimit;
+    std::vector<joiner::JoinPartition*> joinPartitions;
   };
-  void loadFcn();
+  void loadFcn(const uint32_t threadID, const uint32_t smallSideSizeLimit,
+               const std::vector<joiner::JoinPartition*>& joinPartitions);
 
   /* Builder structs */
   struct BuilderOutput
@@ -112,47 +153,54 @@ class DiskJoinStep : public JobStep
     joiner::JoinPartition* jp;
   };
 
-  boost::shared_ptr<joblist::FIFO<boost::shared_ptr<BuilderOutput> > > buildFIFO;
+  using BuilderOutputFIFO = joblist::FIFO<boost::shared_ptr<BuilderOutput>>;
+  std::vector<boost::shared_ptr<BuilderOutputFIFO>> buildFIFO;
 
   struct Builder
   {
-    Builder(DiskJoinStep* d) : djs(d)
+    Builder(DiskJoinStep* d, const uint32_t threadID) : djs(d), threadID(threadID)
     {
     }
     void operator()()
     {
       utils::setThreadName("DJSBuilder");
-      djs->buildFcn();
+      djs->buildFcn(threadID);
     }
     DiskJoinStep* djs;
+    uint32_t threadID;
   };
-  void buildFcn();
+  void buildFcn(const uint32_t threadID);
 
   /* Joining structs */
   struct Joiner
   {
-    Joiner(DiskJoinStep* d) : djs(d)
+    Joiner(DiskJoinStep* d, const uint32_t threadID) : djs(d), threadID(threadID)
     {
     }
     void operator()()
     {
       utils::setThreadName("DJSJoiner");
-      djs->joinFcn();
+      djs->joinFcn(threadID);
     }
     DiskJoinStep* djs;
+    uint32_t threadID;
   };
-  void joinFcn();
+  void joinFcn(const uint32_t threadID);
 
   // limits & usage
   boost::shared_ptr<int64_t> smallUsage;
   int64_t smallLimit;
   int64_t largeLimit;
   uint64_t partitionSize;
+  uint32_t maxPartitionTreeDepth;
 
   void reportStats();
 
   uint32_t joinerIndex;
   bool closedOutput;
+
+  std::mutex outputMutex;
+  const uint32_t maxNumOfJoinThreads = 32;
 };
 
 }  // namespace joblist

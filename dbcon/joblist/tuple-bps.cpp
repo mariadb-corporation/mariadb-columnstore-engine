@@ -30,7 +30,7 @@
 using namespace std;
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 #include <boost/uuid/uuid_io.hpp>
 using namespace boost;
 
@@ -79,7 +79,7 @@ using namespace querytele;
 #include "pseudocolumn.h"
 //#define DEBUG 1
 
-extern std::mutex fileLock_g;
+extern boost::mutex fileLock_g;
 
 namespace
 {
@@ -281,7 +281,7 @@ uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
         {
           // Don't wait for memory, just send the data on to DL.
           RowGroup out(local_outputRG);
-          if (fe2 && tbps->runFEonPM())
+          if (fe2 && !tbps->runFEonPM())
           {
             processFE2(outputData);
             tbps->rgDataVecToDl(outputData, local_fe2Output, dlp);
@@ -1160,7 +1160,7 @@ void TupleBPS::serializeJoiner()
   {
     {
       // code block to release the lock immediatly
-      std::unique_lock lk(serializeJoinerMutex);
+      boost::mutex::scoped_lock lk(serializeJoinerMutex);
       more = fBPP->nextTupleJoinerMsg(*sbs);
     }
 #ifdef JLF_DEBUG
@@ -1175,7 +1175,7 @@ void TupleBPS::serializeJoiner()
 void TupleBPS::serializeJoiner(uint32_t conn)
 {
   // We need this lock for TupleBPS::serializeJoiner()
-  std::unique_lock lk(serializeJoinerMutex);
+  boost::mutex::scoped_lock lk(serializeJoinerMutex);
 
   ByteStream bs;
   bool more = true;
@@ -1195,7 +1195,7 @@ void TupleBPS::prepCasualPartitioning()
   uint32_t i;
   int64_t min, max, seq;
   int128_t bigMin, bigMax;
-  std::unique_lock lk(cpMutex);
+  boost::mutex::scoped_lock lk(cpMutex);
 
   for (i = 0; i < scannedExtents.size(); i++)
   {
@@ -1405,7 +1405,7 @@ void TupleBPS::reloadExtentLists()
 void TupleBPS::run()
 {
   uint32_t i;
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
   uint32_t retryCounter = 0;
   const uint32_t retryMax = 1000;       // 50s max; we've seen a 15s window so 50s should be 'safe'
   const uint32_t waitInterval = 50000;  // in us
@@ -1458,8 +1458,12 @@ void TupleBPS::run()
   fBPP->setThreadCount(fMaxNumProcessorThreads);
 
   if (doJoin)
+  {
     for (i = 0; i < smallSideCount; i++)
       tjoiners[i]->setThreadCount(fMaxNumProcessorThreads);
+
+    fBPP->setMaxPmJoinResultCount(fMaxPmJoinResultCount);
+  }
 
   if (fe1)
     fBPP->setFEGroup1(fe1, fe1Input);
@@ -1500,7 +1504,7 @@ void TupleBPS::run()
 
 void TupleBPS::join()
 {
-  std::unique_lock lk(jlLock);
+  boost::mutex::scoped_lock lk(jlLock);
 
   if (joinRan)
     return;
@@ -1512,7 +1516,7 @@ void TupleBPS::join()
     if (msgsRecvd < msgsSent)
     {
       // wake up the sending thread, it should drain the input dl and exit
-      std::unique_lock<std::mutex> tplLock(tplMutex);
+      boost::unique_lock<boost::mutex> tplLock(tplMutex);
       condvarWakeupProducer.notify_all();
       tplLock.unlock();
     }
@@ -1669,7 +1673,7 @@ void TupleBPS::interleaveJobs(vector<Job>* jobs) const
 void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
-  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
+  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
 
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
@@ -2142,7 +2146,7 @@ void TupleBPS::sendPrimitiveMessages()
   }
 
 abort:
-  std::unique_lock<std::mutex> tplLock(tplMutex);
+  boost::unique_lock<boost::mutex> tplLock(tplMutex);
   finishedSending = true;
   condvar.notify_all();
   tplLock.unlock();
@@ -2157,8 +2161,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
   vector<rowgroup::RGData> fromPrimProc;
   auto data = getJoinLocalDataByIndex(threadID);
 
-  bool validCPData;
-  bool hasBinaryColumn;
+  bool validCPData = false;
+  bool hasBinaryColumn = false;
   int128_t min;
   int128_t max;
   uint64_t lbid;
@@ -2203,8 +2207,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       return;
     }
 
-    bool unused;
-    bool fromDictScan;
+    bool unused = false;
+    bool fromDictScan = false;
     fromPrimProc.clear();
     fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &fromDictScan, &min, &max, &cachedIO,
                           &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
@@ -2402,7 +2406,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     initializeJoinLocalDataPool(1);
 
   vector<boost::shared_ptr<messageqcpp::ByteStream>> bsv;
-  std::unique_lock<std::mutex> tplLock(tplMutex, std::defer_lock);
+  boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
 
   try
   {
@@ -3104,6 +3108,10 @@ void TupleBPS::setFE1Input(const RowGroup& feInput)
 void TupleBPS::setFcnExpGroup2(const boost::shared_ptr<funcexp::FuncExpWrapper>& fe,
                                const rowgroup::RowGroup& rg, bool runFE2onPM)
 {
+  // the presence of fe2 changes rowgroup format which is used in PrimProc.
+  // please be aware, if you are modifying several parts of the system.
+  // the relevant part is in primimities/prim-proc/batchprimitiveprocessor,
+  // execute() function, a branch where aggregation is handled.
   fe2 = fe;
   fe2Output = rg;
   checkDupOutputColumns(rg);
@@ -3393,6 +3401,7 @@ void TupleBPS::abort_nolock()
 
 void TupleBPS::abort()
 {
+  boost::mutex::scoped_lock scoped(boost::mutex);
   abort_nolock();
 }
 

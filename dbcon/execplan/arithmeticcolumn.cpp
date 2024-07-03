@@ -325,8 +325,7 @@ void ArithmeticColumn::serialize(messageqcpp::ByteStream& b) const
   ObjectReader::writeParseTree(fExpression, b);
   b << fTableAlias;
   b << fData;
-  const ByteStream::doublebyte tmp = fAsc;
-  b << tmp;
+  b << (uint8_t)fAsc;
 }
 
 void ArithmeticColumn::unserialize(messageqcpp::ByteStream& b)
@@ -340,9 +339,7 @@ void ArithmeticColumn::unserialize(messageqcpp::ByteStream& b)
   fExpression = ObjectReader::createParseTree(b);
   b >> fTableAlias;
   b >> fData;
-  ByteStream::doublebyte tmp;
-  b >> tmp;
-  fAsc = (tmp);
+  b >> (uint8_t&)fAsc;
 
   fSimpleColumnList.clear();
   fExpression->walk(getSimpleCols, &fSimpleColumnList);

@@ -31,8 +31,7 @@
 #include <stdint.h>
 #include <set>
 #include <tr1/unordered_map>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 #include "brmtypes.h"
 #include "we_type.h"
@@ -243,7 +242,7 @@ class ColExtInf : public ColExtInfBase
  private:
   OID fColOid;                       // Column OID for the relevant extents
   Log* fLog;                         // Log used for debug logging
-  std::mutex fMapMutex;            // protects unordered map access
+  boost::mutex fMapMutex;            // protects unordered map access
   std::set<RID> fPendingExtentRows;  // list of lastInputRow entries that
   // are awaiting an LBID assignment.
 

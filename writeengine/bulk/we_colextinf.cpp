@@ -53,7 +53,7 @@ namespace WriteEngine
 // @bug 4806: Added bIsNewExtent; Set CP min/max for very first extent on a PM
 void ColExtInf::addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent)
 {
-  std::unique_lock lock(fMapMutex);
+  boost::mutex::scoped_lock lock(fMapMutex);
 
   ColExtInfEntry entry(lbid, bIsNewExtent);
   fMap[lastInputRow] = entry;
@@ -70,7 +70,7 @@ template <typename T>
 void ColExtInf::addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, ColDataType colDataType,
                                          int width)
 {
-  std::unique_lock lock(fMapMutex);
+  boost::mutex::scoped_lock lock(fMapMutex);
 
   RowExtMap::iterator iter = fMap.find(lastInputRow);
 
@@ -152,7 +152,7 @@ void ColExtInf::addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, C
 //------------------------------------------------------------------------------
 int ColExtInf::updateEntryLbid(BRM::LBID_t startLbid)
 {
-  std::unique_lock lock(fMapMutex);
+  boost::mutex::scoped_lock lock(fMapMutex);
 
   // fPendingExtentRows is a Set carrying a sorted list of the last Row
   // number in each extent.  We should be allocating/assigning LBIDs in
@@ -189,8 +189,9 @@ int ColExtInf::updateEntryLbid(BRM::LBID_t startLbid)
 void ColExtInf::getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
 {
   bool bIsChar = ((column.weType == WriteEngine::WR_CHAR) && (column.colType != COL_TYPE_DICT));
+  bool bIsText = (column.weType == WriteEngine::WR_TEXT);
 
-  std::unique_lock lock(fMapMutex);
+  boost::mutex::scoped_lock lock(fMapMutex);
 
   RowExtMap::const_iterator iter = fMap.begin();
 
@@ -206,68 +207,80 @@ void ColExtInf::getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
     int128_t bigMinVal = iter->second.fbigMinVal;
     int128_t bigMaxVal = iter->second.fbigMaxVal;
 
-    if (bIsChar)
+    bool bIsValid = true;
+
+    if (bIsChar || bIsText)
     {
       // If we have added 1 or more rows, then we should have a valid
       // range in our RowExtMap object, in which case...
       // We swap/restore byte order before sending min/max string to BRM;
       // else we leave fMinVal & fMaxVal set to LLONG_MIN and send as-is,
       // to let BRM know we added no rows.
+
       if ((iter->second.fMinVal != iter->second.fMaxVal) || (iter->second.fMinVal != LLONG_MIN))
       {
         minVal = static_cast<int64_t>(uint64ToStr(static_cast<uint64_t>(iter->second.fMinVal)));
         maxVal = static_cast<int64_t>(uint64ToStr(static_cast<uint64_t>(iter->second.fMaxVal)));
       }
+      else
+      {
+        // This is dropping range to invalid.
+        minVal = static_cast<int64_t>(~(0UL));
+        maxVal = static_cast<int64_t>(0);
+        bIsValid = false;
+      }
     }
 
-    // Log for now; may control with debug flag later
-    // if (fLog->isDebug( DEBUG_1 ))
-    // TODO MCOL-641 Add support here.
-    {
-      std::ostringstream oss;
-      oss << "Saving CP  update for OID-" << fColOid << "; lbid-" << iter->second.fLbid << "; type-"
-          << bIsChar << "; isNew-" << iter->second.fNewExtent;
+    if (bIsValid) {
+      // Log for now; may control with debug flag later
+      // if (fLog->isDebug( DEBUG_1 ))
+      // TODO MCOL-641 Add support here.
+      {
+        std::ostringstream oss;
+        oss << "Saving CP  update for OID-" << fColOid << "; lbid-" << iter->second.fLbid << "; type-"
+            << bIsChar << "; isNew-" << iter->second.fNewExtent;
 
-      if (bIsChar)
-      {
-        char minValStr[sizeof(int64_t) + 1];
-        char maxValStr[sizeof(int64_t) + 1];
-        memcpy(minValStr, &minVal, sizeof(int64_t));
-        memcpy(maxValStr, &maxVal, sizeof(int64_t));
-        minValStr[sizeof(int64_t)] = '\0';
-        maxValStr[sizeof(int64_t)] = '\0';
-        oss << "; minVal: " << minVal << "; (" << minValStr << ")"
-            << "; maxVal: " << maxVal << "; (" << maxValStr << ")";
+        if (bIsChar)
+        {
+          char minValStr[sizeof(int64_t) + 1];
+          char maxValStr[sizeof(int64_t) + 1];
+          memcpy(minValStr, &minVal, sizeof(int64_t));
+          memcpy(maxValStr, &maxVal, sizeof(int64_t));
+          minValStr[sizeof(int64_t)] = '\0';
+          maxValStr[sizeof(int64_t)] = '\0';
+          oss << "; minVal: " << minVal << "; (" << minValStr << ")"
+              << "; maxVal: " << maxVal << "; (" << maxValStr << ")";
+        }
+        else if (isUnsigned(column.dataType))
+        {
+          oss << "; min: " << static_cast<uint64_t>(minVal) << "; max: " << static_cast<uint64_t>(maxVal);
+        }
+        else
+        {
+          oss << "; min: " << minVal << "; max: " << maxVal;
+        }
+
+        fLog->logMsg(oss.str(), MSGLVL_INFO2);
       }
-      else if (isUnsigned(column.dataType))
+
+      BRM::CPInfoMerge cpInfoMerge;
+      cpInfoMerge.startLbid = iter->second.fLbid;
+      if (column.width <= 8)
       {
-        oss << "; min: " << static_cast<uint64_t>(minVal) << "; max: " << static_cast<uint64_t>(maxVal);
+        cpInfoMerge.max = maxVal;
+        cpInfoMerge.min = minVal;
       }
       else
       {
-        oss << "; min: " << minVal << "; max: " << maxVal;
+        cpInfoMerge.bigMax = bigMaxVal;
+        cpInfoMerge.bigMin = bigMinVal;
       }
-
-      fLog->logMsg(oss.str(), MSGLVL_INFO2);
+      cpInfoMerge.seqNum = -1;  // Not used by mergeExtentsMaxMin. XXX: this marks extent invalid, BTW.
+      cpInfoMerge.type = column.dataType;
+      cpInfoMerge.newExtent = iter->second.fNewExtent;
+      cpInfoMerge.colWidth = column.width;
+      brmReporter.addToCPInfo(cpInfoMerge);
     }
-
-    BRM::CPInfoMerge cpInfoMerge;
-    cpInfoMerge.startLbid = iter->second.fLbid;
-    if (column.width <= 8)
-    {
-      cpInfoMerge.max = maxVal;
-      cpInfoMerge.min = minVal;
-    }
-    else
-    {
-      cpInfoMerge.bigMax = bigMaxVal;
-      cpInfoMerge.bigMin = bigMinVal;
-    }
-    cpInfoMerge.seqNum = -1;  // Not used by mergeExtentsMaxMin
-    cpInfoMerge.type = column.dataType;
-    cpInfoMerge.newExtent = iter->second.fNewExtent;
-    cpInfoMerge.colWidth = column.width;
-    brmReporter.addToCPInfo(cpInfoMerge);
 
     ++iter;
   }
@@ -280,7 +293,7 @@ void ColExtInf::getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
 //------------------------------------------------------------------------------
 void ColExtInf::print(const JobColumn& column)
 {
-  std::unique_lock lock(fMapMutex);
+  boost::mutex::scoped_lock lock(fMapMutex);
   bool bIsChar = ((column.weType == WriteEngine::WR_CHAR) && (column.colType != COL_TYPE_DICT));
   std::ostringstream oss;
   oss << "ColExtInf Map for OID: " << fColOid;

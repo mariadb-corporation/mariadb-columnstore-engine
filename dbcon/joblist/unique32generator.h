@@ -57,7 +57,7 @@ class UniqueNumberGenerator
   }
 
   static UniqueNumberGenerator* fUnique32Generator;
-  static std::mutex fLock;
+  static boost::mutex fLock;
   BRM::DBRM fDbrm;
 };
 

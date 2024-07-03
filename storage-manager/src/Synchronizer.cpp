@@ -20,8 +20,7 @@
 #include "IOCoordinator.h"
 #include "MetadataFile.h"
 #include "Utilities.h"
-#include <chrono>
-#include <thread>
+#include <boost/thread/mutex.hpp>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -32,7 +31,7 @@ using namespace std;
 namespace
 {
 storagemanager::Synchronizer* instance = NULL;
-std::mutex inst_mutex;
+boost::mutex inst_mutex;
 }  // namespace
 
 namespace bf = boost::filesystem;
@@ -42,7 +41,7 @@ Synchronizer* Synchronizer::get()
 {
   if (instance)
     return instance;
-  std::unique_lock<std::mutex> lock(inst_mutex);
+  boost::unique_lock<boost::mutex> lock(inst_mutex);
   if (instance)
     return instance;
   instance = new Synchronizer();
@@ -108,7 +107,7 @@ void Synchronizer::newPrefix(const bf::path& p)
 void Synchronizer::dropPrefix(const bf::path& p)
 {
   syncNow(p);
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   uncommittedJournalSize.erase(p);
 }
 
@@ -128,7 +127,7 @@ void Synchronizer::_newJournalEntry(const bf::path& prefix, const string& _key, 
 
 void Synchronizer::newJournalEntry(const bf::path& prefix, const string& _key, size_t size)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   _newJournalEntry(prefix, _key, size);
   if (uncommittedJournalSize[prefix] > journalSizeThreshold)
   {
@@ -140,7 +139,7 @@ void Synchronizer::newJournalEntry(const bf::path& prefix, const string& _key, s
 
 void Synchronizer::newJournalEntries(const bf::path& prefix, const vector<pair<string, size_t> >& keys)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
   for (auto& keysize : keys)
     _newJournalEntry(prefix, keysize.first, keysize.second);
   if (uncommittedJournalSize[prefix] > journalSizeThreshold)
@@ -153,7 +152,7 @@ void Synchronizer::newJournalEntries(const bf::path& prefix, const vector<pair<s
 
 void Synchronizer::newObjects(const bf::path& prefix, const vector<string>& keys)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   for (const string& _key : keys)
   {
@@ -166,7 +165,7 @@ void Synchronizer::newObjects(const bf::path& prefix, const vector<string>& keys
 
 void Synchronizer::deletedObjects(const bf::path& prefix, const vector<string>& keys)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   for (const string& _key : keys)
   {
@@ -186,9 +185,9 @@ void Synchronizer::flushObject(const bf::path& prefix, const string& _key)
   string key = (prefix / _key).string();
 
   while (blockNewJobs)
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    boost::this_thread::sleep_for(boost::chrono::seconds(1));
 
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   // if there is something to do on key, it should be either in pendingOps or opsInProgress
   // if it is is pending ops, start the job now.  If it is in progress, wait for it to finish.
@@ -269,14 +268,14 @@ void Synchronizer::flushObject(const bf::path& prefix, const string& _key)
 
 void Synchronizer::periodicSync()
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex);
   while (!die)
   {
     lock.unlock();
     bool wasTriggeredBySize = false;
     try
     {
-      std::this_thread::sleep_for(syncInterval);
+      boost::this_thread::sleep_for(syncInterval);
     }
     catch (const boost::thread_interrupted)
     {
@@ -304,7 +303,7 @@ void Synchronizer::periodicSync()
 
 void Synchronizer::syncNow(const bf::path& prefix)
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex);
 
   // This should ensure that all pendingOps have been added as jobs
   // and waits for them to complete. until pendingOps is empty.
@@ -319,7 +318,7 @@ void Synchronizer::syncNow(const bf::path& prefix)
       it->second = 0;
     lock.unlock();
     while (opsInProgress.size() > 0)
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      boost::this_thread::sleep_for(boost::chrono::seconds(1));
     lock.lock();
   }
   blockNewJobs = false;
@@ -327,7 +326,7 @@ void Synchronizer::syncNow(const bf::path& prefix)
 
 void Synchronizer::syncNow()
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex);
 
   // This should ensure that all pendingOps have been added as jobs
   // and waits for them to complete. until pendingOps is empty.
@@ -343,7 +342,7 @@ void Synchronizer::syncNow()
       it->second = 0;
     lock.unlock();
     while (opsInProgress.size() > 0)
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      boost::this_thread::sleep_for(boost::chrono::seconds(1));
     lock.lock();
   }
   blockNewJobs = false;
@@ -351,7 +350,7 @@ void Synchronizer::syncNow()
 
 void Synchronizer::forceFlush()
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex);
 
   syncThread.interrupt();
 }
@@ -374,7 +373,7 @@ void Synchronizer::process(list<string>::iterator name)
           if not, return
   */
 
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   string& key = *name;
   auto it = pendingOps.find(key);
@@ -798,7 +797,7 @@ void Synchronizer::synchronizeWithJournal(const string& sourceFile, list<string>
 
 void Synchronizer::rename(const string& oldKey, const string& newKey)
 {
-  std::unique_lock<std::mutex> s(mutex);
+  boost::unique_lock<boost::mutex> s(mutex);
 
   auto it = pendingOps.find(oldKey);
   if (it != pendingOps.end())
@@ -861,7 +860,7 @@ void Synchronizer::PendingOps::notify()
   condvar.notify_all();
 }
 
-void Synchronizer::PendingOps::wait(std::mutex* m)
+void Synchronizer::PendingOps::wait(boost::mutex* m)
 {
   while (!finished)
   {

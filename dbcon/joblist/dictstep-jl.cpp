@@ -126,6 +126,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
 {
   messageqcpp::ByteStream bs;
 
+  datatypes::Charset cset(charsetNumber);
   if (hasEqFilter)
   {
     idbassert(filterCount == eqFilter.size());
@@ -133,7 +134,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
-      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), charsetNumber);
+      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), cset);
       bs << eqOp;
       bs << roundFlag;
       bs << encodedPrefix;
@@ -173,7 +174,7 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
       bs << roundFlag;
       filterStringCopy >> size;
       ptr = filterStringCopy.buf();
-      encodedPrefix = encodeStringPrefix(ptr, size, charsetNumber);
+      encodedPrefix = encodeStringPrefix(ptr, size, cset);
       bs << encodedPrefix;
       filterStringCopy.advance(size);
     }

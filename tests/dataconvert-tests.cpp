@@ -151,7 +151,7 @@ TEST(DataConvertTest, Strtoll128)
 
 TEST(DataConvertTest, NumberIntValue)
 {
-  datatypes::SystemCatalog::TypeAttributesStd ct;
+  datatypes::TypeAttributesStd ct;
 
   int128_t res, valMax;
   string data;

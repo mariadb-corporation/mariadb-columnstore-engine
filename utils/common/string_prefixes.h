@@ -23,10 +23,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "collation.h"
+#include "joblisttypes.h"
+
+
 // Encode string prefix into an int64_t, packing as many chars from string as possible
 // into the result and respecting the collation provided by charsetNumber.
 //
 // For one example, for CI Czech collation, encodeStringPrefix("cz") < encodeStringPrefix("CH").
-int64_t encodeStringPrefix(const uint8_t* str, size_t len, int charsetNumber);
+int64_t encodeStringPrefix(const uint8_t* str, size_t len, datatypes::Charset& cset);
 
-int64_t encodeStringPrefix_check_null(const uint8_t* str, size_t len, int charsetNumber);
+int64_t encodeStringPrefix_check_null(const uint8_t* str, size_t len, datatypes::Charset& cset);

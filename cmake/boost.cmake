@@ -7,6 +7,9 @@ include(ExternalProject)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(_toolset "gcc")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
+    set(_extra "pch=off")
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   set(_toolset "clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
@@ -19,7 +22,7 @@ SET(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 LINK_DIRECTORIES("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
-set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi; toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
+set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi;${_extra};toolset=${_toolset} --without-python;--prefix=${INSTALL_LOCATION})
 
 SET(byproducts)
 FOREACH(name chrono filesystem program_options regex system thread)
@@ -34,8 +37,8 @@ ENDFOREACH()
 
 ExternalProject_Add(external_boost
   PREFIX .boost
-  URL https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.bz2
-  URL_HASH SHA256=71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa
+  URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
+  URL_HASH SHA256=a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724
   CONFIGURE_COMMAND ./bootstrap.sh
   UPDATE_COMMAND ""
   BUILD_COMMAND ./b2 -q ${_b2args}

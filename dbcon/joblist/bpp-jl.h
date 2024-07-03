@@ -33,7 +33,6 @@
 #include "serializeable.h"
 #include "brm.h"
 #include "jobstep.h"
-// #include "primitiveprocessor.h"
 #include "batchprimitiveprocessor-jl.h"
 #include "command-jl.h"
 #include "columncommand-jl.h"

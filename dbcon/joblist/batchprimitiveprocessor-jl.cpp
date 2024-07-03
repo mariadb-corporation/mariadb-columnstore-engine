@@ -50,7 +50,7 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
-//#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
+#define XXX_BATCHPRIMPROC_TOKENS_RANGES_XXX
 
 namespace joblist
 {
@@ -890,7 +890,8 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
 
         if (joinResults.get() == NULL)
         {
-          joinResults.reset(new vector<uint32_t>[8192]);
+          auto v = new vector<uint32_t>[8192];
+          joinResults.reset(v);
           tJoiners[j]->setPMJoinResults(joinResults, threadID);
         }
 
@@ -1104,6 +1105,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
   /* if HAS_JOINER, send the init params */
   if (flags & HAS_JOINER)
   {
+    bs << (uint32_t)maxPmJoinResultCount;
     if (ot == ROW_GROUP)
     {
       idbassert(tJoiners.size() > 0);

@@ -38,7 +38,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #include "mcs_basic_types.h"
 #include "calpontsystemcatalog.h"
@@ -259,9 +259,6 @@ class pColStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
-
  private:
   /** @brief constructor for completeness
    */
@@ -293,16 +290,16 @@ class pColStep : public JobStep
   // 	      Running with this one will swallow rows at projection.
   bool fSwallowRows;
 
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
 
   BRM::DBRM dbrm;
 
-  std::mutex mutex;
-  std::condition_variable condvar;
-  std::condition_variable flushed;
+  boost::mutex mutex;
+  boost::condition condvar;
+  boost::condition flushed;
   SP_LBIDList lbidList;
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   uint32_t uniqueID;
@@ -482,8 +479,6 @@ class pColScanStep : public JobStep
     return fFilters;
   }
 
- protected:
-  void addFilters();
 
  private:
   // defaults okay?
@@ -509,8 +504,8 @@ class pColScanStep : public JobStep
   BRM::DBRM dbrm;
   SP_LBIDList lbidList;
 
-  std::condition_variable condvar;
-  std::condition_variable_any condvarWakeupProducer;
+  boost::condition condvar;
+  boost::condition condvarWakeupProducer;
   bool finishedSending, sendWaiting, rDoNothing, fIsDict;
   uint32_t recvWaiting, recvExited;
 
@@ -518,7 +513,7 @@ class pColScanStep : public JobStep
   uint32_t extentSize, divShift, ridsPerBlock, rpbShift, numExtents;
   // 	config::Config *fConfig;
 
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   uint64_t fNumBlksSkipped;  // total number of block scans skipped due to CP
   uint64_t fMsgBytesIn;      // total byte count for incoming messages
   uint64_t fMsgBytesOut;     // total byte count for outcoming messages
@@ -648,8 +643,8 @@ class pDictionaryStep : public JobStep
 
   DataList_t* requestList;
   // StringDataList* stringList;
-  std::mutex mutex;
-  std::condition_variable condvar;
+  boost::mutex mutex;
+  boost::condition condvar;
   uint32_t fInterval;
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
@@ -827,9 +822,9 @@ class pDictionaryScan : public JobStep
   uint64_t cThread;  // consumer thread. thread pool handle
   DataList_t* requestList;
   // StringDataList* stringList;
-  std::mutex mutex;
-  std::condition_variable_any condvar;
-  std::condition_variable_any condvarWakeupProducer;
+  boost::mutex mutex;
+  boost::condition condvar;
+  boost::condition condvarWakeupProducer;
   BRM::LBIDRange_v fDictlbids;
   std::vector<struct BRM::EMEntry> extents;
   uint64_t extentSize;
@@ -840,7 +835,7 @@ class pDictionaryScan : public JobStep
   // consumer will tell producer to send
   bool fStopSending;
   uint64_t fPhysicalIO;   // total physical I/O count
-  uint64_t fCacheIO;      // total cache I/O countF
+  uint64_t fCacheIO;      // total cache I/O count
   uint64_t fMsgBytesIn;   // total byte count for incoming messages
   uint64_t fMsgBytesOut;  // total byte count for outcoming messages
   uint32_t fMsgsToPm;     // total number of messages sent to PMs
@@ -1203,6 +1198,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     return bRunFEonPM;
   }
 
+  void setMaxPmJoinResultCount(uint32_t count)
+  {
+    maxPmJoinResultCount = count;
+  }
+
  protected:
   void sendError(uint16_t status);
 
@@ -1233,7 +1233,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fMaxNumThreads;
   uint32_t fNumThreads;
   PrimitiveStepType ffirstStepType;
-  bool isFilterFeeder;
+  bool isFilterFeeder = false;
   std::vector<uint64_t> fProducerThreads;  // thread pool handles
   std::vector<uint64_t> fProcessorThreads;
   messageqcpp::ByteStream fFilterString;
@@ -1278,11 +1278,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t fExtentsPerSegFile;       // config num of Extents Per Segment File
   // uint64_t cThread;  //consumer thread. thread handle from thread pool
   uint64_t pThread;  // producer thread. thread handle from thread pool
-  std::mutex tplMutex;
-  std::mutex dlMutex;
-  std::mutex cpMutex;
-  std::mutex serializeJoinerMutex;
-  std::condition_variable_any condvarWakeupProducer, condvar;
+  boost::mutex tplMutex;
+  boost::mutex dlMutex;
+  boost::mutex cpMutex;
+  boost::mutex serializeJoinerMutex;
+  boost::condition condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
   bool BPPIsAllocated;
@@ -1314,7 +1314,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint8_t bop;  // BOP_AND or BOP_OR
 
   // temporary hack to make sure JobList only calls run and join once
-  std::mutex jlLock;
+  boost::mutex jlLock;
   bool runRan;
   bool joinRan;
 
@@ -1343,6 +1343,8 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
 
   boost::shared_ptr<RowGroupDL> deliveryDL;
   uint32_t deliveryIt;
+
+  uint32_t maxPmJoinResultCount;
 
   class JoinLocalData
   {

@@ -29,8 +29,7 @@
 #include <algorithm>
 #include <unistd.h>
 using namespace std;
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
@@ -59,13 +58,12 @@ namespace WriteEngine
 {
 BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
-std::mutex BRMWrapper::m_instanceCreateMutex;
+boost::mutex BRMWrapper::m_instanceCreateMutex;
 
-
-    bool BRMWrapper::m_useVb = true;
+bool BRMWrapper::m_useVb = true;
 OID BRMWrapper::m_curVBOid = INVALID_NUM;
 IDBDataFile* BRMWrapper::m_curVBFile = NULL;
-std::mutex vbFileLock;
+boost::mutex vbFileLock;
 struct fileInfoCompare  // lt operator
 {
   bool operator()(const File& lhs, const File& rhs) const
@@ -301,7 +299,7 @@ BRMWrapper* BRMWrapper::getInstance()
 {
   if (m_instance == 0)
   {
-    std::unique_lock lock(m_instanceCreateMutex);
+    boost::mutex::scoped_lock lock(m_instanceCreateMutex);
 
     if (m_instance == 0)
     {
@@ -743,6 +741,16 @@ int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, IDBDataFile* pTargetFile, 
     return ERR_BRM_VB_COPY_WRITE;
   else
     return NO_ERROR;
+}
+
+uint8_t BRMWrapper::newCpimportJob(uint32_t &jobId)
+{
+  return blockRsltnMgrPtr->newCpimportJob(jobId);
+}
+
+void BRMWrapper::finishCpimportJob(uint32_t jobId)
+{
+  blockRsltnMgrPtr->finishCpimportJob(jobId);
 }
 
 int BRMWrapper::commit(const VER_t transID)
@@ -1639,7 +1647,7 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
   fileInfo.fSegment = 0;
   //    fileInfo.fDbRoot = (freeList[0].vbOID % rootCnt) + 1;
   fileInfo.fDbRoot = dbRoot;
-  std::unique_lock lk(vbFileLock);
+  boost::mutex::scoped_lock lk(vbFileLock);
   pTargetFile = openFile(fileInfo, "r+b", true);
 
   if (pTargetFile == NULL)

@@ -29,7 +29,7 @@
 #include <string>
 
 #include <boost/thread.hpp>
-#include <condition_variable>
+#include <boost/thread/condition.hpp>
 
 #include "brmtypes.h"
 
@@ -245,7 +245,7 @@ class fileRequest
   /**
    * @brief mutex to control synchronzation of request processing
    **/
-  std::mutex& frMutex() const
+  boost::mutex& frMutex() const
   {
     return fFRMutex;
   }
@@ -253,7 +253,7 @@ class fileRequest
   /**
    * @brief condition variable. signal when request is complete
    **/
-  std::condition_variable_any& frCond() const
+  boost::condition& frCond() const
   {
     return fFRCond;
   }
@@ -304,8 +304,8 @@ class fileRequest
   BRM::QueryContext fVer;
   bool fFlg;
   BRM::VER_t fTxn;
-  mutable std::mutex fFRMutex;
-  mutable std::condition_variable_any fFRCond;
+  mutable boost::mutex fFRMutex;
+  mutable boost::condition fFRCond;
   predicate_status_enum fFRPredicate;
   uint32_t fLength;      // lbids requested
   uint32_t fblksRead;    // lbids read

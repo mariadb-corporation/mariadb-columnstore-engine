@@ -81,6 +81,7 @@ DiskJoinStep::DiskJoinStep(TupleHashJoinStep* t, int djsIndex, int joinIndex, bo
   smallLimit = thjs->djsSmallLimit;
   largeLimit = thjs->djsLargeLimit;
   partitionSize = thjs->djsPartitionSize;
+  maxPartitionTreeDepth = thjs->djsMaxPartitionTreeDepth;
 
   if (smallLimit == 0)
     smallLimit = numeric_limits<int64_t>::max();
@@ -91,13 +92,12 @@ DiskJoinStep::DiskJoinStep(TupleHashJoinStep* t, int djsIndex, int joinIndex, bo
   uint64_t totalUMMemory = thjs->resourceManager->getConfiguredUMMemLimit();
   jp.reset(new JoinPartition(largeRG, smallRG, smallKeyCols, largeKeyCols, typeless,
                              (joinType & ANTI) && (joinType & MATCHNULLS), (bool)fe, totalUMMemory,
-                             partitionSize));
+                             partitionSize, maxPartitionTreeDepth));
 
   if (cancelled())
   {
     // drain inputs, close output
     smallReader();  // only small input is supplying input at this point
-    // largeReader();
     outputDL->endOfInput();
     closedOutput = true;
   }
@@ -163,7 +163,6 @@ void DiskJoinStep::smallReader()
   RGData rgData;
   bool more = true;
   int64_t memUsage = 0, combinedMemUsage = 0;
-  [[maybe_unused]] int rowCount = 0;
   RowGroup l_smallRG = smallRG;
 
   try
@@ -175,11 +174,9 @@ void DiskJoinStep::smallReader()
       if (more)
       {
         l_smallRG.setData(&rgData);
-        rowCount += l_smallRG.getRowCount();
         memUsage = jp->insertSmallSideRGData(rgData);
         combinedMemUsage = atomicops::atomicAdd(smallUsage.get(), memUsage);
 
-        // cout << "memusage = " << memUsage << " total = " << combinedMemUsage << endl;
         if (combinedMemUsage > smallLimit)
         {
           errorMessage(IDBErrorInfo::instance()->errorMsg(ERR_DBJ_DISK_USAGE_LIMIT));
@@ -190,14 +187,11 @@ void DiskJoinStep::smallReader()
       }
     }
 
-    // cout << "(" << joinerIndex << ") read the small side data, combined mem usage= " << combinedMemUsage <<
-    // " rowcount = " << rowCount << endl;
-    if (!cancelled())
+    if (LIKELY(!cancelled()))
     {
       memUsage = jp->doneInsertingSmallData();
       combinedMemUsage = atomicops::atomicAdd(smallUsage.get(), memUsage);
 
-      // cout << "2memusage = " << memUsage << " total = " << combinedMemUsage << endl;
       if (combinedMemUsage > smallLimit)
       {
         errorMessage(IDBErrorInfo::instance()->errorMsg(ERR_DBJ_DISK_USAGE_LIMIT));
@@ -224,11 +218,9 @@ void DiskJoinStep::largeReader()
   RGData rgData;
   bool more = true;
   int64_t largeSize = 0;
-  [[maybe_unused]] int rowCount = 0;
   RowGroup l_largeRG = largeRG;
 
   largeIterationCount++;
-  // cout << "iteration " << largeIterationCount << " largeLimit=" << largeLimit << endl;
 
   try
   {
@@ -239,8 +231,6 @@ void DiskJoinStep::largeReader()
       if (more)
       {
         l_largeRG.setData(&rgData);
-        rowCount += l_largeRG.getRowCount();
-        // cout << "large side raw data: " << largeRG.toString() << endl;
 
         largeSize += jp->insertLargeSideRGData(rgData);
       }
@@ -248,7 +238,6 @@ void DiskJoinStep::largeReader()
 
     jp->doneInsertingLargeData();
 
-    // cout << "(" << joinerIndex << ") read the large side data rowcount = " << rowCount << endl;
     if (!more)
       lastLargeIteration = true;
   }
@@ -260,30 +249,85 @@ void DiskJoinStep::largeReader()
     abort();
   }
 
-  if (cancelled())
+  if (UNLIKELY(cancelled()))
     while (more)
       more = largeDL->next(largeIt, &rgData);
 }
 
-void DiskJoinStep::loadFcn()
+void DiskJoinStep::loadFcn(const uint32_t threadID, const uint32_t smallSideSizeLimit,
+                           const std::vector<joiner::JoinPartition*>& joinPartitions)
 {
   boost::shared_ptr<LoaderOutput> out;
-  bool ret;
 
   try
   {
-    do
-    {
-      out.reset(new LoaderOutput());
-      ret = jp->getNextPartition(&out->smallData, &out->partitionID, &out->jp);
+    uint32_t partitionIndex = 0;
+    bool partitionDone = true;
+    RowGroup& rowGroup = smallRG;
 
-      if (ret)
+    // Iterate over partitions.
+    while (partitionIndex < joinPartitions.size() && !cancelled())
+    {
+      uint64_t currentSize = 0;
+      auto* joinPartition = joinPartitions[partitionIndex];
+      out.reset(new LoaderOutput());
+
+      if (partitionDone)
+        joinPartition->setNextSmallOffset(0);
+
+      while (true)
       {
-        // cout << "loaded partition " << out->partitionID << " smallData = " << out->smallData.size() <<
-        // endl;
-        loadFIFO->insert(out);
+        messageqcpp::ByteStream bs;
+        RGData rgData;
+
+        joinPartition->readByteStream(0, &bs);
+        if (!bs.length())
+        {
+          partitionDone = true;
+          break;
+        }
+
+        rgData.deserialize(bs);
+        rowGroup.setData(&rgData);
+
+        // Check that current `RowGroup` has rows.
+        if (!rowGroup.getRowCount())
+        {
+          partitionDone = true;
+          break;
+        }
+
+        currentSize += rowGroup.getDataSize();
+        out->smallData.push_back(rgData);
+
+        if (currentSize > smallSideSizeLimit)
+        {
+#ifdef DEBUG_DJS
+          cout << "Memory limit exceeded for the partition: " << joinPartition->getUniqueID() << endl;
+          cout << "Current size: " << currentSize << " Memory limit: " << partitionSize << endl;
+#endif
+          partitionDone = false;
+          currentSize = 0;
+          break;
+        }
       }
-    } while (ret && !cancelled());
+
+      if (!out->smallData.size())
+      {
+        ++partitionIndex;
+        partitionDone = true;
+        continue;
+      }
+
+      // Initialize `LoaderOutput` and add it to `FIFO`.
+      out->partitionID = joinPartition->getUniqueID();
+      out->jp = joinPartition;
+      loadFIFO[threadID]->insert(out);
+
+      // If this partition is done - take a next one.
+      if (partitionDone)
+        ++partitionIndex;
+    }
   }
   catch (...)
   {
@@ -293,25 +337,24 @@ void DiskJoinStep::loadFcn()
     abort();
   }
 
-  loadFIFO->endOfInput();
+  loadFIFO[threadID]->endOfInput();
 }
 
-void DiskJoinStep::buildFcn()
+void DiskJoinStep::buildFcn(const uint32_t threadID)
 {
   boost::shared_ptr<LoaderOutput> in;
   boost::shared_ptr<BuilderOutput> out;
   bool more = true;
-  int it = loadFIFO->getIterator();
+  int it = loadFIFO[threadID]->getIterator();
   int i, j;
   Row smallRow;
   RowGroup l_smallRG = smallRG;
 
   l_smallRG.initRow(&smallRow);
 
-  while (1)
+  while (true)
   {
-    // cout << "getting a partition from the loader" << endl;
-    more = loadFIFO->next(it, &in);
+    more = loadFIFO[threadID]->next(it, &in);
 
     if (!more || cancelled())
       goto out;
@@ -322,7 +365,6 @@ void DiskJoinStep::buildFcn()
     out->jp = in->jp;
     out->tupleJoiner = joiner->copyForDiskJoin();
 
-    // cout << "building a tuplejoiner" << endl;
     for (i = 0; i < (int)in->smallData.size(); i++)
     {
       l_smallRG.setData(&in->smallData[i]);
@@ -333,36 +375,36 @@ void DiskJoinStep::buildFcn()
     }
 
     out->tupleJoiner->doneInserting();
-    buildFIFO->insert(out);
+    buildFIFO[threadID]->insert(out);
   }
 
 out:
 
   while (more)
-    more = loadFIFO->next(it, &in);
+    more = loadFIFO[threadID]->next(it, &in);
 
-  buildFIFO->endOfInput();
+  buildFIFO[threadID]->endOfInput();
 }
 
-void DiskJoinStep::joinFcn()
+void DiskJoinStep::joinFcn(const uint32_t threadID)
 {
-  /* This function mostly serves as an adapter between the
-  input data and the joinOneRG() fcn in THJS.  */
-
+  // This function mostly serves as an adapter between the
+  // input data and the joinOneRG() fcn in THJS.
   boost::shared_ptr<BuilderOutput> in;
   bool more = true;
-  int it = buildFIFO->getIterator();
-  int i, j;
+  int it = buildFIFO[threadID]->getIterator();
+  int i;
   vector<RGData> joinResults;
   RowGroup l_largeRG = largeRG, l_smallRG = smallRG;
   RowGroup l_outputRG = outputRG;
   Row l_largeRow;
   Row l_joinFERow, l_outputRow, baseRow;
-  vector<vector<Row::Pointer> > joinMatches;
-  std::shared_ptr<Row[]> smallRowTemplates(new Row[1]);
+  vector<vector<Row::Pointer>> joinMatches;
+  auto new_row = new Row[1];
+  std::shared_ptr<Row[]> smallRowTemplates(new_row);
   vector<std::shared_ptr<TupleJoiner>> joiners;
   std::shared_ptr<std::shared_ptr<int[]>[]> colMappings, fergMappings;
-  boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMem;
+  boost::scoped_array<boost::scoped_array<uint8_t>> smallNullMem;
   boost::scoped_array<uint8_t> joinFEMem;
   Row smallNullRow;
 
@@ -405,9 +447,9 @@ void DiskJoinStep::joinFcn()
 
   try
   {
-    while (1)
+    while (true)
     {
-      more = buildFIFO->next(it, &in);
+      more = buildFIFO[threadID]->next(it, &in);
 
       if (!more || cancelled())
         goto out;
@@ -423,12 +465,9 @@ void DiskJoinStep::joinFcn()
                         joinMatches, smallRowTemplates, outputDL.get(), &joiners, &colMappings, &fergMappings,
                         &smallNullMem);
 
-        for (j = 0; j < (int)joinResults.size(); j++)
-        {
-          // l_outputRG.setData(&joinResults[j]);
-          // cout << "got joined output " << l_outputRG.toString() << endl;
-          outputDL->insert(joinResults[j]);
-        }
+        if (joinResults.size())
+          outputResult(joinResults);
+
         thjs->returnMemory();
         joinResults.clear();
         largeData = in->jp->getNextLargeRGData();
@@ -476,21 +515,20 @@ void DiskJoinStep::joinFcn()
 
             if (l_outputRG.getRowCount() == 8192)
             {
-              outputDL->insert(rgData);
+              outputResult(rgData);
               // cout << "inserting a full RG" << endl;
               if (thjs)
               {
+                // FIXME: Possible false positive. Something wrong with this calculation, just put a warning
+                // until fixed.
                 if (!thjs->getMemory(l_outputRG.getMaxDataSize()))
                 {
+                  // FIXME: This is also looks wrong.
                   // calculate guess of size required for error message
                   uint64_t memReqd = (unmatched.size() * outputRG.getDataSize(1)) / 1048576;
-                  Message::Args args;
-                  args.add(memReqd);
-                  args.add(thjs->resourceManager->getConfiguredUMMemLimit() / 1048576);
-                  std::cerr << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_RESULT_TOO_BIG,
-                                                                           args)
-                            << " @" << __FILE__ << ":" << __LINE__;
-                  throw logging::IDBExcept(logging::ERR_JOIN_RESULT_TOO_BIG, args);
+                  uint64_t memLimit = thjs->resourceManager->getConfiguredUMMemLimit() / 1048576;
+                  std::cerr << "DiskJoin::joinFcn() possible OOM for the join result, mem required: "
+                            << memReqd << " mem limit: " << memLimit << std::endl;
                 }
               }
 
@@ -503,15 +541,10 @@ void DiskJoinStep::joinFcn()
               outputRow.nextRow();
           }
 
-          if (l_outputRG.getRowCount() > 0)
-          {
-            // cout << "inserting an rg with " << l_outputRG.getRowCount() << endl;
-            outputDL->insert(rgData);
-          }
+          if (l_outputRG.getRowCount())
+            outputResult(rgData);
           if (thjs)
-          {
             thjs->returnMemory();
-          }
         }
       }
     }
@@ -527,9 +560,9 @@ void DiskJoinStep::joinFcn()
 out:
 
   while (more)
-    more = buildFIFO->next(it, &in);
+    more = buildFIFO[threadID]->next(it, &in);
 
-  if (lastLargeIteration || cancelled())
+  if (cancelled())
   {
     reportStats();
     outputDL->endOfInput();
@@ -537,39 +570,113 @@ out:
   }
 }
 
+void DiskJoinStep::initializeFIFO(const uint32_t threadCount)
+{
+  loadFIFO.clear();
+  buildFIFO.clear();
+
+  for (uint32_t i = 0; i < threadCount; ++i)
+  {
+    boost::shared_ptr<LoaderOutputFIFO> lFIFO(new LoaderOutputFIFO(1, 1));
+    boost::shared_ptr<BuilderOutputFIFO> bFIFO(new BuilderOutputFIFO(1, 1));
+
+    loadFIFO.push_back(lFIFO);
+    buildFIFO.push_back(bFIFO);
+  }
+}
+
+void DiskJoinStep::processJoinPartitions(const uint32_t threadID, const uint32_t smallSideSizeLimitPerThread,
+                                         const std::vector<JoinPartition*>& joinPartitions)
+{
+  std::vector<uint64_t> pipelineThreads;
+  pipelineThreads.reserve(3);
+  pipelineThreads.push_back(
+      jobstepThreadPool.invoke(Loader(this, threadID, smallSideSizeLimitPerThread, joinPartitions)));
+  pipelineThreads.push_back(jobstepThreadPool.invoke(Builder(this, threadID)));
+  pipelineThreads.push_back(jobstepThreadPool.invoke(Joiner(this, threadID)));
+  jobstepThreadPool.join(pipelineThreads);
+}
+
+void DiskJoinStep::prepareJobs(const std::vector<JoinPartition*>& joinPartitions,
+                               JoinPartitionJobs& joinPartitionsJobs)
+{
+  const uint32_t issuedThreads = jobstepThreadPool.getIssuedThreads();
+  const uint32_t maxNumOfThreads = jobstepThreadPool.getMaxThreads();
+  const uint32_t numOfThreads =
+      std::min(std::min(maxNumOfJoinThreads, std::max(maxNumOfThreads - issuedThreads, (uint32_t)1)),
+               (uint32_t)joinPartitions.size());
+  const uint32_t workSize = joinPartitions.size() / numOfThreads;
+
+  uint32_t offset = 0;
+  joinPartitionsJobs.reserve(numOfThreads);
+  for (uint32_t threadNum = 0; threadNum < numOfThreads; ++threadNum, offset += workSize)
+  {
+    auto start = joinPartitions.begin() + offset;
+    auto end = start + workSize;
+    std::vector<JoinPartition*> joinPartitionJob(start, end);
+    joinPartitionsJobs.push_back(std::move(joinPartitionJob));
+  }
+
+  for (uint32_t i = 0, e = joinPartitions.size() % numOfThreads; i < e; ++i, ++offset)
+    joinPartitionsJobs[i].push_back(joinPartitions[offset]);
+}
+
+void DiskJoinStep::outputResult(const std::vector<rowgroup::RGData>& result)
+{
+  std::lock_guard<std::mutex> lk(outputMutex);
+  for (const auto& rgData : result)
+    outputDL->insert(rgData);
+}
+
+void DiskJoinStep::outputResult(const rowgroup::RGData& result)
+{
+  std::lock_guard<std::mutex> lk(outputMutex);
+  outputDL->insert(result);
+}
+
+void DiskJoinStep::spawnJobs(const std::vector<std::vector<JoinPartition*>>& joinPartitionsJobs,
+                             const uint32_t smallSideSizeLimitPerThread)
+{
+  const uint32_t threadsCount = joinPartitionsJobs.size();
+  std::vector<uint64_t> processorThreadsId;
+  processorThreadsId.reserve(threadsCount);
+  for (uint32_t threadID = 0; threadID < threadsCount; ++threadID)
+  {
+    processorThreadsId.push_back(jobstepThreadPool.invoke(
+        JoinPartitionsProcessor(this, threadID, smallSideSizeLimitPerThread, joinPartitionsJobs[threadID])));
+  }
+
+  jobstepThreadPool.join(processorThreadsId);
+}
+
 void DiskJoinStep::mainRunner()
 {
-  /*
-      Read from smallDL, insert into small side
-      Read from largeDL, insert into large side
-      Start the processing threads
-  */
   try
   {
     smallReader();
 
     while (!lastLargeIteration && !cancelled())
     {
-      // cout << "large iteration " << largeIterationCount << endl;
       jp->initForLargeSideFeed();
       largeReader();
-      // cout << "done reading iteration " << largeIterationCount-1 << endl;
 
       jp->initForProcessing();
 
-      if (cancelled())
-        break;
+      // Collect all join partitions.
+      std::vector<JoinPartition*> joinPartitions;
+      jp->collectJoinPartitions(joinPartitions);
 
-      loadFIFO.reset(
-          new FIFO<boost::shared_ptr<LoaderOutput> >(1, 1));  // double buffering should be good enough
-      buildFIFO.reset(new FIFO<boost::shared_ptr<BuilderOutput> >(1, 1));
+      // Split partitions for each threads.
+      JoinPartitionJobs joinPartitionsJobs;
+      prepareJobs(joinPartitions, joinPartitionsJobs);
 
-      std::vector<uint64_t> thrds;
-      thrds.reserve(3);
-      thrds.push_back(jobstepThreadPool.invoke(Loader(this)));
-      thrds.push_back(jobstepThreadPool.invoke(Builder(this)));
-      thrds.push_back(jobstepThreadPool.invoke(Joiner(this)));
-      jobstepThreadPool.join(thrds);
+      // Initialize data lists.
+      const uint32_t numOfThreads = joinPartitionsJobs.size();
+      initializeFIFO(numOfThreads);
+
+      // Spawn jobs.
+      const uint32_t smallSideSizeLimitPerThread = partitionSize / numOfThreads;
+      spawnJobs(joinPartitionsJobs, smallSideSizeLimitPerThread);
     }
   }
   catch (...)
@@ -581,7 +688,7 @@ void DiskJoinStep::mainRunner()
   }
 
   // make sure all inputs were drained & output closed
-  if (cancelled())
+  if (UNLIKELY(cancelled()))
   {
     try
     {
@@ -598,6 +705,12 @@ void DiskJoinStep::mainRunner()
       outputDL->endOfInput();
       closedOutput = true;
     }
+  }
+
+  if (LIKELY(!closedOutput))
+  {
+    outputDL->endOfInput();
+    closedOutput = true;
   }
 }
 

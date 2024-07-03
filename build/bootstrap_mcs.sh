@@ -4,6 +4,7 @@
 # - the server's source code is two directories above the MCS engine source.
 # - the script is to be run under root.
 
+set -o pipefail
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
 
@@ -26,22 +27,28 @@ cd - > /dev/null
 
 
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=d long=distro desc="Choouse your OS: ${DISTRO_OPTIONS[*]}" variable=OS
+optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
-optparse.define short=D long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
 optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
-optparse.define short=T long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
+optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
 
 source $( optparse.build )
 
@@ -58,12 +65,23 @@ INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-CONFIG_DIR="/etc/my.cnf.d"
+RPM_CONFIG_DIR="/etc/my.cnf.d"
+DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+CONFIG_DIR=$RPM_CONFIG_DIR
 
 if [[ $OS = 'Ubuntu' || $OS = 'Debian' ]]; then
-    CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+    CONFIG_DIR=$DEB_CONFIG_DIR
 fi
 
+export CLICOLOR_FORCE=1
+
+
+disable_git_restore_frozen_revision()
+{
+    cd $MDB_SOURCE_PATH
+    git config submodule.storage/columnstore/columnstore.update none
+    cd - > /dev/null
+}
 
 select_branch()
 {
@@ -81,13 +99,10 @@ select_branch()
         fi
 
         message "Turning off Columnstore submodule auto update via gitconfig"
-        cd $MDB_SOURCE_PATH
-        git config submodule.storage/columnstore/columnstore.update none
-        cd - > /dev/null
     fi
 
     cd - > /dev/null
-    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_normal branch"
+    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_cyan branch"
 }
 
 install_deps()
@@ -102,7 +117,7 @@ install_deps()
         libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev \
         liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev graphviz
 
-    elif [[ $OS = 'CentOS' || $OS = 'Rocky' ]]; then
+    elif [[ $OS = 'CentOS' || $OS = 'Rocky' || $OS = 'Fedora' ]]; then
         if [[ "$OS_VERSION" == "7" ]]; then
             yum -y install cmake3 epel-release centos-release-scl
             CMAKE_BIN_NAME=cmake3
@@ -114,11 +129,17 @@ install_deps()
            yum -y groupinstall "Development Tools" && yum config-manager --set-enabled powertools
            yum install -y checkpolicy
         fi
-        yum -y install epel-release \
-        && yum -y install bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
-        && yum -y install vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
-        && yum -y install jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
-        && yum -y install pcre2-devel flex graphviz
+        if [[ $OS != 'Fedora' ]]; then
+	    yum -y install epel-release
+	fi
+
+        yum install -y bison ncurses-devel readline-devel perl-devel openssl-devel libxml2-devel gperf libaio-devel libevent-devel tree wget pam-devel snappy-devel libicu \
+            vim wget strace ltrace gdb rsyslog net-tools openssh-server expect boost perl-DBI libicu boost-devel initscripts \
+            jemalloc-devel libcurl-devel gtest-devel cppunit-devel systemd-devel lzo-devel xz-devel lz4-devel bzip2-devel \
+            pcre2-devel flex graphviz libaio-devel openssl-devel flex
+    else
+	error "Unsupported OS $OS"
+	exit 17
     fi
 }
 
@@ -128,14 +149,15 @@ stop_service()
     message "Stopping MariaDB services"
     systemctl stop mariadb
     systemctl stop mariadb-columnstore
+    systemctl stop mcs-storagemanager
 }
 
 check_service()
 {
     if systemctl is-active --quiet $1; then
-        message "$1 service started$color_green OK $color_normal"
+        message "$1 $color_normal[$color_green OK $color_normal]"
     else
-        error "$1 service failed"
+        message "$1 $color_normal[$color_red Fail $color_normal]"
         service $1 status
     fi
 }
@@ -147,8 +169,25 @@ start_service()
     systemctl start mariadb-columnstore
     systemctl start mariadb
 
-    check_service mariadb-columnstore
     check_service mariadb
+    check_service mariadb-columnstore
+    check_service mcs-controllernode
+    check_service mcs-ddlproc
+    check_service mcs-dmlproc
+    check_service mcs-primproc
+    check_service mcs-workernode@1
+    check_service mcs-writeengineserver
+}
+
+start_storage_manager_if_needed()
+{
+  if [[ $CLOUD_STORAGE_ENABLED = true ]]; then
+    export MCS_USE_S3_STORAGE=1;
+    message_split
+    message "Starting Storage Manager service"
+    systemctl start mcs-storagemanager
+    check_service mcs-storagemanager
+  fi
 }
 
 clean_old_installation()
@@ -158,21 +197,26 @@ clean_old_installation()
     rm -rf /var/lib/columnstore/data1/*
     rm -rf /var/lib/columnstore/data/
     rm -rf /var/lib/columnstore/local/
-    rm -f /var/lib/columnstore/storagemanager/storagemanager-lock
-    rm -f /var/lib/columnstore/storagemanager/cs-initialized
+    rm -rf /var/lib/columnstore/storagemanager/*
     rm -rf /var/log/mariadb/columnstore/*
+    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf /etc/my.cnf.d/columnstore.cnf
     rm -rf /tmp/*
     rm -rf $REPORT_PATH
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
     rm -rf /etc/mysql
+    rm -rf /etc/my.cnf.d/columnstore.cnf
+    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf
 }
 
 build()
 {
+    MARIA_BUILD_PATH=$(realpath $MARIA_BUILD_PATH)
     message_split
-    message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_normal mode"
+    message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_cyan mode"
+    message "Compiled artifacts will be written to $color_yellow$MARIA_BUILD_PATH$color_cyan"
+    mkdir -p $MARIA_BUILD_PATH
 
     local MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes
                      -DPLUGIN_COLUMNSTORE=YES
@@ -261,10 +305,10 @@ build()
     if [[ $SKIP_SUBMODULES = true ]] ; then
         warn "Skipping initialization of columnstore submodules"
     else
-	    message "Initialization of columnstore submodules"
-	    cd storage/columnstore/columnstore
-	    git submodule update --init
-	    cd - > /dev/null
+        message "Initialization of columnstore submodules"
+        cd storage/columnstore/columnstore
+        git submodule update --init
+        cd - > /dev/null
     fi
 
     if [[ $FORCE_CMAKE_CONFIG = true ]] ; then
@@ -283,16 +327,18 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=sles15"
     fi
 
-    message "Building with flags"
-    newline_array ${MDB_CMAKE_FLAGS[@]}
+    if [[ $PRINT_CMAKE_FLAGS = true ]] ; then
+        message "Building with flags"
+        newline_array ${MDB_CMAKE_FLAGS[@]}
+    fi
 
-    local CPUS=$(getconf _NPROCESSORS_ONLN)
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS . | spinner
+    ${CMAKE_BIN_NAME} -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE $MDB_CMAKE_FLAGS -S$MDB_SOURCE_PATH -B$MARIA_BUILD_PATH | spinner
     message_split
-    ${CMAKE_BIN_NAME} --build . -j $CPUS && \
+
+    ${CMAKE_BIN_NAME} --build $MARIA_BUILD_PATH -j $CPUS | onelinearizator && \
     message "Installing silently" &&
-    ${CMAKE_BIN_NAME} --install . | spinner 30
+    ${CMAKE_BIN_NAME} --install $MARIA_BUILD_PATH | spinner 30
 
     if [ $? -ne 0 ]; then
         message_split
@@ -305,15 +351,16 @@ build()
 
 check_user_and_group()
 {
-    if [ -z "$(grep mysql /etc/passwd)" ]; then
-        message "Adding user mysql into /etc/passwd"
-        useradd -r -U mysql -d /var/lib/mysql
+    user=$1
+    if [ -z "$(grep $user /etc/passwd)" ]; then
+        message "Adding user $user into /etc/passwd"
+        useradd -r -U $user -d /var/lib/mysql
     fi
 
-    if [ -z "$(grep mysql /etc/group)" ]; then
+    if [ -z "$(grep $user /etc/group)" ]; then
         GroupID = `awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group`
-        message "Adding group mysql with id $GroupID"
-        groupadd -g GroupID mysql
+        message "Adding group $user with id $GroupID"
+        groupadd -g $GroupID $user
     fi
 }
 
@@ -352,6 +399,7 @@ disable_plugins_for_bootstrap()
 enable_columnstore_back()
 {
     echo plugin-load-add=ha_columnstore.so >> $CONFIG_DIR/columnstore.cnf
+    sed -i '/\[mysqld\]/a\plugin-load-add=ha_columnstore.so' $CONFIG_DIR/columnstore.cnf
 }
 
 fix_config_files()
@@ -393,7 +441,7 @@ fix_config_files()
         if grep -q UBSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >> $MDB_SERVICE_FILE
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -402,25 +450,32 @@ fix_config_files()
     systemctl daemon-reload
 }
 
+make_dir()
+{
+    mkdir -p $1
+    chown mysql:mysql $1
+}
+
 install()
 {
     message_split
     message "Installing MariaDB"
     disable_plugins_for_bootstrap
 
-    mkdir -p $REPORT_PATH
+    make_dir $REPORT_PATH
     chmod 777 $REPORT_PATH
 
-    check_user_and_group
+    check_user_and_group mysql
+    check_user_and_group syslog
 
-    mkdir -p /etc/my.cnf.d
 
-    bash -c 'echo "[client-server]
-socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
+    make_dir $CONFIG_DIR
+
+    echo "[client-server]
+socket=/run/mysqld/mysqld.sock" > $CONFIG_DIR/socket.cnf
 
     mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
-    mkdir -p /var/lib/mysql
-    chown mysql:mysql /var/lib/mysql
+    make_dir /var/lib/mysql
 
     message "Running mysql_install_db"
     sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
@@ -428,7 +483,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     enable_columnstore_back
 
-    mkdir -p /etc/columnstore
+    make_dir /etc/columnstore
 
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
@@ -437,8 +492,8 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
     cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
     if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
-        mkdir -p /usr/share/mysql
-        mkdir -p /etc/mysql/
+        make_dir /usr/share/mysql
+        make_dir /etc/mysql/
         cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
         cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
         > /etc/mysql/debian.cnf
@@ -446,6 +501,7 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
 
     fix_config_files
 
+    make_dir /etc/my.cnf.d
     if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
         message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
         cp -rp /etc/mysql/mariadb.conf.d/* /etc/my.cnf.d
@@ -456,22 +512,20 @@ socket=/run/mysqld/mysqld.sock" > /etc/my.cnf.d/socket.cnf'
         cp -rp /etc/mysql/conf.d/* /etc/my.cnf.d
     fi
 
-    mkdir -p /var/lib/columnstore/data1
-    mkdir -p /var/lib/columnstore/data1/systemFiles
-    mkdir -p /var/lib/columnstore/data1/systemFiles/dbrm
-    mkdir -p /run/mysqld/
-
-    mkdir -p $DATA_DIR
-    chown -R mysql:mysql $DATA_DIR
-    chown -R mysql:mysql /var/lib/columnstore/
-    chown -R mysql:mysql /run/mysqld/
+    make_dir /var/lib/columnstore/data1
+    make_dir /var/lib/columnstore/data1/systemFiles
+    make_dir /var/lib/columnstore/data1/systemFiles/dbrm
+    make_dir /run/mysqld/
+    make_dir $DATA_DIR
 
     chmod +x $INSTALL_PREFIX/bin/mariadb*
 
     ldconfig
 
+    start_storage_manager_if_needed
+
     message "Running columnstore-post-install"
-    mkdir -p /var/lib/columnstore/local
+    make_dir /var/lib/columnstore/local
     columnstore-post-install --rpmmode=install
     message "Running install_mcs_mysql"
     install_mcs_mysql.sh
@@ -491,7 +545,7 @@ smoke()
         message "Selecting magic numbers"
         MAGIC=`mysql -N test < $MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql`
         if [[ $MAGIC == '42' ]] ; then
-            message "Great answer correct"
+            message "Great answer correct!"
         else
             warn "Smoke failed, answer is '$MAGIC'"
         fi
@@ -510,6 +564,10 @@ generate_svgs()
     fi
 }
 
+if [[ $DO_NOT_FREEZE_REVISION = false ]] ; then
+    disable_git_restore_frozen_revision
+fi
+
 select_branch
 
 if [[ $INSTALL_DEPS = true ]] ; then
@@ -517,7 +575,11 @@ if [[ $INSTALL_DEPS = true ]] ; then
 fi
 
 stop_service
-clean_old_installation
+
+if [[ $NO_CLEAN = false ]] ; then
+    clean_old_installation
+fi
+
 build
 run_unit_tests
 run_microbenchmarks_tests

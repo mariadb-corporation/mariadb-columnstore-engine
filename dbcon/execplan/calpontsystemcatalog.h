@@ -134,6 +134,14 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     DictOID() : dictOID(0), listOID(0), treeOID(0), compressionType(0)
     {
     }
+    DictOID(OID dictOID_, OID listOID_, OID treeOID_, int compressionType_)
+     : dictOID(dictOID_), listOID(listOID_), treeOID(treeOID_), compressionType(compressionType_)
+    {
+    }
+    DictOID(const DictOID& rhs)
+     : dictOID(rhs.dictOID), listOID(rhs.listOID), treeOID(rhs.treeOID), compressionType(rhs.compressionType)
+    {
+    }
     OID dictOID;
     OID listOID;
     OID treeOID;
@@ -204,25 +212,28 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    *
    * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
    */
-  struct ColType : public datatypes::SystemCatalog::TypeHolderStd
+  struct ColType : public datatypes::TypeHolderStd
   {
-    ConstraintType constraintType;
+    ConstraintType constraintType = NO_CONSTRAINT;
     DictOID ddn;
     NullString defaultValue;
-    int32_t colPosition;  // temporally put here. may need to have ColInfo struct later
-    int32_t compressionType;
-    OID columnOID;
-    bool autoincrement;  // set to true if  SYSCOLUMN autoincrement is �y�
-    uint64_t nextvalue;  // next autoincrement value
-    uint32_t charsetNumber;
-    const CHARSET_INFO* cs;
+    int32_t colPosition = -1;  // temporally put here. may need to have ColInfo struct later
+    int32_t compressionType = NO_COMPRESSION;
+    OID columnOID = 0;
+    bool autoincrement = 0;  // set to true if  SYSCOLUMN autoincrement is �y�
+    uint64_t nextvalue = 0;  // next autoincrement value
+    uint32_t charsetNumber = default_charset_info->number;
+    const CHARSET_INFO* cs = nullptr;
 
    private:
     long timeZone;
 
    public:
-    ColType();
+    ColType() = default;
     ColType(const ColType& rhs);
+    ColType(int32_t colWidth_, int32_t scale_, int32_t precision_, const ConstraintType& constraintType_,
+            const DictOID& ddn_, int32_t colPosition_, int32_t compressionType_, OID columnOID_,
+            const ColDataType& colDataType_);
     ColType& operator=(const ColType& rhs);
 
     CHARSET_INFO* getCharset();
@@ -881,27 +892,27 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   void checkSysCatVer();
 
-  static std::mutex map_mutex;
+  static boost::mutex map_mutex;
   static CatalogMap fCatalogMap;
 
   typedef std::map<TableColName, OID> OIDmap;
   OIDmap fOIDmap;
-  std::mutex fOIDmapLock;  // Also locks fColRIDmap
+  boost::mutex fOIDmapLock;  // Also locks fColRIDmap
 
   typedef std::map<TableName, RID> Tablemap;
   Tablemap fTablemap;
 
   typedef std::map<TableName, OID> TableOIDmap;
   TableOIDmap fTableAUXColumnOIDMap;
-  std::mutex fTableAUXColumnOIDMapLock;
+  boost::mutex fTableAUXColumnOIDMapLock;
 
   typedef std::map<OID, OID> AUXColumnOIDTableOIDmap;
   AUXColumnOIDTableOIDmap fAUXColumnOIDToTableOIDMap;
-  std::mutex fAUXColumnOIDToTableOIDMapLock;
+  boost::mutex fAUXColumnOIDToTableOIDMapLock;
 
   typedef std::map<OID, ColType> Colinfomap;
   Colinfomap fColinfomap;
-  std::mutex fColinfomapLock;
+  boost::mutex fColinfomapLock;
 
   /** this structure is used by ddl only. it cache the rid for rows in syscolumn
       that match the tableColName */
@@ -916,11 +927,11 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   // this structure may combine with Tablemap, where RID is added to TalbeInfo struct
   typedef std::map<TableName, TableInfo> TableInfoMap;
   TableInfoMap fTableInfoMap;
-  std::mutex fTableInfoMapLock;
+  boost::mutex fTableInfoMapLock;
 
   typedef std::map<TableColName, IndexNameList> ColIndexListmap;
   ColIndexListmap fColIndexListmap;
-  std::mutex fColIndexListmapLock;
+  boost::mutex fColIndexListmapLock;
 
   typedef std::map<OID, OID> DctTokenMap;
   DctTokenMap fDctTokenMap;
@@ -929,16 +940,16 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   typedef std::map<OID, TableName> TableNameMap;
   TableNameMap fTableNameMap;
-  std::mutex fTableNameMapLock;
+  boost::mutex fTableNameMapLock;
 
   ClientRotator* fExeMgr;
   uint32_t fSessionID;
   uint32_t fTxn;
   int fIdentity;
   std::set<std::string> fSchemaCache;
-  std::mutex fSchemaCacheLock;
+  boost::mutex fSchemaCacheLock;
   // Cache flush
-  std::mutex fSyscatSCNLock;
+  boost::mutex fSyscatSCNLock;
   SCN fSyscatSCN;
 
   static uint32_t fModuleID;
@@ -1206,6 +1217,7 @@ const std::string MAXVALUE_COL = "maxvalue";
 const std::string COMPRESSIONTYPE_COL = "compressiontype";
 const std::string NEXTVALUE_COL = "nextvalue";
 const std::string AUXCOLUMNOID_COL = "auxcolumnoid";
+const std::string CHARSETNUM_COL = "charsetnum";
 
 /*****************************************************
  * System tables OID definition
@@ -1257,7 +1269,8 @@ const int OID_SYSCOLUMN_MINVALUE = SYSCOLUMN_BASE + 19;        /** @brief min va
 const int OID_SYSCOLUMN_MAXVALUE = SYSCOLUMN_BASE + 20;        /** @brief max value col */
 const int OID_SYSCOLUMN_COMPRESSIONTYPE = SYSCOLUMN_BASE + 21; /** @brief compression type */
 const int OID_SYSCOLUMN_NEXTVALUE = SYSCOLUMN_BASE + 22;       /** @brief next value */
-const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 23;                 // be sure this is one more than the highest #
+const int OID_SYSCOLUMN_CHARSETNUM = SYSCOLUMN_BASE + 23; /** @brief character set number for the column */
+const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 24;            // be sure this is one more than the highest #
 
 /*****************************************************
  * SYSTABLE columns dictionary OID definition

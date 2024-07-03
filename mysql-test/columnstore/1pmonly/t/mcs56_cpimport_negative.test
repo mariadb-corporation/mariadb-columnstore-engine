@@ -21,13 +21,13 @@ CREATE TABLE t1(col1 INT, col2 INT) ENGINE=Columnstore;
 # Negative. Non-existing data file.
 exec rm -f /tmp/nonexisting.dat; 
 --disable_result_log #cpimport logs thread/timestamps
-exec $MCS_CPIMPORT mcs56_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec cpimport mcs56_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";
 exec echo "Check for the correct error message:";
-exec grep -q "ERR  : input data file /tmp/nonexisting.dat does not exist" /tmp/mcs56.out;
-
+exec grep "ERR  : input data file /tmp/nonexisting.dat does not exist" /tmp/mcs56.out|wc -l;
+ 
 --disable_warnings
 DROP DATABASE IF EXISTS nonexist_db;
 DROP DATABASE IF EXISTS nonexist_tbl;
@@ -35,22 +35,22 @@ DROP DATABASE IF EXISTS nonexist_tbl;
 
 # Negative. Non-existing db.
 --disable_result_log
-exec $MCS_CPIMPORT nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec cpimport nonexist_db t1 /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";
 exec echo "Check for the correct error message:";
-exec grep -q "MCS-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mcs56.out;
+exec grep "MCS-2006: 'nonexist_db.t1' does not exist in Columnstore." /tmp/mcs56.out|wc -l;
 
 
 # Negative. Non-existing table.
 --disable_result_log
-exec $MCS_CPIMPORT mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
+exec cpimport mcs56_db nonexist_tbl /tmp/nonexisting.dat 2>&1 | tee /tmp/mcs56.out;
 --enable_result_log
 
 exec echo "";
 exec echo "Check for the correct error message:";
-exec grep -q "MCS-2006: 'mcs56_db.nonexist_tbl' does not exist in Columnstore." /tmp/mcs56.out;
+exec grep "MCS-2006: 'mcs56_db.nonexist_tbl' does not exist in Columnstore." /tmp/mcs56.out|wc -l;
 
 # Clean UP
 DROP DATABASE mcs56_db;

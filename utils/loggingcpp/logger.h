@@ -83,7 +83,7 @@ class Logger
 
   MsgMap fMsgMap;
   MessageLog fMl1;
-  std::mutex fLogLock;
+  boost::mutex fLogLock;
 };
 
 typedef boost::shared_ptr<Logger> SPL;

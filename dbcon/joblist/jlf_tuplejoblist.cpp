@@ -417,6 +417,8 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     // last step can be tbps (no join) or thjs, either one can have a group 3 expression
     if (bps || thjs)
     {
+      // this part may set FE2 (setFE23Output()) and may affect behavior of PrimProc's
+      // batchprimitiveprocessor's execute() function when processing aggregates.
       tjs->setOutputRowGroup(rg01);
       tjs->setFcnExpGroup3(exps);
       tjs->setFE23Output(rg1);
@@ -430,6 +432,9 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   }
   else
   {
+    // this may change behavior in the primproc side, look into
+    // a primitives/prim-proc/batchprimitiveprocessor.
+    // This is especially important for aggregation.
     if (thjs && thjs->hasFcnExpGroup2())
       thjs->setFE23Output(rg1);
     else
@@ -705,7 +710,8 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
     {
       //			if (jobInfo.trace && bps->tableOid() >= 3000)
       //				cout << "1 setting project BPP for " << tbps->toString() << " with "
-      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString() << endl;
+      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
+      //<< endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -1838,10 +1844,10 @@ void CircularJoinGraphTransformer::chooseEdgeToTransform(Cycle& cycle,
   }
 
   if (jobInfo.trace)
-    std::cout << "FK FK key not found, removing the first one inner join edge" << std::endl;
+    std::cout << "FK FK key not found, removing the last one inner join edge" << std::endl;
 
-  // Take just a first.
-  resultEdge = std::make_pair(cycle.front(), 0 /*Dummy weight*/);
+  // Take just a last one.
+  resultEdge = std::make_pair(cycle.back(), 0 /*Dummy weight*/);
 }
 
 void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(const JoinEdge& joinEdge)
@@ -1876,7 +1882,6 @@ void CircularJoinGraphTransformer::removeAssociatedHashJoinStepFromJoinSteps(con
       if ((tableKey1 == joinEdge.first && tableKey2 == joinEdge.second) ||
           (tableKey1 == joinEdge.second && tableKey2 == joinEdge.first))
       {
-
         if (jobInfo.trace)
           std::cout << "Erase matched join step with keys: " << tableKey1 << " <-> " << tableKey2
                     << std::endl;
@@ -2130,9 +2135,8 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
 
   // Sort vertices by weights.
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
-            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b) {
-              return a.second < b.second;
-            });
+            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
+            { return a.second < b.second; });
 
   // For each weighted adjacent node.
   for (const auto& adjNodeWeighted : adjacentListWeighted)
@@ -3796,10 +3800,21 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
       small = tid1;
     }
 
+    // MCOL-5539. If the current large table involved in the previous join and it was not merged into
+    // "single large side multiple small sides" optimization, it should be on a small side,
+    // because it represents a intermediate join result and its rowgroup could be a combination of multiple
+    // rowgroups, therefore it should be sent to BPP as a small side, we cannot read it from disk.
+    if (find(joinedTable.begin(), joinedTable.end(), large) != joinedTable.end() &&
+        joinStepMap[small].second > 0)
+    {
+      std::swap(large, small);
+    }
+
     updateJoinSides(small, large, joinInfoMap, smallSides, tableInfoMap, jobInfo);
 
     // This is a table for multiple join edges, always a stream table.
-    if (joinStepMap[large].second > 2)
+    // If `largest` table is equal to the current `large` table - it's an umstream table.
+    if (joinStepMap[large].second > 2 || large == largest)
       umstream = true;
 
     if (find(joinedTable.begin(), joinedTable.end(), small) == joinedTable.end())

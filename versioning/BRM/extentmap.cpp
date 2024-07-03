@@ -20,7 +20,7 @@
  * $Id: extentmap.cpp 1936 2013-07-09 22:10:29Z dhall $
  *
  ****************************************************************************/
-
+#include <atomic>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -212,16 +212,16 @@ bool EMEntry::operator<(const EMEntry& e) const
 }
 
 /*static*/
-std::mutex ExtentMap::mutex;
-std::mutex ExtentMap::emIndexMutex;
+boost::mutex ExtentMap::mutex;
+boost::mutex ExtentMap::emIndexMutex;
 
-std::mutex ExtentMapRBTreeImpl::fInstanceMutex;
+boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
 {
-  std::unique_lock lk(fInstanceMutex);
+  boost::mutex::scoped_lock lk(fInstanceMutex);
 
   if (fInstance)
   {
@@ -243,7 +243,7 @@ ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly
 }
 
 /*static*/
-std::mutex FreeListImpl::fInstanceMutex;
+boost::mutex FreeListImpl::fInstanceMutex;
 
 /*static*/
 FreeListImpl* FreeListImpl::fInstance = 0;
@@ -251,7 +251,7 @@ FreeListImpl* FreeListImpl::fInstance = 0;
 /*static*/
 FreeListImpl* FreeListImpl::makeFreeListImpl(unsigned key, off_t size, bool readOnly)
 {
-  std::unique_lock lk(fInstanceMutex);
+  boost::mutex::scoped_lock lk(fInstanceMutex);
 
   if (fInstance)
   {
@@ -1584,61 +1584,60 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
   constexpr const uint32_t freeShmemThreshold = EM_RB_TREE_INITIAL_SIZE >> 4;
   growEMShmseg(memorySizeNeeded);
 
-  size_t progress = 0, writeSize = emNumElements * sizeof(EMEntry);
   int err;
-  char* writePos;
+  size_t progress = 0;
 
   if (!upgradeV4ToV5)
   {
-    for (uint32_t i = 0; i < emNumElements; ++i)
-    {
-      progress = 0;
-      EMEntry emEntry;
-      writeSize = sizeof(EMEntry);
-      writePos = reinterpret_cast<char*>(&emEntry);
+    const size_t readSize = emNumElements * sizeof(EMEntry);
+    std::unique_ptr<char[]> emBuffer(new char[readSize]);
 
-      while (progress < writeSize)
+    while (progress < readSize)
+    {
+      err = in->read(&emBuffer[progress], readSize - progress);
+      if (err <= 0)
       {
-        err = in->read(writePos + progress, writeSize - progress);
-        if (err <= 0)
-        {
-          log_errno("ExtentMap::loadVersion4(): read ");
-          throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
-        }
-        progress += (uint)err;
+        log_errno("ExtentMap::loadVersion4(): read ");
+        throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
       }
+      progress += (uint)err;
+    }
+
+    progress = 0;
+    for (uint32_t emIndex = 0; emIndex < emNumElements; ++emIndex)
+    {
       if (fPExtMapRBTreeImpl->getFreeMemory() < freeShmemThreshold)
         growEMShmseg(EM_RB_TREE_INCREMENT);
 
+      EMEntry emEntry = *reinterpret_cast<EMEntry*>(&emBuffer[progress]);
       std::pair<int64_t, EMEntry> lbidEMEntryPair = make_pair(emEntry.range.start, emEntry);
       fExtentMapRBTree->insert(lbidEMEntryPair);
+      progress += sizeof(EMEntry);
     }
   }
   else
   {
-    // We are upgrading extent map from v4 to v5.
-    for (uint32_t i = 0; i < emNumElements; i++)
+    const size_t readSize = emNumElements * sizeof(EMEntry_v4);
+    std::unique_ptr<char[]> emBuffer(new char[readSize]);
+
+    while (progress < readSize)
     {
-      EMEntry_v4 emEntryV4;
-      progress = 0;
-      writeSize = sizeof(EMEntry_v4);
-      writePos = reinterpret_cast<char*>(&emEntryV4);
-
-      while (progress < writeSize)
+      err = in->read(&emBuffer[progress], readSize - progress);
+      if (err <= 0)
       {
-        err = in->read(writePos + progress, writeSize - progress);
-        if (err <= 0)
-        {
-          log_errno("ExtentMap::loadVersion4or5(): read ");
-          throw runtime_error(
-              "ExtentMap::loadVersion4or5(): read failed during upgrade. Check the error log.");
-        }
-        progress += (uint)err;
+        log_errno("ExtentMap::loadVersion4(): read ");
+        throw runtime_error("ExtentMap::loadVersion4(): read failed. Check the error log.");
       }
+      progress += (uint)err;
+    }
 
+    progress = 0;
+    for (uint32_t emIndex = 0; emIndex < emNumElements; ++emIndex)
+    {
       if (fPExtMapRBTreeImpl->getFreeMemory() < freeShmemThreshold)
         growEMShmseg(EM_RB_TREE_INCREMENT);
 
+      EMEntry_v4 emEntryV4 = *reinterpret_cast<EMEntry_v4*>(&emBuffer[progress]);
       EMEntry emEntry;
       emEntry.range.start = emEntryV4.range.start;
       emEntry.range.size = emEntryV4.range.size;
@@ -1657,6 +1656,7 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
 
       std::pair<int64_t, EMEntry> lbidEMEntryPair = make_pair(emEntry.range.start, emEntry);
       fExtentMapRBTree->insert(lbidEMEntryPair);
+      progress += sizeof(EMEntry_v4);
     }
 
     std::cout << emNumElements << " extents successfully upgraded" << std::endl;
@@ -1859,16 +1859,35 @@ void ExtentMap::save(const string& filename)
     throw;
   }
 
-  for (auto& lbidEMEntryPair : *fExtentMapRBTree)
+  // MCOL-5623 Prepare `ExtentMap` buffer before write.
+  const size_t emNumOfElements = fExtentMapRBTree->size();
+  auto emIterator = fExtentMapRBTree->begin();
+  size_t emIndex = 0;
+  while (emIndex < emNumOfElements)
   {
-    EMEntry& emEntry = lbidEMEntryPair.second;
-    const uint32_t writeSize = sizeof(EMEntry);
-    char* writePos = reinterpret_cast<char*>(&emEntry);
-    uint32_t progress = 0;
+    const size_t emNumOfElementsInBatch = std::min(EM_SAVE_NUM_PER_BATCH, emNumOfElements - emIndex);
+    const size_t emSizeInBatch = emNumOfElementsInBatch * sizeof(EMEntry);
+    std::unique_ptr<char[]> extentMapBuffer(new char[emSizeInBatch]);
 
-    while (progress < writeSize)
+    const size_t endOfBatch = std::min(emIndex + EM_SAVE_NUM_PER_BATCH, emNumOfElements);
+    size_t offset = 0;
+    while (emIndex < endOfBatch)
     {
-      auto err = out->write(writePos + progress, writeSize - progress);
+      EMEntry& emEntry = emIterator->second;
+      const size_t writeSize = sizeof(EMEntry);
+      char* source = reinterpret_cast<char*>(&emEntry);
+      std::memcpy(&extentMapBuffer[offset], source, writeSize);
+      offset += writeSize;
+      std::advance(emIterator, 1);
+      ++emIndex;
+    }
+    // Double check.
+    idbassert(offset == emSizeInBatch);
+
+    offset = 0;
+    while (offset < emSizeInBatch)
+    {
+      auto err = out->write(&extentMapBuffer[offset], emSizeInBatch - offset);
       if (err < 0)
       {
         releaseFreeList(READ);
@@ -1876,7 +1895,7 @@ void ExtentMap::save(const string& filename)
         releaseEMEntryTable(READ);
         throw ios_base::failure("ExtentMap::save(): write failed. Check the error log.");
       }
-      progress += err;
+      offset += err;
     }
   }
 
@@ -1901,43 +1920,54 @@ void ExtentMap::save(const string& filename)
   releaseEMEntryTable(READ);
 }
 
+// This routine takes shmem RWLock in appropriate mode.
+MSTEntry* ExtentMap::_getTableLock(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    return fMST.getTable_read(table);
+  }
+  // WRITE/NONE op
+  auto result = fMST.getTable_write(table);
+  lockedState = true;
+  return result;
+}
+
+// This routine upgrades shmem RWlock mode if needed.
+void ExtentMap::_getTableLockUpgradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    fMST.getTable_upgrade(table);
+    lockedState = true;
+  }
+}
+
+// This routine downgrades shmem RWlock if it was previously upgraded.
+void ExtentMap::_getTableLockDowngradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table)
+{
+  if (op == READ)
+  {
+    // Look releaseEMEntryTable() for the explanation why lockedState is set before the lock is downgraded.
+    lockedState = false;
+    fMST.getTable_downgrade(table);
+  }
+}
+
 /* always returns holding the EM lock, and with the EM seg mapped */
 void ExtentMap::grabEMEntryTable(OPS op)
 {
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
-  if (op == READ)
-  {
-    fEMRBTreeShminfo = fMST.getTable_read(MasterSegmentTable::EMTable);
-  }
-  else
-  {
-    fEMRBTreeShminfo = fMST.getTable_write(MasterSegmentTable::EMTable);
-    emLocked = true;
-  }
+  fEMRBTreeShminfo = _getTableLock(op, emLocked, MasterSegmentTable::EMTable);
 
   if (!fPExtMapRBTreeImpl || fPExtMapRBTreeImpl->key() != (uint32_t)fEMRBTreeShminfo->tableShmkey)
   {
+    _getTableLockUpgradeIfNeeded(op, emLocked, MasterSegmentTable::EMTable);
+
     if (fEMRBTreeShminfo->allocdSize == 0)
     {
-      if (op == READ)
-      {
-        fMST.getTable_upgrade(MasterSegmentTable::EMTable);
-        emLocked = true;
-
-        if (fEMRBTreeShminfo->allocdSize == 0)
-        {
-          growEMShmseg();
-        }
-
-        // Has to be done holding the write lock.
-        emLocked = false;
-        fMST.getTable_downgrade(MasterSegmentTable::EMTable);
-      }
-      else
-      {
-        growEMShmseg();
-      }
+      growEMShmseg();
     }
     else
     {
@@ -1951,6 +1981,8 @@ void ExtentMap::grabEMEntryTable(OPS op)
         throw runtime_error("ExtentMap cannot create RBTree in shared memory segment");
       }
     }
+
+    _getTableLockDowngradeIfNeeded(op, emLocked, MasterSegmentTable::EMTable);
   }
   else
   {
@@ -1961,21 +1993,14 @@ void ExtentMap::grabEMEntryTable(OPS op)
 /* always returns holding the FL lock */
 void ExtentMap::grabFreeList(OPS op)
 {
-  std::unique_lock lk(mutex, std::defer_lock);
+  boost::mutex::scoped_lock lk(mutex);
 
-  if (op == READ)
-  {
-    fFLShminfo = fMST.getTable_read(MasterSegmentTable::EMFreeList);
-    lk.lock();
-  }
-  else
-  {
-    fFLShminfo = fMST.getTable_write(MasterSegmentTable::EMFreeList);
-    flLocked = true;
-  }
+  fFLShminfo = _getTableLock(op, flLocked, MasterSegmentTable::EMFreeList);
 
   if (!fPFreeListImpl || fPFreeListImpl->key() != (unsigned)fFLShminfo->tableShmkey)
   {
+    _getTableLockUpgradeIfNeeded(op, flLocked, MasterSegmentTable::EMFreeList);
+
     if (fFreeList != nullptr)
     {
       fFreeList = nullptr;
@@ -1983,20 +2008,7 @@ void ExtentMap::grabFreeList(OPS op)
 
     if (fFLShminfo->allocdSize == 0)
     {
-      if (op == READ)
-      {
-        lk.unlock();
-        fMST.getTable_upgrade(MasterSegmentTable::EMFreeList);
-        flLocked = true;
-
-        if (fFLShminfo->allocdSize == 0)
-          growFLShmseg();
-
-        flLocked = false;  // has to be done holding the write lock
-        fMST.getTable_downgrade(MasterSegmentTable::EMFreeList);
-      }
-      else
-        growFLShmseg();
+      growFLShmseg();
     }
     else
     {
@@ -2013,54 +2025,33 @@ void ExtentMap::grabFreeList(OPS op)
         log_errno("ExtentMap::grabFreeList(): shmat");
         throw runtime_error("ExtentMap::grabFreeList(): shmat failed.  Check the error log.");
       }
-
-      if (op == READ)
-        lk.unlock();
     }
+    _getTableLockDowngradeIfNeeded(op, flLocked, MasterSegmentTable::EMFreeList);
   }
   else
   {
     fFreeList = fPFreeListImpl->get();
-
-    if (op == READ)
-      lk.unlock();
   }
 }
 
 void ExtentMap::grabEMIndex(OPS op)
 {
-  std::unique_lock lk(emIndexMutex);
+  boost::mutex::scoped_lock lk(emIndexMutex);
 
-  if (op == READ)
+  fEMIndexShminfo = _getTableLock(op, emIndexLocked, MasterSegmentTable::EMIndex);
+
+  if (fPExtMapIndexImpl_ && (fPExtMapIndexImpl_->getShmemImplSize() == (unsigned)fEMIndexShminfo->allocdSize))
   {
-    fEMIndexShminfo = fMST.getTable_read(MasterSegmentTable::EMIndex);
+    return;
   }
-  else
-  {
-    fEMIndexShminfo = fMST.getTable_write(MasterSegmentTable::EMIndex);
-    emIndexLocked = true;
-  }
+
+  _getTableLockUpgradeIfNeeded(op, emIndexLocked, MasterSegmentTable::EMIndex);
 
   if (!fPExtMapIndexImpl_)
   {
     if (fEMIndexShminfo->allocdSize == 0)
     {
-      if (op == READ)
-      {
-        fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
-        emIndexLocked = true;
-
-        // Checking race conditions
-        if (fEMIndexShminfo->allocdSize == 0)
-          growEMIndexShmseg();
-
-        emIndexLocked = false;
-        fMST.getTable_downgrade(MasterSegmentTable::EMIndex);
-      }
-      else
-      {
-        growEMIndexShmseg();
-      }
+      growEMIndexShmseg();
     }
     else
     {
@@ -2079,13 +2070,14 @@ void ExtentMap::grabEMIndex(OPS op)
     fPExtMapIndexImpl_ =
         ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
   }
+  _getTableLockDowngradeIfNeeded(op, emIndexLocked, MasterSegmentTable::EMIndex);
 }
 
-void ExtentMap::releaseEMEntryTable(OPS op)
+void ExtentMap::_releaseTable(const OPS op, std::atomic<bool>& lockedState, const int table)
 {
   if (op == READ)
   {
-    fMST.releaseTable_read(MasterSegmentTable::EMTable);
+    fMST.releaseTable_read(table);
   }
   else
   {
@@ -2094,33 +2086,24 @@ void ExtentMap::releaseEMEntryTable(OPS op)
     // here will fail is if the underlying semaphore doesn't exist anymore
     // or there is a locking logic error somewhere else.  Either way,
     // declaring the EM unlocked here is OK. Same with all similar assignments.
-    emLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMTable);
+    lockedState = false;
+    fMST.releaseTable_write(table);
   }
+}
+
+void ExtentMap::releaseEMEntryTable(OPS op)
+{
+  _releaseTable(op, emLocked, MasterSegmentTable::EMTable);
 }
 
 void ExtentMap::releaseFreeList(OPS op)
 {
-  if (op == READ)
-    fMST.releaseTable_read(MasterSegmentTable::EMFreeList);
-  else
-  {
-    flLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMFreeList);
-  }
+  _releaseTable(op, flLocked, MasterSegmentTable::EMFreeList);
 }
 
 void ExtentMap::releaseEMIndex(OPS op)
 {
-  if (op == READ)
-  {
-    fMST.releaseTable_read(MasterSegmentTable::EMIndex);
-  }
-  else
-  {
-    emIndexLocked = false;
-    fMST.releaseTable_write(MasterSegmentTable::EMIndex);
-  }
+  _releaseTable(op, emIndexLocked, MasterSegmentTable::EMIndex);
 }
 
 key_t ExtentMap::chooseEMShmkey()
@@ -6036,17 +6019,17 @@ void ExtentMap::confirmChangesRBTree()
   undoRecordsRBTree.clear();
 }
 
-const bool* ExtentMap::getEMFLLockStatus()
+const std::atomic<bool>* ExtentMap::getEMFLLockStatus()
 {
   return &flLocked;
 }
 
-const bool* ExtentMap::getEMLockStatus()
+const std::atomic<bool>* ExtentMap::getEMLockStatus()
 {
   return &emLocked;
 }
 
-const bool* ExtentMap::getEMIndexLockStatus()
+const std::atomic<bool>* ExtentMap::getEMIndexLockStatus()
 {
   return &emIndexLocked;
 }
@@ -6138,7 +6121,7 @@ void ExtentMap::checkReloadConfig()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentSize()  // dmc-should deprecate
 {
-  //	std::unique_lock lk(fConfigCacheMutex);
+  //	boost::mutex::scoped_lock lk(fConfigCacheMutex);
   //	checkReloadConfig( );
 
   ExtentSize = 0x2000;
@@ -6153,7 +6136,7 @@ unsigned ExtentMap::getExtentSize()  // dmc-should deprecate
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentRows()
 {
-  //	std::unique_lock lk(fConfigCacheMutex);
+  //	boost::mutex::scoped_lock lk(fConfigCacheMutex);
   //	checkReloadConfig( );
 
   ExtentRows = 0x800000;
@@ -6166,7 +6149,7 @@ unsigned ExtentMap::getExtentRows()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getFilesPerColumnPartition()
 {
-  std::unique_lock lk(fConfigCacheMutex);
+  boost::mutex::scoped_lock lk(fConfigCacheMutex);
   checkReloadConfig();
 
   return filesPerColumnPartition;
@@ -6177,7 +6160,7 @@ unsigned ExtentMap::getFilesPerColumnPartition()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getExtentsPerSegmentFile()
 {
-  std::unique_lock lk(fConfigCacheMutex);
+  boost::mutex::scoped_lock lk(fConfigCacheMutex);
   checkReloadConfig();
 
   return extentsPerSegmentFile;

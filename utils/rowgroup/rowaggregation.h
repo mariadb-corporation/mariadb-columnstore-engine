@@ -113,7 +113,10 @@ enum RowAggFunctionType
   ROWAGG_DUP_FUNCT,    // duplicate aggregate Function(), except AVG and UDAF, in select
   ROWAGG_DUP_AVG,      // duplicate AVG(column_name) in select
   ROWAGG_DUP_STATS,    // duplicate statistics functions in select
-  ROWAGG_DUP_UDAF      // duplicate UDAF function in select
+  ROWAGG_DUP_UDAF,     // duplicate UDAF function in select
+
+  // a dummy "select some" aggregate needed for non-group-by values in SELECT's with GROUP BY's
+  ROWAGG_SELECT_SOME
 };
 
 //------------------------------------------------------------------------------
@@ -389,7 +392,7 @@ class RowAggregation : public messageqcpp::Serializeable
   RowAggregation();
   RowAggregation(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                  const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {});
+                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {}, bool withRollup = false);
   RowAggregation(const RowAggregation& rhs);
 
   /** @brief RowAggregation default destructor
@@ -422,6 +425,10 @@ class RowAggregation : public messageqcpp::Serializeable
     fRowGroupOut = pRowGroupOut;
     initialize();
   }
+
+  void clearRollup() { fRollupFlag = false; }
+
+  bool hasRollup() const { return fRollupFlag; }
 
   /** @brief Define content of data to be joined
    *
@@ -529,13 +536,14 @@ class RowAggregation : public messageqcpp::Serializeable
   }
 
  protected:
-  virtual void initialize();
+  virtual void initialize(bool hasGroupConcat = false);
   virtual void initMapData(const Row& row);
   virtual void attachGroupConcatAg();
 
   virtual void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
   void mergeEntries(const Row& row);
   virtual void doMinMax(const Row&, int64_t, int64_t, int);
+  virtual void doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOut);
   virtual void doSum(const Row&, int64_t, int64_t, int);
   virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
   virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
@@ -580,6 +588,8 @@ class RowAggregation : public messageqcpp::Serializeable
   Row fNullRow;
   Row* tmpRow;  // used by the hashers & eq functors
   boost::scoped_array<uint8_t> fNullRowData;
+  rowgroup::RGData fNullRowRGData;
+  rowgroup::RowGroup fNullRowGroup;
 
   std::unique_ptr<RowAggStorage> fRowAggStorage;
 
@@ -628,6 +638,11 @@ class RowAggregation : public messageqcpp::Serializeable
   joblist::ResourceManager* fRm = nullptr;
   boost::shared_ptr<int64_t> fSessionMemLimit;
   std::unique_ptr<RGData> fCurRGData;
+  bool fRollupFlag = false;
+
+  std::string fTmpDir = config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+  std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
+
 };
 
 //------------------------------------------------------------------------------
@@ -645,7 +660,7 @@ class RowAggregationUM : public RowAggregation
   }
   RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
-                   boost::shared_ptr<int64_t> sessionMemLimit);
+                   boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUM(const RowAggregationUM& rhs);
 
   /** @brief RowAggregationUM default destructor
@@ -667,6 +682,17 @@ class RowAggregationUM : public RowAggregation
    * @returns true if more data, else false if no more data.
    */
   bool nextRowGroup();
+
+  /** @brief Returns aggregated rows in a RowGroup as long as there are still not returned result RowGroups.
+   *
+   * This function should be called repeatedly until false is returned (meaning end of data).
+   * Returns data from in-memory storage, as well as spilled data from disk. If disk-based aggregation is
+   * happening, finalAggregation() should be called before returning result RowGroups to finalize the used
+   * RowAggStorages, merge different spilled generations and obtain correct aggregation results.
+   *
+   * @returns True if there are more result RowGroups, else false if all results have been returned.
+   */
+  bool nextOutputRowGroup();
 
   /** @brief Add an aggregator for DISTINCT aggregation
    */
@@ -724,7 +750,7 @@ class RowAggregationUM : public RowAggregation
 
  protected:
   // virtual methods from base
-  void initialize() override;
+  void initialize(bool hasGroupConcat = false) override;
 
   void attachGroupConcatAg() override;
   void updateEntry(const Row& row, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
@@ -810,7 +836,7 @@ class RowAggregationUMP2 : public RowAggregationUM
   }
   RowAggregationUMP2(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                      const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
-                     boost::shared_ptr<int64_t> sessionMemLimit);
+                     boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
   RowAggregationUMP2(const RowAggregationUMP2& rhs);
 
   /** @brief RowAggregationUMP2 default destructor

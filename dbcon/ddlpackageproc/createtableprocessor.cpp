@@ -47,8 +47,8 @@ using namespace logging;
 
 namespace ddlpackageprocessor
 {
-CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
-    ddlpackage::CreateTableStatement& createTableStmt)
+CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
+    ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("CreateTableProcessor::processPackage");
 
@@ -72,8 +72,22 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     return result;
   }
 
+  ddlpackage::CreateTableStatement* createTableStmt =
+      dynamic_cast<ddlpackage::CreateTableStatement*>(sqlStmt);
+
+  if (!createTableStmt)
+  {
+    Message::Args args;
+    Message message(9);
+    args.add("CreateTableStatement wrong cast");
+    message.format(args);
+    result.result = CREATE_ERROR;
+    result.message = message;
+    return result;
+  }
+
   DETAIL_INFO(createTableStmt);
-  ddlpackage::TableDef& tableDef = *createTableStmt.fTableDef;
+  ddlpackage::TableDef& tableDef = *(createTableStmt->fTableDef);
   // If schema = CALPONTSYS, do not create table
 
   if (tableDef.fQualifiedName->fSchema == CALPONT_SCHEMA)
@@ -89,7 +103,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 
   // Check whether the table is existed already
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-      CalpontSystemCatalog::makeCalpontSystemCatalog(createTableStmt.fSessionID);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(createTableStmt->fSessionID);
   execplan::CalpontSystemCatalog::TableName tableName;
   tableName.schema = tableDef.fQualifiedName->fSchema;
   tableName.table = tableDef.fQualifiedName->fName;
@@ -105,36 +119,44 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
   }
   catch (IDBExcept& ie)
   {
-    // TODO: What is and is not an error here?
-    if (ie.errorCode() == ERR_DATA_OFFLINE)
+    if (checkPPLostConnection(ie.what()))
     {
-      // release transaction
-      fSessionManager.rolledback(txnID);
-      // Return the error for display to user
-      Message::Args args;
-      Message message(9);
-      args.add(ie.what());
-      message.format(args);
-      result.result = CREATE_ERROR;
-      result.message = message;
+      result.result = NETWORK_ERROR;
       return result;
     }
-    else if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
+    else
     {
-      roPair.objnum = 0;
-    }
-    else  // error out
-    {
-      // release transaction
-      fSessionManager.rolledback(txnID);
-      // Return the error for display to user
-      Message::Args args;
-      Message message(9);
-      args.add(ie.what());
-      message.format(args);
-      result.result = CREATE_ERROR;
-      result.message = message;
-      return result;
+      // TODO: What is and is not an error here?
+      if (ie.errorCode() == ERR_DATA_OFFLINE)
+      {
+        // release transaction
+        fSessionManager.rolledback(txnID);
+        // Return the error for display to user
+        Message::Args args;
+        Message message(9);
+        args.add(ie.what());
+        message.format(args);
+        result.result = CREATE_ERROR;
+        result.message = message;
+        return result;
+      }
+      else if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
+      {
+        roPair.objnum = 0;
+      }
+      else  // error out
+      {
+        // release transaction
+        fSessionManager.rolledback(txnID);
+        // Return the error for display to user
+        Message::Args args;
+        Message message(9);
+        args.add(ie.what());
+        message.format(args);
+        result.result = CREATE_ERROR;
+        result.message = message;
+        return result;
+      }
     }
   }
   catch (std::exception& ex)  // error out
@@ -185,8 +207,8 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
   // Start a new transaction
   VERBOSE_INFO("Starting a new transaction");
 
-  string stmt = createTableStmt.fSql + "|" + tableDef.fQualifiedName->fSchema + "|";
-  SQLLogger logger(stmt, fDDLLoggingId, createTableStmt.fSessionID, txnID.id);
+  string stmt = createTableStmt->fSql + "|" + tableDef.fQualifiedName->fSchema + "|";
+  SQLLogger logger(stmt, fDDLLoggingId, createTableStmt->fSessionID, txnID.id);
 
   std::string err;
   execplan::ObjectIDManager fObjectIDManager;
@@ -255,7 +277,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #endif
 
     uint32_t numColumnOids = numColumns + numDictCols;
-    numColumnOids += 1; // MCOL-5021
+    numColumnOids += 1;  // MCOL-5021
 
     if (fStartingColOID < 0)
     {
@@ -276,11 +298,11 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     ByteStream bytestream;
     bytestream << (ByteStream::byte)WE_SVR_WRITE_SYSTABLE;
     bytestream << uniqueId;
-    bytestream << (uint32_t)createTableStmt.fSessionID;
+    bytestream << (uint32_t)createTableStmt->fSessionID;
     bytestream << (uint32_t)txnID.id;
     bytestream << (uint32_t)fStartingColOID;
     bytestream << (uint32_t)(fStartingColOID + numColumnOids);
-    bytestream << (uint32_t)createTableStmt.fTableWithAutoi;
+    bytestream << (uint32_t)createTableStmt->fTableWithAutoi;
     uint16_t dbRoot;
     BRM::OID_t sysOid = 1001;
     // Find out where systable is
@@ -307,7 +329,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
     pmNum = (*dbRootPMMap)[dbRoot];
     // MCOL-66 The DBRM can't handle concurrent DDL
-    std::unique_lock lk(dbrmMutex);
+    boost::mutex::scoped_lock lk(dbrmMutex);
 
     try
     {
@@ -375,7 +397,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 
       if (rc != NETWORK_ERROR)
       {
-        rollBackTransaction(uniqueId, txnID, createTableStmt.fSessionID);  // What to do with the error code
+        rollBackTransaction(uniqueId, txnID, createTableStmt->fSessionID);  // What to do with the error code
       }
 
       // release transaction
@@ -387,7 +409,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     bytestream.restart();
     bytestream << (ByteStream::byte)WE_SVR_WRITE_CREATE_SYSCOLUMN;
     bytestream << uniqueId;
-    bytestream << (uint32_t)createTableStmt.fSessionID;
+    bytestream << (uint32_t)createTableStmt->fSessionID;
     bytestream << (uint32_t)txnID.id;
     bytestream << numColumns;
 
@@ -486,22 +508,31 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #ifdef IDB_DDL_DEBUG
       cout << fTxnid.id << " Create table WE_SVR_WRITE_CREATE_SYSCOLUMN: " << errorMsg << endl;
 #endif
-      result.result = (ResultCode)rc;
-      Message::Args args;
-      Message message(9);
-      args.add("(3)Create table failed due to ");
-      args.add(errorMsg);
-      message.format(args);
-      result.message = message;
-
-      if (rc != NETWORK_ERROR)
+      if (checkPPLostConnection(errorMsg))
       {
-        rollBackTransaction(uniqueId, txnID, createTableStmt.fSessionID);  // What to do with the error code
+        result.result = PP_LOST_CONNECTION;
+        return result;
       }
+      else
+      {
+        result.result = (ResultCode)rc;
+        Message::Args args;
+        Message message(9);
+        args.add("(3)Create table failed due to ");
+        args.add(errorMsg);
+        message.format(args);
+        result.message = message;
 
-      // release transaction
-      fSessionManager.rolledback(txnID);
-      return result;
+        if (rc != NETWORK_ERROR)
+        {
+          rollBackTransaction(uniqueId, txnID,
+                              createTableStmt->fSessionID);  // What to do with the error code
+        }
+
+        // release transaction
+        fSessionManager.rolledback(txnID);
+        return result;
+      }
     }
 
     // Get the number of tables in the database, the current table is included.
@@ -627,7 +658,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 
       if (rc != NETWORK_ERROR)
       {
-        rollBackTransaction(uniqueId, txnID, createTableStmt.fSessionID);  // What to do with the error code
+        rollBackTransaction(uniqueId, txnID, createTableStmt->fSessionID);  // What to do with the error code
       }
 
       // release transaction
@@ -716,7 +747,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
 #ifdef IDB_DDL_DEBUG
       cout << fTxnid.id << " Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 #endif
-      rollBackTransaction(uniqueId, txnID, createTableStmt.fSessionID);  // What to do with the error code
+      rollBackTransaction(uniqueId, txnID, createTableStmt->fSessionID);  // What to do with the error code
       fSessionManager.rolledback(txnID);
     }
     else
@@ -728,7 +759,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackage(
     }
 
     // Log the DDL statement.
-    logDDL(createTableStmt.fSessionID, txnID.id, createTableStmt.fSql, createTableStmt.fOwner);
+    logDDL(createTableStmt->fSessionID, txnID.id, createTableStmt->fSql, createTableStmt->fOwner);
   }
   catch (std::exception& ex)
   {

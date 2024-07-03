@@ -108,6 +108,15 @@ void set_diskjoin_largesidelimit(THD* thd, ulong value);
 ulong get_diskjoin_bucketsize(THD* thd);
 void set_diskjoin_bucketsize(THD* thd, ulong value);
 
+bool get_diskjoin_force_run(THD* thd);
+void set_diskjoin_force_run(THD* thd, bool value);
+
+ulong get_diskjoin_max_partition_tree_depth(THD* thd);
+void set_diskjoin_max_partition_tree_depth(THD* thd, ulong value);
+
+ulong get_max_pm_join_result_count(THD* thd);
+void set_max_pm_join_result_count(THD* thd, ulong value);
+
 ulong get_um_mem_limit(THD* thd);
 void set_um_mem_limit(THD* thd, ulong value);
 
@@ -164,3 +173,9 @@ void set_s3_secret(THD* thd, char* value);
 
 const char* get_s3_region(THD* thd);
 void set_s3_region(THD* thd, char* value);
+
+const char* get_pron(THD* thd);
+void set_pron(THD* thd, char* value);
+
+ulong get_max_allowed_in_values(THD* thd);
+void set_max_allowed_in_values(THD* thd, ulong value);

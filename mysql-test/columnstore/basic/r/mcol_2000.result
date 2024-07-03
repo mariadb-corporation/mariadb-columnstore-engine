@@ -139,19 +139,19 @@ copy3	CREATE TABLE `copy3` (
   `l` date DEFAULT NULL,
   `m` datetime DEFAULT NULL,
   `o` time DEFAULT NULL,
-  `s` char(17) CHARACTER SET utf8mb3 DEFAULT NULL,
+  `s` char(17) DEFAULT NULL,
   `t` varchar(17) CHARACTER SET utf8mb4 DEFAULT NULL,
   `w` tinyblob DEFAULT NULL,
   `x` tinyblob DEFAULT NULL,
   `y` blob DEFAULT NULL,
   `z` mediumblob DEFAULT NULL,
   `aa` longblob DEFAULT NULL,
-  `bb` tinytext CHARACTER SET utf8mb3 DEFAULT NULL,
+  `bb` tinytext DEFAULT NULL,
   `cc` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
   `dd` text CHARACTER SET utf8mb4 DEFAULT NULL,
   `ee` mediumtext CHARACTER SET utf8mb4 DEFAULT NULL,
   `ff` longtext CHARACTER SET utf8mb4 DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 drop table orig;
 drop table copy1;
 drop table copy2;
@@ -219,31 +219,31 @@ insert into cs3 values (_utf8mb4 0xE1B482, '2020-10-25 01:02:07',
 '1234567890', '2020-10-25 01:02:08',
 'abc', '2020-10-25 01:02:09',
 'cde', '2020-10-25 01:02:10');
-ERROR 22007: Incorrect string value: '\xE1\xB4\x82' for column `test_mcol2000`.`cs3`.`a` at row 1
 select * from cs3;
 a	b	c	d	e	f	g	h
 1	2020-10-25 01:02:04	1234567890	2020-10-25 01:02:05	abc	2020-10-25 01:02:06	cde	2020-10-25 01:02:07
 1	2020-10-25 01:02:06	1234567890	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
+?	2020-10-25 01:02:07	1234567890	2020-10-25 01:02:08	abc	2020-10-25 01:02:09	cde	2020-10-25 01:02:10
 commit;
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
-a	varchar	1	1
+a	varchar	1	3
 b	datetime	NULL	NULL
-c	varchar	10	10
+c	varchar	10	30
 d	datetime	NULL	NULL
-e	varchar	240	240
+e	varchar	240	720
 f	datetime	NULL	NULL
-g	varchar	2000	2000
+g	varchar	2000	6000
 h	datetime	NULL	NULL
 select column_name, data_type, column_length from information_schema.columnstore_columns where hex(table_schema)=hex('test_mcol2000') and hex(table_name)=hex('cs3');
 column_name	data_type	column_length
-a	varchar	1
+a	varchar	3
 b	datetime	8
-c	varchar	10
+c	varchar	30
 d	datetime	8
-e	varchar	240
+e	varchar	720
 f	datetime	8
-g	varchar	2000
+g	varchar	6000
 h	datetime	8
 drop table if exists cs1;
 drop table if exists cs2;
@@ -583,23 +583,23 @@ a	b	c	d	e	f	g	h
 1	2020-10-25 01:02:06	1234567890	2020-10-25 01:02:07	abc	2020-10-25 01:02:08	cde	2020-10-25 01:02:09
 select column_name, data_type, character_maximum_length, character_octet_length from information_schema.columns where table_schema='test_mcol2000' and table_name='cs3';
 column_name	data_type	character_maximum_length	character_octet_length
-a	char	1	1
+a	char	1	3
 b	datetime	NULL	NULL
-c	char	10	10
+c	char	10	30
 d	datetime	NULL	NULL
-e	char	240	240
+e	char	240	720
 f	datetime	NULL	NULL
-g	char	255	255
+g	char	255	765
 h	datetime	NULL	NULL
 select column_name, data_type, column_length from information_schema.columnstore_columns where hex(table_schema)=hex('test_mcol2000') and hex(table_name)=hex('cs3');
 column_name	data_type	column_length
-a	char	1
+a	char	3
 b	datetime	8
-c	char	10
+c	char	30
 d	datetime	8
-e	char	240
+e	char	720
 f	datetime	8
-g	char	255
+g	char	765
 h	datetime	8
 drop table if exists cs1;
 drop table if exists cs2;
@@ -953,13 +953,13 @@ a	tinytext	255	255
 b	datetime	NULL	NULL
 c	tinytext	255	255
 d	datetime	NULL	NULL
-e	tinytext	255	255
+e	text	65535	65535
 f	datetime	NULL	NULL
 g	text	65535	65535
 h	datetime	NULL	NULL
-i	text	65535	65535
+i	mediumtext	16777215	16777215
 j	datetime	NULL	NULL
-k	mediumtext	16777215	16777215
+k	longtext	4294967295	4294967295
 l	datetime	NULL	NULL
 select column_name, data_type, column_length from information_schema.columnstore_columns where hex(table_schema)=hex('test_mcol2000') and hex(table_name)=hex('cs3');
 column_name	data_type	column_length
@@ -967,11 +967,11 @@ a	text	255
 b	datetime	8
 c	text	255
 d	datetime	8
-e	text	255
+e	text	65535
 f	datetime	8
 g	text	65535
 h	datetime	8
-i	text	65535
+i	text	16777215
 j	datetime	8
 k	text	16777215
 l	datetime	8

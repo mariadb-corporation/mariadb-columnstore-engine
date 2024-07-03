@@ -66,7 +66,7 @@ using namespace execplan;
 namespace redistribute
 {
 RedistributeControl* RedistributeControl::fInstance = NULL;
-std::mutex instanceMutex;
+boost::mutex instanceMutex;
 
 const string RedistributeDir("/data1/systemFiles/redistribute");
 const string InfoFileName("/redistribute.info");
@@ -75,7 +75,7 @@ const string PlanFileName("/redistribute.plan");
 RedistributeControl* RedistributeControl::instance()
 {
   // The constructor is protected by instanceMutex lock.
-  std::unique_lock lock(instanceMutex);
+  boost::mutex::scoped_lock lock(instanceMutex);
 
   if (fInstance == NULL)
     fInstance = new RedistributeControl();
@@ -127,7 +127,7 @@ RedistributeControl::~RedistributeControl()
 
 int RedistributeControl::handleUIMsg(messageqcpp::ByteStream& bs, messageqcpp::IOSocket& so)
 {
-  std::unique_lock sessionLock(fSessionMutex);
+  boost::mutex::scoped_lock sessionLock(fSessionMutex);
 
   uint32_t status = RED_STATE_UNDEF;
   const RedistributeMsgHeader* h = (const RedistributeMsgHeader*)bs.buf();
@@ -379,7 +379,7 @@ uint32_t RedistributeControl::getCurrentState()
 {
   uint32_t status = RED_STATE_UNDEF;
   ostringstream oss;
-  std::unique_lock lock(fInfoFileMutex);
+  boost::mutex::scoped_lock lock(fInfoFileMutex);
 
   if (!fInfoFilePtr)
   {
@@ -450,7 +450,7 @@ bool RedistributeControl::getStartOptions(messageqcpp::ByteStream& bs)
 
 void RedistributeControl::updateState(uint32_t s)
 {
-  std::unique_lock lock(fInfoFileMutex);
+  boost::mutex::scoped_lock lock(fInfoFileMutex);
 
   // allowed state change:
   //   idle    ->  active
@@ -636,7 +636,7 @@ void RedistributeControl::updateState(uint32_t s)
 
 void RedistributeControl::setEntryCount(uint32_t entryCount)
 {
-  std::unique_lock lock(fInfoFileMutex);
+  boost::mutex::scoped_lock lock(fInfoFileMutex);
   fRedistributeInfo.planned = entryCount;
 
   rewind(fInfoFilePtr);
@@ -646,7 +646,7 @@ void RedistributeControl::setEntryCount(uint32_t entryCount)
 
 void RedistributeControl::updateProgressInfo(uint32_t s, time_t t)
 {
-  std::unique_lock lock(fInfoFileMutex);
+  boost::mutex::scoped_lock lock(fInfoFileMutex);
   fRedistributeInfo.endTime = t;
 
   switch (s)
@@ -665,7 +665,7 @@ void RedistributeControl::updateProgressInfo(uint32_t s, time_t t)
 
 int RedistributeControl::handleJobMsg(messageqcpp::ByteStream& bs, messageqcpp::IOSocket& so)
 {
-  //	std::unique_lock jobLock(fJobMutex);
+  //	boost::mutex::scoped_lock jobLock(fJobMutex);
 
   uint32_t status = RED_TRANS_SUCCESS;
 

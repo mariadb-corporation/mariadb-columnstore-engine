@@ -24,9 +24,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <boost/thread/thread.hpp>
-#include <map>
-#include <mutex>
-#include <condition_variable>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <atomic>
@@ -40,6 +39,12 @@
 
 namespace threadpool
 {
+
+// Meta Jobs, e.g. BATCH_PRIMITIVE_CREATE has very small weight if a number of such Jobs
+// stuck in the scheduler queue they will starve the whole queue so that no Job could be run
+// except these meta jobs.
+constexpr const uint32_t RescheduleWeightIncrement = 10000;
+constexpr const uint32_t MetaJobsInitialWeight = 1;
 
 // The idea of this thread pool is to run morsel jobs(primitive job) is to equaly distribute CPU time
 // b/w multiple parallel queries(thread maps morsel to query using txnId). Query(txnId) has its weight
@@ -71,19 +76,7 @@ class FairThreadPool
      , id_(id)
     {
     }
-    // sock_ is nullptr here. This is kinda dangerous.
-    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
-        const boost::shared_ptr<Functor>& functor, const uint32_t weight = 1, const uint32_t priority = 0,
-        const uint32_t id = 0)
-     : uniqueID_(uniqueID)
-     , stepID_(stepID)
-     , txnIdx_(txnIdx)
-     , functor_(functor)
-     , weight_(weight)
-     , priority_(priority)
-     , id_(id)
-    {
-    }
+
     uint32_t uniqueID_;
     uint32_t stepID_;
     TransactionIdxT txnIdx_;

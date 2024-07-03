@@ -30,7 +30,7 @@
 
 #pragma once
 
-
+#include "rwlock_local.h"
 #include "resourcemanager.h"
 
 #include "we_simplesyslog.h"
@@ -189,7 +189,7 @@ class WEDataLoader : public Observer
   // CPI Feeder Thread
   WECpiFeederThread* fpCfThread;
 
-  std::mutex fClntMsgMutex;  // mutex in sending messages to client.
+  boost::mutex fClntMsgMutex;  // mutex in sending messages to client.
 
   // static bool fTearDownCpimport; // @bug 4267
   bool fTearDownCpimport;  // @bug 4267

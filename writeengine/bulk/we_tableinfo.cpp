@@ -55,6 +55,9 @@ using namespace querytele;
 #include "oamcache.h"
 #include "cacheutils.h"
 
+#include <arrow/io/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/exception.h>
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -104,7 +107,6 @@ void TableInfo::sleepMS(long ms)
     abs_ts.tv_sec = rm_ts.tv_sec;
     abs_ts.tv_nsec = rm_ts.tv_nsec;
   } while (nanosleep(&abs_ts, &rm_ts) < 0);
-
 }
 
 //------------------------------------------------------------------------------
@@ -153,6 +155,8 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fRejectErrCnt(0)
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
+ , fParquetReader(nullptr)
+ , fReader(nullptr)
 {
   fBuffers.clear();
   fColumns.clear();
@@ -245,7 +249,7 @@ void TableInfo::closeOpenDbFiles()
 //------------------------------------------------------------------------------
 bool TableInfo::lockForRead(const int& locker)
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
 
   if (fLocker == -1)
   {
@@ -266,24 +270,43 @@ int TableInfo::readTableData()
 {
   RID validTotalRows = 0;
   RID totalRowsPerInputFile = 0;
+  int64_t totalRowsParquet = 0;  // totalRowsParquet to be used in later function
+                                 // needs int64_t type
   int filesTBProcessed = fLoadFileList.size();
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
-
-  if (fHandle == NULL)
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
   {
-    fFileName = fLoadFileList[fileCounter];
-    int rc = openTableFile();
-
-    if (rc != NO_ERROR)
+    if (fHandle == NULL)
     {
-      // Mark the table status as error and exit.
-      std::unique_lock lock(fSyncUpdatesTI);
-      fStatusTI = WriteEngine::ERR;
-      return rc;
-    }
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFile();
 
-    fileCounter++;
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+      fileCounter++;
+    }
+  }
+  else
+  {
+    if (fParquetReader == NULL)
+    {
+      fFileName = fLoadFileList[fileCounter];
+      int rc = openTableFileParquet(totalRowsParquet);
+      if (rc != NO_ERROR)
+      {
+        // Mark the table status as error and exit.
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+        fStatusTI = WriteEngine::ERR;
+        return rc;
+      }
+      fileCounter++;
+    }
   }
 
   timeval readStart;
@@ -314,7 +337,7 @@ int TableInfo::readTableData()
     // See if JobStatus has been set to terminate by another thread
     if (BulkStatus::getJobStatus() == EXIT_FAILURE)
     {
-      std::unique_lock lock(fSyncUpdatesTI);
+      boost::mutex::scoped_lock lock(fSyncUpdatesTI);
       fStartTime = readStart;
       fStatusTI = WriteEngine::ERR;
       its.msg_type = ImportTeleStats::IT_TERM;
@@ -350,7 +373,7 @@ int TableInfo::readTableData()
       // See if JobStatus has been set to terminate by another thread
       if (BulkStatus::getJobStatus() == EXIT_FAILURE)
       {
-        std::unique_lock lock(fSyncUpdatesTI);
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         its.msg_type = ImportTeleStats::IT_TERM;
@@ -419,16 +442,23 @@ int TableInfo::readTableData()
     // validTotalRows is ongoing total of valid rows read for all files
     //   pertaining to this DB table.
     int readRc;
-    if (fReadFromS3)
+    if (fImportDataMode != IMPORT_DATA_PARQUET)
     {
-      readRc = fBuffers[readBufNo].fillFromMemory(fBuffers[prevReadBuf], fFileBuffer, fS3ReadLength,
-                                                  &fS3ParseLength, totalRowsPerInputFile, validTotalRows,
-                                                  fColumns, allowedErrCntThisCall);
+      if (fReadFromS3)
+      {
+        readRc = fBuffers[readBufNo].fillFromMemory(fBuffers[prevReadBuf], fFileBuffer, fS3ReadLength,
+                                                    &fS3ParseLength, totalRowsPerInputFile, validTotalRows,
+                                                    fColumns, allowedErrCntThisCall);
+      }
+      else
+      {
+        readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
+                                                  validTotalRows, fColumns, allowedErrCntThisCall);
+      }
     }
     else
     {
-      readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
-                                                validTotalRows, fColumns, allowedErrCntThisCall);
+      readRc = fBuffers[readBufNo].fillFromFileParquet(totalRowsPerInputFile, validTotalRows);
     }
 
     if (readRc != NO_ERROR)
@@ -437,7 +467,7 @@ int TableInfo::readTableData()
       // need to exit.
       // mark the table status as error and exit.
       {
-        std::unique_lock lock(fSyncUpdatesTI);
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         fBuffers[readBufNo].setStatusBLB(WriteEngine::ERR);
@@ -491,7 +521,7 @@ int TableInfo::readTableData()
 
       // number of errors > maximum allowed. hence return error.
       {
-        std::unique_lock lock(fSyncUpdatesTI);
+        boost::mutex::scoped_lock lock(fSyncUpdatesTI);
         fStartTime = readStart;
         fStatusTI = WriteEngine::ERR;
         fBuffers[readBufNo].setStatusBLB(WriteEngine::ERR);
@@ -518,7 +548,7 @@ int TableInfo::readTableData()
 #ifdef PROFILE
       Stats::startReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
 #endif
-      std::unique_lock lock(fSyncUpdatesTI);
+      boost::mutex::scoped_lock lock(fSyncUpdatesTI);
 #ifdef PROFILE
       Stats::stopReadEvent(WE_STATS_WAIT_TO_COMPLETE_READ);
       Stats::startReadEvent(WE_STATS_COMPLETING_READ);
@@ -530,7 +560,8 @@ int TableInfo::readTableData()
       fCurrentReadBuffer = (fCurrentReadBuffer + 1) % fReadBufCount;
 
       // bufferCount++;
-      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)))
+      if ((fHandle && feof(fHandle)) || (fReadFromS3 && (fS3ReadLength == fS3ParseLength)) ||
+          (totalRowsPerInputFile == (RID)totalRowsParquet))
       {
         timeval readFinished;
         gettimeofday(&readFinished, NULL);
@@ -567,7 +598,15 @@ int TableInfo::readTableData()
         if (fileCounter < filesTBProcessed)
         {
           fFileName = fLoadFileList[fileCounter];
-          int rc = openTableFile();
+          int rc;
+          if (fImportDataMode != IMPORT_DATA_PARQUET)
+          {
+            rc = openTableFile();
+          }
+          else
+          {
+            rc = openTableFileParquet(totalRowsParquet);
+          }
 
           if (rc != NO_ERROR)
           {
@@ -629,7 +668,7 @@ void TableInfo::writeErrorList(const std::vector<std::pair<RID, std::string> >* 
 
   if ((errorRowsCount > 0) || (errorDatRowsCount > 0) || (bCloseFile))
   {
-    std::unique_lock lock(fErrorRptInfoMutex);
+    boost::mutex::scoped_lock lock(fErrorRptInfoMutex);
 
     if ((errorRowsCount > 0) || (bCloseFile))
       writeErrReason(errorRows, bCloseFile);
@@ -674,7 +713,7 @@ int TableInfo::parseColumn(const int& columnId, const int& bufferId, double& pro
 //------------------------------------------------------------------------------
 int TableInfo::setParseComplete(const int& columnId, const int& bufferId, double processingTime)
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
 
   // Check table status in case race condition results in this function
   // being called after fStatusTI was set to ERR by another thread.
@@ -1051,7 +1090,7 @@ int TableInfo::finishBRM()
   std::vector<std::string>* errFiles = 0;
   std::vector<std::string>* badFiles = 0;
   {
-    std::unique_lock lock(fErrorRptInfoMutex);
+    boost::mutex::scoped_lock lock(fErrorRptInfoMutex);
     errFiles = &fErrFiles;
     badFiles = &fBadFiles;
   }
@@ -1071,7 +1110,7 @@ int TableInfo::finishBRM()
 //------------------------------------------------------------------------------
 void TableInfo::setParseError()
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
   fStatusTI = WriteEngine::ERR;
 }
 
@@ -1084,7 +1123,7 @@ void TableInfo::setParseError()
 // Added report parm and couts below.
 int TableInfo::getColumnForParse(const int& id, const int& bufferId, bool report)
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
   double maxTime = 0;
   int columnId = -1;
 
@@ -1107,8 +1146,7 @@ int TableInfo::getColumnForParse(const int& id, const int& bufferId, bool report
 
     if (report)
     {
-      oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId <<
-          "]: (colLocker,status,lasttime)- ";
+      oss << " ----- " << pthread_self() << ":fBuffers[" << bufferId << "]: (colLocker,status,lasttime)- ";
     }
 
     // @bug2099-
@@ -1192,8 +1230,8 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
     ostringstream oss;
     string bufStatusStr;
     ColumnInfo::convertStatusToString(stat, bufStatusStr);
-    oss << " --- " << pthread_self() <<
-        ":fBuffers[" << bufferId << "]=" << bufStatusStr << " (" << stat << ")" << std::endl;
+    oss << " --- " << pthread_self() << ":fBuffers[" << bufferId << "]=" << bufStatusStr << " (" << stat
+        << ")" << std::endl;
     cout << oss.str();
   }
 
@@ -1209,7 +1247,6 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
 int TableInfo::initializeBuffers(int noOfBuffers, const JobFieldRefList& jobFieldRefList,
                                  unsigned int fixedBinaryRecLen)
 {
-
   fReadBufCount = noOfBuffers;
 
   // initialize and populate the buffer vector.
@@ -1249,7 +1286,44 @@ void TableInfo::addColumn(ColumnInfo* info)
   fColumns.push_back(info);
   fNumberOfColumns = fColumns.size();
 
-  fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width);
+  fExtentStrAlloc.addColumn(info->column.mapOid, info->column.width, info->column.dataType);
+}
+
+int TableInfo::openTableFileParquet(int64_t& totalRowsParquet)
+{
+  if (fParquetReader != NULL)
+    return NO_ERROR;
+  std::shared_ptr<arrow::io::ReadableFile> infile;
+  try
+  {
+    PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(fFileName, arrow::default_memory_pool()));
+    PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &fReader));
+    fReader->set_batch_size(1000);
+    PARQUET_THROW_NOT_OK(fReader->ScanContents({0}, 1000, &totalRowsParquet));
+    PARQUET_THROW_NOT_OK(fReader->GetRecordBatchReader(&fParquetReader));
+  }
+  catch (std::exception& ex)
+  {
+    ostringstream oss;
+    oss << "Error opening import file " << fFileName << ".";
+    fLog->logMsg(oss.str(), ERR_FILE_OPEN, MSGLVL_ERROR);
+
+    return ERR_FILE_OPEN;
+  }
+  catch (...)
+  {
+    ostringstream oss;
+    oss << "Error opening import file " << fFileName << ".";
+    fLog->logMsg(oss.str(), ERR_FILE_OPEN, MSGLVL_ERROR);
+
+    return ERR_FILE_OPEN;
+  }
+  // initialize fBuffers batch source
+  for (auto& buffer : fBuffers)
+  {
+    buffer.setParquetReader(fParquetReader);
+  }
+  return NO_ERROR;
 }
 
 //------------------------------------------------------------------------------
@@ -1331,24 +1405,32 @@ int TableInfo::openTableFile()
 //------------------------------------------------------------------------------
 void TableInfo::closeTableFile()
 {
-  if (fHandle)
+  if (fImportDataMode != IMPORT_DATA_PARQUET)
   {
-    // If reading from stdin, we don't delete the buffer out from under
-    // the file handle, because stdin is still open.  This will cause a
-    // memory leak, but when using stdin, we can only read in 1 table.
-    // So it's not like we will be leaking multiple buffers for several
-    // tables over the life of the job.
-    if (!fReadFromStdin)
+    if (fHandle)
     {
-      fclose(fHandle);
-      delete[] fFileBuffer;
-    }
+      // If reading from stdin, we don't delete the buffer out from under
+      // the file handle, because stdin is still open.  This will cause a
+      // memory leak, but when using stdin, we can only read in 1 table.
+      // So it's not like we will be leaking multiple buffers for several
+      // tables over the life of the job.
+      if (!fReadFromStdin)
+      {
+        fclose(fHandle);
+        delete[] fFileBuffer;
+      }
 
-    fHandle = 0;
+      fHandle = 0;
+    }
+    else if (ms3)
+    {
+      ms3_free((uint8_t*)fFileBuffer);
+    }
   }
-  else if (ms3)
+  else
   {
-    ms3_free((uint8_t*)fFileBuffer);
+    fReader.reset();
+    fParquetReader.reset();
   }
 }
 
@@ -1360,7 +1442,7 @@ void TableInfo::closeTableFile()
 // Added report parm and couts below.
 bool TableInfo::isBufferAvailable(bool report)
 {
-  std::unique_lock lock(fSyncUpdatesTI);
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
   Status bufferStatus = fBuffers[fCurrentReadBuffer].getStatusBLB();
 
   if ((bufferStatus == WriteEngine::PARSE_COMPLETE) || (bufferStatus == WriteEngine::NEW))
@@ -2379,6 +2461,11 @@ int TableInfo::allocateBRMColumnExtent(OID columnOID, uint16_t dbRoot, uint32_t&
   // fExtentStrAlloc.print();
 
   return rc;
+}
+
+bool TableInfo::readFromSTDIN()
+{
+  return fReadFromStdin;
 }
 
 }  // namespace WriteEngine

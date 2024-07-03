@@ -29,7 +29,7 @@ t1	CREATE TABLE `t1` (
   `t1_INT` int(11) DEFAULT NULL,
   `t1_BIGINT` bigint(20) DEFAULT NULL,
   `t1_BIGINT_UNSIGNED` bigint(20) unsigned DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 CREATE TABLE t2
 (
 t2_DECIMAL_10_3 DECIMAL(10,3),
@@ -48,7 +48,7 @@ t2	CREATE TABLE `t2` (
   `t2_DOUBLE_UNSIGNED` double unsigned DEFAULT NULL,
   `t2_FLOAT` float DEFAULT NULL,
   `t2_FLOAT_UNSIGNED` float unsigned DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 CREATE TABLE t3
 (
 t3_BLOB BLOB,
@@ -77,7 +77,7 @@ t3	CREATE TABLE `t3` (
   `t3_TINYTEXT` tinytext DEFAULT NULL,
   `t3_MEDIUMTEXT` mediumtext DEFAULT NULL,
   `t3_LONGTEXT` longtext DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 CREATE TABLE t4
 (
 t4_DATE DATE,
@@ -98,7 +98,7 @@ t4	CREATE TABLE `t4` (
   `t4_TIME_4` time(4) DEFAULT NULL,
   `t4_TIMESTAMP` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `t4_TIMESTAMP_5` timestamp(5) NOT NULL DEFAULT '0000-00-00 00:00:00.00000'
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 CREATE TABLE t5
 (
 t5_INT INT,
@@ -123,5 +123,5 @@ t5	CREATE TABLE `t5` (
   `t5_DATE` date DEFAULT NULL,
   `t5_TIME` time DEFAULT NULL,
   `t5_TIMESTAMP` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 DROP DATABASE mcs1_db;

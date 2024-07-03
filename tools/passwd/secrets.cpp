@@ -36,12 +36,11 @@
 
 using std::string;
 
-
 #ifdef OPENSSL_VERSION_PREREQ
-#if OPENSSL_VERSION_PREREQ(3,0)
-  #define EVP_CIPHER_key_length EVP_CIPHER_get_key_length
-  #define EVP_CIPHER_iv_length EVP_CIPHER_get_iv_length
-  #define EVP_CIPHER_blocksize EVP_CIPHER_get_blocksize
+#if OPENSSL_VERSION_PREREQ(3, 0)
+#define EVP_CIPHER_key_length EVP_CIPHER_get_key_length
+#define EVP_CIPHER_iv_length EVP_CIPHER_get_iv_length
+#define EVP_CIPHER_blocksize EVP_CIPHER_get_blocksize
 #endif
 #endif
 
@@ -50,7 +49,7 @@ const char* const SECRETS_FILENAME = ".secrets";
 namespace
 {
 CSPasswdLogging* passwdLog = NULL;
-std::mutex m;
+boost::mutex m;
 }  // namespace
 
 CSPasswdLogging::CSPasswdLogging()
@@ -70,7 +69,7 @@ CSPasswdLogging* CSPasswdLogging::get()
 {
   if (passwdLog)
     return passwdLog;
-  std::unique_lock s(m);
+  boost::mutex::scoped_lock s(m);
   if (passwdLog)
     return passwdLog;
   passwdLog = new CSPasswdLogging();
@@ -97,10 +96,6 @@ void CSPasswdLogging::log(int priority, const char* format, ...)
 namespace
 {
 using HexLookupTable = std::array<uint8_t, 256>;
-HexLookupTable init_hex_lookup_table() noexcept;
-
-// Hex char -> byte val lookup table.
-const HexLookupTable hex_lookup_table = init_hex_lookup_table();
 
 /* used in the bin2hex function */
 const char hex_upper[] = "0123456789ABCDEF";
@@ -134,6 +129,9 @@ HexLookupTable init_hex_lookup_table() noexcept
   }
   return rval;
 }
+
+// Hex char -> byte val lookup table.
+const HexLookupTable hex_lookup_table = init_hex_lookup_table();
 
 bool hex2bin(const char* in, unsigned int in_len, uint8_t* out)
 {

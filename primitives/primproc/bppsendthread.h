@@ -37,8 +37,7 @@ namespace primitiveprocessor
 class BPPSendThread
 {
  public:
-  BPPSendThread();                       // starts unthrottled
-  BPPSendThread(uint32_t initMsgsLeft);  // starts throttled
+  BPPSendThread();  // starts unthrottled
   virtual ~BPPSendThread();
 
   struct Msg_t
@@ -71,7 +70,8 @@ class BPPSendThread
   {
     // keep the queue size below the 100 msg threshold & below the 250MB mark,
     // but at least 3 msgs so there is always 1 ready to be sent.
-    return ((msgQueue.size() > sizeThreshold) || (currentByteSize >= maxByteSize && msgQueue.size() > 3)) &&
+    return ((msgQueue.size() > queueMsgThresh) ||
+            (currentByteSize >= queueBytesThresh && msgQueue.size() > 3)) &&
            !die;
   }
 
@@ -111,11 +111,13 @@ class BPPSendThread
   std::queue<Msg_t> msgQueue;
   std::mutex msgQueueLock;
   std::condition_variable queueNotEmpty;
-  volatile bool die, gotException, mainThreadWaiting;
+  volatile bool die = false;
+  volatile bool gotException = false;
+  volatile bool mainThreadWaiting = false;
   std::string exceptionString;
-  uint32_t sizeThreshold;
-  volatile int32_t msgsLeft;
-  bool waiting;
+  uint32_t queueMsgThresh = 0;
+  volatile int32_t msgsLeft = -1;
+  bool waiting = false;
   std::mutex ackLock;
   std::condition_variable okToSend;
   // Condition to prevent run away queue
@@ -141,12 +143,12 @@ class BPPSendThread
   };
   std::set<Connection_t> connections_s;
   std::vector<Connection_t> connections_v;
-  bool sawAllConnections;
-  volatile bool fcEnabled;
+  bool sawAllConnections = false;
+  volatile bool fcEnabled = false;
 
   /* secondary queue size restriction based on byte size */
-  volatile uint64_t currentByteSize;
-  uint64_t maxByteSize;
+  volatile uint64_t currentByteSize = 0;
+  uint64_t queueBytesThresh;
   // Used to tell the ThreadPool It should consider additional threads because a
   // queue full event has happened and a thread has been blocked.
   boost::shared_ptr<threadpool::FairThreadPool> fProcessorPool;

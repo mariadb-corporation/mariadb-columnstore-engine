@@ -128,7 +128,7 @@ class WESplClient
   }
   uint32_t getBytesTx()
   {
-    std::unique_lock aLock(fTxMutex);
+    boost::mutex::scoped_lock aLock(fTxMutex);
     return fBytesTx;
   }
   boost::thread* getFpThread() const
@@ -137,7 +137,7 @@ class WESplClient
   }
   time_t getLastInTime()
   {
-    std::unique_lock aLock(fLastInMutex);
+    boost::mutex::scoped_lock aLock(fLastInMutex);
     return (fLastInTime > 0) ? fLastInTime : fStartTime;  // BUG 4309
   }
   time_t getStartTime() const
@@ -186,12 +186,12 @@ class WESplClient
   }
   unsigned int getDbRootVar()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
     return fDbrVar;
   }
   int getDataRqstCount()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
     return fDataRqstCnt;
   }
   long getRdSecTo() const
@@ -220,13 +220,13 @@ class WESplClient
   }
   void setBytesTx(uint32_t BytesTx)
   {
-    std::unique_lock aLock(fTxMutex);
+    boost::mutex::scoped_lock aLock(fTxMutex);
     fBytesTx = BytesTx;
     aLock.unlock();
   }
   void updateBytesTx(uint32_t fBytes)
   {
-    std::unique_lock aLock(fTxMutex);
+    boost::mutex::scoped_lock aLock(fTxMutex);
     fBytesTx += fBytes;
     aLock.unlock();
   }
@@ -248,7 +248,7 @@ class WESplClient
   }
   void setStartTime(time_t StartTime)
   {
-    std::unique_lock aLock(fLastInMutex);
+    boost::mutex::scoped_lock aLock(fLastInMutex);
     fStartTime = StartTime;
     aLock.lock();
   }
@@ -294,13 +294,13 @@ class WESplClient
   }
   void resetDbRootVar()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
     fDbrVar = fDbrCnt;
     aLock.unlock();
   }
   void decDbRootVar()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
 
     if (fDbrVar > 0)
       --fDbrVar;
@@ -313,13 +313,13 @@ class WESplClient
   }
   void setDataRqstCount(int DataRqstCnt)
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
     fDataRqstCnt = DataRqstCnt;
     aLock.unlock();
   }
   void decDataRqstCount()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
 
     if (fDataRqstCnt > 0)
       --fDataRqstCnt;
@@ -328,7 +328,7 @@ class WESplClient
   }
   void incDataRqstCount()
   {
-    std::unique_lock aLock(fDataRqstMutex);
+    boost::mutex::scoped_lock aLock(fDataRqstMutex);
     ++fDataRqstCnt;
     aLock.unlock();
   }
@@ -370,11 +370,11 @@ class WESplClient
   int fRollbackRslt;
   int fCleanupRslt;
 
-  std::mutex fTxMutex;  // mutex for TxBytes
-  std::mutex fDataRqstMutex;
-  std::mutex fWriteMutex;
-  std::mutex fSentQMutex;
-  std::mutex fLastInMutex;
+  boost::mutex fTxMutex;  // mutex for TxBytes
+  boost::mutex fDataRqstMutex;
+  boost::mutex fWriteMutex;
+  boost::mutex fSentQMutex;
+  boost::mutex fLastInMutex;
   typedef std::queue<messageqcpp::SBS> WESendQueue;
   WESendQueue fSendQueue;
 

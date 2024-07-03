@@ -54,7 +54,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
   uint i;
 
   getBucketCount();
-  m_bucketLocks.reset(new std::mutex[bucketCount]);
+  m_bucketLocks.reset(new boost::mutex[bucketCount]);
 
   if (smallRG.getColTypes()[smallJoinColumn] == CalpontSystemCatalog::LONGDOUBLE)
   {
@@ -171,7 +171,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
     _pool[i] = alloc.getPoolAllocator();
     ht[i].reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
   }
-  m_bucketLocks.reset(new std::mutex[bucketCount]);
+  m_bucketLocks.reset(new boost::mutex[bucketCount]);
 
   smallRG.initRow(&smallNullRow);
 

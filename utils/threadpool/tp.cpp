@@ -30,7 +30,7 @@ using namespace std;
 #include "threadpool.h"
 
 int64_t thecount = 0;
-std::mutex mutex;
+boost::mutex mutex;
 
 const string timeNow()
 {
@@ -68,7 +68,7 @@ struct foo
       // simulate some work
       fData++;
 
-    std::unique_lock lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
     std::cout << "foo thd = " << fThd << " start " << start << " fin " << timeNow() << std::endl;
   }
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
       }
     }
 
-    std::unique_lock lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
   }
 
   // Wait until all of the queued up and in-progress work has finished

@@ -111,7 +111,7 @@ class CopyLocksImpl
 
   BRMShmImpl fCopyLocks;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static CopyLocksImpl* fInstance;
 };
 
@@ -153,7 +153,7 @@ class CopyLocks : public Undoable
   MSTEntry* shminfo;
   MasterSegmentTable mst;
   bool r_only;
-  static std::mutex mutex;
+  static boost::mutex mutex;
   static const int MAX_IO_RETRIES = 10;
   ShmKeys fShmKeys;
   CopyLocksImpl* fCopyLocksImpl;

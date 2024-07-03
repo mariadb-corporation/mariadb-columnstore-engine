@@ -151,7 +151,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   CalpontSelectExecutionPlan(const ReturnedColumnList& returnedCols, ParseTree* filters,
                              const SelectList& subSelects, const GroupByColumnList& groupByCols,
                              ParseTree* having, const OrderByColumnList& orderByCols, const std::string alias,
-                             const int location, const bool dependent);
+                             const int location, const bool dependent, const bool withRollup);
 
   CalpontSelectExecutionPlan(const std::string data);
 
@@ -242,6 +242,18 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   void groupByCols(const GroupByColumnList& groupByCols)
   {
     fGroupByCols = groupByCols;
+  }
+
+  /**
+   * Subtotals.
+   */
+  bool withRollup() const
+  {
+    return fWithRollup;
+  }
+  void withRollup(bool withRollup)
+  {
+    fWithRollup = withRollup;
   }
 
   /**
@@ -596,6 +608,8 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fOrderByThreads;
   }
 
+  void pron(std::string&& pron);
+
   void selectSubList(const SelectList& selectSubList)
   {
     fSelectSubList = selectSubList;
@@ -686,6 +700,33 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   uint64_t djsPartitionSize()
   {
     return fDJSPartitionSize;
+  }
+
+  void djsMaxPartitionTreeDepth(uint32_t value)
+  {
+    fDJSMaxPartitionTreeDepth = value;
+  }
+  uint64_t djsMaxPartitionTreeDepth()
+  {
+    return fDJSMaxPartitionTreeDepth;
+  }
+
+  void djsForceRun(bool b)
+  {
+    fDJSForceRun = b;
+  }
+  bool djsForceRun()
+  {
+    return fDJSForceRun;
+  }
+
+  void maxPmJoinResultCount(uint32_t value)
+  {
+    fMaxPmJoinResultCount = value;
+  }
+  uint32_t maxPmJoinResultCount()
+  {
+    return fMaxPmJoinResultCount;
   }
 
   void umMemLimit(uint64_t l)
@@ -801,7 +842,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * If set, then the local PM only option is turned on
    */
-  uint32_t fLocalQuery;
+  uint32_t fLocalQuery = GLOBAL_QUERY;
 
   /**
    * A list of ReturnedColumn objects
@@ -822,7 +863,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * A tree of Filter objects
    */
-  ParseTree* fFilters;
+  ParseTree* fFilters = nullptr;
   /**
    * A list of CalpontExecutionPlan objects
    */
@@ -846,11 +887,11 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * An enum indicating the location of this select statement in the enclosing select statement
    */
-  int fLocation;
+  int fLocation = 0;
   /**
    * A flag indicating if this sub-select is dependent on the enclosing query or is constant
    */
-  bool fDependent;
+  bool fDependent = false;
 
   /**
    * SQL representation of this execution plan
@@ -859,57 +900,57 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   static ColumnMap fColMap;  // for getplan to use. class-wise map
   ColumnMap fColumnMap;      // for ExeMgr to use. not shared between objects
 
-  uint32_t fSessionID;
-  int fTxnID;  // SQLEngine only needs the ID value
+  uint32_t fSessionID = 0;
+  int fTxnID = -1;  // SQLEngine only needs the ID value
   BRM::QueryContext fVerID;
   // @bug5316. remove static
   std::string fSchemaName;
   std::string fTableName;
-  uint32_t fTraceFlags;
+  uint32_t fTraceFlags = TRACE_NONE;
 
   /**
    * One-up statementID number for this session (fSessionID)
    */
-  uint32_t fStatementID;
+  uint32_t fStatementID = 0;
 
   RMParmVec frmParms;
   TableList fTableList;
   SelectList fDerivedTableList;
 
-  bool fDistinct;
-  bool fOverrideLargeSideEstimate;
+  bool fDistinct = false;
+  bool fOverrideLargeSideEstimate = false;
 
   // for union
   SelectList fUnionVec;
-  uint8_t fDistinctUnionNum;
+  uint8_t fDistinctUnionNum = 0;
 
   // for subselect
-  uint64_t fSubType;
+  uint64_t fSubType = MAIN_SELECT;
   std::string fDerivedTbAlias;
   std::string fDerivedTbView;
 
   // for limit
-  uint64_t fLimitStart;
-  uint64_t fLimitNum;
+  uint64_t fLimitStart = 0;
+  uint64_t fLimitNum = -1;
 
   // for parent select order by
-  bool fHasOrderBy;
+  bool fHasOrderBy = false;
 
   // for Select clause subquery
   SelectList fSelectSubList;
 
   // @bug3321, for string scan blocks
-  uint64_t fStringScanThreshold;
+  uint64_t fStringScanThreshold = ULONG_MAX;
 
   // query type
-  uint32_t fQueryType;
+  uint32_t fQueryType = SELECT;
 
   uint32_t fPriority;
-  uint32_t fStringTableThreshold;
+  uint32_t fStringTableThreshold = 20;
 
   // for specific handlers processing, e.g. GROUP BY
-  bool fSpecHandlerProcessed;
-  uint32_t fOrderByThreads;
+  bool fSpecHandlerProcessed = false;
+  uint32_t fOrderByThreads = 1;
 
   // Derived table involved in the query. For derived table optimization
   std::vector<SCSEP> fSubSelectList;
@@ -917,15 +958,21 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   boost::uuids::uuid fUuid;
 
   /* Disk-based join vars */
-  uint64_t fDJSSmallSideLimit;
-  uint64_t fDJSLargeSideLimit;
-  uint64_t fDJSPartitionSize;
-  int64_t fUMMemLimit;
-  bool fIsDML;
-
-  long fTimeZone;
-
+  uint64_t fDJSSmallSideLimit = 0;
+  uint64_t fDJSLargeSideLimit = 0;
+  uint64_t fDJSPartitionSize = 100 * 1024 * 1024;
+  uint32_t fDJSMaxPartitionTreeDepth = 8;
+  bool fDJSForceRun = false;
+  uint32_t fMaxPmJoinResultCount = 1048576;
+  int64_t fUMMemLimit = numeric_limits<int64_t>::max();
+  bool fIsDML = false;
+  long fTimeZone = 0;
   std::vector<execplan::ParseTree*> fDynamicParseTreeVec;
+  std::string fPron;
+  /**
+   * A flag to compute subtotals, related to GROUP BY operation.
+   */
+  bool fWithRollup;
 };
 
 /**

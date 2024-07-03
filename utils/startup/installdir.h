@@ -25,8 +25,7 @@
 #pragma once
 
 #include <string>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 
 namespace startup
 {
@@ -47,7 +46,7 @@ class StartUp
   StartUp(const StartUp& rhs);
   StartUp& operator=(const StartUp& rhs);
 
-  static std::mutex fTmpDirLock;
+  static boost::mutex fTmpDirLock;
   static std::string* fTmpDirp;
 };
 

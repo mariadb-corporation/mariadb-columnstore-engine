@@ -21,8 +21,7 @@
 #include "messageFormat.h"
 
 #include <signal.h>
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
 #include <tr1/unordered_map>
 
@@ -62,7 +61,7 @@ class SessionManager
   ClientRequestProcessor* crp;
   struct pollfd fds[MAX_SM_SOCKETS];
   int socketCtrl[2];
-  std::mutex ctrlMutex;
+  boost::mutex ctrlMutex;
 
   // These map a socket fd to its state between read iterations if a message header could not be found in the
   // data available at the time.

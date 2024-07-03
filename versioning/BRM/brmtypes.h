@@ -254,7 +254,12 @@ struct TableLockInfo : public messageqcpp::Serializeable
   EXPORT void deserialize(messageqcpp::ByteStream& bs);
   EXPORT void serialize(idbdatafile::IDBDataFile*) const;
   EXPORT void deserialize(idbdatafile::IDBDataFile*);
+  EXPORT void serialize(char* buffer, uint32_t& offset);
+  EXPORT uint32_t getInternalSize() const;
   bool operator<(const TableLockInfo&) const;
+
+ private:
+  void serializeElement(char* buffer, const char* src, const uint32_t size, uint32_t& offset);
 };
 
 /// A Serializeable version of InlineLBIDRange
@@ -315,8 +320,8 @@ struct BulkUpdateDBRootArg
 /* Input Arg type for DBRM::createStripeColumnExtents() */
 struct CreateStripeColumnExtentsArgIn
 {
-  OID_t oid;       // column OID
-  uint32_t width;  // column width in bytes
+  OID_t oid = 0;       // column OID
+  uint32_t width = 0;  // column width in bytes
   execplan::CalpontSystemCatalog::ColDataType colDataType;
 };
 
@@ -526,6 +531,11 @@ const uint8_t RELEASE_LBID_RANGES = 91;
 const uint8_t BULK_UPDATE_DBROOT = 100;
 const uint8_t GET_SYSTEM_CATALOG = 101;
 const uint8_t BULK_WRITE_VB_ENTRY = 102;
+
+const uint8_t NEW_CPIMPORT_JOB = 103;
+const uint8_t FINISH_CPIMPORT_JOB = 104;
+const uint8_t START_READONLY = 105;
+const uint8_t FORCE_CLEAR_CPIMPORT_JOBS = 106;
 
 /* Error codes returned by the DBRM functions. */
 /// The operation was successful

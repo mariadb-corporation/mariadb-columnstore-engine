@@ -39,7 +39,7 @@ namespace BRM
 {
 TableLockServer::TableLockServer(SessionManagerServer* sm) : sms(sm)
 {
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   config::Config* config = config::Config::makeConfig();
 
   filename = config->getConfig("SystemConfig", "TableLockSaveFile");
@@ -70,14 +70,28 @@ void TableLockServer::save()
   if (!out)
     throw runtime_error("TableLockServer::save():  could not open save file");
 
-  out->write((char*)&count, 4);
+  uint32_t bufferSize = 4;
+  for (const auto& lock : locks)
+    bufferSize += lock.second.getInternalSize();
+
+  std::unique_ptr<char[]> buffer(new char[bufferSize]);
+  uint32_t offset = 0;
+  std::memcpy(&buffer[offset], (char*)&count, 4);
+  offset += 4;
 
   for (it = locks.begin(); it != locks.end(); ++it)
-  {
-    if (!out)
-      throw runtime_error("TableLockServer::save():  could not write save file");
+    it->second.serialize(buffer.get(), offset);
 
-    it->second.serialize(out.get());
+  uint32_t writtenSize = 0;
+  uint32_t sizeToWrite = bufferSize;
+  while (writtenSize != bufferSize)
+  {
+    uint32_t ret = out->write(&buffer[writtenSize], sizeToWrite);
+    if (!ret)
+      throw runtime_error("TableLockServer::save():  could not write to the file");
+
+    writtenSize += ret;
+    sizeToWrite -= ret;
   }
 }
 
@@ -132,7 +146,7 @@ uint64_t TableLockServer::lock(TableLockInfo* tli)
   set<uint32_t> dbroots;
   lit_t it;
   uint32_t i;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   for (i = 0; i < tli->dbrootList.size(); i++)
     dbroots.insert(tli->dbrootList[i]);
@@ -174,7 +188,7 @@ bool TableLockServer::unlock(uint64_t id)
   std::map<uint64_t, TableLockInfo>::iterator it;
   TableLockInfo tli;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   it = locks.find(id);
 
   if (it != locks.end())
@@ -201,7 +215,7 @@ bool TableLockServer::unlock(uint64_t id)
 bool TableLockServer::changeState(uint64_t id, LockState state)
 {
   lit_t it;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   LockState old;
 
   it = locks.find(id);
@@ -229,7 +243,7 @@ bool TableLockServer::changeOwner(uint64_t id, const string& ownerName, uint32_t
                                   int32_t txnID)
 {
   lit_t it;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   string oldName;
   uint32_t oldPID;
   int32_t oldSession;
@@ -268,7 +282,7 @@ bool TableLockServer::changeOwner(uint64_t id, const string& ownerName, uint32_t
 vector<TableLockInfo> TableLockServer::getAllLocks() const
 {
   vector<TableLockInfo> ret;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   constlit_t it;
 
   for (it = locks.begin(); it != locks.end(); ++it)
@@ -281,7 +295,7 @@ void TableLockServer::releaseAllLocks()
 {
   std::map<uint64_t, TableLockInfo> tmp;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   tmp.swap(locks);
 
   try
@@ -298,7 +312,7 @@ void TableLockServer::releaseAllLocks()
 bool TableLockServer::getLockInfo(uint64_t id, TableLockInfo* out) const
 {
   constlit_t it;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   it = locks.find(id);
 

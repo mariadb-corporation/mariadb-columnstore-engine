@@ -86,7 +86,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
     return numeric_limits<uint64_t>::max();
 
   //@bug6065, make StringStore::storeString() thread safe
-  std::unique_lock lk(fMutex, std::defer_lock);
+  boost::mutex::scoped_lock lk(fMutex, boost::defer_lock);
 
   if (fUseStoreStringMutex)
     lk.lock();
@@ -212,7 +212,7 @@ uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context,
     return numeric_limits<uint32_t>::max();
   }
 
-  std::unique_lock lk(fMutex, std::defer_lock);
+  boost::mutex::scoped_lock lk(fMutex, boost::defer_lock);
 
   if (fUseUserDataMutex)
     lk.lock();
@@ -322,6 +322,8 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
 #endif
   memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 RGData::RGData(const RowGroup& rg)
@@ -341,6 +343,8 @@ RGData::RGData(const RowGroup& rg)
    */
   memset(rowData.get(), 0, rg.getMaxDataSize());
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
@@ -360,6 +364,8 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
    */
   memset(rowData.get(), 0, rg.getDataSize(rowCount));
 #endif
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -372,6 +378,8 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
   bs << (uint32_t)amount;
+  bs << columnCount;
+  bs << rowSize;
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -402,6 +410,22 @@ void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
   {
     bs >> sig;
     bs >> amount;
+    uint32_t colCountTemp;
+    uint32_t rowSizeTemp;
+    bs >> colCountTemp;
+    bs >> rowSizeTemp;
+    if (rowSize != 0 || columnCount != 0)
+    {
+      idbassert(rowSize == rowSizeTemp && colCountTemp == columnCount);
+    }
+    else
+    {
+      // if deserializing into an empty RGData created by default constructor
+      // which sets columnCount = 0 and rowSize = 0, set columnCount and rowSize
+      // from deserialized bytestream
+      columnCount = colCountTemp;
+      rowSize = rowSizeTemp;
+    }
     rowData.reset(new uint8_t[std::max(amount, defAmount)]);
     buf = bs.buf();
     memcpy(rowData.get(), buf, amount);

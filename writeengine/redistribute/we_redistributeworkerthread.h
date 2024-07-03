@@ -132,7 +132,7 @@ class RedistributeWorkerThread
   // for segment file # workaround
   // uint64_t                      fSegPerRoot;
 
-  static std::mutex fActionMutex;
+  static boost::mutex fActionMutex;
   static volatile bool fStopAction;
   static volatile bool fCommitted;
   static std::string fWesInUse;

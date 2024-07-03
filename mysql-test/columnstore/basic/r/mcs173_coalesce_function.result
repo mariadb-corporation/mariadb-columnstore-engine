@@ -11,7 +11,7 @@ t1	CREATE TABLE `t1` (
   `b` int(11) DEFAULT NULL,
   `c` datetime DEFAULT NULL,
   `d` double DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 SELECT COALESCE(NULL, NULL, NULL, 'mariadb', NULL, 'columnstore');
 COALESCE(NULL, NULL, NULL, 'mariadb', NULL, 'columnstore')
 mariadb

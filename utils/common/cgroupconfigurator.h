@@ -31,14 +31,17 @@ namespace utils
 class CGroupConfigurator
 {
  public:
+  enum CGroupVersions
+  {
+    v1,
+    v2,
+  };
   CGroupConfigurator();
   virtual ~CGroupConfigurator();
 
   uint32_t getNumCores();
   uint64_t getTotalMemory();
   uint64_t getFreeMemory();
-  uint64_t getTotalSwapSpace();
-  uint64_t getSwapInUse();
 
   bool usingCGroup()
   {
@@ -52,20 +55,19 @@ class CGroupConfigurator
   uint64_t getTotalMemoryFromCGroup();
   uint64_t getFreeMemoryFromProc();
   uint64_t getMemUsageFromCGroup();
-  uint64_t getTotalSwapFromSysinfo();
-  int64_t getTotalMemAndSwapFromCGroup();
-  uint64_t getSwapInUseFromSysinfo();
-  int64_t getSwapInUseFromCGroup();
-
-  std::string memUsageFilename;
-  std::string usedSwapFilename;
 
   std::string cGroupName;
+  std::string memUsageFilename;
+  std::string memStatePrefix;
   bool cGroupDefined;
   config::Config* config;
-  uint64_t totalMemory;
-  uint64_t totalSwap;
-  bool printedWarning;
+  uint64_t totalMemory = 0;
+  uint64_t totalSwap = 0;
+  const  uint64_t GIB = 1024ULL * 1024ULL * 1024ULL;
+  bool printedWarning = false;
+  enum CGroupVersions cGroupVersion_;
+  unsigned int logCounter = 0;
+  static constexpr unsigned int logMemoryPeriod = 5000;
 };
 
 }  // namespace utils

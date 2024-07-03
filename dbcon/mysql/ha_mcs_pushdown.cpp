@@ -17,7 +17,39 @@
 #include <typeinfo>
 #include <string>
 
+// This makes specific MDB classes' attributes public to implement
+// MCOL-4740 temporary solution. Search for MCOL-4740
+// to get the actual place where it is used.
+#define updated_leaves \
+  updated_leaves;      \
+                       \
+ public:
+
 #include "ha_mcs_pushdown.h"
+
+void update_counters_on_multi_update()
+{
+  if (ha_mcs_common::isMultiUpdateStatement(current_thd->lex->sql_command) &&
+      !ha_mcs_common::isForeignTableUpdate(current_thd))
+  {
+    SELECT_LEX_UNIT* unit = &current_thd->lex->unit;
+    SELECT_LEX* select_lex = unit->first_select();
+    auto* multi = (select_lex->join) ? reinterpret_cast<multi_update*>(select_lex->join->result) : nullptr;
+
+    if (multi)
+    {
+      multi->table_to_update = multi->update_tables ? multi->update_tables->table : 0;
+
+      cal_impl_if::cal_connection_info* ci =
+          reinterpret_cast<cal_impl_if::cal_connection_info*>(get_fe_conn_info_ptr());
+
+      if (ci)
+      {
+        multi->updated = multi->found = ci->affectedRows;
+      }
+    }
+  }
+}
 
 void check_walk(const Item* item, void* arg);
 
@@ -314,14 +346,12 @@ void item_check(Item* item, bool* unsupported_feature)
   {
     case Item::COND_ITEM:
     {
-      Item_cond* icp = reinterpret_cast<Item_cond*>(item);
-      icp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+      item->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
       break;
     }
     case Item::FUNC_ITEM:
     {
-      Item_func* ifp = reinterpret_cast<Item_func*>(item);
-      ifp->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
+      item->traverse_cond(check_user_var_func, unsupported_feature, Item::POSTFIX);
       break;
     }
     default:
@@ -352,9 +382,7 @@ bool check_user_var(SELECT_LEX* select_lex)
 
   if (join->conds)
   {
-    Item_cond* icp = reinterpret_cast<Item_cond*>(join->conds);
-
-    icp->traverse_cond(check_user_var_func, &is_user_var_func, Item::POSTFIX);
+    join->conds->traverse_cond(check_user_var_func, &is_user_var_func, Item::POSTFIX);
   }
 
   return is_user_var_func;
@@ -420,23 +448,15 @@ group_by_handler* create_columnstore_group_by_handler(THD* thd, Query* query)
       if (!unsupported_feature)
       {
         JOIN* join = select_lex->join;
-        Item_cond* icp = 0;
 
-        if (join != 0)
-          icp = reinterpret_cast<Item_cond*>(join->conds);
-
-        if (unsupported_feature == false && icp)
+        if (unsupported_feature == false && join && join->conds)
         {
-          icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+          join->conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
 
-        // Optimizer could move some join conditions into where
-        if (select_lex->where != 0)
-          icp = reinterpret_cast<Item_cond*>(select_lex->where);
-
-        if (unsupported_feature == false && icp)
+        if (unsupported_feature == false && select_lex->where)
         {
-          icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+          select_lex->where->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
         }
       }
 
@@ -494,7 +514,7 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
 
   // MCOL-1482 Disable derived_handler if the multi-table update
   // statement contains a non-columnstore table.
-  if (cal_impl_if::isUpdateHasForeignTable(thd))
+  if (ha_mcs_common::isUpdateHasForeignTable(thd))
   {
     return handler;
   }
@@ -521,18 +541,16 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
   {
     if (tl->where)
     {
-      Item_cond* where_icp = reinterpret_cast<Item_cond*>(tl->where);
-      where_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-      where_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+      tl->where->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+      tl->where->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
 
     // Looking for JOIN with ON expression through
     // TABLE_LIST in FROM until CS meets unsupported feature
     if (tl->on_expr)
     {
-      Item_cond* on_icp = reinterpret_cast<Item_cond*>(tl->on_expr);
-      on_icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-      on_icp->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+      tl->on_expr->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+      tl->on_expr->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
     }
 
     // Iterate and traverse through the item list and the JOIN cond
@@ -546,9 +564,8 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
 
   if (!unsupported_feature && !join_preds_list.elements && join && join->conds)
   {
-    Item_cond* conds = reinterpret_cast<Item_cond*>(join->conds);
-    conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
-    conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
+    join->conds->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+    join->conds->traverse_cond(save_join_predicates, &join_preds_list, Item::POSTFIX);
   }
 
   // CROSS JOIN w/o conditions isn't supported until MCOL-301
@@ -730,18 +747,18 @@ int ha_mcs_group_by_handler::end_scan()
 
 /*@brief  create_columnstore_select_handler_- Creates handler
 ************************************************************
- * DESCRIPTION:
- * Creates a select handler if there is no non-equi JOIN, e.g
- * t1.c1 > t2.c2 and logical OR in the filter predicates.
- * More details in server/sql/select_handler.h
- * PARAMETERS:
- *    thd - THD pointer.
- *    sel_lex - SELECT_LEX* that describes the query.
- *    sel_unit - SELECT_LEX_UNIT* that describes the query.
- * RETURN:
- *    select_handler if possible
- *    NULL in other case
- ***********************************************************/
+* DESCRIPTION:
+* Creates a select handler if there is no non-equi JOIN, e.g
+* t1.c1 > t2.c2 and logical OR in the filter predicates.
+* More details in server/sql/select_handler.h
+* PARAMETERS:
+*    thd - THD pointer.
+*    sel_lex - SELECT_LEX* that describes the query.
+*    sel_unit - SELECT_LEX_UNIT* that describes the query.
+* RETURN:
+*    select_handler if possible
+*    NULL in other case
+***********************************************************/
 select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit)
 {
   mcs_select_handler_mode_t select_handler_mode = get_select_handler_mode(thd);
@@ -757,7 +774,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // MCOL-1482 Disable select_handler for a multi-table update
   // with a non-columnstore table as the target table of the update
   // operation.
-  if (cal_impl_if::isForeignTableUpdate(thd))
+  if (ha_mcs_common::isForeignTableUpdate(thd))
   {
     return nullptr;
   }
@@ -768,7 +785,8 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // Disable processing of select_result_interceptor classes
   // which intercept and transform result set rows. E.g.:
   // select a,b into @a1, @a2 from t1;
-  if (((thd->lex)->result && !((select_dumpvar*)(thd->lex)->result)->var_list.is_empty()) && (!isPS))
+  select_dumpvar* dumpvar = dynamic_cast<select_dumpvar*>((thd->lex)->result);
+  if (dumpvar && !dumpvar->var_list.is_empty() && !isPS)
   {
     return nullptr;
   }
@@ -824,15 +842,15 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // or unsupported feature.
   ha_columnstore_select_handler* handler;
 
-  if (sel_unit && sel_lex) // partial pushdown of the SELECT_LEX_UNIT
+  if (sel_unit && sel_lex)  // partial pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex, sel_unit);
   }
-  else if (sel_unit) // complete pushdown of the SELECT_LEX_UNIT
+  else if (sel_unit)  // complete pushdown of the SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_unit);
   }
-  else // Query only has a SELECT_LEX, no SELECT_LEX_UNIT
+  else  // Query only has a SELECT_LEX, no SELECT_LEX_UNIT
   {
     handler = new ha_columnstore_select_handler(thd, sel_lex);
   }
@@ -922,8 +940,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
           select_lex != select_lex->master_unit()->fake_select_lex)  // (2)
         thd->lex->set_limit_rows_examined();
 
-      if ((!sel_unit || sel_lex) && !join->tables_list &&
-          (join->table_count || !select_lex->with_sum_func) &&
+      if ((!sel_unit || sel_lex) && !join->tables_list && (join->table_count || !select_lex->with_sum_func) &&
           !select_lex->have_window_funcs())
       {
         if (!thd->is_error())
@@ -1182,6 +1199,11 @@ int ha_columnstore_select_handler::end_scan()
   DBUG_ENTER("ha_columnstore_select_handler::end_scan");
 
   scan_ended = true;
+
+  // MCOL-4740 multi_update::send_eof(), which outputs the affected
+  // number of rows to the client, is called after handler::rnd_end().
+  // So we set multi_update::updated and multi_update::found here.
+  update_counters_on_multi_update();
 
   int rc = ha_mcs_impl_rnd_end(table, true);
 

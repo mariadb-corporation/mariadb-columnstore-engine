@@ -39,6 +39,11 @@
 
 #define EXPORT
 
+namespace arrow
+{
+  class Array;
+}
+
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
@@ -158,6 +163,20 @@ class Dctnry : public DbFileOp
   EXPORT int insertDctnry(const int& sgnature_size, const unsigned char* sgnature_value, Token& token);
 
   /**
+   * @brief Insert signature value to a file block and return token/pointer
+   * (for Bulk use)
+   *
+   * @param columnData  - arrow array containing strings to be parsed
+   * @param startRowIdx - start position for current batch parquet data
+   * @param totalRow    - total number of rows in buf
+   * @param col         - the column to be parsed from buf
+   * @param tokenBuf    - (output) list of tokens for the parsed strings
+  */
+  EXPORT int insertDctnryParquet(std::shared_ptr<arrow::Array> columnData, int startRowIdx, const int totalRow,
+                                 const int col, char* tokenBuf, long long& truncCount,
+                                 const CHARSET_INFO* cs, const WriteEngine::ColType& weType);
+
+  /**
    * @brief Insert a signature value to a file block and return token/pointer
    * (for Bulk use)
    *
@@ -168,7 +187,8 @@ class Dctnry : public DbFileOp
    * @param tokenBuf  - (output) list of tokens for the parsed strings
    */
   EXPORT int insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col,
-                          char* tokenBuf, long long& truncCount);
+                          char* tokenBuf, long long& truncCount, const CHARSET_INFO* cs,
+                          const WriteEngine::ColType& weType);
 
   /**
    * @brief Update dictionary store with tokenized strings (for DDL/DML use)
@@ -279,6 +299,9 @@ class Dctnry : public DbFileOp
   // insertDctnryHdr inserts the new value info into the header.
   // insertSgnture   inserts the new value into the block.
   //
+  int insertDctnry1(Signature& curSig, bool found, char* pOut, int& outOffset, int& startPos,
+                    int& totalUseSize, CommBlock& cb, bool& next, long long& truncCount,
+                    const CHARSET_INFO* cs, const WriteEngine::ColType& weType);
   int insertDctnry2(Signature& sig);
   void insertDctnryHdr(unsigned char* blockBuf, const int& size);
   void insertSgnture(unsigned char* blockBuf, const int& size, unsigned char* value);

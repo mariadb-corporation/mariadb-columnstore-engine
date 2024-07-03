@@ -199,6 +199,15 @@ class PackageHandler
   }
 
  private:
+  int32_t setupDec()
+  {
+    joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+    joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+    return fEc->Setup();
+  }
+  execplan::CalpontSystemCatalog::ROPair getTableRID(boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc,
+                                                     execplan::CalpontSystemCatalog::TableName& tableName);
+
   messageqcpp::IOSocket fIos;
   boost::shared_ptr<messageqcpp::ByteStream> fByteStream;
   boost::scoped_ptr<dmlpackageprocessor::DMLPackageProcessor> fProcessor;
@@ -229,8 +238,8 @@ class PackageHandler
   int forceReleaseTableAccess();
   typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
   static std::map<uint32_t, tableAccessQueue_t> tableOidMap;
-  static std::condition_variable tableOidCond;
-  static std::mutex tableOidMutex;
+  static boost::condition_variable tableOidCond;
+  static boost::mutex tableOidMutex;
 
  public:
   static int clearTableAccess();
@@ -295,11 +304,11 @@ class DMLProcessor
   // A map to hold pointers to all active PackageProcessors
   typedef std::map<uint32_t, boost::shared_ptr<PackageHandler> > PackageHandlerMap_t;
   static PackageHandlerMap_t packageHandlerMap;
-  static std::mutex packageHandlerMapLock;
+  static boost::mutex packageHandlerMapLock;
 
   // A map to hold pointers to all BatchInsertProc object
   static std::map<uint32_t, BatchInsertProc*> batchinsertProcessorMap;
-  static std::mutex batchinsertProcessorMapLock;
+  static boost::mutex batchinsertProcessorMapLock;
 
   friend struct CancellationThread;
   friend class PackageHandler;
@@ -311,22 +320,21 @@ class RollbackTransactionProcessor : public dmlpackageprocessor::DMLPackageProce
   RollbackTransactionProcessor(BRM::DBRM* aDbrm) : DMLPackageProcessor(aDbrm, 1)
   {
   }
-  /** @brief process an Rollback transactions
-   *
-   * @param cpackage the UpdateDMLPackage to process
-   */
-  inline DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage)
-  {
-    DMLResult result;
-    result.result = NO_ERROR;
-    return result;
-  }
 
   void processBulkRollback(BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm, uint64_t uniqueId,
                            oam::OamCache::dbRootPMMap_t& dbRootPMMap, bool& lockReleased);
 
  protected:
+ private:
+  /** @brief process an Rollback transactions
+   *
+   * @param cpackage the UpdateDMLPackage to process
+   */
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage)
+  {
+    DMLResult result;
+    result.result = NO_ERROR;
+    return result;
+  }
 };
-
 }  // namespace dmlprocessor
-

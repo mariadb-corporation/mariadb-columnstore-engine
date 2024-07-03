@@ -26,8 +26,7 @@
 #include <ctime>
 
 //#define      SERIALIZE_DDL_DML_CPIMPORT    1
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -61,14 +60,14 @@ using namespace WriteEngine;
 #include "querytele.h"
 using namespace querytele;
 
-extern std::mutex mute;
-extern std::condition_variable cond;
+extern boost::mutex mute;
+extern boost::condition_variable cond;
 
 #define MCOL_140  // Undefine to test VSS for out of order transactions
 
 namespace
 {
-const std::string myname = "DMLProc";
+[[maybe_unused]] const std::string myname = "DMLProc";
 }
 
 namespace dmlprocessor
@@ -76,16 +75,16 @@ namespace dmlprocessor
 // Map to store the package handler objects so we can set flags during execution
 // for things like ctrl+c
 DMLProcessor::PackageHandlerMap_t DMLProcessor::packageHandlerMap;
-std::mutex DMLProcessor::packageHandlerMapLock;
+boost::mutex DMLProcessor::packageHandlerMapLock;
 
 // Map to store the BatchInsertProc object
 std::map<uint32_t, BatchInsertProc*> DMLProcessor::batchinsertProcessorMap;
-std::mutex DMLProcessor::batchinsertProcessorMapLock;
+boost::mutex DMLProcessor::batchinsertProcessorMapLock;
 
 // MCOL-140 Map to hold table oids for tables being changed.
 std::map<uint32_t, PackageHandler::tableAccessQueue_t> PackageHandler::tableOidMap;
-std::condition_variable PackageHandler::tableOidCond;
-std::mutex PackageHandler::tableOidMutex;
+boost::condition_variable PackageHandler::tableOidCond;
+boost::mutex PackageHandler::tableOidMutex;
 
 //------------------------------------------------------------------------------
 // A thread to periodically call dbrm to see if a user is
@@ -146,7 +145,7 @@ struct CancellationThread
         // Tell any active processors to stop working and return an error
         // The front end will respond with a ROLLBACK command.
         // Mark all active processors to rollback
-        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
+        boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
 
         for (phIter = DMLProcessor::packageHandlerMap.begin();
              phIter != DMLProcessor::packageHandlerMap.end(); ++phIter)
@@ -366,7 +365,7 @@ int PackageHandler::synchTableAccess(dmlpackage::CalpontDMLPackage* dmlPackage)
 {
   // MCOL-140 Wait for any other DML using this table.
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  std::unique_lock<std::mutex> lock(tableOidMutex);
+  boost::unique_lock<boost::mutex> lock(tableOidMutex);
   BRM::TxnID txnid;
 
   if (fPackageType != dmlpackage::DML_COMMAND)
@@ -466,7 +465,7 @@ int PackageHandler::releaseTableAccess()
 {
   // take us out of the queue
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::lock_guard<std::mutex> lock(tableOidMutex);
+  boost::lock_guard<boost::mutex> lock(tableOidMutex);
 
   if (fTableOid == 0 || (it = tableOidMap.find(fTableOid)) == tableOidMap.end())
   {
@@ -513,7 +512,7 @@ int PackageHandler::forceReleaseTableAccess()
   // By removing the txnid from the queue, the logic after the wait in
   // synchTableAccess() will release the thread and clean up if needed.
   std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
-  boost::lock_guard<std::mutex> lock(tableOidMutex);
+  boost::lock_guard<boost::mutex> lock(tableOidMutex);
 
   if (fTableOid == 0 || (it = tableOidMap.find(fTableOid)) == tableOidMap.end())
   {
@@ -540,6 +539,25 @@ int PackageHandler::clearTableAccess()
 {
   tableOidMap.clear();
   return 1;
+}
+
+CalpontSystemCatalog::ROPair PackageHandler::getTableRID(
+    boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc,
+    execplan::CalpontSystemCatalog::TableName& tableName)
+{
+  execplan::CalpontSystemCatalog::ROPair roPair;
+  try
+  {
+    roPair = fcsc->tableRID(tableName);
+  }
+  catch (...)
+  {
+    if (setupDec())
+      throw;
+    roPair = fcsc->tableRID(tableName);
+  }
+
+  return roPair;
 }
 
 void PackageHandler::run()
@@ -578,7 +596,7 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = insertPkg.get_Table()->get_SchemaName();
             tableName.table = insertPkg.get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair = getTableRID(fcsc, tableName);
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this, &insertPkg);  // Blocks if another DML thread is using this fTableOid
@@ -604,7 +622,7 @@ void PackageHandler::run()
           // cout << "This is batch insert " << endl;
           BatchInsertProc* batchProcessor = NULL;
           {
-            std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+            boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
 
             std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                 DMLProcessor::batchinsertProcessorMap.find(fSessionID);
@@ -751,7 +769,7 @@ void PackageHandler::run()
 
             // remove the batch insert object
             {
-              std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+              boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
 
               std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                   DMLProcessor::batchinsertProcessorMap.find(fSessionID);
@@ -867,7 +885,7 @@ void PackageHandler::run()
 
             // remove from map
             {
-              std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+              boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
               std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                   DMLProcessor::batchinsertProcessorMap.find(fSessionID);
 
@@ -912,7 +930,7 @@ void PackageHandler::run()
               logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
               // remove from map
               {
-                std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+                boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
                 std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                     DMLProcessor::batchinsertProcessorMap.find(fSessionID);
 
@@ -977,7 +995,7 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = updatePkg->get_Table()->get_SchemaName();
             tableName.table = updatePkg->get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair = getTableRID(fcsc, tableName);
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this,
@@ -1037,7 +1055,7 @@ void PackageHandler::run()
             CalpontSystemCatalog::TableName tableName;
             tableName.schema = deletePkg->get_Table()->get_SchemaName();
             tableName.table = deletePkg->get_Table()->get_TableName();
-            CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+            CalpontSystemCatalog::ROPair roPair = getTableRID(fcsc, tableName);
             fTableOid = roPair.objnum;
           }
           synchTable.setPackage(this,
@@ -1164,7 +1182,7 @@ void PackageHandler::run()
   // If we remove it after sending the results, it's possible for a commit
   // or rollback be sent and get processed before it is removed, and that
   // will fail.
-  std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
+  boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
   DMLProcessor::packageHandlerMap.erase(getSessionID());
   lk2.unlock();
 
@@ -1388,7 +1406,7 @@ void DMLProcessor::operator()()
           0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
       {
         messageqcpp::ByteStream results;
-        const char* responseMsg = 0;
+        std::string responseMsg;
         bool bReject = false;
 
         // Check to see if we're in write suspended mode
@@ -1434,6 +1452,14 @@ void DMLProcessor::operator()()
             }
           }
 
+          // MCOL-4988 Check if DBRM is in READ ONLY mode
+          if (fDbrm->isReadWrite() == BRM::ERR_READONLY)
+          {
+            BRM::errString(BRM::ERR_READONLY, responseMsg);
+            status = DMLPackageProcessor::DBRM_READ_ONLY;
+            bReject = true;
+          }
+
           if (bReject)
           {
             // For batch insert, we need to send a lastpkg message
@@ -1453,7 +1479,7 @@ void DMLProcessor::operator()()
               if (insertPkg.get_isBatchInsert() && insertPkg.get_Logending())
               {
                 {
-                  std::unique_lock lk(DMLProcessor::batchinsertProcessorMapLock);
+                  boost::mutex::scoped_lock lk(DMLProcessor::batchinsertProcessorMapLock);
                   std::map<uint32_t, BatchInsertProc*>::iterator batchIter =
                       DMLProcessor::batchinsertProcessorMap.find(sessionID);
 
@@ -1503,7 +1529,7 @@ void DMLProcessor::operator()()
       // This mechanism may prove useful for other things, so the above
       // comment may change.
       {
-        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock);
+        boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
         DMLProcessor::PackageHandlerMap_t::iterator phIter = packageHandlerMap.find(sessionID);
 
         if (phIter != packageHandlerMap.end())
@@ -1741,7 +1767,7 @@ void DMLProcessor::operator()()
                                                                    sessionID, txnid.id, fDbrm, fQtc, csc));
           // We put the packageHandler into a map so that if we receive a
           // message to affect the previous command, we can find it.
-          std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, std::defer_lock);
+          boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
           lk2.lock();
           packageHandlerMap[sessionID] = php;
@@ -1783,7 +1809,7 @@ void DMLProcessor::operator()()
             fIos, bs1, packageType, fEC, fConcurrentSupport, maxDeleteRows, sessionID, 0, fDbrm, fQtc, csc));
         // We put the packageHandler into a map so that if we receive a
         // message to affect the previous command, we can find it.
-        std::unique_lock lk2(DMLProcessor::packageHandlerMapLock, std::defer_lock);
+        boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, boost::defer_lock);
 
         lk2.lock();
         packageHandlerMap[sessionID] = php;

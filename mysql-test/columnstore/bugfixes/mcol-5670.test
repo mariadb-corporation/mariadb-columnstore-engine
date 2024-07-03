@@ -1,0 +1,21 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5670;
+--enable_warnings
+CREATE DATABASE mcol_5670;
+USE mcol_5670;
+
+
+# using lastday with DATE type
+create table my_colstore_tab(`yyyymmdd` date DEFAULT NULL) engine=COLUMNSTORE;
+insert into my_colstore_tab values(date('2024-03-18'));
+insert into my_colstore_tab values(date(date('2024-03-18')-interval 1 year));
+select day(s.yyyymmdd) as OK_1, last_day(s.yyyymmdd) as OK_2, day(last_day(s.yyyymmdd)) as OK_3 from my_colstore_tab s;
+
+# using lastday with DATETIME type
+create table my_colstore_tab2(`yyyymmdd` datetime DEFAULT NULL) engine=COLUMNSTORE;
+insert into my_colstore_tab2 values('2024-03-18 13:40:31');
+insert into my_colstore_tab2 values('2024-03-18 13:40:31'-interval 1 year);
+select day(s.yyyymmdd) as OK_1, last_day(s.yyyymmdd) as OK_2, day(last_day(s.yyyymmdd)) as OK_3 from my_colstore_tab2 s;
+
+DROP DATABASE mcol_5670;

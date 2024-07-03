@@ -36,7 +36,7 @@ using namespace std;
 #include <boost/lexical_cast.hpp>
 using namespace boost;
 
-//#include "we_simplesyslog.h"
+// #include "we_simplesyslog.h"
 #include "we_sdhandler.h"
 
 #include "brm.h"
@@ -331,8 +331,7 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
 
       if (datatypes::isWideDecimalType(cpInfoMerge.type, cpInfoMerge.colWidth))
       {
-        datatypes::SystemCatalog::TypeAttributesStd tyAttr(cpInfoMerge.colWidth, 0,
-                                                           datatypes::INT128MAXPRECISION);
+        datatypes::TypeAttributesStd tyAttr(cpInfoMerge.colWidth, 0, datatypes::INT128MAXPRECISION);
 
         pTok = strtok(NULL, " ");
 
@@ -479,7 +478,7 @@ bool WEBrmUpdater::prepareHighWaterMarkInfo()
 }
 
 //------------------------------------------------------------------------------
-//#ROWS: numRowsRead numRowsInserted
+// #ROWS: numRowsRead numRowsInserted
 
 bool WEBrmUpdater::prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows, int64_t& InsRows)
 {
@@ -527,7 +526,7 @@ bool WEBrmUpdater::prepareRowsInsertedInfo(std::string Entry, int64_t& TotRows, 
 }
 
 //------------------------------------------------------------------------------
-//#DATA: columnNumber columnType columnName numOutOfRangeValues
+// #DATA: columnNumber columnType columnName numOutOfRangeValues
 
 bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
                                                execplan::CalpontSystemCatalog::ColDataType& ColType,
@@ -609,7 +608,7 @@ bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
 }
 
 //------------------------------------------------------------------------------
-//#ERR:  error message file
+// #ERR:  error message file
 
 bool WEBrmUpdater::prepareErrorFileInfo(std::string Entry, std::string& ErrFileName)
 {
@@ -650,7 +649,7 @@ bool WEBrmUpdater::prepareErrorFileInfo(std::string Entry, std::string& ErrFileN
 }
 
 //------------------------------------------------------------------------------
-//#BAD:  bad data file, with rejected rows
+// #BAD:  bad data file, with rejected rows
 
 bool WEBrmUpdater::prepareBadDataFileInfo(std::string Entry, std::string& BadFileName)
 {

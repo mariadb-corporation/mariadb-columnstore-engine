@@ -161,7 +161,7 @@ class ClientRotator
   ClientList fClients;
   config::Config* fCf;
   int fDebug;
-  std::mutex fClientLock;
+  boost::mutex fClientLock;
   bool fLocalQuery;
 };
 

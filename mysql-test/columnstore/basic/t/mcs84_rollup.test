@@ -29,13 +29,44 @@ SELECT year, SUM(sales) FROM booksales GROUP BY year ORDER BY year;
 --error 1221
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP ORDER BY year;
 
-# WITH ROLLUP not supported yet. MCOL-678
---error 1178
+--sorted_result
+SELECT year, sales, MAX(country) FROM booksales GROUP BY year, sales;
+--sorted_result
+SELECT year, MAX(country) FROM booksales GROUP BY year;
+--sorted_result
+SELECT year, sales, MAX(country) FROM booksales GROUP BY year, sales WITH ROLLUP;
+
+--sorted_result
 SELECT year, SUM(sales) FROM booksales GROUP BY year WITH ROLLUP;
---error 1178
-SELECT year, SUM(sales) FROM booksales GROUP BY year ASC WITH ROLLUP;
---error 1178
-SELECT year, SUM(sales) FROM booksales GROUP BY year DESC WITH ROLLUP;
+
+--sorted_result
+SELECT country, genre, SUM(sales) FROM booksales GROUP BY country, genre WITH ROLLUP;
+
+--sorted_result
+SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
+
+CREATE TABLE three_cols ( key1 INTEGER, key2 INTEGER, value DECIMAL(38)) ENGINE=COLUMNSTORE;
+
+INSERT INTO three_cols(key1, key2, value) VALUES
+  (NULL, NULL, NULL)
+, (NULL, NULL,    1)
+, (NULL,    1,    2)
+, (   1,    1,    3)
+, (   1,    2,    4)
+, (   1,    2,    5)
+, (   2,    3,    6)
+, (   2,    3,    7);
+
+--sorted_result
+SELECT key1, key2, SUM(value), AVG(value), MIN(value), MAX(value), COUNT(value), COUNT(*) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+
+--error 1815
+SELECT key1, key2, GROUP_CONCAT(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+--error 1815
+SELECT key1, key2, JSON_ARRAYAGG(value) FROM three_cols GROUP BY key1, key2 WITH ROLLUP;
+
+--error 1815
+SELECT 100, SUM(value) FROM three_cols GROUP BY 1 WITH ROLLUP;
 
 # Clean up
 DROP DATABASE IF EXISTS mcs84_db;

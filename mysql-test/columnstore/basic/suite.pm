@@ -23,9 +23,6 @@ sub is_default { 0 }
 sub start_test {
   # we should guard this for --force-restart flag condition.
   my ($self, $tinfo)= @_;
-  print "Here I am restarting Columnstore backend\n";
-  #system("systemctl", "restart", "mariadb-columnstore");
-  print "Columnstore restarted\n";
   My::Suite::start_test(@_);
 }
 

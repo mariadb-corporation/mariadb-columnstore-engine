@@ -30,7 +30,6 @@
 #pragma once
 
 #include <list>
-#include <mutex>
 
 namespace WriteEngine
 {

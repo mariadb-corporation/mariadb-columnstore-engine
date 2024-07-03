@@ -44,7 +44,7 @@ if (WITH_UBSAN)
   endif (WITH_COLUMNSTORE_REPORT_PATH)
 
   SET(LD_PRELOAD_STRING "")
-  SET(ALLOC_CONFIG "UBSAN_OPTIONS=abort_on_error=0")
+  SET(ALLOC_CONFIG "UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true")
   SET(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.primproc)
   SET(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.dmlproc)
   SET(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.ddlproc)
@@ -89,6 +89,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-storagemanager.service.in" "${CM
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcssavebrm.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslog.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslog" @ONLY)
 
 install(PROGRAMS columnstore-post-install
@@ -124,3 +125,6 @@ install(FILES mariadb-columnstore.service
               DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
 
 install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-engine)
+
+find_package (Python3 COMPONENTS Interpreter REQUIRED)
+add_test(NAME PythonUnitTests COMMAND ${Python3_EXECUTABLE} -m unittest test_mcs-savebrm.py)

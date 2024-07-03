@@ -140,12 +140,12 @@ class DataList
   void lock();
   void unlock();
 
-  std::mutex& getMutex()
+  boost::mutex& getMutex()
   {
     return mutex;  // why in the world is this necessary in FIFO?
   }
 
-  std::mutex mutex;
+  boost::mutex mutex;
   bool noMoreInput;
   uint64_t consumersFinished;
   uint32_t fElemDiskFirstSize;   // byte size of element.first saved to disk

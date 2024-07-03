@@ -42,11 +42,11 @@ using namespace config;
 namespace joblist
 {
 ResourceManager* ResourceManager::fInstance = NULL;
-std::mutex mx;
+boost::mutex mx;
 
 ResourceManager* ResourceManager::instance(bool runningInExeMgr, config::Config* aConfig)
 {
-  std::unique_lock lk(mx);
+  boost::mutex::scoped_lock lk(mx);
 
   if (!fInstance)
     fInstance = new ResourceManager(runningInExeMgr, aConfig);
@@ -238,8 +238,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr, config::Config* aConfig)
 
   fAllowedDiskAggregation =
       getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
-
-  fMaxBPPSendQueue = getUintVal(fPrimitiveServersStr, "MaxBPPSendQueue", defaultMaxBPPSendQueue);
 
   if (!load_encryption_keys())
   {

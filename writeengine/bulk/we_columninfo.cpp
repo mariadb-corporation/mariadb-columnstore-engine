@@ -301,7 +301,7 @@ int ColumnInfo::createDelayedFileIfNeeded(const std::string& tableName)
   // No sense in waiting for a fColMutex lock, when 99.99% of the time,
   // all we need to do is check fDelayedFileCreation, see that it's value
   // is INITIAL_DBFILE_STAT_FILE_EXISTS, and exit the function.
-  std::unique_lock lock(fDelayedFileCreateMutex);
+  boost::mutex::scoped_lock lock(fDelayedFileCreateMutex);
 
   if (fDelayedFileCreation == INITIAL_DBFILE_STAT_FILE_EXISTS)
     return NO_ERROR;
@@ -323,7 +323,7 @@ int ColumnInfo::createDelayedFileIfNeeded(const std::string& tableName)
   // fDelayedFileCreateMutex lock might suffice, but better to explicitly
   // lock fColMutex since we are modifying attributes that we typically
   // change within the scope of a fColMutex lock.
-  std::unique_lock lock2(fColMutex);
+  boost::mutex::scoped_lock lock2(fColMutex);
 
   uint16_t dbRoot = curCol.dataFile.fDbRoot;
   uint32_t partition = curCol.dataFile.fPartition;
@@ -1116,7 +1116,7 @@ int ColumnInfo::finishParsing()
   // thread working on this column.  But, we use the mutex to insure that
   // we see the latest state that may have been set by another parsing thread
   // working with the same column.
-  std::unique_lock lock(fColMutex);
+  boost::mutex::scoped_lock lock(fColMutex);
 
   // Force the flushing of remaining data in the output buffer
   if (fColBufferMgr)
@@ -1165,7 +1165,7 @@ int ColumnInfo::finishParsing()
 //------------------------------------------------------------------------------
 void ColumnInfo::getBRMUpdateInfo(BRMReporter& brmReporter)
 {
-  std::unique_lock lock(fColMutex);
+  boost::mutex::scoped_lock lock(fColMutex);
   // Useful for debugging
   // printCPInfo(column);
 
@@ -1495,7 +1495,7 @@ int ColumnInfo::finishAutoInc()
 //------------------------------------------------------------------------------
 void ColumnInfo::getSegFileInfo(DBRootExtentInfo& fileInfo)
 {
-  std::unique_lock lock(fColMutex);
+  boost::mutex::scoped_lock lock(fColMutex);
   fileInfo.fDbRoot = curCol.dataFile.fDbRoot;
   fileInfo.fPartition = curCol.dataFile.fPartition;
   fileInfo.fSegment = curCol.dataFile.fSegment;
@@ -1657,6 +1657,41 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
   return rc;
 }
 
+//--------------------------------------------------------------------------------------
+// Update dictionary store file with string column parquet data, and return the assigned
+// tokens (tokenbuf) to be stored in the corresponding column token file.
+//--------------------------------------------------------------------------------------
+int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos,
+                                         const int totalRow, char* tokenBuf)
+{
+  long long truncCount = 0;
+
+#ifdef PROFILE
+  Stats::startParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+  boost::mutex::scoped_lock lock(fDictionaryMutex);
+#ifdef PROFILE
+  Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+
+  int rc = fStore->insertDctnryParquet(columnData, tokenPos, totalRow, id, tokenBuf, truncCount, column.cs, column.weType);
+
+  if (rc != NO_ERROR)
+  {
+    WErrorCodes ec;
+    std::ostringstream oss;
+    oss << "updateDctnryStore: error adding rows to store file for "
+        << "OID-" << column.dctnry.dctnryOid << "; DBRoot-" << curCol.dataFile.fDbRoot << "; part-"
+        << curCol.dataFile.fPartition << "; seg-" << curCol.dataFile.fSegment << "; " << ec.errorString(rc);
+    fLog->logMsg(oss.str(), rc, MSGLVL_CRITICAL);
+    fpTableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
+    return rc;
+  }
+
+  incSaturatedCnt(truncCount);
+  return NO_ERROR;
+}
+
 //------------------------------------------------------------------------------
 // Update dictionary store file with specified strings, and return the assigned
 // tokens (tokenbuf) to be stored in the corresponding column token file.
@@ -1672,7 +1707,7 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
   // column.
   // This only applies to default text mode.  This step is bypassed for
   // binary imports, because in that case, the data is already true binary.
-  if (((curCol.colType == WR_VARBINARY) || (curCol.colType == WR_BLOB)) &&
+  if (((curCol.colType == WR_VARBINARY) || (curCol.colType == WR_BLOB && fpTableInfo->readFromSTDIN())) &&
       (fpTableInfo->getImportDataMode() == IMPORT_DATA_TEXT))
   {
 #ifdef PROFILE
@@ -1692,12 +1727,12 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif
-  std::unique_lock lock(fDictionaryMutex);
+  boost::mutex::scoped_lock lock(fDictionaryMutex);
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
 #endif
 
-  int rc = fStore->insertDctnry(buf, pos, totalRow, id, tokenBuf, truncCount);
+  int rc = fStore->insertDctnry(buf, pos, totalRow, id, tokenBuf, truncCount, column.cs, column.weType);
 
   if (rc != NO_ERROR)
   {

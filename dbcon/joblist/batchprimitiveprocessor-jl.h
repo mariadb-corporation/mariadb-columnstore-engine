@@ -252,6 +252,11 @@ class BatchPrimitiveProcessorJL
     uuid = u;
   }
 
+  void setMaxPmJoinResultCount(uint32_t count)
+  {
+    maxPmJoinResultCount = count;
+  }
+
  private:
   const size_t perColumnProjectWeight_ = 10;
   const size_t perColumnFilteringWeight_ = 10;
@@ -374,6 +379,7 @@ class BatchPrimitiveProcessorJL
   unsigned fJoinerChunkSize;
   uint32_t dbRoot;
   bool hasSmallOuterJoin;
+  uint32_t maxPmJoinResultCount = 1048576;
 
   uint32_t _priority;
 

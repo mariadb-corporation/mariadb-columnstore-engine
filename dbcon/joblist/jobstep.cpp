@@ -56,7 +56,7 @@ int toInt(const string& val)
 
 namespace joblist
 {
-std::mutex JobStep::fLogMutex;  //=PTHREAD_MUTEX_INITIALIZER;
+boost::mutex JobStep::fLogMutex;  //=PTHREAD_MUTEX_INITIALIZER;
 
 threadpool::ThreadPool JobStep::jobstepThreadPool(defaultJLThreadPoolSize, 0);
 
@@ -91,6 +91,7 @@ JobStep::JobStep(const JobInfo& j)
  , fProgress(0)
  , fStartTime(-1)
  , fTimeZone(j.timeZone)
+ , fMaxPmJoinResultCount(j.maxPmJoinResultCount)
 {
   QueryTeleServerParms tsp;
   string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));

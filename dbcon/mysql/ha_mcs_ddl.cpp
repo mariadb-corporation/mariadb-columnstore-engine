@@ -766,7 +766,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
   parser.setDefaultSchema(schema);
   parser.setDefaultCharset(default_table_charset);
   int rc = 0;
-  parser.Parse(ddlStatement.c_str());
+  parser.Parse(ddlStatement.c_str(), thd->get_utf8_flag());
 
   if (get_fe_conn_info_ptr() == NULL) {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -2515,7 +2515,8 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
         const CHARSET_INFO* field_cs = (*field)->charset();
         if (field_cs && (!share->table_charset || field_cs->number != share->table_charset->number))
         {
-          oss << " CHARACTER SET " << field_cs->cs_name.str;
+          oss << " CHARACTER SET " << field_cs->cs_name.str <<
+          " COLLATE " << field_cs->coll_name.str;
         }
       }
 
@@ -2555,7 +2556,8 @@ int ha_mcs_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* crea
 
     if (share->table_charset)
     {
-      oss << " DEFAULT CHARSET=" << share->table_charset->cs_name.str;
+      oss << " DEFAULT CHARSET=" << share->table_charset->cs_name.str <<
+      " COLLATE=" << share->table_charset->coll_name.str;
     }
 
     // Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT

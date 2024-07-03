@@ -96,7 +96,6 @@ class BatchPrimitiveProcessor
   void resetBPP(messageqcpp::ByteStream&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& outputSock);
   void addToJoiner(messageqcpp::ByteStream&);
   int endOfJoiner();
-  void doneSendingJoinerData();
   int operator()();
   void setLBIDForScan(uint64_t rid);
 
@@ -264,7 +263,7 @@ class BatchPrimitiveProcessor
   bool hasWideColumnOut;
   uint8_t wideColumnWidthOut;
   // IO counters
-  std::mutex counterLock;
+  boost::mutex counterLock;
   uint32_t busyLoaderCount;
 
   uint32_t physIO, cachedIO, touchedBlocks;
@@ -284,8 +283,8 @@ class BatchPrimitiveProcessor
 
   /* Join support TODO: Make join ops a seperate Command class. */
   bool doJoin;
-  boost::scoped_array<boost::scoped_array<std::mutex>> addToJoinerLocks;
-  boost::scoped_array<std::mutex> smallSideDataLocks;
+  boost::scoped_array<boost::scoped_array<boost::mutex>> addToJoinerLocks;
+  boost::scoped_array<boost::mutex> smallSideDataLocks;
 
   // 		uint32_t ridsIn, ridsOut;
 
@@ -336,7 +335,7 @@ class BatchPrimitiveProcessor
   std::shared_ptr<std::shared_ptr<boost::shared_ptr<TJoiner>[]>[]> tJoiners;
   typedef std::vector<uint32_t> MatchedData[LOGICAL_BLOCK_RIDS];
   std::shared_ptr<MatchedData[]> tSmallSideMatches;
-  uint32_t executeTupleJoin(uint32_t startRid);
+  uint32_t executeTupleJoin(uint32_t startRid, rowgroup::RowGroup& largeSideRowGroup);
   bool getTupleJoinRowGroupData;
   std::vector<rowgroup::RowGroup> smallSideRGs;
   rowgroup::RowGroup largeSideRG;
@@ -438,7 +437,7 @@ class BatchPrimitiveProcessor
   bool initiatedByEM_;
   uint32_t weight_;
 
-  static const uint64_t maxResultCount = 1048576;  // 2^20
+  uint32_t maxPmJoinResultCount = 1048576;
   friend class Command;
   friend class ColumnCommand;
   friend class DictStep;

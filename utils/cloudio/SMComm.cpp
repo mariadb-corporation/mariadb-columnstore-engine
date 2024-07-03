@@ -24,7 +24,7 @@ using namespace messageqcpp;
 namespace
 {
 idbdatafile::SMComm* instance = NULL;
-std::mutex m;
+boost::mutex m;
 };  // namespace
 
 namespace idbdatafile
@@ -34,7 +34,7 @@ SMComm* SMComm::get()
   if (instance)
     return instance;
 
-  std::unique_lock sl(m);
+  boost::mutex::scoped_lock sl(m);
 
   if (instance)
     return instance;

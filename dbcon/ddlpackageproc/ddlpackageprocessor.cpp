@@ -79,7 +79,7 @@ using namespace ddlpackage;
 
 namespace ddlpackageprocessor
 {
-std::mutex DDLPackageProcessor::dbrmMutex;
+boost::mutex DDLPackageProcessor::dbrmMutex;
 
 DDLPackageProcessor::~DDLPackageProcessor()
 {
@@ -562,10 +562,9 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
 {
   SUMMARY_INFO("DDLPackageProcessor::createFiles");
   boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
-    CalpontSystemCatalog::makeCalpontSystemCatalog(1);
+      CalpontSystemCatalog::makeCalpontSystemCatalog(1);
   CalpontSystemCatalog::RIDList ridList = systemCatalogPtr->columnRIDs(aTableName);
-  CalpontSystemCatalog::OID tableAUXColOid =
-    systemCatalogPtr->tableAUXColumnOID(aTableName);
+  CalpontSystemCatalog::OID tableAUXColOid = systemCatalogPtr->tableAUXColumnOID(aTableName);
 
   if (tableAUXColOid > 3000)
   {
@@ -1127,148 +1126,37 @@ void DDLPackageProcessor::createWriteTruncateTableLogFile(
     throw std::runtime_error(errorMsg);
 }
 
-#if 0
-void DDLPackageProcessor::createOpenTruncateTableLogFile(execplan::CalpontSystemCatalog::OID tableOid, execplan::CalpontSystemCatalog::TableName tableName)
+DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackage(SqlStatement* sqlStmt)
 {
-    SUMMARY_INFO("DDLPackageProcessor::createOpenTruncateTableLogFile");
-    //Build file name with tableOid. Currently, table oid is not returned and therefore not reused
-    string prefix, error;
-    config::Config* config = config::Config::makeConfig();
-    prefix = config->getConfig("SystemConfig", "DBRMRoot");
+  auto result = processPackageInternal(sqlStmt);
+  uint32_t tries = 0;
+  while ((result.result == PP_LOST_CONNECTION) && (tries < 5))
+  {
+    std::cerr << "DDLPackageProcessor: NETWORK ERROR; attempt # " << tries << std::endl;
+    joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+    joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+    if (fEc->Setup())
+      return result;
 
-    if (prefix.length() == 0)
-    {
-        error = "Need a valid DBRMRoot entry in Calpont configuation file";
-        throw std::runtime_error(error);
-    }
-
-    uint64_t pos =  prefix.find_last_of ("/") ;
-
-    if (pos != string::npos)
-    {
-        fDDLLogFileName = prefix.substr(0, pos + 1); //Get the file path
-    }
-    else
-    {
-        error = "Cannot find the dbrm directory for the DDL log file";
-        throw std::runtime_error(error);
-
-    }
-
-    std::ostringstream oss;
-    oss << tableOid;
-    fDDLLogFileName += "DDL_TRUNCATETABLE_Log_" + oss.str();
-    fDDLLogFile.open(fDDLLogFileName.c_str(), ios::out);
-
-    if (!fDDLLogFile)
-    {
-        error = "DDL truncate table log file cannot be created";
-        throw std::runtime_error(error);
-    }
+    result = processPackageInternal(sqlStmt);
+    ++tries;
+  }
+  return result;
 }
 
-void DDLPackageProcessor::removeIndexFiles(execplan::CalpontSystemCatalog::SCN txnID,
-        DDLResult& result,
-        execplan::CalpontSystemCatalog::IndexOIDList& idxOIDList)
+DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackageInternal(SqlStatement* sqlStmt)
 {
-    /*	SUMMARY_INFO("DDLPackageProcessor::removeIndexFiles");
-
-    	if (result.result != NO_ERROR)
-    		return;
-
-    	int err = 0;
-    	CalpontSystemCatalog::IndexOID idxOID;
-    	CalpontSystemCatalog::IndexOIDList::const_iterator iter = idxOIDList.begin();
-    	std::string error;
-    	try
-    	{
-    		while(iter != idxOIDList.end())
-    		{
-    			idxOID = *iter;
-    			if (idxOID.objnum < 3000 || idxOID.listOID < 3000)
-    			{
-    				++iter;
-    				continue;
-    			}
-    			err = -1;
-    			if (err)
-    			{
-    		WErrorCodes ec;
-    				error = "WE: Error removing index files: " + getFileName(idxOID.objnum) + ", " + getFileName(idxOID.listOID) + ". error = " + ec.errorString(err);
-    				throw std::runtime_error(error);
-    			}
-
-    			++iter;
-    		}
-    	}
-    	catch (std::exception& ex)
-    	{
-    		error = ex.what();
-    		throw std::runtime_error(error);
-    	}
-    	catch (...)
-    	{
-    		error = "Unknown exception caught";
-    		throw std::runtime_error(error);
-    	}
-    */
+  // This should not be called.
+  DDLPackageProcessor::DDLResult result;
+  result.result = NOT_ACCEPTING_PACKAGES;
+  return result;
 }
 
-
-
-void DDLPackageProcessor::updateSyscolumns(execplan::CalpontSystemCatalog::SCN txnID,
-        DDLResult& result, WriteEngine::RIDList& ridList,
-        WriteEngine::ColValueList& colValuesList,
-        WriteEngine::ColValueList& colOldValuesList)
+bool DDLPackageProcessor::checkPPLostConnection(std::string error)
 {
-    SUMMARY_INFO("DDLPackageProcessor::updateSyscolumns");
-
-    if (result.result != NO_ERROR)
-        return;
-
-    WriteEngine::ColStructList colStructs;
-    WriteEngine::CSCTypesList cscColTypeList;
-    //std::vector<ColStruct> colStructs;
-    WriteEngine::ColStruct colStruct;
-    execplan::CalpontSystemCatalog::ColType colType;
-    WriteEngine::DctnryStructList dctnryStructList;
-    WriteEngine::DctnryValueList dctnryValueList;
-    //Build column structure for COLUMNPOS_COL
-    colType.columnOID = colStruct.dataOid = OID_SYSCOLUMN_COLUMNPOS;
-    colType.colWidth = colStruct.colWidth = 4;
-    colStruct.tokenFlag = false;
-    colType.colDataType = colStruct.colDataType = CalpontSystemCatalog::INT;
-    colStructs.push_back(colStruct);
-    cscColTypeList.push_back(colType);
-    int error;
-    std::string err;
-    std::vector<void*> colOldValuesList1;
-
-    try
-    {
-        //@Bug 3051 use updateColumnRecs instead of updateColumnRec to use different value for diffrent rows.
-        if (NO_ERROR != (error = fWriteEngine.updateColumnRecs( txnID, cscColTypeList, colStructs, colValuesList, ridList )))
-        {
-            // build the logging message
-            WErrorCodes ec;
-            err = "WE: Failed on update SYSCOLUMN table. " + ec.errorString(error);
-            throw std::runtime_error(err);
-        }
-    }
-    catch (std::exception& ex)
-    {
-        err = ex.what();
-        throw std::runtime_error(err);
-    }
-    catch (...)
-    {
-        err = "updateSyscolumns:Unknown exception caught";
-        throw std::runtime_error(err);
-    }
-
+  return error.find(PPLostConnectionErrorCode) != std::string::npos;
 }
 
-#endif
 void DDLPackageProcessor::returnOIDs(execplan::CalpontSystemCatalog::RIDList& ridList,
                                      execplan::CalpontSystemCatalog::DictOIDList& dictOIDList)
 {

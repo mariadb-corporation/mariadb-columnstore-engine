@@ -15,7 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <memory>
 #include <sstream>
 #include <map>
 #include <time.h>
@@ -71,7 +70,7 @@ static uint64_t TimeSpecToSeconds(struct timespec* ts)
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrIp, uint64_t port)
 {
-  auto lock = std::unique_lock(lockedMap.queueMutex);
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
 
   std::ostringstream oss;
   oss << dnOrIp << "_" << port;
@@ -100,7 +99,7 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrI
 
 MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& module)
 {
-  auto lock = std::unique_lock(lockedMap.queueMutex);
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
 
 
   MessageQueueClient* returnClient = MessageQueueClientPool::findInPool(module);
@@ -194,7 +193,7 @@ void MessageQueueClientPool::releaseInstance(MessageQueueClient* client)
   if (client == NULL)
     return;
 
-  auto lock = std::unique_lock(lockedMap.queueMutex);
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
   auto it = lockedMap.clientMap.begin();
 
   while (it != lockedMap.clientMap.end())
@@ -223,7 +222,7 @@ void MessageQueueClientPool::deleteInstance(MessageQueueClient* client)
     return;
 
 
-  auto lock = std::unique_lock(lockedMap.queueMutex);
+  auto lock = std::scoped_lock(lockedMap.queueMutex);
   auto it = lockedMap.clientMap.begin();
 
   while (it != lockedMap.clientMap.end())

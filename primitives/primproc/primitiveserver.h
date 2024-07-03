@@ -45,7 +45,7 @@ namespace primitiveprocessor
 {
 extern dbbc::BlockRequestProcessor** BRPp;
 extern BRM::DBRM* brm;
-extern std::mutex bppLock;
+extern boost::mutex bppLock;
 extern uint32_t highPriorityThreads, medPriorityThreads, lowPriorityThreads;
 
 class BPPSendThread;
@@ -66,7 +66,7 @@ class BPPV
   }
   void abort();
   bool aborted();
-  volatile bool joinDataReceived;
+  std::atomic<bool> joinDataReceived{false};
 
  private:
   std::vector<boost::shared_ptr<BatchPrimitiveProcessor> > v;
@@ -90,7 +90,7 @@ void loadBlock(uint64_t lbid, BRM::QueryContext q, uint32_t txn, int compType, v
                bool* pWasBlockInCache, uint32_t* rCount = NULL, bool LBIDTrace = false,
                uint32_t sessionID = 0, bool doPrefetch = true, VSSCache* vssCache = NULL);
 void loadBlockAsync(uint64_t lbid, const BRM::QueryContext& q, uint32_t txn, int CompType, uint32_t* cCount,
-                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, std::mutex* m,
+                    uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, boost::mutex* m,
                     uint32_t* busyLoaders, boost::shared_ptr<BPPSendThread> sendThread,
                     VSSCache* vssCache = 0);
 uint32_t loadBlocks(BRM::LBID_t* lbids, BRM::QueryContext q, BRM::VER_t txn, int compType,
@@ -129,6 +129,11 @@ class PrimitiveServer
     return fProcessorPool;
   }
 
+  inline std::shared_ptr<threadpool::PriorityThreadPool> getOOBProcessorThreadPool() const
+  {
+    return fOOBPool;
+  }
+
   int ReadAheadBlocks() const
   {
     return fReadAheadBlocks;
@@ -161,6 +166,7 @@ class PrimitiveServer
    * primitive commands
    */
   boost::shared_ptr<threadpool::FairThreadPool> fProcessorPool;
+  std::shared_ptr<threadpool::PriorityThreadPool> fOOBPool;
 
   int fServerThreads;
   int fServerQueueSize;

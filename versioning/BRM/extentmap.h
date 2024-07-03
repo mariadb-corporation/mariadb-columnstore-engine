@@ -34,7 +34,7 @@
 #include <tr1/unordered_map>
 #include <mutex>
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/functional/hash.hpp>  //boost::hash
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -297,7 +297,7 @@ class ExtentMapRBTreeImpl
 
   BRMManagedShmImplRBTree fManagedShm;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static ExtentMapRBTreeImpl* fInstance;
 };
 
@@ -357,7 +357,7 @@ class FreeListImpl
 
   BRMShmImpl fFreeList;
 
-  static std::mutex fInstanceMutex;
+  static boost::mutex fInstanceMutex;
   static FreeListImpl* fInstance;
 };
 
@@ -1035,9 +1035,9 @@ class ExtentMap : public Undoable
   EXPORT std::vector<InlineLBIDRange> getFreeListEntries();
 
   EXPORT void dumpTo(std::ostream& os);
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
+  EXPORT const std::atomic<bool>* getEMLockStatus();
+  EXPORT const std::atomic<bool>* getEMFLLockStatus();
+  EXPORT const std::atomic<bool>* getEMIndexLockStatus();
   size_t EMIndexShmemSize();
   size_t EMIndexShmemFree();
 
@@ -1061,6 +1061,7 @@ class ExtentMap : public Undoable
   static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
   static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
   static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
+  static const constexpr size_t EM_SAVE_NUM_PER_BATCH = 1000000;
   // RBTree constants.
   static const size_t EM_RB_TREE_NODE_SIZE = sizeof(EMEntry) + 8 * sizeof(uint64_t);
   static const size_t EM_RB_TREE_EMPTY_SIZE = 1024;
@@ -1087,11 +1088,13 @@ class ExtentMap : public Undoable
   time_t fCacheTime;  // timestamp associated with config cache
 
   int numUndoRecords;
-  bool flLocked, emLocked, emIndexLocked;
+  std::atomic<bool> flLocked{false};
+  std::atomic<bool> emLocked{false};
+  std::atomic<bool> emIndexLocked{false};
 
-  static std::mutex mutex;  // @bug5355 - made mutex static
-  static std::mutex emIndexMutex;
-  std::mutex fConfigCacheMutex;  // protect access to Config Cache
+  static boost::mutex mutex;  // @bug5355 - made mutex static
+  static boost::mutex emIndexMutex;
+  boost::mutex fConfigCacheMutex;  // protect access to Config Cache
 
   enum OPS
   {
@@ -1172,6 +1175,11 @@ class ExtentMap : public Undoable
   bool fDebug;
 
   int _markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
+
+  MSTEntry* _getTableLock(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _getTableLockUpgradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _getTableLockDowngradeIfNeeded(const OPS op, std::atomic<bool>& lockedState, const int table);
+  void _releaseTable(const OPS op, std::atomic<bool>& lockedState, const int table);
 
   template <typename T>
   void load(T* in);

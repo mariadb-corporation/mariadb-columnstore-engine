@@ -28,16 +28,17 @@
 #include <sys/stat.h>
 #include <cerrno>
 #include <fcntl.h>
+#include <mutex>
 #include <unistd.h>
 
 #include <iostream>
 #include <string>
 #include <stdexcept>
 #include <limits>
+#include <unordered_set>
 using namespace std;
 
-#include <map>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
@@ -235,7 +236,7 @@ const QueryContext SessionManagerServer::verID()
 {
   QueryContext ret;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   ret.currentScn = _verID;
 
   for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
@@ -248,7 +249,7 @@ const QueryContext SessionManagerServer::sysCatVerID()
 {
   QueryContext ret;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   ret.currentScn = _sysCatVerID;
 
   for (iterator i = activeTxns.begin(); i != activeTxns.end(); ++i)
@@ -257,12 +258,34 @@ const QueryContext SessionManagerServer::sysCatVerID()
   return ret;
 }
 
+uint32_t SessionManagerServer::newCpimportJob()
+{
+  std::scoped_lock lk(cpimportMutex);
+  activeCpimportJobs.insert(cpimportJobId);
+  auto ret = cpimportJobId;
+  ++cpimportJobId;
+  return ret;
+}
+
+void SessionManagerServer::finishCpimortJob(uint32_t jobId)
+{
+  std::scoped_lock lk(cpimportMutex);
+  if (activeCpimportJobs.count(jobId))
+    activeCpimportJobs.erase(jobId);
+}
+
+void SessionManagerServer::clearAllCpimportJobs()
+{
+  std::scoped_lock lk(cpimportMutex);
+  activeCpimportJobs.clear();
+}
+
 const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool isDDL)
 {
   TxnID ret;  // ctor must set valid = false
   iterator it;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   // if it already has a txn...
   it = activeTxns.find(session);
@@ -298,7 +321,7 @@ const TxnID SessionManagerServer::newTxnID(const SID session, bool block, bool i
 void SessionManagerServer::finishTransaction(TxnID& txn)
 {
   iterator it;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   bool found = false;
 
   if (!txn.valid)
@@ -334,7 +357,7 @@ const TxnID SessionManagerServer::getTxnID(const SID session)
   TxnID ret;
   iterator it;
 
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   it = activeTxns.find(session);
 
@@ -351,7 +374,7 @@ std::shared_ptr<SIDTIDEntry[]> SessionManagerServer::SIDTIDMap(int& len)
 {
   int j;
   std::shared_ptr<SIDTIDEntry[]> ret;
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   iterator it;
 
   ret.reset(new SIDTIDEntry[activeTxns.size()]);
@@ -370,7 +393,7 @@ std::shared_ptr<SIDTIDEntry[]> SessionManagerServer::SIDTIDMap(int& len)
 
 void SessionManagerServer::setSystemState(uint32_t state)
 {
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   systemState |= state;
   saveSystemState();
@@ -378,15 +401,21 @@ void SessionManagerServer::setSystemState(uint32_t state)
 
 void SessionManagerServer::clearSystemState(uint32_t state)
 {
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
 
   systemState &= ~state;
   saveSystemState();
 }
 
+uint32_t SessionManagerServer::getCpimportJobsCount()
+{
+  std::scoped_lock lk(cpimportMutex);
+  return activeCpimportJobs.size();
+}
+
 uint32_t SessionManagerServer::getTxnCount()
 {
-  std::unique_lock lk(mutex);
+  boost::mutex::scoped_lock lk(mutex);
   return activeTxns.size();
 }
 

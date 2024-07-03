@@ -27,7 +27,7 @@
 #pragma once
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
@@ -131,7 +131,7 @@ class BRMManagedShmImplRBTree : public BRMShmImplParent
 
  private:
   // The `segment` name is fixed.
-  const char* segmentName = "MCS-shm-00020001";
+  const char* segmentName = "@SHMEM_FILE_GLOB@00020001";
 };
 
 }  // namespace BRM

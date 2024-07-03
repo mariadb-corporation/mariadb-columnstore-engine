@@ -177,7 +177,13 @@ build/Testing/
 tests/*\[1\]_tests.cmake
 tests/*\[1\]_include.cmake
 .boost
+build/.cmake
 *.vtg
 *.vtg-back
 '*.vtg-Stashed changes'
+versioning/BRM/brmshmimpl.h
+versioning/BRM/shmkeys.cpp
+obj/
+build/build
+
 
