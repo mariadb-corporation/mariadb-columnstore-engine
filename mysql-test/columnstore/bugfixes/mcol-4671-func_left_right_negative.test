@@ -1,0 +1,44 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol 4671`;
+--enable_warnings
+CREATE DATABASE `mcol 4671`;
+USE `mcol 4671`;
+
+# tinyint
+CREATE TABLE t_tinyint (a TINYINT) ENGINE=ColumnStore;
+INSERT INTO t_tinyint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_tinyint;
+
+SELECT RIGHT('abc',a) FROM t_tinyint;
+
+# smallint
+CREATE TABLE t_smallint (a SMALLINT) ENGINE=ColumnStore;
+INSERT INTO t_smallint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_smallint;
+
+SELECT RIGHT('abc',a) FROM t_smallint;
+
+# mediumint
+CREATE TABLE t_mediumint (a MEDIUMINT) ENGINE=ColumnStore;
+INSERT INTO t_mediumint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_mediumint;
+
+SELECT RIGHT('abc',a) FROM t_mediumint;
+
+# int
+CREATE TABLE t_int (a INT) ENGINE=ColumnStore;
+INSERT INTO t_int VALUES (-1);
+SELECT LEFT('abc',a) FROM t_int;
+
+SELECT RIGHT('abc',a) FROM t_int;
+
+# bigint
+CREATE TABLE t_bigint (a BIGINT) ENGINE=ColumnStore;
+INSERT INTO t_bigint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_bigint;
+
+SELECT RIGHT('abc',a) FROM t_bigint;
+
+# cleanup
+DROP DATABASE `mcol 4671`;
