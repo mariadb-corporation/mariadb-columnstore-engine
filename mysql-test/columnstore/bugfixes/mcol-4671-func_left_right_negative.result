@@ -1,0 +1,44 @@
+DROP DATABASE IF EXISTS `mcol 4671`;
+CREATE DATABASE `mcol 4671`;
+USE `mcol 4671`;
+CREATE TABLE t_tinyint (a TINYINT) ENGINE=ColumnStore;
+INSERT INTO t_tinyint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_tinyint;
+LEFT('abc',a)
+
+SELECT RIGHT('abc',a) FROM t_tinyint;
+RIGHT('abc',a)
+
+CREATE TABLE t_smallint (a SMALLINT) ENGINE=ColumnStore;
+INSERT INTO t_smallint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_smallint;
+LEFT('abc',a)
+
+SELECT RIGHT('abc',a) FROM t_smallint;
+RIGHT('abc',a)
+
+CREATE TABLE t_mediumint (a MEDIUMINT) ENGINE=ColumnStore;
+INSERT INTO t_mediumint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_mediumint;
+LEFT('abc',a)
+
+SELECT RIGHT('abc',a) FROM t_mediumint;
+RIGHT('abc',a)
+
+CREATE TABLE t_int (a INT) ENGINE=ColumnStore;
+INSERT INTO t_int VALUES (-1);
+SELECT LEFT('abc',a) FROM t_int;
+LEFT('abc',a)
+
+SELECT RIGHT('abc',a) FROM t_int;
+RIGHT('abc',a)
+
+CREATE TABLE t_bigint (a BIGINT) ENGINE=ColumnStore;
+INSERT INTO t_bigint VALUES (-1);
+SELECT LEFT('abc',a) FROM t_bigint;
+LEFT('abc',a)
+
+SELECT RIGHT('abc',a) FROM t_bigint;
+RIGHT('abc',a)
+
+DROP DATABASE `mcol 4671`;

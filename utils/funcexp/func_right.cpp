@@ -56,15 +56,17 @@ std::string Func_right::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   const char* pos = src.str();
   const char* end = pos + binLen;
 
-  size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
+  // Negative trim length values are legal, but they don't make any real sense
+  int64_t trimLength = fp[1]->data()->getUintVal(row, isNull);
   if (isNull || trimLength <= 0)
     return "";
 
+  size_t trimLengthPositive = static_cast<size_t>(trimLength);  // now we are sure it is positive
   size_t start = cs->numchars(pos, end);  // Here, start is number of characters in src
-  if (start <= trimLength)
+  if (start <= trimLengthPositive)
     return src.safeString("");
   start = cs->charpos(pos, end,
-                      start - trimLength);  // Here, start becomes number of bytes into src to start copying
+                      start - trimLengthPositive);  // Here, start becomes number of bytes into src to start copying
 
   std::string ret(pos + start, binLen - start);
   return ret;
