@@ -8,6 +8,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 PROJECT(Columnstore)
 INCLUDE (CheckCXXSourceCompiles)
 
+# MariaDB server adds this flags by default for Debug builds, and this makes our external projects
+# ABI incompatible with debug STL containers
+STRING(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+STRING(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+
+
 FOREACH(p CMP0135)
   IF(POLICY ${p})
     CMAKE_POLICY(SET ${p} NEW)
