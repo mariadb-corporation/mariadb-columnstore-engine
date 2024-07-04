@@ -371,7 +371,7 @@ run_unit_tests()
         warn "Skipping unittests"
     else
         message "Running unittests"
-        cd $MDB_SOURCE_PATH
+        cd $MARIA_BUILD_PATH
         ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
         cd - > /dev/null
     fi
