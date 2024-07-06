@@ -774,7 +774,7 @@ extern "C"
     return result;
   }
 
-  void caldisablepartitions_deinit(UDF_INIT* initid)
+      void caldisablepartitions_deinit(UDF_INIT* initid)
   {
   }
 
@@ -853,7 +853,7 @@ extern "C"
     return result;
   }
 
-  void calenablepartitions_deinit(UDF_INIT* initid)
+      void calenablepartitions_deinit(UDF_INIT* initid)
   {
   }
 
