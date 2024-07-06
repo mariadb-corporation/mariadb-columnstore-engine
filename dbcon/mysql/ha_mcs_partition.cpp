@@ -1045,7 +1045,7 @@ extern "C"
   }
 
       const char* caldisablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result,
-                                          unsigned long* length, char* is_null, char* error)
+                                              unsigned long* length, char* is_null, char* error)
   {
     string msg;
     set<LogicalPartition> partSet;
@@ -1131,7 +1131,7 @@ extern "C"
   /**
    * CalShowPartitionsByValue
    */
-  my_bool calshowpartitionsbyvalue_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+      my_bool calshowpartitionsbyvalue_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     bool err = false;
 
@@ -1164,7 +1164,7 @@ extern "C"
     return 0;
   }
 
-  void calshowpartitionsbyvalue_deinit(UDF_INIT* initid)
+      void calshowpartitionsbyvalue_deinit(UDF_INIT* initid)
   {
     delete[] initid->ptr;
   }
