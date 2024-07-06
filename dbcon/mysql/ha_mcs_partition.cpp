@@ -774,7 +774,7 @@ extern "C"
     return result;
   }
 
-      void caldisablepartitions_deinit(UDF_INIT* initid)
+  void caldisablepartitions_deinit(UDF_INIT* initid)
   {
   }
 
@@ -853,7 +853,7 @@ extern "C"
     return result;
   }
 
-      void calenablepartitions_deinit(UDF_INIT* initid)
+  void calenablepartitions_deinit(UDF_INIT* initid)
   {
   }
 
@@ -1045,7 +1045,7 @@ extern "C"
   }
 
       const char* caldisablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result,
-                                              unsigned long* length, char* is_null, char* error)
+                                          unsigned long* length, char* is_null, char* error)
   {
     string msg;
     set<LogicalPartition> partSet;
@@ -1131,7 +1131,7 @@ extern "C"
   /**
    * CalShowPartitionsByValue
    */
-      my_bool calshowpartitionsbyvalue_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool calshowpartitionsbyvalue_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     bool err = false;
 
@@ -1164,7 +1164,7 @@ extern "C"
     return 0;
   }
 
-      void calshowpartitionsbyvalue_deinit(UDF_INIT* initid)
+  void calshowpartitionsbyvalue_deinit(UDF_INIT* initid)
   {
     delete[] initid->ptr;
   }
@@ -1351,23 +1351,23 @@ extern "C"
    */
   my_bool mcs_analyze_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    bool err = false;
+    bool hasErr = false;
 
     if (args->arg_count < 2 || args->arg_count > 3)
     {
-      err = true;
+      hasErr = true;
     }
     else if (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT ||
              (args->arg_count == 3 && args->arg_type[2] != STRING_RESULT))
     {
-      err = true;
+      hasErr = true;
     }
     else if (!args->args[0] || !args->args[1] || (args->arg_count == 3 && !args->args[2]))
     {
-      err = true;
+      hasErr = true;
     }
 
-    if (err)
+    if (hasErr)
     {
       strcpy(message, "usage: MCS_ANALYZE_PARTITION_BLOAT (schema, table, partition_num)");
       return 1;
@@ -1396,6 +1396,8 @@ extern "C"
 
     ostringstream output;
 
+    THD* thd = current_thd;
+
     try
     {
       schema = (char*)(args->args[0]);
@@ -1412,7 +1414,8 @@ extern "C"
       partitionNum = *partitionNums.begin();
 
       tableNameObj = make_table(schema, table, lower_case_table_names);
-      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableNameObj);
+      vector<bool> deletedBitMap =
+          getPartitionDeletedBitmap(partitionNum, tableNameObj, tid2sid(thd->thread_id));
 
       uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
 

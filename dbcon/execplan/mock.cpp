@@ -8,6 +8,7 @@
 #include "constantcolumn.h"
 #include "functioncolumn.h"
 #include "rowgroup.h"
+#include "sessionmanager.h"
 #include "simplecolumn.h"
 #include "returnedcolumn.h"
 #include "simplefilter.h"
@@ -19,169 +20,158 @@ namespace
 {
 using RowSize = uint32_t;
 
-RowSize doProcessQuery(const CalpontExecutionPlan& csep, std::shared_ptr<execplan::ClientRotator> exeMgr)
+RowSize processQuery(const CalpontSelectExecutionPlan& csep)
 {
-  messageqcpp::ByteStream msg;
-
-  // send code to indicat tuple
-  messageqcpp::ByteStream::quadbyte qb = 4;
-  msg << qb;
-  exeMgr->write(msg);
-  msg.restart();
-
-  // Send the CalpontSelectExecutionPlan to ExeMgr.
-  csep.serialize(msg);
-  exeMgr->write(msg);
-
-  // Get the table oid for the system table being queried.
-  uint32_t tableOID = IDB_VTABLE_ID;
-  uint16_t status = 0;
-
-  // Send the request for the table.
-  qb = static_cast<messageqcpp::ByteStream::quadbyte>(tableOID);
-  messageqcpp::ByteStream bs;
-  bs << qb;
-  exeMgr->write(bs);
-  std::unique_ptr<rowgroup::RowGroup> rowGroup;
-  rowgroup::RGData rgData;
-
-  msg.restart();
-  bs.restart();
-  msg = exeMgr->read();
-  bs = exeMgr->read();
-
-  if (bs.length() == 0)
+  auto exeMgr = std::make_unique<execplan::ClientRotator>(csep.sessionID(), "ExeMgr");
+  try
+  {
+    exeMgr->connect(5);
+  }
+  catch (...)
   {
     throw logging::IDBExcept(logging::ERR_LOST_CONN_EXEMGR);
   }
 
-  std::string emsgStr;
-  bs >> emsgStr;
-  bool err = false;
+  messageqcpp::ByteStream msgCSEP;
 
-  if (msg.length() == 4)
+  // send code to indicat tuple
+  messageqcpp::ByteStream::quadbyte qb = 4;
+  msgCSEP << qb;
+  exeMgr->write(msgCSEP);
+  msgCSEP.restart();
+
+  // Send the CalpontSelectExecutionPlan to ExeMgr.
+  csep.serialize(msgCSEP);
+  exeMgr->write(msgCSEP);
+
+  msgCSEP.restart();
+  msgCSEP = exeMgr->read();
+
+  messageqcpp::ByteStream msg;
+  msg = exeMgr->read();
+  if (msg.length() == 0)
   {
-    msg >> qb;
+    throw logging::IDBExcept(logging::ERR_LOST_CONN_EXEMGR);
+  }
+
+  std::string errMsg;
+  msg >> errMsg;
+
+  bool hasErr = false;
+  if (msgCSEP.length() == 4)
+  {
+    msgCSEP >> qb;
 
     if (qb != 0)
-      err = true;
+      hasErr = true;
   }
   else
   {
-    err = true;
+    hasErr = true;
   }
 
-  if (err)
+  if (hasErr)
   {
-    throw runtime_error(emsgStr);
+    throw runtime_error(errMsg);
   }
 
+  std::unique_ptr<rowgroup::RowGroup> rowGroup;
+  rowgroup::RGData rgData;
+  RowSize result = 0;
   while (true)
   {
-    bs.restart();
-    bs = exeMgr->read();
+    msg.restart();
+    msg = exeMgr->read();
 
-    // @bug 1782. check ExeMgr connection lost
-    if (bs.length() == 0)
+    // ExeMgr connection lost
+    if (msg.length() == 0)
+    {
       throw logging::IDBExcept(logging::ERR_LOST_CONN_EXEMGR);
+    }
 
     if (!rowGroup)
     {
       rowGroup.reset(new rowgroup::RowGroup());
-      rowGroup->deserialize(bs);
+      rowGroup->deserialize(msg);
       continue;
     }
     else
     {
-      rgData.deserialize(bs, true);
+      rgData.deserialize(msg, true);
       rowGroup->setData(&rgData);
     }
 
-    if ((status = rowGroup->getStatus()) != 0)
+    if (uint32_t status = rowGroup->getStatus(); status != 0)
     {
       if (status >= 1000)  // new error system
       {
-        // bs.advance(rowGroup->getDataSize());
-        bs >> emsgStr;
-        throw logging::IDBExcept(emsgStr, rowGroup->getStatus());
+        msg >> errMsg;
+        throw logging::IDBExcept(errMsg, rowGroup->getStatus());
       }
       else
-      {
-        throw logging::IDBExcept(logging::ERR_SYSTEM_CATALOG);
-      }
-    }
-
-    if (rowGroup->getRowCount() > 0)
-      // rowGroup->addToSysDataList(sysDataList);
-      rowGroup->getColumnCount();
-    else
-      break;
-  }
-
-  bs.reset();
-  qb = 0;
-  bs << qb;
-  exeMgr->write(bs);
-  return 0;
-}
-
-RowSize processQuery(const CalpontExecutionPlan& cesp)
-{
-  RowSize result = 0;
-  auto exeMgr = std::make_shared<execplan::ClientRotator>(0, "ExeMgr");
-  int maxTries = 0;
-  while (maxTries < 5)
-  {
-    maxTries++;
-
-    try
-    {
-      result = doProcessQuery(cesp, exeMgr);
-      break;
-    }
-    // error already occurred. this is not a broken pipe
-    catch (logging::IDBExcept&)
-    {
-      throw;
-    }
-    catch (...)
-    {
-      // may be a broken pipe. re-establish exeMgr and send the message
-      exeMgr.reset(new ClientRotator(0, "ExeMgr"));
-      try
-      {
-        exeMgr->connect(5);
-      }
-      catch (...)
       {
         throw logging::IDBExcept(logging::ERR_LOST_CONN_EXEMGR);
       }
     }
-  }
-  if (maxTries >= 5)
-    throw logging::IDBExcept(logging::ERR_SYSTEM_CATALOG);
 
+    if (uint32_t rowSize = rowGroup->getRowCount(); rowSize > 0)
+    {
+      rowgroup::Row row;
+      rowGroup->initRow(&row);
+      for (uint32_t i = 0; i < rowSize; i++)
+      {
+        rowGroup->getRow(i, &row);
+        result = row.getUintField(0);
+      }
+    }
+    else
+      break;
+  }
+
+  msg.reset();
+  qb = 0;
+  msg << qb;
+  exeMgr->write(msg);
   return result;
 }
+
 RowSize getAUXPartitionSize(BRM::LogicalPartition partitionNum,
-                            execplan::CalpontSystemCatalog::TableName tableNameObj)
+                            execplan::CalpontSystemCatalog::TableName tableNameObj, int sessionID)
 {
   CalpontSelectExecutionPlan csep;
+  csep.sessionID(sessionID);
 
-  CalpontSystemCatalog csc;
-  CalpontSystemCatalog::RIDList oidList = csc.columnRIDs(tableNameObj);
+  auto csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+  csc->identity(execplan::CalpontSystemCatalog::FE);
+  CalpontSystemCatalog::RIDList oidList = csc->columnRIDs(tableNameObj);
   if (oidList.empty())
   {
     return 0;
   }
 
-  std::string colName = csc.colName(oidList[0].objnum).column;
+  SessionManager sm;
+  BRM::TxnID txnID;
+  txnID = sm.getTxnID(sessionID);
+
+  if (!txnID.valid)
+  {
+    txnID.id = 0;
+    txnID.valid = true;
+  }
+
+  BRM::QueryContext verID;
+  verID = sm.verID();
+  csep.txnID(txnID.id);
+  csep.verID(verID);
+  csep.sessionID(sessionID);
+
+  std::string colName = csc->colName(oidList[0].objnum).column;
 
   // SQL Statement: select count(col) from target_table from idbpartition(col) = "*.*.*";
   std::string schemaTablePrefix = std::format("{}.{}.", tableNameObj.schema, tableNameObj.table);
-  FunctionColumn* fc1 = new FunctionColumn("count", schemaTablePrefix + colName);
-  FunctionColumn* fc2 = new FunctionColumn("idbpartition", schemaTablePrefix + colName);
-  SimpleColumn* sc = new SimpleColumn(colName);
+  FunctionColumn* fc1 = new FunctionColumn("count", schemaTablePrefix + colName, sessionID);
+  FunctionColumn* fc2 = new FunctionColumn("idbpartition", schemaTablePrefix + colName, sessionID);
+  SimpleColumn* sc = new SimpleColumn(colName, sessionID);
 
   CalpontSelectExecutionPlan::ColumnMap colMap;
   SRCP srcp;
@@ -219,14 +209,14 @@ RowSize getAUXPartitionSize(BRM::LogicalPartition partitionNum,
 
   return processQuery(csep);
 }
-
 }  // namespace
 
 std::vector<bool> getPartitionDeletedBitmap(BRM::LogicalPartition partitionNum,
-                                            execplan::CalpontSystemCatalog::TableName tableName)
+                                            execplan::CalpontSystemCatalog::TableName tableName,
+                                            int sessionID)
 {
   std::vector<bool> auxColMock;
-  uint32_t rowSize = getAUXPartitionSize(partitionNum, tableName);
+  uint32_t rowSize = getAUXPartitionSize(partitionNum, tableName, sessionID);
   auxColMock.reserve(rowSize);
 
   std::random_device rd;
@@ -241,5 +231,4 @@ std::vector<bool> getPartitionDeletedBitmap(BRM::LogicalPartition partitionNum,
 
   return auxColMock;
 }
-
 }  // namespace execplan

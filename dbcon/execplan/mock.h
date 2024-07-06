@@ -16,7 +16,8 @@ namespace execplan
  * @return std::vector<bool> deleted bitmap,`true` means deleted and `false` means not deleted
  */
 std::vector<bool> getPartitionDeletedBitmap(BRM::LogicalPartition partitionNum,
-                                            execplan::CalpontSystemCatalog::TableName tableName);
+                                            execplan::CalpontSystemCatalog::TableName tableName,
+                                            int sessionID);
 
 }  // namespace execplan
 #endif  // __MOCK_H__
