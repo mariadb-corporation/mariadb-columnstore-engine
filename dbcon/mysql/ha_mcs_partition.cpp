@@ -27,6 +27,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
+#include <format>
 // #include <unistd.h>
 #include <iomanip>
 using namespace std;
@@ -38,6 +39,7 @@ using namespace std;
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 #include "objectidmanager.h"
+#include "mock.h"
 using namespace execplan;
 
 #include "mastersegmenttable.h"
@@ -1385,7 +1387,7 @@ extern "C"
     BRM::DBRM::refreshShm();
     DBRM dbrm;
 
-    CalpontSystemCatalog::TableName tableName;
+    CalpontSystemCatalog::TableName tableNameObj;
     string schema, table, partitionNumStr;
     set<LogicalPartition> partitionNums;
     LogicalPartition partitionNum;
@@ -1399,7 +1401,8 @@ extern "C"
       schema = (char*)(args->args[0]);
       table = (char*)(args->args[1]);
       partitionNumStr = (char*)(args->args[2]);
-      parsePartitionString(args, 2, partitionNums, errMsg, tableName);
+
+      parsePartitionString(args, 2, partitionNums, errMsg, tableNameObj);
       if (!errMsg.empty())
       {
         Message::Args args;
@@ -1407,11 +1410,11 @@ extern "C"
         throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
       }
       partitionNum = *partitionNums.begin();
-      tableName = make_table(schema, table, lower_case_table_names);
 
-      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
+      tableNameObj = make_table(schema, table, lower_case_table_names);
+      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableNameObj);
 
-      uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true);
+      uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
 
       std::string header = std::format("{:<20} {:<} ", "Part#", "Empty Rate");
       std::string values = std::format("  {:<20} {:<.2f}%", partitionNumStr,
