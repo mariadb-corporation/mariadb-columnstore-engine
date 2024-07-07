@@ -1277,6 +1277,9 @@ int TableInfo::initializeBuffers(int noOfBuffers, const JobFieldRefList& jobFiel
 {
   fReadBufCount = noOfBuffers;
 
+    // threadNum == ReadBufCount
+  if (fImportDataMode == IMPORT_DATA_CSV)
+    fCsvBufferBatch.resize(fReadBufCount);
   // initialize and populate the buffer vector.
   for (int i = 0; i < fReadBufCount; ++i)
   {
@@ -1489,7 +1492,7 @@ bool try_parse_line(int64_t tStartPos, int64_t buf_size, char* buf, uint64_t col
   return true;
 }
 
-int get_newline_pos(std::shared_ptr<arrow::io::RandomAccessFile> in,
+int64_t get_newline_pos(std::shared_ptr<arrow::io::RandomAccessFile> in,
 					int64_t pos,
 					int64_t bytes_read,
 					uint64_t col_num,
@@ -1552,10 +1555,10 @@ int TableInfo::openTableFileCsv()
   auto res_file_size = input->GetSize();
   file_size = res_file_size.ValueOrDie();
   // assume 2 threads
-  const int threadNum = 5;
+  const int threadNum = fReadBufCount;  // default 5
   const int chunk_num = 1;
   const int col_num = 3;
-  int part_size = file_size / threadNum;
+  int64_t part_size = file_size / threadNum;
   // process each part : compute start pos
   // if each part data is loaded here, we still pay the cost(TODO:)
   std::shared_ptr<arrow::Buffer> buffer;
@@ -1573,7 +1576,7 @@ int TableInfo::openTableFileCsv()
     // ARROW_ASSIGN_OR_RAISE(buffer, input->ReadAt(part_size * i, part_size));
     // auto res = input->ReadAt(part_size * i, part_size);
     // buffer = res.ValueOrDie();
-    int newlineStartPos = get_newline_pos(input, part_size * i, part_size, col_num, i == 0);
+    int64_t newlineStartPos = get_newline_pos(input, part_size * (int64_t)i, part_size, col_num, i == 0);
     startPos[i] = newlineStartPos;
     if (i > 0)
       endPos[i-1] = newlineStartPos - 1;
@@ -1679,6 +1682,11 @@ void TableInfo::readPartCsv(int partId, const int chunk_num,
                  std::string& fFileName
                  )
 {
+  // TODO:count time consuming
+
+  // preprocessing
+
+  auto preprocessStartTime = std::chrono::high_resolution_clock::now();
   arrow::io::IOContext io_context = arrow::io::default_io_context();
   std::shared_ptr<arrow::io::InputStream> ins;
   auto resIns = arrow::io::ReadableFile::Open(fFileName);
@@ -1687,7 +1695,8 @@ void TableInfo::readPartCsv(int partId, const int chunk_num,
   if (!advanceRes.ok())
     return;
   auto read_options = arrow::csv::ReadOptions::Defaults();
-  int bsize = (endPos - startPos + 1) / chunk_num;
+  int64_t bsize = (endPos - startPos + 1) / chunk_num;
+  // BUGFIX: block_size is int32 type
   read_options.block_size = bsize;
   if (partId)
     read_options.autogenerate_column_names = true;
@@ -1698,26 +1707,35 @@ void TableInfo::readPartCsv(int partId, const int chunk_num,
   auto maybe_reader =
       arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
   std::shared_ptr<arrow::csv::StreamingReader> reader = *maybe_reader;
-  std::shared_ptr<arrow::RecordBatch> batch;
+  // std::shared_ptr<arrow::RecordBatch> batch;
   int64_t bytesRead = 0;
   int j = 0;
+  int64_t part_row = 0;
+  auto preprocessEndTime = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = preprocessEndTime - preprocessStartTime;
+  std::ostringstream oss;
+  oss << "Preprocess Time Duration: " << duration.count() << " seconds" << std::endl;
+  fLog->logMsg(oss.str(), MSGLVL_INFO2);
 
+  auto readStartTime = std::chrono::high_resolution_clock::now();
   while (true)
   {
-    arrow::Status status = reader->ReadNext(&batch);
+    arrow::Status status = reader->ReadNext(&fCsvBufferBatch[partId]);
     if (!status.ok())
     {
       // Handle read error
     }
 
-    if (batch == NULL)
+    if (fCsvBufferBatch[partId] == NULL)
     {
       // Handle end of file
       break;
     }
+    // part_row += batch->num_rows();
+    part_row += fCsvBufferBatch[partId]->num_rows();
     {
       boost::mutex::scoped_lock lock(fRowCount);
-      tot_row_count += batch->num_rows();
+      tot_row_count += fCsvBufferBatch[partId]->num_rows();
     }
     
     // std::cout << "part" << i << " chunk" << j << std::endl;
@@ -1737,28 +1755,36 @@ void TableInfo::readPartCsv(int partId, const int chunk_num,
   if (!advanceRes.ok())
     return;
   read_options.block_size = endPos - startPos + 1 - bytesRead;
-  if (!read_options.block_size)
-    return;
-
-  maybe_reader =
-      arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
-  reader = *maybe_reader;
-
-  arrow::Status status = reader->ReadNext(&batch);
-  if (!status.ok())
+  if (read_options.block_size)
   {
-    // Handle read error
-  }
+    maybe_reader =
+        arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
+    reader = *maybe_reader;
 
-  if (batch == NULL)
-  {
-    // Handle end of file
-    return;
+    arrow::Status status = reader->ReadNext(&fCsvBufferBatch[partId]);
+    if (!status.ok())
+    {
+      // Handle read error
+    }
+
+    if (fCsvBufferBatch[partId] == NULL)
+    {
+      // Handle end of file
+      return;
+    }
+    part_row += fCsvBufferBatch[partId]->num_rows();
+    {
+      boost::mutex::scoped_lock lock(fRowCount);
+      tot_row_count += fCsvBufferBatch[partId]->num_rows();
+    }
   }
-  {
-    boost::mutex::scoped_lock lock(fRowCount);
-    tot_row_count += batch->num_rows();
-  }
+  auto readEndTime = std::chrono::high_resolution_clock::now();
+  duration = readEndTime - readStartTime;
+    // return;
+  std::ostringstream oss1;
+  oss1 << "Read Time Duration: " << duration.count() << " seconds" << std::endl;
+  fLog->logMsg(oss1.str(), MSGLVL_INFO2);
+  return;
 }
 
 //------------------------------------------------------------------------------

@@ -1160,8 +1160,15 @@ int BulkLoad::processJob()
   totalRunTime += getTotalRunTime();
 
   startTimer();
-  spawnWorkersCsv();
-  // spawnWorkers();
+  // temporary entrance
+  if (fImportDataMode == IMPORT_DATA_CSV)
+  {
+    spawnWorkersCsv();
+  }
+  else
+  {
+    spawnWorkers();
+  }
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {
@@ -1231,12 +1238,15 @@ int BulkLoad::manageImportDataFileList(Job& job, int tableNo, TableInfo* tableIn
     return ERR_FILE_TYPE_DIFF;
   }
   const bool isParquet = allFilesHaveSameType && fileNameA.rfind(".parquet") != std::string::npos;
-
+  const bool isCsv = allFilesHaveSameType && fileNameA.rfind(".csv") != std::string::npos;
   if (isParquet)
   {
     setImportDataMode(IMPORT_DATA_PARQUET);
   }
-
+  if (isCsv)
+  {
+    setImportDataMode(IMPORT_DATA_CSV);
+  }
   // Take loadFileName from command line argument override "if" one exists,
   // else we take from the Job xml file
   std::string loadFileName;

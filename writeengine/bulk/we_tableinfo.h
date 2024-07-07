@@ -176,6 +176,8 @@ class TableInfo : public WeUIDGID
 
   std::shared_ptr<arrow::RecordBatchReader> fParquetReader;  // Batch reader to read batches of data
   std::unique_ptr<parquet::arrow::FileReader> fReader;       // Reader to read parquet file
+  std::vector<std::shared_ptr<arrow::RecordBatch>> fCsvBufferBatch;  // Batch for each buffer to store data
+
   //--------------------------------------------------------------------------
   // Private Functions
   //--------------------------------------------------------------------------
